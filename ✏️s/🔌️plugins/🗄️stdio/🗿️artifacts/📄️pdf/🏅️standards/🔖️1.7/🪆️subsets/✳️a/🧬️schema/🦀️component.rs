@@ -12,6 +12,19 @@
 //! `🧐️analyzer`'s `detect_pdfa_level`.
 
 pub use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::*;
+//#region 🧬️Mutations
+// 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
+// `📦️glue.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
+// ✳️any subset already records for its own test mount — leave the shared file alone, let an artifact
+// own the subtree it owns — applies to a production leaf of this subset just as well. `#[path]` on a
+// non-inline module resolves against this file's own directory. The explicit declaration shadows the
+// glob re-export of ✳️any's `mutations` above, which is what puts this subset's own vocabulary at
+// `subsets::<name>::schema::mutations` while ✳️any's document vocabulary stays reachable at its own
+// address.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+//#endregion 🧬️Mutations
+
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::pdf::standards::v1_7::subsets::a::schema::check_pdf_a_conformance;

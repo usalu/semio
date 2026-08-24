@@ -20,6 +20,14 @@
 //! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
 //! local implementation; the Rust SUBJECT phase is blocked this wave by a concurrent os-kernel
 //! refactor, so it is written and gated but not run.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
+//! the written statement of the reference answer rather than a second running party. Every law this
+//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
+//! printed. A handler that merely ran the mutation and returned would report a pass having checked
+//! nothing.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
@@ -108,7 +116,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{before_uri, mutation_uri, NULLARY_KIND};
+    use super::{after_uri, before_uri, mutation_uri, NULLARY_KIND};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, inverse_semio_image_mutation, SemioImageMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
@@ -196,11 +204,21 @@ mod subject {
 
     //#region 🔖️Fixtures
     /// 🧫️ Reads the SAME committed fixture bytes the oracle role reads. The nullary kind owns no
-    /// leaf, so its payload comes from the feature's own doc string instead of a leaf file.
-    fn fixture_for(kind: &str, ctx: &Context) -> Result<(SemioImageSnapshot, SemioImageMutation), String> {
+    /// leaf, so its payload comes from the feature's own doc string instead of a leaf file, and —
+    /// mirroring `../🦀️component.rs::mutate_oracle_for` — its expected after-state is the
+    /// before-snapshot itself, never the borrowed leaf's `➡️after` file, which belongs to
+    /// `move-frame` and would assert the opposite of identity.
+    fn fixture_for(kind: &str, ctx: &Context) -> Result<(SemioImageSnapshot, SemioImageMutation, SemioImageSnapshot), String> {
         let before = decode_snapshot(&ctx.fixture_json(&before_uri(kind))?);
         let mutation = if kind == NULLARY_KIND { decode_mutation(&ctx.doc_json()?) } else { decode_mutation(&ctx.fixture_json(&mutation_uri(kind))?) };
-        Ok((before, mutation))
+        let after = if kind == NULLARY_KIND { before.clone() } else { decode_snapshot(&ctx.fixture_json(&after_uri(kind))?) };
+        Ok((before, mutation, after))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
+    /// vectors are written in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioImageSnapshot, expected: &SemioImageSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got).to_string(), snapshot_json(expected).to_string())
     }
     //#endregion 🔖️Fixtures
 
@@ -245,20 +263,30 @@ mod subject {
     //#endregion 🔖️Projection
 
     //#region 🔖️Handlers
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot — colorspace tag, plane geometry and sample payload alike. The assertion lives
+    /// here rather than in the comparison because a recorded no-oracle case runs no oracle role: a
+    /// handler that merely returned `Ok` would report a pass having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (mut base, mutation) = fixture_for(kind, ctx)?;
+            let (mut base, mutation, expected) = fixture_for(kind, ctx)?;
             let outcome = apply_semio_image_mutation(&mut base, &mutation);
             if !outcome.messages().is_empty() {
                 return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+            }
+            if base != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &base, &expected));
             }
             Ok(outcome_of(&base))
         }
     }
 
+    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
+    /// restore the committed before-snapshot exactly, including the sample bytes a plane edit
+    /// overwrote.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (base, mutation) = fixture_for(kind, ctx)?;
+            let (base, mutation, _expected) = fixture_for(kind, ctx)?;
             let mut current = base.clone();
             let outcome = apply_semio_image_mutation(&mut current, &mutation);
             if !outcome.messages().is_empty() {
@@ -270,6 +298,9 @@ mod subject {
                     return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
                 }
             }
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
+            }
             Ok(outcome_of(&current))
         }
     }
@@ -280,9 +311,12 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let committed = decode_snapshot(&ctx.fixture_json(&before_uri(NULLARY_KIND))?);
         let mut rebuilt = SemioImageSnapshot::default();
-        let outcome = apply_semio_image_mutation(&mut rebuilt, &SemioImageMutation::SetSnapshot { snapshot: committed });
+        let outcome = apply_semio_image_mutation(&mut rebuilt, &SemioImageMutation::SetSnapshot { snapshot: committed.clone() });
         if !outcome.messages().is_empty() {
             return Err(format!("identity-round-trip: full-replace rejected: {:?}", outcome.messages()));
+        }
+        if rebuilt != committed {
+            return Err(disagreement("identity-round-trip: rebuilding the committed image from an empty snapshot did not land on it — a slot of the typed model was dropped on the way through the full-replace diff", &rebuilt, &committed));
         }
         Ok(outcome_of(&rebuilt))
     }

@@ -256,14 +256,21 @@ fn faces_by_material_range(ranges: &[(usize, String)], face_count: usize) -> Vec
     out
 }
 
+/// 🧵️ The `s` statement, if any, that belongs immediately before each face. Emitted at exactly the
+/// face indices [`parse`] records a range start for, rather than wherever a derived per-face value
+/// happens to change — a model that declares NO smoothing at all must emit no `s` line, and a
+/// declared `s off` at face 0 must survive being written out and read back. Deriving the statements
+/// from a per-face value instead makes both of those wrong in opposite directions.
 #[cfg(feature = "oracles")]
-fn faces_by_smoothing_range(ranges: &[(usize, Option<u32>)], face_count: usize) -> Vec<Option<u32>> {
+fn smoothing_statement_before_face(ranges: &[(usize, Option<u32>)], face_count: usize) -> Vec<Option<Option<u32>>> {
     let mut sorted = ranges.to_vec();
     sorted.sort_by_key(|(from, _)| *from);
     let mut out = vec![None; face_count];
     for (from, group) in &sorted {
-        for slot in out.iter_mut().skip(*from) {
-            *slot = *group;
+        if let Some(slot) = out.get_mut(*from) {
+            if slot.is_none() {
+                *slot = Some(*group);
+            }
         }
     }
     out
@@ -299,13 +306,11 @@ fn render(model: &Model) -> String {
     let group_of_face = faces_by_group(&model.groups, face_count);
     let object_of_face = faces_by_object(&model.objects, face_count);
     let material_of_face = faces_by_material_range(&model.usemtl, face_count);
-    let smoothing_of_face = faces_by_smoothing_range(&model.smoothing, face_count);
+    let smoothing_of_face = smoothing_statement_before_face(&model.smoothing, face_count);
 
     let mut cur_groups: Vec<String> = Vec::new();
     let mut cur_object: Option<String> = None;
     let mut cur_material: Option<String> = None;
-    let mut cur_smoothing: Option<u32> = None;
-    let mut have_smoothing = false;
 
     for (index, face) in model.faces.iter().enumerate() {
         if group_of_face[index] != cur_groups {
@@ -326,13 +331,11 @@ fn render(model: &Model) -> String {
             }
             cur_material = material_of_face[index].clone();
         }
-        if !have_smoothing || smoothing_of_face[index] != cur_smoothing {
-            match smoothing_of_face[index] {
-                Some(group) => out.push_str(&format!("s {group}\n")),
+        if let Some(group) = smoothing_of_face[index] {
+            match group {
+                Some(value) => out.push_str(&format!("s {value}\n")),
                 None => out.push_str("s off\n"),
             }
-            cur_smoothing = smoothing_of_face[index];
-            have_smoothing = true;
         }
         out.push_str("f ");
         out.push_str(&face.vertices.iter().map(write_face_vertex).collect::<Vec<_>>().join(" "));
@@ -560,6 +563,134 @@ fn model_to_json(model: &Model) -> Json {
 }
 //#endregion 🔖️ItemRendering
 
+//#region 🔖️DocumentProjection
+/// 📊️ A component-wise fingerprint of one declared geometry block: how many rows it holds and, per
+/// component, their extent and total. `tobj` reports only the corners faces actually reference — it
+/// re-indexes per model and drops every unreferenced row — so a mutation of a `v`/`vt`/`vn` row is
+/// invisible in the mesh projection alone. Extent and sum are what make it visible while staying
+/// comparable under a numeric tolerance, which a text digest of the same rows would not be: the two
+/// producers format their decimals differently and a digest would diverge on formatting.
+#[cfg(feature = "oracles")]
+fn block_fingerprint(rows: &[Vec<f64>], components: usize) -> Json {
+    let mut minimum = vec![f64::INFINITY; components];
+    let mut maximum = vec![f64::NEG_INFINITY; components];
+    let mut total = vec![0.0; components];
+    for row in rows {
+        for (index, value) in row.iter().take(components).enumerate() {
+            minimum[index] = minimum[index].min(*value);
+            maximum[index] = maximum[index].max(*value);
+            total[index] += *value;
+        }
+    }
+    let axis = |values: &[f64]| Json::Array(values.iter().map(|value| Json::Number(if value.is_finite() { *value } else { 0.0 })).collect());
+    json_object(vec![("count", Json::Number(rows.len() as f64)), ("min", axis(&minimum)), ("max", axis(&maximum)), ("sum", axis(&total))])
+}
+
+#[cfg(feature = "oracles")]
+fn range_membership_json(entries: &[(String, Vec<usize>)]) -> Json {
+    Json::Array(
+        entries
+            .iter()
+            .map(|(name, faces)| {
+                json_object(vec![
+                    ("name", Json::String(name.clone())),
+                    ("faceCount", Json::Number(faces.len() as f64)),
+                    ("firstFace", Json::Number(faces.iter().min().copied().unwrap_or(0) as f64)),
+                    ("lastFace", Json::Number(faces.iter().max().copied().unwrap_or(0) as f64)),
+                ])
+            })
+            .collect(),
+    )
+}
+
+/// 📐️ Everything this subset's 22-kind vocabulary can move that a triangle-soup reader cannot see:
+/// the declared `v`/`vt`/`vn`/`f` row counts and their per-component extent, the `mtllib` reference,
+/// the `g`/`o` membership spans, the `usemtl`/`s` run starts and the retained comment lines.
+/// Composed with `mesh::project_obj`'s `tobj` reading by the case adapter, this is what makes every
+/// declared kind observable — 14 of the 22 move nothing in the mesh projection at all.
+#[cfg(feature = "oracles")]
+pub fn oracle_document_projection(input: &[u8]) -> Result<Json, String> {
+    let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
+    let model = parse(text)?;
+    let vertices: Vec<Vec<f64>> = model.vertices.iter().map(|vertex| vec![vertex.x, vertex.y, vertex.z]).collect();
+    let texcoords: Vec<Vec<f64>> = model.texcoords.iter().map(|texcoord| vec![texcoord.u, texcoord.v]).collect();
+    let normals: Vec<Vec<f64>> = model.normals.iter().map(|normal| vec![normal.x, normal.y, normal.z]).collect();
+    Ok(json_object(vec![
+        ("declaredVertices", block_fingerprint(&vertices, 3)),
+        ("declaredTexcoords", block_fingerprint(&texcoords, 2)),
+        ("declaredNormals", block_fingerprint(&normals, 3)),
+        ("declaredFaces", Json::Number(model.faces.len() as f64)),
+        ("mtllib", model.mtllib.clone().map(Json::String).unwrap_or(Json::Null)),
+        ("groups", range_membership_json(&model.groups)),
+        ("objects", range_membership_json(&model.objects)),
+        ("usemtlRanges", Json::Array(model.usemtl.iter().map(|(from, material)| json_object(vec![("faceIndexFrom", Json::Number(*from as f64)), ("material", Json::String(material.clone()))])).collect())),
+        (
+            "smoothingGroups",
+            Json::Array(model.smoothing.iter().map(|(from, group)| json_object(vec![("faceIndexFrom", Json::Number(*from as f64)), ("group", group.map(|value| Json::Number(value as f64)).unwrap_or(Json::Null))])).collect()),
+        ),
+        ("unknownStatements", Json::Array(model.unknown.iter().map(|raw| Json::String(raw.clone())).collect())),
+    ]))
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_document_projection(_input: &[u8]) -> Result<Json, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+//#endregion 🔖️DocumentProjection
+
+//#region 🔖️FaceIndexSpace
+/// 🔢️ `groups`/`objects` membership and the `usemtl`/`s` range starts are all keyed by FACE INDEX,
+/// so inserting a face at `index` moves every reference at or after it by one. Skipping the shift
+/// does not merely leave stale numbers behind — the grammar's sticky runs re-emit from them, so the
+/// very next render silently re-bands every face after the insertion point.
+#[cfg(feature = "oracles")]
+fn shift_face_index_space_for_insert(model: &mut Model, index: usize) {
+    for (_, faces) in model.groups.iter_mut().chain(model.objects.iter_mut()) {
+        for face in faces.iter_mut() {
+            if *face >= index {
+                *face += 1;
+            }
+        }
+    }
+    for (from, _) in model.usemtl.iter_mut() {
+        if *from >= index {
+            *from += 1;
+        }
+    }
+    for (from, _) in model.smoothing.iter_mut() {
+        if *from >= index {
+            *from += 1;
+        }
+    }
+}
+
+/// 🔢️ The mirror of [`shift_face_index_space_for_insert`]: the removed face leaves every membership
+/// list, and everything after it closes up by one. A range START that pointed AT the removed face
+/// stays where it is — the next face inherits the run, which is what the `usemtl`/`s` sticky
+/// semantics mean.
+#[cfg(feature = "oracles")]
+fn shift_face_index_space_for_remove(model: &mut Model, index: usize) {
+    for (_, faces) in model.groups.iter_mut().chain(model.objects.iter_mut()) {
+        faces.retain(|face| *face != index);
+        for face in faces.iter_mut() {
+            if *face > index {
+                *face -= 1;
+            }
+        }
+    }
+    for (from, _) in model.usemtl.iter_mut() {
+        if *from > index {
+            *from -= 1;
+        }
+    }
+    for (from, _) in model.smoothing.iter_mut() {
+        if *from > index {
+            *from -= 1;
+        }
+    }
+}
+//#endregion 🔖️FaceIndexSpace
+
 //#region 🔖️Apply
 /// 🦠️ Applies one declared kind to the independently-parsed model — one arm per `ObjMutation`
 /// variant this subset's catalog declares, matched by its kebab-case `KINDS` spelling.
@@ -630,7 +761,9 @@ fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
         }
         "insert-face" => {
             let index = usize_field(params, "index")?.min(model.faces.len());
-            model.faces.insert(index, parse_face(params.get("face").ok_or("insert-face requires a face field")?)?);
+            let face = parse_face(params.get("face").ok_or("insert-face requires a face field")?)?;
+            shift_face_index_space_for_insert(model, index);
+            model.faces.insert(index, face);
             Ok(())
         }
         "remove-face" => {
@@ -639,6 +772,7 @@ fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
                 return Err(format!("remove-face index {index} out of range"));
             }
             model.faces.remove(index);
+            shift_face_index_space_for_remove(model, index);
             Ok(())
         }
         "set-face" => {
@@ -764,6 +898,49 @@ mod tests {
         let snapshot = oracle_snapshot_json(bytes).unwrap();
         let replaced = oracle_apply_mutation(bytes, &spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))).unwrap();
         assert_eq!(String::from_utf8(replaced).unwrap(), render(&parse(DOCUMENT).unwrap()), "set-snapshot fed the document's own emitted snapshot must reproduce that document");
+    }
+
+    const TWO_BANDS: &str = "v 0 0 0\nv 1 0 0\nv 0 1 0\nv 1 1 0\ng lower\nf 1 2 3\nf 2 3 4\ng upper\nf 1 3 4\nf 1 2 4\n";
+
+    fn band_membership(document: &[u8]) -> Vec<(String, Vec<usize>)> {
+        oracle_snapshot_json(document)
+            .unwrap()
+            .array("groups")
+            .iter()
+            .map(|entry| {
+                (
+                    entry.str("name"),
+                    entry
+                        .array("faces")
+                        .iter()
+                        .map(|face| match face {
+                            Json::Number(number) => *number as usize,
+                            other => panic!("a face index must be a number, found {other:?}"),
+                        })
+                        .collect(),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn removing_an_interior_face_closes_the_membership_index_space() {
+        let removed = oracle_apply_mutation(TWO_BANDS.as_bytes(), &spec("remove-face", Json::Object(vec![("index".to_string(), Json::Number(1.0))]))).unwrap();
+        assert_eq!(band_membership(&removed), vec![("lower".to_string(), vec![0]), ("upper".to_string(), vec![1, 2])], "the removed face must leave its own band and every later face must close up by one");
+    }
+
+    #[test]
+    fn inserting_an_interior_face_opens_the_membership_index_space() {
+        let face = Json::Object(vec![(
+            "vertices".to_string(),
+            Json::Array(vec![
+                Json::Object(vec![("vertex".to_string(), Json::Number(0.0))]),
+                Json::Object(vec![("vertex".to_string(), Json::Number(1.0))]),
+                Json::Object(vec![("vertex".to_string(), Json::Number(3.0))]),
+            ]),
+        )]);
+        let widened = oracle_apply_mutation(TWO_BANDS.as_bytes(), &spec("insert-face", Json::Object(vec![("index".to_string(), Json::Number(1.0)), ("face".to_string(), face)]))).unwrap();
+        assert_eq!(band_membership(&widened), vec![("lower".to_string(), vec![0, 2]), ("upper".to_string(), vec![3, 4])], "the inserted face joins no band, and every band member at or after it moves up by one");
     }
 
     #[test]

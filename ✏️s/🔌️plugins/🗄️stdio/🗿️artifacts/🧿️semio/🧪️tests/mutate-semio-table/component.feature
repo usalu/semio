@@ -17,7 +17,18 @@ Feature: Apply every typed semio TABLE mutation to its committed specification f
   role (no recomputation, no reimplementation) and the `subject` role (decoded once into real
   `SemioTableSnapshot`/`SemioTableMutation` values, then run through the real production entry
   point) read the exact same committed bytes rather than a hand-transcribed copy that could drift
-  from them. The `ordered-json-v1` profile compares the two structurally.
+  from them.
+
+  ⚖️ Because this case records a no-oracle decision, the runner executes NO oracle role: it resolves
+  an oracle implementation from an `@oracle-` tag this feature deliberately does not carry, so the
+  comparison profile never receives two sides to compare and the `oracle` handlers below are the
+  written statement of the reference answer rather than a second running party. Every law this
+  feature claims is therefore asserted INSIDE the subject handler, which fails with both documents
+  printed. A handler that merely ran the mutation and returned would report a pass having checked
+  nothing. Here that means the applied table is checked against the committed
+  after-snapshot with column ORDER and row ORDER significant — which is the only way `reorder-columns`
+  and `reorder-rows` can be told apart from a rebuild that keeps the same set — and the undone table
+  against the committed before-snapshot, cell values included.
 
   @id-mutate
   @level-exhaustive

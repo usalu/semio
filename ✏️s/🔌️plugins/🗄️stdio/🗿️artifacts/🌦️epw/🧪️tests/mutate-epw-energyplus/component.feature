@@ -2,7 +2,7 @@
 @oracle-csv-epw-energyplus-mutate
 @comparison-semantic-epw-v1
 @mutations-epw-energyplus-any
-Feature: Apply every typed EnergyPlus EPW mutation to a real weather file
+Feature: Apply every typed EnergyPlus EPW mutation to the only EPW this repository has
   NO REAL ENERGYPLUS WEATHER FILE EXISTS IN THIS REPOSITORY. The repository was searched
   (`*.epw`/`*.tmy`/`*.tmy3`, and every weather-shaped asset under `♻️mit-bestand`) and the only two
   `.epw` files tracked anywhere are byte-identical copies of the same 32-line handcrafted stub whose
@@ -44,9 +44,10 @@ Feature: Apply every typed EnergyPlus EPW mutation to a real weather file
   Every scenario copies the fixture into the case work directory before touching it; the committed
   stub is never written to.
 
-  Honest limits: the Rust SUBJECT phase does not compile this wave (a concurrent session's
-  `semio_framework::` cycle in `📡️spr/🧵️channel`); every scenario below is written and `sut`-gated so
-  it compiles into the subject role the moment that lands, and only the oracle side is verified here.
+  Honest limits: the Rust SUBJECT phase does not compile (a concurrent session's in-flight
+  `ManuallyDrop<Option<RetainedJobPayload>>` migration in `semio-framework-job`, which the whole
+  subject host depends on); every scenario below is written and `sut`-gated so it compiles into the
+  subject role the moment that lands, and only the oracle side is verified here.
   A further, format-specific limit for the eventual subject comparison: this subset's own schema
   stores every record column as `String` specifically to avoid float-reformatting drift (see
   `../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`'s own module

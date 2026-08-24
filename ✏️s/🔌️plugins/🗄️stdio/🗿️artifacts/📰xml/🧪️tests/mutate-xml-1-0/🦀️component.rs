@@ -37,11 +37,21 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#region 🔖️Oracle
 /// 🔮️ One handler shared by every `mutate-<kind>` scenario id -- the scenario's own `<id>`/`<params>`
 /// spec is carried in its doc string, not in the function it dispatches to.
+///
+/// 👁️ The OBSERVABILITY law is asserted here in role: a kind other than `no-mutation` whose
+/// parameters leave the semantic projection exactly where it was has not been tested by this
+/// scenario at all -- it proves only that the reference library declined to error. Every `Examples`
+/// row is chosen against the real document's actual content for that reason, and this check is what
+/// keeps them so.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_xml_1_0(&bytes)?;
+    if kind != "no-mutation" && projection_divergence(&projection, &project_xml_1_0(&input)?).is_none() {
+        return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real document is not a test of that kind"));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -75,28 +85,91 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// 🔒️ The ORACLE side of the no-byte-pass-through law, ASSERTED rather than narrated: `quick-xml`
-/// fully parses the real document and re-serializes it from its own tree alone (the same
-/// "no-mutation" routing `oracle_apply_mutation` already gives every other kind), so BOTH halves of
-/// the law are checkable here without a subject -- the re-encoded bytes must differ from the input,
-/// XML 1.0 being no byte-preserving carrier (a conforming writer re-derives every tag, quote and
-/// escape from the tree), and the re-encoded document's own projection must still equal the input's.
+/// 🧪️ The same XML document, rendered differently: one insignificant space inserted before the `>`
+/// (or `/>`) that terminates every start tag. XML 1.0 §3.1 admits it exactly there — `STag ::= '<'
+/// Name (S Attribute)* S? '>'` and `EmptyElemTag ::= '<' Name (S Attribute)* S? '/>'` — so the
+/// perturbed bytes denote the SAME document while being a document no writer would emit. Comments,
+/// CDATA sections, processing instructions, the DOCTYPE and the interiors of attribute values are
+/// stepped over untouched, because `>` inside any of them is ordinary content.
+fn loosen_start_tags(input: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(input.len() + input.len() / 16);
+    let mut at = 0usize;
+    let skip_past = |out: &mut Vec<u8>, at: &mut usize, terminator: &[u8]| {
+        let end = input[*at..].windows(terminator.len()).position(|window| window == terminator).map(|offset| *at + offset + terminator.len()).unwrap_or(input.len());
+        out.extend_from_slice(&input[*at..end]);
+        *at = end;
+    };
+    while at < input.len() {
+        if input[at] != b'<' {
+            out.push(input[at]);
+            at += 1;
+            continue;
+        }
+        let rest = &input[at..];
+        if rest.starts_with(b"<!--") {
+            skip_past(&mut out, &mut at, b"-->");
+        } else if rest.starts_with(b"<![CDATA[") {
+            skip_past(&mut out, &mut at, b"]]>");
+        } else if rest.starts_with(b"<?") || rest.starts_with(b"<!") || rest.starts_with(b"</") {
+            skip_past(&mut out, &mut at, b">");
+        } else {
+            let mut quote: Option<u8> = None;
+            let mut cursor = at;
+            while cursor < input.len() {
+                let byte = input[cursor];
+                match quote {
+                    Some(open) if byte == open => quote = None,
+                    Some(_) => {}
+                    None if byte == b'"' || byte == b'\'' => quote = Some(byte),
+                    None if byte == b'>' => break,
+                    None => {}
+                }
+                cursor += 1;
+            }
+            let close = if input[..cursor].ends_with(b"/") { cursor - 1 } else { cursor };
+            out.extend_from_slice(&input[at..close]);
+            out.push(b' ');
+            out.extend_from_slice(&input[close..(cursor + 1).min(input.len())]);
+            at = cursor + 1;
+        }
+    }
+    out
+}
+
+/// 🔒️ The ORACLE side of the no-byte-pass-through law, ASSERTED rather than narrated — and asserted
+/// by a probe that a byte copy cannot satisfy.
 ///
-/// ⚠️ The byte half currently FAILS on this fixture, and the failure is recorded rather than tuned
-/// away: `shared://📰️ooxml-word-document.xml` is byte-identical to the `word/document.xml` part of
-/// `../../📜️docx/…/📜️example.docx`, which carries no `docProps`, zeroed zip timestamps and a 14-byte
-/// `numbering.xml` -- it is this repository's own minified OOXML writer's output, not Microsoft
-/// Word's, and `quick-xml`'s canonical serialization happens to agree with it character for
-/// character. So `output == input` here is two minifying writers coinciding, not a pass-through, and
-/// the assertion cannot tell the two apart. The fix belongs to the FIXTURE (re-derive the part from
-/// a genuinely Word-authored DOCX, which carries an XML declaration and breaks the coincidence), not
-/// to this handler.
+/// ⚠️ The naive form of this law ("the re-encoded bytes must differ from the input") is the wrong
+/// assertion for THIS input and was replaced rather than tuned: `shared://📰️ooxml-word-document.xml`
+/// is a canonically minified OOXML part with no XML declaration and no inter-element whitespace, and
+/// `quick-xml`'s canonical serialization agrees with it character for character. `output == input`
+/// here is two minifying writers CONVERGING, which the byte-difference check cannot tell apart from
+/// a `read`/`write` shortcut that never parsed anything — it fails on a correct implementation and
+/// would pass on an incorrect one the moment a fixture with a declaration were swapped in. It is not
+/// evidence either way.
+///
+/// What IS evidence, and is what this handler now requires: serialization-form invariance. The input
+/// is re-rendered by [`loosen_start_tags`] into byte-different markup denoting the same document,
+/// and both renderings must re-encode to the SAME bytes. A shortcut that hands its input back
+/// returns the two different byte strings unchanged and fails immediately; only an implementation
+/// that actually parsed both into one tree and re-derived the output from it can pass. The probe is
+/// additionally required to be non-vacuous (the perturbation must really have moved the bytes), and
+/// the round trip must still preserve the semantic projection.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
     let bytes = oracle_apply_mutation(&input, &no_mutation)?;
-    if bytes == input {
-        return Err("byte pass-through: the oracle's re-encoded bytes are bit-identical to the input, so nothing here proves the document was parsed rather than copied".to_string());
+    let loosened = loosen_start_tags(&input);
+    if loosened == input {
+        return Err("the serialization-form probe is vacuous: perturbing the start tags did not change a single byte, so it cannot distinguish parsing from copying".to_string());
+    }
+    let from_loosened = oracle_apply_mutation(&loosened, &no_mutation)?;
+    if from_loosened != bytes {
+        return Err(format!(
+            "byte pass-through: two byte-different renderings of the SAME document re-encoded differently ({} vs {} bytes), so the output is not being re-derived from a parsed tree",
+            from_loosened.len(),
+            bytes.len()
+        ));
     }
     let projection = project_xml_1_0(&bytes)?;
     let original = project_xml_1_0(&input)?;
@@ -231,13 +304,22 @@ mod subject {
     //#endregion 🔖️Inverse
 
     //#region 🔖️Handlers
+    /// 👁️ The forward mutation, with the same observability law the oracle side asserts: a kind
+    /// other than `no-mutation` that left the projection exactly where it was addressed nothing in
+    /// the real document.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let base = XmlSnapshot::import_utf8(&mutable_input(ctx)?).map_err(|error| format!("import_utf8 failed: {error}"))?;
-        let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let mut snapshot = base;
+        let input = mutable_input(ctx)?;
+        let base = XmlSnapshot::import_utf8(&input).map_err(|error| format!("import_utf8 failed: {error}"))?;
+        let spec = ctx.doc_json()?;
+        let kind = spec.str("kind");
+        let mutation = mutation_from_spec(&spec)?;
+        let mut snapshot = base.clone();
         apply_xml_mutation(&mut snapshot, &mutation);
         let bytes = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         let projection = project_xml_1_0(&bytes)?;
+        if kind != "no-mutation" && super::projection_divergence(&projection, &project_xml_1_0(&base.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?)?).is_none() {
+            return Err(format!("{kind:?} left the semantic projection exactly as it found it -- the parameters address nothing in the real document"));
+        }
         Ok(Outcome::with_raw(bytes, projection))
     }
 
@@ -253,16 +335,25 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
-    /// typed snapshot and re-serialize from the model alone -- `XmlSnapshot::import_utf8`/`export_utf8`
-    /// are this subset's ONLY channel from input to output (XML is text-native; there is no separate
-    /// binary layer over the same model).
+    /// 🔒️ The no-byte-pass-through rule, asserted by the SAME serialization-form probe the oracle
+    /// side uses and for the same reason: this fixture is canonically minified, so a correct writer
+    /// converging on the input byte for byte is the expected outcome and "the bytes must differ"
+    /// cannot tell that apart from a `read`/`write` shortcut. Instead the input is re-rendered by
+    /// `super::loosen_start_tags` into byte-different markup denoting the same document, and both
+    /// renderings must re-encode identically -- which only an implementation that really parsed
+    /// them into one snapshot can do. `XmlSnapshot::import_utf8`/`export_utf8` are this subset's
+    /// ONLY channel from input to output (XML is text-native; there is no separate binary layer
+    /// over the same model).
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
-        let snapshot = XmlSnapshot::import_utf8(&input).map_err(|error| format!("import_utf8 failed: {error}"))?;
-        let output = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
-        if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".to_string());
+        let output = XmlSnapshot::import_utf8(&input).map_err(|error| format!("import_utf8 failed: {error}"))?.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
+        let loosened = super::loosen_start_tags(&input);
+        if loosened == input {
+            return Err("the serialization-form probe is vacuous: perturbing the start tags did not change a single byte".to_string());
+        }
+        let from_loosened = XmlSnapshot::import_utf8(&loosened).map_err(|error| format!("import_utf8 of the perturbed rendering failed: {error}"))?.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
+        if from_loosened != output {
+            return Err(format!("byte pass-through: two byte-different renderings of the SAME document re-encoded differently ({} vs {} bytes)", from_loosened.len(), output.len()));
         }
         let projection = project_xml_1_0(&output)?;
         Ok(Outcome::with_raw(output, projection))

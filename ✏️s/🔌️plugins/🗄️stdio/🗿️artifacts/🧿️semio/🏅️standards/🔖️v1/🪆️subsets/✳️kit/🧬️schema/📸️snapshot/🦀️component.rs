@@ -654,6 +654,39 @@ pub fn encode_kit_snapshot_json(snapshot: &SemioKitSnapshot) -> String {
 }
 //#endregion 🔖️JsonBridge
 
+//#region 🔖️Wire
+/// 📝️ Parses `s.stdio.semio.kit` DSL text into a [`SemioKitSnapshot`] — a named pass-through of this snapshot's own
+/// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// crate, so `mutate-semio-kit`'s `identity-round-trip` scenario reaches the real committed
+/// artifact (`../../📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio`) through this instead.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_kit_dsl(text: &str) -> Result<SemioKitSnapshot, String> {
+    <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Renders a [`SemioKitSnapshot`] back as `s.stdio.semio.kit` DSL text — the inverse of
+/// [`parse_semio_kit_dsl`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_kit_dsl(snapshot: &SemioKitSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Encodes a [`SemioKitSnapshot`] as a semio pack envelope — the binary twin of the DSL text, produced by a
+/// SEPARATE codec, which is what makes the two committed encodings of one document able to
+/// contradict each other.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_kit_pack(snapshot: &SemioKitSnapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+
+/// 📦️ Decodes a semio pack envelope into a [`SemioKitSnapshot`] — the inverse of
+/// [`encode_semio_kit_pack`], reading `../../📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_kit_pack(bytes: &[u8]) -> Result<SemioKitSnapshot, String> {
+    <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+//#endregion 🔖️Wire
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.kit` — one type ("chair") with one representation link, one design
 /// ("living-room") with two pieces and one connection, one owned object child, one owned model

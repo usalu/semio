@@ -62,6 +62,7 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real-world clipped drawin
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
+    And the semantic projection moved, unless the kind is no-mutation
     Examples:
       | id                      | params                                                                                                                                                                                    |
       | no-mutation             | {}                                                                                                                                                                                        |

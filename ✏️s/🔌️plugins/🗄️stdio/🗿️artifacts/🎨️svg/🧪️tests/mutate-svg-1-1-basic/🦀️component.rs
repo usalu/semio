@@ -33,9 +33,20 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 👁️ The forward mutation, with the OBSERVABILITY law asserted in role: a kind other than
+/// `no-mutation` whose parameters leave the semantic projection exactly where it was has not been
+/// tested by this scenario at all -- it proves only that the reference library declined to error.
+/// Every `Examples` row is chosen against the real artifact's actual content for that reason, and
+/// this check is what keeps them so.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let bytes = oracle_apply_mutation(&mutable_input(ctx)?, &ctx.doc_json()?)?;
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
+    let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_svg_basic(&bytes)?;
+    if kind != "no-mutation" && projection_divergence(&projection, &project_svg_basic(&input)?).is_none() {
+        return Err(format!("{kind:?} left the semantic projection exactly as it found it -- a mutation whose parameters make it a no-op against the real artifact is not a test of that kind"));
+    }
     Ok(Outcome::with_raw(bytes, projection))
 }
 

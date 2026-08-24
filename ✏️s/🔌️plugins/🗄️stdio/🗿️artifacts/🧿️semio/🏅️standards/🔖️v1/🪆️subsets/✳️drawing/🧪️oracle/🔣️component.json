@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.drawing` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
+  "oracles": [],
+  "noOracleDecisions": [
+    {
+      "id": "semio-drawing-mutation-semantics",
+      "capabilities": ["semio-v1-drawing-mutate"],
+      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, let alone one authoritative over this subset's `SemioDrawingMutation` vocabulary — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. Two families of crate were surveyed and DELIBERATELY declined rather than merely absent. `usvg`/`resvg` parse SVG, which is the nearest foreign vector-graphics model, but semio's drawing snapshot is not SVG: it carries a canvas, a named STYLE table referenced by name, and an anonymous recursive `DrawNode` scene graph whose nodes have no ids at all, so every node-addressed verb here is keyed by a structural `NodePath` (`{layer, path}`) that has no SVG counterpart — round-tripping through SVG would have to invent ids, and the four hierarchy verbs (group/ungroup/flatten/unflatten) would be re-implemented on top of it rather than confirmed by it. `lyon`/`kurbo` model path geometry only and know nothing of layers, styles or hierarchy, so they could adjudicate at most `replace-path`. Calling either a reference for this vocabulary would overstate the evidence. Confidence instead comes from the committed, independently handcrafted per-kind fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff)` specification vector per kind, authored by hand and already unit-tested inside the production crate itself — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture, which is the sharpest available check on this subset precisely because `flatten`/`unflatten` and `group`/`ungroup` are declared inverses of each other and a hierarchy verb that loses a transform cannot hide it. The `mutate-semio-drawing` case re-exercises those SAME committed fixtures end-to-end through `apply_semio_drawing_mutation` rather than calling `Mutation::diff`/`inverse` directly as the in-crate unit tests do, and additionally decodes the real committed sketch artifact through both of its committed encodings.",
+      "substitutes": ["specification-vectors", "metamorphic-laws"]
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "semio-v1-drawing",
+      "capability": "semio-v1-drawing-mutate",
+      "kinds": ["create-layer", "delete-layer", "create-node", "delete-node", "move-node", "drag-nodes", "rotate", "scale", "reorder-nodes", "group", "ungroup", "flatten", "unflatten", "replace-path", "replace-fill", "change-stroke-color", "change-stroke-width"]
+    }
+  ]
+}

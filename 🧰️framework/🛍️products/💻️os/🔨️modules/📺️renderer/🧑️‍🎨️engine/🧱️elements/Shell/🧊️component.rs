@@ -20,7 +20,7 @@ use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
-use ui_contract::{UiDocumentLease, UiFixedList, UI_DOCUMENT_LEASE_SLOTS};
+use ui_contract::{UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_LEASE_SLOTS};
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
 // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
@@ -1310,6 +1310,7 @@ pub struct ShellState {
     pub tree_drag: Option<TreeDragState>,
     pub tree_hovered_id: Option<String>,
     pub widget_maps: WidgetInteractionMaps<ActionDescriptor>,
+    window_measure_actions: WindowMeasureActionRegistry,
     pub pending_tree_drag: Option<(String, HashMap<String, String>)>,
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
@@ -1754,6 +1755,7 @@ impl ShellState {
             tree_drag: None,
             tree_hovered_id: None,
             widget_maps: WidgetInteractionMaps::default(),
+            window_measure_actions: WindowMeasureActionRegistry::new(),
             pending_tree_drag: None,
             tree_drag_origin: (0.0, 0.0),
             dock_drag: None,
@@ -4812,6 +4814,11 @@ impl ShellState {
                     return Ok(true);
                 }
             }
+            id if self.window_measure_actions.get(id).is_some_and(|binding| matches!(binding.kind, WindowMeasureActionKind::Select)) => {
+                let opening = !self.open_selects.get(id).copied().unwrap_or(false);
+                self.open_selects.insert(id.to_string(), opening);
+                return Ok(true);
+            }
             id if self.widget_maps.select_metas.contains_key(id) => {
                 let opening = !self.open_selects.get(id).copied().unwrap_or(false);
                 for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
@@ -4822,12 +4829,27 @@ impl ShellState {
             }
             id if id.contains(".item.") => {
                 if let Some((select_id, value)) = id.rsplit_once(".item.") {
+                    if let Some(binding) = self.window_measure_actions.get(select_id).filter(|binding| matches!(binding.kind, WindowMeasureActionKind::Select)) {
+                        let controller_id = binding.controller.as_str().to_owned();
+                        let action = binding.action.as_str().to_owned();
+                        self.open_selects.insert(select_id.to_string(), false);
+                        self.dispatch_action(ActionDescriptor { controller_id, action, args: crate::action_args_json!({ "value": value }) }).await?;
+                        return Ok(true);
+                    }
                     if let Some(action) = self.widget_maps.select_metas.get(select_id).cloned() {
                         self.open_selects.insert(select_id.to_string(), false);
                         self.dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: crate::action_args_json!({ "value": value }) }).await?;
                         return Ok(true);
                     }
                 }
+            }
+            id if self.window_measure_actions.get(id).is_some_and(|binding| matches!(binding.kind, WindowMeasureActionKind::Toggle(_))) => {
+                let Some(binding) = self.window_measure_actions.get(id) else { return Ok(false) };
+                let WindowMeasureActionKind::Toggle(pressed) = binding.kind else { return Ok(false) };
+                let controller_id = binding.controller.as_str().to_owned();
+                let action = binding.action.as_str().to_owned();
+                self.dispatch_action(ActionDescriptor { controller_id, action, args: crate::action_args_json!({ "pressed": !pressed }) }).await?;
+                return Ok(true);
             }
             id if self.widget_maps.toggle_metas.contains_key(id) => {
                 if let Some((pressed, action)) = self.widget_maps.toggle_metas.get(id).cloned() {
@@ -4911,6 +4933,10 @@ impl ShellState {
         if let Some(value) = self.widget_maps.slider_live_values.get(id).copied() {
             if let Some(meta) = self.widget_maps.slider_metas.get(id).cloned() {
                 self.dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: crate::action_args_json!({ "value": value }) }).await?;
+            } else if let Some(binding) = self.window_measure_actions.get(id).filter(|binding| matches!(binding.kind, WindowMeasureActionKind::Slider)) {
+                let controller_id = binding.controller.as_str().to_owned();
+                let action = binding.action.as_str().to_owned();
+                self.dispatch_action(ActionDescriptor { controller_id, action, args: crate::action_args_json!({ "value": value }) }).await?;
             }
         } else if let Some(value) = self.widget_maps.ring_live_values.get(id).copied() {
             if let Some(meta) = self.widget_maps.ring_metas.get(id).cloned() {
@@ -6046,6 +6072,54 @@ struct WindowMeasuresRailOutcome {
     reserve_width: f32,
 }
 
+const WINDOW_MEASURE_TRAVERSAL_CAPACITY: usize = 64;
+const WINDOW_MEASURE_ACTION_CAPACITY: usize = 64;
+
+#[derive(Clone, Copy)]
+enum WindowMeasureActionKind {
+    Select,
+    Slider,
+    Toggle(bool),
+}
+
+struct WindowMeasureActionBinding {
+    control: UiText,
+    controller: UiText,
+    action: UiText,
+    kind: WindowMeasureActionKind,
+}
+
+struct WindowMeasureActionRegistry {
+    slots: [Option<WindowMeasureActionBinding>; WINDOW_MEASURE_ACTION_CAPACITY],
+}
+
+struct WindowMeasureRenderFrame<'a> {
+    measure: &'a WindowMeasure,
+    inset: f32,
+}
+
+impl WindowMeasureActionRegistry {
+    fn new() -> Self {
+        Self { slots: std::array::from_fn(|_| None) }
+    }
+
+    fn try_upsert(&mut self, control: &str, descriptor: &ActionDescriptor, kind: WindowMeasureActionKind) -> Result<(), ()> {
+        let binding =
+            WindowMeasureActionBinding { control: UiText::try_from_str(control).map_err(|_| ())?, controller: UiText::try_from_str(&descriptor.controller_id).map_err(|_| ())?, action: UiText::try_from_str(&descriptor.action).map_err(|_| ())?, kind };
+        if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|slot| slot.control.as_str() == control)) {
+            *slot = Some(binding);
+            return Ok(());
+        }
+        let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) else { return Err(()) };
+        *slot = Some(binding);
+        Ok(())
+    }
+
+    fn get(&self, control: &str) -> Option<&WindowMeasureActionBinding> {
+        self.slots.iter().flatten().find(|slot| slot.control.as_str() == control)
+    }
+}
+
 fn window_overlay_max_width(content_w: f32, inset: f32) -> f32 {
     (content_w - inset * 2.0).max(0.0)
 }
@@ -6067,25 +6141,33 @@ fn floating_panel_width(width: f32, body: Rect, theme: &Theme) -> f32 {
     width.clamp(theme.panel_min_width, floating_panel_max_width(body, theme))
 }
 
-fn measure_window_measure_height(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measure: &WindowMeasure) -> f32 {
-    match measure {
-        WindowMeasure::Group { id, default_open, children, .. } => {
-            let open = !collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false));
-            let mut h = theme.control_height;
-            if open {
-                for child in children {
-                    h += measure_window_measure_height(theme, collapsed_sections, child);
+fn measure_window_measure_height(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measure: &WindowMeasure) -> Option<f32> {
+    let mut stack = UiFixedList::<&WindowMeasure, WINDOW_MEASURE_TRAVERSAL_CAPACITY>::default();
+    stack.try_push(measure).ok()?;
+    let mut height = 0.0;
+    while let Some(measure) = stack.pop() {
+        match measure {
+            WindowMeasure::Group { id, default_open, children, .. } => {
+                height += theme.control_height;
+                if !collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false)) {
+                    for child in children.iter().rev() {
+                        stack.try_push(child).ok()?;
+                    }
                 }
             }
-            h
+            WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => height += 16.0 + theme.control_height,
+            WindowMeasure::Toggle { .. } => height += theme.control_height,
         }
-        WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => 16.0 + theme.control_height,
-        WindowMeasure::Toggle { .. } => theme.control_height,
     }
+    Some(height)
 }
 
-fn measure_window_measures_body_height(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measures: &[WindowMeasure]) -> f32 {
-    measures.iter().map(|measure| measure_window_measure_height(theme, collapsed_sections, measure)).sum()
+fn measure_window_measures_body_height<'a>(theme: &Theme, collapsed_sections: &HashMap<String, bool>, measures: impl Iterator<Item = &'a WindowMeasure>) -> Option<f32> {
+    let mut height = 0.0;
+    for measure in measures {
+        height += measure_window_measure_height(theme, collapsed_sections, measure)?;
+    }
+    Some(height)
 }
 
 fn measure_engagement_body_height(theme: &Theme, engagement: &WindowEngagement) -> f32 {
@@ -10582,8 +10664,8 @@ impl ShellState {
         }
     }
 
-    fn measures_for_kind(&self, kind: &semio_framework::WindowKindDefinition) -> Vec<WindowMeasure> {
-        self.window_measures.get(&kind.id).filter(|measures| !measures.is_empty()).cloned().unwrap_or_else(|| kind.options.measures.clone())
+    fn measures_for_kind(kind: &semio_framework::WindowKindDefinition) -> &[WindowMeasure] {
+        kind.options.measures.as_slice()
     }
 
     fn engagement_for_kind(&self, kind: &semio_framework::WindowKindDefinition) -> Option<WindowEngagement> {
@@ -10603,8 +10685,11 @@ impl ShellState {
         kind: &semio_framework::WindowKindDefinition,
     ) -> WindowMeasuresRailOutcome {
         let inset = theme.gap_standard;
-        let active_utility = self.active_utility_by_window.get(window_id).cloned();
-        let (measures, _utility_options) = ui_wgpu::wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
+        let active_utility = self.active_utility_by_window.get(window_id).map(String::as_str);
+        let Ok(partition) = ui_wgpu::wgpu::partition_window_measures(Self::measures_for_kind(kind), active_utility) else {
+            return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
+        };
+        let measures = partition.general;
         if measures.is_empty() {
             return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
         }
@@ -10622,7 +10707,9 @@ impl ShellState {
             let max_w = window_overlay_max_width(content.w, inset);
             let default_w = *self.measures_width.get(window_id).unwrap_or(&theme.window_measures_default_width);
             let width = if expanded { content.w } else { default_w.clamp(theme.panel_min_width, theme.panel_max_width).min(max_w) };
-            let body_content_h = measure_window_measures_body_height(theme, &self.collapsed_sections, &measures);
+            let Some(body_content_h) = measure_window_measures_body_height(theme, &self.collapsed_sections, measures.iter().copied()) else {
+                return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
+            };
             let rail_h = if expanded {
                 content.h
             } else {
@@ -10653,10 +10740,11 @@ impl ShellState {
             });
             let body = Rect::new(rail.x + theme.gap_standard, rail.y + theme.panel_header_height + theme.gap_standard, rail.w - theme.gap_standard * 2.0, rail.h - theme.panel_header_height - theme.gap_standard * 2.0);
             let mut y = body.y;
-            for measure in &measures {
-                let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
-                self.render_window_measure(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, h), measure);
-                y += h;
+            for measure in measures.iter().copied() {
+                let Some(height) = self.render_window_measure_tree(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, body.h), measure) else {
+                    return WindowMeasuresRailOutcome { chip_hit: None, reserve_width: 0.0 };
+                };
+                y += height;
             }
             if !expanded {
                 let resize = Rect::new(rail.x - 3.0, rail.y, 6.0, rail.h);
@@ -10684,14 +10772,19 @@ impl ShellState {
         kind: &semio_framework::WindowKindDefinition,
     ) {
         let inset = theme.gap_standard;
-        let active_utility = self.active_utility_by_window.get(window_id).cloned();
-        let (_general, utility_options) = ui_wgpu::wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
+        let active_utility = self.active_utility_by_window.get(window_id).map(String::as_str);
+        let Ok(partition) = ui_wgpu::wgpu::partition_window_measures(Self::measures_for_kind(kind), active_utility) else {
+            return;
+        };
+        let utility_options = partition.utility_options;
         if utility_options.is_empty() {
             return;
         }
         (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
             let width = theme.window_measures_default_width.clamp(theme.panel_min_width, theme.panel_max_width).min(window_overlay_max_width(content.w, inset));
-            let body_content_h = measure_window_measures_body_height(theme, &self.collapsed_sections, &utility_options);
+            let Some(body_content_h) = measure_window_measures_body_height(theme, &self.collapsed_sections, utility_options.iter().copied()) else {
+                return;
+            };
             let card_h = body_content_h + theme.gap_standard * 2.0;
             let footer_reserve = theme.footer_height + inset;
             let rail = Rect::new(content.x + inset, content.y + content.h - card_h - footer_reserve, width, card_h);
@@ -10699,84 +10792,95 @@ impl ShellState {
             chrome.begin_glass_content(glass);
             let body = Rect::new(rail.x + theme.gap_standard, rail.y + theme.gap_standard, rail.w - theme.gap_standard * 2.0, rail.h - theme.gap_standard * 2.0);
             let mut y = body.y;
-            for measure in &utility_options {
-                let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
-                self.render_window_measure(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, h), measure);
-                y += h;
+            for measure in utility_options.iter().copied() {
+                let Some(height) = self.render_window_measure_tree(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, body.h), measure) else {
+                    return;
+                };
+                y += height;
             }
             chrome.end_glass_content();
         })(draw, overlay)
     }
 
-    fn render_window_measure(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, measure: &WindowMeasure) -> f32 {
-        use ui_wgpu::wgpu::component::layout::MeasureSelectItem;
-        use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
-        let height = measure_window_measure_height(theme, &self.collapsed_sections, measure);
+    fn render_window_measure_tree(
+        &mut self,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        bounds: Rect,
+        measure: &WindowMeasure,
+    ) -> Option<f32> {
+        let mut stack = UiFixedList::<WindowMeasureRenderFrame<'_>, WINDOW_MEASURE_TRAVERSAL_CAPACITY>::default();
+        stack.try_push(WindowMeasureRenderFrame { measure, inset: 0.0 }).ok()?;
         let mut y = bounds.y;
+        while let Some(frame) = stack.pop() {
+            let height = match frame.measure {
+                WindowMeasure::Group { .. } | WindowMeasure::Toggle { .. } => theme.control_height,
+                WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => theme.control_height + 16.0,
+            };
+            let leaf_bounds = Rect::new(bounds.x + frame.inset, y, (bounds.w - frame.inset).max(0.0), height);
+            self.render_window_measure_one(draw, overlay, atlas, icons, input, theme, leaf_bounds, frame.measure);
+            y += height;
+            if let WindowMeasure::Group { id, default_open, children, .. } = frame.measure {
+                let open = !self.collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false));
+                if open {
+                    for child in children.iter().rev() {
+                        stack.try_push(WindowMeasureRenderFrame { measure: child, inset: frame.inset + 12.0 }).ok()?;
+                    }
+                }
+            }
+        }
+        Some(y - bounds.y)
+    }
+
+    fn render_window_measure_one(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, measure: &WindowMeasure) {
+        use ui_wgpu::wgpu::widgets::{render_window_measure_select, render_window_measure_slider, render_window_measure_toggle};
+        let y = bounds.y;
         match measure {
-            WindowMeasure::Group { id, label, default_open, children, .. } => {
+            WindowMeasure::Group { id, label, default_open, .. } => {
                 let open = !self.collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false));
                 chrome_text(draw, atlas, input, theme, &format!("{} {}", if open { "v" } else { ">" }, label), bounds.x, y + 14.0, theme.font_size_small, theme.text);
                 input.register_hit(HitTarget { rect: Rect::new(bounds.x, y, bounds.w, theme.control_height), event: None, control_id: Some(format!("shell.measure.group.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
-                y += theme.control_height;
-                if open {
-                    for child in children {
-                        let child_h = measure_window_measure_height(theme, &self.collapsed_sections, child);
-                        self.render_window_measure(draw, overlay, atlas, icons, input, theme, Rect::new(bounds.x + 12.0, y, bounds.w - 12.0, child_h), child);
-                        y += child_h;
-                    }
-                }
             }
             WindowMeasure::Select { id, label, value, items, on_change } => {
                 if let Some(label) = label {
                     chrome_text(draw, atlas, input, theme, label, bounds.x, y + 14.0, theme.font_size_small, theme.text_muted);
                 }
-                let node = WidgetNode::Select {
-                    id: id.clone(),
-                    value: value.clone(),
-                    items: items.iter().map(|item: &MeasureSelectItem| ui_wgpu::wgpu::widgets::SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
-                    placeholder: None,
-                    on_change: Some(on_change.clone()),
-                };
+                let _ = self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Select);
                 let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
                 let scroll_offsets = &mut self.scroll_offsets;
                 let collapsed_sections = &mut self.collapsed_sections;
                 let open_selects = &mut self.open_selects;
                 let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-                render_widget(&node, rect, &mut ctx);
+                render_window_measure_select(id, value, items, rect, &mut ctx);
             }
             WindowMeasure::Slider { id, label, value, min, max, step, ready, loading: _, waiting: _, disabled, reveal: _, on_change } => {
                 if let Some(label) = label {
                     chrome_text(draw, atlas, input, theme, label, bounds.x, y + 14.0, theme.font_size_small, theme.text_muted);
                 }
-                let node = WidgetNode::Slider {
-                    id: id.clone(),
-                    value: *value,
-                    min: *min,
-                    max: *max,
-                    step: step.unwrap_or(0.01),
-                    ready: *ready,
-                    disabled: disabled.unwrap_or(false),
-                    on_change: if disabled.unwrap_or(false) { None } else { Some(on_change.clone()) },
-                };
+                if !disabled.unwrap_or(false) {
+                    let _ = self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Slider);
+                }
                 let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
                 let scroll_offsets = &mut self.scroll_offsets;
                 let collapsed_sections = &mut self.collapsed_sections;
                 let open_selects = &mut self.open_selects;
                 let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-                render_widget(&node, rect, &mut ctx);
+                render_window_measure_slider(id, *value, *min, *max, step.unwrap_or(0.01), *ready, disabled.unwrap_or(false), rect, &mut ctx);
             }
             WindowMeasure::Toggle { id, icon_id, label, pressed, text, on_change } => {
-                let node = WidgetNode::Toggle { id: id.clone(), icon_id: icon_id.clone(), pressed: *pressed, text: text.clone().or(label.clone()), on_change: Some(on_change.clone()) };
+                let _ = self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Toggle(*pressed));
                 let rect = Rect::new(bounds.x, y, bounds.w, theme.control_height);
                 let scroll_offsets = &mut self.scroll_offsets;
                 let collapsed_sections = &mut self.collapsed_sections;
                 let open_selects = &mut self.open_selects;
                 let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, None);
-                render_widget(&node, rect, &mut ctx);
+                render_window_measure_toggle(id, icon_id.clone(), *pressed, text.as_deref().or(label.as_deref()), rect, &mut ctx);
             }
         }
-        height
     }
 
     fn render_window_engagement_rail(

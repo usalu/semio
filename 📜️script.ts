@@ -3584,7 +3584,22 @@ function toolJobUniversalRetainedOwnershipExact(jobRuntime: string, nativeIo: st
 
 //#region 🧮️P6hFemNumericalMicrocursors
 /** 🧮️ Phase-6h FEM numerical hot-loop, fixed-owner, identity and hostile-law contract. */
-function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analyses: string, model: string, elements: string, session: string): boolean {
+function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analyses: string, model: string, elements: string, session: string, runtime: string): boolean {
+  const namedBlock = (source: string, signature: string) => {
+    const start = source.indexOf(signature);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(source, open);
+  };
+  const ordered = (source: string, tokens: readonly string[]) => {
+    let cursor = 0;
+    for (const token of tokens) {
+      const next = source.indexOf(token, cursor);
+      if (next < 0) return false;
+      cursor = next + token.length;
+    }
+    return true;
+  };
+  const loopFree = (block: { body: string } | undefined) => !!block && !/\b(?:while|for)\b/.test(block.body);
   const ldltStart = sparse.indexOf("impl InteractiveJob for LdltJob");
   const ldltOpen = ldltStart < 0 ? -1 : sparse.indexOf("{", ldltStart);
   const ldlt = ldltOpen < 0 ? undefined : toolJobRustBlock(sparse, ldltOpen);
@@ -3597,6 +3612,28 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
   const elementStart = analyses.indexOf("fn advance_element_build(&mut self)");
   const elementOpen = elementStart < 0 ? -1 : analyses.indexOf("{", elementStart);
   const element = elementOpen < 0 ? undefined : toolJobRustBlock(analyses, elementOpen);
+  const ldltCheckpoint = namedBlock(sparse, "fn advance_checkpoint_entry(state: &LdltCheckpoint");
+  const subspaceCheckpoint = namedBlock(sparse, "fn advance_checkpoint_entry(state: &SubspaceCheckpoint");
+  const ldltOutput = namedBlock(sparse, "fn advance_output_entry(");
+  const subspacePreview = namedBlock(sparse, "fn advance_preview_entry(");
+  const ldltRestore = namedBlock(sparse, "fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault>");
+  const secondRestoreStart = sparse.indexOf("fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault>", (ldltRestore?.end ?? 0) + 1);
+  const subspaceRestore = secondRestoreStart < 0 ? undefined : toolJobRustBlock(sparse, sparse.indexOf("{", secondRestoreStart));
+  const ldltRestoreImpl = namedBlock(sparse, "impl LdltRestoreCursor");
+  const subspaceRestoreImpl = namedBlock(sparse, "impl SubspaceRestoreCursor");
+  const restoreHelpers = ["fn restore_u32_entry(", "fn restore_usize_entry(", "fn restore_f64_entry(", "fn restore_pair_entry(", "fn restore_matrix_entry("].map((signature) => namedBlock(sparse, signature));
+  const ownerWriters = ["fn advance_u32_owner(", "fn advance_u64_owner(", "fn advance_u64_values(", "fn advance_f64_owner(", "fn advance_pair_owner(", "fn advance_matrix_owner("].map((signature) => namedBlock(sparse, signature));
+  const meshStep = namedBlock(mesh, "impl InteractiveJob for MeshJob");
+  const faceCursor = namedBlock(mesh, "fn advance_face_classification(&mut self)");
+  const meshLaw = namedBlock(mesh, "fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affected_adjacencies()");
+  const elementLaw = namedBlock(analyses, "fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws()");
+  const elementAdmissionLaw = namedBlock(analyses, "fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing()");
+  const identityMatches = namedBlock(sparse, "fn matches(self, operation: Operation) -> bool");
+  const stagedWriterStart = runtime.indexOf("impl RetainedJobPayloadWriter");
+  const stagedCloseStart = runtime.indexOf("pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> JobPayloadCloseStep", stagedWriterStart);
+  const stagedClose = stagedCloseStart < 0 ? undefined : toolJobRustBlock(runtime, runtime.indexOf("{", stagedCloseStart));
+  const stagedBegin = namedBlock(runtime, "pub fn begin_staged_page(&mut self");
+  const stagedCommit = namedBlock(runtime, "pub fn commit_staged_page(&mut self)");
   const ldltStages = ["ReserveColumn", "SourceEntry", "ContributorLookup", "ContributorEntry", "PivotRead", "DiagonalCommit", "EmitRow", "PublishColumn", "CompleteColumn"];
   const subspaceStages = [
     "ReserveIteration",
@@ -3657,17 +3694,17 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
     sparse.includes("struct NumericalPageCursor") &&
     sparse.includes("pub struct LdltRestoreCursor") &&
     sparse.includes("pub struct SubspaceRestoreCursor") &&
-    sparse.includes("fn decode_page(&mut self, bytes: &[u8])") &&
+    sparse.includes("fn decode_page_entry(&mut self, bytes: &[u8])") &&
     sparse.includes("pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize)") &&
     sparse.includes("pub fn terminal_is_empty(&self) -> bool") &&
     sparse.includes("reserve_lane: u8") &&
     sparse.includes("fn advance_reservation(&mut self)") &&
     sparse.includes("initialization_cursor: usize") &&
     sparse.includes("retiring_work: Option<SubspaceWork>") &&
-    sparse.includes("fn advance_preview_publication(state: &mut SubspaceCheckpoint") &&
-    sparse.includes("fn advance_checkpoint_page(state: &LdltCheckpoint") &&
-    sparse.includes("fn advance_checkpoint_page(state: &SubspaceCheckpoint") &&
-    sparse.includes("initialized_remaining_mut()") &&
+    sparse.includes("fn advance_preview_entry(state: &mut SubspaceCheckpoint") &&
+    sparse.includes("fn advance_checkpoint_entry(state: &LdltCheckpoint") &&
+    sparse.includes("fn advance_checkpoint_entry(state: &SubspaceCheckpoint") &&
+    sparse.includes("begin_staged_page(context)") &&
     sparse.includes("JobPayloadStream::CheckpointState") &&
     sparse.includes("terminal_writer: Option<RetainedJobPayloadWriter>") &&
     sparse.includes("NumericalCheckpointFault::Truncated") &&
@@ -3684,8 +3721,7 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
     (elements.match(/fn mounted_stiffness_cell\(/g) ?? []).length === 3 &&
     session.includes("MountedOwnerClaim { class: MountedOwnerClass::MeshEdgeIndexVectors, roots: 3") &&
     !!ldlt &&
-    ldlt.body.includes("context.should_yield()") &&
-    ldlt.body.includes("context.consume_fuel(1)") &&
+    ordered(ldlt.body, ["context.should_yield()", "context.consume_fuel(1)", "writer.staged_page_len().is_none()", "return match writer.begin_staged_page(context)", "advance_checkpoint_entry"]) &&
     !ldlt.body.includes("ldlt_column(") &&
     !ldlt.body.includes("while ") &&
     !ldlt.body.includes("unwrap_or_default") &&
@@ -3693,8 +3729,7 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
     !ldlt.body.includes("serde_json") &&
     !ldlt.body.includes("expect(") &&
     !!subspace &&
-    subspace.body.includes("context.should_yield()") &&
-    subspace.body.includes("context.consume_fuel(1)") &&
+    ordered(subspace.body, ["context.should_yield()", "context.consume_fuel(1)", "writer.staged_page_len().is_none()", "return match writer.begin_staged_page(context)", "advance_checkpoint_entry"]) &&
     !subspace.body.includes("self.iterate(") &&
     !subspace.body.includes("while ") &&
     !subspace.body.includes("serde_json::to_vec(&self.preview())") &&
@@ -3705,87 +3740,87 @@ function toolJobFemNumericalMicrocursorExact(sparse: string, mesh: string, analy
     !constraint.includes(".edges()") &&
     !!element &&
     element.body.includes("mounted_stiffness_cell") &&
-    !element.body.includes("stiffness_global(")
+    !element.body.includes("stiffness_global(") &&
+    ownerWriters.every((block) => loopFree(block) && block?.body.includes("cursor.item += 1") && block.body.includes("return Ok(false)")) &&
+    restoreHelpers.every(loopFree) &&
+    loopFree(ldltCheckpoint) &&
+    loopFree(subspaceCheckpoint) &&
+    loopFree(ldltOutput) &&
+    loopFree(subspacePreview) &&
+    !!ldltCheckpoint && ordered(ldltCheckpoint.body, ["advance_numerical_page_header", "advance_", "writer.commit_staged_page()", "cursor.item = 0", "cursor.owner = 0"]) &&
+    !!subspaceCheckpoint && ordered(subspaceCheckpoint.body, ["advance_numerical_page_header", "advance_", "writer.commit_staged_page()", "cursor.item = 0", "cursor.owner = 0"]) &&
+    !!ldltRestore && !ldltRestore.body.includes("[0u8;") && !ldltRestore.body.includes("copy_from_slice(source)") && ldltRestore.body.includes("page_entry") &&
+    !!subspaceRestore && !subspaceRestore.body.includes("[0u8;") && !subspaceRestore.body.includes("copy_from_slice(source)") && subspaceRestore.body.includes("page_entry") &&
+    !!ldltRestoreImpl && !!subspaceRestoreImpl && !ldltRestoreImpl.body.includes("copy_from_slice(source)") && !subspaceRestoreImpl.body.includes("copy_from_slice(source)") && ldltRestoreImpl.body.includes("payload.take()") && subspaceRestoreImpl.body.includes("payload.take()") &&
+    !!identityMatches && identityMatches.body.includes("self == Self::from_operation(operation)") &&
+    !!meshStep && loopFree(meshStep) && ordered(meshStep.body, ["context.should_yield()", "context.consume_fuel(1)", "match self.stage"]) && meshStep.body.includes("MeshJobStage::CountInput") && meshStep.body.includes("triangulation.insert_next();") &&
+    !!faceCursor && loopFree(faceCursor) && faceCursor.body.includes("FaceClassificationStage::HoleEdge") && faceCursor.body.includes("self.point_index.get(cursor.lookup)") &&
+    !!meshLaw && meshLaw.body.includes("job.step(&mut deadline)") && meshLaw.body.includes("job.step(&mut stale)") && meshLaw.body.includes("job.step(&mut cancelled)") && meshLaw.body.includes("maximum_micros < 8_000") && !meshLaw.body.includes("job.advance_constraint_recovery()") &&
+    !!elementLaw && elementLaw.body.includes("AssemblyJobConstruction::new_owned") && elementLaw.body.includes("Bar2") && elementLaw.body.includes("BeamEb2") && elementLaw.body.includes("Tri3Cst") && elementLaw.body.includes("mounted stiffness mismatch") && elementLaw.body.includes("maximum_micros < 8_000") &&
+    !!elementAdmissionLaw && elementAdmissionLaw.body.includes("reserve_exact_owner_page") && elementAdmissionLaw.body.includes("observed - 1") && elementAdmissionLaw.body.includes("rejected.as_ptr()") && !elementAdmissionLaw.body.includes("include_str!") &&
+    !!stagedBegin && stagedBegin.body.includes("self.admit_page(cx)?.stage()") &&
+    !!stagedCommit && stagedCommit.body.includes("self.staged.take()") &&
+    !!stagedClose && ordered(stagedClose.body, ["self.staged.as_ref()", "ledger.release(stream)", "self.rejected.is_some()", "payload.close_step"])
   );
 }
 
 /** 🧪️ Faithful P6h false-positive mutations. */
-function toolJobFemNumericalMicrocursorSelfTests(): number {
-  const sparse = [
-    "const LDLT_MAXIMUM_ORDER: usize = 40; const SUBSPACE_MAXIMUM_ORDER: usize = 40; const SUBSPACE_MAXIMUM_COLUMNS: usize = 40;",
-    "struct NumericalCheckpointIdentity { operation: u64, revision: u64, generation: u64, seed: u64 }",
-    "revision: operation.base_revision.0; generation: operation.generation.0; seed: operation.seed;",
-    'b"FEMLCP1\\0"; b"FEMSCP1\\0"; NUMERICAL_CHECKPOINT_VERSION; struct NumericalPageCursor; pub struct LdltRestoreCursor; pub struct SubspaceRestoreCursor;',
-    "fn decode_page(&mut self, bytes: &[u8]) {} pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) {} pub fn terminal_is_empty(&self) -> bool {}",
-    "reserve_lane: u8; fn advance_reservation(&mut self) {} initialization_cursor: usize; retiring_work: Option<SubspaceWork>; fn advance_preview_publication(state: &mut SubspaceCheckpoint) {} fn advance_checkpoint_page(state: &LdltCheckpoint) {} fn advance_checkpoint_page(state: &SubspaceCheckpoint) {}",
-    "initialized_remaining_mut(); JobPayloadStream::CheckpointState; terminal_writer: Option<RetainedJobPayloadWriter>; NumericalCheckpointFault::Truncated; interrupted_restore.close_step(1, usize::MAX);",
-    "ReserveColumn SourceEntry ContributorLookup ContributorEntry PivotRead DiagonalCommit EmitRow PublishColumn CompleteColumn",
-    "ReserveIteration ApplyOperatorColumnRow FactorForwardEntry FactorDiagonalEntry FactorBackwardEntry OrthogonalizePairElement NormalizeColumnElement ProjectedMatrixCellEntry JacobiFindPairCell JacobiRotateCell JacobiConvergenceCell ModeSortCompare ModePermuteElement ResidualColumnRow ConvergenceMode PublishIteration",
-    "p6h_ldlt_microcursor_max_plus_one_cancel_deadline_stale_replay_and_numerical_parity",
-    "p6h_subspace_cancellation_is_observed_at_every_nested_stage_and_worker_replay_is_exact",
-    "impl InteractiveJob for LdltJob { fn step() { context.should_yield(); context.consume_fuel(1); } }",
-    "impl InteractiveJob for SubspaceIterationJob { fn step() { context.should_yield(); context.consume_fuel(1); } }",
-  ].join("\n");
-  const mesh = [
-    "enum ConstraintRecoveryStage { ReserveConstraintWorkspace, IndexTriangleEdge, SearchConstraintEdge, ClassifyIntersection, SelectDeterministicFlip, ValidateFlip, ApplyFlip, RetireFormerEdge, PublishConstraintProgress, ConstraintComplete }",
-    "indexed_constraint_edges: Vec<IndexedConstraintEdge>",
-    "MeshJobStage::ConstrainBoundary => { advance_constraint_recovery(); } MeshJobStage::ReservePointIndex => {}",
-    "p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affected_adjacencies",
-  ].join("\n");
-  const analyses = [
-    "ReferenceQuadraturePoint ShapeFunctionDerivativeScalar JacobianCell DeterminantInverseCell StrainDisplacementCell ConstitutiveCell LocalStiffnessMultiplyCell BodyTractionLoadCell LocalToGlobalTripletCell",
-    "fn advance_element_build(&mut self) { element.mounted_stiffness_cell(ctx, row, column); }",
-    "p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws",
-  ].join("\n");
-  const model = "fn mounted_stiffness_cell(&self, _ctx: &ElementContext, _row: usize, _column: usize) -> Option<f64> { None }";
-  const elements = "fn mounted_stiffness_cell() {} fn mounted_stiffness_cell() {} fn mounted_stiffness_cell() {} p6h_mounted_element_fixed_schema_cells_match_batch_and_reject_maximum_plus_one";
-  const session = "MountedOwnerClaim { class: MountedOwnerClass::MeshEdgeIndexVectors, roots: 3 }";
-  const exact = (s = sparse, m = mesh, a = analyses, mo = model, e = elements, se = session) => toolJobFemNumericalMicrocursorExact(s, m, a, mo, e, se);
-  if (!exact()) throw new Error("[verify interactivity tool-jobs p6h] valid fixture was falsely rejected.");
+function toolJobFemNumericalMicrocursorSelfTests(sparse: string, mesh: string, analyses: string, model: string, elements: string, session: string, runtime: string): number {
+  const exact = (s = sparse, m = mesh, a = analyses, mo = model, e = elements, se = session, r = runtime) => toolJobFemNumericalMicrocursorExact(s, m, a, mo, e, se, r);
+  if (!exact()) throw new Error("[verify interactivity tool-jobs p6h] live structural fixture was falsely rejected.");
   const mutations: readonly [string, () => boolean][] = [
-    ["LDLT whole column", () => exact(sparse.replace("context.consume_fuel(1);", "ldlt_column();"))],
-    ["LDLT missing source cursor", () => exact(sparse.replace("SourceEntry", "SourceBatch"))],
+    ["LDLT whole column", () => exact(sparse.replace("self.advance_column_microcursor().is_err()", "ldlt_column(&self.state.a, self.state.column).is_err()"))],
+    ["LDLT missing source cursor", () => exact(sparse.replaceAll("SourceEntry", "SourceBatch"))],
     ["LDLT missing max+1", () => exact(sparse.replace("const LDLT_MAXIMUM_ORDER: usize = 40;", ""))],
-    ["LDLT silent default", () => exact(sparse.replace("context.consume_fuel(1);", "context.consume_fuel(1); unwrap_or_default();"))],
+    ["LDLT silent default", () => exact(sparse.replace("if self.advance_column_microcursor().is_err()", "unwrap_or_default(); if self.advance_column_microcursor().is_err()"))],
     ["checkpoint revision loss", () => exact(sparse.replace("revision: operation.base_revision.0", "revision: 0"))],
     ["checkpoint seed loss", () => exact(sparse.replace("seed: operation.seed", "seed: 0"))],
     ["LDLT constructor preallocation restored", () => exact(sparse.replace("reserve_lane: u8", "workspace: Vec::with_capacity(n)"))],
-    [
-      "subspace whole iteration",
-      () =>
-        exact(
-          sparse.replace(
-            "impl InteractiveJob for SubspaceIterationJob { fn step() { context.should_yield(); context.consume_fuel(1); } }",
-            "impl InteractiveJob for SubspaceIterationJob { fn step() { context.should_yield(); self.iterate(); context.consume_fuel(1); } }",
-          ),
-        ),
-    ],
-    ["subspace missing Jacobi cell", () => exact(sparse.replace("JacobiRotateCell", "JacobiRotateSweep"))],
+    ["subspace whole iteration", () => exact(sparse.replace("let result = match self.state.work.stage", "self.iterate(); let result = match self.state.work.stage"))],
+    ["subspace missing Jacobi cell", () => exact(sparse.replaceAll("JacobiRotateCell", "JacobiRotateSweep"))],
     ["subspace missing max+1", () => exact(sparse.replace("const SUBSPACE_MAXIMUM_ORDER: usize = 40;", ""))],
     ["subspace missing worker replay law", () => exact(sparse.replace("p6h_subspace_cancellation_is_observed_at_every_nested_stage_and_worker_replay_is_exact", "subspace_smoke"))],
-    ["subspace constructor preallocation restored", () => exact(sparse.replace("initialization_cursor: usize", "let x = MatD::zeros(n, m)"))],
-    ["subspace whole preview serializer restored", () => exact(sparse.replace("fn advance_preview_publication(state: &mut SubspaceCheckpoint) {}", "fn publish() { serde_json::to_vec(&self.preview()); }"))],
+    ["subspace constructor preallocation restored", () => exact(sparse.replace("initialization_cursor: usize", "preallocated: MatD"))],
+    ["subspace whole preview serializer restored", () => exact(sparse.replace("fn advance_preview_entry(state: &mut SubspaceCheckpoint", "fn advance_preview_publication(state: &mut SubspaceCheckpoint"))],
     ["subspace displaced work dropped recursively", () => exact(sparse.replace("retiring_work: Option<SubspaceWork>", "self.state.work = SubspaceWork::empty()"))],
-    ["checkpoint truncation law omitted", () => exact(sparse.replace("NumericalCheckpointFault::Truncated", "NumericalCheckpointFault::Field"))],
-    ["LDLT checkpoint tag omitted", () => exact(sparse.replace('b"FEMLCP1\\0"', 'b"FEMLCP0\\0"'))],
-    ["subspace checkpoint tag omitted", () => exact(sparse.replace('b"FEMSCP1\\0"', 'b"FEMSCP0\\0"'))],
+    ["checkpoint truncation law omitted", () => exact(sparse.replaceAll("NumericalCheckpointFault::Truncated", "NumericalCheckpointFault::Field"))],
+    ["LDLT checkpoint tag omitted", () => exact(sparse.replaceAll('b"FEMLCP1\\0"', 'b"FEMLCP0\\0"'))],
+    ["subspace checkpoint tag omitted", () => exact(sparse.replaceAll('b"FEMSCP1\\0"', 'b"FEMSCP0\\0"'))],
     ["checkpoint page cursor omitted", () => exact(sparse.replace("struct NumericalPageCursor", "struct NumericalBuffer"))],
     ["LDLT restore cursor omitted", () => exact(sparse.replace("pub struct LdltRestoreCursor", "struct LdltReplay"))],
     ["subspace restore cursor omitted", () => exact(sparse.replace("pub struct SubspaceRestoreCursor", "struct SubspaceReplay"))],
-    ["retained checkpoint stream omitted", () => exact(sparse.replace("JobPayloadStream::CheckpointState", "JobPayloadStream::Preview"))],
-    ["direct page backing omitted", () => exact(sparse.replace("initialized_remaining_mut()", "whole_checkpoint_bytes()"))],
+    ["retained checkpoint stream omitted", () => exact(sparse.replaceAll("JobPayloadStream::CheckpointState", "JobPayloadStream::Preview"))],
+    ["direct page backing omitted", () => exact(sparse.replace("fn restore_u32_entry(", "fn restore_u32_entry_with_whole_page_copy("))],
     ["terminal result writer omitted", () => exact(sparse.replace("terminal_writer: Option<RetainedJobPayloadWriter>", "terminal_bytes: Vec<u8>"))],
-    ["restore interrupted close omitted", () => exact(sparse.replace("interrupted_restore.close_step(1, usize::MAX)", "drop(interrupted_restore)"))],
+    ["restore interrupted close omitted", () => exact(sparse.replaceAll("interrupted_restore.close_step(1, usize::MAX)", "drop(interrupted_restore)"))],
     ["whole publication buffer restored", () => exact(`${sparse}\npublication_bytes preview_bytes`)],
     ["mesh whole recovery", () => exact(sparse, mesh.replace("advance_constraint_recovery()", "recover_constraint()"))],
-    ["mesh rebuilt edge collection", () => exact(sparse, mesh.replace("advance_constraint_recovery();", "advance_constraint_recovery(); triangulation.edges();"))],
-    ["mesh missing edge retirement", () => exact(sparse, mesh.replace("RetireFormerEdge", "ForgetFormerEdge"))],
-    ["mesh owner credit lost", () => exact(sparse, mesh, analyses, model, elements, session.replace("roots: 3", "roots: 2"))],
-    ["element whole matrix", () => exact(sparse, mesh, analyses.replace("element.mounted_stiffness_cell(ctx, row, column)", "element.stiffness_global(ctx)"))],
-    ["element missing multiply cell", () => exact(sparse, mesh, analyses.replace("LocalStiffnessMultiplyCell", "LocalStiffnessMatrix"))],
-    ["element family omitted", () => exact(sparse, mesh, analyses, model, elements.replace("fn mounted_stiffness_cell() {} ", ""))],
+    ["mesh rebuilt edge collection", () => exact(sparse, mesh.replace("match self.advance_constraint_recovery()", "triangulation.edges(); match self.advance_constraint_recovery()"))],
+    ["mesh missing edge retirement", () => exact(sparse, mesh.replaceAll("RetireFormerEdge", "ForgetFormerEdge"))],
+    ["mesh owner credit lost", () => exact(sparse, mesh, analyses, model, elements, session.replaceAll("roots: 3", "roots: 2"))],
+    ["element whole matrix", () => exact(sparse, mesh, analyses.replace("element.mounted_stiffness_cell(&context, row, column)", "Some(element.stiffness_global(&context).get(row, column))"))],
+    ["element missing multiply cell", () => exact(sparse, mesh, analyses.replaceAll("LocalStiffnessMultiplyCell", "LocalStiffnessMatrix"))],
+    ["element family omitted", () => exact(sparse, mesh, analyses, model, elements.replace("fn mounted_stiffness_cell(", "fn removed_mounted_stiffness_cell("))],
     ["element parity law omitted", () => exact(sparse, mesh, analyses, model, elements.replace("p6h_mounted_element_fixed_schema_cells_match_batch_and_reject_maximum_plus_one", "element_smoke"))],
     ["element interruption law omitted", () => exact(sparse, mesh, analyses.replace("p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws", "element_smoke"))],
+    ["checkpoint owner page loop", () => exact(sparse.replace("if let Some(value) = values.get(cursor.item)", "while let Some(value) = values.get(cursor.item)"))],
+    ["checkpoint pair page loop", () => exact(sparse.replace("if let Some((index, value)) = values.get(cursor.item)", "while let Some((index, value)) = values.get(cursor.item)"))],
+    ["restore scalar page loop", () => exact(sparse.replace("if item < length {\n        owner.push(read_checkpoint_u32", "while item < length {\n        owner.push(read_checkpoint_u32"))],
+    ["restore contiguous page copy", () => exact(sparse.replace("self.decode_page_entry(source)", "{ let mut bytes = [0u8; 16384]; bytes[..source.len()].copy_from_slice(source); self.decode_page_entry(&bytes[..source.len()]) }"))],
+    ["weak checkpoint identity", () => exact(sparse.replace("self == Self::from_operation(operation)", "self.operation == operation.operation.0"))],
+    ["checkpoint page admission fallthrough", () => exact(sparse.replace("return match writer.begin_staged_page(context)", "match writer.begin_staged_page(context)"))],
+    ["mesh post-work fuel", () => exact(sparse, mesh.replace("context.consume_fuel(1);\n        match self.stage", "match self.stage"))],
+    ["mesh prepare batch loop", () => exact(sparse, mesh.replace("let complete = match self.preparation", "for _ in 0..8 {} let complete = match self.preparation"))],
+    ["mesh insertion batch loop", () => exact(sparse, mesh.replace("triangulation.insert_next();", "while triangulation.insert_next() {}"))],
+    ["mesh whole point lookup", () => exact(sparse, mesh.replace("self.point_index.get(cursor.lookup)", "self.point_index.iter().find(|_| true)"))],
+    ["mesh decorative direct recovery law", () => exact(sparse, mesh.replaceAll("job.step(&mut context)", "job.advance_constraint_recovery()"))],
+    ["element borrowed construction law", () => exact(sparse, mesh, analyses.replace("AssemblyJobConstruction::new_owned(Arc::new(model), operation, 1)", "AssemblyJob::new(&model, operation, 1)"))],
+    ["element Bar2 law removed", () => exact(sparse, mesh, analyses.replace("let bar = Bar2", "let bar = AxialSpring"))],
+    ["element numerical identity removed", () => exact(sparse, mesh, analyses.replace("mounted stiffness mismatch", "mounted stiffness smoke"))],
+    ["element max+1 production admission bypassed", () => exact(sparse, mesh, analyses.replace("reserve_exact_owner_page(&mut rejected", "reserve_exact_owner_smoke(&mut rejected"))],
+    ["element rejected backing identity omitted", () => exact(sparse, mesh, analyses.replaceAll("rejected.as_ptr()", "std::ptr::null()"))],
+    ["staged page close omitted", () => exact(sparse, mesh, analyses, model, elements, session, runtime.replace("if let Some((ledger, _, length)) = self.staged.as_ref()", "if false"))],
+    ["staged page transfer omitted", () => exact(sparse, mesh, analyses, model, elements, session, runtime.replaceAll("self.staged.take()", "None"))],
   ];
   for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs p6h] mutation ${name} was falsely accepted.`);
   return mutations.length;
@@ -5285,7 +5320,7 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("const GUEST_RELAY_MOUNTED_SLOTS: usize = 16", "slots: Vec<GuestRelayMountedSession>"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-fixed-mounted-registry-removal was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("self.relay_registry.mount(index, mounted_generation, owner);", "loop { session.step().await; }"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-run-loop-restoration was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
-  return fixtures.length + 360 + toolJobFemNumericalMicrocursorSelfTests();
+  return fixtures.length + 360;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -5456,7 +5491,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobActorProgressOverlayExact(actor, shardHost, wgpuHost)) failures.push("actor Job publications lack a fixed preview/progress overlay, independent autonomous-shard authority, presenter-adopted ACK, exact rejected-owner handback, or app/fault/realm retirement");
   if (!toolJobUniversalRetainedOwnershipExact(jobRuntime, nativeIo, wgpuHost, allRustFiles)) failures.push("universal retained job ownership still permits optional job close, post-work fault allocation, legacy drains/constructors, resizable Native I/O outputs, or future-driven mounted session progress");
   if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, fem2dModel, femMesh, femPluginRoot, femGlue, reactorJobs, femAnalyses, reactor, store, plugin)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, mounted visual/mesh/stiffness backing, exact snapshot-return witness, or live visual consumer");
-  if (!toolJobFemNumericalMicrocursorExact(femSparse, femMesh, femAnalyses, femEngineModel, femElements2d, fem2dSession)) failures.push("P6h FEM numerical LDLT, subspace, constraint recovery, or fixed-schema stiffness loops lack exact persistent microcursors, owner credit, identity, or hostile laws");
+  if (!toolJobFemNumericalMicrocursorExact(femSparse, femMesh, femAnalyses, femEngineModel, femElements2d, fem2dSession, jobRuntime)) failures.push("P6h FEM numerical LDLT, subspace, constraint recovery, or fixed-schema stiffness loops lack exact persistent microcursors, owner credit, identity, or hostile laws");
   if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
   if (!toolJobMediaExportBounded(`${plugin}\n${jobRuntime}`)) failures.push("owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions");
   if (!toolJobExternalCancellationOwned(plugin)) failures.push("typed jobs lack externally reachable operation/document/app/generation cancellation through close and supersession");
@@ -5711,14 +5746,15 @@ export class VerifyScript extends Script {
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   private runToolJobCoverage(args: string[]): void {
     if (args.includes("--p6h-only")) {
-      const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests() : 0;
       const session = policyReadFileSafe(this.root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
       const sparse = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs");
       const mesh = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs");
       const analyses = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs");
       const model = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs");
       const elements = policyReadFileSafe(this.root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️component.rs");
-      if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");
+      const runtime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
+      const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(sparse, mesh, analyses, model, elements, session, runtime) : 0;
+      if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session, runtime)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");
       console.log(`[verify interactivity tool-jobs p6h] live-source clean; hostile-mutations=${mutations}.`);
       return;
     }
@@ -6189,6 +6225,8 @@ const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products
 const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs";
 const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs";
 const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs";
+const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs";
+const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs";
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
@@ -6526,7 +6564,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
   ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn;
   const reactorPatches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
@@ -6928,6 +6966,13 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
   const drive = reconcile.slice(driveStart, driveEnd);
   const turnPatchBridgeStart = reactor.indexOf("let owner = std::mem::take(&mut result.ui_patches)");
   const turnPatchBridge = reactor.slice(turnPatchBridgeStart, reactor.indexOf("//#endregion 🔀️BudgetBridge", turnPatchBridgeStart));
+  const rendererRetainedStart = reactor.indexOf("struct RetainedDocumentBuild");
+  const rendererRetained = reactor.slice(rendererRetainedStart, reactor.indexOf("struct PendingJobProgressPresentation", rendererRetainedStart));
+  const rendererSequenceStart = reactor.indexOf("struct RendererSequenceAuthority");
+  const rendererSequence = reactor.slice(rendererSequenceStart, reactor.indexOf("const JOB_PROGRESS_PRESENTATION_CAPACITY", rendererSequenceStart));
+  const windowMeasureStart = reactor.indexOf("fn measures_for_kind");
+  const windowMeasure = reactor.slice(windowMeasureStart, reactor.indexOf("fn render_window_engagement_rail", windowMeasureStart));
+  const trackerDefinitions = patches.slice(patches.indexOf("struct SurfaceSlot"), patches.indexOf("impl PatchTracker"));
   const failures: string[] = [];
   if (
     !value.includes("pub struct UiList") ||
@@ -7230,7 +7275,7 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
   if (!patches.includes("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected: [Option<RejectedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("terminals: [Option<TerminalSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("producer_terminals: [Option<MountedTreeTerminal>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected_reserved: [Option<u64>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("unadmitted: [Option<UnadmittedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS + 1]") || patches.includes("HashMap") || patches.includes("pub fn begin(&self, surface: String, tree: ComponentTree)") || !patches.includes("pub fn commit_source(mut self, root: TreeNode) -> Result<(), TreeNode>") || !patches.includes("pub fn reserve_mounted") || !patches.includes("pub fn drive_one(&self)") || !patches.includes("pub fn begin_close_instance") || !patches.includes("pub fn close_step(&self)") || !patches.includes("pub fn take_terminal") || !patches.includes("pub fn take_rejected")) failures.push("mounted PatchTracker is not the fixed admitted public lifecycle authority");
   const commitSource = patches.slice(patches.indexOf("pub fn commit_source"), patches.indexOf("#[cfg(test)]", patches.indexOf("pub fn commit_source")));
   if ((commitSource.match(/return Err\(root\)/g) ?? []).length !== 6 || commitSource.includes("drop(root)")) failures.push("mounted source rejection does not return the exact root on every preflight or transfer refusal");
-  if (!patches.includes("ready: [Option<ReadySlot>; READY_PATCH_CAPACITY]") || !patches.includes("pending < ready_generation") || !patches.includes("acknowledged_revision") || !patches.includes("closing_instances: [Option<ClosingInstance>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("surface_instance(&slot.surface) == Some(closing.instance)") || !patches.includes("slot.instance == Some(closing.instance)") || !patches.includes("state.ready.iter().all(Option::is_none)") || !patches.includes("state.deferred.iter().all(Option::is_none)") || !patches.includes("state.unadmitted.iter().all(Option::is_none)")) failures.push("mounted reconcile fixed publication/ACK/close order or terminal emptiness omits a retained owner class");
+  if (!patches.includes("ready: [Option<ReadySlot>; READY_PATCH_CAPACITY]") || !patches.includes("pending < ready_generation") || !patches.includes("acknowledged_revision") || !patches.includes("closing_instances: [Option<ClosingInstance>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("surface_instance(slot.surface.as_ref()) == Some(closing.instance)") || !patches.includes("slot.instance == Some(closing.instance)") || !patches.includes("state.ready.iter().all(Option::is_none)") || !patches.includes("state.deferred.iter().all(Option::is_none)") || !patches.includes("state.unadmitted.iter().all(Option::is_none)")) failures.push("mounted reconcile fixed publication/ACK/close order or terminal emptiness omits a retained owner class");
   const unadmittedDefinition = patches.slice(patches.indexOf("struct UnadmittedSlot"), patches.indexOf("pub struct MountedReconcileGrant"));
   if (!patches.includes("MountedReconcileGrant") || !patches.includes("MountedReconcileOwner::Live { reconciler, reservation }") || !patches.includes("rejected_index: usize") || unadmittedDefinition.includes("tree:" ) || unadmittedDefinition.includes("reservation:") || patches.includes("tree: Option<ComponentTree>") || patches.includes("pub fn take_unadmitted")) failures.push("mounted producer can retain or publicly escape a whole unadmitted source tree instead of a reservation-only marker plus exact grant owner");
   const closeStart = patches.indexOf("pub fn close_step(&self)");
@@ -7266,6 +7311,77 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
     reactor.includes('expect("fixed timer tail authority")') ||
     reactor.includes('expect("fixed pending-patch close instance")')
   ) failures.push("reactor mounted owner/cursor transitions still saturate or panic instead of returning a fault or preserving the fixed owner");
+  if (
+    !reactor.includes("struct DirtyPollOwners") ||
+    !reactor.includes("surfaces: ui_contract::UiFixedList<(u32, ui_contract::SurfaceId), DIRTY_RENDER_CAPACITY>") ||
+    !reactor.includes("intents: ui_contract::UiFixedList<DirtyIntentBatch, DIRTY_INTENT_INSTANCE_CAPACITY>") ||
+    !reactor.includes("fn try_surface(&mut self, instance: u32, surface: ui_contract::SurfaceId) -> Result<(), ui_contract::SurfaceId>") ||
+    !reactor.includes("fn try_intent(&mut self, instance: u32, intent: ui_contract::UiIntent) -> Result<(), ui_contract::UiIntent>") ||
+    reactor.includes("let mut dirty_render: Vec") ||
+    reactor.includes("dirty_intents: HashMap<u32, Vec") ||
+    reactor.includes("new batch retains one exact intent")
+  ) failures.push("P5b reactor poll work owners are not fixed SurfaceId/UiIntent collections with exact nonpanicking refusal");
+  if (
+    !trackerDefinitions.includes("surface: ui_contract::SurfaceId") ||
+    !trackerDefinitions.includes("deferred: [Option<ui_contract::SurfaceId>; SURFACE_RECONCILE_ADMISSION_SLOTS]") ||
+    !patches.includes("pub fn reserve_mounted(&self, surface: ui_contract::SurfaceId) -> Result<MountedReconcileGrant<'_>, ui_contract::SurfaceId>") ||
+    trackerDefinitions.includes("surface: String") ||
+    trackerDefinitions.includes("deferred: [Option<String>")
+  ) failures.push("P5b tracker still retains heap String identity instead of fixed SurfaceId text ownership");
+  if (
+    rendererRetainedStart < 0 ||
+    !rendererRetained.includes("struct RetainedSurfaceRegistry") ||
+    !rendererRetained.includes("slots: [Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY]") ||
+    !rendererRetained.includes("generation: u64") ||
+    !rendererRetained.includes("surface: SurfaceId") ||
+    !rendererRetained.includes("struct PendingSurfaceRejectionRegistry") ||
+    !rendererRetained.includes("slots: [Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY]") ||
+    !rendererRetained.includes("close_cursor: usize") ||
+    !rendererRetained.includes("terminal_is_empty") ||
+    rendererRetained.includes("retained: HashMap") ||
+    rendererRetained.includes("pending_rejections: HashMap") ||
+    !rendererRetained.includes("if closing.close_step() && closing.terminal_is_empty()") ||
+    !rendererRetained.includes("if builder.close_step() && builder.terminal_is_empty()") ||
+    !rendererRetained.includes("exchange_closing: Option<UiDocumentLease>") ||
+    !schema.includes("pub enum UiTurnPatchTransfer<T>") ||
+    !schema.includes("pub fn try_transfer_one<T>(&mut self, transfer: impl FnOnce(UiPatch) -> Result<T, UiPatch>)") ||
+    !reactor.includes("result.ui_patches.try_transfer_one(|patch| self.apply_ui_patch(instance, patch))") ||
+    !reactor.includes("fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch) -> Result<(), KernelUiPatch>") ||
+    !schemaSource.includes("refused_turn_patch_transfer_restores_the_exact_retirement_owner")
+  ) failures.push("P5b renderer retained/rejection authority or document closer is dynamic, unqualified, or erased before terminality");
+  if (
+    rendererSequenceStart < 0 ||
+    !rendererSequence.includes("self.committed.checked_add(1).filter(|generation| *generation != 0)") ||
+    !rendererSequence.includes("self.exhausted = generation == u64::MAX") ||
+    !rendererSequence.includes("struct RendererSequenceReservation") ||
+    !rendererSequence.includes("authority.rollback(self.generation)") ||
+    rendererSequence.includes("SEQ.fetch_add") ||
+    rendererSequence.includes("wrapping_add(1)")
+  ) failures.push("P5b renderer sequence is not checked, nonzero, transactional, and permanently exhausted after one maximum");
+  if (
+    windowMeasureStart < 0 ||
+    !reactor.includes("pub struct WindowMeasurePartition<'a>") ||
+    !reactor.includes("UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>") ||
+    !reactor.includes("Result<WindowMeasurePartition<'a>, &'a WindowMeasure>") ||
+    !reactorSource.includes("partition_window_measures_max_plus_one_returns_exact_borrowed_owner") ||
+    !windowMeasure.includes("WindowMeasureRenderFrame") ||
+    !windowMeasure.includes("UiFixedList::<WindowMeasureRenderFrame<'_>, WINDOW_MEASURE_TRAVERSAL_CAPACITY>") ||
+    !windowMeasure.includes("render_window_measure_select") ||
+    !windowMeasure.includes("render_window_measure_slider") ||
+    !windowMeasure.includes("render_window_measure_toggle") ||
+    !windowMeasure.includes("window_measure_actions.try_upsert") ||
+    windowMeasure.includes("self.render_window_measure(") ||
+    windowMeasure.includes("on_change.clone()") ||
+    windowMeasure.includes("items.iter().map(") ||
+    windowMeasure.includes(".collect::<Vec")
+  ) failures.push("P5b WindowMeasure rail is not fixed borrowed iterative traversal with fixed retained UI-native action bindings");
+  for (const fixture of [
+    "renderer_sequence_maximum_is_once_then_permanently_exhausted_and_rollback_is_transactional",
+    "renderer_fixed_registries_return_exact_max_plus_one_surface_and_patch_owners",
+    "stale_cancel_and_fault_document_builds_retain_closer_until_terminal",
+    "document_builder_close_persists_until_terminal_after_one_step",
+    "ordinary_lease_drop_releases_then_global_closer_reaches_terminal",
+  ]) if (!reactorSource.includes(`fn ${fixture}`) && !schemaSource.includes(`fn ${fixture}`)) failures.push(`P5b integrated fixture missing ${fixture}`);
   for (const fixture of [
     "mounted_path_advances_one_reconcile_opportunity_per_grant",
     "cap_plus_one_returns_the_exact_tree_owner",
@@ -7307,8 +7423,18 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
   ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
   const patches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   const mutations: [string, string, string, string][] = [
+    ["dynamic-poll-surfaces", reconcile, patches, reactor.replace("surfaces: ui_contract::UiFixedList<(u32, ui_contract::SurfaceId), DIRTY_RENDER_CAPACITY>", "surfaces: Vec<(u32, ui_contract::SurfaceId)>")],
+    ["dynamic-poll-intents", reconcile, patches, reactor.replace("intents: ui_contract::UiFixedList<DirtyIntentBatch, DIRTY_INTENT_INSTANCE_CAPACITY>", "intents: Vec<DirtyIntentBatch>")],
+    ["tracker-heap-surface", reconcile, patches.replace("surface: ui_contract::SurfaceId", "surface: String"), reactor],
+    ["dynamic-renderer-registry", reconcile, patches, reactor.replace("slots: [Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY]", "slots: Vec<Option<RetainedSurfaceSlot>>")],
+    ["lossy-renderer-refusal", reconcile, patches, reactor.replace("result.ui_patches.try_transfer_one(|patch| self.apply_ui_patch(instance, patch))", "result.ui_patches.into_iter().map(|patch| self.apply_ui_patch(instance, patch))")],
+    ["nonterminal-closer-erasure", reconcile, patches, reactor.replaceAll("if closing.close_step() && closing.terminal_is_empty()", "let _ = closing.close_step(); if true")],
+    ["wrapping-renderer-sequence", reconcile, patches, reactor.replace("self.committed.checked_add(1).filter(|generation| *generation != 0)", "Some(self.committed.wrapping_add(1))")],
+    ["dynamic-window-partition", reconcile, patches, reactor.replaceAll("UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>", "Vec<&'a WindowMeasure>")],
+    ["recursive-window-measure", reconcile, patches, reactor.replace("UiFixedList::<WindowMeasureRenderFrame<'_>, WINDOW_MEASURE_TRAVERSAL_CAPACITY>", "Vec<WindowMeasureRenderFrame<'_>>")],
+    ["cloned-window-action", reconcile, patches, reactor.replace("self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Select)", "{ let _dynamic = on_change.clone(); self.window_measure_actions.try_upsert(id, on_change, WindowMeasureActionKind::Select) }")],
     ["slot-cap", reconcile.replace("SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64", "SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 65"), patches, reactor],
     ["page-cap", reconcile.replace("SURFACE_RECONCILE_PAGE_BYTES: usize = 16 * 1_024", "SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024"), patches, reactor],
     ["missing-byte-preflight", reconcile.replace("next_bytes > SURFACE_RECONCILE_AGGREGATE_BYTES", "false"), patches, reactor],
@@ -7319,11 +7445,11 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     ["missing-terminal-drop", reconcile.replace("impl Drop for SurfaceReconcileTerminal", "impl SurfaceReconcileTerminal"), patches, reactor],
     ["dynamic-tracker", reconcile, patches.replace("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]", "slots: Vec<Option<SurfaceSlot>>"), reactor],
     ["effect-reorder", reconcile, patches.replace("pending < ready_generation", "false"), reactor],
-    ["instance-close-erasure", reconcile, patches.replaceAll("surface_instance(&slot.surface) == Some(closing.instance)", "false"), reactor],
+    ["instance-close-erasure", reconcile, patches.replaceAll("surface_instance(slot.surface.as_ref()) == Some(closing.instance)", "false"), reactor],
     ["tree-clone", reconcile, patches, reactor.replace("Ok(tree) => grant.commit_source(tree.root)", "Ok(tree) => { let alias = unsafe { std::ptr::read(&tree.root) }; grant.commit_source(alias) }")],
     ["missing-drive", reconcile, patches, reactor.replace("let more = patches.drive_one();", "let more = false;")],
     ["missing-close", reconcile, patches, reactor.replace("patches.begin_close_instance(*numeric_instance)", "patches.defer(numeric_instance.to_string())")],
-    ["old-diff", reconcile, patches.replace("pub fn reserve_mounted(&self, surface: String)", "pub fn diff_mounted(&self, surface: String)"), reactor],
+    ["old-diff", reconcile, patches.replace("pub fn reserve_mounted(&self, surface: ui_contract::SurfaceId)", "pub fn diff_mounted(&self, surface: ui_contract::SurfaceId)"), reactor],
     ["missing-cap-fixture", reconcile, patches.replace("cap_plus_one_returns_the_exact_tree_owner", "cap_smoke"), reactor],
     ["recursive-semantic-helper", reconcile.replace("struct SurfaceSemanticCensusCursor", "fn tree_node_semantic_usage(_node: &crate::TreeNode) {}\nstruct SurfaceSemanticCensusCursor"), patches, reactor],
     ["missing-fixed-value-stack", reconcile.replace("value_stack: [Option<SurfaceSemanticValueFrame>; SURFACE_RECONCILE_VALUE_DEPTH]", "value_stack: Vec<SurfaceSemanticValueFrame>"), patches, reactor],
@@ -7878,6 +8004,8 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "pub struct DbIoDriverReservation",
     "pub struct DbIoArtifactId",
     "pub fn try_from_text(operation: u64, source: &DbIoText)",
+    "value: DbIoText",
+    "pub struct DbIoExternalBytes",
     "pub type LeaseInfo = DbIoLeaseResult",
     "pub fn try_reserve(operation: u64, maximum_capacity: usize)",
     "pub fn observe_capacity(&mut self, capacity: usize)",
@@ -7908,6 +8036,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     "DbIoLostOwner::Lease",
     "DbIoLostOwner::Fault",
     "DbIoLostOwner::DriverReservation",
+    "DbIoLostOwner::ExternalBytes",
     "DbIoLostOwner::Backend",
     "DbIoLostOwner::ResultLease",
   ]) if (!storage.includes(required)) failures.push(`DB aggregate/result/backend authority missing: ${required}`);
@@ -7932,6 +8061,12 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
     if (body.includes(".close_backend_step(")) failures.push("DB facade/drop/maintenance caller polls a backend close future");
   const lostOwnerInstall = rustItem(storage, "fn db_io_park_lost_owner");
   if (!lostOwnerInstall.includes("Result<(), DbIoLostOwner>") || !lostOwnerInstall.includes("DB_IO_LOST_OWNER_QUARANTINE") || lostOwnerInstall.includes(".expect(")) failures.push("DB aggregate retirement lacks checked exact-owner overflow/quarantine return");
+  const artifactOwner = rustItem(storage, "impl DbIoArtifactId");
+  if (!artifactOwner.includes("DbIoText::try_from_str(source.as_str())") || artifactOwner.includes("std::mem::replace") || artifactOwner.includes("ArtifactId(")) failures.push("DB admitted artifact identity is not a fixed retained DbIoText owner");
+  const observedBytes = rustItem(storage, "impl Future for DbIoObservedBytesWrite");
+  if (!storage.includes("source: Option<DbIoExternalBytes>") || !observedBytes.includes("source.close_step()") || !observedBytes.includes("source.terminal_is_empty()")) failures.push("DB observed driver allocation lacks an explicit resumable external owner");
+  const writerSeal = rustItem(storage, "impl Future for DbIoPageWriterSeal");
+  if (!writerSeal.includes("owner.phase") || !writerSeal.includes("owner.page") || writerSeal.includes("writer.finish()")) failures.push("DB writer publication is not a persisted one-page transition cursor");
 
   const memoryStart = storage.indexOf("struct MemoryDbIoExecutor");
   const memoryEnd = storage.indexOf("//#region 🔖️Fs", memoryStart);
@@ -8028,7 +8163,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   for (const evidence of ["worker_role.load", "assert_ne!", "close_worker_role.load", "close_thread.lock"])
     if (!actualWorkerLaw.includes(evidence)) failures.push(`DB exact WorkerPool Lane::Io law lacks production-path evidence: ${evidence}`);
   const saturationLaw = rustItem(storageSource, "fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate");
-  for (const evidence of ["DB_IO_LOST_OWNER_SLOTS", "db_io_park_lost_owner(owner)", "DB_IO_LOST_OWNER_OVERFLOW", "exact-plus-one-candidate", "exact-plus-two-candidate", "db_io_lost_owner_close_step"])
+  for (const evidence of ["DB_IO_LOST_OWNER_SLOTS", "db_io_park_lost_owner(owner)", "DB_IO_LOST_OWNER_OVERFLOW", "DB_IO_LOST_OWNER_QUARANTINE", "retained-overflow-owner", "exact-plus-one-candidate", "exact-plus-two-candidate", "assert_eq!(exact", "db_io_lost_owner_close_step"])
     if (!saturationLaw.includes(evidence)) failures.push(`DB saturation identity/recovery law lacks production-path evidence: ${evidence}`);
   const closeInterruptionLaw = rustItem(storageSource, "async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger");
   for (const evidence of ["db_io_close_platform", "Poll::Pending", "Poll::Ready(Ok(()))", "Poll::Ready(Err(DbError::Unavailable", "drop(close)", "ledger_witness"])
@@ -8042,7 +8177,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
 function interactivityDbIoB1B6SelfTests(): void {
   let storage =
     "struct DbIoOperationLedger fn db_io_operation_reserve fn db_io_backend_owner_reserve fn db_io_operation_attach_task fn db_io_operation_add_result_lease fn db_io_operation_return_result_lease fn db_io_operation_transfer_to_backend fn db_io_operation_detach_task fn db_io_operation_terminal_is_empty backend_owner: bool pub struct DbIoResultLease result_handback: Option<DbIoTaskHandle> Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()) pub struct DbIoAsyncTaskLease credit_returned: bool fn db_io_result_lease_credit() fn db_io_async_lease_credit() pub async fn take_async_native pub async fn start_async_native_on_lane_io pub fn start_on_lane_io type DbIoAsyncDriverFuture async_driver: Option<DbIoAsyncDriverFuture> fn db_io_poll_async_driver db_io_submit_job(handle, Box::new(move || db_io_poll_async_driver(handle)) pub fn enter_lane_io_driver_turn pub fn leave_lane_io_driver_turn pub fn db_io_maintenance_step() fn db_io_backend_close_lane_step fn db_io_poll_backend_close_on_lane_io { db_io_backend_close_lane_step(control, context) } fn db_io_request_backend_close pool.try_submit(Lane::Io executor: Option<Box<dyn DbIoTaskExecutor>> fn close_backend_step(&mut self, context: &mut std::task::Context<'_>) -> Result<bool, DbError> fn backend_terminal_is_empty(&self) -> bool pub struct DbIoDriverReservation pub struct DbIoArtifactId pub fn try_from_text(operation: u64, source: &DbIoText) pub type LeaseInfo = DbIoLeaseResult pub fn try_reserve(operation: u64, maximum_capacity: usize) pub fn observe_capacity(&mut self, capacity: usize) pub struct DbIoPageWriterSeal impl std::future::Future for DbIoPageWriterSeal { context.waker().wake_by_ref(); std::task::Poll::Pending } pub struct DbIoObservedBytesWrite pub fn db_io_write_observed_bytes impl std::future::Future for DbIoObservedBytesWrite { context.waker().wake_by_ref(); std::task::Poll::Pending } pub fn db_io_copy_observed_text pub struct DbIoListTransfer pub fn db_io_transfer_list impl std::future::Future for DbIoListTransfer { context.waker().wake_by_ref(); std::task::Poll::Pending } pub struct DbIoPlatformClose impl std::future::Future for DbIoPlatformClose { context.waker().wake_by_ref(); std::task::Poll::Pending } pub(crate) struct DbIoPlatformSlicesCopy impl std::future::Future for DbIoPlatformSlicesCopy { context.waker().wake_by_ref(); std::task::Poll::Pending } pub async fn close_db_io_backend pub fn retire_db_io_backend fn db_io_backend_maintenance_step { db_io_request_backend_close(control) } pub fn close_backend_step(&self) -> Result<bool, DbError> pub fn backend_terminal_is_empty(&self) -> bool const DB_IO_LOST_OWNER_SLOTS const DB_IO_LOST_OWNER_OVERFLOW_SLOTS static DB_IO_LOST_OWNER_OVERFLOW static DB_IO_RETIREMENT_PRESSURE_FAULT struct DbIoRejectedBackendRegistry fn db_io_poll_rejected_backend_on_lane_io { executor.close_backend_step(context) } fn db_io_park_lost_owner fn db_io_try_park_lost_owner DbIoLostOwner::PageWriter DbIoLostOwner::Pages DbIoLostOwner::List DbIoLostOwner::Lease DbIoLostOwner::Fault DbIoLostOwner::DriverReservation DbIoLostOwner::Backend DbIoLostOwner::ResultLease struct MemoryDbIoExecutor { wal: std::sync::Mutex<Box<[Option<MemoryWalOwner>]>>, payloads: std::sync::Mutex<[Option<MemoryPayloadOwner>; DB_IO_MEMORY_OWNERS]>, leases: std::sync::Mutex<[Option<MemoryLeaseOwner>; DB_IO_MEMORY_OWNERS]> } fn bind_owner_operation fn owner_backing_bytes pages.transfer_to_backend(backend_operation)? impl DbIoTaskExecutor for MemoryDbIoExecutor MemoryDbIoCursor::LeaseRelease pub struct MemoryStorage pub async fn new(pool: Arc<WorkerPool>) memory_execute(self.pool.as_ref(), DbIoTask:: //#region 🔖️Fs impl Drop for DbIoPageWriter { db_io_park_lost_owner( } impl Drop for DbIoPages { db_io_park_lost_owner( } impl Drop for DbIoU64List { db_io_park_lost_owner( } impl Drop for DbIoLeaseResult { db_io_park_lost_owner( } impl Drop for DbIoFault { db_io_park_lost_owner( } impl Drop for DbIoResultLease { db_io_park_lost_owner( } pub fn cancel(&self) { owner.cancelled = true; drop(owner); db_io_enqueue_close(self.handle)?; } pub async fn take_async_native pub fn complete(mut self { owner.async_detached = false; Ok(()) if owner.cancelled => DbIoTerminal::Cancelled(terminal.ok()); drop(owner); db_io_operation_return(self.handle.operation, db_io_async_lease_credit())?; } impl Drop for DbIoAsyncTaskLease pub fn db_io_task_close_step { owner.phase == DbIoTaskPhase::Executing; db_io_rotate_close_head(handle)?; } fn db_io_rotate_close_head db_io_one_byte_high_capacity_candidate_is_rejected_with_exact_owner db_io_process_and_operation_ledger_return_to_exact_prior_witness db_io_platform_fixed_ring_max_plus_one_returns_exact_capacity db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate db_io_real_queued_callback_rejects_a_reused_task_slot_aba db_io_retry_generation_max_publishes_a_lossless_terminal_fault db_io_postgres_and_neo4j_mock_drivers_use_supplied_writer_and_observed_capacity db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker db_io_artifact_and_lease_result_owners_retain_exact_incremental_handback db_io_all_five_backend_controls_require_explicit_terminal_close_witness db_io_memory_backend_uses_actual_typed_submit_take_result_and_terminal_close db_io_async_native_lost_backend_uses_typed_lane_lease_and_mounted_terminal_witness db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness";
-  storage += " static DB_IO_LOST_OWNER_QUARANTINE fn db_io_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner> { DB_IO_LOST_OWNER_QUARANTINE } impl Future for DbIoPageWriterSeal { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoObservedBytesWrite { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoListTransfer { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformClose { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformSlicesCopy { context.waker().wake_by_ref(); std::task::Poll::Pending } fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() { DB_IO_LOST_OWNER_SLOTS db_io_park_lost_owner(owner) DB_IO_LOST_OWNER_OVERFLOW exact-plus-one-candidate exact-plus-two-candidate db_io_lost_owner_close_step } async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger() { db_io_close_platform Poll::Pending Poll::Ready(Ok(())) Poll::Ready(Err(DbError::Unavailable drop(close) ledger_witness } async fn db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker() { worker_role.load assert_ne! close_worker_role.load close_thread.lock }";
+  storage += " value: DbIoText pub struct DbIoExternalBytes source: Option<DbIoExternalBytes> DbIoLostOwner::ExternalBytes impl DbIoArtifactId { DbIoText::try_from_str(source.as_str()) } static DB_IO_LOST_OWNER_QUARANTINE fn db_io_park_lost_owner(owner: DbIoLostOwner) -> Result<(), DbIoLostOwner> { DB_IO_LOST_OWNER_QUARANTINE } impl Future for DbIoPageWriterSeal { owner.phase owner.page context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoObservedBytesWrite { source.close_step(); source.terminal_is_empty(); context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoListTransfer { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformClose { context.waker().wake_by_ref(); std::task::Poll::Pending } impl Future for DbIoPlatformSlicesCopy { context.waker().wake_by_ref(); std::task::Poll::Pending } fn db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate() { DB_IO_LOST_OWNER_SLOTS db_io_park_lost_owner(owner) DB_IO_LOST_OWNER_OVERFLOW DB_IO_LOST_OWNER_QUARANTINE retained-overflow-owner exact-plus-one-candidate exact-plus-two-candidate assert_eq!(exact db_io_lost_owner_close_step } async fn db_io_storage_ready_and_pending_close_interruption_recover_the_same_owner_and_ledger() { db_io_close_platform Poll::Pending Poll::Ready(Ok(())) Poll::Ready(Err(DbError::Unavailable drop(close) ledger_witness } async fn db_io_actual_async_driver_future_is_polled_by_the_shared_io_worker() { worker_role.load assert_ne! close_worker_role.load close_thread.lock }";
   const sqlite = "backend_close_cursor backend_terminal fn close_backend_step(&mut self, fn backend_terminal_is_empty(&self) close_db_io_backend(self.control).await";
   const postgres =
     "struct PostgresDbIoExecutor impl DbIoTaskExecutor for PostgresDbIoExecutor DbIoExecutorMode::AsyncNative register_db_io_backend db_io_transfer_list fn drive_async(self: Box<Self>, operation: u64, task: DbIoTask) with_admitted_artifact! fn close_backend_step(&mut self, pool.close().await Future::poll(future.as_mut(), context) fn backend_terminal_is_empty(&self) self.pool.is_closed() DbIoDriverReservation reserve_driver_output DbIoDriverReservation::try_reserve(self.active_operation db_io_write_observed_bytes(reservation, bytes, output).await db_io_copy_observed_text(reservation, holder) pub struct PostgresStorage worker_pool: Arc<WorkerPool> async fn execute { submit_db_io_task(self.worker_pool.as_ref(), task); operation.start_async_native_on_lane_io().await?; operation.await; } self.execute(DbIoTask:: close_db_io_backend(self.control).await //#region 🔖️DbBackend lost_postgres_facade_drives_the_real_lazy_pool_to_closed";
@@ -8060,6 +8195,9 @@ function interactivityDbIoB1B6SelfTests(): void {
     ["recursive-close", `${storage} callback_at(`, postgres, neo4j],
     ["arc-executor", storage.replace("Option<Box<dyn DbIoTaskExecutor>>", "Arc<dyn DbIoTaskExecutor>"), postgres, neo4j],
     ["observed-capacity", storage.replace("pub struct DbIoObservedBytesWrite", "pub struct WholeBufferCopy"), postgres, neo4j],
+    ["dynamic-artifact-owner", storage.replace("value: DbIoText", "value: ArtifactId"), postgres, neo4j],
+    ["unretained-external-allocation", storage.replace("source: Option<DbIoExternalBytes>", "source: Option<Vec<u8>>"), postgres, neo4j],
+    ["writer-final-loop", storage.replace("owner.phase owner.page", "writer.finish()"), postgres, neo4j],
     ["ready-only-copy", storage.replace("impl Future for DbIoObservedBytesWrite { context.waker().wake_by_ref(); std::task::Poll::Pending }", "impl Future for DbIoObservedBytesWrite { std::task::Poll::Ready(()) }"), postgres, neo4j],
     ["retirement-forget", `${storage} std::mem::forget(owner)`, postgres, neo4j],
     ["backend-noop-waker", storage, `${postgres} Waker::noop()`, neo4j],
@@ -8088,6 +8226,8 @@ function interactivityDbIoB1B6SelfTests(): void {
     ["lost-ring-max-law", storage.replaceAll("db_io_lost_owner_fixed_ring_max_plus_one_returns_the_exact_candidate", "lost_ring_smoke"), postgres, neo4j],
     ["lost-ring-max-law-body", storage.replace("exact-plus-one-candidate", "anonymous-owner"), postgres, neo4j],
     ["lost-ring-max-plus-two-body", storage.replace("exact-plus-two-candidate", "anonymous-second-owner"), postgres, neo4j],
+    ["lost-ring-no-overflow-fill", storage.replace("retained-overflow-owner", "anonymous-overflow"), postgres, neo4j],
+    ["lost-ring-no-quarantine-proof", storage.replace("assert_eq!(exact", "assert!(true"), postgres, neo4j],
     ["close-interruption-law-body", storage.replace("Poll::Ready(Ok(()))", "Poll::Pending"), postgres, neo4j],
     ["cancellation-lifecycle-law", storage.replace("db_io_cancellation_before_during_and_receiver_drop_retain_exact_terminal_owners", "cancel_smoke"), postgres, neo4j],
     ["panic-fault-shutdown-law", storage.replace("db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness", "panic_smoke"), postgres, neo4j],
@@ -8156,6 +8296,16 @@ function interactivityP1qR4Failures(packSource: string, snapshotSource: string, 
     const install = rustItem(source, marker);
     if (!install.includes("Result<(),") || !install.includes(quarantine) || install.includes(".expect(")) failures.push(`${name} retirement lacks checked exact-owner overflow/quarantine return`);
   }
+  for (const [name, source, reservation, install] of [
+    ["artifact", artifact, "ARTIFACT_STATE_RETIREMENT_RESERVATIONS", "install_reserved_artifact_state_owner"],
+    ["query", query, "QUERY_RETIRED_ROWS_RESERVATIONS", "install_reserved_query_rows"],
+    ["engine", engine, "ENGINE_QUERY_RETIREMENT_RESERVATIONS", "install_reserved_engine_query_stream"],
+    ["compact", compact, "COMPACTION_RETIREMENT_RESERVATIONS", "install_reserved_compaction_pages"],
+  ] as const) {
+    if (!source.includes(reservation) || !source.includes(install) || !source.includes("fetch_or(bit") || !source.includes("fetch_and(!")) failures.push(`${name} leaf admission lacks an exact durable retirement reservation`);
+    for (const forbidden of ["return_to_leaf_authorities", "_or_recover", "let pages = std::mem::replace", "let rows = std::mem::replace", "let results = std::mem::replace"])
+      if (source.includes(forbidden)) failures.push(`${name} all-tier refusal destructures or ordinarily drops a leaf owner through ${forbidden}`);
+  }
   for (const required of ["pub struct PackIdentityChunkCursor", "pub async fn read_fragment", "pub fn identity_chunk_cursor", "retained fragment cursor requires an identity chunk"])
     if (!pack.includes(required)) failures.push(`pack retained identity cursor missing: ${required}`);
   const snapshotRead = rustItem(snapshot, "pub async fn read_page");
@@ -8172,20 +8322,33 @@ function interactivityP1qR4Failures(packSource: string, snapshotSource: string, 
   if (!walNext.includes("WalReplayStep::Yield") || !walNext.includes("if self.close_segment_step().await?")) failures.push("WAL replay segment transition lacks a resumable close yield");
   if (/while[^\n{]*close_segment_step/.test(walNext)) failures.push("WAL replay segment transition bulk-drains its retained segment");
   const queryDrop = rustItem(query, "impl Drop for QueryRows");
-  for (const required of ["QUERY_RETIRED_ROWS", "QUERY_RETIRED_ROWS_OVERFLOW", "QUERY_RETIRED_ROWS_QUARANTINE", "QUERY_RETIREMENT_PRESSURE_FAULT", "query_rows_maintenance_step", "retire_query_rows_or_recover(std::mem::replace"])
+  for (const required of ["QUERY_RETIRED_ROWS", "QUERY_RETIRED_ROWS_OVERFLOW", "QUERY_RETIRED_ROWS_QUARANTINE", "QUERY_RETIREMENT_PRESSURE_FAULT", "query_rows_maintenance_step", "install_reserved_query_rows(std::mem::replace"])
     if (!query.includes(required)) failures.push(`query mounted retirement missing: ${required}`);
   if (queryDrop.includes("while") || queryDrop.includes("loop")) failures.push("QueryRows Drop bulk-drains its result graph");
   const engineDrop = rustItem(engine, "impl Drop for QueryStream");
-  for (const required of ["ENGINE_QUERY_RETIREMENT", "ENGINE_QUERY_RETIREMENT_OVERFLOW", "ENGINE_QUERY_RETIREMENT_QUARANTINE", "ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT", "engine_query_maintenance_step", "retire_engine_query_stream_or_recover(std::mem::replace"])
+  for (const required of ["ENGINE_QUERY_RETIREMENT", "ENGINE_QUERY_RETIREMENT_OVERFLOW", "ENGINE_QUERY_RETIREMENT_QUARANTINE", "ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT", "engine_query_maintenance_step", "install_reserved_engine_query_stream(std::mem::replace"])
     if (!engine.includes(required)) failures.push(`engine query mounted retirement missing: ${required}`);
   if (engineDrop.includes("while") || engineDrop.includes("loop")) failures.push("QueryStream Drop bulk-drains its result graph");
-  for (const required of ["ArtifactStateRetirementCursor", "ARTIFACT_STATE_RETIREMENT", "ARTIFACT_STATE_RETIREMENT_OVERFLOW", "ARTIFACT_STATE_RETIREMENT_QUARANTINE", "ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT", "artifact_state_retirement_maintenance_step", "retire_artifact_state_owner_or_recover"])
+  for (const required of ["ArtifactStateRetirementCursor", "ARTIFACT_STATE_RETIREMENT", "ARTIFACT_STATE_RETIREMENT_OVERFLOW", "ARTIFACT_STATE_RETIREMENT_QUARANTINE", "ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT", "artifact_state_retirement_maintenance_step", "install_reserved_artifact_state_owner"])
     if (!artifact.includes(required)) failures.push(`artifact fixed staging retirement missing: ${required}`);
   for (const required of ["CompactionRetainedPages", "COMPACTION_PAGE_RETIREMENT", "COMPACTION_PAGE_RETIREMENT_OVERFLOW", "COMPACTION_PAGE_RETIREMENT_QUARANTINE", "COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT", "MountedCompactionPageClose", "publish_retained"])
     if (!compact.includes(required)) failures.push(`compaction fixed retained publication missing: ${required}`);
   if (/Vec\s*<\s*(?:db_state::)?Page\s*>/.test(compact)) failures.push("compaction retains a dynamic Vec<Page> owner graph");
   for (const required of ["MountedWalRecordCommandClose", "MountedWalBatchCommandClose", "MountedWalReplayCommandClose", "MountedSnapshotCommandClose", "CliCommandCloseWitness"])
     if (!cli.includes(required)) failures.push(`CLI mounted command close missing: ${required}`);
+  for (const marker of ["impl Future for MountedWalRecordCommandClose", "impl Future for MountedWalBatchCommandClose", "impl Future for MountedWalReplayCommandClose", "impl Future for MountedSnapshotCommandClose"]) {
+    const close = rustItem(cli, marker);
+    if (!close.includes("self.terminal") || close.includes(".expect(")) failures.push(`CLI mounted close lacks a deterministic repeat-poll terminal witness: ${marker}`);
+  }
+  const replayDecode = rustItem(artifact, "impl Future for ArtifactWalEnvelopeDecode");
+  for (const required of ["ArtifactWalTextField", "ArtifactWalPageField", "dependency_count", "std::task::Poll::Pending", "owner.page.poll", "ARTIFACT_WAL_DEPENDENCIES"])
+    if (!`${artifact} ${replayDecode}`.includes(required)) failures.push(`artifact WAL retained decoder missing: ${required}`);
+  if (/Vec::with_capacity|decode_protocol_field|while\b|\bfor\b/.test(replayDecode)) failures.push("artifact WAL retained decoder restores a synchronous or preallocated owner loop");
+  const replayAdapter = rustItem(artifact, "impl Future for ArtifactWalEnvelopeAdapter");
+  for (const required of ["owner.control.grant()", "retained.diff_payload.page(owner.page)", "retained.diff_payload.close_step()?", "retained.inverse_payload.page(owner.page)", "retained.inverse_payload.close_step()?", "std::task::Poll::Pending"])
+    if (!replayAdapter.includes(required)) failures.push(`artifact WAL schema adapter lacks one-entry/page/close progress: ${required}`);
+  const replayOpen = rustItem(artifact, "pub async fn open_retained");
+  if (!replayOpen.includes("decode_retained_envelope(bytes, &mut control).await?") || !replayOpen.includes("adapt_retained_envelope(retained, &mut control).await?")) failures.push("artifact live WAL replay bypasses the retained decoder/schema adapter");
   for (const [name, source] of [["artifact", rustItem(artifact, "async fn apply_entries")], ["compact", compact], ["CLI wal-inspect", rustItem(cli, "async fn cmd_wal_inspect")], ["CLI snapshot-inspect", rustItem(cli, "async fn cmd_snapshot_inspect")], ["CLI replay", rustItem(cli, "async fn cmd_replay")], ["CLI migration", rustItem(cli, "async fn cmd_migrate")]] as const)
     if (hasTerminalCloseSweep(source)) failures.push(`${name} production retains a loop/for/while whole-owner close sweep`);
   for (const [name, raw, fixture] of [
@@ -8194,24 +8357,28 @@ function interactivityP1qR4Failures(packSource: string, snapshotSource: string, 
     ["query", querySource, "interrupted_query_rows_drop_retains_one_resumable_close_owner"],
     ["engine", engineSource, "interrupted_query_stream_drop_retains_one_resumable_close_owner"],
     ["artifact", artifactSource, "artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless"],
+    ["artifact WAL", artifactSource, "retained_wal_decoder_covers_pending_cancel_deadline_corrupt_max_and_max_plus_one"],
     ["compaction", compactSource, "compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit"],
     ["CLI", cliSource, "cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses"],
   ] as const) if (!raw.includes(fixture)) failures.push(`${name} hostile retained-close fixture missing: ${fixture}`);
   const artifactLaw = rustItem(artifactSource, "async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless");
-  for (const evidence of ["StateEntry::try_admit", "state cursor cancelled", "state cursor deadline reached", "ARTIFACT_STATE_RETIREMENT_OVERFLOW", "ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT", "Some(source)", "second_source"])
+  for (const evidence of ["StateEntry::try_admit", "state cursor cancelled", "state cursor deadline reached", "ARTIFACT_STATE_RETIREMENT_OVERFLOW", "ARTIFACT_STATE_RETIREMENT_QUARANTINE", "ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT", "reserve_artifact_state_retirement", "Some(source)", "second_source"])
     if (!artifactLaw.includes(evidence)) failures.push(`artifact hostile law lacks exact production-path evidence: ${evidence}`);
   const compactLaw = rustItem(compactSource, "async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit");
-  for (const evidence of ["unwrap_err", "exact_operation", "second_operation", "COMPACTION_PAGE_RETIREMENT_OVERFLOW", "COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT", "MountedCompactionPageClose"])
+  for (const evidence of ["unwrap_err", "exact_operation", "second_operation", "COMPACTION_PAGE_RETIREMENT_OVERFLOW", "COMPACTION_PAGE_RETIREMENT_QUARANTINE", "COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT", "reserve_compaction_retirement", "MountedCompactionPageClose"])
     if (!compactLaw.includes(evidence)) failures.push(`compaction hostile law lacks exact production-path evidence: ${evidence}`);
   const queryLaw = rustItem(querySource, "async fn interrupted_query_rows_drop_retains_one_resumable_close_owner");
-  for (const evidence of ["QUERY_RETIRED_ROWS_OVERFLOW", "QUERY_RETIREMENT_PRESSURE_FAULT", "0x5155_4552_59", "0x5155_4552_5a", "retire_query_rows(exact)"])
+  for (const evidence of ["QUERY_RETIRED_ROWS_OVERFLOW", "QUERY_RETIRED_ROWS_QUARANTINE", "QUERY_RETIREMENT_PRESSURE_FAULT", "reserve_query_rows_retirement", "0x5155_4552_59", "0x5155_4552_5a", "retire_query_rows(exact)"])
     if (!queryLaw.includes(evidence)) failures.push(`query hostile law lacks saturation identity/recovery evidence: ${evidence}`);
   const engineLaw = rustItem(engineSource, "fn interrupted_query_stream_drop_retains_one_resumable_close_owner");
-  for (const evidence of ["ENGINE_QUERY_RETIREMENT_OVERFLOW", "ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT", "exact-overflow-stream", "second-overflow-stream", "retire_engine_query_stream(exact)"])
+  for (const evidence of ["ENGINE_QUERY_RETIREMENT_OVERFLOW", "ENGINE_QUERY_RETIREMENT_QUARANTINE", "ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT", "reserve_engine_query_retirement", "exact-overflow-stream", "second-overflow-stream", "retire_engine_query_stream(exact)"])
     if (!engineLaw.includes(evidence)) failures.push(`engine hostile law lacks saturation identity/recovery evidence: ${evidence}`);
   const cliLaw = rustItem(cliSource, "async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses");
-  for (const evidence of ["Future::poll", "Poll::Pending", "Poll::Ready(Ok(CliCommandCloseWitness", "CLI_COMMAND_CLOSE_INTERRUPTED", "unwrap_err"])
+  for (const evidence of ["Future::poll", "Poll::Pending", "Poll::Ready(Ok(CliCommandCloseWitness", "CLI_COMMAND_CLOSE_INTERRUPTED", "terminal: Some(fault)", "unwrap_err"])
     if (!cliLaw.includes(evidence)) failures.push(`CLI hostile law lacks Ready/Pending/refusal/drop evidence: ${evidence}`);
+  const replayLaw = rustItem(artifactSource, "async fn retained_wal_decoder_covers_pending_cancel_deadline_corrupt_max_and_max_plus_one");
+  for (const evidence of ["poll_artifact_wal_decode", "is_pending", "wal cursor cancelled", "wal cursor deadline reached", "WAL command envelope has trailing bytes", "ARTIFACT_WAL_DEPENDENCIES", "ARTIFACT_WAL_FIELD_BYTES", "max-plus-one", "db_io_maintenance_step"])
+    if (!replayLaw.includes(evidence)) failures.push(`artifact WAL hostile decoder law lacks real-path evidence: ${evidence}`);
   for (const evidence of ["cli_full_cycle_succeeds_for_a_seeded_document", "cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it", "cli_migrate_appends_a_migration_record_visible_to_wal_inspect"])
     if (!cliSource.includes(evidence)) failures.push(`CLI R4 command-path law missing: ${evidence}`);
   return failures;
@@ -8222,11 +8389,11 @@ function interactivityP1qR4SelfTests(): void {
   const snapshot = "pub async fn read_page() { let mut cursor = file.identity_chunk_cursor(id, level)?; cursor.read_fragment(&mut fragment).await?; }";
   const index = "async fn decode_run_pages() { let _ = pages.close_step()?; drop(pages); } impl RunEntries { fn close_step() { let _ = owner.close_step(); } } impl IndexBlobList { fn close_step() { let _ = owner.close_step(); } } index close lost retained entry index blob close lost retained owner";
   const wal = "pub async fn next_step() { if self.close_segment_step().await? { return Ok(WalReplayStep::Yield); } } impl WalRecordBatch { fn close_step() { let _ = owner.close_step(); } } WAL batch close lost retained record wal_replay_cancel_resume_close_and_fragment_crc_are_deterministic";
-  const artifact = "struct ArtifactStateRetirementCursor static ARTIFACT_STATE_RETIREMENT static ARTIFACT_STATE_RETIREMENT_OVERFLOW static ARTIFACT_STATE_RETIREMENT_QUARANTINE static ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT fn artifact_state_retirement_maintenance_step fn retire_artifact_state_owner(owner: Owner) -> Result<(), Owner> { ARTIFACT_STATE_RETIREMENT_QUARANTINE } fn retire_artifact_state_owner_or_recover async fn apply_entries() { let _ = owner.close_step()?; drop(owner); } async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless() { StateEntry::try_admit state cursor cancelled state cursor deadline reached ARTIFACT_STATE_RETIREMENT_OVERFLOW ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT Some(source) second_source }";
-  const query = "static QUERY_RETIRED_ROWS: Ring; static QUERY_RETIRED_ROWS_OVERFLOW: Ring; static QUERY_RETIRED_ROWS_QUARANTINE: Ring; static QUERY_RETIREMENT_PRESSURE_FAULT: Flag; pub fn query_rows_maintenance_step() {} fn retire_query_rows(owner: Owner) -> Result<(), Owner> { QUERY_RETIRED_ROWS_QUARANTINE } fn retire_query_rows_or_recover() {} impl Drop for QueryRows { fn drop(&mut self) { retire_query_rows_or_recover(std::mem::replace(self, Self::new())); } } async fn interrupted_query_rows_drop_retains_one_resumable_close_owner() { QUERY_RETIRED_ROWS_OVERFLOW QUERY_RETIREMENT_PRESSURE_FAULT 0x5155_4552_59 0x5155_4552_5a retire_query_rows(exact) }";
-  const engine = "static ENGINE_QUERY_RETIREMENT: Ring; static ENGINE_QUERY_RETIREMENT_OVERFLOW: Ring; static ENGINE_QUERY_RETIREMENT_QUARANTINE: Ring; static ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT: Flag; pub fn engine_query_maintenance_step() {} fn retire_engine_query_stream(owner: Owner) -> Result<(), Owner> { ENGINE_QUERY_RETIREMENT_QUARANTINE } fn retire_engine_query_stream_or_recover() {} impl Drop for QueryStream { fn drop(&mut self) { retire_engine_query_stream_or_recover(std::mem::replace(self, Self::new())); } } fn interrupted_query_stream_drop_retains_one_resumable_close_owner() { ENGINE_QUERY_RETIREMENT_OVERFLOW ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT exact-overflow-stream second-overflow-stream retire_engine_query_stream(exact) }";
-  const compact = "struct CompactionRetainedPages static COMPACTION_PAGE_RETIREMENT static COMPACTION_PAGE_RETIREMENT_OVERFLOW static COMPACTION_PAGE_RETIREMENT_QUARANTINE static COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT fn retire_compaction_pages(owner: Owner) -> Result<(), Owner> { COMPACTION_PAGE_RETIREMENT_QUARANTINE } struct MountedCompactionPageClose fn publish_retained async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit() { unwrap_err exact_operation second_operation COMPACTION_PAGE_RETIREMENT_OVERFLOW COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT MountedCompactionPageClose }";
-  const cli = "struct MountedWalRecordCommandClose struct MountedWalBatchCommandClose struct MountedWalReplayCommandClose struct MountedSnapshotCommandClose struct CliCommandCloseWitness async fn cmd_wal_inspect() {} async fn cmd_snapshot_inspect() {} async fn cmd_replay() {} async fn cmd_migrate() {} async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses() { Future::poll Poll::Pending Poll::Ready(Ok(CliCommandCloseWitness CLI_COMMAND_CLOSE_INTERRUPTED unwrap_err } cli_full_cycle_succeeds_for_a_seeded_document cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it cli_migrate_appends_a_migration_record_visible_to_wal_inspect";
+  const artifact = "struct ArtifactStateRetirementCursor static ARTIFACT_STATE_RETIREMENT static ARTIFACT_STATE_RETIREMENT_OVERFLOW static ARTIFACT_STATE_RETIREMENT_QUARANTINE static ARTIFACT_STATE_RETIREMENT_RESERVATIONS static ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT fetch_or(bit fetch_and(! fn reserve_artifact_state_retirement fn install_reserved_artifact_state_owner fn artifact_state_retirement_maintenance_step fn retire_artifact_state_owner(owner: Owner) -> Result<(), Owner> { ARTIFACT_STATE_RETIREMENT_QUARANTINE } async fn apply_entries() { let _ = owner.close_step()?; drop(owner); } struct ArtifactWalTextField struct ArtifactWalPageField ARTIFACT_WAL_DEPENDENCIES struct ArtifactWalEnvelopeDecode { dependency_count: u8 } impl Future for ArtifactWalEnvelopeDecode { owner.page.poll std::task::Poll::Pending } struct ArtifactWalEnvelopeAdapter impl Future for ArtifactWalEnvelopeAdapter { owner.control.grant(); retained.diff_payload.page(owner.page); retained.diff_payload.close_step()?; retained.inverse_payload.page(owner.page); retained.inverse_payload.close_step()?; std::task::Poll::Pending } pub async fn open_retained() { decode_retained_envelope(bytes, &mut control).await?; adapt_retained_envelope(retained, &mut control).await?; } async fn artifact_staging_retirement_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_are_lossless() { StateEntry::try_admit state cursor cancelled state cursor deadline reached ARTIFACT_STATE_RETIREMENT_OVERFLOW ARTIFACT_STATE_RETIREMENT_QUARANTINE ARTIFACT_STATE_RETIREMENT_PRESSURE_FAULT reserve_artifact_state_retirement Some(source) second_source } async fn retained_wal_decoder_covers_pending_cancel_deadline_corrupt_max_and_max_plus_one() { poll_artifact_wal_decode is_pending wal cursor cancelled wal cursor deadline reached WAL command envelope has trailing bytes ARTIFACT_WAL_DEPENDENCIES ARTIFACT_WAL_FIELD_BYTES max-plus-one db_io_maintenance_step }";
+  const query = "static QUERY_RETIRED_ROWS: Ring; static QUERY_RETIRED_ROWS_OVERFLOW: Ring; static QUERY_RETIRED_ROWS_QUARANTINE: Ring; static QUERY_RETIRED_ROWS_RESERVATIONS: Ring; static QUERY_RETIREMENT_PRESSURE_FAULT: Flag; fetch_or(bit fetch_and(! fn reserve_query_rows_retirement fn install_reserved_query_rows pub fn query_rows_maintenance_step() {} fn retire_query_rows(owner: Owner) -> Result<(), Owner> { QUERY_RETIRED_ROWS_QUARANTINE } impl Drop for QueryRows { fn drop(&mut self) { install_reserved_query_rows(std::mem::replace(self, Self::new())); } } async fn interrupted_query_rows_drop_retains_one_resumable_close_owner() { QUERY_RETIRED_ROWS_OVERFLOW QUERY_RETIRED_ROWS_QUARANTINE QUERY_RETIREMENT_PRESSURE_FAULT reserve_query_rows_retirement 0x5155_4552_59 0x5155_4552_5a retire_query_rows(exact) }";
+  const engine = "static ENGINE_QUERY_RETIREMENT: Ring; static ENGINE_QUERY_RETIREMENT_OVERFLOW: Ring; static ENGINE_QUERY_RETIREMENT_QUARANTINE: Ring; static ENGINE_QUERY_RETIREMENT_RESERVATIONS: Ring; static ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT: Flag; fetch_or(bit fetch_and(! fn reserve_engine_query_retirement fn install_reserved_engine_query_stream pub fn engine_query_maintenance_step() {} fn retire_engine_query_stream(owner: Owner) -> Result<(), Owner> { ENGINE_QUERY_RETIREMENT_QUARANTINE } impl Drop for QueryStream { fn drop(&mut self) { install_reserved_engine_query_stream(std::mem::replace(self, Self::new())); } } fn interrupted_query_stream_drop_retains_one_resumable_close_owner() { ENGINE_QUERY_RETIREMENT_OVERFLOW ENGINE_QUERY_RETIREMENT_QUARANTINE ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT reserve_engine_query_retirement exact-overflow-stream second-overflow-stream retire_engine_query_stream(exact) }";
+  const compact = "struct CompactionRetainedPages static COMPACTION_PAGE_RETIREMENT static COMPACTION_PAGE_RETIREMENT_OVERFLOW static COMPACTION_PAGE_RETIREMENT_QUARANTINE static COMPACTION_RETIREMENT_RESERVATIONS static COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT fetch_or(bit fetch_and(! fn reserve_compaction_retirement fn install_reserved_compaction_pages fn retire_compaction_pages(owner: Owner) -> Result<(), Owner> { COMPACTION_PAGE_RETIREMENT_QUARANTINE } struct MountedCompactionPageClose fn publish_retained async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit() { unwrap_err exact_operation second_operation COMPACTION_PAGE_RETIREMENT_OVERFLOW COMPACTION_PAGE_RETIREMENT_QUARANTINE COMPACTION_PAGE_RETIREMENT_PRESSURE_FAULT reserve_compaction_retirement MountedCompactionPageClose }";
+  const cli = "struct MountedWalRecordCommandClose struct MountedWalBatchCommandClose struct MountedWalReplayCommandClose struct MountedSnapshotCommandClose struct CliCommandCloseWitness impl Future for MountedWalRecordCommandClose { self.terminal } impl Future for MountedWalBatchCommandClose { self.terminal } impl Future for MountedWalReplayCommandClose { self.terminal } impl Future for MountedSnapshotCommandClose { self.terminal } async fn cmd_wal_inspect() {} async fn cmd_snapshot_inspect() {} async fn cmd_replay() {} async fn cmd_migrate() {} async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses() { Future::poll Poll::Pending Poll::Ready(Ok(CliCommandCloseWitness CLI_COMMAND_CLOSE_INTERRUPTED terminal: Some(fault) unwrap_err } cli_full_cycle_succeeds_for_a_seeded_document cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it cli_migrate_appends_a_migration_record_visible_to_wal_inspect";
   const clean = [pack, snapshot, index, wal, artifact, query, engine, compact, cli] as const;
   if (interactivityP1qR4Failures(...clean).length !== 0) throw new Error("[verify interactivity] P1q R4 retained source baseline was falsely rejected.");
   const mutations = [
@@ -8260,6 +8427,18 @@ function interactivityP1qR4SelfTests(): void {
     clean.with(4, `${artifact} std::mem::forget(owner)`),
     clean.with(7, `${compact} std::mem::forget(owner)`),
     clean.with(5, `${query} poll_fn(|context| { context.waker().wake_by_ref(); Poll::Ready(()) })`),
+    clean.with(4, artifact.replace("ARTIFACT_STATE_RETIREMENT_RESERVATIONS", "ARTIFACT_UNRESERVED_RETIREMENT")),
+    clean.with(5, query.replace("QUERY_RETIRED_ROWS_RESERVATIONS", "QUERY_UNRESERVED_ROWS")),
+    clean.with(6, engine.replace("ENGINE_QUERY_RETIREMENT_RESERVATIONS", "ENGINE_UNRESERVED_STREAMS")),
+    clean.with(7, compact.replace("COMPACTION_RETIREMENT_RESERVATIONS", "COMPACTION_UNRESERVED_PAGES")),
+    clean.with(4, artifact.replace("impl Future for ArtifactWalEnvelopeDecode {", "impl Future for ArtifactWalEnvelopeDecode { Vec::with_capacity(count);")),
+    clean.with(4, artifact.replace("owner.page.poll", "while remaining != 0 { decode_protocol_field() }")),
+    clean.with(4, artifact.replace("retained.diff_payload.close_step()?", "drop(retained.diff_payload)")),
+    clean.with(4, artifact.replace("decode_retained_envelope(bytes, &mut control).await?", "protocol::decode_envelope(bytes)")),
+    clean.with(8, cli.replace("impl Future for MountedWalRecordCommandClose { self.terminal }", "impl Future for MountedWalRecordCommandClose { self.owner.as_mut().expect(\"live owner\") }")),
+    clean.with(8, cli.replace("terminal: Some(fault)", "owner: None")),
+    clean.with(4, artifact.replace("wal cursor cancelled", "cancel flag only")),
+    clean.with(4, artifact.replace("ARTIFACT_WAL_FIELD_BYTES max-plus-one", "unbounded field")),
   ];
   for (const [index, mutation] of mutations.entries())
     if (interactivityP1qR4Failures(...mutation).length === 0) throw new Error(`[verify interactivity] P1q R4 hostile mutation ${index} was falsely accepted.`);

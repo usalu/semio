@@ -3153,13 +3153,83 @@ pub(crate) mod kernel_runtime {
     use std::future::Future;
     use std::path::PathBuf;
     use std::pin::Pin;
-    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Mutex, OnceLock};
     use std::task::{Context, Poll, Waker};
     use std::time::Duration;
     use ui_contract::{SurfaceId, UiDocumentBuilder, UiDocumentLease, UiDocumentLimits, UiFixedList, UiPatchApplyOutcome, UiPatchApplyProducer, UiPatchApplyRejected, UiPatchApplyStep, UiRevision, UiSnapshotState, UI_DOCUMENT_LEASE_SLOTS};
 
-    static SEQ: AtomicU64 = AtomicU64::new(1);
+    #[derive(Default)]
+    struct RendererSequenceAuthority {
+        committed: u64,
+        reserved: Option<u64>,
+        exhausted: bool,
+    }
+
+    impl RendererSequenceAuthority {
+        fn try_reserve(&mut self) -> Result<u64, String> {
+            if self.exhausted || self.reserved.is_some() {
+                return Err("renderer sequence authority is exhausted or reserved".to_string());
+            }
+            let generation = self.committed.checked_add(1).filter(|generation| *generation != 0).ok_or_else(|| "renderer sequence authority is permanently exhausted".to_string())?;
+            self.reserved = Some(generation);
+            Ok(generation)
+        }
+
+        fn commit(&mut self, generation: u64) -> Result<(), String> {
+            if self.reserved != Some(generation) || self.committed.checked_add(1) != Some(generation) {
+                return Err("renderer sequence reservation is stale".to_string());
+            }
+            self.reserved = None;
+            self.committed = generation;
+            self.exhausted = generation == u64::MAX;
+            Ok(())
+        }
+
+        fn rollback(&mut self, generation: u64) {
+            if self.reserved == Some(generation) {
+                self.reserved = None;
+            }
+        }
+    }
+
+    struct RendererSequenceReservation {
+        generation: u64,
+        active: bool,
+    }
+
+    impl RendererSequenceReservation {
+        fn generation(&self) -> u64 {
+            self.generation
+        }
+
+        fn commit(mut self) -> Result<u64, String> {
+            let mut authority = renderer_sequence_authority().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            authority.commit(self.generation)?;
+            self.active = false;
+            Ok(self.generation)
+        }
+    }
+
+    impl Drop for RendererSequenceReservation {
+        fn drop(&mut self) {
+            if !self.active {
+                return;
+            }
+            let mut authority = renderer_sequence_authority().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            authority.rollback(self.generation);
+        }
+    }
+
+    fn renderer_sequence_authority() -> &'static Mutex<RendererSequenceAuthority> {
+        static AUTHORITY: OnceLock<Mutex<RendererSequenceAuthority>> = OnceLock::new();
+        AUTHORITY.get_or_init(|| Mutex::new(RendererSequenceAuthority::default()))
+    }
+
+    fn reserve_seq() -> Result<RendererSequenceReservation, String> {
+        let mut authority = renderer_sequence_authority().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let generation = authority.try_reserve()?;
+        Ok(RendererSequenceReservation { generation, active: true })
+    }
 
     const JOB_PROGRESS_PRESENTATION_CAPACITY: usize = 64;
 
@@ -3335,8 +3405,8 @@ pub(crate) mod kernel_runtime {
         job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").take()
     }
 
-    fn next_seq() -> u64 {
-        SEQ.fetch_add(1, Ordering::Relaxed)
+    fn next_seq() -> Result<u64, String> {
+        reserve_seq()?.commit()
     }
 
     fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, session: u64) -> Result<TurnResult, String> {
@@ -3933,38 +4003,42 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle {
+        pub(crate) fn begin_destroy_app(&self, instance: u32) -> Result<KernelCloseHandle, String> {
+            let reservation = reserve_seq()?;
             let owner = Arc::new(KernelCloseSubmission {
                 instance,
                 realm: false,
-                generation: next_seq(),
+                generation: reservation.generation(),
                 queue: self.queue.clone(),
                 pool: crate::renderer_worker_pool(),
                 registry: Arc::downgrade(&self.close_submissions),
                 phase: std::sync::atomic::AtomicU8::new(KERNEL_CLOSE_UNADMITTED),
             });
+            reservation.commit()?;
             let handle = KernelCloseHandle { owner };
             let _ = handle.poll();
-            handle
+            Ok(handle)
         }
 
-        pub(crate) fn begin_close_realm(&self) -> KernelCloseHandle {
+        pub(crate) fn begin_close_realm(&self) -> Result<KernelCloseHandle, String> {
+            let reservation = reserve_seq()?;
             let owner = Arc::new(KernelCloseSubmission {
                 instance: u32::MAX,
                 realm: true,
-                generation: next_seq(),
+                generation: reservation.generation(),
                 queue: self.queue.clone(),
                 pool: crate::renderer_worker_pool(),
                 registry: Arc::downgrade(&self.close_submissions),
                 phase: std::sync::atomic::AtomicU8::new(KERNEL_CLOSE_UNADMITTED),
             });
+            reservation.commit()?;
             let handle = KernelCloseHandle { owner };
             let _ = handle.poll();
-            handle
+            Ok(handle)
         }
 
         pub(crate) fn destroy_app(&self, instance: u32) {
-            let handle = self.begin_destroy_app(instance);
+            let Ok(handle) = self.begin_destroy_app(instance) else { return };
             match handle.poll() {
                 KernelCloseStatus::Pending | KernelCloseStatus::Complete => {}
                 KernelCloseStatus::AdmissionBlocked | KernelCloseStatus::Fault => {
@@ -3979,16 +4053,20 @@ pub(crate) mod kernel_runtime {
             }
             let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| fault.to_string())?;
             for command in commands {
-                let seq = next_seq();
+                let seq = next_seq()?;
                 let command = protocol::encode_app_command(&command).await.map_err(|fault| fault.to_string())?;
                 if let Err((fault, rejected)) = envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance, seq, command }) {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected) }, Arc::new(ResponseSlot::default())).await;
                     return Err(fault.to_string());
                 }
             }
-            let generation = next_seq();
+            let reservation = reserve_seq()?;
+            let generation = reservation.generation();
             let batch = match semio_framework::kernel::CommandBatch::try_new(generation, envelopes) {
-                Ok(batch) => batch,
+                Ok(batch) => {
+                    reservation.commit()?;
+                    batch
+                }
                 Err((fault, owners)) => {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::from_admitted(owners) }, Arc::new(ResponseSlot::default())).await;
                     return Err(fault.to_string());
@@ -4037,6 +4115,8 @@ pub(crate) mod kernel_runtime {
         revision: UiRevision,
         cursor: usize,
         builder: Option<UiDocumentBuilder>,
+        rejected_record: Option<ui_contract::UiNodeRecord>,
+        closing: bool,
     }
     //#endregion 📄️RetainedDocumentExchange
 
@@ -4044,32 +4124,61 @@ pub(crate) mod kernel_runtime {
         state: Option<UiSnapshotState>,
         patch: Option<RetainedPatchApply>,
         queued_patches: UiFixedList<KernelUiPatch, UI_DOCUMENT_LEASE_SLOTS>,
+        rejected_patches: UiFixedList<KernelUiPatch, UI_DOCUMENT_LEASE_SLOTS>,
         build: Option<RetainedDocumentBuild>,
         build_pending: bool,
         published: Option<UiDocumentLease>,
         closing: Option<UiDocumentLease>,
+        exchange_closing: Option<UiDocumentLease>,
         patch_close_complete: bool,
     }
 
     impl RetainedSurface {
         fn new(surface: SurfaceId) -> Self {
-            Self { state: Some(UiSnapshotState::new(surface)), patch: None, queued_patches: UiFixedList::default(), build: None, build_pending: false, published: None, closing: None, patch_close_complete: false }
+            Self {
+                state: Some(UiSnapshotState::new(surface)),
+                patch: None,
+                queued_patches: UiFixedList::default(),
+                rejected_patches: UiFixedList::default(),
+                build: None,
+                build_pending: false,
+                published: None,
+                closing: None,
+                exchange_closing: None,
+                patch_close_complete: false,
+            }
         }
 
         fn admit_patch(&mut self, patch: KernelUiPatch) -> Result<(), KernelUiPatch> {
             if self.patch.is_some() || self.state.is_none() {
                 return self.queued_patches.try_push(patch);
             }
+            let reservation = match reserve_seq() {
+                Ok(reservation) => reservation,
+                Err(_) => return Err(patch),
+            };
             let state = self.state.take().expect("retained surface state is admitted once");
-            let generation = next_seq();
-            self.patch = Some(match UiPatchApplyProducer::try_new(state, patch, UiDocumentLimits::default(), generation) {
+            let generation = reservation.generation();
+            let owner = match UiPatchApplyProducer::try_new(state, patch, UiDocumentLimits::default(), generation) {
                 Ok(producer) => RetainedPatchApply::Applying(producer),
                 Err(rejected) => RetainedPatchApply::Rejected(rejected),
-            });
+            };
+            let committed = reservation.commit().is_ok();
+            self.patch = Some(owner);
+            if !committed {
+                return Ok(());
+            }
             Ok(())
         }
 
-        fn advance_patch_one(&mut self) -> Option<(UiRevision, String)> {
+        fn advance_patch_one(&mut self) -> Option<(UiRevision, ui_contract::UiText)> {
+            if let Some(patch) = self.rejected_patches.get_mut(0) {
+                if patch.ops.pop().is_some() {
+                    return None;
+                }
+                let _ = self.rejected_patches.swap_remove(0);
+                return Some((UiRevision::default(), ui_contract::UiText::try_from_str("retained patch admission capacity exhausted").unwrap_or_default()));
+            }
             if self.patch.is_none() {
                 if let Some(patch) = self.queued_patches.swap_remove(0) {
                     if let Err(patch) = self.admit_patch(patch) {
@@ -4105,7 +4214,7 @@ pub(crate) mod kernel_runtime {
                 }
                 RetainedPatchApply::Rejected(mut rejected) => {
                     let revision = rejected.state().map_or(UiRevision::default(), UiSnapshotState::revision);
-                    let reason = format!("{:?}", rejected.rejection());
+                    let reason = ui_contract::UiText::try_from_str("retained patch rejected").unwrap_or_default();
                     if !rejected.close_step() {
                         self.patch = Some(RetainedPatchApply::Rejected(rejected));
                     } else {
@@ -4125,7 +4234,8 @@ pub(crate) mod kernel_runtime {
                 return;
             }
             let Some(state) = self.state.as_ref() else { return };
-            let generation = next_seq();
+            let Ok(reservation) = reserve_seq() else { return };
+            let generation = reservation.generation();
             let builder = match UiDocumentBuilder::try_new(generation, state.surface.clone(), state.revision, state.root, state.revision.0) {
                 Ok(builder) => builder,
                 Err((_fault, _surface)) => {
@@ -4133,37 +4243,63 @@ pub(crate) mod kernel_runtime {
                     return;
                 }
             };
+            let mut build = RetainedDocumentBuild { generation, revision: state.revision, cursor: 0, builder: Some(builder), rejected_record: None, closing: false };
+            if reservation.commit().is_err() {
+                build.closing = true;
+                self.build = Some(build);
+                return;
+            }
             self.build_pending = false;
-            self.build = Some(RetainedDocumentBuild { generation, revision: state.revision, cursor: 0, builder: Some(builder) });
+            self.build = Some(build);
         }
 
         fn advance_document_one(&mut self) {
+            if let Some(closing) = self.exchange_closing.as_mut() {
+                if closing.close_step() && closing.terminal_is_empty() {
+                    self.exchange_closing = None;
+                }
+                return;
+            }
             if let Some(closing) = self.closing.as_mut() {
-                let _ = closing.close_step();
-                self.closing = None;
+                if closing.close_step() && closing.terminal_is_empty() {
+                    self.closing = None;
+                }
                 return;
             }
             self.begin_document_build();
             let Some(build) = self.build.as_mut() else { return };
+            if build.closing {
+                let Some(builder) = build.builder.as_mut() else { return };
+                if builder.close_step() && builder.terminal_is_empty() {
+                    build.builder = None;
+                    if build.rejected_record.take().is_some() {
+                        return;
+                    }
+                    self.build = None;
+                }
+                return;
+            }
             let Some(state) = self.state.as_ref() else { return };
-            if state.revision != build.revision || build.generation == 0 {
-                self.build = None;
+            if state.revision != build.revision {
+                build.closing = true;
                 return;
             }
             if let Some(record) = state.nodes.get_index(build.cursor) {
                 let Some(record) = record.credited_clone() else {
-                    self.build = None;
+                    build.closing = true;
                     return;
                 };
-                let Some(builder) = build.builder.as_mut() else {
-                    self.build = None;
-                    return;
-                };
-                if builder.try_push(record).is_err() {
-                    self.build = None;
+                let Some(builder) = build.builder.as_mut() else { return };
+                if let Err((_fault, record)) = builder.try_push(record) {
+                    build.rejected_record = Some(record);
+                    build.closing = true;
                     return;
                 }
-                build.cursor += 1;
+                let Some(cursor) = build.cursor.checked_add(1) else {
+                    build.closing = true;
+                    return;
+                };
+                build.cursor = cursor;
                 return;
             }
             let Some(builder) = build.builder.take() else { return };
@@ -4172,7 +4308,10 @@ pub(crate) mod kernel_runtime {
                     self.closing = self.published.replace(document);
                     self.build = None;
                 }
-                Err((_fault, builder)) => build.builder = Some(builder),
+                Err((_fault, builder)) => {
+                    build.builder = Some(builder);
+                    build.closing = true;
+                }
             }
         }
 
@@ -4219,7 +4358,23 @@ pub(crate) mod kernel_runtime {
                 }
                 return false;
             }
-            if self.build.take().is_some() {
+            if let Some(patch) = self.rejected_patches.get_mut(0) {
+                if patch.ops.pop().is_none() {
+                    let _ = self.rejected_patches.swap_remove(0);
+                }
+                return false;
+            }
+            if let Some(build) = self.build.as_mut() {
+                build.closing = true;
+                if let Some(builder) = build.builder.as_mut() {
+                    if builder.close_step() && builder.terminal_is_empty() {
+                        build.builder = None;
+                        if build.rejected_record.take().is_some() {
+                            return false;
+                        }
+                        self.build = None;
+                    }
+                }
                 return false;
             }
             if self.build_pending {
@@ -4227,13 +4382,21 @@ pub(crate) mod kernel_runtime {
                 return false;
             }
             if let Some(document) = self.published.as_mut() {
-                let _ = document.close_step();
-                self.published = None;
+                if document.close_step() && document.terminal_is_empty() {
+                    self.published = None;
+                }
                 return false;
             }
             if let Some(document) = self.closing.as_mut() {
-                let _ = document.close_step();
-                self.closing = None;
+                if document.close_step() && document.terminal_is_empty() {
+                    self.closing = None;
+                }
+                return false;
+            }
+            if let Some(document) = self.exchange_closing.as_mut() {
+                if document.close_step() && document.terminal_is_empty() {
+                    self.exchange_closing = None;
+                }
                 return false;
             }
             if let Some(state) = self.state.as_mut() {
@@ -4249,6 +4412,168 @@ pub(crate) mod kernel_runtime {
                 return false;
             }
             ui_contract::close_ui_document_page_one()
+        }
+    }
+
+    const RETAINED_SURFACE_CAPACITY: usize = 64;
+
+    struct RetainedSurfaceSlot {
+        generation: u64,
+        instance: u32,
+        surface: SurfaceId,
+        owner: RetainedSurface,
+    }
+
+    struct RetainedSurfaceRegistry {
+        slots: [Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY],
+        next_generation: u64,
+        generation_exhausted: bool,
+        close_cursor: usize,
+    }
+
+    impl RetainedSurfaceRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| None), next_generation: 0, generation_exhausted: false, close_cursor: 0 }
+        }
+
+        fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
+            self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == instance && slot.surface == *surface))
+        }
+
+        fn get(&self, instance: u32, surface: &SurfaceId) -> Option<&RetainedSurfaceSlot> {
+            self.index(instance, surface).and_then(|index| self.slots[index].as_ref())
+        }
+
+        fn get_mut(&mut self, instance: u32, surface: &SurfaceId) -> Option<&mut RetainedSurfaceSlot> {
+            let index = self.index(instance, surface)?;
+            self.slots[index].as_mut()
+        }
+
+        fn try_admit(&mut self, instance: u32, surface: SurfaceId) -> Result<usize, SurfaceId> {
+            if let Some(index) = self.index(instance, &surface) {
+                return Ok(index);
+            }
+            if self.generation_exhausted {
+                return Err(surface);
+            }
+            let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(surface) };
+            let Some(generation) = self.next_generation.checked_add(1).filter(|generation| *generation != 0) else { return Err(surface) };
+            let owner = RetainedSurface::new(surface.clone());
+            self.slots[index] = Some(RetainedSurfaceSlot { generation, instance, surface, owner });
+            self.next_generation = generation;
+            self.generation_exhausted = generation == u64::MAX;
+            Ok(index)
+        }
+
+        fn advance_instance_close_one(&mut self, instance: u32) -> bool {
+            let index = self.close_cursor;
+            self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
+            let Some(slot) = self.slots[index].as_mut().filter(|slot| slot.instance == instance) else {
+                return !self.slots.iter().flatten().any(|slot| slot.instance == instance);
+            };
+            if slot.owner.close_step() {
+                self.slots[index] = None;
+            }
+            false
+        }
+
+        fn advance_realm_close_one(&mut self) -> bool {
+            let index = self.close_cursor;
+            self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
+            let Some(slot) = self.slots[index].as_mut() else { return self.slots.iter().all(Option::is_none) };
+            if slot.owner.close_step() {
+                self.slots[index] = None;
+            }
+            false
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.slots.iter().all(Option::is_none)
+        }
+    }
+
+    struct PendingSurfaceRejection {
+        generation: u64,
+        instance: u32,
+        surface: SurfaceId,
+        revision: UiRevision,
+        reason: ui_contract::UiText,
+        patch: Option<KernelUiPatch>,
+    }
+
+    struct PendingSurfaceRejectionRegistry {
+        slots: [Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY],
+        close_cursor: usize,
+    }
+
+    impl PendingSurfaceRejectionRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| None), close_cursor: 0 }
+        }
+
+        fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
+            self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == instance && slot.surface == *surface))
+        }
+
+        fn get(&self, instance: u32, surface: &SurfaceId) -> Option<&PendingSurfaceRejection> {
+            self.index(instance, surface).and_then(|index| self.slots[index].as_ref())
+        }
+
+        fn remove(&mut self, instance: u32, surface: &SurfaceId) -> Option<PendingSurfaceRejection> {
+            let index = self.index(instance, surface)?;
+            self.slots[index].take()
+        }
+
+        fn try_admit(&mut self, rejection: PendingSurfaceRejection) -> Result<(), PendingSurfaceRejection> {
+            let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) else { return Err(rejection) };
+            *slot = Some(rejection);
+            Ok(())
+        }
+
+        fn try_upsert(&mut self, rejection: PendingSurfaceRejection) -> Result<(), PendingSurfaceRejection> {
+            if let Some(index) = self.index(rejection.instance, &rejection.surface) {
+                if self.slots[index].as_ref().is_some_and(|current| current.patch.is_some()) {
+                    return Err(rejection);
+                }
+                self.slots[index] = Some(rejection);
+                return Ok(());
+            }
+            self.try_admit(rejection)
+        }
+
+        fn take_instance_one(&mut self, instance: u32) -> Option<PendingSurfaceRejection> {
+            let index = self.close_cursor;
+            self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
+            let slot = self.slots[index].as_mut().filter(|slot| slot.instance == instance)?;
+            if let Some(patch) = slot.patch.as_mut() {
+                if patch.ops.pop().is_none() {
+                    slot.patch = None;
+                }
+                return None;
+            }
+            self.slots[index].take()
+        }
+
+        fn take_any_one(&mut self) -> Option<PendingSurfaceRejection> {
+            let index = self.close_cursor;
+            self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
+            if let Some(patch) = self.slots[index].as_mut().and_then(|slot| slot.patch.as_mut()) {
+                if patch.ops.pop().is_none() {
+                    if let Some(slot) = self.slots[index].as_mut() {
+                        slot.patch = None;
+                    }
+                }
+                return None;
+            }
+            self.slots[index].take()
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.slots.iter().all(Option::is_none)
+        }
+
+        fn instance_is_empty(&self, instance: u32) -> bool {
+            !self.slots.iter().flatten().any(|slot| slot.instance == instance)
         }
     }
 
@@ -4294,10 +4619,10 @@ pub(crate) mod kernel_runtime {
         /// document lease per `(instance, surface)`. Every [`UiPatchOp`] is applied through the
         /// contract's retained, quota-bounded [`UiPatchApplyProducer`]; a rejection preserves both
         /// the document revision and the previously published document.
-        retained: HashMap<(u32, SurfaceId), RetainedSurface>,
+        retained: RetainedSurfaceRegistry,
         /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected`, retaining both
         /// the receiver revision and the contract rejection reason.
-        pending_rejections: HashMap<(u32, SurfaceId), (UiRevision, String)>,
+        pending_rejections: PendingSurfaceRejectionRegistry,
         retained_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
         queued_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
         rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
@@ -4329,8 +4654,8 @@ pub(crate) mod kernel_runtime {
                 plugin_ordinals: HashMap::new(),
                 instances: HashMap::new(),
                 next_instance_id: 1,
-                retained: HashMap::new(),
-                pending_rejections: HashMap::new(),
+                retained: RetainedSurfaceRegistry::new(),
+                pending_rejections: PendingSurfaceRejectionRegistry::new(),
                 retained_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
                 queued_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
                 rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
@@ -4754,19 +5079,13 @@ pub(crate) mod kernel_runtime {
                 self.closing_apps[close_index] = Some(closing);
                 return false;
             }
-            if let Some(key) = self.retained.keys().find(|(retained_instance, _)| *retained_instance == instance).cloned() {
-                let terminal = self.retained.get_mut(&key).is_some_and(RetainedSurface::close_step);
-                if !terminal {
-                    return false;
-                }
-                self.retained.remove(&key);
+            if !self.retained.advance_instance_close_one(instance) {
                 return false;
             }
-            if let Some(key) = self.pending_rejections.keys().find(|(retained_instance, _)| *retained_instance == instance).cloned() {
-                self.pending_rejections.remove(&key);
+            if self.pending_rejections.take_instance_one(instance).is_some() {
                 return false;
             }
-            true
+            self.pending_rejections.instance_is_empty(instance)
         }
 
         fn close_realm_progress_step(&mut self) -> bool {
@@ -4791,15 +5110,13 @@ pub(crate) mod kernel_runtime {
                 let _ = self.command_maintenance_step();
                 return false;
             }
-            if let Some(key) = self.retained.keys().next().cloned() {
-                let terminal = self.retained.get_mut(&key).is_some_and(RetainedSurface::close_step);
-                if terminal {
-                    self.retained.remove(&key);
-                }
+            if !self.retained.advance_realm_close_one() {
                 return false;
             }
-            if let Some(key) = self.pending_rejections.keys().next().cloned() {
-                self.pending_rejections.remove(&key);
+            if self.pending_rejections.take_any_one().is_some() {
+                return false;
+            }
+            if !self.pending_rejections.terminal_is_empty() {
                 return false;
             }
             self.realm_progress_close_started = false;
@@ -4810,11 +5127,8 @@ pub(crate) mod kernel_runtime {
             let Some(&actor) = self.instances.get(&instance) else {
                 return Err(format!("kernel: instance {instance} is not registered"));
             };
-            let rejections: Vec<(u32, SurfaceId)> = self.pending_rejections.keys().filter(|(inst, _)| *inst == instance).cloned().collect();
-            for key in rejections {
-                if let Some((revision, reason)) = self.pending_rejections.remove(&key) {
-                    events.insert(0, Event::PatchRejected { surface: key.1 .0, revision: revision.0, reason });
-                }
+            if let Some(rejection) = self.pending_rejections.take_instance_one(instance) {
+                events.insert(0, Event::PatchRejected { surface: rejection.surface.0, revision: rejection.revision.0, reason: rejection.reason.to_string() });
             }
             self.run_turn(actor, instance, events).await
         }
@@ -4904,7 +5218,7 @@ pub(crate) mod kernel_runtime {
                     to: actor,
                     from: Origin::Kernel,
                     lane: Lane::Interactive,
-                    seq: next_seq(),
+                    seq: next_seq()?,
                     deadline_ms: None,
                     coalesce: None,
                     cancel_of: None,
@@ -4916,7 +5230,7 @@ pub(crate) mod kernel_runtime {
                         to: actor,
                         from: Origin::Kernel,
                         lane: Lane::Interactive,
-                        seq: next_seq(),
+                        seq: next_seq()?,
                         deadline_ms: None,
                         coalesce: None,
                         cancel_of: None,
@@ -5008,7 +5322,7 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        async fn apply_turn_result(&mut self, actor: ActorId, instance: u32, result: TurnResult) -> Result<ExchangeOutcome, String> {
+        async fn apply_turn_result(&mut self, actor: ActorId, instance: u32, mut result: TurnResult) -> Result<ExchangeOutcome, String> {
             // 🎠️ terra-kernel-loop: `Kernel::complete` (the bridge this doc comment used to flag as
             // unreached — "bridging the two needs a real pack-encode step this packet didn't reach")
             // is now genuinely called, from `run_turn`, for EVERY `ShardOutcome::Turn` a tick grants
@@ -5029,25 +5343,56 @@ pub(crate) mod kernel_runtime {
                 effects.push(effect);
             }
             let mut surfaces = UiFixedList::default();
-            for patch in result.ui_patches {
-                self.apply_ui_patch(instance, patch);
+            loop {
+                match result.ui_patches.try_transfer_one(|patch| self.apply_ui_patch(instance, patch)) {
+                    semio_framework::kernel::UiTurnPatchTransfer::Empty => break,
+                    semio_framework::kernel::UiTurnPatchTransfer::Transferred(()) => {}
+                    semio_framework::kernel::UiTurnPatchTransfer::Refused => return Err("renderer retained patch admission refused without consuming the exact turn owner".to_string()),
+                }
             }
             let _ = self.advance_retained_one(instance, None, &mut surfaces);
             Ok(ExchangeOutcome { frames, surfaces, effects, command_ingress: result.command_ingress })
         }
 
-        fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch) {
-            let key = (instance, patch.surface.clone());
-            let retained = self.retained.entry(key.clone()).or_insert_with(|| RetainedSurface::new(patch.surface.clone()));
-            if let Err(rejected) = retained.admit_patch(patch) {
-                let generation = next_seq();
-                let state = UiSnapshotState::new(rejected.surface.clone());
-                match UiPatchApplyProducer::try_new(state, rejected, UiDocumentLimits::default(), generation) {
-                    Ok(producer) => drop(producer),
-                    Err(rejected) => drop(rejected),
+        fn apply_ui_patch(&mut self, instance: u32, patch: KernelUiPatch) -> Result<(), KernelUiPatch> {
+            let surface = patch.surface.clone();
+            let index = match self.retained.try_admit(instance, surface.clone()) {
+                Ok(index) => index,
+                Err(surface) => {
+                    let Ok(reservation) = reserve_seq() else {
+                        return Err(patch);
+                    };
+                    let generation = reservation.generation();
+                    let rejection = PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained surface capacity exhausted").unwrap_or_default(), patch: Some(patch) };
+                    match self.pending_rejections.try_admit(rejection) {
+                        Ok(()) => {
+                            let _ = reservation.commit();
+                        }
+                        Err(mut rejection) => {
+                            return rejection.patch.take().map_or(Ok(()), Err);
+                        }
+                    }
+                    return Ok(());
                 }
-                self.pending_rejections.insert(key, (UiRevision::default(), "retained patch admission capacity exhausted".to_string()));
+            };
+            let Some(slot) = self.retained.slots[index].as_mut() else { return Err(patch) };
+            let rejected = slot.owner.admit_patch(patch).err().and_then(|patch| slot.owner.rejected_patches.try_push(patch).err());
+            if let Some(patch) = rejected {
+                let Ok(reservation) = reserve_seq() else {
+                    return Err(patch);
+                };
+                let generation = reservation.generation();
+                let rejection = PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained patch queues exhausted").unwrap_or_default(), patch: Some(patch) };
+                match self.pending_rejections.try_admit(rejection) {
+                    Ok(()) => {
+                        let _ = reservation.commit();
+                    }
+                    Err(mut rejection) => {
+                        return rejection.patch.take().map_or(Ok(()), Err);
+                    }
+                }
             }
+            Ok(())
         }
 
         fn advance_retained_surface_one(&mut self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, String> {
@@ -5057,14 +5402,21 @@ pub(crate) mod kernel_runtime {
         }
 
         fn advance_retained_one(&mut self, instance: u32, requested: Option<&SurfaceId>, out: &mut UiFixedList<ExchangeSurfaceDocument, UI_DOCUMENT_LEASE_SLOTS>) -> Result<(), String> {
-            let requested_key = requested.map(|surface| (instance, surface.clone()));
-            let key = requested_key.or_else(|| {
-                self.retained
-                    .iter()
-                    .find(|((retained_instance, _), retained)| *retained_instance == instance && (retained.patch.is_some() || !retained.queued_patches.is_empty() || retained.build.is_some() || retained.build_pending || retained.closing.is_some()))
-                    .map(|(key, _)| key.clone())
+            let index = requested.and_then(|surface| self.retained.index(instance, surface)).or_else(|| {
+                self.retained.slots.iter().position(|slot| {
+                    slot.as_ref().is_some_and(|slot| {
+                        slot.instance == instance
+                            && (slot.owner.patch.is_some()
+                                || !slot.owner.queued_patches.is_empty()
+                                || !slot.owner.rejected_patches.is_empty()
+                                || slot.owner.build.is_some()
+                                || slot.owner.build_pending
+                                || slot.owner.closing.is_some()
+                                || slot.owner.exchange_closing.is_some())
+                    })
+                })
             });
-            let Some(key) = key else {
+            let Some(index) = index else {
                 if let Some(surface) = requested {
                     return Err(format!("retained surface '{}' is not admitted", surface.as_ref()));
                 }
@@ -5076,35 +5428,38 @@ pub(crate) mod kernel_runtime {
                 self.semantic_close_document_lane = !self.semantic_close_document_lane;
                 return Ok(());
             };
-            let Some(retained) = self.retained.get_mut(&key) else {
-                return Err(format!("retained surface '{}' is not admitted", key.1.as_ref()));
-            };
-            let active = retained.patch.is_some() || !retained.queued_patches.is_empty() || retained.build.is_some() || retained.build_pending || retained.closing.is_some();
+            let Some(slot) = self.retained.slots[index].as_mut() else { return Err("retained surface slot is vacant".to_string()) };
+            let generation = slot.generation;
+            let surface = slot.surface.clone();
+            let retained = &mut slot.owner;
+            let active =
+                retained.patch.is_some() || !retained.queued_patches.is_empty() || !retained.rejected_patches.is_empty() || retained.build.is_some() || retained.build_pending || retained.closing.is_some() || retained.exchange_closing.is_some();
             if !active {
-                if let Some((_, reason)) = self.pending_rejections.get(&key) {
+                if let Some(rejection) = self.pending_rejections.get(instance, &surface).filter(|rejection| rejection.generation == generation) {
                     if retained.published.is_none() {
-                        return Err(reason.clone());
+                        return Err(rejection.reason.to_string());
                     }
                 }
             }
             if active {
                 if retained.patch.is_some() || !retained.queued_patches.is_empty() {
                     if let Some(rejection) = retained.advance_patch_one() {
-                        let reason = rejection.1.clone();
-                        self.pending_rejections.insert(key.clone(), rejection);
+                        let reason = rejection.1.to_string();
+                        let owner = PendingSurfaceRejection { generation, instance, surface: surface.clone(), revision: rejection.0, reason: rejection.1, patch: None };
+                        let _ = self.pending_rejections.try_upsert(owner);
                         if requested.is_some() && retained.published.is_none() {
                             return Err(reason);
                         }
                     } else if retained.patch.is_none() {
-                        self.pending_rejections.remove(&key);
+                        let _ = self.pending_rejections.remove(instance, &surface);
                     }
                 } else {
                     retained.advance_document_one();
                 }
             }
             if let Some(document) = retained.try_alias() {
-                if let Err(mut rejected) = out.try_push(ExchangeSurfaceDocument { surface: key.1.clone(), document }) {
-                    let _ = rejected.document.close_step();
+                if let Err(rejected) = out.try_push(ExchangeSurfaceDocument { surface: surface.clone(), document }) {
+                    retained.exchange_closing = Some(rejected.document);
                     if requested.is_some() {
                         return Err("retained surface exchange capacity exhausted".to_string());
                     }
@@ -5421,6 +5776,84 @@ pub(crate) mod kernel_runtime {
             ops.try_push(ui_contract::UiPatchOp::Upsert(record)).expect("hostile upsert owner");
             ops.try_push(ui_contract::UiPatchOp::SetRoot { id }).expect("hostile root owner");
             KernelUiPatch { surface, base_revision: UiRevision(base), revision: UiRevision(revision), ops }
+        }
+
+        #[test]
+        fn renderer_sequence_maximum_is_once_then_permanently_exhausted_and_rollback_is_transactional() {
+            let mut authority = RendererSequenceAuthority { committed: u64::MAX - 1, reserved: None, exhausted: false };
+            let maximum = authority.try_reserve().expect("maximum is admitted once");
+            assert_eq!(maximum, u64::MAX);
+            authority.commit(maximum).expect("maximum commits once");
+            let witness = (authority.committed, authority.reserved, authority.exhausted);
+            assert!(authority.try_reserve().is_err());
+            assert!(authority.try_reserve().is_err());
+            assert_eq!((authority.committed, authority.reserved, authority.exhausted), witness);
+
+            let mut rollback = RendererSequenceAuthority::default();
+            let first = rollback.try_reserve().expect("first reservation");
+            rollback.rollback(first);
+            assert_eq!(rollback.try_reserve().expect("rolled back identity is reusable before commit"), first);
+        }
+
+        #[test]
+        fn renderer_fixed_registries_return_exact_max_plus_one_surface_and_patch_owners() {
+            let mut retained = RetainedSurfaceRegistry::new();
+            for index in 0..RETAINED_SURFACE_CAPACITY {
+                retained.try_admit(1, SurfaceId::try_from(format!("surface-{index}")).expect("bounded surface")).expect("maximum retained surface");
+            }
+            let overflow = SurfaceId::try_from("surface-overflow").expect("bounded surface");
+            assert_eq!(retained.try_admit(1, overflow.clone()), Err(overflow));
+
+            let mut rejections = PendingSurfaceRejectionRegistry::new();
+            for index in 0..RETAINED_SURFACE_CAPACITY {
+                let surface = SurfaceId::try_from(format!("rejection-{index}")).expect("bounded surface");
+                rejections
+                    .try_admit(PendingSurfaceRejection {
+                        generation: index as u64 + 1,
+                        instance: 1,
+                        surface: surface.clone(),
+                        revision: UiRevision(index as u64),
+                        reason: ui_contract::UiText::try_from_str("capacity").expect("bounded reason"),
+                        patch: Some(retained_patch(surface, 0, index as u64 + 1)),
+                    })
+                    .expect("maximum pending rejection");
+            }
+            let surface = SurfaceId::try_from("rejection-overflow").expect("bounded surface");
+            let rejected = rejections
+                .try_admit(PendingSurfaceRejection {
+                    generation: 999,
+                    instance: 1,
+                    surface: surface.clone(),
+                    revision: UiRevision(999),
+                    reason: ui_contract::UiText::try_from_str("capacity").expect("bounded reason"),
+                    patch: Some(retained_patch(surface, 0, 999)),
+                })
+                .expect_err("maximum plus one rejection");
+            assert_eq!(rejected.patch.as_ref().map(|patch| patch.revision), Some(UiRevision(999)));
+            while !rejections.terminal_is_empty() {
+                let _ = rejections.take_any_one();
+            }
+            while !retained.advance_realm_close_one() {}
+        }
+
+        #[test]
+        fn stale_cancel_and_fault_document_builds_retain_closer_until_terminal() {
+            let surface = SurfaceId::try_from("hostile.document-close").expect("bounded hostile surface");
+            let mut retained = RetainedSurface::new(surface.clone());
+            retained.admit_patch(retained_patch(surface, 0, 1)).expect("retained patch");
+            while retained.patch.is_some() {
+                let _ = retained.advance_patch_one();
+            }
+            retained.begin_document_build();
+            retained.advance_document_one();
+            let build = retained.build.as_mut().expect("builder retained");
+            build.closing = true;
+            retained.advance_document_one();
+            assert!(retained.build.is_some(), "cancel/stale/fault first close opportunity retains a nonterminal closer");
+            while retained.build.is_some() {
+                retained.advance_document_one();
+            }
+            while !retained.close_step() {}
         }
 
         #[test]

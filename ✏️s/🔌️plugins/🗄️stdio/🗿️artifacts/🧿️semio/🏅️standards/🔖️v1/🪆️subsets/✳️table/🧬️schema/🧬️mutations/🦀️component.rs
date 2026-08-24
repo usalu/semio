@@ -68,6 +68,27 @@ pub fn apply_semio_table_mutation(snapshot: &mut SemioTableSnapshot, mutation: &
     let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
+/// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
+/// `protocol` extern-crate item (the `mutate-semio-table` test adapter, whose `inverse-<kind>` scenarios
+/// need a mutation's own computed inverse) can still reach the inverse law that
+/// [`apply_semio_table_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
+    use protocol::Mutation;
+    <SemioTableMutation as Mutation<SemioTableSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
+/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// carry — into a real [`SemioTableMutation`]. `reorder-columns`/`reorder-rows` address positions (`to_index`) while the rename/edit kinds
+/// address names — decoding keeps those two addressing modes exactly as the vector states them.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_table_mutation_json(text: &str) -> Result<SemioTableMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests

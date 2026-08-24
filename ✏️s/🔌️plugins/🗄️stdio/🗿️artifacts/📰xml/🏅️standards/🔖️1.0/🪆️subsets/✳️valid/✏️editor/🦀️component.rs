@@ -1,13 +1,16 @@
 //! ✏️ Xml editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.xml@1.0/*` (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main` (`TreeWindowKit`),
 //! directly editing `Text` nodes of `XmlSnapshot.doc` through the artifact's own
-//! `XmlMutation::SetText` — `set-node` on an `Element`/`CData`/`Comment`/`ProcessingInstruction`
-//! node is a documented no-op (`SetAttribute`/`InsertElement`/`RemoveElement` stay unreachable
-//! through this first-pass window).
+//! `XmlValidMutation::SetText` — `set-node` on an `Element`/`CData`/`Comment`/`ProcessingInstruction`
+//! node is a documented no-op. The vocabulary is this SUBSET's own `XmlValidMutation`, not `✳️any`'s
+//! `XmlMutation`: `SetText` is the one kind the two share, and the DOCTYPE/validity kinds
+//! (`declare-doctype`, `rename-document-element`, `set-external-subset`, `set-standalone`,
+//! `declare-entity`, `undeclare-entity`) stay unreachable through this first-pass window.
 
 use crate::artifacts::xml::schema::mutations::XmlNodePath;
 use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::xml::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
+use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation;
+use crate::artifacts::xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use crate::editor::xml_valid::modes::edit;
 use crate::editor::xml_valid::modes::edit::windows::main;
 use semio_framework_plugin::{
@@ -90,7 +93,7 @@ pub struct XmlValidEditor;
 
 impl ArtifactEditor for XmlValidEditor {
     type Snapshot = XmlSnapshot;
-    type Mutation = XmlMutation;
+    type Mutation = XmlValidMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
@@ -122,7 +125,7 @@ impl ArtifactEditor for XmlValidEditor {
         let Ok(path) = decode_node_id(node_id) else { return Ok(Emit::default()) };
         let Some(root) = &doc.snapshot.doc.root else { return Ok(Emit::default()) };
         let Some(XmlNode::Text { .. }) = resolve_node(root, &path) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![XmlMutation::SetText { path: XmlNodePath(path), text: value.clone() }], description: Some(format!("Set node {node_id}")), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![XmlValidMutation::SetText { path: XmlNodePath(path), text: value.clone() }], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {

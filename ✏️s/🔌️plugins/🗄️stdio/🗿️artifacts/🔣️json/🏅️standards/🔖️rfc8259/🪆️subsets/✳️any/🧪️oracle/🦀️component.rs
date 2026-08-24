@@ -130,6 +130,24 @@ fn number(value: &Json, key: &str) -> Option<f64> {
 fn path_param(params: &Json) -> Vec<PathSeg> {
     path_from_spec(&params.get("path").cloned().unwrap_or(Json::Array(Vec::new())))
 }
+/// 🔢️ WORKED_AROUND_DEFECT — `json` 0.12's `impl From<f64> for JsonValue` is not round-trip exact.
+/// Its `Number` is a `(sign, mantissa: u64, exponent: i16)` decimal pair, and the conversion INTO it
+/// rounds: `JsonValue::from(2.7000102824824506_f64).dump()` yields `2.7000102824824507`, one ULP up,
+/// and `-8.881784197001252e-16` becomes `…253e-16`. Reproduced standalone against the crate alone —
+/// 2 of 9 probed values were moved — and the crate's own PARSER is exact on all of them, so the fix
+/// is to reach the same `Number` through the half that works: format the `f64` with Rust's own
+/// shortest-round-trip `{:?}` and let `json::parse` build the value. Non-finite doubles are not JSON
+/// numbers at all and become `null`, which is what the crate's own conversion does with them too.
+/// Without this, a `set-snapshot` carrying a real 8,449-vertex model back through the reference
+/// perturbs its coordinates and the inverse law fails on a defect that is not this repository's.
+#[cfg(feature = "oracles")]
+fn library_number(number: f64) -> json::JsonValue {
+    if !number.is_finite() {
+        return json::JsonValue::Null;
+    }
+    json::parse(&format!("{number:?}")).unwrap_or(json::JsonValue::Null)
+}
+
 /// 🔀️ The host's own minimal `Json` (single `f64` number kind, no order distinction) into
 /// `json::JsonValue`, so a mutation's literal `value`/`snapshot` param can be written by the
 /// reference implementation.
@@ -138,7 +156,7 @@ fn json_to_library(value: &Json) -> json::JsonValue {
     match value {
         Json::Null => json::JsonValue::Null,
         Json::Bool(flag) => json::JsonValue::from(*flag),
-        Json::Number(number) => json::JsonValue::from(*number),
+        Json::Number(number) => library_number(*number),
         Json::String(text) => json::JsonValue::from(text.clone()),
         Json::Array(items) => json::JsonValue::Array(items.iter().map(json_to_library).collect()),
         Json::Object(entries) => {
@@ -298,6 +316,22 @@ mod tests {
 
     fn spec(kind: &str, params: Json) -> Json {
         Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
+    }
+
+    /// 🔢️ Pins the worked-around `json` 0.12 defect and the fix together: the crate's own
+    /// `From<f64>` moves these two real fixture coordinates by one ULP, and `library_number` does
+    /// not. If a later release fixes the conversion, the first half of this test starts failing and
+    /// the workaround can go.
+    #[test]
+    fn the_library_number_conversion_survives_a_round_trip_the_crates_own_does_not() {
+        for value in [2.7000102824824506_f64, -8.881784197001252e-16] {
+            assert_ne!(json::JsonValue::from(value).as_f64().unwrap().to_bits(), value.to_bits(), "json 0.12's own From<f64> is documented here as lossy for {value:?}");
+            assert_eq!(library_number(value).as_f64().unwrap().to_bits(), value.to_bits(), "the workaround has to be exact for {value:?}");
+        }
+        for value in [0.1_f64, 1.0, 0.0, -0.0, 1e300, 1.0 / 3.0] {
+            assert_eq!(library_number(value).as_f64().unwrap().to_bits(), value.to_bits(), "and exact for {value:?} as well");
+        }
+        assert!(library_number(f64::NAN).is_null(), "a non-finite double is not a JSON number");
     }
     fn obj(pairs: Vec<(&str, Json)>) -> Json {
         Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())

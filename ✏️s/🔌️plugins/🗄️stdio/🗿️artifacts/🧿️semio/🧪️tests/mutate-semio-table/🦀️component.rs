@@ -21,6 +21,14 @@
 //! feature so the oracle-only run never compiles the local implementation; the Rust SUBJECT phase
 //! is blocked this wave by a concurrent os-kernel refactor (see the fleet brief), so it is written
 //! and gated but not run.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
+//! the written statement of the reference answer rather than a second running party. Every law this
+//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
+//! printed. A handler that merely ran the mutation and returned would report a pass having checked
+//! nothing.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
@@ -89,12 +97,11 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{before_uri, mutation_uri};
+    use super::{after_uri, before_uri, mutation_uri};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::mutations::{create_column, delete_column, edit_cell, insert_row, remove_row, rename_column, reorder_columns, reorder_rows, SemioTableMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-    use protocol::Mutation;
 
     //#region 🔖️Decode
     /// 🧫️ A small, forward-only, hand-written structural decoder — turns the fixture bytes
@@ -179,11 +186,19 @@ mod subject {
 
     //#region 🔖️Fixtures
     /// 🧫️ Reads the SAME committed fixture bytes `../🦀️component.rs`'s oracle role reads, decoded
-    /// once into real typed values through `decode_snapshot`/`decode_mutation` above.
-    fn fixture_for(kind: &str, ctx: &Context) -> Result<(SemioTableSnapshot, SemioTableMutation), String> {
+    /// once into real typed values through `decode_snapshot`/`decode_mutation` above — the
+    /// before-snapshot, the mutation payload AND the after-snapshot the applied result has to equal.
+    fn fixture_for(kind: &str, ctx: &Context) -> Result<(SemioTableSnapshot, SemioTableMutation, SemioTableSnapshot), String> {
         let before = decode_snapshot(&ctx.fixture_json(&before_uri(kind))?);
         let mutation = decode_mutation(&ctx.fixture_json(&mutation_uri(kind))?);
-        Ok((before, mutation))
+        let after = decode_snapshot(&ctx.fixture_json(&after_uri(kind))?);
+        Ok((before, mutation, after))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
+    /// fixtures are written in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioTableSnapshot, expected: &SemioTableSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got).to_string(), snapshot_json(expected).to_string())
     }
     //#endregion 🔖️Fixtures
 
@@ -230,12 +245,20 @@ mod subject {
     //#endregion 🔖️Projection
 
     //#region 🔖️Handlers
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot — column ORDER and row ORDER included, which is what separates a real
+    /// `reorder-columns`/`reorder-rows` from a rebuild that keeps the same set. The assertion lives
+    /// here rather than in the comparison because a recorded no-oracle case runs no oracle role: a
+    /// handler that merely returned `Ok` would report a pass having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (mut base, mutation) = fixture_for(kind, ctx)?;
+            let (mut base, mutation, expected) = fixture_for(kind, ctx)?;
             let outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::mutations::apply_semio_table_mutation(&mut base, &mutation);
             if !outcome.messages().is_empty() {
                 return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+            }
+            if base != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &base, &expected));
             }
             let projection = snapshot_json(&base);
             let bytes = projection.to_string().into_bytes();
@@ -243,20 +266,29 @@ mod subject {
         }
     }
 
+    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
+    /// restore the committed before-snapshot exactly — a deleted column's POSITION and every cell
+    /// its rows carried, not merely a column of the same name reappearing at the end. The inverse
+    /// is reached through this subset's own `inverse_semio_table_mutation`, because
+    /// `protocol::Mutation` is a private extern-crate item of the plugin and cannot be imported
+    /// from a test host that links only the plugin itself.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (base, mutation) = fixture_for(kind, ctx)?;
+            let (base, mutation, _expected) = fixture_for(kind, ctx)?;
             let mut current = base.clone();
             let outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::mutations::apply_semio_table_mutation(&mut current, &mutation);
             if !outcome.messages().is_empty() {
                 return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", outcome.messages()));
             }
-            let undo = mutation.inverse(&base);
+            let undo = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::mutations::inverse_semio_table_mutation(&mutation, &base);
             for step in &undo {
                 let step_outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::mutations::apply_semio_table_mutation(&mut current, step);
                 if !step_outcome.messages().is_empty() {
                     return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
                 }
+            }
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
             }
             let projection = snapshot_json(&current);
             let bytes = projection.to_string().into_bytes();

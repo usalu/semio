@@ -643,6 +643,7 @@ enum MeshJobStage {
     Validate,
     ReservePreparation,
     PrepareInput,
+    CountInput,
     Initialize,
     InsertBoundary,
     ReserveEdgeAuthorities,
@@ -685,8 +686,28 @@ struct ConstraintFlipCandidate {
     replacement: [[usize; 3]; 2],
 }
 
-const MESH_JOB_UNIT_BATCH: usize = 1;
-const MESH_JOB_INSERT_BATCH: usize = 1;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FaceClassificationStage {
+    Begin,
+    OuterEdge,
+    HoleEdge,
+    PointLookup,
+    PointInsert,
+    TrianglePublish,
+}
+
+#[derive(Clone, Copy)]
+struct FaceClassificationCursor {
+    stage: FaceClassificationStage,
+    positions: [[f64; 2]; 3],
+    centroid: [f64; 2],
+    hole: usize,
+    edge: usize,
+    inside: bool,
+    slot: usize,
+    lookup: usize,
+    indices: [u32; 3],
+}
 
 /// 🧵️ Persistent constrained-mesh state machine. Bowyer-Watson insertion retains scan, cavity
 /// compaction, and fan cursors; boundary recovery and face classification retain independent cursors.
@@ -721,6 +742,9 @@ pub struct MeshJob {
     constraint_retire_cursor: usize,
     constraint_reindex_cursor: usize,
     face_cursor: usize,
+    face_classification: Option<FaceClassificationCursor>,
+    input_count: usize,
+    input_count_hole: usize,
     preview_tier: MeshQualityTier,
     mesh: TriMesh2,
     point_index: Vec<((u64, u64), u32)>,
@@ -764,6 +788,9 @@ impl MeshJob {
             constraint_retire_cursor: 0,
             constraint_reindex_cursor: 0,
             face_cursor: 0,
+            face_classification: None,
+            input_count: 0,
+            input_count_hole: 0,
             preview_tier: MeshQualityTier::Coarse,
             mesh: TriMesh2 { points: Vec::new(), tris: Vec::new() },
             point_index: Vec::new(),
@@ -978,35 +1005,109 @@ impl MeshJob {
 
     fn begin_classification(&mut self, tier: MeshQualityTier) {
         self.face_cursor = 0;
+        self.face_classification = None;
         self.preview_tier = tier;
         self.stage = MeshJobStage::Classify;
     }
 
-    fn append_face(&mut self, positions: [[f64; 2]; 3]) -> bool {
-        let centroid = [(positions[0][0] + positions[1][0] + positions[2][0]) / 3.0, (positions[0][1] + positions[1][1] + positions[2][1]) / 3.0];
-        if !point_in_polygon(centroid, &self.domain.outer) || self.domain.holes.iter().any(|hole| point_in_polygon(centroid, hole)) {
+    fn advance_polygon_edge(point: [f64; 2], polygon: &[[f64; 2]], edge: usize, inside: &mut bool) -> bool {
+        if edge == polygon.len() {
             return true;
         }
-        let mut indices = [0; 3];
-        for (slot, position) in positions.into_iter().enumerate() {
-            let key = (position[0].to_bits(), position[1].to_bits());
-            if let Some((_, index)) = self.point_index.iter().find(|(current, _)| *current == key) {
-                indices[slot] = *index;
-            } else {
-                if self.mesh.points.len() == self.maximum_points {
-                    return false;
+        let current = polygon[edge];
+        let previous = polygon[(edge + polygon.len() - 1) % polygon.len()];
+        if ((current[1] > point[1]) != (previous[1] > point[1])) && point[0] < (previous[0] - current[0]) * (point[1] - current[1]) / (previous[1] - current[1]) + current[0] {
+            *inside = !*inside;
+        }
+        false
+    }
+
+    fn advance_face_classification(&mut self) -> Result<bool, ()> {
+        if self.face_classification.is_none() {
+            let triangulation = self.triangulation.as_ref().ok_or(())?;
+            let Some(triangle) = triangulation.triangles.get(self.face_cursor) else { return Ok(true) };
+            let positions = std::array::from_fn(|index| triangulation.points[triangle[index]]);
+            let centroid = [(positions[0][0] + positions[1][0] + positions[2][0]) / 3.0, (positions[0][1] + positions[1][1] + positions[2][1]) / 3.0];
+            self.face_classification = Some(FaceClassificationCursor { stage: FaceClassificationStage::Begin, positions, centroid, hole: 0, edge: 0, inside: false, slot: 0, lookup: 0, indices: [0; 3] });
+            return Ok(false);
+        }
+        let cursor = self.face_classification.as_mut().ok_or(())?;
+        match cursor.stage {
+            FaceClassificationStage::Begin => cursor.stage = FaceClassificationStage::OuterEdge,
+            FaceClassificationStage::OuterEdge => {
+                if Self::advance_polygon_edge(cursor.centroid, &self.domain.outer, cursor.edge, &mut cursor.inside) {
+                    if !cursor.inside {
+                        self.face_classification = None;
+                        self.face_cursor += 1;
+                        return Ok(false);
+                    }
+                    cursor.edge = 0;
+                    cursor.inside = false;
+                    cursor.stage = FaceClassificationStage::HoleEdge;
+                } else {
+                    cursor.edge += 1;
                 }
+            }
+            FaceClassificationStage::HoleEdge => {
+                if let Some(hole) = self.domain.holes.get(cursor.hole) {
+                    if Self::advance_polygon_edge(cursor.centroid, hole, cursor.edge, &mut cursor.inside) {
+                        if cursor.inside {
+                            self.face_classification = None;
+                            self.face_cursor += 1;
+                            return Ok(false);
+                        }
+                        cursor.hole += 1;
+                        cursor.edge = 0;
+                        cursor.inside = false;
+                    } else {
+                        cursor.edge += 1;
+                    }
+                } else {
+                    cursor.stage = FaceClassificationStage::PointLookup;
+                }
+            }
+            FaceClassificationStage::PointLookup => {
+                let position = cursor.positions[cursor.slot];
+                let key = (position[0].to_bits(), position[1].to_bits());
+                if let Some((current, index)) = self.point_index.get(cursor.lookup) {
+                    if *current == key {
+                        cursor.indices[cursor.slot] = *index;
+                        cursor.slot += 1;
+                        cursor.lookup = 0;
+                    } else {
+                        cursor.lookup += 1;
+                    }
+                } else {
+                    cursor.stage = FaceClassificationStage::PointInsert;
+                }
+                if cursor.slot == 3 {
+                    cursor.stage = FaceClassificationStage::TrianglePublish;
+                }
+            }
+            FaceClassificationStage::PointInsert => {
+                if self.mesh.points.len() == self.maximum_points {
+                    return Err(());
+                }
+                let position = cursor.positions[cursor.slot];
+                let key = (position[0].to_bits(), position[1].to_bits());
                 self.mesh.points.push(position);
                 let index = (self.mesh.points.len() - 1) as u32;
                 self.point_index.push((key, index));
-                indices[slot] = index;
+                cursor.indices[cursor.slot] = index;
+                cursor.slot += 1;
+                cursor.lookup = 0;
+                cursor.stage = if cursor.slot == 3 { FaceClassificationStage::TrianglePublish } else { FaceClassificationStage::PointLookup };
+            }
+            FaceClassificationStage::TrianglePublish => {
+                if self.mesh.tris.len() == self.maximum_triangles {
+                    return Err(());
+                }
+                self.mesh.tris.push(cursor.indices);
+                self.face_classification = None;
+                self.face_cursor += 1;
             }
         }
-        if self.mesh.tris.len() == self.maximum_triangles {
-            return false;
-        }
-        self.mesh.tris.push(indices);
-        true
+        Ok(false)
     }
 
     fn encode_preview(&mut self, context: &mut StepContext<'_>) -> Vec<u8> {
@@ -1233,6 +1334,7 @@ impl InteractiveJob for MeshJob {
             MeshJobStage::Validate => "validate-references",
             MeshJobStage::ReservePreparation => "reserve-preparation",
             MeshJobStage::PrepareInput => "prepare-input",
+            MeshJobStage::CountInput => "count-input",
             MeshJobStage::Initialize => "initialize-triangulation",
             MeshJobStage::ReserveEdgeAuthorities => "reserve-edge-authorities",
             MeshJobStage::InsertBoundary => "insert-boundary",
@@ -1256,6 +1358,10 @@ impl InteractiveJob for MeshJob {
             MeshJobStage::Finalize => "finalize-mesh",
             MeshJobStage::Complete => "complete",
         });
+        if context.should_yield() {
+            return StepOutcome::Yield;
+        }
+        context.consume_fuel(1);
         match self.stage {
             MeshJobStage::Validate => {
                 if self.domain.outer.len() < 3 {
@@ -1266,12 +1372,10 @@ impl InteractiveJob for MeshJob {
                         return Self::fail(MeshError::DegenerateDomain.to_string().into_bytes());
                     }
                     self.validation_hole_cursor += 1;
-                    context.consume_fuel(1);
                     return StepOutcome::Yield;
                 }
                 self.preparation = Some(MeshInputPreparation::new());
                 self.stage = MeshJobStage::ReservePreparation;
-                context.consume_fuel(1);
                 StepOutcome::Yield
             }
             MeshJobStage::ReservePreparation => {
@@ -1289,40 +1393,39 @@ impl InteractiveJob for MeshJob {
                     }
                 }
                 self.stage = MeshJobStage::PrepareInput;
-                context.consume_fuel(1);
                 StepOutcome::Yield
             }
             MeshJobStage::PrepareInput => {
-                let mut complete = false;
-                for _ in 0..MESH_JOB_UNIT_BATCH {
-                    if context.should_yield() {
-                        break;
-                    }
-                    complete = match self.preparation.as_mut().expect("input preparation initialized").advance(&self.domain, &self.options) {
-                        Ok(complete) => complete,
-                        Err(error) => return Self::fail(error.to_string().into_bytes()),
-                    };
-                    let preparation = self.preparation.as_ref().expect("input preparation retained");
-                    if preparation.points.len() > self.maximum_points || preparation.constraints.len() > self.maximum_triangles.saturating_mul(3) {
-                        return Self::fail(b"mesh-fixed-input-capacity".to_vec());
-                    }
-                    context.consume_fuel(1);
-                    if complete || context.is_cancelled() {
-                        break;
-                    }
-                }
-                if context.is_cancelled() {
-                    return StepOutcome::Cancelled;
+                let complete = match self.preparation.as_mut().expect("input preparation initialized").advance(&self.domain, &self.options) {
+                    Ok(complete) => complete,
+                    Err(error) => return Self::fail(error.to_string().into_bytes()),
+                };
+                let preparation = self.preparation.as_ref().expect("input preparation retained");
+                if preparation.points.len() > self.maximum_points || preparation.constraints.len() > self.maximum_triangles.saturating_mul(3) {
+                    return Self::fail(b"mesh-fixed-input-capacity".to_vec());
                 }
                 if complete {
                     let preparation = self.preparation.take().expect("input preparation complete");
                     self.prepared_input = Some((preparation.points, preparation.constraints));
+                    self.input_count = self.domain.outer.len();
+                    self.input_count_hole = 0;
+                    self.stage = MeshJobStage::CountInput;
+                }
+                StepOutcome::Yield
+            }
+            MeshJobStage::CountInput => {
+                if let Some(hole) = self.domain.holes.get(self.input_count_hole) {
+                    self.input_count = match self.input_count.checked_add(hole.len()) {
+                        Some(count) => count,
+                        None => return Self::fail(b"mesh-input-count-overflow".to_vec()),
+                    };
+                    self.input_count_hole += 1;
+                } else {
                     self.stage = MeshJobStage::Initialize;
                 }
                 StepOutcome::Yield
             }
             MeshJobStage::Initialize => {
-                let input_count = self.domain.outer.len() + self.domain.holes.iter().map(Vec::len).sum::<usize>();
                 let (prepared_points, input_constraints) = self.prepared_input.take().expect("prepared input");
                 if prepared_points.len() > self.maximum_points {
                     self.prepared_input = Some((prepared_points, input_constraints));
@@ -1344,16 +1447,14 @@ impl InteractiveJob for MeshJob {
                     (triangulation, constraints)
                 };
                 self.constraints = constraints;
-                self.refinement_steps = triangulation.input_len.saturating_sub(input_count);
+                self.refinement_steps = triangulation.input_len.saturating_sub(self.input_count);
                 self.triangulation = Some(triangulation);
                 self.stage = MeshJobStage::ReserveEdgeAuthorities;
-                context.consume_fuel(1);
                 StepOutcome::Yield
             }
             MeshJobStage::ReserveEdgeAuthorities => {
                 if self.maximum_triangles == usize::MAX {
                     self.stage = MeshJobStage::InsertBoundary;
-                    context.consume_fuel(1);
                     return StepOutcome::Yield;
                 }
                 let edge_capacity = self.maximum_triangles.saturating_mul(12).saturating_add(3);
@@ -1367,19 +1468,11 @@ impl InteractiveJob for MeshJob {
                     return Self::fail(b"mesh-fixed-edge-authority-backing".to_vec());
                 }
                 self.stage = MeshJobStage::InsertBoundary;
-                context.consume_fuel(1);
                 StepOutcome::Yield
             }
             MeshJobStage::InsertBoundary => {
                 let triangulation = self.triangulation.as_mut().expect("validated triangulation");
-                let mut units = 0;
-                while units < MESH_JOB_INSERT_BATCH && !context.should_yield() && triangulation.insert_next() {
-                    units += 1;
-                    context.consume_fuel(1);
-                    if context.is_cancelled() {
-                        return StepOutcome::Cancelled;
-                    }
-                }
+                triangulation.insert_next();
                 if triangulation.allocation_fault {
                     return Self::fail(b"mesh-fixed-triangulation-workspace-backing".to_vec());
                 }
@@ -1394,10 +1487,6 @@ impl InteractiveJob for MeshJob {
             }
             MeshJobStage::IndexEdges => {
                 let face_count = self.triangulation.as_ref().map_or(0, |triangulation| triangulation.triangles.len());
-                if context.should_yield() {
-                    return StepOutcome::Yield;
-                }
-                context.consume_fuel(1);
                 if self.edge_index_candidate.is_none() {
                     if self.edge_index_cursor < face_count {
                         if !self.begin_edge_index_candidate(self.edge_index_cursor, self.edge_index_local_cursor) {
@@ -1426,10 +1515,6 @@ impl InteractiveJob for MeshJob {
             }
             MeshJobStage::ConstrainBoundary => {
                 if self.constraint_cursor < self.constraints.len() {
-                    if context.should_yield() {
-                        return StepOutcome::Yield;
-                    }
-                    context.consume_fuel(1);
                     match self.advance_constraint_recovery() {
                         Ok(true) => {
                             self.constraint_cursor += 1;
@@ -1453,7 +1538,6 @@ impl InteractiveJob for MeshJob {
                     return Self::fail(b"mesh-fixed-point-index-backing".to_vec());
                 }
                 self.stage = MeshJobStage::ReserveMeshPoints;
-                context.consume_fuel(1);
                 StepOutcome::Yield
             }
             MeshJobStage::ReserveMeshPoints => {
@@ -1461,7 +1545,6 @@ impl InteractiveJob for MeshJob {
                     return Self::fail(b"mesh-fixed-point-backing".to_vec());
                 }
                 self.stage = MeshJobStage::ReserveMeshTriangles;
-                context.consume_fuel(1);
                 StepOutcome::Yield
             }
             MeshJobStage::ReserveMeshTriangles => {
@@ -1469,26 +1552,16 @@ impl InteractiveJob for MeshJob {
                     return Self::fail(b"mesh-fixed-triangle-backing".to_vec());
                 }
                 self.begin_classification(if self.refinement_steps == 0 { MeshQualityTier::Coarse } else { MeshQualityTier::Final });
-                context.consume_fuel(1);
                 StepOutcome::Yield
             }
             MeshJobStage::Classify => {
-                let triangulation = self.triangulation.as_ref().expect("constrained triangulation");
-                let face_count = triangulation.triangles.len();
-                let face = triangulation.triangles.get(self.face_cursor).map(|triangle| std::array::from_fn(|index| triangulation.points[triangle[index]]));
-                if let Some(face) = face {
-                    if !self.append_face(face) {
-                        return Self::fail(b"mesh-fixed-output-capacity".to_vec());
-                    }
-                    self.face_cursor += 1;
-                    context.consume_fuel(1);
-                    if context.is_cancelled() {
-                        return StepOutcome::Cancelled;
-                    }
-                }
+                let face_count = self.triangulation.as_ref().expect("constrained triangulation").triangles.len();
                 if self.face_cursor >= face_count {
                     self.stage = MeshJobStage::Finalize;
                     return StepOutcome::PreviewReady(self.encode_preview(context));
+                }
+                if self.advance_face_classification().is_err() {
+                    return Self::fail(b"mesh-fixed-output-capacity".to_vec());
                 }
                 StepOutcome::Yield
             }
@@ -2335,9 +2408,33 @@ mod tests {
             }
         }
         let mut seen = HashSet::new();
-        for _ in 0..256 {
-            seen.insert(job.constraint_stage);
-            if job.advance_constraint_recovery().expect("recover diagonal") {
+        let mut sequence = 0;
+        let mut maximum_micros = 0;
+        for _ in 0..512 {
+            let stage = job.constraint_stage;
+            seen.insert(stage);
+            let before = job.triangulation.as_ref().expect("triangulation retained").triangles.clone();
+            let before_cursor = (job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor);
+            let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), root_cancel_token(), || 0, &mut sequence);
+            assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+            assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor), before_cursor);
+            assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
+
+            let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
+            assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor), before_cursor);
+
+            let token = root_cancel_token();
+            semio_framework_async::block_on(token.cancel());
+            let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+            assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+            assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor), before_cursor);
+
+            let started = std::time::Instant::now();
+            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+            assert_eq!(job.step(&mut context), StepOutcome::Yield);
+            maximum_micros = maximum_micros.max(started.elapsed().as_micros());
+            if job.constraint_cursor == job.constraints.len() {
                 break;
             }
         }
@@ -2357,22 +2454,7 @@ mod tests {
         }
         assert!(job.indexed_constraint_edges.iter().any(|slot| slot.active && slot.edge == Edge::new(1, 3)));
         assert!(!job.indexed_constraint_edges.iter().any(|slot| slot.active && slot.edge == Edge::new(0, 2)));
-
-        let before = job.triangulation.as_ref().expect("triangulation retained").triangles.clone();
-        let mut sequence = 0;
-        let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, 0), root_cancel_token(), || 0, &mut sequence);
-        assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
-        assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
-
-        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), root_cancel_token(), || 0, &mut sequence);
-        assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
-        assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
-
-        let token = root_cancel_token();
-        semio_framework_async::block_on(token.cancel());
-        let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
-        assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
-        assert_eq!(job.triangulation.as_ref().expect("triangulation retained").triangles, before);
+        assert!(maximum_micros < 8_000, "constraint recovery step exceeded timing ceiling: {maximum_micros} us");
 
         let mut close_turns = 0;
         loop {

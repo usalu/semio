@@ -387,21 +387,6 @@ fn pixel_to_rgba(samples: &[u32], ihdr: &Ihdr, palette: &[[u8; 3]], palette_alph
 // `encode_png`/`decode_png` bodies since every one of these is a single (type, wire-shape) pair.
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_trns(t: &PngTransparency) -> Vec<u8> {
-    match t {
-        PngTransparency::Indexed { alpha } => alpha.clone(),
-        PngTransparency::Grayscale { gray } => gray.to_be_bytes().to_vec(),
-        PngTransparency::Rgb { r, g, b } => {
-            let mut v = Vec::with_capacity(6);
-            v.extend_from_slice(&r.to_be_bytes());
-            v.extend_from_slice(&g.to_be_bytes());
-            v.extend_from_slice(&b.to_be_bytes());
-            v
-        }
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn encode_bkgd(b: &PngBackground) -> Vec<u8> {
     match b {
         PngBackground::Grayscale { gray } => gray.to_be_bytes().to_vec(),
@@ -506,11 +491,13 @@ pub fn encode_png(snap: &PngSnapshot) -> Result<Vec<u8>, String> {
                     write_chunk(&mut out, b"PLTE", &data);
                 }
             }
-            PngChunkMarker::Trns => {
-                if let Some(t) = &snap.trns {
-                    write_chunk(&mut out, b"tRNS", &encode_trns(t));
-                }
-            }
+            // 🚫 §11.3.3: "a tRNS chunk shall not appear for colour types 4 and 6". This encoder
+            // always writes colour type 6 (the EncodeScopeNote above), so a tRNS chunk here would
+            // make the output non-conforming and unreadable — the reference `png` decoder rejects
+            // it outright with `ColorWithBadTrns`. Alpha decoded from the source's own tRNS is
+            // already folded into `pixels`, so nothing is lost by omitting the chunk; what would be
+            // lost by writing it is the whole file.
+            PngChunkMarker::Trns => {}
             PngChunkMarker::Gama => {
                 if let Some(g) = snap.gama {
                     write_chunk(&mut out, b"gAMA", &g.to_be_bytes());
@@ -991,6 +978,42 @@ mod codec_tests {
         assert_eq!(snap.color_type, PngColorType::Palette);
         assert_eq!(snap.plte.as_ref().expect("plte retained").len(), 3);
         assert_eq!(snap.trns, Some(PngTransparency::Indexed { alpha: vec![255, 128, 0] }));
+    }
+
+    /// 🚫 §11.3.3 forbids tRNS alongside colour types 4 and 6, and `encode_png` always writes
+    /// colour type 6 — so the chunk is omitted rather than emitted into a file no conforming
+    /// decoder would accept. The alpha it carried is not lost: `decode_png` already resolved it
+    /// into `pixels`, which is what the re-encode carries forward.
+    #[test]
+    fn trns_is_not_re_emitted_alongside_the_canonical_rgba_colour_type() {
+        let plte = [255u8, 0, 0, 0, 255, 0, 0, 0, 255];
+        let trns = [255u8, 128, 0];
+        let raw = vec![0u8, 1, 2, 0];
+        let snap = decode_png(&hand_encode(4, 1, 8, 3, Some(&plte), Some(&trns), &raw)).expect("decode palette+trns");
+        assert!(snap.trns.is_some(), "the source really does carry a tRNS chunk");
+
+        let reencoded = encode_png(&snap).expect("re-encode a snapshot whose tRNS cannot be represented at colour type 6");
+        assert!(!chunk_types(&reencoded).iter().any(|kind| kind == b"tRNS"), "colour type 6 output must carry no tRNS chunk, got {:?}", chunk_types(&reencoded).iter().map(|k| String::from_utf8_lossy(k).into_owned()).collect::<Vec<_>>());
+
+        let redecoded = decode_png(&reencoded).expect("re-decode");
+        assert_eq!(redecoded.pixels, snap.pixels, "the resolved alpha survives in the raster even though the chunk does not");
+        assert_eq!(redecoded.trns, None);
+    }
+
+    /// 📇️ Every chunk type in a PNG byte stream, in file order — §5.3's `length|type|data|crc`.
+    fn chunk_types(bytes: &[u8]) -> Vec<[u8; 4]> {
+        let mut out = Vec::new();
+        let mut cursor = 8usize;
+        while cursor + 8 <= bytes.len() {
+            let length = u32::from_be_bytes(bytes[cursor..cursor + 4].try_into().expect("4-byte length")) as usize;
+            let kind: [u8; 4] = bytes[cursor + 4..cursor + 8].try_into().expect("4-byte type");
+            out.push(kind);
+            if &kind == b"IEND" {
+                break;
+            }
+            cursor += 12 + length;
+        }
+        out
     }
 
     #[semio_framework_async_macros::async_test]

@@ -25,7 +25,7 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing arti
   committed bytes: the `oracle` role reads the vector literally (no recomputation, no
   reimplementation of mutation semantics) and the `subject` role decodes it into real
   `SemioCadSnapshot`/`SemioCadMutation` values and runs the production entry point
-  `apply_semio_cad_mutation`. The `ordered-json-v1` profile compares the two structurally.
+  `apply_semio_cad_mutation`.
 
   What genuinely distinguishes this vocabulary from its siblings is that it addresses TWO nested
   name-keyed collections at once: `add-block-entity`, `remove-block-entity`,

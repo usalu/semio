@@ -13,7 +13,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::any::{oracle_apply_mutation, project_json_value, read_at, round_trip, PathSeg};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `json-rfc8259-any` catalog. Duplicated, not imported, from
@@ -113,6 +113,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let output = oracle_apply_mutation(&input, &spec)?;
     let projection = project_json_value(&output)?;
+    mutation_is_observable(&spec.str("kind"), &projection, &project_json_value(&input)?, &[])?;
     Ok(Outcome::with_raw(output, projection))
 }
 

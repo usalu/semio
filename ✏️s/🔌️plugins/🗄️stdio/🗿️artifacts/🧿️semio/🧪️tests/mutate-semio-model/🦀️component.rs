@@ -22,6 +22,14 @@
 //! reimplementation of mutation semantics. The subject half is gated behind the generated host's
 //! `sut` feature; the Rust SUBJECT phase is blocked this wave by a concurrent refactor in
 //! `semio-framework-job`, so it is written and gated but not run.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
+//! the written statement of the reference answer rather than a second running party. Every law this
+//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
+//! printed. A handler that merely ran the mutation and returned would report a pass having checked
+//! nothing.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
@@ -88,7 +96,7 @@ fn identity_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{before_uri, mutation_uri, DSL_ASSET, PACK_ASSET};
+    use super::{after_uri, before_uri, mutation_uri, DSL_ASSET, PACK_ASSET};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::mutations::{apply_semio_model_mutation, semio_model_mutation_inverse, SemioModelMutation};
@@ -371,26 +379,45 @@ mod subject {
     //#endregion 🔖️Projection
 
     //#region 🔖️Handlers
-    fn fixture_for(kind: &str, ctx: &Context) -> Result<(SemioModelSnapshot, SemioModelMutation), String> {
+    fn fixture_for(kind: &str, ctx: &Context) -> Result<(SemioModelSnapshot, SemioModelMutation, SemioModelSnapshot), String> {
         let before = decode_snapshot(&ctx.fixture_json(&before_uri(kind))?);
         let mutation = decode_mutation(&ctx.fixture_json(&mutation_uri(kind))?);
-        Ok((before, mutation))
+        let after = decode_snapshot(&ctx.fixture_json(&after_uri(kind))?);
+        Ok((before, mutation, after))
     }
 
+    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
+    /// vectors are written in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioModelSnapshot, expected: &SemioModelSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got).to_string(), snapshot_json(expected).to_string())
+    }
+
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot — the spatial containment tree, the element list, the relations and the
+    /// property sets together, so an edit that reached the right element through the wrong spatial
+    /// parent still fails. The assertion lives here rather than in the comparison because a recorded
+    /// no-oracle case runs no oracle role: a handler that merely returned `Ok` would report a pass
+    /// having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (mut base, mutation) = fixture_for(kind, ctx)?;
+            let (mut base, mutation, expected) = fixture_for(kind, ctx)?;
             let outcome = apply_semio_model_mutation(&mut base, &mutation);
             if !outcome.messages().is_empty() {
                 return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+            }
+            if base != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &base, &expected));
             }
             Ok(outcome_of(&base))
         }
     }
 
+    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
+    /// restore the committed before-snapshot exactly, relations to deleted elements included — the
+    /// cascade a `delete-element` performs is only provably undone if its own inverse rebuilds them.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (base, mutation) = fixture_for(kind, ctx)?;
+            let (base, mutation, _expected) = fixture_for(kind, ctx)?;
             let mut current = base.clone();
             let outcome = apply_semio_model_mutation(&mut current, &mutation);
             if !outcome.messages().is_empty() {
@@ -401,6 +428,9 @@ mod subject {
                 if !step_outcome.messages().is_empty() {
                     return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
                 }
+            }
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
             }
             Ok(outcome_of(&current))
         }

@@ -24,10 +24,13 @@
 //!   real fixture has none, and every reference-produced GIF was gaining one it never had.
 //! - `gif::Decoder` always DE-INTERLACES on read and resets `Frame::interlaced` to `false`
 //!   regardless of the source flag, and `gif::Encoder::write_frame` writes `frame.buffer` verbatim —
-//!   it does not itself reorder rows to match the flag it writes. A mutation that flips `interlaced`
-//!   must therefore reorder the buffer between natural and GIF's 4-pass storage order itself
-//!   (`reorder_rows`), or the written flag and the written row order disagree and any
-//!   interlace-aware reader — this one included — reconstructs the wrong pixels.
+//!   it does not itself reorder rows to match the flag it writes. This module therefore reads the
+//!   flag the FILE carries with `raster::gif_image_interlace_flags` (a fixed-grammar walk over the
+//!   Image Descriptors, shared with the 87a subset) and re-interleaves the rows itself on encode
+//!   with `raster::gif_reorder_rows`. Trusting `Frame::interlaced` instead is not merely lossy: it
+//!   makes `set-frame-interlace` a mutation the projection can never see, because the round trip
+//!   through this reader erases both the flag and the row permutation and lands back exactly where
+//!   it started.
 //!
 //! The vocabulary is per SUBSET, not per artifact: 87a has no GCE/animation concept at all, so
 //! nothing here is shared with the peer 87a subset's own oracle.
@@ -331,6 +334,7 @@ mod imp {
             gif::Repeat::Finite(0) => None,
             gif::Repeat::Finite(n) => Some(n),
         };
+        let stored_interlace = crate::raster::gif_image_interlace_flags(input)?;
         let mut frames = Vec::new();
         while let Some(frame) = decoder.read_next_frame().map_err(|error| format!("independent reader could not decode a GIF frame: {}", error))? {
             frames.push(OFrame {
@@ -338,7 +342,7 @@ mod imp {
                 top: frame.top,
                 width: frame.width,
                 height: frame.height,
-                interlaced: frame.interlaced,
+                interlaced: stored_interlace.get(frames.len()).copied().unwrap_or(false),
                 palette: frame.palette.clone(),
                 indices: frame.buffer.to_vec(),
                 delay: frame.delay,
@@ -376,6 +380,10 @@ mod imp {
                 encoder.write_raw_extension(gif::AnyExtension(0xFF), &[&header[..], &extension.data[..]]).map_err(|error| format!("gif application extension: {}", error))?;
             }
             for frame in &snap.frames {
+                // 🔀️ `indices` is natural row order throughout this model; GIF stores an interlaced
+                // image's rows in four passes and `write_frame` writes the buffer verbatim, so the
+                // re-interleaving is the caller's job (see the module docstring).
+                let stored = if frame.interlaced { crate::raster::gif_reorder_rows(&frame.indices, frame.width as usize, frame.height as usize, true) } else { frame.indices.clone() };
                 let gif_frame = gif::Frame {
                     delay: frame.delay,
                     dispose: frame.dispose,
@@ -387,7 +395,7 @@ mod imp {
                     height: frame.height,
                     interlaced: frame.interlaced,
                     palette: frame.palette.clone(),
-                    buffer: std::borrow::Cow::Borrowed(&frame.indices),
+                    buffer: std::borrow::Cow::Borrowed(&stored),
                 };
                 encoder.write_frame(&gif_frame).map_err(|error| format!("gif frame: {}", error))?;
             }
@@ -469,35 +477,6 @@ mod imp {
         frame.indices = next;
     }
     //#endregion 🔖️Resize
-
-    //#region 🔖️Interlace
-    /// 🧵️ GIF89a §24.e's 4-pass row order for a frame `height` rows tall.
-    fn interlace_row_order(height: usize) -> Vec<usize> {
-        (0..height).step_by(8).chain((4..height).step_by(8)).chain((2..height).step_by(4)).chain((1..height).step_by(2)).collect()
-    }
-
-    /// 🔀️ Reorders palette indices between NATURAL row order (what `indices` always holds while
-    /// `interlaced` is `false`, and what `gif::Decoder` always hands back regardless of the source
-    /// file's flag — see the module docstring) and GIF's interlaced STORAGE order. `gif::Encoder`
-    /// writes `frame.buffer` verbatim and only flips the descriptor bit — it does not perform this
-    /// reordering itself — so a mutation that flips `interlaced` must do it, or the flag and the
-    /// stored row order disagree and an interlace-aware reader (this one included) reconstructs the
-    /// wrong pixels.
-    fn reorder_rows(indices: &[u8], width: usize, height: usize, to_interlaced: bool) -> Vec<u8> {
-        if width == 0 || height == 0 || indices.len() != width * height {
-            return indices.to_vec();
-        }
-        let order = interlace_row_order(height);
-        let mut out = vec![0u8; indices.len()];
-        let mut cursor = 0usize;
-        for row in order {
-            let (src, dst) = if to_interlaced { (row * width, cursor) } else { (cursor, row * width) };
-            out[dst..dst + width].copy_from_slice(&indices[src..src + width]);
-            cursor += width;
-        }
-        out
-    }
-    //#endregion 🔖️Interlace
 
     //#region 🔖️Apply
     /// 🦠️ Applies one of the 21 declared kinds in place. Out-of-range frame/comment/extension
@@ -583,11 +562,7 @@ mod imp {
             "set-frame-interlace" => {
                 let index = num_or(params, "index", 0.0) as usize;
                 if let Some(frame) = snap.frames.get_mut(index) {
-                    let target = bool_or(params, "interlace", frame.interlaced);
-                    if target != frame.interlaced {
-                        frame.indices = reorder_rows(&frame.indices, frame.width as usize, frame.height as usize, target);
-                        frame.interlaced = target;
-                    }
+                    frame.interlaced = bool_or(params, "interlace", frame.interlaced);
                 }
             }
             "set-frame-delay" => {

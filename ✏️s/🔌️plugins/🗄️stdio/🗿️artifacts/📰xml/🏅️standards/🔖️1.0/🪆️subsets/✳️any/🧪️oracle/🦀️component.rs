@@ -696,11 +696,24 @@ mod oracles {
 
     /// ↩️ Applies `{kind, params}` and then its computed inverse, in sequence, and returns the
     /// re-serialized result — the caller compares its projection against the ORIGINAL input's own.
+    /// 🐛️ The forward step and the undo share ONE parsed tree rather than passing serialized bytes
+    /// between them. Routing the undo through `apply_mutation(&mutated, ...)` re-parsed the
+    /// intermediate document, and XML parsing COALESCES adjacent character data, so removing an
+    /// element that sat between two whitespace text nodes left an index space the undo could no
+    /// longer address — the same defect the sibling SVG oracle's `inverse-remove-element` failed on
+    /// against a pretty-printed real drawing. This fixture is minified and never showed it; the
+    /// routing was wrong either way, and the subject applies both steps to one snapshot with no
+    /// serialization between, so this is what the law actually claims.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        if kind.is_empty() {
+            return Err("mutation spec carries no `kind`".to_string());
+        }
         let base = parse(input)?;
         let inverse = inverse_spec(&base, kind, params);
-        let mutated = apply_mutation(input, kind, params)?;
-        apply_mutation(&mutated, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))
+        let mut doc = base;
+        apply_kind(&mut doc, kind, params)?;
+        apply_kind(&mut doc, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))?;
+        serialize(&doc)
     }
 
     //#region 🔖️Projection

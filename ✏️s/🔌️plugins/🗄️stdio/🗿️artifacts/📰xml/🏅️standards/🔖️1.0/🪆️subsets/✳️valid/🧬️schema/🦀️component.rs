@@ -6,54 +6,72 @@
 //! `subsetChildDirs`, without duplicating the schema definition.
 
 pub use crate::artifacts::xml::standards::v1_0::subsets::any::schema::*;
+
+//#region 🧬️Mutations
+/// 🧬️ THIS subset's own mutation vocabulary — `XmlValidMutation`, not the `✳️any` subset's
+/// `XmlMutation` the glob re-export above would otherwise supply. Declared here rather than in the
+/// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
+/// over the glob import, which is exactly the intent.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod valid_mutations;
+pub use valid_mutations::{apply_xml_valid_mutation, inverse_xml_valid_mutation, XmlValidMutation, KINDS as VALID_MUTATION_KINDS};
+//#endregion 🧬️Mutations
+
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::xml::standards::v1_0::subsets::any::schema::diff::XmlDiff;
-    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::mutations::XmlMutation;
     use crate::artifacts::xml::standards::v1_0::subsets::any::schema::snapshot::XmlSnapshot;
-    use crate::artifacts::xml::standards::v1_0::subsets::any::schema::XmlBuilder as XmlAnyBuilder;
     use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
+    use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::valid_mutations::{apply_xml_valid_mutation, XmlValidMutation};
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
+    /// 🏗️ Holds the shared `XmlSnapshot` directly rather than wrapping the `✳️any` builder: this
+    /// subset's `mutate` speaks `XmlValidMutation`, which the `✳️any` builder has no impl for, and
+    /// forwarding would have to unwrap a snapshot the `✳️any` builder keeps private. The decode
+    /// entry points are the same `ArtifactDsl`/`ArtifactPack` codecs the `✳️any` builder itself
+    /// calls, so nothing about the parse is duplicated or diverges.
     #[derive(Clone, Debug, Default)]
-    pub struct XmlValidBuilderConstruction(XmlAnyBuilder);
+    pub struct XmlValidBuilderConstruction {
+        snapshot: XmlSnapshot,
+    }
 
     impl ArtifactBuilder for XmlValidBuilderConstruction {
         type Snapshot = XmlSnapshot;
-        type Mutation = XmlMutation;
+        type Mutation = XmlValidMutation;
         type Diff = XmlDiff;
 
         async fn empty() -> Self {
-            Self(XmlAnyBuilder::empty().await)
+            Self::default()
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self(XmlAnyBuilder::from_snapshot(snapshot).await)
+            Self { snapshot }
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self(XmlAnyBuilder::from_text(text).await?))
+            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self(XmlAnyBuilder::from_binary(bytes).await?))
+            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
 
-        async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.0.mutate(mutation).await;
-            (Self(inner), diff)
+        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = apply_xml_valid_mutation(&mut self.snapshot, &mutation);
+            (self, outcome)
         }
 
-        async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self(self.0.absorb(diff).await?))
+        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <XmlDiff as protocol::MutationDiff<XmlSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
-        /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard XML 1.0
-        /// §5.1 validity violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
+        /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard XML 1.0 §5.1
+        /// validity violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
         async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let snapshot = self.0.build().await?;
+            let snapshot = self.snapshot;
             let hard: Vec<Diagnostic> = check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -81,13 +99,26 @@ pub mod derived_construction {
         }
 
         #[semio_framework_async_macros::async_test]
-        async fn root_name_mismatch_injected_via_raw_mutate_still_fails_build() {
+        async fn root_name_mismatch_injected_around_the_vocabulary_still_fails_build() {
             let built = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("clean build");
             let mut mismatched = built;
             mismatched.doc.doctype = Some("<!DOCTYPE somethingElse>".into());
-            let (mutated, _diff) = XmlValidBuilderConstruction::from_snapshot(XmlSnapshot::default()).mutate(XmlMutation::SetSnapshot { snapshot: mismatched });
-            let err = mutated.build().expect_err("a doctype/root name mismatch must fail build()");
+            let err = XmlValidBuilderConstruction::from_snapshot(mismatched).build().expect_err("a doctype/root name mismatch must fail build()");
             assert!(err.iter().any(|d| d.code.0 == "stdio.xml.valid.root-name-mismatch"));
+        }
+
+        /// 🛡️ The vocabulary's own gate, one layer earlier than `build()`: `✳️any`'s ungated
+        /// `SetSnapshot` would let a desynchronised DOCTYPE Name land in the snapshot and leave
+        /// `build()` to catch it. This subset's `SetSnapshot` refuses it outright and leaves the
+        /// document untouched, which is what makes the vocabulary subset-closed rather than merely
+        /// subset-checked.
+        #[semio_framework_async_macros::async_test]
+        async fn the_vocabularys_own_gate_refuses_a_mismatched_replacement() {
+            let mut mismatched = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").build().expect("clean build");
+            mismatched.doc.doctype = Some("<!DOCTYPE somethingElse>".into());
+            let (kept, outcome) = XmlValidBuilderConstruction::from_text("<!DOCTYPE root>\n<root/>").expect("parses").mutate(XmlValidMutation::SetSnapshot { snapshot: mismatched });
+            assert!(outcome.messages().iter().any(|message| message.code.0 == super::super::valid_mutations::CODE_REJECTED), "got {:?}", outcome.messages());
+            assert_eq!(kept.build().expect("the refused mutation must leave a still-valid document").doc.doctype.as_ref().map(|doctype| doctype.name.as_str()), Some("root"));
         }
     }
 }

@@ -1,24 +1,36 @@
 //! 🦀️ Semio TEXT exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `semio-text-mutation-semantics` (`../../🏅️standards/
 //! 🔖️v1/🪆️subsets/✳️text/🧪️oracle/🔣️component.json`): `s.stdio.semio.text` is a semio-NATIVE
-//! format with no third-party reader or writer, so `oracle` here reads the committed,
-//! independently handcrafted per-kind specification fixtures (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️text/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`) literally — no recomputation, no
+//! format with no third-party reader or writer, so `oracle` here reads the committed, independently
+//! handcrafted per-kind specification fixtures (`../../🏅️standards/🔖️v1/🪆️subsets/✳️text/
+//! 🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`) literally — no recomputation, no
 //! reimplementation of mutation semantics. `subject` drives this repository's own
-//! `apply_semio_text_mutation`, the entry point this ticket added, over the full 7-kind
-//! `SemioTextMutation` vocabulary. Both sides project the snapshot to structural JSON and
-//! `ordered-json-v1` compares them. The oracle-only build must never link the subject crate (fleet
-//! brief §5.3), so the fixtures' BEFORE snapshot and MUTATION payload are transcribed once, by
-//! hand, as `SemioTextSnapshot`/`SemioTextMutation` Rust literals inside the `sut`-gated `subject`
-//! module below — mechanically identical to the committed JSON, never independently invented
-//! (compare against the JSON embedded via `include_str!` in `oracle_fixture`). The generated
-//! test-host crate carries no `serde_json` dependency (only `semio-repo-test-host` and, behind
-//! `sut`, this subset's own crate), so parsing committed JSON straight into typed structs is not an
-//! option here; the framework's own dependency-free `protocol::Json`/`parse_json` carries the
-//! oracle side instead. The subject half is gated behind the generated host's `sut` feature so the
-//! oracle-only run never compiles the local implementation; the Rust SUBJECT phase is blocked this
-//! wave by a concurrent os-kernel refactor (see the fleet brief), so it is written and gated but
-//! not run.
+//! `apply_semio_text_mutation` over the full 7-kind `SemioTextMutation` vocabulary.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never gets two sides to compare. Every law this case claims is therefore
+//! asserted INSIDE the subject handler: `mutate-<kind>` checks the applied snapshot IS the committed
+//! after-snapshot, `inverse-<kind>` checks the mutation's own computed inverse restores the
+//! committed before-snapshot, and `identity-round-trip` crosses the two committed encodings of the
+//! real note artifact against each other. A handler that merely returned `Ok` would report a pass
+//! having checked nothing at all.
+//!
+//! **How the fixture reaches typed values.** The generated test host links only
+//! `semio-repo-test-host` and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`,
+//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`), so neither
+//! `protocol::Mutation` nor a `serde` derive is nameable from here. The subset's own production code
+//! therefore exports the bridges this adapter needs, whose signatures name only reachable types:
+//! `decode_semio_text_snapshot_json`/`encode_semio_text_snapshot_json` (`../../🏅️standards/🔖️v1/
+//! 🪆️subsets/✳️text/🧬️schema/📸️snapshot/🦀️component.rs`), `decode_semio_text_mutation_json`/
+//! `inverse_semio_text_mutation` (`…/🧬️mutations/🦀️component.rs`) and the DSL/pack pass-throughs
+//! `parse_semio_text_dsl`/`print_semio_text_dsl`/`encode_semio_text_pack`/`decode_semio_text_pack`.
+//! Both roles read the SAME committed bytes — the oracle role via `include_str!`, the subject role
+//! by decoding that same text — so no hand-transcribed Rust literal exists here to drift away from
+//! the fixture it claims to mirror. The subject half is gated behind the generated host's `sut`
+//! feature so the oracle-only run never compiles the local implementation; the Rust SUBJECT phase is
+//! blocked this wave by concurrent framework refactors (see 📓️w7-fleet-brief.md), so it is written
+//! and gated but not run.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
@@ -29,40 +41,57 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.
 const KINDS: &[&str] = &["insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark"];
+
+/// 🗣️ The real committed note — three runs that between them cover every field this subset has: an
+/// unmarked English run, an English run carrying a `bold` mark, and a German run carrying a `link`
+/// mark with a non-empty `href`.
+#[cfg(feature = "sut")]
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio";
+/// 🎒️ The same note in its binary envelope, written by a separate codec from the DSL text.
+#[cfg(feature = "sut")]
+const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio";
 //#endregion 🔖️Kinds
 
-//#region 🔖️OracleFixtures
-/// 🧫️ The committed `(before, after)` snapshot JSON for one kind, read literally — this IS the
-/// independently handcrafted specification vector the no-oracle decision rests on, never
-/// recomputed.
-fn oracle_fixture(kind: &str) -> (&'static str, &'static str) {
+//#region 🔖️Fixtures
+/// 🧫️ The committed `(before, mutation, after)` fixture TEXT for one kind, read literally via
+/// `include_str!` — this IS the independently handcrafted specification vector the no-oracle
+/// decision rests on, never recomputed. One `include_str!` per file for the whole adapter: `oracle`
+/// answers with `before`/`after`, `subject` decodes all three.
+fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "insert-run" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/📥insert-run/🧪️tests/inserts-a-german-run-between-two-english-runs/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/📥insert-run/🧪️tests/inserts-a-german-run-between-two-english-runs/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/📥insert-run/🧪️tests/inserts-a-german-run-between-two-english-runs/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "remove-run" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🗑️remove-run/🧪️tests/removes-the-middle-run/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🗑️remove-run/🧪️tests/removes-the-middle-run/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🗑️remove-run/🧪️tests/removes-the-middle-run/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "edit-run" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/✏️edit-run/🧪️tests/rewrites-the-marked-runs-content/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/✏️edit-run/🧪️tests/rewrites-the-marked-runs-content/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/✏️edit-run/🧪️tests/rewrites-the-marked-runs-content/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "change-run-language" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🌐change-run-language/🧪️tests/retags-the-second-run-as-german/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🌐change-run-language/🧪️tests/retags-the-second-run-as-german/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🌐change-run-language/🧪️tests/retags-the-second-run-as-german/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "reorder-runs" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🔀reorder-runs/🧪️tests/moves-the-first-run-to-the-end/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🔀reorder-runs/🧪️tests/moves-the-first-run-to-the-end/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/🔀reorder-runs/🧪️tests/moves-the-first-run-to-the-end/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "add-mark" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/➕add-mark/🧪️tests/adds-a-link-mark-ahead-of-the-bold-mark/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/➕add-mark/🧪️tests/adds-a-link-mark-ahead-of-the-bold-mark/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/➕add-mark/🧪️tests/adds-a-link-mark-ahead-of-the-bold-mark/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "remove-mark" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/➖remove-mark/🧪️tests/detaches-the-italic-mark-from-the-run/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/➖remove-mark/🧪️tests/detaches-the-italic-mark-from-the-run/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🧬️mutations/➖remove-mark/🧪️tests/detaches-the-italic-mark-from-the-run/📸️snapshot/➡️after/🔣️component.json"),
         ),
         other => panic!("mutate-semio-text: no fixture registered for kind {other:?}"),
@@ -73,13 +102,13 @@ fn oracle_fixture(kind: &str) -> (&'static str, &'static str) {
 fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
-//#endregion 🔖️OracleFixtures
+//#endregion 🔖️Fixtures
 
 //#region 🔖️Oracle
 /// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally.
 fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let (_before, after) = oracle_fixture(kind);
+        let (_before, _mutation, after) = fixture_text(kind);
         Ok(Outcome::with_raw(after.as_bytes().to_vec(), canonical(after)))
     }
 }
@@ -88,7 +117,7 @@ fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome,
 /// return to exactly where the specification vector started.
 fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let (before, _after) = oracle_fixture(kind);
+        let (before, _mutation, _after) = fixture_text(kind);
         Ok(Outcome::with_raw(before.as_bytes().to_vec(), canonical(before)))
     }
 }
@@ -97,109 +126,122 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::mutations::{add_mark, change_run_language, edit_run, insert_run, remove_mark, remove_run, reorder_runs, SemioTextMutation};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};
-    use protocol::Mutation;
+    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::mutations::{apply_semio_text_mutation, decode_semio_text_mutation_json, inverse_semio_text_mutation, SemioTextMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{decode_semio_text_pack, decode_semio_text_snapshot_json, encode_semio_text_pack, encode_semio_text_snapshot_json, parse_semio_text_dsl, print_semio_text_dsl, SemioTextSnapshot};
 
-    //#region 🔖️HandcraftedFixtures
-    /// 🧫️ The SAME specification vector `../🦀️component.rs::oracle_fixture` embeds as JSON,
-    /// transcribed once by hand into real `SemioTextSnapshot`/`SemioTextMutation` values — the
-    /// oracle-only build must never link this crate, so there is no way to share one physical
-    /// source between the two roles; committed side by side under the same kind's `🧪️tests/`
-    /// directory, so a drift between them is a one-file diff away from being caught by eye.
-    fn run(language: &str, content: &str, marks: Vec<SemioTextMark>) -> SemioTextRun {
-        SemioTextRun { language: language.into(), content: content.into(), marks }
-    }
-    fn mark(kind: SemioTextMarkKind, href: &str) -> SemioTextMark {
-        SemioTextMark { kind, href: href.into() }
-    }
-    fn snapshot(runs: Vec<SemioTextRun>) -> SemioTextSnapshot {
-        SemioTextSnapshot { schema: "s.stdio.semio.text".into(), runs }
+    //#region 🔖️FixtureDecode
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// this subset's own production JSON bridges — real deserialization of the committed bytes,
+    /// never a Rust literal transcribed beside them.
+    fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<SemioTextSnapshot, String> {
+        decode_semio_text_snapshot_json(text).map_err(|error| format!("mutate-semio-text: the committed {label}-snapshot for {kind:?} must decode: {error}"))
     }
 
-    fn fixture_for(kind: &str) -> (SemioTextSnapshot, SemioTextMutation) {
-        match kind {
-            "insert-run" => (
-                snapshot(vec![run("en", "Good morning", vec![]), run("en", "Goodbye", vec![])]),
-                SemioTextMutation::InsertRun(insert_run::mutation::InsertRun { index: 1, run: run("de", "Guten Morgen", vec![]) }),
-            ),
-            "remove-run" => (snapshot(vec![run("en", "Alpha", vec![]), run("de", "Beta", vec![]), run("en", "Gamma", vec![])]), SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 1 })),
-            "edit-run" => (
-                snapshot(vec![run("en", "Hello", vec![]), run("en", "world", vec![mark(SemioTextMarkKind::Bold, "")])]),
-                SemioTextMutation::EditRun(edit_run::mutation::EditRun { index: 1, new_content: "planet".into() }),
-            ),
-            "change-run-language" => (snapshot(vec![run("en", "Hello", vec![]), run("en", "Welt", vec![])]), SemioTextMutation::ChangeRunLanguage(change_run_language::mutation::ChangeRunLanguage { index: 1, new_language: "de".into() })),
-            "reorder-runs" => (snapshot(vec![run("en", "one", vec![]), run("en", "two", vec![]), run("en", "three", vec![])]), SemioTextMutation::ReorderRuns(reorder_runs::mutation::ReorderRuns { from: 0, to: 2 })),
-            "add-mark" => (snapshot(vec![run("en", "semio", vec![mark(SemioTextMarkKind::Bold, "")])]), SemioTextMutation::AddMark(add_mark::mutation::AddMark { run_index: 0, index: 0, mark: mark(SemioTextMarkKind::Link, "https://semio.tech") })),
-            "remove-mark" => (snapshot(vec![run("en", "emphasis", vec![mark(SemioTextMarkKind::Bold, ""), mark(SemioTextMarkKind::Italic, "")])]), SemioTextMutation::RemoveMark(remove_mark::mutation::RemoveMark { run_index: 0, index: 1 })),
-            other => panic!("mutate-semio-text: no fixture registered for kind {other:?}"),
-        }
+    fn mutation_of(text: &str, kind: &str) -> Result<SemioTextMutation, String> {
+        decode_semio_text_mutation_json(text).map_err(|error| format!("mutate-semio-text: the committed mutation payload for {kind:?} must decode: {error}"))
     }
-    //#endregion 🔖️HandcraftedFixtures
 
-    //#region 🔖️Projection
-    fn mark_kind_str(kind: SemioTextMarkKind) -> &'static str {
-        match kind {
-            SemioTextMarkKind::Bold => "bold",
-            SemioTextMarkKind::Italic => "italic",
-            SemioTextMarkKind::Code => "code",
-            SemioTextMarkKind::Link => "link",
-        }
+    fn projection(snapshot: &SemioTextSnapshot) -> Result<Json, String> {
+        parse_json(&encode_semio_text_snapshot_json(snapshot))
     }
-    fn mark_json(mark: &SemioTextMark) -> Json {
-        Json::Object(vec![("kind".to_string(), Json::String(mark_kind_str(mark.kind).to_string())), ("href".to_string(), Json::String(mark.href.clone()))])
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both fixtures are written
+    /// in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioTextSnapshot, expected: &SemioTextSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", encode_semio_text_snapshot_json(got), encode_semio_text_snapshot_json(expected))
     }
-    fn run_json(run: &SemioTextRun) -> Json {
-        Json::Object(vec![("language".to_string(), Json::String(run.language.clone())), ("content".to_string(), Json::String(run.content.clone())), ("marks".to_string(), Json::Array(run.marks.iter().map(mark_json).collect()))])
-    }
-    /// 🎯️ The projection every scenario compares under `ordered-json-v1`: the snapshot's own
-    /// structural JSON shape, matching the committed fixtures field for field.
-    fn snapshot_json(snapshot: &SemioTextSnapshot) -> Json {
-        Json::Object(vec![("schema".to_string(), Json::String(snapshot.schema.clone())), ("runs".to_string(), Json::Array(snapshot.runs.iter().map(run_json).collect()))])
-    }
-    //#endregion 🔖️Projection
+    //#endregion 🔖️FixtureDecode
 
     //#region 🔖️Handlers
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot. The assertion lives here rather than in the comparison because a recorded
+    /// no-oracle case runs no oracle role: a handler that merely returned `Ok` would report a pass
+    /// having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
-            let (mut base, mutation) = fixture_for(kind);
-            let outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::mutations::apply_semio_text_mutation(&mut base, &mutation);
+            let (before, mutation, after) = super::fixture_text(kind);
+            let mut current = snapshot_of(before, "before", kind)?;
+            let expected = snapshot_of(after, "after", kind)?;
+            let mutation = mutation_of(mutation, kind)?;
+            let outcome = apply_semio_text_mutation(&mut current, &mutation);
             if !outcome.messages().is_empty() {
-                return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", outcome.messages()));
             }
-            let projection = snapshot_json(&base);
-            let bytes = projection.to_string().into_bytes();
-            Ok(Outcome::with_raw(bytes, projection))
+            if current != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &current, &expected));
+            }
+            let projection = projection(&current)?;
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
 
+    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
+    /// restore the committed before-snapshot exactly — run addressing, nested mark indices and the
+    /// `href` a `link` mark carries included.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
-            let (base, mutation) = fixture_for(kind);
+            let (before, mutation, _after) = super::fixture_text(kind);
+            let base = snapshot_of(before, "before", kind)?;
+            let mutation = mutation_of(mutation, kind)?;
             let mut current = base.clone();
-            let outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::mutations::apply_semio_text_mutation(&mut current, &mutation);
+            let outcome = apply_semio_text_mutation(&mut current, &mutation);
             if !outcome.messages().is_empty() {
-                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", outcome.messages()));
+                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", outcome.messages()));
             }
-            let undo = mutation.inverse(&base);
-            for step in &undo {
-                let step_outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::mutations::apply_semio_text_mutation(&mut current, step);
+            for step in inverse_semio_text_mutation(&mutation, &base) {
+                let step_outcome = apply_semio_text_mutation(&mut current, &step);
                 if !step_outcome.messages().is_empty() {
-                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
+                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", step_outcome.messages()));
                 }
             }
-            let projection = snapshot_json(&current);
-            let bytes = projection.to_string().into_bytes();
-            Ok(Outcome::with_raw(bytes, projection))
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
+            }
+            let projection = projection(&current)?;
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
+    }
+
+    /// 🔁️ The real committed note through both of its committed encodings. The DSL text and the
+    /// pack envelope are separate committed files produced by separate codecs, so agreeing on one
+    /// snapshot cannot be achieved by smuggling bytes from either. Byte-identical re-emission IS
+    /// expected here — the committed text is this codec's own output, not a foreign writer's — so
+    /// the wave's usual "output must not equal input" tripwire does not apply and the text/binary
+    /// cross-check carries that evidence instead.
+    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed note artifact is not UTF-8: {error}"))?;
+        let parsed = parse_semio_text_dsl(&text)?;
+        if parsed.runs.len() != 3 {
+            return Err(format!("identity-round-trip: the committed note is the three-run fixture this case describes, but parsed {} run(s)", parsed.runs.len()));
+        }
+        let reparsed = parse_semio_text_dsl(&print_semio_text_dsl(&parsed))?;
+        if reparsed != parsed {
+            return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
+        }
+        let unpacked = decode_semio_text_pack(&ctx.fixture_bytes(super::PACK_ASSET)?)?;
+        if unpacked != parsed {
+            return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different note than the committed text artifact", &unpacked, &parsed));
+        }
+        let repacked = decode_semio_text_pack(&encode_semio_text_pack(&parsed))?;
+        if repacked != parsed {
+            return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &parsed));
+        }
+        let projection = projection(&parsed)?;
+        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
     }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls.
+/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
+/// id, so the loop mirrors the feature's `Examples` tables exactly. `identity-round-trip` is
+/// deliberately subject-only: the reference answer for the other scenarios is a committed JSON
+/// snapshot the oracle role can read literally, but the note artifact is committed as DSL and pack
+/// bytes ONLY, and turning those into a snapshot needs this subset's own codec — which the
+/// oracle-only build must not link. Inventing a JSON transcription of it here would be a second,
+/// drifting copy of the artifact, so that scenario asserts entirely in-role instead.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     for kind in KINDS {
@@ -208,6 +250,10 @@ pub fn adapter() -> Adapter {
         {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
         }
+    }
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("identity-round-trip", subject::round_trip);
     }
     built
 }

@@ -336,6 +336,63 @@ impl store::ArtifactPack for SemioTextSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.text` — the shape `mutate-semio-text` compares under `ordered-json-v1`, derived
+/// from the snapshot type itself rather than hand-written a second time in the adapter, where it
+/// could drift away from the type it claims to project. A thin `serde_json` wrapper (already a
+/// direct dependency of this crate, used behind this interface per CLAUDE.md's "external libraries
+/// behind an interface" rule, never a new one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_text_snapshot_json(snapshot: &SemioTextSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioTextSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_text_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`SemioTextSnapshot`] values, so `mutate-semio-text`'s adapter
+/// reads the committed fixture instead of re-declaring it as a Rust literal beside it. Reaching
+/// `serde_json` from that adapter is impossible — the generated test host links only this crate —
+/// which is why the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_text_snapshot_json(text: &str) -> Result<SemioTextSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🔖️Wire
+/// 📝️ Parses `s.stdio.semio.text` DSL text into a [`SemioTextSnapshot`] — a named pass-through of this snapshot's own
+/// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// crate, so `mutate-semio-text`'s `identity-round-trip` scenario reaches the real committed
+/// artifact (`../../📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio`) through this instead.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_text_dsl(text: &str) -> Result<SemioTextSnapshot, String> {
+    <SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Renders a [`SemioTextSnapshot`] back as `s.stdio.semio.text` DSL text — the inverse of
+/// [`parse_semio_text_dsl`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_text_dsl(snapshot: &SemioTextSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Encodes a [`SemioTextSnapshot`] as a semio pack envelope — the binary twin of the DSL text, produced by a
+/// SEPARATE codec, which is what makes the two committed encodings of one document able to
+/// contradict each other.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_text_pack(snapshot: &SemioTextSnapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+
+/// 📦️ Decodes a semio pack envelope into a [`SemioTextSnapshot`] — the inverse of
+/// [`encode_semio_text_pack`], reading `../../📚️examples/📃️note/🖼️assets/🎒️example.pack.semio`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_text_pack(bytes: &[u8]) -> Result<SemioTextSnapshot, String> {
+    <SemioTextSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+//#endregion 🔖️Wire
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.text` document — three runs (plain, bold, and a link mark) across
 /// two languages, exercising every leaf/collection shape at least once. Single source of truth for

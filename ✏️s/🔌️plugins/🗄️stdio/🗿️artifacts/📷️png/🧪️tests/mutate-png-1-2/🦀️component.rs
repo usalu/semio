@@ -14,7 +14,7 @@
 //! real document into the typed `PngSnapshot` and re-serializes from it — never splices bytes.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_png_mutation};
+use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::{oracle_apply_mutation, oracle_arrange, oracle_undo_mutation, project_png_mutation};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
@@ -58,14 +58,37 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 fn no_mutation_spec() -> Json {
     Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))])
 }
+
+/// 🎬️ The document a kind actually acts on. The committed floor plan carries exactly
+/// IHDR/PLTE/IDAT/IEND — no text chunk, no private chunk, no tRNS — so the three kinds that address
+/// an EXISTING text or unknown chunk are handed the real document with their target inserted first,
+/// by the reference implementation. Every other kind gets the committed bytes untouched.
+fn arranged_input(ctx: &Context, spec: &Json) -> Result<Vec<u8>, String> {
+    oracle_arrange(&mutable_input(ctx)?, spec)
+}
+
+/// 🚫️ The two kinds this subset's serialization genuinely cannot show, each for a reason stated in
+/// the oracle module, in `encode_png`'s own `🚫️EncodeScopeNote` and in the feature description:
+/// `set-header` (IHDR must describe the canonical RGBA IDAT that follows it, and `SetHeader` does
+/// not resize `pixels`, so no field of it can reach the bytes) and `set-transparency` (§11.3.3
+/// forbids tRNS at colour type 6, which is the only colour type either encoder writes). Naming them
+/// here is what keeps the other fifteen honest: the law below fails any kind not on this list that
+/// leaves the projection untouched.
+const UNOBSERVABLE: &[&str] = &["set-header", "set-transparency"];
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 👁️ `@id-mutate`: applies the row's kind with the reference `png` codec and ASSERTS the result is
+/// distinguishable from its own pre-state. Without that assertion a kind whose effect lands outside
+/// the projection passes exactly as `no-mutation` does, which is the defect this case carried while
+/// its projection reported geometry and a sample digest alone.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let bytes = oracle_apply_mutation(&input, &spec)?;
+    let base = arranged_input(ctx, &spec)?;
+    let before = project_png_mutation(&base)?;
+    let bytes = oracle_apply_mutation(&base, &spec)?;
     let projection = project_png_mutation(&bytes)?;
+    law::mutation_is_observable(&spec.str("kind"), &projection, &before, UNOBSERVABLE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -75,11 +98,11 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// applying the forward mutation (what this used to do) asserted nothing — the scenario passed
 /// whenever the reference crate re-encoded the untouched fixture without erroring.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let before = project_png_mutation(&input)?;
-    let mutated = oracle_apply_mutation(&input, &spec)?;
-    let bytes = oracle_undo_mutation(&input, &spec, &mutated)?;
+    let base = arranged_input(ctx, &spec)?;
+    let before = project_png_mutation(&base)?;
+    let mutated = oracle_apply_mutation(&base, &spec)?;
+    let bytes = oracle_undo_mutation(&base, &spec, &mutated)?;
     let projection = project_png_mutation(&bytes)?;
     law::inverse_restores(&spec.str("kind"), &projection, &before)?;
     Ok(Outcome::with_raw(bytes, projection))
@@ -103,12 +126,11 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::mutable_input;
-    use protocol::Mutation;
+    use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::project_png_mutation;
     use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
-    use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, PngMutation};
+    use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, inverse_png_mutation, PngMutation};
     use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSnapshot, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp};
 
     //#region 🔖️Json
@@ -233,8 +255,8 @@ mod subject {
 
     //#region 🔖️Handlers
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let mut snapshot = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let spec = ctx.doc_json()?;
+        let mut snapshot = decode_png(&arranged_input(ctx, &spec)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &snapshot)?;
         let _ = apply_png_mutation(&mut snapshot, &mutation);
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;
@@ -246,12 +268,12 @@ mod subject {
     /// returns (the vocabulary's own algebraic law, index-aware, computed against the pre-forward
     /// `base`) — the real production undo pipeline, not a hand-derived counter-mutation.
     pub fn undo(ctx: &Context) -> Result<Outcome, String> {
-        let base = decode_png(&mutable_input(ctx)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let spec = ctx.doc_json()?;
+        let base = decode_png(&arranged_input(ctx, &spec)?).map_err(|error| format!("decode_png failed: {error}"))?;
         let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &base)?;
         let mut snapshot = base.clone();
         let _ = apply_png_mutation(&mut snapshot, &mutation);
-        for inverse in <PngMutation as Mutation<PngSnapshot>>::inverse(&mutation, &base) {
+        for inverse in inverse_png_mutation(&mutation, &base) {
             let _ = apply_png_mutation(&mut snapshot, &inverse);
         }
         let bytes = encode_png(&snapshot).map_err(|error| format!("encode_png failed: {error}"))?;

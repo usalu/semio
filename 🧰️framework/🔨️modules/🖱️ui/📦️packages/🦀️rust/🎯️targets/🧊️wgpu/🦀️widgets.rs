@@ -438,6 +438,21 @@ use crate::wgpu::ring::render_ring;
 use crate::wgpu::select::render_select;
 use crate::wgpu::slider::render_slider;
 use crate::wgpu::stepper::render_number_stepper;
+
+//#region 🔖️WindowMeasureBorrowedControls
+pub fn render_window_measure_select<E: Clone>(id: &str, value: &str, items: &[crate::wgpu::component::layout::MeasureSelectItem], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    render_select(id, value, items, None, bounds, ctx);
+}
+
+#[allow(clippy::too_many_arguments, reason = "one field per retained measure leaf")]
+pub fn render_window_measure_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, disabled: bool, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    render_slider(id, value, min, max, step, ready, disabled, None, bounds, ctx);
+}
+
+pub fn render_window_measure_toggle<E: Clone>(id: &str, icon_id: crate::wgpu::IconName, pressed: bool, text: Option<&str>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    render_toggle(id, icon_id, pressed, text, None, bounds, ctx);
+}
+//#endregion 🔖️WindowMeasureBorrowedControls
 use crate::wgpu::toggle::render_toggle;
 use crate::wgpu::tree_element::{measure_tree_sections, measure_tree_sections_state, measure_tree_sections_width, render_tree};
 

@@ -1,0 +1,11 @@
+[workspace]
+
+[package]
+name = "xml-valid-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+semio-s-plugin-stdio-test-oracle = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust", features = ["oracles"] }
+semio-repo-test-host = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }

@@ -25,6 +25,14 @@
 //! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
 //! local implementation (fleet brief §5.3); the Rust SUBJECT phase is blocked this wave by a
 //! concurrent os-kernel refactor (see the fleet brief), so it is written and gated but not run.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
+//! the written statement of the reference answer rather than a second running party. Every law this
+//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
+//! printed. A handler that merely ran the mutation and returned would report a pass having checked
+//! nothing.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
@@ -74,11 +82,10 @@ fn snapshot_oracle_for(role: &'static str) -> impl Fn(&Context) -> Result<Outcom
 #[cfg(feature = "sut")]
 mod subject {
     use super::fixture_uri;
-    use protocol::Mutation;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{
-        apply_semio_brep_mutation, create_edge, create_face, create_shell, create_solid, create_vertex, delete_edge, delete_face, delete_shell, delete_solid, delete_vertex, move_vertex, replace_curve, replace_surface, SemioBrepMutation,
+        apply_semio_brep_mutation, inverse_semio_brep_mutation, create_edge, create_face, create_shell, create_solid, create_vertex, delete_edge, delete_face, delete_shell, delete_solid, delete_vertex, move_vertex, replace_curve, replace_surface, SemioBrepMutation,
     };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
         BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot,
@@ -266,12 +273,20 @@ mod subject {
         }
     }
 
-    /// 🧫️ The committed `(before, mutation)` pair the scenario binds, decoded into the typed values
-    /// `apply_semio_brep_mutation` consumes.
-    fn fixture_for(ctx: &Context) -> Result<(SemioBrepSnapshot, SemioBrepMutation), String> {
+    /// 🧫️ The committed `(before, mutation, after)` triple the scenario binds, decoded into the
+    /// typed values `apply_semio_brep_mutation` consumes and the typed answer the applied result has
+    /// to equal.
+    fn fixture_for(ctx: &Context) -> Result<(SemioBrepSnapshot, SemioBrepMutation, SemioBrepSnapshot), String> {
         let before = snapshot_of(&ctx.fixture_json(&fixture_uri(ctx, "before")?)?)?;
         let mutation = mutation_of(&ctx.fixture_json(&fixture_uri(ctx, "mutation")?)?)?;
-        Ok((before, mutation))
+        let after = snapshot_of(&ctx.fixture_json(&fixture_uri(ctx, "after")?)?)?;
+        Ok((before, mutation, after))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
+    /// fixtures are written in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioBrepSnapshot, expected: &SemioBrepSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got).to_string(), snapshot_json(expected).to_string())
     }
     //#endregion 🔖️Decode
 
@@ -398,29 +413,46 @@ mod subject {
     //#endregion 🔖️Projection
 
     //#region 🔖️Handlers
+    /// 🎯️ Applies the bound kind to the committed before-snapshot and asserts the result IS the
+    /// committed after-snapshot — the whole topology, so a `delete-face` that removed the face but
+    /// left its loop referencing a severed edge fails here rather than passing quietly. The
+    /// assertion lives in the handler because a recorded no-oracle case runs no oracle role: one
+    /// that merely returned `Ok` would report a pass having checked nothing.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let (mut current, mutation) = fixture_for(ctx)?;
+        let (mut current, mutation, expected) = fixture_for(ctx)?;
         let outcome = apply_semio_brep_mutation(&mut current, &mutation);
         if !outcome.messages().is_empty() {
             return Err(format!("{}: mutation rejected: {:?}", ctx.scenario.id, outcome.messages()));
+        }
+        if current != expected {
+            return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
         }
         let projection = snapshot_json(&current);
         let bytes = projection.to_string().into_bytes();
         Ok(Outcome::with_raw(bytes, projection))
     }
 
+    /// ↩️ The metamorphic inverse law: applying the bound kind and then its OWN computed inverse
+    /// must restore the committed before-snapshot exactly — a deleted solid's shells and every
+    /// loop/edge/vertex beneath them, in their original order, not merely a solid of the same id.
+    /// The inverse is reached through this subset's own `inverse_semio_brep_mutation`, because
+    /// `protocol::Mutation` is a private extern-crate item of the plugin and cannot be imported
+    /// from a test host that links only the plugin itself.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let (base, mutation) = fixture_for(ctx)?;
+        let (base, mutation, _expected) = fixture_for(ctx)?;
         let mut current = base.clone();
         let outcome = apply_semio_brep_mutation(&mut current, &mutation);
         if !outcome.messages().is_empty() {
             return Err(format!("{}: forward mutation rejected: {:?}", ctx.scenario.id, outcome.messages()));
         }
-        for step in &mutation.inverse(&base) {
+        for step in &inverse_semio_brep_mutation(&mutation, &base) {
             let step_outcome = apply_semio_brep_mutation(&mut current, step);
             if !step_outcome.messages().is_empty() {
                 return Err(format!("{}: inverse step rejected: {:?}", ctx.scenario.id, step_outcome.messages()));
             }
+        }
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the before-snapshot", ctx.scenario.id), &current, &base));
         }
         let projection = snapshot_json(&current);
         let bytes = projection.to_string().into_bytes();

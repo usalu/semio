@@ -5981,10 +5981,7 @@ pub mod app {
         async fn form_panel_builder_wraps_a_field_control_and_submit_button() {
             let on_change = ActionId::try_v1("app", "setValue").expect("bounded fixture");
             let submit_action = ActionId::try_v1("app", "submit").expect("bounded fixture");
-            let control = ui::input(InputKind::Text)
-                .try_id("ns-play-form.field.name").expect("bounded fixture")
-                .try_on(Trigger::Change, on_change).expect("bounded fixture")
-                .try_build().expect("bounded fixture");
+            let control = ui::input(InputKind::Text).try_id("ns-play-form.field.name").expect("bounded fixture").try_on(Trigger::Change, on_change).expect("bounded fixture").try_build().expect("bounded fixture");
             let builder = FormPanelBuilder::new("ns-play-form").await.expect("bounded fixture");
             let builder = builder.field("name", "Name", Some("Full name".into()), control).await.expect("bounded fixture");
             let builder = builder.submit("Submit", submit_action).await.expect("bounded fixture");
@@ -6021,10 +6018,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
             let action = ActionId::try_v1("app", "edit").expect("bounded fixture");
-            let button = ui::button(Label::try_from("Edit").expect("bounded fixture"))
-                .icon(UiText::try_from_str("edit").expect("bounded fixture"))
-                .try_on(Trigger::Activate, action).expect("bounded fixture")
-                .try_build().expect("bounded fixture");
+            let button = ui::button(Label::try_from("Edit").expect("bounded fixture")).icon(UiText::try_from_str("edit").expect("bounded fixture")).try_on(Trigger::Activate, action).expect("bounded fixture").try_build().expect("bounded fixture");
             let entry = KeyValueEntry { label: Label::try_from("Kind").expect("bounded fixture"), value: UiText::try_from_str("gizmo").expect("bounded fixture") };
             let node = entity_detail("Widget", Some(Label::try_from("A widget").expect("bounded fixture")), [entry], [button]).await.expect("bounded fixture");
             assert_eq!(node.children.len(), 4);
@@ -6201,9 +6195,7 @@ pub mod app {
 
     impl UiCommandJsonProducer {
         fn try_new(value: &UiValue) -> Result<Self, Fault> {
-            let pending = value.credited_clone().ok_or_else(|| {
-                Fault::new(FaultOrigin::Framework, FaultCode::new("app.intent.bridge-admission"), "typed intent value alias admission refused before conversion")
-            })?;
+            let pending = value.credited_clone().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("app.intent.bridge-admission"), "typed intent value alias admission refused before conversion"))?;
             Ok(Self { stack: UiFixedList::default(), pending: Some(pending), ready: None, fault: None, items: 0 })
         }
 
@@ -6436,13 +6428,7 @@ pub mod app {
             args_map.insert("scope".to_string(), UiValue::Text(ui_text("keep")));
             let mut input_map = std::collections::BTreeMap::new();
             input_map.insert("value".to_string(), UiValue::Number(2.0));
-            let merged = merge_ui_values(
-                Some(&UiValue::Map(ui_map(args_map))),
-                Some(&UiValue::Map(ui_map(input_map))),
-            )
-            .await
-            .expect("retained merge")
-            .expect("both sides set");
+            let merged = merge_ui_values(Some(&UiValue::Map(ui_map(args_map))), Some(&UiValue::Map(ui_map(input_map)))).await.expect("retained merge").expect("both sides set");
             assert_eq!(merged, serde_json::json!({ "value": 2.0, "scope": "keep" }));
         }
 
@@ -10701,14 +10687,8 @@ pub mod app {
             HistoryCommandFilter::OnlyMutations => "onlyMutations",
         };
         let mut filter_builder = ui::select(ui_text(filter_value, "history-panel.filter-value")?);
-        for (value, label) in [
-            ("all", if is_de { "Alle" } else { "All" }),
-            ("withoutMutations", if is_de { "Ohne Operationen" } else { "Without Operations" }),
-            ("onlyMutations", if is_de { "Nur Operationen" } else { "Only Operations" }),
-        ] {
-            filter_builder = filter_builder
-                .try_item(ui_text(value, "history-panel.filter-item-value")?, ui_label(label, "history-panel.filter-item-label")?)
-                .map_err(|_| ui_assembly_error("history-panel.filter-items"))?;
+        for (value, label) in [("all", if is_de { "Alle" } else { "All" }), ("withoutMutations", if is_de { "Ohne Operationen" } else { "Without Operations" }), ("onlyMutations", if is_de { "Nur Operationen" } else { "Only Operations" })] {
+            filter_builder = filter_builder.try_item(ui_text(value, "history-panel.filter-item-value")?, ui_label(label, "history-panel.filter-item-label")?).map_err(|_| ui_assembly_error("history-panel.filter-items"))?;
         }
         let filter_builder = filter_builder.try_id("framework.history.filter.control").map_err(|_| ui_assembly_error("history-panel.filter-id"))?;
         let filter_action = ActionId::try_v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.filter-action"))?;
@@ -10718,21 +10698,14 @@ pub mod app {
         let filter_item = filter_builder.try_child(filter_select).map_err(|_| ui_assembly_error("history-panel.filter-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.filter-item-build"))?;
 
         let mut command_items = UiFixedList::default();
-        for entry in history
-            .commands
-            .iter()
-            .filter(|entry| match history.command_filter {
-                HistoryCommandFilter::All => true,
-                HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
-                HistoryCommandFilter::OnlyMutations => entry.edit_id.is_some(),
-            })
-        {
+        for entry in history.commands.iter().filter(|entry| match history.command_filter {
+            HistoryCommandFilter::All => true,
+            HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
+            HistoryCommandFilter::OnlyMutations => entry.edit_id.is_some(),
+        }) {
             // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
-            let label = if entry.count > 1 {
-                UiText::try_format(format_args!("{} x{}", entry.label, entry.count)).ok_or_else(|| ui_assembly_error("history-panel.command-label"))?
-            } else {
-                ui_text(entry.label.clone(), "history-panel.command-label")?
-            };
+            let label =
+                if entry.count > 1 { UiText::try_format(format_args!("{} x{}", entry.label, entry.count)).ok_or_else(|| ui_assembly_error("history-panel.command-label"))? } else { ui_text(entry.label.clone(), "history-panel.command-label")? };
             let label = Label(label);
             let id = UiText::try_format(format_args!("framework.history.entry.{}", entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
             let mut builder = ui::tree_item(label).icon(ui_text(history_panel_icon_id(entry.kind).await.as_str(), "history-panel.command-icon")?);
@@ -13852,7 +13825,16 @@ pub mod app {
 
             impl $job {
                 fn new(raw: Vec<u8>, total_items: usize) -> Self {
-                    Self { raw, envelope_cursor: 0, item_cursor: 0, total_items, stage: FrameworkReservedStage::Admitted, contract: semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1), operation: None, closing: false }
+                    Self {
+                        raw,
+                        envelope_cursor: 0,
+                        item_cursor: 0,
+                        total_items,
+                        stage: FrameworkReservedStage::Admitted,
+                        contract: semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1),
+                        operation: None,
+                        closing: false,
+                    }
                 }
 
                 fn checkpoint(&self) -> semio_framework_job::Checkpoint {
@@ -15132,7 +15114,21 @@ pub mod app {
             cx.consume_fuel(self.work_units);
             let operation = self.operation.expect("tool job factory assigns operation identity");
             debug_assert_eq!(operation.operation, cx.operation());
-            let (Some(parent_document_id), Some(command), Some(snapshot), Some(config), Some(history), Some(children), Some(draft), Some(interaction_state), Some(interaction_hover), Some(peer_presence), Some(presence_local), Some(presence_peers), Some(transient)) = (
+            let (
+                Some(parent_document_id),
+                Some(command),
+                Some(snapshot),
+                Some(config),
+                Some(history),
+                Some(children),
+                Some(draft),
+                Some(interaction_state),
+                Some(interaction_hover),
+                Some(peer_presence),
+                Some(presence_local),
+                Some(presence_peers),
+                Some(transient),
+            ) = (
                 self.parent_document_id.as_ref(),
                 self.command.as_ref(),
                 self.snapshot.as_ref(),
@@ -15146,7 +15142,8 @@ pub mod app {
                 self.presence_local.as_ref(),
                 self.presence_peers.as_ref(),
                 self.transient.as_ref(),
-            ) else {
+            )
+            else {
                 return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
             };
             let context = AppOperationContext::from_operation(self.app_instance_id, parent_document_id.clone(), operation, self.canonical_base_revision);
@@ -15409,7 +15406,9 @@ pub mod app {
                         self.state = ActiveArtifactEnvelopeDecodeState::ClosingFault;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-rejected-false-terminal"), "rejected envelope worker session reported Complete without terminal-empty authority")),
+                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-rejected-false-terminal"), "rejected envelope worker session reported Complete without terminal-empty authority"))
+                    }
                 };
             }
             if let Some(rejected) = self.rejected.as_mut() {
@@ -15448,11 +15447,17 @@ pub mod app {
                     semio_framework_job::InteractiveJobCloseStep::Complete if outcome.terminal_is_empty() => {
                         drop(self.retained_outcome.take());
                         if self.terminal_state.is_none() {
-                            self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.resume"), "envelope worker outcome lost its exact resume authority"))?;
+                            self.session
+                                .as_mut()
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?
+                                .resume()
+                                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.resume"), "envelope worker outcome lost its exact resume authority"))?;
                         }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-false-terminal"), "envelope worker outcome reported Complete without terminal-empty payload")),
+                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-false-terminal"), "envelope worker outcome reported Complete without terminal-empty payload"))
+                    }
                 };
             }
             if let Some(target) = self.terminal_state {
@@ -15467,7 +15472,9 @@ pub mod app {
                         self.state = target;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::WorkerJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-false-terminal"), "terminal envelope worker session reported Complete without terminal-empty authority")),
+                    semio_framework_job::WorkerJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-false-terminal"), "terminal envelope worker session reported Complete without terminal-empty authority"))
+                    }
                 };
             }
             let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?;
@@ -15640,7 +15647,9 @@ pub mod app {
                         self.state = ActiveArtifactStoreReplacementState::Complete;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-rejected-false-terminal"), "store initializer rejection reported Complete without terminal-empty authority")),
+                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-rejected-false-terminal"), "store initializer rejection reported Complete without terminal-empty authority"))
+                    }
                 };
             }
             if let Some(outcome) = self.retained_outcome.as_mut() {
@@ -15650,11 +15659,17 @@ pub mod app {
                     semio_framework_job::InteractiveJobCloseStep::Complete if outcome.terminal_is_empty() => {
                         drop(self.retained_outcome.take());
                         if self.terminal_target.is_none() {
-                            self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before resume"))?.resume().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-resume"), "store initializer lost its exact resume authority"))?;
+                            self.session
+                                .as_mut()
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before resume"))?
+                                .resume()
+                                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-resume"), "store initializer lost its exact resume authority"))?;
                         }
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::InteractiveJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-false-terminal"), "store initializer outcome reported Complete without terminal-empty payload")),
+                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-false-terminal"), "store initializer outcome reported Complete without terminal-empty payload"))
+                    }
                 };
             }
             if let Some(target) = self.terminal_target {
@@ -15669,19 +15684,27 @@ pub mod app {
                         self.state = target;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                    semio_framework_job::WorkerJobCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-false-terminal"), "store initializer session reported Complete without terminal-empty authority")),
+                    semio_framework_job::WorkerJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-false-terminal"), "store initializer session reported Complete without terminal-empty authority"))
+                    }
                 };
             }
             let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
             match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
                 Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
-                    let terminal_kind = session.checked_out_outcome().map(|outcome| match outcome {
-                        semio_framework_job::StepOutcome::Complete(_) => 1,
-                        semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => 2,
-                        _ => 0,
-                    }).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome"))?;
+                    let terminal_kind = session
+                        .checked_out_outcome()
+                        .map(|outcome| match outcome {
+                            semio_framework_job::StepOutcome::Complete(_) => 1,
+                            semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => 2,
+                            _ => 0,
+                        })
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome"))?;
                     if terminal_kind == 1 {
-                        let candidate = session.checked_out_job_mut().and_then(ArtifactStoreInitializationJob::take_candidate).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-candidate-missing"), "completed store initializer lost its exact candidate"))?;
+                        let candidate = session
+                            .checked_out_job_mut()
+                            .and_then(ArtifactStoreInitializationJob::take_candidate)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-candidate-missing"), "completed store initializer lost its exact candidate"))?;
                         *self.retained_store = Some(candidate);
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::CandidateReady);
                     } else if terminal_kind == 2 {
@@ -16072,7 +16095,9 @@ pub mod app {
                         match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
                             semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Blocked => {}
                             semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => break,
-                            semio_framework_job::InteractiveJobCloseStep::Complete => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-false-terminal"), "framework reserved worker admission rejection did not reach terminal-empty authority")),
+                            semio_framework_job::InteractiveJobCloseStep::Complete => {
+                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-false-terminal"), "framework reserved worker admission rejection did not reach terminal-empty authority"))
+                            }
                         }
                     }
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-capacity"), "framework reserved worker session capacity is exhausted"));
@@ -16081,7 +16106,8 @@ pub mod app {
             let mut checkpoint_progress = 0u64;
             loop {
                 plugin_job_yield_once().await;
-                let poll = session.pump_one(&pool, semio_framework_async::Lane::Interactive).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-pump"), "framework reserved mounted worker transition was rejected"))?;
+                let poll =
+                    session.pump_one(&pool, semio_framework_async::Lane::Interactive).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-pump"), "framework reserved mounted worker transition was rejected"))?;
                 if !matches!(poll, semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) {
                     continue;
                 }
@@ -16112,7 +16138,9 @@ pub mod app {
                     match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
                         semio_framework_job::JobPayloadCloseStep::Pending { .. } => {}
                         semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => break,
-                        semio_framework_job::JobPayloadCloseStep::Complete => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-false-terminal"), "framework reserved outcome did not reach terminal-empty payload authority")),
+                        semio_framework_job::JobPayloadCloseStep::Complete => {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.outcome-false-terminal"), "framework reserved outcome did not reach terminal-empty payload authority"))
+                        }
                     }
                 }
                 if !terminal {
@@ -16132,7 +16160,9 @@ pub mod app {
                     match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
                         semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => {}
                         semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => break,
-                        semio_framework_job::WorkerJobCloseStep::Complete => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.session-false-terminal"), "framework reserved session did not reach terminal-empty authority")),
+                        semio_framework_job::WorkerJobCloseStep::Complete => {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.session-false-terminal"), "framework reserved session did not reach terminal-empty authority"))
+                        }
                     }
                 }
                 if overrun {
@@ -19072,14 +19102,7 @@ pub mod app {
         async fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let raw = command_bytes.to_vec();
             let decoded = std::sync::Arc::new(std::sync::Mutex::new(None));
-            let job = FrameworkConfigurationBinaryJob::<A> {
-                raw: raw.clone(),
-                cursor: 0,
-                stage: FrameworkConfigurationBinaryStage::Envelope,
-                operation: None,
-                decoded: std::mem::ManuallyDrop::new(Some(decoded.clone())),
-                closing: false,
-            };
+            let job = FrameworkConfigurationBinaryJob::<A> { raw: raw.clone(), cursor: 0, stage: FrameworkConfigurationBinaryStage::Envelope, operation: None, decoded: std::mem::ManuallyDrop::new(Some(decoded.clone())), closing: false };
             let permit = self.run_framework_reserved_job("configuration-binary", &raw, 1, job, meta, None).await?;
             self.validate_framework_reserved_commit("configuration-binary", &permit).await?;
             let command = decoded
@@ -20545,10 +20568,7 @@ pub mod app {
                 return Ok(node);
             }
             let canonical_base_revision = self.store.content_revision().await;
-            let revision_lane = canonical_base_revision
-                .get(..8)
-                .and_then(|bytes| bytes.try_into().ok())
-                .ok_or_else(|| plugin_sdk_fault("canonical revision has no generation lane"))?;
+            let revision_lane = canonical_base_revision.get(..8).and_then(|bytes| bytes.try_into().ok()).ok_or_else(|| plugin_sdk_fault("canonical revision has no generation lane"))?;
             let render_operation = AppRenderOperationContext {
                 app_instance_id: self.live_runtime_instance_id.unwrap_or_default(),
                 base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(revision_lane)),
@@ -21267,12 +21287,7 @@ pub mod app {
     impl Drop for TableRowsView {
         fn drop(&mut self) {
             let Some(retirement) = self.retirement.take() else { return };
-            let owner = RetiredTableRowsView {
-                columns: std::mem::take(&mut self.columns),
-                rows: std::mem::take(&mut self.rows),
-                actions_label: std::mem::take(&mut self.actions_label),
-                closing_row: None,
-            };
+            let owner = RetiredTableRowsView { columns: std::mem::take(&mut self.columns), rows: std::mem::take(&mut self.rows), actions_label: std::mem::take(&mut self.actions_label), closing_row: None };
             let _ = with_table_rows_retire_arena(|arena| arena.handback(retirement, owner));
         }
     }
@@ -21350,17 +21365,13 @@ pub mod app {
                 built: UiFixedList<BuiltNode>,
             }
             let mut stack: UiFixedList<Frame<'_>, { semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
-            stack
-                .try_push(Frame { node: None, children: &view.roots, next: 0, built: UiFixedList::default() })
-                .map_err(|_| ui_assembly_error("tree-window.depth"))?;
+            stack.try_push(Frame { node: None, children: &view.roots, next: 0, built: UiFixedList::default() }).map_err(|_| ui_assembly_error("tree-window.depth"))?;
             let roots = loop {
                 let mut frame = stack.pop().ok_or_else(|| ui_assembly_error("tree-window.frames"))?;
                 if let Some(child) = frame.children.get(frame.next) {
                     frame.next = frame.next.checked_add(1).ok_or_else(|| ui_assembly_error("tree-window.cursor"))?;
                     stack.try_push(frame).map_err(|_| ui_assembly_error("tree-window.depth"))?;
-                    stack
-                        .try_push(Frame { node: Some(child), children: &child.children, next: 0, built: UiFixedList::default() })
-                        .map_err(|_| ui_assembly_error("tree-window.depth"))?;
+                    stack.try_push(Frame { node: Some(child), children: &child.children, next: 0, built: UiFixedList::default() }).map_err(|_| ui_assembly_error("tree-window.depth"))?;
                     continue;
                 }
                 let Some(node) = frame.node else { break frame.built };
@@ -21714,13 +21725,7 @@ pub mod app {
             view.try_push_column(UiText::try_from_str("Name").expect("bounded text")).expect("fixed column");
             let mut table_row = TableRow::new(UiText::try_from_str("space:abc").expect("bounded text"));
             table_row.try_push_cell(UiText::try_from_str("Atelier").expect("bounded text")).expect("fixed cell");
-            table_row
-                .try_push_action(TableRowAction::new(
-                    UiText::try_from_str(IconName::Trash2.as_str()).expect("bounded icon"),
-                    Label(UiText::try_from_str("Delete").expect("bounded label")),
-                    (action.clone(), None),
-                ))
-                .expect("fixed action");
+            table_row.try_push_action(TableRowAction::new(UiText::try_from_str(IconName::Trash2.as_str()).expect("bounded icon"), Label(UiText::try_from_str("Delete").expect("bounded label")), (action.clone(), None))).expect("fixed action");
             view.try_push_row(table_row).expect("fixed row");
             let node = TableWindowKit::render_rows(view).expect("bounded fixture");
             assert_eq!(node.children.get(0).expect("header").children.len(), 2);
@@ -21747,12 +21752,8 @@ pub mod app {
             let mut view = TableRowsView::new(UiText::default());
             let mut row = TableRow::new(UiText::try_from_str("row").expect("bounded id"));
             row.try_push_cell(UiText::try_from_str("cell").expect("bounded cell")).expect("fixed cell");
-            row.try_push_action(TableRowAction::new(
-                UiText::try_from_str("trash-2").expect("bounded icon"),
-                Label(UiText::try_from_str("Delete").expect("bounded label")),
-                (ActionId::try_v1("fixture", "delete").expect("bounded action"), None),
-            ))
-            .expect("fixed action");
+            row.try_push_action(TableRowAction::new(UiText::try_from_str("trash-2").expect("bounded icon"), Label(UiText::try_from_str("Delete").expect("bounded label")), (ActionId::try_v1("fixture", "delete").expect("bounded action"), None)))
+                .expect("fixed action");
             view.try_push_row(row).expect("fixed row");
             drop(view);
             let mut opportunities = 0;
@@ -24570,12 +24571,7 @@ pub mod plugin_runtime {
                 operation: semio_framework_job::OperationId((1u64 << 62) | cell.id as u64),
                 generation,
                 cancel: semio_framework_job::CancelToken::root_now(),
-                config: semio_framework_job::BatchDriveConfig {
-                    site: "plugin_runtime_live_cleanup",
-                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
-                    fuel_per_step: 1,
-                    step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS,
-                },
+                config: semio_framework_job::BatchDriveConfig { site: "plugin_runtime_live_cleanup", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS },
                 now_ms: semio_framework_job::default_now_ms,
             };
             match semio_framework_job::BatchJobSession::try_new(job, params) {
@@ -24827,12 +24823,7 @@ pub mod plugin_runtime {
                 operation: semio_framework_job::OperationId((1u64 << 63) | state.instance_id as u64),
                 generation: state.generation,
                 cancel: semio_framework_job::CancelToken::root_now(),
-                config: semio_framework_job::BatchDriveConfig {
-                    site: "plugin_runtime_close_cleanup",
-                    stage: semio_framework_job::InteractiveStage::InteractiveStep,
-                    fuel_per_step: 1,
-                    step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS,
-                },
+                config: semio_framework_job::BatchDriveConfig { site: "plugin_runtime_close_cleanup", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS },
                 now_ms: semio_framework_job::default_now_ms,
             };
             match semio_framework_job::BatchJobSession::try_new(job, params) {
@@ -26152,7 +26143,7 @@ pub mod plugin_runtime {
     /// `ActionId.version` mismatch, or a `View`/`Shell`-kind action returning operations) rides
     /// `AppFrame::Error` — never silently dropped, never a hard stop for the remaining intents in the
     /// same batch.
-    pub async fn plugin_dispatch_intents<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, intents: &[ui_contract::UiIntent]) -> Result<PluginExchangeOutput, Fault> {
+    pub async fn plugin_dispatch_intents<PA: PluginApp, const N: usize>(runtime: &PluginRuntime<PA>, instance_id: u32, intents: &ui_contract::UiFixedList<ui_contract::UiIntent, N>) -> Result<PluginExchangeOutput, Fault> {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
@@ -30043,7 +30034,17 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn view_kind_intent_returning_operations_hard_faults() {
             let mut app = contract_app_under_test().await;
-            let intent = UiIntent { surface: SurfaceId::try_from("s").expect("bounded fixture"), revision: UiRevision(0), node: UiNodeId::default(), node_key: "bad".into(), trigger: Trigger::Activate, action: ActionId::try_v1("app", "badView").expect("bounded fixture"), args: None, input: None, seq: 2 };
+            let intent = UiIntent {
+                surface: SurfaceId::try_from("s").expect("bounded fixture"),
+                revision: UiRevision(0),
+                node: UiNodeId::default(),
+                node_key: "bad".into(),
+                trigger: Trigger::Activate,
+                action: ActionId::try_v1("app", "badView").expect("bounded fixture"),
+                args: None,
+                input: None,
+                seq: 2,
+            };
             let error = app.handle_intent_frame(&intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
             assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
             assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
@@ -30415,13 +30416,10 @@ pub mod plugin_runtime {
                 .try_with_children([item])
                 .unwrap_or_else(|_| panic!("bounded fixture"));
             let tree = semio_framework_ui_runtime::ComponentTree::new(
-                semio_framework_ui_runtime::TreeNode::try_new(
-                    "root",
-                    semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some(ui_text("items").expect("bounded fixture")) }),
-                )
-                .expect("bounded fixture")
-                .try_with_children([section])
-                .unwrap_or_else(|_| panic!("bounded fixture")),
+                semio_framework_ui_runtime::TreeNode::try_new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some(ui_text("items").expect("bounded fixture")) }))
+                    .expect("bounded fixture")
+                    .try_with_children([section])
+                    .unwrap_or_else(|_| panic!("bounded fixture")),
             );
             let state = app.interaction_state().await;
             app.stamp_and_cache_interaction_ui(&tree, &state, "window").await.expect("bounded fixture");

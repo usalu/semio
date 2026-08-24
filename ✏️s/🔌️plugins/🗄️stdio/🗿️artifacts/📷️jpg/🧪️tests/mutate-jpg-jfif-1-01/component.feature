@@ -21,19 +21,37 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
   set-pixels and set-snapshot rows displace ~5.6 million pixels, three orders of magnitude past it.
   Exact per-bucket equality is a law JPEG does not have and is deliberately not asserted.
 
+  Walking the fixture's own marker chain gives APP0 (JFIF, version 1.1, density unit 1 = dots per
+  inch, 500x500), APP1 carrying a real 31,385-byte Adobe XMP packet, two DQT, SOF0, four DHT and
+  SOS. That real APP1 is what remove-other-segment removes and what insert-other-segment is inserted
+  in front of; neither row addresses something the file does not have.
+
   This subset's own codec (../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs) is a
   complete from-scratch baseline JPEG codec, not a wrapper over the `image` reference crate, and it
   deliberately regenerates fresh Annex K DQT/DHT tables scaled by `re_encode_quality` on every encode
   rather than preserving whatever tables a mutation set on the decoded snapshot, and it never emits a
-  DRI/restart marker at all. Consequence: set-quant-table, remove-quant-table, set-huffman-table,
-  remove-huffman-table and set-restart-interval mutate only the in-memory typed snapshot — none of
-  them is observable in the re-serialized bytes, by design, not by test gap. set-jfif-header and
-  insert-other-segment/remove-other-segment ARE written to real bytes (a real JFIF APP0, verbatim
-  segment echo) but remain metadata a conforming decoder does not need to reproduce for the decoded
-  raster to be correct. JPEG is also lossy, so the semantic projection every scenario below is
-  compared through (semantic-jpg-mutate-v1) reports geometry plus an 8-bucket luma histogram rather
-  than raw samples: this platform's comparison tolerance is per-number and absolute with no aggregate
-  mode, so an unbounded raw sample array could never be compared honestly.
+  DRI/restart marker at all.
+
+  ⚠️ Consequence: set-quant-table, remove-quant-table, set-huffman-table, remove-huffman-table and
+  set-restart-interval mutate only the in-memory typed snapshot — none of the five is observable in
+  the re-serialized bytes, by design, not by test gap. They are the ONLY five kinds named in the
+  adapter's observability exemption list, and every other kind is required to move the compared
+  projection or its scenario fails.
+
+  set-jfif-header, insert-other-segment and remove-other-segment ARE written to real bytes — a real
+  JFIF APP0 built from the snapshot's own fields, and the retained segments echoed verbatim right
+  after it — so they are compared as real mutations here rather than reduced to "the file still
+  decodes". The oracle reaches the density unit and both density values through `image`'s own
+  `set_pixel_density`; the two JFIF version bytes (hard-coded to 1.2 in that crate's
+  `build_jfif_header`) and the APPn/COM segments (no API at all) are written back at their fixed
+  T.871 positions afterwards, which is stated in the oracle module against the crate's source.
+
+  The projection therefore has two halves. The raster half is geometry plus an 8-bucket luma
+  histogram, never raw samples: JPEG is lossy and this platform's comparison tolerance is per-number
+  and absolute with no aggregate mode, so an unbounded sample array could never be compared honestly.
+  The metadata half — JFIF version, density unit, x/y density, and each retained segment's marker,
+  length and payload digest — is EXACT, and needs no slack, because a marker segment survives a
+  re-encode byte for byte or it does not survive at all.
 
   @id-mutate
   @level-exhaustive

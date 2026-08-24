@@ -620,6 +620,32 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.mesh` — the shape `mutate-semio-mesh` compares under `ordered-json-v1`, derived from the
+/// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
+/// away from the type it claims to project. A mesh snapshot is dominated by bulk arrays — per-primitive `positions`/`normals`/`uvs`/
+/// `indices` — where transcribing a fixture into a Rust literal is both the most laborious and the
+/// least reviewable option available.
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_mesh_snapshot_json(snapshot: &SemioMeshSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioMeshSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_mesh_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`SemioMeshSnapshot`] values, so `mutate-semio-mesh`'s adapter reads the
+/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
+/// from that adapter is impossible — the generated test host links only this crate — which is why
+/// the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_mesh_snapshot_json(text: &str) -> Result<SemioMeshSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🔖️Demo
 /// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
 /// STATE-MACHINES) — pure snapshot constructor, no codec/IO concern.

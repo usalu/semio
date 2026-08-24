@@ -1123,6 +1123,8 @@ pub struct LdltRestoreCursor {
     page_slot: usize,
     close_due: bool,
     expected_field: u16,
+    page_entry: usize,
+    control: [u64; 24],
     state: Option<LdltCheckpoint>,
     fault: Option<NumericalCheckpointFault>,
 }
@@ -1130,12 +1132,12 @@ pub struct LdltRestoreCursor {
 impl LdltRestoreCursor {
     pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
         let total_pages = payload.page_count();
-        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, state: None, fault: None }
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, control: [0; 24], state: None, fault: None }
     }
 
-    fn decode_page(&mut self, bytes: &[u8]) -> Result<(), NumericalCheckpointFault> {
+    fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault> {
         let page = parse_numerical_page(bytes, b"FEMLCP1\0")?;
-        if page.kind != 11 || page.field != self.expected_field {
+        if page.kind != 11 || page.field != self.expected_field || page.owner != 0 || page.item != 0 {
             return Err(NumericalCheckpointFault::Field);
         }
         if page.field == 0 {
@@ -1143,16 +1145,26 @@ impl LdltRestoreCursor {
             if count != 21 || page.bytes.len() != 8 + count * 8 {
                 return Err(NumericalCheckpointFault::Truncated);
             }
-            let value = |index| read_checkpoint_u64(page.bytes, 8 + index * 8);
-            let identity = NumericalCheckpointIdentity { operation: value(0)?, revision: value(1)?, generation: value(2)?, seed: value(3)? };
+            if self.page_entry == 0 {
+                self.page_entry = 1;
+                return Ok(false);
+            }
+            let item = self.page_entry - 1;
+            if item < count {
+                self.control[item] = read_checkpoint_u64(page.bytes, 8 + item * 8)?;
+                self.page_entry += 1;
+                return Ok(false);
+            }
+            let value = |index| self.control[index];
+            let identity = NumericalCheckpointIdentity { operation: value(0), revision: value(1), generation: value(2), seed: value(3) };
             if !identity.matches(self.operation) {
                 return Err(NumericalCheckpointFault::Stale);
             }
-            let n = value(4)? as usize;
+            let n = value(4) as usize;
             if n > LDLT_MAXIMUM_ORDER {
                 return Err(NumericalCheckpointFault::Envelope);
             }
-            let stage = match value(6)? {
+            let stage = match value(6) {
                 0 => LdltColumnStage::ReserveColumn,
                 1 => LdltColumnStage::SourceEntry,
                 2 => LdltColumnStage::ContributorLookup,
@@ -1170,66 +1182,78 @@ impl LdltRestoreCursor {
                 l_cols: Vec::new(),
                 d: Vec::new(),
                 row_lists: Vec::new(),
-                column: value(5)? as usize,
+                column: value(5) as usize,
                 cursor: LdltColumnCursor {
                     stage,
-                    source: value(7)? as usize,
-                    contributor: value(8)? as usize,
-                    entry: value(9)? as usize,
-                    emit_row: value(10)? as usize,
-                    active_column: value(11)? as usize,
-                    factor: f64::from_bits(value(12)?),
-                    pivot: f64::from_bits(value(13)?),
+                    source: value(7) as usize,
+                    contributor: value(8) as usize,
+                    entry: value(9) as usize,
+                    emit_row: value(10) as usize,
+                    active_column: value(11) as usize,
+                    factor: f64::from_bits(value(12)),
+                    pivot: f64::from_bits(value(13)),
                 },
-                workspace: LdltColumnWorkspace { values: Vec::new(), marks: Vec::new(), generation: value(20)? as u32, candidate: Vec::new() },
-                admission_fault: value(14)? != 0,
-                reserve_lane: value(15)? as u8,
-                reserve_cursor: value(16)? as usize,
+                workspace: LdltColumnWorkspace { values: Vec::new(), marks: Vec::new(), generation: value(20) as u32, candidate: Vec::new() },
+                admission_fault: value(14) != 0,
+                reserve_lane: value(15) as u8,
+                reserve_cursor: value(16) as usize,
                 checkpoint_due: false,
-                publication_stage: value(17)? as u8,
-                publication_outer: value(18)? as usize,
-                publication_inner: value(19)? as usize,
+                publication_stage: value(17) as u8,
+                publication_outer: value(18) as usize,
+                publication_inner: value(19) as usize,
             });
             self.expected_field = 1;
-            return Ok(());
+            return Ok(true);
         }
         let state = self.state.as_mut().ok_or(NumericalCheckpointFault::Field)?;
         let n = state.a.n;
         let row_base = 520u16;
         let complete = match page.field {
-            1 => restore_u32_owner(&mut state.a.colptr, &page, n + 1)?,
-            2 => restore_u32_owner(&mut state.a.rowind, &page, n.saturating_mul(n))?,
-            3 => restore_f64_owner(&mut state.a.vals, &page, n.saturating_mul(n))?,
+            1 => restore_u32_entry(&mut state.a.colptr, &page, n + 1, &mut self.page_entry)?,
+            2 => restore_u32_entry(&mut state.a.rowind, &page, n.saturating_mul(n), &mut self.page_entry)?,
+            3 => restore_f64_entry(&mut state.a.vals, &page, n.saturating_mul(n), &mut self.page_entry)?,
             4 => {
                 let length = declared_owner_length(&page, n)?;
                 if page.bytes.len() != 8 {
                     return Err(NumericalCheckpointFault::Field);
                 }
-                state.l_cols.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
-                validate_restored_owner(&state.l_cols)?;
-                for _ in 0..length {
+                if self.page_entry == 0 {
+                    state.l_cols.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+                    validate_restored_owner(&state.l_cols)?;
+                    self.page_entry = 1;
+                    return Ok(false);
+                }
+                if state.l_cols.len() < length {
                     state.l_cols.push(Vec::new());
+                    self.page_entry += 1;
+                    return Ok(false);
                 }
                 true
             }
-            field if field >= 5 && field < 5 + state.l_cols.len() as u16 => restore_pair_owner(&mut state.l_cols[(field - 5) as usize], &page, n)?,
-            517 => restore_f64_owner(&mut state.d, &page, n)?,
+            field if field >= 5 && field < 5 + state.l_cols.len() as u16 => restore_pair_entry(&mut state.l_cols[(field - 5) as usize], &page, n, &mut self.page_entry)?,
+            517 => restore_f64_entry(&mut state.d, &page, n, &mut self.page_entry)?,
             518 => {
                 let length = declared_owner_length(&page, n)?;
                 if page.bytes.len() != 8 {
                     return Err(NumericalCheckpointFault::Field);
                 }
-                state.row_lists.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
-                validate_restored_owner(&state.row_lists)?;
-                for _ in 0..length {
+                if self.page_entry == 0 {
+                    state.row_lists.try_reserve_exact(length).map_err(|_| NumericalCheckpointFault::Admission)?;
+                    validate_restored_owner(&state.row_lists)?;
+                    self.page_entry = 1;
+                    return Ok(false);
+                }
+                if state.row_lists.len() < length {
                     state.row_lists.push(Vec::new());
+                    self.page_entry += 1;
+                    return Ok(false);
                 }
                 true
             }
-            field if field >= row_base && field < row_base + state.row_lists.len() as u16 => restore_usize_owner(&mut state.row_lists[(field - row_base) as usize], &page, n)?,
-            1032 => restore_f64_owner(&mut state.workspace.values, &page, n)?,
-            1033 => restore_u32_owner(&mut state.workspace.marks, &page, n)?,
-            1034 => restore_pair_owner(&mut state.workspace.candidate, &page, n)?,
+            field if field >= row_base && field < row_base + state.row_lists.len() as u16 => restore_usize_entry(&mut state.row_lists[(field - row_base) as usize], &page, n, &mut self.page_entry)?,
+            1032 => restore_f64_entry(&mut state.workspace.values, &page, n, &mut self.page_entry)?,
+            1033 => restore_u32_entry(&mut state.workspace.marks, &page, n, &mut self.page_entry)?,
+            1034 => restore_pair_entry(&mut state.workspace.candidate, &page, n, &mut self.page_entry)?,
             _ => return Err(NumericalCheckpointFault::Field),
         };
         if complete {
@@ -1248,7 +1272,7 @@ impl LdltRestoreCursor {
                 field => field + 1,
             };
         }
-        Ok(())
+        Ok(complete)
     }
 
     pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<Option<LdltJob>, NumericalCheckpointFault> {
@@ -1267,6 +1291,7 @@ impl LdltRestoreCursor {
             let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             self.page_slot += 1;
             self.close_due = false;
+            self.page_entry = 0;
             if self.page_slot == self.total_pages {
                 if self.expected_field != u16::MAX || !payload.terminal_is_empty() {
                     return Err(NumericalCheckpointFault::Truncated);
@@ -1277,14 +1302,17 @@ impl LdltRestoreCursor {
             }
             return Ok(None);
         }
-        let source = self.payload.as_ref().and_then(|payload| payload.page(self.page_slot)).ok_or(NumericalCheckpointFault::Truncated)?;
-        let mut bytes = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
-        bytes[..source.len()].copy_from_slice(source);
-        if let Err(fault) = self.decode_page(&bytes[..source.len()]) {
-            self.fault = Some(fault);
-            return Err(fault);
+        let payload = self.payload.take().ok_or(NumericalCheckpointFault::Truncated)?;
+        let decoded = payload.page(self.page_slot).ok_or(NumericalCheckpointFault::Truncated).and_then(|source| self.decode_page_entry(source));
+        self.payload = Some(payload);
+        match decoded {
+            Ok(true) => self.close_due = true,
+            Ok(false) => {}
+            Err(fault) => {
+                self.fault = Some(fault);
+                return Err(fault);
+            }
         }
-        self.close_due = true;
         Ok(None)
     }
 
@@ -3492,30 +3520,38 @@ impl SubspaceIterationJob {
     }
 }
 
-fn restore_matrix_owner(matrix: &mut MatD, page: &NumericalPageView<'_>, maximum: usize) -> Result<bool, NumericalCheckpointFault> {
+fn restore_matrix_entry(matrix: &mut MatD, page: &NumericalPageView<'_>, maximum: usize, entry: &mut usize) -> Result<bool, NumericalCheckpointFault> {
     let rows = read_checkpoint_u64(page.bytes, 0)? as usize;
     let cols = read_checkpoint_u64(page.bytes, 8)? as usize;
     let capacity = rows.checked_mul(cols).ok_or(NumericalCheckpointFault::Envelope)?;
     let length = read_checkpoint_u64(page.bytes, 16)? as usize;
-    if capacity > maximum || length > capacity || page.item != matrix.data.len() {
+    if capacity > maximum || length > capacity || page.item != 0 || page.bytes.len() != 24usize.saturating_add(length.saturating_mul(8)) {
         return Err(NumericalCheckpointFault::Envelope);
     }
-    if page.item == 0 {
+    if *entry == 0 {
+        if !matrix.data.is_empty() {
+            return Err(NumericalCheckpointFault::Field);
+        }
         matrix.data.try_reserve_exact(capacity).map_err(|_| NumericalCheckpointFault::Admission)?;
         validate_restored_owner(&matrix.data)?;
         matrix.rows = rows;
         matrix.cols = cols;
-    } else if matrix.rows != rows || matrix.cols != cols {
+        *entry = 1;
+        return Ok(false);
+    }
+    if matrix.rows != rows || matrix.cols != cols {
         return Err(NumericalCheckpointFault::Field);
     }
-    let data = page.bytes.get(24..).ok_or(NumericalCheckpointFault::Truncated)?;
-    if data.len() % 8 != 0 || matrix.data.len().saturating_add(data.len() / 8) > length {
-        return Err(NumericalCheckpointFault::Truncated);
+    let item = *entry - 1;
+    if matrix.data.len() != item {
+        return Err(NumericalCheckpointFault::Field);
     }
-    for offset in (0..data.len()).step_by(8) {
-        matrix.data.push(f64::from_bits(read_checkpoint_u64(data, offset)?));
+    if item < length {
+        matrix.data.push(f64::from_bits(read_checkpoint_u64(page.bytes, 24 + item * 8)?));
+        *entry += 1;
+        return Ok(false);
     }
-    Ok(matrix.data.len() == length)
+    Ok(true)
 }
 
 fn decode_subspace_stage(value: u64) -> Result<SubspaceStage, NumericalCheckpointFault> {
@@ -3540,45 +3576,54 @@ fn decode_subspace_stage(value: u64) -> Result<SubspaceStage, NumericalCheckpoin
     }
 }
 
-fn restore_work_control(work: &mut SubspaceWork, bytes: &[u8]) -> Result<(), NumericalCheckpointFault> {
-    let count = read_checkpoint_u64(bytes, 0)? as usize;
-    if count != 13 || bytes.len() != 8 + count * 8 {
-        return Err(NumericalCheckpointFault::Truncated);
-    }
-    let value = |index| read_checkpoint_u64(bytes, 8 + index * 8);
-    work.stage = decode_subspace_stage(value(0)?)?;
-    work.reserve = value(1)? as usize;
-    work.first = value(2)? as usize;
-    work.second = value(3)? as usize;
-    work.third = value(4)? as usize;
-    work.phase = value(5)? as usize;
-    work.sweep = value(6)? as usize;
-    work.scalar = f64::from_bits(value(7)?);
-    work.coefficient = f64::from_bits(value(8)?);
-    work.cosine = f64::from_bits(value(9)?);
-    work.sine = f64::from_bits(value(10)?);
-    work.tangent = f64::from_bits(value(11)?);
-    work.close_lane = value(12)? as u8;
+fn apply_work_control(work: &mut SubspaceWork, values: &[u64; 24]) -> Result<(), NumericalCheckpointFault> {
+    work.stage = decode_subspace_stage(values[0])?;
+    work.reserve = values[1] as usize;
+    work.first = values[2] as usize;
+    work.second = values[3] as usize;
+    work.third = values[4] as usize;
+    work.phase = values[5] as usize;
+    work.sweep = values[6] as usize;
+    work.scalar = f64::from_bits(values[7]);
+    work.coefficient = f64::from_bits(values[8]);
+    work.cosine = f64::from_bits(values[9]);
+    work.sine = f64::from_bits(values[10]);
+    work.tangent = f64::from_bits(values[11]);
+    work.close_lane = values[12] as u8;
     Ok(())
 }
 
-fn restore_work_owner(work: &mut SubspaceWork, page: &NumericalPageView<'_>, base: u16, n: usize, m: usize) -> Result<bool, NumericalCheckpointFault> {
+fn restore_work_entry(work: &mut SubspaceWork, page: &NumericalPageView<'_>, base: u16, n: usize, m: usize, entry: &mut usize, control: &mut [u64; 24]) -> Result<bool, NumericalCheckpointFault> {
     match page.field - base {
         0 => {
-            restore_work_control(work, page.bytes)?;
+            let count = declared_owner_length(page, 13)?;
+            if count != 13 || page.bytes.len() != 8 + count * 8 {
+                return Err(NumericalCheckpointFault::Truncated);
+            }
+            if *entry == 0 {
+                *entry = 1;
+                return Ok(false);
+            }
+            let item = *entry - 1;
+            if item < count {
+                control[item] = read_checkpoint_u64(page.bytes, 8 + item * 8)?;
+                *entry += 1;
+                return Ok(false);
+            }
+            apply_work_control(work, control)?;
             Ok(true)
         }
-        1 => restore_matrix_owner(&mut work.rhs, page, n.saturating_mul(m)),
-        2 => restore_matrix_owner(&mut work.solved, page, n.saturating_mul(m)),
-        3 => restore_matrix_owner(&mut work.b_basis, page, n.saturating_mul(m)),
-        4 => restore_matrix_owner(&mut work.projected, page, m.saturating_mul(m)),
-        5 => restore_matrix_owner(&mut work.jacobi, page, m.saturating_mul(m)),
-        6 => restore_matrix_owner(&mut work.jacobi_vectors, page, m.saturating_mul(m)),
-        7 => restore_matrix_owner(&mut work.ordered_vectors, page, m.saturating_mul(m)),
-        8 => restore_matrix_owner(&mut work.candidate_x, page, n.saturating_mul(m)),
-        9 => restore_f64_owner(&mut work.mu, page, m),
-        10 => restore_f64_owner(&mut work.theta, page, m),
-        11 => restore_usize_owner(&mut work.order, page, m),
+        1 => restore_matrix_entry(&mut work.rhs, page, n.saturating_mul(m), entry),
+        2 => restore_matrix_entry(&mut work.solved, page, n.saturating_mul(m), entry),
+        3 => restore_matrix_entry(&mut work.b_basis, page, n.saturating_mul(m), entry),
+        4 => restore_matrix_entry(&mut work.projected, page, m.saturating_mul(m), entry),
+        5 => restore_matrix_entry(&mut work.jacobi, page, m.saturating_mul(m), entry),
+        6 => restore_matrix_entry(&mut work.jacobi_vectors, page, m.saturating_mul(m), entry),
+        7 => restore_matrix_entry(&mut work.ordered_vectors, page, m.saturating_mul(m), entry),
+        8 => restore_matrix_entry(&mut work.candidate_x, page, n.saturating_mul(m), entry),
+        9 => restore_f64_entry(&mut work.mu, page, m, entry),
+        10 => restore_f64_entry(&mut work.theta, page, m, entry),
+        11 => restore_usize_entry(&mut work.order, page, m, entry),
         _ => Err(NumericalCheckpointFault::Field),
     }
 }
@@ -3590,6 +3635,8 @@ pub struct SubspaceRestoreCursor {
     page_slot: usize,
     close_due: bool,
     expected_field: u16,
+    page_entry: usize,
+    control: [u64; 24],
     state: Option<SubspaceCheckpoint>,
     fault: Option<NumericalCheckpointFault>,
 }
@@ -3597,12 +3644,12 @@ pub struct SubspaceRestoreCursor {
 impl SubspaceRestoreCursor {
     pub fn new(operation: Operation, payload: RetainedJobPayload) -> Self {
         let total_pages = payload.page_count();
-        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, state: None, fault: None }
+        Self { operation, payload: Some(payload), total_pages, page_slot: 0, close_due: false, expected_field: 0, page_entry: 0, control: [0; 24], state: None, fault: None }
     }
 
-    fn decode_page(&mut self, bytes: &[u8]) -> Result<(), NumericalCheckpointFault> {
+    fn decode_page_entry(&mut self, bytes: &[u8]) -> Result<bool, NumericalCheckpointFault> {
         let page = parse_numerical_page(bytes, b"FEMSCP1\0")?;
-        if page.kind != 12 || page.field != self.expected_field {
+        if page.kind != 12 || page.field != self.expected_field || page.owner != 0 || page.item != 0 {
             return Err(NumericalCheckpointFault::Field);
         }
         if page.field == 0 {
@@ -3610,14 +3657,24 @@ impl SubspaceRestoreCursor {
             if count != 18 || page.bytes.len() != 8 + count * 8 {
                 return Err(NumericalCheckpointFault::Truncated);
             }
-            let value = |index| read_checkpoint_u64(page.bytes, 8 + index * 8);
-            let identity = NumericalCheckpointIdentity { operation: value(0)?, revision: value(1)?, generation: value(2)?, seed: value(3)? };
+            if self.page_entry == 0 {
+                self.page_entry = 1;
+                return Ok(false);
+            }
+            let item = self.page_entry - 1;
+            if item < count {
+                self.control[item] = read_checkpoint_u64(page.bytes, 8 + item * 8)?;
+                self.page_entry += 1;
+                return Ok(false);
+            }
+            let value = |index| self.control[index];
+            let identity = NumericalCheckpointIdentity { operation: value(0), revision: value(1), generation: value(2), seed: value(3) };
             if !identity.matches(self.operation) {
                 return Err(NumericalCheckpointFault::Stale);
             }
-            let n = value(4)? as usize;
-            let p = value(5)? as usize;
-            let m = value(7)? as usize;
+            let n = value(4) as usize;
+            let p = value(5) as usize;
+            let m = value(7) as usize;
             if n == 0 || n > SUBSPACE_MAXIMUM_ORDER || p == 0 || p > n || m == 0 || m > SUBSPACE_MAXIMUM_COLUMNS || m > n {
                 return Err(NumericalCheckpointFault::Envelope);
             }
@@ -3627,27 +3684,27 @@ impl SubspaceRestoreCursor {
                 b: Csr { n, indptr: Vec::new(), indices: Vec::new(), vals: Vec::new() },
                 n,
                 p,
-                max_iter: value(6)? as usize,
+                max_iter: value(6) as usize,
                 m,
                 x: MatD::zeros(0, 0),
                 prev_theta: Vec::new(),
                 final_theta: Vec::new(),
-                iteration: value(8)? as usize,
+                iteration: value(8) as usize,
                 residuals: Vec::new(),
-                converged_count: value(9)? as usize,
-                converged: value(10)? != 0,
+                converged_count: value(9) as usize,
+                converged: value(10) != 0,
                 checkpoint_due: false,
-                preview_due: value(12)? != 0,
-                admission_fault: value(13)? != 0,
-                initialization_cursor: value(14)? as usize,
-                publication_stage: value(15)? as u8,
-                publication_first: value(16)? as usize,
-                publication_second: value(17)? as usize,
+                preview_due: value(12) != 0,
+                admission_fault: value(13) != 0,
+                initialization_cursor: value(14) as usize,
+                publication_stage: value(15) as u8,
+                publication_first: value(16) as usize,
+                publication_second: value(17) as usize,
                 work: SubspaceWork::empty(),
                 retiring_work: None,
             });
             self.expected_field = 1;
-            return Ok(());
+            return Ok(true);
         }
         let state = self.state.as_mut().ok_or(NumericalCheckpointFault::Field)?;
         let n = state.n;
@@ -3658,39 +3715,63 @@ impl SubspaceRestoreCursor {
                 if length != n || page.bytes.len() != 8 {
                     return Err(NumericalCheckpointFault::Field);
                 }
-                state.k_factor.l_cols.try_reserve_exact(n).map_err(|_| NumericalCheckpointFault::Admission)?;
-                validate_restored_owner(&state.k_factor.l_cols)?;
-                for _ in 0..n {
+                if self.page_entry == 0 {
+                    state.k_factor.l_cols.try_reserve_exact(n).map_err(|_| NumericalCheckpointFault::Admission)?;
+                    validate_restored_owner(&state.k_factor.l_cols)?;
+                    self.page_entry = 1;
+                    return Ok(false);
+                }
+                if state.k_factor.l_cols.len() < n {
                     state.k_factor.l_cols.push(Vec::new());
+                    self.page_entry += 1;
+                    return Ok(false);
                 }
                 true
             }
-            field if field >= 2 && field < 2 + n as u16 => restore_pair_owner(&mut state.k_factor.l_cols[(field - 2) as usize], &page, n)?,
-            514 => restore_f64_owner(&mut state.k_factor.d, &page, n)?,
-            515 => restore_u32_owner(&mut state.b.indptr, &page, n + 1)?,
-            516 => restore_u32_owner(&mut state.b.indices, &page, n.saturating_mul(n))?,
-            517 => restore_f64_owner(&mut state.b.vals, &page, n.saturating_mul(n))?,
-            518 => restore_matrix_owner(&mut state.x, &page, n.saturating_mul(m))?,
-            519 => restore_f64_owner(&mut state.prev_theta, &page, state.p)?,
-            520 => restore_f64_owner(&mut state.final_theta, &page, m)?,
-            521 => restore_f64_owner(&mut state.residuals, &page, state.p)?,
-            field if (522..=533).contains(&field) => restore_work_owner(&mut state.work, &page, 522, n, m)?,
+            field if field >= 2 && field < 2 + n as u16 => restore_pair_entry(&mut state.k_factor.l_cols[(field - 2) as usize], &page, n, &mut self.page_entry)?,
+            514 => restore_f64_entry(&mut state.k_factor.d, &page, n, &mut self.page_entry)?,
+            515 => restore_u32_entry(&mut state.b.indptr, &page, n + 1, &mut self.page_entry)?,
+            516 => restore_u32_entry(&mut state.b.indices, &page, n.saturating_mul(n), &mut self.page_entry)?,
+            517 => restore_f64_entry(&mut state.b.vals, &page, n.saturating_mul(n), &mut self.page_entry)?,
+            518 => restore_matrix_entry(&mut state.x, &page, n.saturating_mul(m), &mut self.page_entry)?,
+            519 => restore_f64_entry(&mut state.prev_theta, &page, state.p, &mut self.page_entry)?,
+            520 => restore_f64_entry(&mut state.final_theta, &page, m, &mut self.page_entry)?,
+            521 => restore_f64_entry(&mut state.residuals, &page, state.p, &mut self.page_entry)?,
+            field if (522..=533).contains(&field) => restore_work_entry(&mut state.work, &page, 522, n, m, &mut self.page_entry, &mut self.control)?,
             534 => {
                 let present = read_checkpoint_u64(page.bytes, 0)?;
+                if self.page_entry == 0 {
+                    self.page_entry = 1;
+                    return Ok(false);
+                }
                 match present {
-                    0 if page.bytes.len() == 8 => state.retiring_work = None,
+                    0 if page.bytes.len() == 8 => true,
                     1 => {
+                        let count = read_checkpoint_u64(page.bytes, 8)? as usize;
+                        if count != 13 || page.bytes.len() != 16 + count * 8 {
+                            return Err(NumericalCheckpointFault::Truncated);
+                        }
+                        if self.page_entry == 1 {
+                            self.page_entry = 2;
+                            return Ok(false);
+                        }
+                        let item = self.page_entry - 2;
+                        if item < count {
+                            self.control[item] = read_checkpoint_u64(page.bytes, 16 + item * 8)?;
+                            self.page_entry += 1;
+                            return Ok(false);
+                        }
                         let mut work = SubspaceWork::empty();
-                        restore_work_control(&mut work, page.bytes.get(8..).ok_or(NumericalCheckpointFault::Truncated)?)?;
+                        apply_work_control(&mut work, &self.control)?;
                         state.retiring_work = Some(work);
+                        true
                     }
                     _ => return Err(NumericalCheckpointFault::Field),
                 }
-                true
             }
             field if (535..=545).contains(&field) => {
                 let work = state.retiring_work.as_mut().ok_or(NumericalCheckpointFault::Field)?;
-                restore_work_owner(work, &page, 534, n, m)?
+                restore_work_entry(work, &page, 534, n, m, &mut self.page_entry, &mut self.control)?
             }
             _ => return Err(NumericalCheckpointFault::Field),
         };
@@ -3708,7 +3789,7 @@ impl SubspaceRestoreCursor {
                 _ => return Err(NumericalCheckpointFault::Field),
             };
         }
-        Ok(())
+        Ok(complete)
     }
 
     pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<Option<SubspaceIterationJob>, NumericalCheckpointFault> {
@@ -3727,6 +3808,7 @@ impl SubspaceRestoreCursor {
             let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             self.page_slot += 1;
             self.close_due = false;
+            self.page_entry = 0;
             if self.page_slot == self.total_pages {
                 if self.expected_field != u16::MAX || !payload.terminal_is_empty() {
                     return Err(NumericalCheckpointFault::Truncated);
@@ -3746,14 +3828,17 @@ impl SubspaceRestoreCursor {
             }
             return Ok(None);
         }
-        let source = self.payload.as_ref().and_then(|payload| payload.page(self.page_slot)).ok_or(NumericalCheckpointFault::Truncated)?;
-        let mut bytes = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
-        bytes[..source.len()].copy_from_slice(source);
-        if let Err(fault) = self.decode_page(&bytes[..source.len()]) {
-            self.fault = Some(fault);
-            return Err(fault);
+        let payload = self.payload.take().ok_or(NumericalCheckpointFault::Truncated)?;
+        let decoded = payload.page(self.page_slot).ok_or(NumericalCheckpointFault::Truncated).and_then(|source| self.decode_page_entry(source));
+        self.payload = Some(payload);
+        match decoded {
+            Ok(true) => self.close_due = true,
+            Ok(false) => {}
+            Err(fault) => {
+                self.fault = Some(fault);
+                return Err(fault);
+            }
         }
-        self.close_due = true;
         Ok(None)
     }
 

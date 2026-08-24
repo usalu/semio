@@ -304,6 +304,67 @@ impl store::ArtifactPack for SemioObjectSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.object` — the shape `mutate-semio-object` compares under `ordered-json-v1`, derived from the
+/// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
+/// away from the type it claims to project. This is the bridge that makes the CHILD slots reachable at all. `brep`/`mesh`/`properties` are
+/// `Option<store::ArtifactChild<S>>`, and `store` is this crate's PRIVATE `extern crate
+/// semio_framework_os_kernel as store;` (`📦️glue.rs`), so no external caller can name the type to
+/// construct one; going through `serde` here needs no nameable path, only the field data the
+/// committed fixture already carries.
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_object_snapshot_json(snapshot: &SemioObjectSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioObjectSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_object_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`SemioObjectSnapshot`] values, so `mutate-semio-object`'s adapter reads the
+/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
+/// from that adapter is impossible — the generated test host links only this crate — which is why
+/// the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_object_snapshot_json(text: &str) -> Result<SemioObjectSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🔖️Wire
+/// 📝️ Parses `s.stdio.semio.object` DSL text into a [`SemioObjectSnapshot`] — a named pass-through of this snapshot's own
+/// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// crate, so `mutate-semio-object`'s `identity-round-trip` scenario reaches the real committed
+/// artifact (`../../📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio`) through this instead.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_object_dsl(text: &str) -> Result<SemioObjectSnapshot, String> {
+    <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Renders a [`SemioObjectSnapshot`] back as `s.stdio.semio.object` DSL text — the inverse of
+/// [`parse_semio_object_dsl`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_object_dsl(snapshot: &SemioObjectSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Encodes a [`SemioObjectSnapshot`] as a semio pack envelope — the binary twin of the DSL text, produced by a
+/// SEPARATE codec, which is what makes the two committed encodings of one document able to
+/// contradict each other.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_object_pack(snapshot: &SemioObjectSnapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+
+/// 📦️ Decodes a semio pack envelope into a [`SemioObjectSnapshot`] — the inverse of
+/// [`encode_semio_object_pack`], reading `../../📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_object_pack(bytes: &[u8]) -> Result<SemioObjectSnapshot, String> {
+    <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+//#endregion 🔖️Wire
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.object` — a non-identity transform plus all three child handles
 /// populated (real child_id/target pairs, never embedded content). Single source of truth for

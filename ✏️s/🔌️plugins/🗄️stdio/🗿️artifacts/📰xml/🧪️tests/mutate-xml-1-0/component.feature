@@ -34,24 +34,43 @@ Feature: Apply every typed XML 1.0 mutation to a real-world document
   `XmlSnapshot`/`XmlMutation`, and both results are read back through the SAME independent `quick-xml`
   projection (`project_xml_1_0`) before comparison.
 
-  Both non-differential laws are asserted IN ROLE, by the handler that plays the role, and are not
-  deferred to the oracle-vs-subject comparison: every `inverse-<kind>` row requires apply-then-undo
-  to restore that side's OWN reading of the original document's projection, and
-  `identity-round-trip` requires that side's own decode → re-encode both to preserve its own
-  projection and to move the bytes. XML 1.0 is not a byte-preserving carrier — a conforming writer
-  re-derives every tag, quote and character reference from the tree — so the byte half of the law
-  applies in full on both sides. A scenario that only proved the reference library did not error
-  would be vacuous — it is checkable without a second producer, so it is checked without one.
-  ⚠️ OPEN, and left red rather than tuned away: the byte half of `identity-round-trip` FAILS on the
-  ORACLE side today. `shared://📰️ooxml-word-document.xml` is byte-identical to the
-  `word/document.xml` part of
-  ../../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx, and
-  that DOCX carries no `docProps`, zeroed zip timestamps and a 14-byte `numbering.xml` — it is this
-  repository's own minified OOXML writer's output, not Microsoft Word's. `quick-xml`'s canonical
-  serialization agrees with it character for character, so `output == input` here is two minifying
-  writers coinciding rather than a pass-through, and the assertion cannot tell the two apart. The
-  remedy belongs to the FIXTURE — re-derive the part from a genuinely Word-authored DOCX, whose
-  `<?xml …?>` declaration and attribute quoting break the coincidence — not to the assertion.
+  Three laws are asserted IN ROLE, by the handler that plays the role, and are not deferred to the
+  oracle-vs-subject comparison. Every `mutate-<kind>` row other than `no-mutation` requires the
+  semantic projection to MOVE — a row whose parameters make the mutation a no-op against the real
+  document tests nothing, and every `Examples` value below is chosen against this part's actual
+  content for that reason. Every `inverse-<kind>` row requires apply-then-undo to restore that side's
+  OWN reading of the original document's projection. And `identity-round-trip` requires that side's
+  own decode → re-encode to preserve its own projection AND to prove it re-derived its output rather
+  than handing the input back. A scenario that only proved the reference library did not error would
+  be vacuous — all three are checkable without a second producer, so all three are checked without
+  one.
+
+  ⚠️ RESOLVED, and worth recording because the resolution was to change the ASSERTION rather than
+  the fixture. `identity-round-trip` used to require the re-encoded bytes to differ from the input,
+  and it failed. `shared://📰️ooxml-word-document.xml` is byte-identical to the `word/document.xml`
+  part of ../../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx
+  — this repository's own minified OOXML writer's output, with no XML declaration and no
+  inter-element whitespace — and `quick-xml`'s canonical serialization agrees with it character for
+  character. `output == input` there is two minifying writers CONVERGING, which a byte-difference
+  check cannot tell apart from a `read`/`write` shortcut that never parsed anything: it fails on a
+  correct implementation and would pass on an incorrect one the moment a declaration-bearing fixture
+  were swapped in. It is not evidence either way, so swapping the fixture would have hidden the
+  problem rather than fixed it. What replaced it is a probe a byte copy cannot satisfy —
+  serialization-form invariance. The input is re-rendered with one insignificant space before the
+  `>`/`/>` that terminates each start tag (XML 1.0 §3.1 admits `S?` in exactly that position, so the
+  perturbed bytes denote the SAME document while being markup no writer would emit), and both
+  renderings must re-encode to the SAME bytes. A shortcut that hands its input back returns the two
+  different byte strings unchanged and fails immediately; only an implementation that parsed both
+  into one tree and re-derived the output from it can pass. The probe is additionally required to be
+  non-vacuous. Both sides assert it.
+
+  ⚠️ One real defect the inverse law found and that WAS fixed at its cause, in the oracle module:
+  `oracles::apply_mutation_inverse` used to re-serialize between the forward step and the undo and
+  re-parse those bytes, so the two steps did not see the same tree. XML parsing coalesces adjacent
+  character data, so removing an element that sat between two whitespace text nodes left an index
+  space the undo could no longer address. This minified fixture never showed it; the sibling SVG case
+  did, on a pretty-printed real drawing. Both routings now apply the forward step and its inverse to
+  ONE parsed tree, which is what the law claims and what the subject does.
 
   @id-mutate
   @level-exhaustive
@@ -63,6 +82,7 @@ Feature: Apply every typed XML 1.0 mutation to a real-world document
       {"kind": "<id>", "params": <params>}
       """
     Then the oracle and the subject agree on the semantic projection
+    And the semantic projection moved, unless the kind is no-mutation
     Examples:
       | id              | params                                                                                                                                                                                                                                       |
       | no-mutation      | {}                                                                                                                                                                                                                                          |
@@ -102,4 +122,4 @@ Feature: Apply every typed XML 1.0 mutation to a real-world document
     Given the real input document shared://📰️ooxml-word-document.xml
     When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
     Then the oracle and the subject agree on the semantic projection
-    And the re-encoded bytes are not bit-identical to the input
+    And a byte-different rendering of the same document re-encodes to exactly those bytes

@@ -17,7 +17,7 @@
 //! is written and gated but not run.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{independent_render, independent_split, oracle_apply_mutation, project_txt};
+use semio_s_plugin_stdio_test_oracle::artifacts::txt::standards::v_utf_8::subsets::any::{independent_render, independent_split, oracle_apply_mutation, oracle_inverse_spec, project_txt};
 use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
 
 //#region 🔖️Kinds
@@ -47,67 +47,6 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️SpecHelpers
-fn json_object(pairs: Vec<(&str, Json)>) -> Json {
-    Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
-}
-
-fn kind_spec(kind: &str, params: Json) -> Json {
-    json_object(vec![("kind", Json::String(kind.to_string())), ("params", params)])
-}
-
-fn line_ending_str(is_crlf: bool) -> &'static str {
-    if is_crlf {
-        "crLf"
-    } else {
-        "lf"
-    }
-}
-
-/// ↩️ The inverse mutation's OWN spec, computed by reading whatever pre-mutation state it needs
-/// straight out of `original` with the SAME independent reader the oracle mutates with — never by
-/// calling this repository's own `TxtMutation::inverse`, which would defeat the point of an
-/// independently-computed oracle. Mirrors that method's documented rule exactly (index-aware,
-/// reading the pre-state it needs from the ORIGINAL document; `InsertLine`'s inverse lands at
-/// `min(index, len)`, matching the clamped position it actually inserted at).
-fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
-    let body = std::str::from_utf8(original).map_err(|error| format!("input is not UTF-8: {error}"))?;
-    let (lines, trailing_newline, is_crlf) = independent_split(body);
-    let params = forward.get("params").cloned().unwrap_or(Json::Null);
-    let index = |key: &str| match params.get(key) {
-        Some(Json::Number(value)) => Some(*value as usize),
-        _ => None,
-    };
-    match forward.str("kind").as_str() {
-        "no-mutation" => Ok(kind_spec("no-mutation", json_object(vec![]))),
-        "set-snapshot" => Ok(kind_spec(
-            "set-snapshot",
-            json_object(vec![("lines", Json::Array(lines.into_iter().map(Json::String).collect())), ("trailingNewline", Json::Bool(trailing_newline)), ("lineEnding", Json::String(line_ending_str(is_crlf).to_string()))]),
-        )),
-        "set-trailing-newline" => Ok(kind_spec("set-trailing-newline", json_object(vec![("value", Json::Bool(trailing_newline))]))),
-        "set-line-ending" => Ok(kind_spec("set-line-ending", json_object(vec![("value", Json::String(line_ending_str(is_crlf).to_string()))]))),
-        "insert-line" => {
-            let requested = index("index").ok_or("insert-line inverse: missing `index`")?;
-            let landed_at = requested.min(lines.len());
-            Ok(kind_spec("remove-line", json_object(vec![("index", Json::Number(landed_at as f64))])))
-        }
-        "remove-line" => {
-            let requested = index("index").ok_or("remove-line inverse: missing `index`")?;
-            match lines.get(requested) {
-                Some(text) => Ok(kind_spec("insert-line", json_object(vec![("index", Json::Number(requested as f64)), ("text", Json::String(text.clone()))]))),
-                None => Ok(kind_spec("no-mutation", json_object(vec![]))),
-            }
-        }
-        "set-line" => {
-            let requested = index("index").ok_or("set-line inverse: missing `index`")?;
-            match lines.get(requested) {
-                Some(text) => Ok(kind_spec("set-line", json_object(vec![("index", Json::Number(requested as f64)), ("text", Json::String(text.clone()))]))),
-                None => Ok(kind_spec("no-mutation", json_object(vec![]))),
-            }
-        }
-        other => Err(format!("no inverse rule for kind {other:?}")),
-    }
-}
-
 /// 🔤️ Reads the `@id-spec-vector` docstring, which is a bare JSON STRING (not an object like the
 /// mutate/inverse specs) — the exact literal byte vector the scenario asserts round-trips.
 fn spec_vector_text(spec: &Json) -> Result<String, String> {
@@ -136,7 +75,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let mutated = oracle_apply_mutation(&input, &spec)?;
-    let undo = inverse_spec(&input, &spec)?;
+    let undo = oracle_inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &undo)?;
     let projection = project_txt(&restored)?;
     inverse_restores(&spec.str("kind"), &projection, &project_txt(&input)?)?;
@@ -179,7 +118,7 @@ fn spec_vector_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input, spec_vector_text};
+    use super::{mutable_input, spec_vector_text};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::mutations::apply_txt_mutation;
     use semio_s_plugin_stdio::artifacts::txt::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
@@ -251,7 +190,7 @@ mod subject {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&input)?;
         apply_txt_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        apply_txt_mutation(&mut snapshot, &mutation_from_spec(&inverse_spec(&input, &spec)?)?);
+        apply_txt_mutation(&mut snapshot, &mutation_from_spec(&oracle_inverse_spec(&input, &spec)?)?);
         let output = snapshot.to_body().into_bytes();
         let projection = project_txt(&output)?;
         Ok(Outcome::with_raw(output, projection))

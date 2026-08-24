@@ -57,6 +57,28 @@ pub fn apply_semio_object_mutation(snapshot: &mut SemioObjectSnapshot, mutation:
     let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
+/// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
+/// `protocol` extern-crate item (the `mutate-semio-object` test adapter, whose `inverse-<kind>` scenarios
+/// need a mutation's own computed inverse) can still reach the inverse law that
+/// [`apply_semio_object_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
+    use protocol::Mutation;
+    <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
+/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// carry — into a real [`SemioObjectMutation`]. `create-brep`/`create-mesh`/`create-properties` carry a `store::os_io::ArtifactRef` `target`
+/// field, the exact value an external caller cannot construct by hand; decoding the committed vector
+/// is what turns those six child-lifecycle kinds from unreachable into exercisable.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_object_mutation_json(text: &str) -> Result<SemioObjectMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests

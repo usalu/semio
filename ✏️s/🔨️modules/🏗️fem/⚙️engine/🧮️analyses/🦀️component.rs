@@ -552,7 +552,7 @@ struct PendingElementAssembly {
     stiffness: Vec<f64>,
 }
 
-#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 enum PendingElementBuildStage {
     ReserveIndices,
     Indices,
@@ -2604,17 +2604,13 @@ mod tests {
 
     #[test]
     fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {
-        let source = include_str!("component.rs");
-        let reserve = source.find("PendingElementBuildStage::ReserveStiffnessCredit =>").expect("reserve stiffness credit");
-        let allocate = source.find("PendingElementBuildStage::AllocateStiffness =>").expect("allocate stiffness quarantine");
-        let observe = source.find("PendingElementBuildStage::ObserveStiffnessBacking =>").expect("observe actual stiffness backing");
-        let admit = source.find("PendingElementBuildStage::AdmitStiffnessBacking =>").expect("admit observed stiffness backing");
-        assert!(reserve < allocate && allocate < observe && observe < admit);
-
         let mut rejected = Vec::<f64>::new();
-        rejected.try_reserve_exact(MOUNTED_OWNER_PAGE_BYTES / std::mem::size_of::<f64>() + 1).expect("hostile rejected backing");
+        assert!(!reserve_exact_owner_page(&mut rejected, MOUNTED_OWNER_PAGE_BYTES / std::mem::size_of::<f64>() + 1));
         let observed = rejected.capacity() * std::mem::size_of::<f64>();
+        let pointer = rejected.as_ptr();
         assert!(observed > MOUNTED_OWNER_PAGE_BYTES);
+        assert_eq!(close_vec_owner_step(&mut rejected, observed - 1), Err(()));
+        assert_eq!(rejected.as_ptr(), pointer, "an interrupted close preserves the exact rejected backing");
         assert_eq!(close_vec_owner_step(&mut rejected, observed), Ok(Some((1, observed))), "the exact rejected allocation retires through the retained close helper");
         assert_eq!(rejected.capacity(), 0);
     }
@@ -2682,52 +2678,100 @@ mod tests {
         assert!(max_step_micros < 8_000, "slowest assembly step was {max_step_micros} us");
     }
 
-    /// 🚫️ Stale and cancelled contexts leave the persistent assembly cursor untouched.
+    /// 🧪️ Mounted fixed-family cell cursors preserve numerical identity and every interruption seam.
     #[test]
     fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws() {
-        let source = include_str!("component.rs");
-        let mut stage_offset = 0;
-        for stage in
-            ["ReferenceQuadraturePoint", "ShapeFunctionDerivativeScalar", "JacobianCell", "DeterminantInverseCell", "StrainDisplacementCell", "ConstitutiveCell", "LocalStiffnessMultiplyCell", "BodyTractionLoadCell", "LocalToGlobalTripletCell"]
-        {
-            let offset = source[stage_offset..].find(stage).expect("P6h stiffness stage") + stage_offset;
-            assert!(offset >= stage_offset);
-            stage_offset = offset + stage.len();
-        }
-        let model = axial_chain(3);
-        let operation = assembly_operation(304);
-        let mut job = AssemblyJob::new(&model, operation, 2).expect("assembly prepares");
-        let before = job.checkpoint_bytes();
-        let mut sequence = 0;
-        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-        assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
-        assert_eq!(job.checkpoint_bytes(), before);
+        use crate::elements2d::{PlaneKind, Tri3Cst};
 
-        let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-        assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
-        assert_eq!(job.checkpoint_bytes(), before);
-
-        let token = semio_framework_job::root_cancel_token();
-        semio_framework_async::block_on(token.cancel());
-        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
-        assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
-        assert_eq!(job.checkpoint_bytes(), before);
-
-        for _ in 0..24 {
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
-            assert!(matches!(job.step(&mut context), StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)));
-        }
-        let mut close_turns = 0;
-        loop {
-            close_turns += 1;
-            let (terminal, released_items, _) = job.close_step(usize::MAX);
-            assert!(released_items <= 1);
-            if terminal {
-                break;
+        fn exercise(model: AnalysisModel, expected: Vec<f64>, operation: Operation) {
+            let mut construction = AssemblyJobConstruction::new_owned(Arc::new(model), operation, 1);
+            while !construction.step_one().expect("owned assembly construction") {}
+            let mut job = construction.take_complete().expect("owned construction transfers mounted job");
+            assert!(matches!(&job.model, AnalysisModelOwner::Owned(_)));
+            let required = [
+                PendingElementBuildStage::ReferenceQuadraturePoint,
+                PendingElementBuildStage::ShapeFunctionDerivativeScalar,
+                PendingElementBuildStage::JacobianCell,
+                PendingElementBuildStage::DeterminantInverseCell,
+                PendingElementBuildStage::StrainDisplacementCell,
+                PendingElementBuildStage::ConstitutiveCell,
+                PendingElementBuildStage::LocalStiffnessMultiplyCell,
+                PendingElementBuildStage::BodyTractionLoadCell,
+                PendingElementBuildStage::LocalToGlobalTripletCell,
+            ];
+            let mut seen = HashSet::new();
+            let mut sequence = 0;
+            let mut maximum_micros = 0;
+            for _ in 0..1_024 {
+                let before = job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len()));
+                if let Some((stage, _, _)) = before.filter(|(stage, _, _)| required.contains(stage)) {
+                    seen.insert(stage);
+                    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, 0), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    assert_eq!(job.step(&mut deadline), StepOutcome::Yield);
+                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len())), before);
+                    let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                    assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
+                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len())), before);
+                    let token = semio_framework_job::root_cancel_token();
+                    semio_framework_async::block_on(token.cancel());
+                    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+                    assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+                    assert_eq!(job.state.pending_build.as_ref().map(|build| (build.stage, build.scalar_cursor, build.stiffness.len())), before);
+                }
+                let started = std::time::Instant::now();
+                let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+                assert!(matches!(job.step(&mut context), StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)));
+                maximum_micros = maximum_micros.max(started.elapsed().as_micros());
+                if job.state.pending.is_some() {
+                    break;
+                }
             }
-            assert!(close_turns < 20_000);
+            assert!(required.into_iter().all(|stage| seen.contains(&stage)));
+            let actual = &job.state.pending.as_ref().expect("mounted stiffness candidate published").stiffness;
+            assert_eq!(actual.len(), expected.len());
+            for (actual, expected) in actual.iter().zip(expected) {
+                assert!((actual - expected).abs() <= expected.abs().max(1.0) * 1e-12, "mounted stiffness mismatch: {actual} vs {expected}");
+            }
+            assert!(maximum_micros < 8_000, "fixed mounted cell exceeded timing ceiling: {maximum_micros} us");
+            let mut close_turns = 0;
+            loop {
+                close_turns += 1;
+                let (terminal, released_items, _) = job.close_step(usize::MAX);
+                assert!(released_items <= 1);
+                if terminal {
+                    break;
+                }
+                assert!(close_turns < 20_000);
+            }
+            assert!(job.close_lane > 11);
         }
-        assert!(job.close_lane > 11);
+
+        let bar = Bar2 { id: "bar".into(), start: "a".into(), end: "b".into(), e: 210e9, area: 0.02, density: 0.0 };
+        let bar_context = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]] };
+        let bar_expected = bar.stiffness_global(&bar_context).data;
+        exercise(AnalysisModel { nodes: vec![Node { id: "a".into(), pos: bar_context.positions[0] }, Node { id: "b".into(), pos: bar_context.positions[1] }], elements: vec![bar.into()], supports: Vec::new() }, bar_expected, assembly_operation(304));
+
+        let beam = BeamEb2 { id: "beam".into(), start: "a".into(), end: "b".into(), e: 205e9, area: 0.015, iy: 7e-6, density: 0.0 };
+        let beam_context = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 2.0, 0.0]] };
+        let beam_expected = beam.stiffness_global(&beam_context).data;
+        exercise(
+            AnalysisModel { nodes: vec![Node { id: "a".into(), pos: beam_context.positions[0] }, Node { id: "b".into(), pos: beam_context.positions[1] }], elements: vec![beam.into()], supports: Vec::new() },
+            beam_expected,
+            assembly_operation(305),
+        );
+
+        let triangle = Tri3Cst { id: "tri".into(), nodes: ["a".into(), "b".into(), "c".into()], e: 70e9, nu: 0.27, thickness: 0.2, kind: PlaneKind::Stress, density: 0.0 };
+        let triangle_context = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.25, 1.5, 0.0]] };
+        let triangle_expected = triangle.stiffness_global(&triangle_context).data;
+        exercise(
+            AnalysisModel {
+                nodes: vec![Node { id: "a".into(), pos: triangle_context.positions[0] }, Node { id: "b".into(), pos: triangle_context.positions[1] }, Node { id: "c".into(), pos: triangle_context.positions[2] }],
+                elements: vec![triangle.into()],
+                supports: Vec::new(),
+            },
+            triangle_expected,
+            assembly_operation(306),
+        );
     }
 
     /// 🧮️ Cross-validates `solve_multi_case`'s sparse RCM-ordered pipeline (single case) against

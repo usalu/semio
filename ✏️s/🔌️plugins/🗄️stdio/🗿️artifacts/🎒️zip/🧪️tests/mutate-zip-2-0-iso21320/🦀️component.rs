@@ -13,7 +13,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::iso21320::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_iso21320};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves, unordered};
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves, unordered};
 
 //#region 🔖️Input
 /// 🦠️ Every declared `ZipIso21320Mutation` variant, kebab-case — mirrors
@@ -32,9 +32,16 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 🦠️ The forward half, with observability asserted in role: the reference applies the kind to the
+/// real container and the result has to differ from the untouched one under the very profile the
+/// case is measured by — member ORDER excepted, since `semantic-zip-iso21320-v1` declares
+/// `arrays: "set"` and a reordering is not a change the comparison would ever see.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let bytes = oracle_apply_mutation(&mutable_input(ctx)?, &ctx.doc_json()?)?;
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_zip_iso21320(&bytes)?;
+    mutation_is_observable(&spec.str("kind"), &unordered(&projection, &["entries"]), &unordered(&project_zip_iso21320(&input)?, &["entries"]), &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

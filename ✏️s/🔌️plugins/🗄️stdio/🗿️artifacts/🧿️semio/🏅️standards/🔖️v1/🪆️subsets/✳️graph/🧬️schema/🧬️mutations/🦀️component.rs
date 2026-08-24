@@ -77,6 +77,28 @@ pub fn apply_semio_graph_mutation(snapshot: &mut SemioGraphSnapshot, mutation: &
     let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
+/// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
+/// `protocol` extern-crate item (the `mutate-semio-graph` test adapter, whose `inverse-<kind>` scenarios
+/// need a mutation's own computed inverse) can still reach the inverse law that
+/// [`apply_semio_graph_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+    use protocol::Mutation;
+    <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
+/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// carry — into a real [`SemioGraphMutation`]. Payload fields are snake_case (`new_position`, `new_label`) while the snapshot side is
+/// camelCase — two different conventions in one specification vector, which is precisely the kind of
+/// detail a transcribed Rust literal gets wrong silently.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_graph_mutation_json(text: &str) -> Result<SemioGraphMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests

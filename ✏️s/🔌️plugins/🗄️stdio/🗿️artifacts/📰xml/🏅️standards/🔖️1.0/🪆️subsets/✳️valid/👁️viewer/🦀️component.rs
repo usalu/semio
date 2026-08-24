@@ -4,7 +4,8 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact mutation. Must
 //! not import anything from the sibling mutation-capable surface.
 
-use crate::artifacts::xml::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
+use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation;
+use crate::artifacts::xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use crate::viewer::xml_valid::modes::view;
 use crate::viewer::xml_valid::modes::view::windows::main;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
@@ -39,7 +40,7 @@ pub struct XmlValidViewer;
 
 impl ArtifactViewer for XmlValidViewer {
     type Snapshot = XmlSnapshot;
-    type Mutation = XmlMutation;
+    type Mutation = XmlValidMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

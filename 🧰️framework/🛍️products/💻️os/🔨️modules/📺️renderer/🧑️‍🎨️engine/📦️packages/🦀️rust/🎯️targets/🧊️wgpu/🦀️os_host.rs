@@ -198,7 +198,7 @@ impl OsHost {
             raster_uploads: Some(crate::scenes::begin_pending_raster_authority_close()),
             cursor_wake_requested,
             #[cfg(not(target_arch = "wasm32"))]
-            kernel_progress_close: Some(crate::kernel_runtime::KernelClient::get().begin_close_realm()),
+            kernel_progress_close: crate::kernel_runtime::KernelClient::get().begin_close_realm().ok(),
         }
     }
 

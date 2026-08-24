@@ -2336,27 +2336,90 @@ impl QueryResultEntry {
 pub struct QueryStream {
     results: [Option<QueryResultEntry>; 64],
     len: u8,
+    retirement: Option<EngineQueryRetirementReservation>,
 }
 
 const ENGINE_RETIRED_QUERY_STREAMS: usize = 64;
 static ENGINE_QUERY_RETIREMENT: std::sync::Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = std::sync::Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
 static ENGINE_QUERY_RETIREMENT_OVERFLOW: std::sync::Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = std::sync::Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
 static ENGINE_QUERY_RETIREMENT_QUARANTINE: std::sync::Mutex<[Option<QueryStream>; ENGINE_RETIRED_QUERY_STREAMS]> = std::sync::Mutex::new([const { None }; ENGINE_RETIRED_QUERY_STREAMS]);
+static ENGINE_QUERY_RETIREMENT_RESERVATIONS: [std::sync::atomic::AtomicU64; 3] = [const { std::sync::atomic::AtomicU64::new(0) }; 3];
 static ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[derive(Clone, Copy)]
+struct EngineQueryRetirementReservation {
+    tier: u8,
+    index: u8,
+}
+
+fn reserve_engine_query_retirement() -> Option<EngineQueryRetirementReservation> {
+    for tier in 0..3u8 {
+        for index in 0..ENGINE_RETIRED_QUERY_STREAMS as u8 {
+            let bit = 1u64 << index;
+            if ENGINE_QUERY_RETIREMENT_RESERVATIONS[tier as usize].fetch_or(bit, std::sync::atomic::Ordering::AcqRel) & bit != 0 {
+                continue;
+            }
+            let vacant = match tier {
+                0 => ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[index as usize].is_none(),
+                1 => ENGINE_QUERY_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[index as usize].is_none(),
+                _ => ENGINE_QUERY_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[index as usize].is_none(),
+            };
+            if vacant {
+                if tier != 0 {
+                    ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
+                }
+                return Some(EngineQueryRetirementReservation { tier, index });
+            }
+            ENGINE_QUERY_RETIREMENT_RESERVATIONS[tier as usize].fetch_and(!bit, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+    ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
+    None
+}
+
+fn release_engine_query_retirement(reservation: &mut Option<EngineQueryRetirementReservation>) {
+    if let Some(reservation) = reservation.take() {
+        ENGINE_QUERY_RETIREMENT_RESERVATIONS[reservation.tier as usize].fetch_and(!(1u64 << reservation.index), std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+fn engine_query_vacant_retirement_slot(tier: usize, slots: &[Option<QueryStream>]) -> Option<usize> {
+    let reserved = ENGINE_QUERY_RETIREMENT_RESERVATIONS[tier].load(std::sync::atomic::Ordering::Acquire);
+    slots.iter().enumerate().position(|(index, slot)| slot.is_none() && reserved & (1u64 << index) == 0)
+}
+
+fn install_reserved_engine_query_stream(owner: QueryStream) {
+    let reservation = owner.retirement.unwrap_or(EngineQueryRetirementReservation { tier: 0, index: 0 });
+    match reservation.tier {
+        0 => ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[reservation.index as usize] = Some(owner),
+        1 => ENGINE_QUERY_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[reservation.index as usize] = Some(owner),
+        _ => ENGINE_QUERY_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)[reservation.index as usize] = Some(owner),
+    }
+}
 
 impl QueryStream {
     fn new() -> Self {
-        Self { results: std::array::from_fn(|_| None), len: 0 }
+        Self { results: std::array::from_fn(|_| None), len: 0, retirement: None }
     }
 
     fn push(&mut self, entry: QueryResultEntry) -> Result<(), QueryResultEntry> {
         if self.len() == self.results.len() {
             return Err(entry);
         }
+        if self.len == 0 && self.retirement.is_none() {
+            let Some(retirement) = reserve_engine_query_retirement() else { return Err(entry) };
+            self.retirement = Some(retirement);
+        }
         let index = self.len();
         self.results[index] = Some(entry);
         self.len += 1;
         Ok(())
+    }
+
+    fn push_preflighted(&mut self, entry: QueryResultEntry) {
+        let index = self.len();
+        self.results[index] = Some(entry);
+        self.len += 1;
     }
 
     pub fn len(&self) -> usize {
@@ -2384,6 +2447,9 @@ impl QueryStream {
             self.results[index - 1] = self.results[index].take();
         }
         self.len -= 1;
+        if self.len == 0 {
+            release_engine_query_retirement(&mut self.retirement);
+        }
         entry
     }
 
@@ -2398,6 +2464,9 @@ impl QueryStream {
         }
         self.results[index] = None;
         self.len -= 1;
+        if self.len == 0 {
+            release_engine_query_retirement(&mut self.retirement);
+        }
         Ok(true)
     }
 
@@ -2407,39 +2476,28 @@ impl QueryStream {
 }
 
 fn retire_engine_query_stream(owner: QueryStream) -> Result<(), QueryStream> {
+    if owner.retirement.is_some() {
+        install_reserved_engine_query_stream(owner);
+        return Ok(());
+    }
     let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    if let Some(slot) = retired.iter_mut().find(|slot| slot.is_none()) {
-        *slot = Some(owner);
+    if let Some(index) = engine_query_vacant_retirement_slot(0, &retired) {
+        retired[index] = Some(owner);
         Ok(())
     } else {
         drop(retired);
         ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT.store(true, std::sync::atomic::Ordering::Release);
         let mut overflow = ENGINE_QUERY_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(slot) = overflow.iter_mut().find(|slot| slot.is_none()) {
-            *slot = Some(owner);
+        if let Some(index) = engine_query_vacant_retirement_slot(1, &overflow) {
+            overflow[index] = Some(owner);
             return Ok(());
         }
         drop(overflow);
         let mut quarantine = ENGINE_QUERY_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let Some(slot) = quarantine.iter_mut().find(|slot| slot.is_none()) else { return Err(owner) };
-        *slot = Some(owner);
+        let Some(index) = engine_query_vacant_retirement_slot(2, &quarantine) else { return Err(owner) };
+        quarantine[index] = Some(owner);
         Ok(())
     }
-}
-
-fn retire_engine_query_stream_or_recover(owner: QueryStream) {
-    if let Err(mut owner) = retire_engine_query_stream(owner) {
-        let results = std::mem::replace(&mut owner.results, std::array::from_fn(|_| None));
-        owner.len = 0;
-        drop(owner);
-        drop(results);
-    }
-}
-
-fn retire_engine_query_entry(entry: QueryResultEntry) {
-    let mut stream = QueryStream::new();
-    let _ = stream.push(entry);
-    retire_engine_query_stream_or_recover(stream);
 }
 
 pub fn engine_query_maintenance_step() -> Result<bool, DbError> {
@@ -2454,15 +2512,15 @@ pub fn engine_query_maintenance_step() -> Result<bool, DbError> {
             let owner = quarantine[index].take().ok_or_else(|| DbError::Internal("engine query quarantine changed stream owner".to_string()))?;
             drop(quarantine);
             let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("engine query retirement primary refilled before quarantine recovery".to_string()))?;
-            *slot = Some(owner);
+            let index = engine_query_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("engine query retirement primary refilled before quarantine recovery".to_string()))?;
+            retired[index] = Some(owner);
             return Ok(true);
         };
         let owner = overflow[index].take().ok_or_else(|| DbError::Internal("engine query overflow retirement changed stream owner".to_string()))?;
         drop(overflow);
         let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let slot = retired.iter_mut().find(|slot| slot.is_none()).ok_or_else(|| DbError::Internal("engine query primary retirement refilled before overflow recovery".to_string()))?;
-        *slot = Some(owner);
+        let index = engine_query_vacant_retirement_slot(0, &retired).ok_or_else(|| DbError::Internal("engine query primary retirement refilled before overflow recovery".to_string()))?;
+        retired[index] = Some(owner);
         return Ok(true);
     };
     let owner = slot.as_mut().ok_or_else(|| DbError::Internal("engine query retirement changed owner".to_string()))?;
@@ -2476,9 +2534,10 @@ pub fn engine_query_maintenance_step() -> Result<bool, DbError> {
 impl Drop for QueryStream {
     fn drop(&mut self) {
         if self.terminal_is_empty() {
+            release_engine_query_retirement(&mut self.retirement);
             return;
         }
-        retire_engine_query_stream_or_recover(std::mem::replace(self, Self::new()));
+        install_reserved_engine_query_stream(std::mem::replace(self, Self::new()));
     }
 }
 //#endregion 🔖️Query
@@ -5509,6 +5568,9 @@ impl ArtifactHandle {
             return Err(DbError::LimitExceeded("engine query result entries"));
         }
         let mut results = QueryStream::new();
+        if !paths.is_empty() {
+            results.retirement = Some(reserve_engine_query_retirement().ok_or_else(|| DbError::Unavailable("engine query retirement pressure refused query".to_string()))?);
+        }
         for path in paths {
             let value = match self.authority.query(&path).await {
                 Ok(value) => value,
@@ -5525,11 +5587,7 @@ impl ArtifactHandle {
                     return Err(error);
                 }
             };
-            if let Err(rejected) = results.push(QueryResultEntry { path, value }) {
-                retire_engine_query_entry(rejected);
-                drop(results);
-                return Err(DbError::LimitExceeded("engine query result entries"));
-            }
+            results.push_preflighted(QueryResultEntry { path, value });
         }
 
         let frontier = match self.frontier().await {
@@ -5624,6 +5682,12 @@ mod tests {
                 *slot = Some(QueryStream::new());
             }
         }
+        {
+            let mut overflow = ENGINE_QUERY_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            for slot in overflow.iter_mut() {
+                *slot = Some(QueryStream::new());
+            }
+        }
         let mut exact = QueryStream::new();
         exact.push(QueryResultEntry { path: db_storage::DbIoText::try_from_str("exact-overflow-stream").unwrap(), value: None }).unwrap();
         let mut second = QueryStream::new();
@@ -5632,15 +5696,18 @@ mod tests {
         assert!(retire_engine_query_stream(second).is_ok());
         assert!(ENGINE_QUERY_RETIREMENT_PRESSURE_FAULT.load(std::sync::atomic::Ordering::Acquire));
         {
-            let overflow = ENGINE_QUERY_RETIREMENT_OVERFLOW.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            assert_eq!(overflow.iter().flatten().find_map(|stream| stream.get(0).map(QueryResultEntry::path)), Some("exact-overflow-stream"));
-            assert!(overflow.iter().flatten().any(|stream| stream.get(0).map(QueryResultEntry::path) == Some("second-overflow-stream")));
+            let quarantine = ENGINE_QUERY_RETIREMENT_QUARANTINE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            assert_eq!(quarantine.iter().flatten().find_map(|stream| stream.get(0).map(QueryResultEntry::path)), Some("exact-overflow-stream"));
+            assert!(quarantine.iter().flatten().any(|stream| stream.get(0).map(QueryResultEntry::path) == Some("second-overflow-stream")));
         }
         {
             let mut retired = ENGINE_QUERY_RETIREMENT.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             for slot in retired.iter_mut() {
                 *slot = None;
             }
+        }
+        for _ in 0..ENGINE_RETIRED_QUERY_STREAMS * 2 {
+            assert!(engine_query_maintenance_step().unwrap());
         }
         assert!(engine_query_maintenance_step().unwrap());
         {

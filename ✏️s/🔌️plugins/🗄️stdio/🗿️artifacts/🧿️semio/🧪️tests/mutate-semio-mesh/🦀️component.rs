@@ -1,24 +1,44 @@
 //! 🦀️ Semio MESH exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
 //! REFACTOR. Recorded no-oracle decision `semio-mesh-mutation-semantics` (`../../🏅️standards/
 //! 🔖️v1/🪆️subsets/✳️mesh/🧪️oracle/🔣️component.json`): `s.stdio.semio.mesh` is a semio-NATIVE
-//! format with no third-party reader or writer, so `oracle` here reads the committed,
-//! independently handcrafted per-kind specification fixtures (`../../🏅️standards/🔖️v1/🪆️subsets/
-//! ✳️mesh/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`) literally — no recomputation, no
+//! format with no third-party reader or writer, so `oracle` here reads the committed, independently
+//! handcrafted per-kind specification fixtures (`../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/
+//! 🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`) literally — no recomputation, no
 //! reimplementation of mutation semantics. `subject` drives this repository's own
-//! `apply_semio_mesh_mutation`, the entry point this ticket added, over the full 17-kind
-//! `SemioMeshMutation` vocabulary. Both sides project the snapshot to structural JSON and
-//! `ordered-json-v1` compares them. The oracle-only build must never link the subject crate (fleet
-//! brief §5.3), so the fixtures' BEFORE snapshot and MUTATION payload are transcribed once, by
-//! hand, as `SemioMeshSnapshot`/`SemioMeshMutation` Rust literals inside the `sut`-gated `subject`
-//! module below — mechanically identical to the committed JSON, never independently invented
-//! (compare against the JSON embedded via `include_str!` in `oracle_fixture`). The generated
-//! test-host crate carries no `serde_json` dependency (only `semio-repo-test-host` and, behind
-//! `sut`, this subset's own crate), so parsing committed JSON straight into typed structs is not an
-//! option here; the framework's own dependency-free `protocol::Json`/`parse_json` carries the
-//! oracle side instead. The subject half is gated behind the generated host's `sut` feature so the
-//! oracle-only run never compiles the local implementation; the Rust SUBJECT phase is blocked this
-//! wave by a concurrent os-kernel refactor (see the fleet brief), so it is written and gated but
-//! not run.
+//! `apply_semio_mesh_mutation` over the full 17-kind `SemioMeshMutation` vocabulary.
+//!
+//! What distinguishes this subset is that it is three independent pools joined by reference:
+//! `meshes` (each holding positional `primitives` with parallel `positions`/`normals`/`uvs`/
+//! `colors` arrays and an `indices` list), `materials`, and `textures`. A primitive names its
+//! material by id, so `delete-material` and `set-primitive-material` reach across pools while
+//! `move-vertex` reaches into one primitive's position array by index and must leave the parallel
+//! attribute arrays it is NOT addressing untouched. Bulk float arrays are also why this case
+//! decodes its fixtures rather than transcribing them: a mis-typed coordinate in a hand-written
+//! Rust literal is invisible to review in a way a decoded file never is.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never gets two sides to compare. Every law this case claims is therefore
+//! asserted INSIDE the subject handler: `mutate-<kind>` checks the applied snapshot IS the committed
+//! after-snapshot, `inverse-<kind>` checks the mutation's own computed inverse restores the
+//! committed before-snapshot, and `identity-round-trip` crosses the two committed encodings of the
+//! real artifact against each other. A handler that merely returned `Ok` would report a pass having
+//! checked nothing at all.
+//!
+//! **How the fixture reaches typed values.** The generated test host links only
+//! `semio-repo-test-host` and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`,
+//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`), so neither
+//! `protocol::Mutation` nor a `serde` derive is nameable from here. An earlier draft of this adapter
+//! answered that by transcribing every fixture into a Rust literal beside it, which is exactly the
+//! drift a specification-vector substitute cannot afford. The subset's own production code now
+//! exports the bridges instead, whose signatures name only reachable types: `decode_semio_mesh_snapshot_json`/
+//! `encode_semio_mesh_snapshot_json` and the DSL/pack pass-throughs (`../../🏅️standards/🔖️v1/🪆️subsets/
+//! ✳️mesh/🧬️schema/📸️snapshot/🦀️component.rs`), `decode_semio_mesh_mutation_json`/`inverse_semio_mesh_mutation`
+//! (`…/🧬️mutations/🦀️component.rs`). Both roles read the SAME committed bytes — the oracle role via
+//! `include_str!`, the subject role by decoding that same text. The subject half is gated behind the
+//! generated host's `sut` feature so the oracle-only run never compiles the local implementation;
+//! the Rust SUBJECT phase is blocked this wave by concurrent framework refactors (see
+//! 📓️w7-fleet-brief.md), so it is written and gated but not run.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
@@ -47,80 +67,105 @@ const KINDS: &[&str] = &[
     "replace-texture-bytes",
     "move-vertex",
 ];
+
+/// 🗣️ The real committed artifact — one mesh holding a single triangle primitive with parallel position, normal, uv and colour arrays, one PBR material and one `image/png` texture.
+#[cfg(feature = "sut")]
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio";
+/// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
+#[cfg(feature = "sut")]
+const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️mesh/📚️examples/🧊️cube/🖼️assets/🎒️example.pack.semio";
 //#endregion 🔖️Kinds
 
-//#region 🔖️OracleFixtures
-/// 🧫️ The committed `(before, after)` snapshot JSON for one kind, read literally — this IS the
-/// independently handcrafted specification vector the no-oracle decision rests on, never
-/// recomputed.
-fn oracle_fixture(kind: &str) -> (&'static str, &'static str) {
+//#region 🔖️Fixtures
+/// 🧫️ The committed `(before, mutation, after)` fixture TEXT for one kind, read literally via
+/// `include_str!` — this IS the independently handcrafted specification vector the no-oracle
+/// decision rests on, never recomputed. One `include_str!` per file for the whole adapter: `oracle`
+/// answers with `before`/`after`, `subject` decodes all three.
+fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "create-mesh" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/adds-an-empty-second-mesh-at-the-end/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/adds-an-empty-second-mesh-at-the-end/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/adds-an-empty-second-mesh-at-the-end/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "delete-mesh" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🗑️delete-mesh/🧪️tests/removes-the-leading-mesh-and-keeps-the-trailing-one/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🗑️delete-mesh/🧪️tests/removes-the-leading-mesh-and-keeps-the-trailing-one/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🗑️delete-mesh/🧪️tests/removes-the-leading-mesh-and-keeps-the-trailing-one/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "create-primitive" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔺create-primitive/🧪️tests/adds-a-second-primitive-inside-the-existing-mesh/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔺create-primitive/🧪️tests/adds-a-second-primitive-inside-the-existing-mesh/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔺create-primitive/🧪️tests/adds-a-second-primitive-inside-the-existing-mesh/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "delete-primitive" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✂️delete-primitive/🧪️tests/removes-the-leading-primitive-and-keeps-the-trailing-one/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✂️delete-primitive/🧪️tests/removes-the-leading-primitive-and-keeps-the-trailing-one/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/✂️delete-primitive/🧪️tests/removes-the-leading-primitive-and-keeps-the-trailing-one/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "set-primitive-topology" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀set-primitive-topology/🧪️tests/switches-the-primitive-to-a-triangle-strip/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀set-primitive-topology/🧪️tests/switches-the-primitive-to-a-triangle-strip/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔀set-primitive-topology/🧪️tests/switches-the-primitive-to-a-triangle-strip/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "replace-primitive-geometry" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📐replace-primitive-geometry/🧪️tests/swaps-the-triangle-for-a-textured-quad/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📐replace-primitive-geometry/🧪️tests/swaps-the-triangle-for-a-textured-quad/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📐replace-primitive-geometry/🧪️tests/swaps-the-triangle-for-a-textured-quad/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "set-primitive-material" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔗set-primitive-material/🧪️tests/binds-the-primitive-to-the-existing-material/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔗set-primitive-material/🧪️tests/binds-the-primitive-to-the-existing-material/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🔗set-primitive-material/🧪️tests/binds-the-primitive-to-the-existing-material/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "create-material" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🎨create-material/🧪️tests/adds-a-second-material-at-the-end/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🎨create-material/🧪️tests/adds-a-second-material-at-the-end/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🎨create-material/🧪️tests/adds-a-second-material-at-the-end/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "delete-material" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚮delete-material/🧪️tests/removes-the-leading-material-and-keeps-the-trailing-one/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚮delete-material/🧪️tests/removes-the-leading-material-and-keeps-the-trailing-one/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🚮delete-material/🧪️tests/removes-the-leading-material-and-keeps-the-trailing-one/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "change-material-base-color" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🧪️tests/repaints-the-material-from-red-to-blue/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🧪️tests/repaints-the-material-from-red-to-blue/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🧪️tests/repaints-the-material-from-red-to-blue/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "change-material-metallic" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/⚙️change-material-metallic/🧪️tests/raises-the-metallic-factor-to-fully-metallic/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/⚙️change-material-metallic/🧪️tests/raises-the-metallic-factor-to-fully-metallic/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/⚙️change-material-metallic/🧪️tests/raises-the-metallic-factor-to-fully-metallic/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "change-material-roughness" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🧱change-material-roughness/🧪️tests/lowers-the-roughness-factor-to-a-quarter/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🧱change-material-roughness/🧪️tests/lowers-the-roughness-factor-to-a-quarter/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🧱change-material-roughness/🧪️tests/lowers-the-roughness-factor-to-a-quarter/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "create-texture" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🖼️create-texture/🧪️tests/adds-a-second-texture-at-the-end/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🖼️create-texture/🧪️tests/adds-a-second-texture-at-the-end/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🖼️create-texture/🧪️tests/adds-a-second-texture-at-the-end/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "delete-texture" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🕳️delete-texture/🧪️tests/removes-the-leading-texture-and-keeps-the-trailing-one/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🕳️delete-texture/🧪️tests/removes-the-leading-texture-and-keeps-the-trailing-one/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🕳️delete-texture/🧪️tests/removes-the-leading-texture-and-keeps-the-trailing-one/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "change-texture-mime" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🏷️change-texture-mime/🧪️tests/retags-the-texture-as-jpeg-without-touching-its-bytes/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🏷️change-texture-mime/🧪️tests/retags-the-texture-as-jpeg-without-touching-its-bytes/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🏷️change-texture-mime/🧪️tests/retags-the-texture-as-jpeg-without-touching-its-bytes/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "replace-texture-bytes" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📀replace-texture-bytes/🧪️tests/swaps-the-texture-payload-without-retagging-its-mime/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📀replace-texture-bytes/🧪️tests/swaps-the-texture-payload-without-retagging-its-mime/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📀replace-texture-bytes/🧪️tests/swaps-the-texture-payload-without-retagging-its-mime/📸️snapshot/➡️after/🔣️component.json"),
         ),
         "move-vertex" => (
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📍move-vertex/🧪️tests/lifts-the-third-vertex-of-the-triangle/📸️snapshot/⬅️before/🔣️component.json"),
+            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📍move-vertex/🧪️tests/lifts-the-third-vertex-of-the-triangle/🦠️mutation/🔣️component.json"),
             include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/📍move-vertex/🧪️tests/lifts-the-third-vertex-of-the-triangle/📸️snapshot/➡️after/🔣️component.json"),
         ),
         other => panic!("mutate-semio-mesh: no fixture registered for kind {other:?}"),
@@ -131,13 +176,13 @@ fn oracle_fixture(kind: &str) -> (&'static str, &'static str) {
 fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
-//#endregion 🔖️OracleFixtures
+//#endregion 🔖️Fixtures
 
 //#region 🔖️Oracle
 /// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally.
 fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let (_before, after) = oracle_fixture(kind);
+        let (_before, _mutation, after) = fixture_text(kind);
         Ok(Outcome::with_raw(after.as_bytes().to_vec(), canonical(after)))
     }
 }
@@ -146,7 +191,7 @@ fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome,
 /// return to exactly where the specification vector started.
 fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let (before, _after) = oracle_fixture(kind);
+        let (before, _mutation, _after) = fixture_text(kind);
         Ok(Outcome::with_raw(before.as_bytes().to_vec(), canonical(before)))
     }
 }
@@ -155,200 +200,122 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{
-        change_material_base_color, change_material_metallic, change_material_roughness, change_texture_mime, create_material, create_mesh, create_primitive, create_texture, delete_material, delete_mesh, delete_primitive, delete_texture, move_vertex, replace_primitive_geometry,
-        replace_texture_bytes, set_primitive_material, set_primitive_topology, SemioMeshMutation,
-    };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
-    use protocol::Mutation;
+    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::{apply_semio_mesh_mutation, decode_semio_mesh_mutation_json, inverse_semio_mesh_mutation, SemioMeshMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{decode_mesh_pack, decode_semio_mesh_snapshot_json, encode_mesh_pack, encode_semio_mesh_snapshot_json, parse_mesh_dsl, print_mesh_dsl, SemioMeshSnapshot};
 
-    //#region 🔖️HandcraftedFixtures
-    /// 🧫️ The SAME specification vector `../🦀️component.rs::oracle_fixture` embeds as JSON,
-    /// transcribed once by hand into real `SemioMeshSnapshot`/`SemioMeshMutation` values — the
-    /// oracle-only build must never link this crate, so there is no way to share one physical
-    /// source between the two roles; committed side by side under the same kind's `🧪️tests/`
-    /// directory, so a drift between them is a one-file diff away from being caught by eye.
-    fn p3(x: f64, y: f64, z: f64) -> SemioPoint3 {
-        SemioPoint3 { x, y, z }
-    }
-    fn uv(u: f64, v: f64) -> SemioUv {
-        SemioUv { u, v }
-    }
-    fn rgba(r: f32, g: f32, b: f32, a: f32) -> SemioRgba {
-        SemioRgba { r, g, b, a }
+    //#region 🔖️FixtureDecode
+    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
+    /// this subset's own production JSON bridges — real deserialization of the committed bytes,
+    /// never a Rust literal transcribed beside them.
+    fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<SemioMeshSnapshot, String> {
+        decode_semio_mesh_snapshot_json(text).map_err(|error| format!("mutate-semio-mesh: the committed {label}-snapshot for {kind:?} must decode: {error}"))
     }
 
-    /// 🔺 `prim-a`: the base fixture's sole primitive — a plain, unmaterialed CCW triangle.
-    fn prim_a() -> SemioPrimitive {
-        SemioPrimitive { id: "prim-a".into(), topology: SemioTopology::Triangles, positions: vec![p3(0.0, 0.0, 0.0), p3(1.0, 0.0, 0.0), p3(0.0, 1.0, 0.0)], normals: vec![], uvs: vec![], colors: vec![], indices: vec![0, 1, 2], material_id: None }
-    }
-    /// 🎨 `mat-a`: the base fixture's sole material — opaque red, non-metallic, half-rough.
-    fn mat_a() -> SemioMaterial {
-        SemioMaterial { id: "mat-a".into(), base_color: rgba(1.0, 0.0, 0.0, 1.0), metallic: 0.0, roughness: 0.5 }
-    }
-    /// 🖼️ `tex-a`: the base fixture's sole texture — a tiny 4-byte PNG-tagged payload.
-    fn tex_a() -> SemioTexture {
-        SemioTexture { id: "tex-a".into(), mime: "image/png".into(), bytes: vec![1, 2, 3, 4] }
-    }
-    /// 🕸️ The shared base snapshot every single-mutation fixture starts from: one mesh (`mesh-a`)
-    /// holding `prim_a()`, one material (`mat_a()`), one texture (`tex_a()`) — matches every
-    /// committed `⬅️before/🔣️component.json` this kind's fixture directory carries except
-    /// `delete-material`/`delete-texture`, whose `before` additionally carries a second entity kept
-    /// in `after` (handled inline in `fixture_for` below).
-    fn base_snapshot() -> SemioMeshSnapshot {
-        SemioMeshSnapshot { schema: "stdio.semio.mesh".into(), meshes: vec![SemioMesh { id: "mesh-a".into(), primitives: vec![prim_a()] }], materials: vec![mat_a()], textures: vec![tex_a()] }
+    fn mutation_of(text: &str, kind: &str) -> Result<SemioMeshMutation, String> {
+        decode_semio_mesh_mutation_json(text).map_err(|error| format!("mutate-semio-mesh: the committed mutation payload for {kind:?} must decode: {error}"))
     }
 
-    fn fixture_for(kind: &str) -> (SemioMeshSnapshot, SemioMeshMutation) {
-        match kind {
-            "create-mesh" => (base_snapshot(), SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] } })),
-            "delete-mesh" => {
-                let mut before = base_snapshot();
-                before.meshes.push(SemioMesh { id: "mesh-b".into(), primitives: vec![] });
-                (before, SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: "mesh-a".into() }))
-            }
-            "create-primitive" => {
-                let primitive = SemioPrimitive { id: "prim-b".into(), topology: SemioTopology::Lines, positions: vec![p3(0.0, 0.0, 0.0), p3(0.0, 0.0, 1.0)], normals: vec![], uvs: vec![], colors: vec![], indices: vec![0, 1], material_id: None };
-                (base_snapshot(), SemioMeshMutation::CreatePrimitive(create_primitive::mutation::CreatePrimitive { mesh_id: "mesh-a".into(), primitive }))
-            }
-            "delete-primitive" => {
-                let mut before = base_snapshot();
-                let second = SemioPrimitive { id: "prim-b".into(), topology: SemioTopology::Lines, positions: vec![p3(0.0, 0.0, 0.0), p3(0.0, 0.0, 1.0)], normals: vec![], uvs: vec![], colors: vec![], indices: vec![0, 1], material_id: None };
-                before.meshes[0].primitives.push(second);
-                (before, SemioMeshMutation::DeletePrimitive(delete_primitive::mutation::DeletePrimitive { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into() }))
-            }
-            "set-primitive-topology" => (base_snapshot(), SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), topology: SemioTopology::TriangleStrip })),
-            "replace-primitive-geometry" => (
-                base_snapshot(),
-                SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::mutation::ReplacePrimitiveGeometry {
-                    mesh_id: "mesh-a".into(),
-                    primitive_id: "prim-a".into(),
-                    positions: vec![p3(0.0, 0.0, 0.0), p3(2.0, 0.0, 0.0), p3(0.0, 2.0, 0.0), p3(2.0, 2.0, 0.0)],
-                    normals: vec![p3(0.0, 0.0, 1.0); 4],
-                    uvs: vec![uv(0.0, 0.0), uv(1.0, 0.0), uv(0.0, 1.0), uv(1.0, 1.0)],
-                    colors: vec![rgba(1.0, 1.0, 1.0, 1.0); 4],
-                    indices: vec![0, 1, 2, 1, 3, 2],
-                }),
-            ),
-            "set-primitive-material" => (base_snapshot(), SemioMeshMutation::SetPrimitiveMaterial(set_primitive_material::mutation::SetPrimitiveMaterial { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), material_id: Some("mat-a".into()) })),
-            "create-material" => (base_snapshot(), SemioMeshMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: SemioMaterial { id: "mat-b".into(), base_color: rgba(0.0, 0.0, 1.0, 1.0), metallic: 1.0, roughness: 0.25 } })),
-            "delete-material" => {
-                let mut before = base_snapshot();
-                before.materials.push(SemioMaterial { id: "mat-b".into(), base_color: rgba(0.0, 0.0, 1.0, 1.0), metallic: 1.0, roughness: 0.25 });
-                (before, SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "mat-a".into() }))
-            }
-            "change-material-base-color" => (base_snapshot(), SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::mutation::ChangeMaterialBaseColor { id: "mat-a".into(), new_base_color: rgba(0.0, 0.5, 1.0, 1.0) })),
-            "change-material-metallic" => (base_snapshot(), SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::mutation::ChangeMaterialMetallic { id: "mat-a".into(), new_metallic: 1.0 })),
-            "change-material-roughness" => (base_snapshot(), SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::mutation::ChangeMaterialRoughness { id: "mat-a".into(), new_roughness: 0.25 })),
-            "create-texture" => (base_snapshot(), SemioMeshMutation::CreateTexture(create_texture::mutation::CreateTexture { texture: SemioTexture { id: "tex-b".into(), mime: "image/jpeg".into(), bytes: vec![9, 8, 7] } })),
-            "delete-texture" => {
-                let mut before = base_snapshot();
-                before.textures.push(SemioTexture { id: "tex-b".into(), mime: "image/jpeg".into(), bytes: vec![9, 8, 7] });
-                (before, SemioMeshMutation::DeleteTexture(delete_texture::mutation::DeleteTexture { id: "tex-a".into() }))
-            }
-            "change-texture-mime" => (base_snapshot(), SemioMeshMutation::ChangeTextureMime(change_texture_mime::mutation::ChangeTextureMime { id: "tex-a".into(), new_mime: "image/jpeg".into() })),
-            "replace-texture-bytes" => (base_snapshot(), SemioMeshMutation::ReplaceTextureBytes(replace_texture_bytes::mutation::ReplaceTextureBytes { id: "tex-a".into(), new_bytes: vec![10, 20, 30, 40, 50] })),
-            "move-vertex" => (base_snapshot(), SemioMeshMutation::MoveVertex(move_vertex::mutation::MoveVertex { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), vertex_index: 2, new_point: p3(0.0, 1.0, 0.5) })),
-            other => panic!("mutate-semio-mesh: no fixture registered for kind {other:?}"),
-        }
+    fn projection(snapshot: &SemioMeshSnapshot) -> Result<Json, String> {
+        parse_json(&encode_semio_mesh_snapshot_json(snapshot))
     }
-    //#endregion 🔖️HandcraftedFixtures
 
-    //#region 🔖️Projection
-    fn topology_str(topology: SemioTopology) -> &'static str {
-        match topology {
-            SemioTopology::Points => "points",
-            SemioTopology::Lines => "lines",
-            SemioTopology::LineStrip => "lineStrip",
-            SemioTopology::Triangles => "triangles",
-            SemioTopology::TriangleStrip => "triangleStrip",
-            SemioTopology::TriangleFan => "triangleFan",
-        }
+    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both fixtures are written
+    /// in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioMeshSnapshot, expected: &SemioMeshSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", encode_semio_mesh_snapshot_json(got), encode_semio_mesh_snapshot_json(expected))
     }
-    fn point3_json(p: &SemioPoint3) -> Json {
-        Json::Object(vec![("x".to_string(), Json::Number(p.x)), ("y".to_string(), Json::Number(p.y)), ("z".to_string(), Json::Number(p.z))])
-    }
-    fn uv_json(v: &SemioUv) -> Json {
-        Json::Object(vec![("u".to_string(), Json::Number(v.u)), ("v".to_string(), Json::Number(v.v))])
-    }
-    fn rgba_json(c: &SemioRgba) -> Json {
-        Json::Object(vec![("r".to_string(), Json::Number(c.r as f64)), ("g".to_string(), Json::Number(c.g as f64)), ("b".to_string(), Json::Number(c.b as f64)), ("a".to_string(), Json::Number(c.a as f64))])
-    }
-    fn primitive_json(p: &SemioPrimitive) -> Json {
-        Json::Object(vec![
-            ("id".to_string(), Json::String(p.id.clone())),
-            ("topology".to_string(), Json::String(topology_str(p.topology).to_string())),
-            ("positions".to_string(), Json::Array(p.positions.iter().map(point3_json).collect())),
-            ("normals".to_string(), Json::Array(p.normals.iter().map(point3_json).collect())),
-            ("uvs".to_string(), Json::Array(p.uvs.iter().map(uv_json).collect())),
-            ("colors".to_string(), Json::Array(p.colors.iter().map(rgba_json).collect())),
-            ("indices".to_string(), Json::Array(p.indices.iter().map(|v| Json::Number(*v as f64)).collect())),
-            ("materialId".to_string(), match &p.material_id { Some(id) => Json::String(id.clone()), None => Json::Null }),
-        ])
-    }
-    fn mesh_json(m: &SemioMesh) -> Json {
-        Json::Object(vec![("id".to_string(), Json::String(m.id.clone())), ("primitives".to_string(), Json::Array(m.primitives.iter().map(primitive_json).collect()))])
-    }
-    fn material_json(m: &SemioMaterial) -> Json {
-        Json::Object(vec![("id".to_string(), Json::String(m.id.clone())), ("baseColor".to_string(), rgba_json(&m.base_color)), ("metallic".to_string(), Json::Number(m.metallic as f64)), ("roughness".to_string(), Json::Number(m.roughness as f64))])
-    }
-    fn texture_json(t: &SemioTexture) -> Json {
-        Json::Object(vec![("id".to_string(), Json::String(t.id.clone())), ("mime".to_string(), Json::String(t.mime.clone())), ("bytes".to_string(), Json::Array(t.bytes.iter().map(|b| Json::Number(*b as f64)).collect()))])
-    }
-    /// 🎯️ The projection every scenario compares under `ordered-json-v1`: the snapshot's own
-    /// structural JSON shape, matching the committed fixtures field for field.
-    fn snapshot_json(snapshot: &SemioMeshSnapshot) -> Json {
-        Json::Object(vec![
-            ("schema".to_string(), Json::String(snapshot.schema.clone())),
-            ("meshes".to_string(), Json::Array(snapshot.meshes.iter().map(mesh_json).collect())),
-            ("materials".to_string(), Json::Array(snapshot.materials.iter().map(material_json).collect())),
-            ("textures".to_string(), Json::Array(snapshot.textures.iter().map(texture_json).collect())),
-        ])
-    }
-    //#endregion 🔖️Projection
+    //#endregion 🔖️FixtureDecode
 
     //#region 🔖️Handlers
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot. The assertion lives here rather than in the comparison because a recorded
+    /// no-oracle case runs no oracle role: a handler that merely returned `Ok` would report a pass
+    /// having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
-            let (mut base, mutation) = fixture_for(kind);
-            let outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::apply_semio_mesh_mutation(&mut base, &mutation);
+            let (before, mutation, after) = super::fixture_text(kind);
+            let mut current = snapshot_of(before, "before", kind)?;
+            let expected = snapshot_of(after, "after", kind)?;
+            let mutation = mutation_of(mutation, kind)?;
+            let outcome = apply_semio_mesh_mutation(&mut current, &mutation);
             if !outcome.messages().is_empty() {
-                return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", outcome.messages()));
             }
-            let projection = snapshot_json(&base);
-            let bytes = projection.to_string().into_bytes();
-            Ok(Outcome::with_raw(bytes, projection))
+            if current != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &current, &expected));
+            }
+            let projection = projection(&current)?;
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
 
+    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
+    /// restore the committed before-snapshot exactly — collection POSITION included, not merely
+    /// membership, which is what a delete/create pair has to rebuild rather than re-append.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
-            let (base, mutation) = fixture_for(kind);
+            let (before, mutation, _after) = super::fixture_text(kind);
+            let base = snapshot_of(before, "before", kind)?;
+            let mutation = mutation_of(mutation, kind)?;
             let mut current = base.clone();
-            let outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::apply_semio_mesh_mutation(&mut current, &mutation);
+            let outcome = apply_semio_mesh_mutation(&mut current, &mutation);
             if !outcome.messages().is_empty() {
-                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", outcome.messages()));
+                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", outcome.messages()));
             }
-            let undo = mutation.inverse(&base);
-            for step in &undo {
-                let step_outcome = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::apply_semio_mesh_mutation(&mut current, step);
+            for step in inverse_semio_mesh_mutation(&mutation, &base) {
+                let step_outcome = apply_semio_mesh_mutation(&mut current, &step);
                 if !step_outcome.messages().is_empty() {
-                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
+                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", step_outcome.messages()));
                 }
             }
-            let projection = snapshot_json(&current);
-            let bytes = projection.to_string().into_bytes();
-            Ok(Outcome::with_raw(bytes, projection))
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
+            }
+            let projection = projection(&current)?;
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
+    }
+
+    /// 🔁️ The real committed artifact through both of its committed encodings. The DSL text and the
+    /// pack envelope are separate committed files produced by separate codecs, so agreeing on one
+    /// snapshot cannot be achieved by smuggling bytes from either. Byte-identical re-emission IS
+    /// expected here — the committed text is this codec's own output, not a foreign writer's — so
+    /// the wave's usual "output must not equal input" tripwire does not apply and the text/binary
+    /// cross-check carries that evidence instead.
+    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed cube mesh artifact is not UTF-8: {error}"))?;
+        let parsed = parse_mesh_dsl(&text).map_err(|error| error.to_string())?;
+        if parsed.meshes.len() != 1 || parsed.materials.len() != 1 || parsed.textures.len() != 1 {
+            return Err(format!("identity-round-trip: the committed cube artifact is the one-mesh/one-material/one-texture fixture this case describes, but parsed {}/{}/{}", parsed.meshes.len(), parsed.materials.len(), parsed.textures.len()));
+        }
+        let reparsed = parse_mesh_dsl(&print_mesh_dsl(&parsed)).map_err(|error| error.to_string())?;
+        if reparsed != parsed {
+            return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
+        }
+        let unpacked = decode_mesh_pack(&ctx.fixture_bytes(super::PACK_ASSET)?).map_err(|error| error.to_string())?;
+        if unpacked != parsed {
+            return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different document than the committed text artifact", &unpacked, &parsed));
+        }
+        let repacked = decode_mesh_pack(&encode_mesh_pack(&parsed)).map_err(|error| error.to_string())?;
+        if repacked != parsed {
+            return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &parsed));
+        }
+        let projection = projection(&parsed)?;
+        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
     }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls.
+/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
+/// id, so the loop mirrors the feature's `Examples` tables exactly. `identity-round-trip` is
+/// deliberately subject-only: the reference answer for the other scenarios is a committed JSON
+/// snapshot the oracle role can read literally, but the real artifact is committed as DSL and pack
+/// bytes ONLY, and turning those into a snapshot needs this subset's own codec — which the
+/// oracle-only build must not link. Inventing a JSON transcription of it here would be a second,
+/// drifting copy of the artifact, so that scenario asserts entirely in-role instead.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     for kind in KINDS {
@@ -357,6 +324,10 @@ pub fn adapter() -> Adapter {
         {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
         }
+    }
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("identity-round-trip", subject::round_trip);
     }
     built
 }

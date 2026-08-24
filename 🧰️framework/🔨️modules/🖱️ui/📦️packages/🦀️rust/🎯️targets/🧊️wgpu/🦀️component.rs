@@ -8,6 +8,7 @@ pub mod layout {
     use dsl::DslValue;
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
+    use ui_contract::UiFixedList;
 
     //#region 🔖️Action
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -933,6 +934,14 @@ pub mod layout {
     }
 
     //#region 🔖️PartitionWindowMeasures
+    pub const WINDOW_MEASURE_PARTITION_CAPACITY: usize = 64;
+
+    #[derive(Debug)]
+    pub struct WindowMeasurePartition<'a> {
+        pub general: UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>,
+        pub utility_options: UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>,
+    }
+
     /// @emoji 🎯️ Splits a window's top-level measures into `(general, utility_options)`.
     ///
     /// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *utility-scoped chrome*:
@@ -941,20 +950,21 @@ pub mod layout {
     /// currently active). The wrapper itself is a routing envelope only — never rendered — so activating a
     /// utility shows its option tree directly (no duplicate utility-name group header). Every untagged group
     /// and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level concept only.
-    pub fn partition_window_measures(measures: &[WindowMeasure], active_utility_id: Option<&str>) -> (Vec<WindowMeasure>, Vec<WindowMeasure>) {
-        let mut general = Vec::new();
-        let mut utility_options = Vec::new();
+    pub fn partition_window_measures<'a>(measures: &'a [WindowMeasure], active_utility_id: Option<&str>) -> Result<WindowMeasurePartition<'a>, &'a WindowMeasure> {
+        let mut partition = WindowMeasurePartition { general: UiFixedList::default(), utility_options: UiFixedList::default() };
         for measure in measures {
             match measure {
                 WindowMeasure::Group { active_utility_id: Some(scoped), children, .. } => {
                     if active_utility_id == Some(scoped.as_str()) {
-                        utility_options.extend(children.iter().cloned());
+                        for child in children {
+                            partition.utility_options.try_push(child)?;
+                        }
                     }
                 }
-                _ => general.push(measure.clone()),
+                _ => partition.general.try_push(measure)?,
             }
         }
-        (general, utility_options)
+        Ok(partition)
     }
     //#endregion 🔖️PartitionWindowMeasures
 
@@ -1236,19 +1246,19 @@ pub mod layout {
         #[semio_framework_async_macros::async_test]
         async fn partition_window_measures_unwraps_matching_utility_group_children_into_utility_options() {
             let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
-            let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
-            assert!(general.is_empty());
-            assert_eq!(utility_options.len(), 1);
-            assert!(matches!(&utility_options[0], WindowMeasure::Toggle { id, .. } if id == "size"), "tagged wrapper is routing-only — children render flat");
+            let partition = partition_window_measures(&measures, Some("brush")).expect("fixed partition");
+            assert!(partition.general.is_empty());
+            assert_eq!(partition.utility_options.len(), 1);
+            assert!(matches!(partition.utility_options.get(0).copied(), Some(WindowMeasure::Toggle { id, .. }) if id == "size"), "tagged wrapper is routing-only — children render flat");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn partition_window_measures_drops_non_matching_utility_group_from_both_buckets() {
             let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
-            let (general_other, utility_options_other) = partition_window_measures(&measures, Some("fill"));
-            assert!(general_other.is_empty() && utility_options_other.is_empty(), "wrong active utility drops the group entirely");
-            let (general_none, utility_options_none) = partition_window_measures(&measures, None);
-            assert!(general_none.is_empty() && utility_options_none.is_empty(), "no active utility drops the group entirely");
+            let other = partition_window_measures(&measures, Some("fill")).expect("fixed partition");
+            assert!(other.general.is_empty() && other.utility_options.is_empty(), "wrong active utility drops the group entirely");
+            let none = partition_window_measures(&measures, None).expect("fixed partition");
+            assert!(none.general.is_empty() && none.utility_options.is_empty(), "no active utility drops the group entirely");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -1270,15 +1280,22 @@ pub mod layout {
                     on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
                 },
             ];
-            let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
-            assert_eq!(general.len(), 2, "untagged group and slider both stay general");
-            assert!(utility_options.is_empty());
+            let partition = partition_window_measures(&measures, Some("brush")).expect("fixed partition");
+            assert_eq!(partition.general.len(), 2, "untagged group and slider both stay general");
+            assert!(partition.utility_options.is_empty());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn partition_window_measures_empty_input_roundtrips_to_empty() {
-            let (general, utility_options) = partition_window_measures(&[], Some("brush"));
-            assert!(general.is_empty() && utility_options.is_empty());
+            let partition = partition_window_measures(&[], Some("brush")).expect("fixed partition");
+            assert!(partition.general.is_empty() && partition.utility_options.is_empty());
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn partition_window_measures_max_plus_one_returns_exact_borrowed_owner() {
+            let measures = (0..=WINDOW_MEASURE_PARTITION_CAPACITY).map(|index| measure_toggle(&format!("measure-{index}"))).collect::<Vec<_>>();
+            let rejected = partition_window_measures(&measures, None).expect_err("maximum plus one must refuse");
+            assert!(std::ptr::eq(rejected, &measures[WINDOW_MEASURE_PARTITION_CAPACITY]));
         }
 
         const GOLDEN_WINDOW_ENGAGEMENT_JSON: &str = "{\"sessionActive\":true,\"options\":[{\"id\":\"opt1\",\"label\":\"Option\",\"pressed\":false}],\"input\":{\"id\":\"in1\",\"value\":\"v\"},\"control\":{\"kind\":\"slider\",\"id\":\"sl1\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":null,\"unit\":null,\"disabled\":null,\"onChange\":null,\"onCommit\":null},\"status\":[{\"id\":\"st1\",\"text\":\"Ready\"}],\"possibleEngagements\":[{\"id\":\"pe1\",\"label\":\"Possible\"}]}";

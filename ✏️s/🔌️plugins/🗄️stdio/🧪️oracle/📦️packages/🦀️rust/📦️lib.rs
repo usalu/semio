@@ -518,6 +518,22 @@ pub mod artifacts {
                         mod component;
                         pub use component::*;
                     }
+                    // 🏅️ A conformance subset of PDF 1.4 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod a {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ A conformance subset of PDF 1.4 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod x {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
                 }
             }
             #[path = "."]
@@ -527,6 +543,54 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ A conformance-class subset of PDF 1.7 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod a {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ A conformance-class subset of PDF 1.7 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod e {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ A conformance-class subset of PDF 1.7 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod h {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ A conformance-class subset of PDF 1.7 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod ua {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ A conformance-class subset of PDF 1.7 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod vt {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    // 🏅️ A conformance-class subset of PDF 1.7 — its oracle sits at the same taxonomy address as
+                    // the implementation it is evidence for, beside `any` rather than inside it.
+                    #[path = "."]
+                    pub mod x {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -610,11 +674,55 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_ap214 {
+                // 📐️ The standard-level reference codec and CC ladder, shared by every ap214 subset
+                // so no class copies a Part-21 writer or a §4.3 classification.
+                #[path = "."]
+                pub mod reference {
+                    #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🧪️oracle/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
+                }
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cc1 {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cc2 {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cc3 {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cc4 {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cc5 {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod cc6 {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -787,6 +895,12 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
+                    pub mod valid {
+                        #[path = "../../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }

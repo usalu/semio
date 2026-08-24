@@ -1,24 +1,51 @@
 @capability-obj-3-0-mutate
 @oracle-tobj-obj-3-0-mutate
-@comparison-semantic-mesh-v1
+@comparison-semantic-obj-3-0-v1
 @mutations-obj-3-0-any
 Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
-  The input is a real 16,128-triangle mesh (8,449 real vertices/texcoords/normals each, one real
-  material, three real named `o`/`g` bands plus a small real `apex` object/group carved out of
-  band-0's own first 3 real faces) derived once from the real committed art asset
+  The input is a real 16,128-triangle mesh derived once from the real committed art asset
   🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb, not a synthetic fixture. The GLB
   container was hand-parsed (12-byte header, JSON chunk, BIN chunk; POSITION/NORMAL/TEXCOORD_0 and
   the index accessor read directly with plain struct decoding, no gltf crate) and re-emitted as real
-  Wavefront OBJ text; the committed fixture's own header comments record the same derivation. One
-  real vertex/texcoord/normal (a duplicate of index 0's real value) is appended once more,
-  unreferenced by any face, so the `remove-vertex`/`remove-texcoord`/`remove-normal` scenarios have a
-  real, exactly-known target that needs no cascading face-index repair. Every scenario copies the
-  fixture into the case work directory before touching it; the committed mesh is never written to.
-  Both the oracle's and the subject's results are read back by the INDEPENDENT `tobj` reader before
-  the `semantic-mesh-v1` profile compares them: the vertex set, face topology and counts are
-  normative; `o`/`g`/`usemtl`/`s`/`mtllib`/comment mutations are exercised for real (real band/
-  object names, real face-index membership) but sit outside that profile's normative surface, same
-  as generator strings and precision are writer freedom for mesh creation.
+  Wavefront OBJ text; the committed fixture's own header comments record the same derivation. It
+  declares 8,449 `v`/`vt`/`vn` rows each, one `mtllib`-less `usemtl pattern` run covering every
+  face, exactly one object — `o pattern-sphere`, all 16,128 faces — and exactly three groups,
+  `g band-0`, `g band-1` and `g band-2`, holding faces 0–5375, 5376–10751 and 10752–16127. Those
+  four names are the only ones the `set-group`/`remove-group`/`set-object`/`remove-object` rows
+  address; the adapter reads each one's membership back out of the file rather than restating it,
+  so a row naming a band the mesh does not carry fails outright instead of inverting into a
+  fabrication. One real vertex/texcoord/normal (a duplicate of index 0's real value) is appended
+  once more, unreferenced by any face, so the `remove-vertex`/`remove-texcoord`/`remove-normal`
+  scenarios have a real, exactly-known target that needs no cascading face-index repair. Every
+  scenario copies the fixture into the case work directory before touching it; the committed mesh
+  is never written to.
+
+  Both roles' results are read back by INDEPENDENT readers before `semantic-obj-3-0-v1` compares
+  them. `tobj` supplies the mesh half — and on its own it is not enough to judge this vocabulary:
+  it triangulates, re-indexes per `o`/`g` model and drops every declared row no face references, so
+  14 of the 22 kinds move nothing in it at all. (It also splits a model at every `o`/`g` transition,
+  which is why the projected vertex count is 8,576 rather than 8,449 and why a face that ends up in
+  no band is immediately visible.) The other half is the document surface a mesh reader cannot see —
+  declared `v`/`vt`/`vn` row counts with their per-component extent and totals, the `mtllib`
+  reference, the `g`/`o` membership spans, the `usemtl`/`s` run starts and the retained comment
+  lines — read by the oracle module's own grammar parser, which never touches `decode_obj`. Extent
+  and totals rather than a text digest of the rows, because the two producers format decimals
+  differently and only numbers survive that under the profile's 1e-5 tolerance. With both halves in
+  the projection every declared kind is observable, and each `mutate-<kind>` scenario asserts in
+  role that it really did move it — a row whose parameters leave the document where it was fails
+  instead of passing.
+
+  ⚠️ `inverse-remove-face` is a known, reproduced FAILURE and is left asserting. Both roles apply
+  the forward mutation, serialize, re-read and then apply the inverse — the wire is deliberately in
+  the middle, because that is what this ticket tests. Face 16127 belongs to `g band-2` and to
+  `o pattern-sphere`; `RemoveFace` drops it from both, and `InsertFace`, the inverse `ObjMutation`
+  declares, carries a face but no membership, so the restored face lands in no band and no object.
+  `tobj` then reads it as a fourth model and the projection reports 8,577 vertices where the real
+  mesh has 8,576. The defect is ours, not `tobj`'s and not the fixture's: `ObjMutation::inverse`
+  returns `Vec<Self>` and could return `[InsertFace, SetGroup, SetObject]`, but
+  `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` returns the single
+  `InsertFace`. Weakening the assertion would hide it, so the scenario stays red until the
+  vocabulary restores membership.
 
   @id-mutate
   @level-exhaustive
@@ -46,10 +73,10 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | insert-face           | {"index":16128,"face":{"vertices":[{"vertex":0},{"vertex":1},{"vertex":2}]}}                 |
       | remove-face           | {"index":16127}                                                                              |
       | set-face              | {"index":16127,"face":{"vertices":[{"vertex":2},{"vertex":1},{"vertex":0}]}}                 |
-      | set-group             | {"name":"equator","faces":[0,1,2]}                                                           |
-      | remove-group          | {"name":"apex-band"}                                                                         |
-      | set-object            | {"name":"north-cap","faces":[0,1,2]}                                                         |
-      | remove-object         | {"name":"apex"}                                                                              |
+      | set-group             | {"name":"band-0","faces":[0,1,2]}                                                            |
+      | remove-group          | {"name":"band-0"}                                                                            |
+      | set-object            | {"name":"pattern-sphere","faces":[0,1,2]}                                                    |
+      | remove-object         | {"name":"pattern-sphere"}                                                                    |
       | set-mtllib            | {"mtllib":"pattern-sphere.mtl"}                                                              |
       | set-usemtl            | {"usemtl":[{"faceIndexFrom":0,"material":"clay"}]}                                           |
       | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |
@@ -82,10 +109,10 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | insert-face           | {"index":16128,"face":{"vertices":[{"vertex":0},{"vertex":1},{"vertex":2}]}}                 |
       | remove-face           | {"index":16127}                                                                              |
       | set-face              | {"index":16127,"face":{"vertices":[{"vertex":2},{"vertex":1},{"vertex":0}]}}                 |
-      | set-group             | {"name":"equator","faces":[0,1,2]}                                                           |
-      | remove-group          | {"name":"apex-band"}                                                                         |
-      | set-object            | {"name":"north-cap","faces":[0,1,2]}                                                         |
-      | remove-object         | {"name":"apex"}                                                                              |
+      | set-group             | {"name":"band-0","faces":[0,1,2]}                                                            |
+      | remove-group          | {"name":"band-0"}                                                                            |
+      | set-object            | {"name":"pattern-sphere","faces":[0,1,2]}                                                    |
+      | remove-object         | {"name":"pattern-sphere"}                                                                    |
       | set-mtllib            | {"mtllib":"pattern-sphere.mtl"}                                                              |
       | set-usemtl            | {"usemtl":[{"faceIndexFrom":0,"material":"clay"}]}                                           |
       | set-smoothing-groups  | {"smoothingGroups":[{"faceIndexFrom":0,"group":1}]}                                          |

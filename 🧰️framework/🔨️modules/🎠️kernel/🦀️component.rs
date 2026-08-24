@@ -888,8 +888,8 @@ pub enum RequestOutcome {
 /// `#[cfg(test)] mod extension_activation_tests` below, via its `use super::*`) keeps resolving —
 /// same pattern this file's own `PresencePeer` re-export above already uses.
 pub use semio_framework_os_kernel::channel::{
-    CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, FixedCommandPage, PagedCommand,
-    PagedCommandReader, RejectedCommandBuild, RejectedCommandBuildRegistry, COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES,
+    CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, FixedCommandPage, PagedCommand, PagedCommandReader,
+    RejectedCommandBuild, RejectedCommandBuildRegistry, COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES,
 };
 //#endregion 🔖️PagedCommandIngress
 
@@ -1122,11 +1122,7 @@ impl UiTurnPatchRetireArena {
         true
     }
 
-    fn handback(
-        &mut self,
-        key: UiTurnPatchRetireKey,
-        patches: semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM>,
-    ) {
+    fn handback(&mut self, key: UiTurnPatchRetireKey, patches: semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM>) {
         let slot = &mut self.slots[key.slot];
         slot.patches = patches;
     }
@@ -1155,8 +1151,7 @@ impl UiTurnPatchRetireArena {
 }
 
 fn with_ui_turn_patch_retire_arena<T>(f: impl FnOnce(&mut UiTurnPatchRetireArena) -> T) -> T {
-    static ARENA: std::sync::LazyLock<std::sync::Mutex<UiTurnPatchRetireArena>> =
-        std::sync::LazyLock::new(|| std::sync::Mutex::new(UiTurnPatchRetireArena::default()));
+    static ARENA: std::sync::LazyLock<std::sync::Mutex<UiTurnPatchRetireArena>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(UiTurnPatchRetireArena::default()));
     let mut arena = ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     f(&mut arena)
 }
@@ -1250,8 +1245,7 @@ impl UiTurnPatchTransportArena {
 }
 
 fn with_ui_turn_patch_transport_arena<T>(f: impl FnOnce(&mut UiTurnPatchTransportArena) -> T) -> T {
-    static ARENA: std::sync::LazyLock<std::sync::Mutex<UiTurnPatchTransportArena>> =
-        std::sync::LazyLock::new(|| std::sync::Mutex::new(UiTurnPatchTransportArena::default()));
+    static ARENA: std::sync::LazyLock<std::sync::Mutex<UiTurnPatchTransportArena>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(UiTurnPatchTransportArena::default()));
     let mut arena = ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     f(&mut arena)
 }
@@ -1413,6 +1407,12 @@ pub struct UiTurnPatches {
     retirement: Option<UiTurnPatchRetireKey>,
 }
 
+pub enum UiTurnPatchTransfer<T> {
+    Empty,
+    Transferred(T),
+    Refused,
+}
+
 impl Default for UiTurnPatches {
     fn default() -> Self {
         Self { patches: semio_framework_ui_contract::UiFixedList::default(), retirement: None }
@@ -1444,6 +1444,19 @@ impl UiTurnPatches {
 
     pub fn is_empty(&self) -> bool {
         self.patches.is_empty()
+    }
+
+    pub fn try_transfer_one<T>(&mut self, transfer: impl FnOnce(UiPatch) -> Result<T, UiPatch>) -> UiTurnPatchTransfer<T> {
+        let Some(patch) = self.patches.swap_remove(0) else { return UiTurnPatchTransfer::Empty };
+        match transfer(patch) {
+            Ok(value) => UiTurnPatchTransfer::Transferred(value),
+            Err(patch) => {
+                if self.patches.try_push(patch).is_err() {
+                    return UiTurnPatchTransfer::Refused;
+                }
+                UiTurnPatchTransfer::Refused
+            }
+        }
     }
 
     pub fn close_step(&mut self) -> bool {
@@ -1564,6 +1577,17 @@ mod ui_turn_patch_tests {
         let rejected = patches.try_push_ui_patch(patch(2)).expect_err("maximum plus one");
         assert_eq!(rejected.revision, semio_framework_ui_contract::UiRevision(2));
         assert_eq!(patches.len(), UI_TURN_PATCHES_MAXIMUM);
+    }
+
+    #[test]
+    fn refused_turn_patch_transfer_restores_the_exact_retirement_owner() {
+        let mut patches = UiTurnPatches::default();
+        patches.try_push_ui_patch(patch(1)).expect("one patch");
+        assert!(matches!(patches.try_transfer_one(Err::<(), UiPatch>), UiTurnPatchTransfer::Refused));
+        assert_eq!(patches.len(), 1);
+        assert_eq!(patches.iter().next().map(|patch| patch.revision), Some(semio_framework_ui_contract::UiRevision(1)));
+        drop(patches);
+        while !close_ui_turn_patch_owner_one() {}
     }
 
     #[test]

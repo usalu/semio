@@ -133,6 +133,15 @@ pub fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutation) ->
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ This subset's own inverse algebra as a free function, so a caller that legitimately drives the
+/// vocabulary from outside the crate reaches it without naming the `protocol::Mutation` trait —
+/// `protocol` is an `extern crate` ALIAS private to this plugin's glue (`📦️glue.rs`), so the name
+/// simply does not exist for a dependent, and the exhaustive mutation case's subject half could not
+/// compile while it tried to import it. Same shape as `inverse_svg_basic_mutation`.
+pub fn inverse_png_mutation(mutation: &PngMutation, base: &PngSnapshot) -> Vec<PngMutation> {
+    Mutation::inverse(mutation, base)
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

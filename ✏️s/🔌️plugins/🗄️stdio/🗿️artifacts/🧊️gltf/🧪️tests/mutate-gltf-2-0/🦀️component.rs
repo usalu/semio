@@ -11,7 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::gltf::standards::v2_0::subsets::any::{oracle_apply_mutation, project_gltf, round_trip, undo_create_scene};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `GLTF_MUTATION_LEAF_DESCRIPTORS`'s 7 registered leaves (`../../🏅️standards/🔖️2.0/
@@ -82,6 +82,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_gltf(&bytes)?;
+    mutation_is_observable_within(&spec.str("kind"), &projection, &project_gltf(&input)?, &[], GLTF_WRITER_FREEDOM, 0.0)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

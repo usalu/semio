@@ -113,6 +113,14 @@ pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) ->
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ This subset's own inverse algebra as a free function, so a caller that legitimately drives the
+/// vocabulary from outside the crate reaches it without naming the `protocol::Mutation` trait —
+/// `protocol` is an `extern crate` ALIAS private to this plugin's glue (`📦️glue.rs`) and does not
+/// exist as a path for a dependent. Same shape as `inverse_svg_basic_mutation`.
+pub fn inverse_jpg_mutation(mutation: &JpgMutation, base: &JpgSnapshot) -> Vec<JpgMutation> {
+    Mutation::inverse(mutation, base)
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

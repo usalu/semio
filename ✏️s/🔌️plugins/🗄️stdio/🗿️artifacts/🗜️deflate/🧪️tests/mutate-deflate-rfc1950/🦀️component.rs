@@ -11,7 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::deflate::standards::v_rfc1950::subsets::any::{independent_payload, inverse_mutation_spec, oracle_apply_mutation, project_deflate};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🗂️ Mirrors `DeflateMutation`'s kebab-case `KINDS` (schema/mutations/component.rs). Duplicated
@@ -38,6 +38,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx, MUTATE_INPUT, "input.zz")?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_deflate(&bytes)?;
+    mutation_is_observable(&spec.str("kind"), &projection, &project_deflate(&input)?, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

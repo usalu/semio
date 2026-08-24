@@ -7,8 +7,8 @@
 //! INDEPENDENT `tobj` reader before the `semantic-mesh-v1` profile compares them.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::obj::standards::v3_0::subsets::any::{oracle_apply_mutation, oracle_snapshot_json};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, reparsed_not_copied, round_trip_preserves_within};
+use semio_s_plugin_stdio_test_oracle::artifacts::obj::standards::v3_0::subsets::any::{oracle_apply_mutation, oracle_document_projection, oracle_snapshot_json};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, reparsed_not_copied, round_trip_preserves_within};
 use semio_s_plugin_stdio_test_oracle::mesh::project_obj;
 
 //#region 🔖️Kinds
@@ -63,21 +63,42 @@ fn json_num(value: f64) -> Json {
 fn json_str(value: &str) -> Json {
     Json::String(value.to_string())
 }
-fn json_index_list(indices: &[usize]) -> Json {
-    Json::Array(indices.iter().map(|index| json_num(*index as f64)).collect())
-}
 fn json_spec(kind: &str, params: Json) -> Json {
     json_obj(vec![("kind", json_str(kind)), ("params", params)])
 }
 //#endregion 🔖️JsonBuild
 
 //#region 🔖️Profile
-/// 📏️ `semantic-mesh-v1`'s own declared tolerances (`../../../../🧪️oracle/🔣️component.json`),
-/// mirrored here so an in-handler law check is exactly as strict as the profile the case is
-/// measured by — never stricter, which would invent a failure the comparison itself would forgive.
-const MESH_WRITER_FREEDOM: &[&str] = &["generator", "comment", "byteLength", "fileSize", "precision", "solidName"];
-const MESH_TOLERANCE: f64 = 1e-5;
+/// 📏️ `semantic-obj-3-0-v1`'s own declared tolerances (`../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/
+/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as the
+/// profile the case is measured by — never stricter, which would invent a failure the comparison
+/// itself would forgive.
+const OBJ_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "precision"];
+const OBJ_TOLERANCE: f64 = 1e-5;
 //#endregion 🔖️Profile
+
+//#region 🔖️Projection
+/// 🔍️ The projection both roles are compared through: `tobj`'s triangle mesh, plus the document
+/// surface that reader cannot see. `tobj` triangulates, re-indexes per `o`/`g` model and drops every
+/// declared row no face references, so on its own it leaves 14 of the 22 declared kinds
+/// unobservable — `set-mtllib`, `set-usemtl`, `set-smoothing-groups`, `set-unknown-statements`, the
+/// four name-keyed `g`/`o` kinds and every `v`/`vt`/`vn` kind move nothing in it. Both halves come
+/// from readers independent of `decode_obj`.
+fn project(bytes: &[u8]) -> Result<Json, String> {
+    let mut projection = project_obj(bytes)?;
+    match &mut projection {
+        Json::Object(members) => members.push(("document".to_string(), oracle_document_projection(bytes)?)),
+        other => return Err(format!("the mesh reader returned {other:?} rather than an object")),
+    }
+    Ok(projection)
+}
+
+/// 👁️ Every one of the 22 declared kinds has to move that composed projection — none is exempt,
+/// which is exactly what the document half was added to make true.
+fn moved_the_document(kind: &str, mutated: &Json, base: &Json) -> Result<(), String> {
+    mutation_is_observable_within(kind, mutated, base, &[], OBJ_WRITER_FREEDOM, OBJ_TOLERANCE)
+}
+//#endregion 🔖️Projection
 
 //#region 🔖️Inverse
 /// ↩️ The original real fixture's 7 retained comment lines, in file order (`🧫️fixtures/
@@ -93,16 +114,36 @@ const ORIGINAL_UNKNOWN_STATEMENTS: [&str; 7] = [
     "# trailing orphan v/vt/vn above: a duplicate of index 0, unreferenced by any face on purpose",
 ];
 
+/// 🏷️ The face-index membership the pristine fixture's OWN `g`/`o` statement carries for `name`,
+/// read back out of the real document rather than written down here. Both name-keyed inverses need
+/// it, and reading it is also the guard that keeps an `Examples` row honest: a row naming a band or
+/// object the real mesh does not carry fails here instead of quietly inverting into a fabrication.
+fn membership_of(base: &[u8], collection: &str, name: &str) -> Result<Json, String> {
+    let snapshot = oracle_snapshot_json(base)?;
+    snapshot
+        .array(collection)
+        .into_iter()
+        .find(|entry| entry.str("name") == name)
+        .map(|entry| entry.get("faces").cloned().unwrap_or_else(|| Json::Array(Vec::new())))
+        .ok_or_else(|| format!("the real fixture carries no {collection} entry named {name:?} — the mesh's own partition is `o pattern-sphere` over all 16,128 faces and `g band-0`/`band-1`/`band-2` over 5,376 faces each"))
+}
+
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
-/// pristine fixture's own known real values — index/name-aware, mirroring the same per-variant
+/// pristine fixture's own real values — index/name-aware, mirroring the same per-variant
 /// `ObjMutation::inverse()` semantics `../../🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
 /// 🦀️component.rs` documents, computed independently here since neither the oracle nor this adapter
-/// can reach that subject-side method. `set-snapshot`'s inverse is a REAL `set-snapshot` carrying
-/// the original document's own independently emitted payload (`oracle_snapshot_json`) — never a
+/// can reach that subject-side method. Whatever the inverse needs to know about the pre-mutation
+/// state it reads out of `base` with the oracle's own independent parser: `set-snapshot` inverts
+/// through a REAL `set-snapshot` carrying the original document's emitted payload — never a
 /// hand-back of the pristine input bytes, which would let the scenario pass without the reference
-/// re-serializing anything at all, which is why it needs `base` rather than the kind alone.
-fn inverse_spec(kind: &str, base: &[u8]) -> Result<Json, String> {
-    Ok(match kind {
+/// re-serializing anything at all — and the four name-keyed `g`/`o` kinds invert through the band
+/// or object membership the real file actually declares.
+fn inverse_spec(spec: &Json, base: &[u8]) -> Result<Json, String> {
+    let kind = spec.str("kind");
+    let empty = json_obj(vec![]);
+    let params = spec.get("params").unwrap_or(&empty);
+    let named = |key: &str| -> Result<String, String> { params.get(key).and_then(|value| match value { Json::String(text) => Some(text.clone()), _ => None }).ok_or_else(|| format!("{kind} requires a string {key:?} parameter")) };
+    Ok(match kind.as_str() {
         "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", oracle_snapshot_json(base)?)])),
         "no-mutation" => json_spec("no-mutation", json_obj(vec![])),
         "insert-vertex" => json_spec("remove-vertex", json_obj(vec![("index", json_num(8449.0))])),
@@ -127,10 +168,14 @@ fn inverse_spec(kind: &str, base: &[u8]) -> Result<Json, String> {
             let restore_kind = if kind == "remove-face" { "insert-face" } else { "set-face" };
             json_spec(restore_kind, json_obj(vec![("index", json_num(16127.0)), ("face", face)]))
         }
-        "set-group" => json_spec("remove-group", json_obj(vec![("name", json_str("equator"))])),
-        "remove-group" => json_spec("set-group", json_obj(vec![("name", json_str("apex-band")), ("faces", json_index_list(&[0, 1, 2]))])),
-        "set-object" => json_spec("remove-object", json_obj(vec![("name", json_str("north-cap"))])),
-        "remove-object" => json_spec("set-object", json_obj(vec![("name", json_str("apex")), ("faces", json_index_list(&[0, 1, 2]))])),
+        "set-group" | "remove-group" => {
+            let name = named("name")?;
+            json_spec("set-group", json_obj(vec![("name", json_str(&name)), ("faces", membership_of(base, "groups", &name)?)]))
+        }
+        "set-object" | "remove-object" => {
+            let name = named("name")?;
+            json_spec("set-object", json_obj(vec![("name", json_str(&name)), ("faces", membership_of(base, "objects", &name)?)]))
+        }
         "set-mtllib" => json_spec("set-mtllib", json_obj(vec![])),
         "set-usemtl" => json_spec("set-usemtl", json_obj(vec![("usemtl", Json::Array(vec![json_obj(vec![("faceIndexFrom", json_num(0.0)), ("material", json_str("pattern"))])]))])),
         "set-smoothing-groups" => json_spec("set-smoothing-groups", json_obj(vec![("smoothingGroups", Json::Array(vec![]))])),
@@ -144,28 +189,32 @@ fn inverse_spec(kind: &str, base: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️Inverse
 
 //#region 🔖️Oracle
+/// 🦠️ The forward half, with observability asserted in role: the reference applies the kind to the
+/// real mesh and the result has to differ from the untouched document under the very profile the
+/// case is measured by.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
-    let projection = project_obj(&bytes)?;
+    let projection = project(&bytes)?;
+    moved_the_document(&spec.str("kind"), &projection, &project(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
 /// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: every kind — INCLUDING
 /// `set-snapshot`, which now inverts through a real `set-snapshot` of the original document instead
 /// of returning the pristine bytes — is applied forward and then undone, and the restored mesh's
-/// independent `tobj` projection must equal the REAL original's own. `semantic-mesh-v1`'s own
-/// tolerance (1e-5, `generator`/`comment`/`precision` writer freedom) is what the comparison uses,
+/// composed projection must equal the REAL original's own. `semantic-obj-3-0-v1`'s own tolerance
+/// (1e-5, byte length and decimal precision the only writer freedom) is what the comparison uses,
 /// never a stricter one.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let kind = spec.str("kind");
     let mutated = oracle_apply_mutation(&input, &spec)?;
-    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&kind, &input)?)?;
-    let projection = project_obj(&restored)?;
-    inverse_restores_within(&kind, &projection, &project_obj(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
+    let restored = oracle_apply_mutation(&mutated, &inverse_spec(&spec, &input)?)?;
+    let projection = project(&restored)?;
+    inverse_restores_within(&kind, &projection, &project(&input)?, OBJ_WRITER_FREEDOM, OBJ_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
@@ -178,8 +227,8 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_apply_mutation(&input, &json_spec("no-mutation", json_obj(vec![])))?;
     reparsed_not_copied(&bytes, &input)?;
-    let projection = project_obj(&bytes)?;
-    round_trip_preserves_within(&projection, &project_obj(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
+    let projection = project(&bytes)?;
+    round_trip_preserves_within(&projection, &project(&input)?, OBJ_WRITER_FREEDOM, OBJ_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -187,12 +236,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{inverse_spec, mutable_input};
+    use super::{inverse_spec, moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::io::{decode_obj, encode_obj};
     use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::mutations::{apply_obj_mutation, ObjMutation};
     use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::subsets::any::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjSnapshot, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
-    use semio_s_plugin_stdio_test_oracle::mesh::project_obj;
 
     //#region 🔖️SpecReading
     fn json_num(value: &Json, key: &str) -> Option<f64> {
@@ -329,7 +377,8 @@ mod subject {
         let input = mutable_input(ctx)?;
         let spec = ctx.doc_json()?;
         let bytes = apply_and_encode(&input, &spec)?;
-        let projection = project_obj(&bytes)?;
+        let projection = project(&bytes)?;
+        moved_the_document(&spec.str("kind"), &projection, &project(&input)?)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
@@ -342,8 +391,8 @@ mod subject {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let mutated = apply_and_encode(&input, &spec)?;
-        let restored = apply_and_encode(&mutated, &inverse_spec(&kind, &input)?)?;
-        let projection = project_obj(&restored)?;
+        let restored = apply_and_encode(&mutated, &inverse_spec(&spec, &input)?)?;
+        let projection = project(&restored)?;
         Ok(Outcome::with_raw(restored, projection))
     }
 
@@ -355,7 +404,7 @@ mod subject {
         if bytes == input {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
-        let projection = project_obj(&bytes)?;
+        let projection = project(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
     //#endregion 🔖️Handlers

@@ -5,8 +5,9 @@
 Feature: Apply every typed UTF-8 text-line mutation to a real document
   The input is shared://📄️interview-transkript.tex, a real 170-line, LF-terminated German
   interview transcript (♻️mit-bestand/📋️bericht/📋️zwischenbericht/anhang/transkript-bunschoten.tex,
-  copied here verbatim) — genuine LaTeX markup, genuine umlauts (ä/ö/ü/ß) and 81 real blank lines
-  from real paragraph spacing, not synthetic prose. Every scenario copies it into the case work
+  copied here verbatim) — genuine LaTeX markup, genuine umlauts (ä/ö/ü/ß) and 80 real blank lines
+  from real paragraph spacing, not synthetic prose. Its 170th line is empty: the file ends
+  `…conversation.\n\n`, which matters below. Every scenario copies it into the case work
   directory before touching it; the committed file is never written to.
 
   There is no credible third-party crate that is authoritative over plain-text line structure —
@@ -44,6 +45,30 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   proves genuine parsing for this subset instead is the exhaustive `mutate-<kind>` scenarios below:
   you cannot insert, remove or replace line 100 of a 170-line real document without actually having
   parsed it into lines.
+
+  ⚠️ TWO things about this case a reader must not take on trust. FIRST: the runner does not execute
+  a `@no-oracle-` case's scenarios in the oracle phase at all — `[test] not-exercised … recorded
+  no-oracle decision txt-utf-8-line-structure` — and the subject phase has never run either, so
+  every scenario below has ZERO executed evidence today. What does carry evidence is the reference
+  module's own `#[cfg(test)]` suite (`cargo test --features oracles --lib`), which now exercises the
+  observability law, the inverse law and the carrier law against THIS fixture with THESE exact
+  Examples parameters. That is stated here because "the evidence is discharged by the subject phase"
+  is, today, a claim about a phase that does not run.
+
+  ⚠️ SECOND, and found by asserting the inverse law rather than describing it: `set-trailing-newline`
+  does NOT invert on this document, and the defect is in this subset's own data model. The pair
+  `(lines, trailingNewline)` is not an injective encoding of a body — `(["a"], true)` and
+  `(["a", ""], false)` both render to `"a\n"`, and the split resolves the tie in favour of the
+  terminator. This fixture's last line is empty, so `set-trailing-newline` to `false` renders 170
+  lines with no terminator, which reads back as 169 lines WITH one, and the inverse (correctly
+  computed from the original as `true`) can no longer recover the lost blank line. The production
+  `TxtSnapshot`/`TxtMutation` share that decomposition, so the subject has the identical hole — it
+  has simply never been measured. The remedy belongs to the VOCABULARY, on both sides at once:
+  `SetTrailingNewline { value: false }` has no representable result on a document whose last line is
+  empty and should be REJECTED there. Left RED in
+  `every_feature_row_inverts_back_to_the_real_document` rather than tuned away, and NOT worked around
+  by choosing a fixture that does not end with a blank line — that would hide a defect that is live
+  in production code.
 
   @id-mutate
   @level-exhaustive

@@ -528,6 +528,65 @@ impl store::ArtifactPack for SemioGraphSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.graph` — the shape `mutate-semio-graph` compares under `ordered-json-v1`, derived from the
+/// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
+/// away from the type it claims to project. Node and edge identity travels as a NEWTYPE (`{"value": "b"}`), not as a bare string, so a
+/// hand-written adapter projection has to reproduce that wrapper at every reference site or compare
+/// unequal for a reason that has nothing to do with the mutation under test.
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_graph_snapshot_json(snapshot: &SemioGraphSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioGraphSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_graph_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`SemioGraphSnapshot`] values, so `mutate-semio-graph`'s adapter reads the
+/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
+/// from that adapter is impossible — the generated test host links only this crate — which is why
+/// the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🔖️Wire
+/// 📝️ Parses `s.stdio.semio.graph` DSL text into a [`SemioGraphSnapshot`] — a named pass-through of this snapshot's own
+/// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// crate, so `mutate-semio-graph`'s `identity-round-trip` scenario reaches the real committed
+/// artifact (`../../📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio`) through this instead.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_graph_dsl(text: &str) -> Result<SemioGraphSnapshot, String> {
+    <SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Renders a [`SemioGraphSnapshot`] back as `s.stdio.semio.graph` DSL text — the inverse of
+/// [`parse_semio_graph_dsl`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_graph_dsl(snapshot: &SemioGraphSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Encodes a [`SemioGraphSnapshot`] as a semio pack envelope — the binary twin of the DSL text, produced by a
+/// SEPARATE codec, which is what makes the two committed encodings of one document able to
+/// contradict each other.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_graph_pack(snapshot: &SemioGraphSnapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+
+/// 📦️ Decodes a semio pack envelope into a [`SemioGraphSnapshot`] — the inverse of
+/// [`encode_semio_graph_pack`], reading `../../📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_graph_pack(bytes: &[u8]) -> Result<SemioGraphSnapshot, String> {
+    <SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+//#endregion 🔖️Wire
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.graph` document — two nodes (each with ≥1 port and ≥1 property,
 /// non-default position) and one edge connecting them, exercising every leaf/collection shape at

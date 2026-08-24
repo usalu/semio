@@ -6,17 +6,28 @@ Feature: Apply every typed semio OBJECT mutation to its committed specification 
   `s.stdio.semio.object` is a semio-NATIVE format: no third party reads or writes `.dsl.semio`/
   `.pack.semio`, so there is no reference implementation to register as an oracle (recorded as the
   `semio-object-mutation-semantics` no-oracle decision in `../../🏅️standards/🔖️v1/🪆️subsets/
-  ✳️object/🧪️oracle/🔣️component.json`). Every one of this subset's 9 kinds already carries an
-  independently handcrafted `(before, mutation, after, diff)` specification fixture under its own
-  leaf's `🧪️tests/` directory, authored by hand and already unit-tested inside the production crate
-  itself — this feature re-exercises those SAME committed fixtures end-to-end through
-  `apply_semio_object_mutation`, the entry point this ticket added, instead of calling
-  `Mutation::diff`/`inverse` directly the way the in-crate tests do. `SemioObjectSnapshot` carries
-  one composite `transform` field (translation/rotation/scale, mutated by `move-object`/
-  `rotate-object`/`scale-object`) and three optional owned CHILD slots (`brep`/`mesh`/`properties`,
-  each attached or detached by its own `create`/`delete` pair). The `oracle` role below reads the
-  committed fixture JSON literally (no recomputation, no reimplementation); the `subject` role runs
-  the real production entry point and the `ordered-json-v1` profile compares the two structurally.
+  ✳️object/🧪️oracle/🔣️component.json`). Every one of this subset's 9 kinds carries an independently
+  handcrafted `(before, mutation, after, diff)` specification fixture under its own leaf's
+  `🧪️tests/` directory, and this feature re-exercises those SAME committed bytes end-to-end through
+  `apply_semio_object_mutation` rather than calling `Mutation::diff`/`inverse` directly the way the
+  in-crate fixture tests do.
+
+  What distinguishes this subset is that it was the first COMPOSITE one. Alongside the composite
+  `transform` field — split into `move-object`/`rotate-object`/`scale-object` so that a translation
+  edit provably leaves rotation and scale alone — it carries three optional owned CHILD slots:
+  `brep`, `mesh` and `properties`. A child is a two-string handle (`childId`, plus an artifact id
+  and its dialect), never embedded content, so `create-<slot>`/`delete-<slot>` attach and detach a
+  reference rather than moving geometry. The fixtures are chosen so a slot-confusing implementation
+  cannot pass: `delete-brep` runs against an object carrying BOTH a brep and a mesh child and must
+  leave the mesh handle intact, `delete-properties` runs against one carrying both a properties and
+  a mesh child, and every `create-<slot>` runs against an object where that slot is empty and must
+  land the exact artifact id and dialect the payload names.
+
+  Because this case records a no-oracle decision, the runner executes NO oracle role — every
+  assertion below therefore lives inside the subject handler, which compares the applied snapshot
+  against the committed after-snapshot and the undone snapshot against the committed
+  before-snapshot, and fails with both JSON documents printed. A handler that merely ran the
+  mutation and returned would report a pass having checked nothing.
 
   @id-mutate
   @level-exhaustive
@@ -56,3 +67,12 @@ Feature: Apply every typed semio OBJECT mutation to its committed specification 
       | delete-mesh        |
       | create-properties  |
       | delete-properties  |
+
+  @id-identity-round-trip
+  @level-long
+  @mode-round-trip
+  Scenario: Decode the real committed crate object through both of its committed encodings
+    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio
+    When the text artifact is parsed, printed back to DSL and parsed again, and the binary twin is decoded and re-encoded
+    Then every decoding agrees on the same placed object, a non-identity translation with all three child slots occupied by real brep, mesh and value handles

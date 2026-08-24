@@ -142,7 +142,7 @@ pub mod derived_composition {
 
         impl store::os_store::test_support::SubsetRoundtripSpec for XmlValidRoundtrip {
             type Snapshot = XmlSnapshot;
-            type Mutation = crate::artifacts::xml::standards::v1_0::subsets::any::schema::mutations::XmlMutation;
+            type Mutation = crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation;
             type Inference = crate::artifacts::xml::standards::v1_0::subsets::any::schema::inferences::XmlInference;
 
             async fn dialect() -> store::os_io::ArtifactDialect {
@@ -181,7 +181,7 @@ pub mod derived_composition {
             }
 
             async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-                vec![crate::artifacts::xml::standards::v1_0::subsets::any::schema::mutations::XmlMutation::SetSnapshot { snapshot: snapshot.clone() }]
+                vec![crate::artifacts::xml::standards::v1_0::subsets::valid::schema::XmlValidMutation::SetSnapshot { snapshot: snapshot.clone() }]
             }
 
             async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

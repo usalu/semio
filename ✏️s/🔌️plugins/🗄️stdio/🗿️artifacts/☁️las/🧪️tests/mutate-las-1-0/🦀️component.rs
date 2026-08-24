@@ -10,7 +10,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::las::standards::v1_0::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_las};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_preserves_within};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `LasMutation::KINDS`
@@ -44,6 +44,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
     let projection = project_las(&bytes)?;
+    mutation_is_observable_within(&spec.str("kind"), &projection, &project_las(&input)?, &[], &[], LAS_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

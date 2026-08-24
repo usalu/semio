@@ -9,15 +9,23 @@
       "package": "tobj",
       "version": "4",
       "capabilities": ["obj-3-0-mutate"],
-      "comparisonProfiles": ["semantic-mesh-v1"],
+      "comparisonProfiles": ["semantic-obj-3-0-v1"],
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/Twinklebear/tobj",
-      "rationale": "OBJ has no reference WRITER in the Rust ecosystem — it is a plain-text grammar — so this subset's oracle applies every declared mutation kind by direct grammar manipulation (mirroring the same precedent the shared `tobj` mesh-creation oracle already uses) and `tobj` serves as the independent reader every oracle and subject result is projected through onto `semantic-mesh-v1` before comparison. Scoped to what that profile actually compares: the vertex set, face topology and counts: `o`/`g`/`usemtl`/`s`/`mtllib`/comment mutations are exercised for real (real band/object names, real face-index membership) but are writer/metadata freedom outside the profile's normative surface, same as generator strings and precision are for mesh creation.",
+      "rationale": "OBJ has no reference WRITER in the Rust ecosystem — it is a plain-text grammar — so this subset's oracle applies every declared mutation kind by direct grammar manipulation (mirroring the same precedent the shared `tobj` mesh-creation oracle already uses) and `tobj` serves as the independent reader every oracle and subject result is projected through before comparison. `tobj` alone is not enough to judge this vocabulary: it triangulates, re-indexes per `o`/`g` model and drops every row no face references, so 14 of the 22 declared kinds move nothing in its reading at all. The projection therefore composes that `tobj` mesh reading with this module's own `oracle_document_projection` -- declared `v`/`vt`/`vn` row counts and per-component extent, the `mtllib` reference, the `g`/`o` membership spans, the `usemtl`/`s` run starts and the retained comment lines -- and the case asserts in role that every kind but `no-mutation` actually moves it. That document half is read by this module's independent grammar parser, which never touches the subject's `decode_obj`, so it stays a second reader rather than a self-comparison.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
     }
   ],
   "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-obj-3-0-v1",
+      "description": "Wavefront OBJ documents compared by the `tobj` triangle mesh (vertex set, face topology, counts) AND by the document surface a mesh reader cannot see: declared v/vt/vn row counts with their per-component extent and totals, the mtllib reference, the g/o membership spans, the usemtl/s run starts and the retained comment lines. Unlike the shared semantic-mesh-v1 profile, none of those are writer freedom here -- ObjMutation's set-mtllib/set-usemtl/set-smoothing-groups/set-unknown-statements and the four name-keyed g/o kinds mutate exactly that surface, so ignoring it would leave 14 of the 22 declared kinds unobservable. Only byte length and decimal precision remain producer freedom; per-component extents and totals are compared under the mesh tolerance so the two producers' differing decimal formatting never registers as a divergence.",
+      "tolerance": 1e-5,
+      "ignoreKeys": ["byteLength", "fileSize", "precision"]
+    }
+  ],
   "mutationCatalogs": [
     {
       "id": "obj-3-0-any",

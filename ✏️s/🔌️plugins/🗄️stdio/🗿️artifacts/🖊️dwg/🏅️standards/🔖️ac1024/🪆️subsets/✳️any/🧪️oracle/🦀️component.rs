@@ -13,11 +13,21 @@
 //! offsets are published (LibreDWG's own `header.spec`) and are already cited by this subset's
 //! `DwgSnapshot` doc comments:
 //!
-//! | bytes       | field                                                     |
-//! |-------------|-----------------------------------------------------------|
-//! | `0x00-0x05` | six ASCII version characters, e.g. `AC1024`                |
-//! | `0x12`      | `maint_version`, one byte (`RC`)                           |
-//! | `0x13-0x14` | `codepage`, little-endian `u16` (`RS`) — `30` for ANSI_1252 |
+//! | bytes       | field                                                       | in the vocabulary? |
+//! |-------------|-------------------------------------------------------------|--------------------|
+//! | `0x00-0x05` | six ASCII version characters, e.g. `AC1024`                  | yes                |
+//! | `0x06-0x0A` | five bytes the specification declares `0x00`                 | read and preserved |
+//! | `0x0B`      | maintenance release version (`RC`) — `0x02` in the fixture   | read and preserved |
+//! | `0x0C`      | marker byte, `0x00`/`0x01`/`0x03` — `0x03` in the fixture    | read and preserved |
+//! | `0x0D-0x10` | preview (image seeker) address (`RL`) — `0x1c0` in the fixture | read and preserved |
+//! | `0x11`      | application (DWG) version (`RC`) — `0x1d` in the fixture     | read and preserved |
+//! | `0x12`      | `maint_version`, one byte (`RC`)                             | yes                |
+//! | `0x13-0x14` | `codepage`, little-endian `u16` (`RS`) — `30` for ANSI_1252  | yes                |
+//!
+//! The whole 21-byte prefix is modelled, not only the three addressable fields, because
+//! [`oracle_round_trip`] zeroes exactly that region before rewriting it: a field the reader does not
+//! carry is a field the round trip destroys. Only the addressable three are PROJECTED — projecting
+//! the others would claim a discrimination `DwgMutation` cannot exercise.
 //!
 //! Everything after that is the R2004+ section map: compressed, checksummed and section-encrypted,
 //! and nothing in this repository or in the permissively licensed Rust ecosystem can regenerate it.
@@ -43,17 +53,45 @@ pub const KINDS: [&str; 3] = ["no-mutation", "set-snapshot", "set-version-info"]
 //#endregion 🔖️Kinds
 
 //#region 🔖️Preamble
-/// 📐️ Byte offsets of the three preamble fields, per LibreDWG's `header.spec`.
+/// 📐️ Byte offsets of the R2004+ file-header prefix, per the ODA `.dwg` specification §4.1 and
+/// LibreDWG's `header.spec`. ALL of them, not only the three this subset's vocabulary addresses —
+/// see [`Preamble`] for why that distinction matters.
 const VERSION_RANGE: std::ops::Range<usize> = 0..6;
+const RESERVED_RANGE: std::ops::Range<usize> = 0x06..0x0B;
+const RELEASE_MAINTENANCE_OFFSET: usize = 0x0B;
+const MARKER_OFFSET: usize = 0x0C;
+const PREVIEW_ADDRESS_RANGE: std::ops::Range<usize> = 0x0D..0x11;
+const APPLICATION_VERSION_OFFSET: usize = 0x11;
 const MAINTENANCE_OFFSET: usize = 0x12;
 const CODEPAGE_RANGE: std::ops::Range<usize> = 0x13..0x15;
-/// 📏️ The smallest prefix that carries all three fields — a document shorter than this has no
-/// readable preamble at all.
+/// 📏️ The smallest prefix that carries the whole published header — a document shorter than this
+/// has no readable preamble at all.
 const PREAMBLE_LEN: usize = 0x15;
 
-/// 🧱️ The DWG preamble, as far as it is publicly specified.
+/// 🧱️ The DWG preamble, as far as it is publicly specified — EVERY byte of `0x00..0x15`, not only
+/// the three fields `DwgMutation` can address.
+///
+/// ⚠️ Modelling the whole 21 bytes is a correctness requirement, not thoroughness for its own sake:
+/// [`oracle_round_trip`] zeroes exactly this region before rewriting it, so any byte the struct does
+/// not carry is a byte the round trip DESTROYS. An earlier revision of this module modelled only
+/// `version`/`maintenance_version`/`codepage` and silently wiped `0x06..0x12` — the real
+/// `architectural.dwg` fixture carries `0x02` at 0x0B, `0x03` at 0x0C, the preview-image seeker
+/// `0x000001c0` at 0x0D-0x10 and application version `0x1d` at 0x11, all of them real published
+/// fields. `the_round_trip_rebuilds_the_preamble_from_the_parse_alone` caught it, which is exactly
+/// what an exact-bytes law is for.
+///
+/// The four fields beyond the addressable triple are READ and PRESERVED but not projected: no
+/// declared mutation kind edits them, so projecting them would claim discrimination the vocabulary
+/// cannot exercise. `reserved` is likewise read rather than assumed zero — the specification says
+/// five `0x00` bytes there, and a file that disagrees must round-trip as itself rather than as what
+/// the specification wishes it were.
 struct Preamble {
     version: String,
+    reserved: [u8; 5],
+    release_maintenance: u8,
+    marker: u8,
+    preview_address: u32,
+    application_version: u8,
     maintenance_version: u8,
     codepage: u16,
 }
@@ -69,10 +107,24 @@ fn read_preamble(input: &[u8]) -> Result<Preamble, String> {
     if !(version.starts_with("AC") && version.len() == 6 && version[2..].bytes().all(|byte| byte.is_ascii_digit())) {
         return Err(format!("version string {version:?} is not the `AC` + four digits every DWG file since R13 begins with"));
     }
-    Ok(Preamble { version, maintenance_version: input[MAINTENANCE_OFFSET], codepage: u16::from_le_bytes([input[CODEPAGE_RANGE.start], input[CODEPAGE_RANGE.start + 1]]) })
+    let mut reserved = [0u8; 5];
+    reserved.copy_from_slice(&input[RESERVED_RANGE]);
+    let mut preview = [0u8; 4];
+    preview.copy_from_slice(&input[PREVIEW_ADDRESS_RANGE]);
+    Ok(Preamble {
+        version,
+        reserved,
+        release_maintenance: input[RELEASE_MAINTENANCE_OFFSET],
+        marker: input[MARKER_OFFSET],
+        preview_address: u32::from_le_bytes(preview),
+        application_version: input[APPLICATION_VERSION_OFFSET],
+        maintenance_version: input[MAINTENANCE_OFFSET],
+        codepage: u16::from_le_bytes([input[CODEPAGE_RANGE.start], input[CODEPAGE_RANGE.start + 1]]),
+    })
 }
 
-/// 🏷️ Writes the preamble back into `document` at the specification's own offsets.
+/// 🏷️ Writes the preamble back into `document` at the specification's own offsets — every byte of
+/// `0x00..0x15`, so a zeroed region is fully re-derived rather than partly restored.
 fn write_preamble(document: &mut [u8], preamble: &Preamble) -> Result<(), String> {
     if document.len() < PREAMBLE_LEN {
         return Err(format!("a DWG preamble needs at least {PREAMBLE_LEN} bytes; this document has {}", document.len()));
@@ -81,19 +133,38 @@ fn write_preamble(document: &mut [u8], preamble: &Preamble) -> Result<(), String
         return Err(format!("version string {:?} is not six ASCII characters", preamble.version));
     }
     document[VERSION_RANGE].copy_from_slice(preamble.version.as_bytes());
+    document[RESERVED_RANGE].copy_from_slice(&preamble.reserved);
+    document[RELEASE_MAINTENANCE_OFFSET] = preamble.release_maintenance;
+    document[MARKER_OFFSET] = preamble.marker;
+    document[PREVIEW_ADDRESS_RANGE].copy_from_slice(&preamble.preview_address.to_le_bytes());
+    document[APPLICATION_VERSION_OFFSET] = preamble.application_version;
     document[MAINTENANCE_OFFSET] = preamble.maintenance_version;
     document[CODEPAGE_RANGE].copy_from_slice(&preamble.codepage.to_le_bytes());
     Ok(())
 }
 
-/// 🌱 A whole DWG document that is nothing but a preamble — the shape this artifact's own
-/// `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` already has (22 bytes: six version characters and
-/// zeros). This is what `set-snapshot` builds when it is given fields rather than a document: a
-/// genuine whole-document replacement, observable as a collapse in `byteLength`, not a
-/// field-set dressed up as one.
+/// 🌱 A whole DWG document that is nothing but a preamble — byte for byte the shape this artifact's
+/// own `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` already has (22 bytes: six version characters
+/// then zeros). This is what `set-snapshot` builds when it is given fields rather than a document: a
+/// genuine whole-document replacement, observable as a collapse in `byteLength`, not a field-set
+/// dressed up as one.
+///
+/// The fields the vocabulary cannot address are ZEROED here rather than inherited, and that is the
+/// point of the verb: a fresh preamble-only document has no preview image, so carrying the source
+/// container's `preview_address` into it would point 0x1c0 bytes past the end of a 22-byte file.
 fn stub_document(preamble: &Preamble) -> Result<Vec<u8>, String> {
+    let fresh = Preamble {
+        version: preamble.version.clone(),
+        reserved: [0u8; 5],
+        release_maintenance: 0,
+        marker: 0,
+        preview_address: 0,
+        application_version: 0,
+        maintenance_version: preamble.maintenance_version,
+        codepage: preamble.codepage,
+    };
     let mut document = vec![0u8; 22];
-    write_preamble(&mut document, preamble)?;
+    write_preamble(&mut document, &fresh)?;
     Ok(document)
 }
 //#endregion 🔖️Preamble
@@ -111,13 +182,20 @@ fn number(value: &Json, key: &str) -> Option<f64> {
 }
 
 /// 🧭️ The preamble a spec's params describe, defaulting each field to the document's current value
-/// so a scenario states only what it changes.
+/// so a scenario states only what it changes. Only the three fields the vocabulary declares are
+/// addressable; the rest of the published header rides along from `current` untouched, which is what
+/// makes `set-version-info` a field set rather than a header rewrite.
 fn preamble_from(params: &Json, current: &Preamble) -> Preamble {
     Preamble {
         version: match params.get("version") {
             Some(Json::String(found)) => found.clone(),
             _ => current.version.clone(),
         },
+        reserved: current.reserved,
+        release_maintenance: current.release_maintenance,
+        marker: current.marker,
+        preview_address: current.preview_address,
+        application_version: current.application_version,
         maintenance_version: number(params, "maintenanceVersion").map(|found| found as u8).unwrap_or(current.maintenance_version),
         codepage: number(params, "codepage").map(|found| found as u16).unwrap_or(current.codepage),
     }
@@ -253,6 +331,33 @@ mod tests {
         assert_eq!(projection.get("maintenanceVersion").unwrap().clone(), Json::Number(2.0), "LibreDWG's header.spec puts maint_version at 0x12; this file carries 0x02 there");
         assert_eq!(projection.get("codepage").unwrap().clone(), Json::Number(30.0), "0x13-0x14 is the codepage RS; 30 is ANSI_1252");
         assert_eq!(projection.get("byteLength").unwrap().clone(), Json::Number(148_638.0));
+    }
+
+    /// 📐️ Every published field of the R2004+ header prefix, read off the real fixture at the
+    /// specification's own offsets. This is the test that would have caught the earlier revision's
+    /// silent wipe of `0x06..0x12`, and it is what entitles [`oracle_round_trip`] to zero the whole
+    /// region: a field asserted here is a field the writer is required to put back.
+    #[test]
+    fn the_whole_published_header_prefix_reads_the_values_the_fixture_carries() {
+        let preamble = read_preamble(&fixture()).unwrap();
+        assert_eq!(preamble.version, "AC1024");
+        assert_eq!(preamble.reserved, [0u8; 5], "the specification declares 0x06-0x0A as five zero bytes");
+        assert_eq!(preamble.release_maintenance, 0x02, "maintenance release version at 0x0B");
+        assert_eq!(preamble.marker, 0x03, "the 0x00/0x01/0x03 marker at 0x0C");
+        assert_eq!(preamble.preview_address, 0x0000_01c0, "preview (image seeker) address at 0x0D-0x10, little-endian");
+        assert_eq!(preamble.application_version, 0x1d, "application (DWG) version at 0x11");
+        assert_eq!(preamble.maintenance_version, 0x02);
+        assert_eq!(preamble.codepage, 30);
+    }
+
+    /// 🌱 `set-snapshot`'s stub is byte-identical to this artifact's own committed 22-byte demo
+    /// example when it carries that file's own fields — the shape is read off a real committed file
+    /// rather than invented, and the non-addressable fields are reset rather than inherited.
+    #[test]
+    fn the_whole_document_replacement_matches_the_committed_preamble_only_example() {
+        let demo = include_bytes!("../../../../🔖️ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🖊️example.dwg").to_vec();
+        let built = oracle_apply_mutation(&fixture(), &spec("set-snapshot", object(vec![("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))]))).unwrap();
+        assert_eq!(built, demo, "the stub must reproduce the committed preamble-only example, including the fields no mutation kind addresses");
     }
 
     #[test]

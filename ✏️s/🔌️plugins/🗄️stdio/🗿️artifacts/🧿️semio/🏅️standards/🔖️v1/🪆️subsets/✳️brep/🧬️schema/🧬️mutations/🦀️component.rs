@@ -96,6 +96,27 @@ pub fn apply_semio_brep_mutation(snapshot: &mut SemioBrepSnapshot, mutation: &Se
     let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
+/// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
+/// `protocol` extern-crate item (the `mutate-semio-brep` test adapter, whose `inverse-<kind>` scenarios
+/// need a mutation's own computed inverse) can still reach the inverse law that
+/// [`apply_semio_brep_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
+    use protocol::Mutation;
+    <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
+/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// carry — into a real [`SemioBrepMutation`]. `create-*`/`delete-*` payloads address topology by the string ids (`v1`, `e2`, `so1`) the
+/// committed vectors use, so a decoded mutation is directly comparable with the vector it came from.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_brep_mutation_json(text: &str) -> Result<SemioBrepMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️OpText

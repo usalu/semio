@@ -146,9 +146,68 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     Ok(independent_render(&lines, trailing_newline, is_crlf).into_bytes())
 }
 
+/// ↩️ The inverse mutation's OWN spec, computed by reading whatever pre-mutation state it needs
+/// straight out of `original` with the SAME independent reader [`oracle_apply_mutation`] mutates
+/// with — never by calling this repository's own `TxtMutation::inverse`, which would defeat the
+/// point of an independently-computed reference. Mirrors that method's documented rule exactly
+/// (index-aware, reading the pre-state it needs from the ORIGINAL document; `insert-line`'s inverse
+/// lands at `min(index, len)`, matching the clamped position it actually inserted at).
+///
+/// 🏠️ Lives HERE, in the reference module, rather than in the case adapter, because it is reference
+/// SEMANTICS and not test plumbing: the adapter drives it, and this module's own unit tests below
+/// exercise it against the real committed fixture — which is the only place the inverse law for
+/// this subset is checked at all today, the case being a recorded no-oracle one whose scenarios the
+/// runner never dispatches in the oracle phase.
+#[cfg(feature = "oracles")]
+pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
+    let body = std::str::from_utf8(original).map_err(|error| format!("input is not UTF-8: {error}"))?;
+    let (lines, trailing_newline, is_crlf) = independent_split(body);
+    let params = forward.get("params").cloned().unwrap_or(Json::Null);
+    let index = |key: &str| match params.get(key) {
+        Some(Json::Number(value)) => Some(*value as usize),
+        _ => None,
+    };
+    let object = |pairs: Vec<(&str, Json)>| Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let spec = |kind: &str, params: Json| Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)]);
+    let ending = if is_crlf { "crLf" } else { "lf" };
+    match forward.str("kind").as_str() {
+        "no-mutation" => Ok(spec("no-mutation", object(vec![]))),
+        "set-snapshot" => Ok(spec(
+            "set-snapshot",
+            object(vec![("lines", Json::Array(lines.into_iter().map(Json::String).collect())), ("trailingNewline", Json::Bool(trailing_newline)), ("lineEnding", Json::String(ending.to_string()))]),
+        )),
+        "set-trailing-newline" => Ok(spec("set-trailing-newline", object(vec![("value", Json::Bool(trailing_newline))]))),
+        "set-line-ending" => Ok(spec("set-line-ending", object(vec![("value", Json::String(ending.to_string()))]))),
+        "insert-line" => {
+            let requested = index("index").ok_or("insert-line inverse: missing `index`")?;
+            Ok(spec("remove-line", object(vec![("index", Json::Number(requested.min(lines.len()) as f64))])))
+        }
+        "remove-line" => {
+            let requested = index("index").ok_or("remove-line inverse: missing `index`")?;
+            match lines.get(requested) {
+                Some(text) => Ok(spec("insert-line", object(vec![("index", Json::Number(requested as f64)), ("text", Json::String(text.clone()))]))),
+                None => Ok(spec("no-mutation", object(vec![]))),
+            }
+        }
+        "set-line" => {
+            let requested = index("index").ok_or("set-line inverse: missing `index`")?;
+            match lines.get(requested) {
+                Some(text) => Ok(spec("set-line", object(vec![("index", Json::Number(requested as f64)), ("text", Json::String(text.clone()))]))),
+                None => Ok(spec("no-mutation", object(vec![]))),
+            }
+        }
+        other => Err(format!("no inverse rule for kind {other:?}")),
+    }
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_inverse_spec(_original: &[u8], _forward: &Json) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Dispatch
@@ -348,7 +407,7 @@ mod tests {
     fn csv_cross_check_agrees_with_independent_split_on_the_real_single_style_fixture_non_blank_lines() {
         // 📄️ The real German interview transcript this subset's case exhaustively mutates — see
         // `../../../../../🧫️fixtures/📄️interview-transkript.tex` and its provenance note in the
-        // case feature file: 170 real LF-terminated lines (81 of them blank — real LaTeX source
+        // case feature file: 170 real LF-terminated lines (80 of them blank — real LaTeX source
         // paragraph spacing), genuine umlauts, no CR anywhere.
         //
         // 🧭️ FINDING: `csv-core`'s NFA silently treats a zero-byte record as "not a record" and
@@ -364,7 +423,7 @@ mod tests {
         let non_blank = lines.iter().filter(|line| !line.is_empty()).count();
         let csv_count = csv_independent_line_count(body).expect("csv cross-check must read the real fixture");
         assert_eq!(csv_count, non_blank, "independent hand-rolled splitter and the csv crate's record reader must agree on NON-BLANK line count for single-style real content");
-        assert_ne!(csv_count, lines.len(), "documented limitation: csv silently drops the 81 real blank lines, so it does NOT agree on the true line count");
+        assert_ne!(csv_count, lines.len(), "documented limitation: csv silently drops the 80 real blank lines, so it does NOT agree on the true line count");
     }
 
     #[test]
@@ -390,6 +449,125 @@ mod tests {
         assert_eq!(csv_count, 4, "the csv crate's finer per-terminator boundary detection sees the bare \\n too");
         assert_ne!(csv_count, lines.len(), "genuinely different answers — a real partial substitute, not a disguised full one");
     }
+
+    //#region 🧪️RealFixtureLaws
+    /// 📄️ The real committed German interview transcript this subset's case names as its input —
+    /// 170 LF-terminated lines, 81 of them blank, genuine umlauts, no CR anywhere.
+    const REAL_FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/📄️interview-transkript.tex");
+
+    /// 🎬️ The `@id-mutate`/`@id-inverse` Examples table of
+    /// `../../../../../🧪️tests/mutate-txt-utf-8/component.feature`, verbatim — the same seven rows,
+    /// the same parameters against the same real document.
+    // 🚫️async: E1 pure test-fixture builder, no I/O — see R9
+    fn feature_example_rows() -> Vec<Json> {
+        vec![
+            spec("no-mutation", &[]),
+            spec(
+                "set-snapshot",
+                &[
+                    ("lines", Json::Array(vec![Json::String("Ersetztes Protokoll".to_string()), Json::String("Zweite Zeile mit Umlaut: äöüß und Emoji 🎉".to_string())])),
+                    ("trailingNewline", Json::Bool(true)),
+                    ("lineEnding", Json::String("lf".to_string())),
+                ],
+            ),
+            spec("set-trailing-newline", &[("value", Json::Bool(false))]),
+            spec("set-line-ending", &[("value", Json::String("crLf".to_string()))]),
+            spec("insert-line", &[("index", Json::Number(20.0)), ("text", Json::String("Eingefügte Randnotiz zu Bauhütte 4.0".to_string()))]),
+            spec("remove-line", &[("index", Json::Number(100.0))]),
+            spec("set-line", &[("index", Json::Number(50.0)), ("text", Json::String("Ersetzte Zeile: Stakeholder-Interessen verbinden".to_string()))]),
+        ]
+    }
+
+    /// 👁️ The OBSERVABILITY law, carried here because the case cannot carry it. Every kind other
+    /// than `no-mutation`, with the feature file's OWN parameters, has to move the real document's
+    /// semantic projection — a row whose parameters address nothing (an index past the end, a value
+    /// the document already has) would report as a pass while testing nothing at all. This subset's
+    /// case is a recorded no-oracle one, so the runner never dispatches its oracle-phase scenarios
+    /// and this unit test is the ONLY place that claim is checked today.
+    #[test]
+    fn every_feature_row_moves_the_real_documents_projection() {
+        let original = project_txt(REAL_FIXTURE).expect("the real fixture projects");
+        for row in feature_example_rows() {
+            let kind = row.str("kind");
+            let mutated = oracle_apply_mutation(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must apply to the real fixture: {error}"));
+            let projection = project_txt(&mutated).expect("the mutated document projects");
+            if kind == "no-mutation" {
+                assert_eq!(projection, original, "no-mutation must be a true identity on the real document");
+            } else {
+                assert_ne!(projection, original, "{kind} with the feature file's own parameters left the real document's projection untouched — that row tests nothing");
+            }
+        }
+    }
+
+    /// ↩️ The INVERSE law on the real document, likewise carried here: apply the kind, apply its own
+    /// independently computed inverse, and the projection must be back where it started — every
+    /// line, the trailing-terminator flag and the whole-document line ending.
+    ///
+    /// ⚠️ OPEN, and left RED rather than tuned away: `set-trailing-newline` FAILS this on the real
+    /// fixture, and the defect is in the SUBSET'S OWN DATA MODEL, not in this reference module, not
+    /// in the fixture and not in the law. `(lines, trailing_newline)` is not an injective encoding
+    /// of a body: `(["a"], true)` and `(["a", ""], false)` both render to `"a\n"`, and the split
+    /// resolves that tie in favour of the first. The real fixture ends `"…conversation.\n\n"`, so
+    /// its 170th line is empty; `set-trailing-newline(false)` renders 170 lines with no terminator,
+    /// which reads back as 169 lines WITH one, and the inverse — correctly computed from the
+    /// original as `set-trailing-newline(true)` — can no longer recover the lost blank line. The
+    /// production `TxtSnapshot`/`TxtMutation` share the same decomposition, so the subject has the
+    /// identical hole; it has simply never been measured, because this case is a recorded no-oracle
+    /// one whose scenarios the runner never dispatches. The remedy belongs to the VOCABULARY —
+    /// `SetTrailingNewline { value: false }` has no representable result on a document whose last
+    /// line is empty and should be REJECTED there, the same "refuse rather than silently lose"
+    /// discipline the sibling `📰xml ✳️valid` vocabulary uses — and it must land on both sides at
+    /// once. Weakening this assertion, or picking a fixture that does not end with a blank line,
+    /// would hide a defect that is live in production code.
+    #[test]
+    fn every_feature_row_inverts_back_to_the_real_document() {
+        let original = project_txt(REAL_FIXTURE).expect("the real fixture projects");
+        for row in feature_example_rows() {
+            let kind = row.str("kind");
+            let mutated = oracle_apply_mutation(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must apply: {error}"));
+            let undo = oracle_inverse_spec(REAL_FIXTURE, &row).unwrap_or_else(|error| panic!("{kind} must have an inverse: {error}"));
+            let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("the inverse of {kind} must apply: {error}"));
+            let restored_bytes = restored.len();
+            assert_eq!(
+                project_txt(&restored).expect("the restored document projects"),
+                original,
+                "applying {kind} and then its own inverse did not restore the real document ({restored_bytes} bytes back, {} in) — see this test's own doc comment for the `(lines, trailing_newline)` non-injectivity this exposes",
+                REAL_FIXTURE.len()
+            );
+        }
+    }
+
+    /// 🔬️ The exact shape of the defect above, pinned so it cannot be misattributed to the fixture
+    /// or to the reference module: two DIFFERENT `(lines, trailing_newline)` pairs render to the
+    /// SAME bytes, and the split can only return one of them. This test asserts the ambiguity
+    /// itself, so it starts failing the moment the decomposition is made injective — which is the
+    /// signal that the vocabulary fix has landed and the law test above should go green.
+    #[test]
+    fn the_line_terminator_decomposition_is_not_injective() {
+        let with_terminator = independent_render(&["a".to_string()], true, false);
+        let with_empty_last_line = independent_render(&["a".to_string(), String::new()], false, false);
+        assert_eq!(with_terminator, with_empty_last_line, "these are the two pre-images that collide");
+        assert_eq!(independent_split(&with_terminator), (vec!["a".to_string()], true, false), "the split resolves the tie in favour of the terminator, losing the empty last line");
+        let body = std::str::from_utf8(REAL_FIXTURE).expect("UTF-8");
+        assert!(body.ends_with("\n\n"), "the real fixture is one of the documents that hits the collision: its last line is empty");
+    }
+
+    /// 🔒️ The CARRIER law on the real document: for this subset, and unlike every other format in
+    /// this wave, decode → re-encode reproducing the input EXACTLY is the correct answer, because
+    /// splitting a string on a fixed separator and rejoining with that same separator is a
+    /// mathematical identity. The must-differ tripwire the other cases assert would be a fabricated
+    /// law here; this is the same claim stated the way this carrier can honestly satisfy it, and it
+    /// still fails loudly the moment the split or the render drifts.
+    #[test]
+    fn the_carrier_law_holds_byte_for_byte_on_the_real_document() {
+        let body = std::str::from_utf8(REAL_FIXTURE).expect("the real fixture is UTF-8");
+        let (lines, trailing, crlf) = independent_split(body);
+        assert_eq!(independent_render(&lines, trailing, crlf).as_bytes(), REAL_FIXTURE, "decode then re-encode must reproduce the real document exactly");
+        assert!(!crlf, "the real fixture is LF-only");
+        assert!(trailing, "the real fixture ends with a terminator");
+        assert_eq!(lines.iter().filter(|line| line.is_empty()).count(), 80, "the real fixture's 80 blank lines are what the csv cross-check cannot see -- MEASURED, correcting the \"81\" the feature file and the manifest rationale both carried");
+    }
+    //#endregion 🧪️RealFixtureLaws
 
     // 🚫️async: E1 pure test-fixture builder, no I/O — see R9
     fn spec(kind: &str, params: &[(&str, Json)]) -> Json {

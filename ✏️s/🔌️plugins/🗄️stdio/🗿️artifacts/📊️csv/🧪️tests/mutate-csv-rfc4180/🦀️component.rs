@@ -10,7 +10,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::csv::standards::v_rfc4180::subsets::any::{oracle_apply_mutation, project_csv_grid, read_grid, write_grid};
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, reparsed_not_copied, round_trip_preserves};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `csv-rfc4180-any` catalog. Duplicated, not imported, from
@@ -107,6 +107,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let output = oracle_apply_mutation(&input, &spec)?;
     let projection = project_csv_grid(&output, resulting_has_header(&spec, BASELINE_HAS_HEADER))?;
+    mutation_is_observable(&spec.str("kind"), &projection, &project_csv_grid(&input, BASELINE_HAS_HEADER)?, &[])?;
     Ok(Outcome::with_raw(output, projection))
 }
 

@@ -107,6 +107,97 @@ fn rgba_from(buffer: &[u8], color: png::ColorType, palette: Option<&[u8]>, trans
 }
 //#endregion 🔖️Png
 
+//#region 🔖️GifInterlace
+/// 🧵️ GIF §24.e's four-pass row order for an image `height` rows tall — every 8th row from 0, then
+/// every 8th from 4, then every 4th from 2, then every 2nd from 1.
+///
+/// Shared by BOTH GIF standards' subset oracles (`🗿️artifacts/🎞️gif/🏅️standards/🔖️87a` and `🔖️89a`):
+/// interlacing is defined identically in GIF87a §20 and GIF89a §20, so this is one grammar rule,
+/// not two, and copying it into both subsets would be the copy this platform exists to prevent.
+pub fn gif_interlace_row_order(height: usize) -> Vec<usize> {
+    (0..height).step_by(8).chain((4..height).step_by(8)).chain((2..height).step_by(4)).chain((1..height).step_by(2)).collect()
+}
+
+/// 🔀️ Reorders palette indices between NATURAL row order — what `gif::Decoder` always hands back,
+/// because it de-interlaces on read and resets `Frame::interlaced` to `false` regardless of the
+/// source flag (`reader/converter.rs:72`) — and GIF's interlaced STORAGE order. `gif::Encoder`
+/// writes `frame.buffer` verbatim and only flips the descriptor bit, so a caller that sets the flag
+/// must perform this reordering itself or the written flag and the written rows disagree.
+pub fn gif_reorder_rows(indices: &[u8], width: usize, height: usize, to_interlaced: bool) -> Vec<u8> {
+    if width == 0 || height == 0 || indices.len() != width * height {
+        return indices.to_vec();
+    }
+    let order = gif_interlace_row_order(height);
+    let mut out = vec![0u8; indices.len()];
+    let mut cursor = 0usize;
+    for row in order {
+        let (source, destination) = if to_interlaced { (row * width, cursor) } else { (cursor, row * width) };
+        out[destination..destination + width].copy_from_slice(&indices[source..source + width]);
+        cursor += width;
+    }
+    out
+}
+
+/// 🚩️ The interlace bit (§20 Image Descriptor packed field, bit 6) of every image block in a GIF
+/// byte stream, in file order.
+///
+/// `gif::Decoder` cannot answer this: it de-interlaces every frame on read and then reports
+/// `Frame::interlaced == false` unconditionally, so the flag the FILE carries is erased before any
+/// caller sees it. A fixed-grammar walk over the block structure recovers it without decoding a
+/// single pixel — the same technique the 89a subset's own oracle already uses for the comment,
+/// application-extension and pixel-aspect-ratio bytes the high-level API omits. Shared by both GIF
+/// standards' subset oracles; the block grammar this walks is identical in 87a and 89a except that
+/// 87a never emits the extension blocks, which this skips structurally either way.
+pub fn gif_image_interlace_flags(data: &[u8]) -> Result<Vec<bool>, String> {
+    if data.len() < 13 || &data[0..3] != b"GIF" {
+        return Err("not a GIF byte stream".to_string());
+    }
+    let packed = data[10];
+    let mut cursor = 13usize;
+    if packed & 0x80 != 0 {
+        cursor += (2usize << (packed & 0x07)) * 3;
+    }
+    let mut flags = Vec::new();
+    while cursor < data.len() {
+        match data[cursor] {
+            0x21 => {
+                let mut walk = cursor + 2;
+                loop {
+                    let size = *data.get(walk).ok_or("truncated GIF extension sub-block")? as usize;
+                    walk += 1;
+                    if size == 0 {
+                        break;
+                    }
+                    walk += size;
+                }
+                cursor = walk;
+            }
+            0x2C => {
+                let descriptor = *data.get(cursor + 9).ok_or("truncated GIF image descriptor")?;
+                flags.push(descriptor & 0x40 != 0);
+                let mut walk = cursor + 10;
+                if descriptor & 0x80 != 0 {
+                    walk += (2usize << (descriptor & 0x07)) * 3;
+                }
+                walk += 1;
+                loop {
+                    let size = *data.get(walk).ok_or("truncated GIF image data")? as usize;
+                    walk += 1;
+                    if size == 0 {
+                        break;
+                    }
+                    walk += size;
+                }
+                cursor = walk;
+            }
+            0x3B => break,
+            other => return Err(format!("unexpected GIF block introducer 0x{other:02x}")),
+        }
+    }
+    Ok(flags)
+}
+//#endregion 🔖️GifInterlace
+
 //#region 🔖️Gif
 /// 🔮️ Creates a single-frame GIF with the registered `gif` reference implementation.
 /// @see https://github.com/image-rs/image-gif
@@ -230,3 +321,53 @@ mod unavailable {
 #[cfg(not(feature = "oracles"))]
 pub use unavailable::{create_gif as oracle_create_gif, create_image as oracle_create_image, create_png as oracle_create_png, project_gif, project_image, project_png};
 //#endregion 🔖️Unavailable
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 🧵️ GIF §20's worked example: an 8-row image stores rows 0,8… then 4,12… then 2,6… then odd.
+    #[test]
+    fn the_four_pass_order_matches_the_specification() {
+        assert_eq!(gif_interlace_row_order(8), vec![0, 4, 2, 6, 1, 3, 5, 7]);
+        assert_eq!(gif_interlace_row_order(1), vec![0]);
+        assert_eq!(gif_interlace_row_order(0), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn reordering_rows_is_its_own_inverse() {
+        let natural: Vec<u8> = (0..8u8).flat_map(|row| [row, row, row]).collect();
+        let interlaced = gif_reorder_rows(&natural, 3, 8, true);
+        assert_eq!(&interlaced[0..3], &[0, 0, 0], "the first stored row is row 0");
+        assert_eq!(&interlaced[3..6], &[4, 4, 4], "the second stored row is row 4");
+        assert_eq!(gif_reorder_rows(&interlaced, 3, 8, false), natural);
+    }
+
+    #[test]
+    fn a_buffer_that_does_not_match_the_geometry_is_returned_untouched() {
+        assert_eq!(gif_reorder_rows(&[1, 2, 3], 4, 4, true), vec![1, 2, 3]);
+    }
+
+    /// 🚩️ A hand-built two-image 87a stream: image 0 interlaced, image 1 not, with a comment
+    /// extension between them that the walk must skip structurally.
+    #[test]
+    fn interlace_flags_are_recovered_per_image_block() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"GIF87a");
+        data.extend_from_slice(&2u16.to_le_bytes());
+        data.extend_from_slice(&2u16.to_le_bytes());
+        data.extend_from_slice(&[0x00, 0x00, 0x00]);
+        data.extend_from_slice(&[0x2C, 0, 0, 0, 0, 2, 0, 2, 0, 0x40, 0x02, 0x01, 0x00, 0x00]);
+        data.extend_from_slice(&[0x21, 0xFE, 0x03, b'h', b'e', b'y', 0x00]);
+        data.extend_from_slice(&[0x2C, 0, 0, 0, 0, 2, 0, 2, 0, 0x00, 0x02, 0x01, 0x00, 0x00]);
+        data.push(0x3B);
+        assert_eq!(gif_image_interlace_flags(&data).expect("walk the hand-built stream"), vec![true, false]);
+    }
+
+    #[test]
+    fn a_stream_that_is_not_a_gif_is_rejected_rather_than_guessed() {
+        assert!(gif_image_interlace_flags(b"not a gif at all, really").is_err());
+    }
+}
+//#endregion 🧪️Tests

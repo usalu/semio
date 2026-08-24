@@ -1009,6 +1009,33 @@ impl store::ArtifactPack for SemioBrepSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.brep` — the shape `mutate-semio-brep` compares under `ordered-json-v1`, derived from the
+/// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
+/// away from the type it claims to project. The projection is not flat: `BrepCurve` and `BrepSurface` are `#[serde(tag = "kind",
+/// rename_all = "camelCase")]` enums, so every edge carries a discriminated `curve` object and every
+/// face a discriminated `surface` one — a shape no hand-written adapter projection would reproduce
+/// reliably by eye.
+/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
+/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_brep_snapshot_json(snapshot: &SemioBrepSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioBrepSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_brep_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`SemioBrepSnapshot`] values, so `mutate-semio-brep`'s adapter reads the
+/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
+/// from that adapter is impossible — the generated test host links only this crate — which is why
+/// the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_brep_snapshot_json(text: &str) -> Result<SemioBrepSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.brep` document — one triangular face bounding one shell bounding one
 /// solid, exercising every collection AND every `BrepCurve`/`BrepSurface` variant at least once

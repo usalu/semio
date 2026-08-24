@@ -11,7 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::epw::standards::v_energyplus::subsets::any::{oracle_apply_mutation, project_epw, round_trip_epw};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves};
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
 //#region 🔖️Kinds
 /// 🧾️ Test-case-local mirror of the `epw-energyplus-any` catalog. Duplicated, not imported, from
@@ -138,6 +138,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let spec = ctx.doc_json()?;
     let output = oracle_apply_mutation(&input, &spec)?;
     let projection = project_epw(&output)?;
+    mutation_is_observable(&spec.str("kind"), &projection, &project_epw(&input)?, &[])?;
     Ok(Outcome::with_raw(output, projection))
 }
 

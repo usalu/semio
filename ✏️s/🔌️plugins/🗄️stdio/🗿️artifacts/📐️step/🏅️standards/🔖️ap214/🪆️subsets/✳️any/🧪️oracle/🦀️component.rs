@@ -116,150 +116,21 @@ mod oracles {
     }
     //#endregion 🔖️ValueGrammar
 
-    //#region 🔖️Writer
-    /// 📤️ From-scratch Part-21 clear-text writer (ruststep 0.4 has none) — one line per header
-    /// record, one line per entity instance, no attempt at the 78-column wrapping real STEP writers
-    /// use for readability (spec-optional, never semantically required; confirmed by re-parsing this
-    /// writer's own output with the same real `Exchange::from_str` below in this subset's ticket
-    /// scratch probe before this module was written).
-    fn write_param(param: &Parameter, out: &mut String) {
-        match param {
-            Parameter::Typed { keyword, parameter } => {
-                out.push_str(keyword);
-                out.push('(');
-                write_param(parameter, out);
-                out.push(')');
-            }
-            Parameter::Integer(i) => out.push_str(&i.to_string()),
-            Parameter::Real(r) => {
-                if r.fract() == 0.0 && r.is_finite() {
-                    out.push_str(&format!("{r:.0}."));
-                } else {
-                    out.push_str(&format!("{r}"));
-                }
-            }
-            Parameter::String(s) => {
-                out.push('\'');
-                out.push_str(&s.replace('\'', "''"));
-                out.push('\'');
-            }
-            Parameter::Enumeration(s) => {
-                out.push('.');
-                out.push_str(s);
-                out.push('.');
-            }
-            Parameter::List(items) => {
-                out.push('(');
-                for (index, item) in items.iter().enumerate() {
-                    if index > 0 {
-                        out.push(',');
-                    }
-                    write_param(item, out);
-                }
-                out.push(')');
-            }
-            Parameter::Ref(name) => match name {
-                Name::Entity(id) => out.push_str(&format!("#{id}")),
-                Name::Value(id) => out.push_str(&format!("@{id}")),
-                Name::ConstantEntity(s) => out.push_str(&format!("#{s}")),
-                Name::ConstantValue(s) => out.push_str(&format!("@{s}")),
-            },
-            Parameter::NotProvided => out.push('$'),
-            Parameter::Omitted => out.push('*'),
-        }
-    }
-
-    fn write_record(record: &Record, out: &mut String) {
-        out.push_str(&record.name);
-        write_param(&record.parameter, out);
-    }
-
-    fn write_entity(entity: &EntityInstance, out: &mut String) {
-        match entity {
-            EntityInstance::Simple { id, record } => {
-                out.push('#');
-                out.push_str(&id.to_string());
-                out.push('=');
-                write_record(record, out);
-                out.push_str(";\n");
-            }
-            EntityInstance::Complex { id, subsuper } => {
-                out.push('#');
-                out.push_str(&id.to_string());
-                out.push_str("=(");
-                for record in &subsuper.0 {
-                    write_record(record, out);
-                }
-                out.push_str(");\n");
-            }
-        }
-    }
+    //#region 🔖️SharedCodec
+    /// 📤️ The from-scratch Part-21 writer and the instance/record accessors are NOT declared here.
+    /// They live once, at the standard level (`../../../🧪️oracle/🦀️component.rs`), because all seven
+    /// `ap214` subsets genuinely share them — this subset writes ISO 10303-21 clear text exactly as
+    /// the six `✳️ccN` conformance-class subsets do, and a second copy in this file would be the
+    /// duplication the family-module rule exists to prevent. What stays here is what is genuinely
+    /// this subset's own: the eleven-verb Part-21 GRAMMAR vocabulary and its projection.
+    use crate::artifacts::step::standards::v_ap214::reference::part21::{args, args_mut, entity_id, header_record, header_record_mut, primary_record, primary_record_mut, string_list as string_list_param, write as write_exchange_bytes};
 
     fn write_exchange(exchange: &Exchange) -> String {
-        let mut out = String::new();
-        out.push_str("ISO-10303-21;\nHEADER;\n");
-        for record in &exchange.header {
-            write_record(record, &mut out);
-            out.push_str(";\n");
-        }
-        out.push_str("ENDSEC;\nDATA;\n");
-        for section in &exchange.data {
-            for entity in &section.entities {
-                write_entity(entity, &mut out);
-            }
-        }
-        out.push_str("ENDSEC;\nEND-ISO-10303-21;\n");
-        out
+        String::from_utf8_lossy(&write_exchange_bytes(exchange)).to_string()
     }
-    //#endregion 🔖️Writer
-
-    //#region 🔖️EntityAccess
-    fn entity_id(entity: &EntityInstance) -> u64 {
-        match entity {
-            EntityInstance::Simple { id, .. } => *id,
-            EntityInstance::Complex { id, .. } => *id,
-        }
-    }
-    fn primary_record_mut(entity: &mut EntityInstance) -> &mut Record {
-        match entity {
-            EntityInstance::Simple { record, .. } => record,
-            EntityInstance::Complex { subsuper, .. } => &mut subsuper.0[0],
-        }
-    }
-    fn primary_record(entity: &EntityInstance) -> &Record {
-        match entity {
-            EntityInstance::Simple { record, .. } => record,
-            EntityInstance::Complex { subsuper, .. } => &subsuper.0[0],
-        }
-    }
-    /// 🔎️ A record's positional argument list — real Part-21 records always carry `Parameter::
-    /// List(..)` at the top level (confirmed against every one of this subset's real fixture's 1396
-    /// entities in this ticket's scratch probe); anything else is malformed input.
-    fn args_mut(record: &mut Record) -> Result<&mut Vec<Parameter>, String> {
-        match &mut record.parameter {
-            Parameter::List(items) => Ok(items),
-            other => Err(format!("record {:?} does not carry a positional argument list ({other:?})", record.name)),
-        }
-    }
-    fn args(record: &Record) -> Result<&Vec<Parameter>, String> {
-        match &record.parameter {
-            Parameter::List(items) => Ok(items),
-            other => Err(format!("record {:?} does not carry a positional argument list ({other:?})", record.name)),
-        }
-    }
-    fn header_record<'e>(exchange: &'e Exchange, name: &str) -> Option<&'e Record> {
-        exchange.header.iter().find(|record| record.name == name)
-    }
-    fn header_record_mut<'e>(exchange: &'e mut Exchange, name: &str) -> Option<&'e mut Record> {
-        exchange.header.iter_mut().find(|record| record.name == name)
-    }
-    //#endregion 🔖️EntityAccess
+    //#endregion 🔖️SharedCodec
 
     //#region 🔖️Apply
-    fn string_list_param(values: &[String]) -> Parameter {
-        Parameter::List(values.iter().cloned().map(Parameter::String).collect())
-    }
-
     /// 🦠️ Applies one declared `StepMutation::KINDS` kind to a real, independently-parsed
     /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling. An
     /// unrecognised kind is an error, never a silent no-op. `set-snapshot` is pragmatic: it

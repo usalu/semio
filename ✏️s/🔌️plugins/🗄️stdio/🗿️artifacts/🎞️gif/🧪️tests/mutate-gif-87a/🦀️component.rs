@@ -2,15 +2,20 @@
 //!
 //! `oracle` drives the registered `gif` reference crate (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/
 //! 🧪️oracle/🦀️component.rs`), `subject` drives this repository's own `decode_gif`/`apply_gif_mutation`/
-//! `encode_gif` round trip, and both results are read back by the shared, independent
-//! `raster::project_gif` reader before the `semantic-raster-v1` profile compares them. The subject
-//! half is gated behind the generated host's `sut` feature so the oracle-only run never compiles
-//! the local implementation.
+//! `encode_gif` round trip, and both results are read back by that same module's independent
+//! `project_gif_87a` reader before the `semantic-raster-v1` profile compares them. The subject half
+//! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
+//! local implementation.
+//!
+//! The projection is this subset's own, not the shared `raster::project_gif`: that one reports
+//! screen geometry, per-frame rectangles and an opaque-sample count only, so the Global Color
+//! Table, the background-colour index, the pixel-aspect-ratio byte, the interlace flag and the raw
+//! index buffers all fell outside the compared surface — five of the twelve declared kinds could
+//! not move it at all.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::{oracle_apply_mutation, oracle_inverse_spec};
+use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, project_gif_87a};
 use semio_s_plugin_stdio_test_oracle::law;
-use semio_s_plugin_stdio_test_oracle::raster::project_gif;
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🖼️dancing-87a.gif";
@@ -33,10 +38,17 @@ fn spec(ctx: &Context) -> Result<Json, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 👁️ `@id-mutate`: applies the row's kind with the reference `gif` codec and ASSERTS the result is
+/// distinguishable from the untouched fixture. Every one of this vocabulary's twelve kinds reaches
+/// the projection — nothing is exempt — so the exemption list is empty and stays empty: a kind that
+/// stops moving it is a regression in the oracle or the projection, not a fact about GIF87a.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = ctx.fixture_bytes(INPUT)?;
-    let bytes = oracle_apply_mutation(&input, &spec(ctx)?)?;
-    let projection = project_gif(&bytes)?;
+    let forward = spec(ctx)?;
+    let before = project_gif_87a(&input)?;
+    let bytes = oracle_apply_mutation(&input, &forward)?;
+    let projection = project_gif_87a(&bytes)?;
+    law::mutation_is_observable(&forward.str("kind"), &projection, &before, &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -47,14 +59,14 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = ctx.fixture_bytes(INPUT)?;
-    let before = project_gif(&input)?;
+    let before = project_gif_87a(&input)?;
     let forward = spec(ctx)?;
     let kind = forward.str("kind");
     let params = forward.get("params").cloned().unwrap_or_else(empty_params);
     let mutated = oracle_apply_mutation(&input, &forward)?;
     let inverse = oracle_inverse_spec(&input, &kind, &params)?;
     let restored = oracle_apply_mutation(&mutated, &inverse)?;
-    let projection = project_gif(&restored)?;
+    let projection = project_gif_87a(&restored)?;
     law::inverse_restores(&kind, &projection, &before)?;
     Ok(Outcome::with_raw(restored, projection))
 }
@@ -68,8 +80,8 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), empty_params())]);
     let output = oracle_apply_mutation(&input, &no_mutation)?;
     law::reparsed_not_copied(&output, &input)?;
-    let before = project_gif(&input)?;
-    let after = project_gif(&output)?;
+    let before = project_gif_87a(&input)?;
+    let after = project_gif_87a(&output)?;
     law::round_trip_preserves(&after, &before)?;
     Ok(Outcome::with_raw(output, after))
 }
@@ -80,7 +92,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{empty_params, spec, INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::raster::project_gif;
+    use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::project_gif_87a;
     use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
     use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::mutations::{apply_gif_mutation, GifMutation};
     use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
@@ -231,7 +243,7 @@ mod subject {
         let mutation = mutation_from_spec(&spec(ctx)?)?;
         apply_gif_mutation(&mut snapshot, &mutation);
         let bytes = encode_gif(&snapshot)?;
-        let projection = project_gif(&bytes)?;
+        let projection = project_gif_87a(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
@@ -243,7 +255,7 @@ mod subject {
         let undo = inverse_mutation(&original, &mutation);
         apply_gif_mutation(&mut restored, &undo);
         let bytes = encode_gif(&restored)?;
-        let projection = project_gif(&bytes)?;
+        let projection = project_gif_87a(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
@@ -255,7 +267,7 @@ mod subject {
         if output == input {
             return Err("byte pass-through: output is bit-identical to the input".into());
         }
-        let projection = project_gif(&output)?;
+        let projection = project_gif_87a(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 }

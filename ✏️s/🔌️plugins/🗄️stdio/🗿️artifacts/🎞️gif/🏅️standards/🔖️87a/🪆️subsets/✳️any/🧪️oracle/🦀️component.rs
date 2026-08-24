@@ -8,10 +8,25 @@
 //!
 //! GIF87a has no Graphic Control Extension, so this oracle never writes one on purpose — but the
 //! `gif` crate's `Encoder::write_frame` always emits one regardless, and its header is always
-//! literally `GIF89a`. Both are cosmetic here: `raster::project_gif` (the shared, independent
-//! reader every comparison in this case goes through) parses GIF87a and GIF89a identically
-//! (`gif::Version::V87a`/`V89a` are recorded, never gated on), so this module patches the magic
-//! byte for honesty and otherwise leaves the crate's own encoder output alone.
+//! literally `GIF89a`. Both are cosmetic here: the reference reader parses GIF87a and GIF89a
+//! identically (`gif::Version::V87a`/`V89a` are recorded, never gated on), so this module patches
+//! the magic byte for honesty and otherwise leaves the crate's own encoder output alone.
+//!
+//! Three Logical Screen Descriptor scalars (GIF87a §18) are written by `gif::Encoder` as hardcoded
+//! constants and never from the model handed to it — `encoder.rs`'s own `write_screen_desc` emits
+//! `b"GIF89a"`, then `0u8 // bg index` and `0u8 // aspect ratio`. The reference crate exposes no
+//! setter for any of them. This module therefore reads the background-colour index through the
+//! crate's own `Decoder::bg_color()` and the pixel-aspect-ratio byte at its fixed offset 12, and
+//! patches both back into byte 11/12 of the encoder's own output — the same one-byte-patch
+//! technique the 89a sibling already uses (`../../🔖️89a/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`
+//! `out[12] = snap.aspect_ratio`) and the same one this module already used for the magic byte.
+//! Without those patches `set-background-color-index` and `set-pixel-aspect-ratio` are accepted and
+//! silently discarded, which reports as a passing scenario.
+//!
+//! `project` (below) is this subset's OWN projection rather than the shared `raster::project_gif`:
+//! that one reports only screen geometry and per-frame rectangles plus an opaque-sample count, so
+//! the GCT, the background index, the aspect ratio, the interlace flag and the raw index buffers —
+//! five of this vocabulary's twelve kinds — would land outside the compared surface entirely.
 //!
 //! @see 🔣️component.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`GifMutation`,
@@ -28,10 +43,9 @@ mod live {
     //#region 🔖️Doc
     /// 🧾️ This oracle's own, independent GIF87a document model — built and re-serialized purely
     /// through the `gif` reference crate, never through this repository's own `GifSnapshot`/
-    /// `decode_gif`/`encode_gif`. `pixel_aspect_ratio` has no field here: the crate's reader parses
-    /// it into an internal buffer it never exposes a getter for, so `set-pixel-aspect-ratio` is
-    /// honestly a no-op on this side (mirrors `raster::project_gif`'s own established precedent of
-    /// canonicalizing away whatever the independent reader cannot observe).
+    /// `decode_gif`/`encode_gif`. `pixel_aspect_ratio` is carried here because GIF87a §18 puts it
+    /// in the Logical Screen Descriptor as a real byte; the reference crate has no getter or setter
+    /// for it, so this module reads and writes that byte at its fixed offset (see the module doc).
     struct OracleImage {
         left: u16,
         top: u16,
@@ -47,6 +61,7 @@ mod live {
         height: u16,
         gct: Vec<u8>,
         background_color_index: u8,
+        pixel_aspect_ratio: u8,
         images: Vec<OracleImage>,
     }
     //#endregion 🔖️Doc
@@ -130,6 +145,7 @@ mod live {
             height: num(json, "height").ok_or("snapshot missing height")? as u16,
             gct,
             background_color_index: num(json, "backgroundColorIndex").unwrap_or(0.0) as u8,
+            pixel_aspect_ratio: num(json, "pixelAspectRatio").unwrap_or(0.0) as u8,
             images,
         })
     }
@@ -140,7 +156,7 @@ mod live {
             ("height".to_string(), Json::Number(doc.height as f64)),
             ("gct".to_string(), if doc.gct.is_empty() { Json::Null } else { palette_to_json(&doc.gct) }),
             ("backgroundColorIndex".to_string(), Json::Number(doc.background_color_index as f64)),
-            ("pixelAspectRatio".to_string(), Json::Number(0.0)),
+            ("pixelAspectRatio".to_string(), Json::Number(doc.pixel_aspect_ratio as f64)),
             ("images".to_string(), Json::Array(doc.images.iter().map(image_to_json).collect())),
         ])
     }
@@ -156,21 +172,30 @@ mod live {
         let width = decoder.width();
         let height = decoder.height();
         let background_color_index = decoder.bg_color().unwrap_or(0) as u8;
+        let pixel_aspect_ratio = *bytes.get(12).ok_or("truncated Logical Screen Descriptor: no pixel-aspect-ratio byte")?;
         let gct = decoder.global_palette().unwrap_or(&[]).to_vec();
+        let stored_interlace = crate::raster::gif_image_interlace_flags(bytes)?;
         let mut images = Vec::new();
         while let Some(frame) = decoder.read_next_frame().map_err(|error| format!("independent reader could not decode a GIF87a image: {}", error))? {
-            images.push(OracleImage { left: frame.left, top: frame.top, width: frame.width, height: frame.height, interlaced: frame.interlaced, palette: frame.palette.clone(), indices: frame.buffer.clone().into_owned() });
+            let interlaced = stored_interlace.get(images.len()).copied().unwrap_or(false);
+            images.push(OracleImage { left: frame.left, top: frame.top, width: frame.width, height: frame.height, interlaced, palette: frame.palette.clone(), indices: frame.buffer.clone().into_owned() });
         }
-        Ok(OracleDoc { width, height, gct, background_color_index, images })
+        Ok(OracleDoc { width, height, gct, background_color_index, pixel_aspect_ratio, images })
     }
 
-    /// 🖋️ Writes real bytes with the independent `gif` writer, then patches the header magic from
-    /// the crate's hardcoded `GIF89a` to `GIF87a` — cosmetic, see the module docstring.
+    /// 🖋️ Writes real bytes with the independent `gif` writer, then patches the three Logical
+    /// Screen Descriptor bytes that writer emits as constants rather than from its input — the
+    /// `GIF89a` magic's version digit (byte 4), the background-colour index (byte 11) and the
+    /// pixel-aspect-ratio (byte 12). See the module docstring for the crate lines that prove it.
     fn oracle_encode(doc: &OracleDoc) -> Result<Vec<u8>, String> {
         let mut out = Vec::new();
         {
             let mut encoder = gif::Encoder::new(&mut out, doc.width, doc.height, &doc.gct).map_err(|error| format!("independent writer failed on the header: {}", error))?;
             for image in &doc.images {
+                // 🔀️ `indices` is always natural row order in this model (that is what the reference
+                // decoder hands back); GIF stores an interlaced image's rows in four passes, and
+                // `gif::Encoder` writes the buffer verbatim, so the reordering is the caller's.
+                let stored = if image.interlaced { crate::raster::gif_reorder_rows(&image.indices, image.width as usize, image.height as usize, true) } else { image.indices.clone() };
                 let frame = gif::Frame {
                     delay: 0,
                     dispose: gif::DisposalMethod::Any,
@@ -182,14 +207,17 @@ mod live {
                     height: image.height,
                     interlaced: image.interlaced,
                     palette: image.palette.clone(),
-                    buffer: Cow::Borrowed(&image.indices),
+                    buffer: Cow::Borrowed(&stored),
                 };
                 encoder.write_frame(&frame).map_err(|error| format!("independent writer failed on an image: {}", error))?;
             }
         }
-        if out.len() >= 6 {
-            out[4] = b'7';
+        if out.len() < 13 {
+            return Err("independent writer produced a stream shorter than a Logical Screen Descriptor".to_string());
         }
+        out[4] = b'7';
+        out[11] = doc.background_color_index;
+        out[12] = doc.pixel_aspect_ratio;
         Ok(out)
     }
     //#endregion 🔖️Codec
@@ -213,7 +241,7 @@ mod live {
                 }
             }
             "set-background-color-index" => doc.background_color_index = num(params, "index").ok_or("set-background-color-index: missing index")? as u8,
-            "set-pixel-aspect-ratio" => {}
+            "set-pixel-aspect-ratio" => doc.pixel_aspect_ratio = num(params, "ratio").ok_or("set-pixel-aspect-ratio: missing ratio")? as u8,
             "insert-image" => {
                 let index = num(params, "index").ok_or("insert-image: missing index")? as usize;
                 let image = image_from_json(params.get("image").ok_or("insert-image: missing image")?)?;
@@ -295,7 +323,7 @@ mod live {
             "set-screen-size" => ("set-screen-size", Json::Object(vec![("width".to_string(), Json::Number(original.width as f64)), ("height".to_string(), Json::Number(original.height as f64))])),
             "set-global-color-table" => ("set-global-color-table", Json::Object(vec![("gct".to_string(), if original.gct.is_empty() { Json::Null } else { palette_to_json(&original.gct) })])),
             "set-background-color-index" => ("set-background-color-index", Json::Object(vec![("index".to_string(), Json::Number(original.background_color_index as f64))])),
-            "set-pixel-aspect-ratio" => ("set-pixel-aspect-ratio", Json::Object(vec![("ratio".to_string(), Json::Number(0.0))])),
+            "set-pixel-aspect-ratio" => ("set-pixel-aspect-ratio", Json::Object(vec![("ratio".to_string(), Json::Number(original.pixel_aspect_ratio as f64))])),
             "insert-image" => {
                 let index = num(params, "index").ok_or("insert-image: missing index")? as usize;
                 ("remove-image", Json::Object(vec![("index".to_string(), Json::Number(index.min(original.images.len()) as f64))]))
@@ -356,6 +384,65 @@ mod live {
         Ok(Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]))
     }
     //#endregion 🔖️Dispatch
+
+    //#region 🔖️Projection
+    /// #⃣️ FNV-1a, 64-bit, dependency-free — the same compact fingerprint the 89a sibling uses for
+    /// raw palette indices, so a pixel or palette mutation moves the projection without embedding a
+    /// per-sample array the comparison engine would have to diff element by element.
+    fn digest_hex(bytes: &[u8]) -> String {
+        let mut hash: u64 = 0xcbf29ce484222325;
+        for &byte in bytes {
+            hash ^= byte as u64;
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+        format!("{hash:016x}")
+    }
+
+    /// 👁️ The surface every scenario compares through, read back with the SAME independent `gif`
+    /// reader `oracle_decode` uses. Every one of the twelve declared kinds moves at least one
+    /// member of it: screen geometry (`set-screen-size`), the Global Color Table
+    /// (`set-global-color-table`), the two Logical Screen Descriptor scalars
+    /// (`set-background-color-index`, `set-pixel-aspect-ratio`), the image list's length and order
+    /// (`insert-image`/`remove-image`/`move-image`), each image's rectangle
+    /// (`set-image-geometry`), its interlace flag (`set-image-interlace`), its local table and its
+    /// raw index buffer (`set-image-pixels`), and all of them at once (`set-snapshot`).
+    ///
+    /// Interlace is read back from the FILE (`raster::gif_image_interlace_flags`), never from
+    /// `Frame::interlaced`: the reference decoder de-interlaces every image and then reports that
+    /// field as `false` unconditionally, so trusting it would make `set-image-interlace` a mutation
+    /// nothing can see. `indexDigest` is over natural-order indices on both sides, which is the
+    /// point — flipping the flag must move the descriptor bit and leave the picture alone.
+    pub fn project(bytes: &[u8]) -> Result<Json, String> {
+        let doc = oracle_decode(bytes)?;
+        let images: Vec<Json> = doc
+            .images
+            .iter()
+            .map(|image| {
+                Json::Object(vec![
+                    ("left".to_string(), Json::Number(image.left as f64)),
+                    ("top".to_string(), Json::Number(image.top as f64)),
+                    ("width".to_string(), Json::Number(image.width as f64)),
+                    ("height".to_string(), Json::Number(image.height as f64)),
+                    ("interlaced".to_string(), Json::Bool(image.interlaced)),
+                    ("lctColors".to_string(), Json::Number(image.palette.as_ref().map_or(0, |p| p.len() / 3) as f64)),
+                    ("lctDigest".to_string(), Json::String(digest_hex(image.palette.as_deref().unwrap_or(&[])))),
+                    ("indexDigest".to_string(), Json::String(digest_hex(&image.indices))),
+                ])
+            })
+            .collect();
+        Ok(Json::Object(vec![
+            ("format".to_string(), Json::String("gif87a".to_string())),
+            ("width".to_string(), Json::Number(doc.width as f64)),
+            ("height".to_string(), Json::Number(doc.height as f64)),
+            ("gctColors".to_string(), Json::Number((doc.gct.len() / 3) as f64)),
+            ("gctDigest".to_string(), Json::String(digest_hex(&doc.gct))),
+            ("backgroundColorIndex".to_string(), Json::Number(doc.background_color_index as f64)),
+            ("pixelAspectRatio".to_string(), Json::Number(doc.pixel_aspect_ratio as f64)),
+            ("imageCount".to_string(), Json::Number(doc.images.len() as f64)),
+            ("images".to_string(), Json::Array(images)),
+        ]))
+    }
+    //#endregion 🔖️Projection
 }
 
 //#region 🔖️Dispatch
@@ -375,6 +462,15 @@ pub fn oracle_inverse_spec(original_bytes: &[u8], kind: &str, params: &Json) -> 
     live::inverse_spec(original_bytes, kind, params)
 }
 
+/// 👁️ Projects GIF87a bytes (oracle or subject, either role) onto the surface every
+/// `mutate-<kind>`/`inverse-<kind>`/`identity-round-trip` scenario compares under
+/// `@comparison-semantic-raster-v1`. @see `live::project`'s own doc comment for why this subset
+/// carries its own projection instead of the shared `raster::project_gif`.
+#[cfg(feature = "oracles")]
+pub fn project_gif_87a(bytes: &[u8]) -> Result<Json, String> {
+    live::project(bytes)
+}
+
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
@@ -383,6 +479,11 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_inverse_spec(_original_bytes: &[u8], _kind: &str, _params: &Json) -> Result<Json, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn project_gif_87a(_bytes: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Dispatch

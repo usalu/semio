@@ -335,11 +335,12 @@ fn cli_command_close_witness(exit: CliCommandCloseExit, opportunities: u64) -> C
 struct MountedWalRecordCommandClose {
     owner: Option<db::wal::WalRecord>,
     opportunities: u64,
+    terminal: Option<CliCommandCloseWitness>,
 }
 
 impl MountedWalRecordCommandClose {
     fn new(owner: db::wal::WalRecord) -> Self {
-        Self { owner: Some(owner), opportunities: 0 }
+        Self { owner: Some(owner), opportunities: 0, terminal: None }
     }
 }
 
@@ -348,7 +349,9 @@ impl std::future::Future for MountedWalRecordCommandClose {
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         self.opportunities += 1;
-        let owner = self.owner.as_mut().expect("mounted WAL record owner");
+        let Some(owner) = self.owner.as_mut() else {
+            return std::task::Poll::Ready(Ok(self.terminal.unwrap_or_else(|| cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities))));
+        };
         match owner.close_step() {
             Ok(true) => {
                 context.waker().wake_by_ref();
@@ -356,11 +359,13 @@ impl std::future::Future for MountedWalRecordCommandClose {
             }
             Ok(false) => {
                 self.owner = None;
-                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(witness);
+                std::task::Poll::Ready(Ok(witness))
             }
             Err(error) => {
                 self.owner = None;
-                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                self.terminal = Some(cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities));
                 CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
                 std::task::Poll::Ready(Err(error))
             }
@@ -381,11 +386,12 @@ impl Drop for MountedWalRecordCommandClose {
 struct MountedWalBatchCommandClose {
     owner: Option<db::wal::WalRecordBatch>,
     opportunities: u64,
+    terminal: Option<CliCommandCloseWitness>,
 }
 
 impl MountedWalBatchCommandClose {
     fn new(owner: db::wal::WalRecordBatch) -> Self {
-        Self { owner: Some(owner), opportunities: 0 }
+        Self { owner: Some(owner), opportunities: 0, terminal: None }
     }
 }
 
@@ -394,7 +400,9 @@ impl std::future::Future for MountedWalBatchCommandClose {
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         self.opportunities += 1;
-        let owner = self.owner.as_mut().expect("mounted WAL batch owner");
+        let Some(owner) = self.owner.as_mut() else {
+            return std::task::Poll::Ready(Ok(self.terminal.unwrap_or_else(|| cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities))));
+        };
         match owner.close_step() {
             Ok(true) => {
                 context.waker().wake_by_ref();
@@ -402,11 +410,13 @@ impl std::future::Future for MountedWalBatchCommandClose {
             }
             Ok(false) => {
                 self.owner = None;
-                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(witness);
+                std::task::Poll::Ready(Ok(witness))
             }
             Err(error) => {
                 self.owner = None;
-                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                self.terminal = Some(cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities));
                 CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
                 std::task::Poll::Ready(Err(error))
             }
@@ -427,11 +437,12 @@ impl Drop for MountedWalBatchCommandClose {
 struct MountedWalReplayCommandClose<'storage> {
     owner: Option<db::wal::WalReplayCursor<'storage, db::storage::FsStorage>>,
     opportunities: u64,
+    terminal: Option<CliCommandCloseWitness>,
 }
 
 impl<'storage> MountedWalReplayCommandClose<'storage> {
     fn new(owner: db::wal::WalReplayCursor<'storage, db::storage::FsStorage>) -> Self {
-        Self { owner: Some(owner), opportunities: 0 }
+        Self { owner: Some(owner), opportunities: 0, terminal: None }
     }
 }
 
@@ -440,7 +451,9 @@ impl std::future::Future for MountedWalReplayCommandClose<'_> {
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         self.opportunities += 1;
-        let owner = self.owner.as_mut().expect("mounted WAL replay owner");
+        let Some(owner) = self.owner.as_mut() else {
+            return std::task::Poll::Ready(Ok(self.terminal.unwrap_or_else(|| cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities))));
+        };
         match owner.close_owner_step() {
             Ok(true) => {
                 context.waker().wake_by_ref();
@@ -448,11 +461,13 @@ impl std::future::Future for MountedWalReplayCommandClose<'_> {
             }
             Ok(false) => {
                 self.owner = None;
-                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(witness);
+                std::task::Poll::Ready(Ok(witness))
             }
             Err(error) => {
                 self.owner = None;
-                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                self.terminal = Some(cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities));
                 CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
                 std::task::Poll::Ready(Err(error))
             }
@@ -473,11 +488,12 @@ impl Drop for MountedWalReplayCommandClose<'_> {
 struct MountedSnapshotCommandClose<'manager, 'storage> {
     owner: Option<db::snapshot::SnapshotChainCursor<'manager, 'storage, db::storage::FsStorage>>,
     opportunities: u64,
+    terminal: Option<CliCommandCloseWitness>,
 }
 
 impl<'manager, 'storage> MountedSnapshotCommandClose<'manager, 'storage> {
     fn new(owner: db::snapshot::SnapshotChainCursor<'manager, 'storage, db::storage::FsStorage>) -> Self {
-        Self { owner: Some(owner), opportunities: 0 }
+        Self { owner: Some(owner), opportunities: 0, terminal: None }
     }
 }
 
@@ -486,7 +502,9 @@ impl std::future::Future for MountedSnapshotCommandClose<'_, '_> {
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         self.opportunities += 1;
-        let owner = self.owner.as_mut().expect("mounted snapshot cursor owner");
+        let Some(owner) = self.owner.as_mut() else {
+            return std::task::Poll::Ready(Ok(self.terminal.unwrap_or_else(|| cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities))));
+        };
         match owner.close_step() {
             Ok(true) => {
                 context.waker().wake_by_ref();
@@ -494,11 +512,13 @@ impl std::future::Future for MountedSnapshotCommandClose<'_, '_> {
             }
             Ok(false) => {
                 self.owner = None;
-                std::task::Poll::Ready(Ok(cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities)))
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(witness);
+                std::task::Poll::Ready(Ok(witness))
             }
             Err(error) => {
                 self.owner = None;
-                let _ = cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities);
+                self.terminal = Some(cli_command_close_witness(CliCommandCloseExit::Fault, self.opportunities));
                 CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
                 std::task::Poll::Ready(Err(error))
             }
@@ -1544,6 +1564,7 @@ mod tests {
         let mut record = MountedWalRecordCommandClose::new(db::wal::WalRecord::VcsRef(db::storage::DbIoText::try_from_str("retained-cli-record").unwrap()));
         assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Pending));
         assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 2 }))));
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 2 }))));
         drop(record);
         let mut batch = db::wal::WalRecordBatch::new();
         assert!(batch.push(db::wal::WalRecord::TxBegin { tx_id: 2 }).is_ok());
@@ -1552,7 +1573,17 @@ mod tests {
         assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Pending));
         assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Pending));
         assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 3 }))));
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 3 }))));
         drop(batch_close);
+        let fault = cli_command_close_witness(CliCommandCloseExit::Fault, 7);
+        let mut record_fault = MountedWalRecordCommandClose { owner: None, opportunities: 7, terminal: Some(fault) };
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record_fault), context), std::task::Poll::Ready(Ok(witness)) if witness == fault));
+        let mut batch_fault = MountedWalBatchCommandClose { owner: None, opportunities: 7, terminal: Some(fault) };
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_fault), context), std::task::Poll::Ready(Ok(witness)) if witness == fault));
+        let mut replay_fault: MountedWalReplayCommandClose<'static> = MountedWalReplayCommandClose { owner: None, opportunities: 7, terminal: Some(fault) };
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut replay_fault), context), std::task::Poll::Ready(Ok(witness)) if witness == fault));
+        let mut snapshot_fault: MountedSnapshotCommandClose<'static, 'static> = MountedSnapshotCommandClose { owner: None, opportunities: 7, terminal: Some(fault) };
+        assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut snapshot_fault), context), std::task::Poll::Ready(Ok(witness)) if witness == fault));
         let interrupted = CLI_COMMAND_CLOSE_INTERRUPTED.load(std::sync::atomic::Ordering::Acquire);
         let owner = MountedWalRecordCommandClose::new(db::wal::WalRecord::TxAbort { tx_id: 3 });
         drop(owner);

@@ -2,16 +2,22 @@
 //! fixture into the case work directory first; the committed fixture is never written to. `oracle`
 //! drives the registered `image` reference implementation, `subject` drives this subset's own
 //! from-scratch decode/mutate/encode round trip, and both results are read back by the SAME
-//! independent reader (`raster::project_image`) before the `semantic-jpg-mutate-v1` profile compares
-//! their `{format, width, height, lossy, lumaHistogram}` projections — never raw samples, since JPEG
-//! is lossy and this platform's tolerance is per-number and absolute with no aggregate mode. The
-//! subject half is gated behind the generated host's `sut` feature so the oracle-only run never
+//! independent reader before the `semantic-jpg-mutate-v1` profile compares them.
+//!
+//! The projection is this subset's own `project_jpg_mutation`, not the shared
+//! `raster::project_image`: that one reports geometry and a luma histogram, so the JFIF header
+//! fields and the APPn/COM segments — three of the twelve declared kinds — fell outside the
+//! compared surface entirely and could not move it. Its raster half is unchanged and still coarse,
+//! because JPEG is lossy and this platform's tolerance is per-number and absolute with no aggregate
+//! mode; its metadata half is exact, because a marker segment survives a re-encode byte for byte or
+//! it is wrong.
+//!
+//! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
 //! compiles the local implementation.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip};
+use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::any::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_identity_round_trip, project_jpg_mutation};
 use semio_s_plugin_stdio_test_oracle::law;
-use semio_s_plugin_stdio_test_oracle::raster::project_image;
 
 //#region 🔖️Kinds
 /// 🦠️ Kebab-case spelling of every `JpgMutation` variant, matching the subject's own `KINDS` const
@@ -44,15 +50,31 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 /// `set-snapshot` rows perform lands ~5.6 MILLION pixels in the wrong bucket, three orders of
 /// magnitude past it, so the law below stays substantive rather than being excused by the slack.
 const JPG_TOLERANCE: f64 = 400_000.0;
+
+/// 🚫️ The five kinds this codec pair provably cannot make byte-observable, each because
+/// `../../🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs` regenerates fresh Annex K
+/// DQT/DHT tables scaled by `re_encode_quality` on every encode and never emits a DRI marker at
+/// all. They mutate the typed snapshot and nothing else, which the feature description states and
+/// the subset's own oracle module documents against the encoder's source. Everything NOT on this
+/// list — including `set-jfif-header`, `insert-other-segment` and `remove-other-segment`, which are
+/// written to real bytes — must move the projection, and the law below fails the scenario if it
+/// does not.
+const UNOBSERVABLE: &[&str] = &["set-quant-table", "remove-quant-table", "set-huffman-table", "remove-huffman-table", "set-restart-interval"];
 //#endregion 🔖️Lossy
 
 //#region 🔖️Oracle
-/// 🔮️ Applies the scenario's declared mutation with the reference `image` codec.
+/// 🔮️ Applies the scenario's declared mutation with the reference `image` codec and ASSERTS the
+/// result is distinguishable from the untouched scan, under the same slack the case is measured by.
+/// Without that assertion a kind whose effect lands outside the projection passes exactly as
+/// `no-mutation` does — which is what all eight non-raster kinds did while this case compared only
+/// geometry and a luma histogram.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
+    let before = project_jpg_mutation(&original)?;
     let bytes = oracle_apply_mutation(&original, &spec)?;
-    let projection = project_image(&bytes, "jpg")?;
+    let projection = project_jpg_mutation(&bytes)?;
+    law::mutation_is_observable_within(&spec.str("kind"), &projection, &before, UNOBSERVABLE, &[], JPG_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -65,10 +87,10 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
-    let before = project_image(&original, "jpg")?;
+    let before = project_jpg_mutation(&original)?;
     let forward = oracle_apply_mutation(&original, &spec)?;
     let restored = oracle_apply_mutation_inverse(&original, &spec, &forward)?;
-    let projection = project_image(&restored, "jpg")?;
+    let projection = project_jpg_mutation(&restored)?;
     law::inverse_restores_within(&spec.str("kind"), &projection, &before, &[], JPG_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
@@ -81,8 +103,8 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let original = mutable_input(ctx)?;
     let bytes = oracle_identity_round_trip(&original)?;
     law::reparsed_not_copied(&bytes, &original)?;
-    let before = project_image(&original, "jpg")?;
-    let projection = project_image(&bytes, "jpg")?;
+    let before = project_jpg_mutation(&original)?;
+    let projection = project_jpg_mutation(&bytes)?;
     law::round_trip_preserves_within(&projection, &before, &[], JPG_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
@@ -94,11 +116,11 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::jpg::schema::diff::JpgHuffmanTableKey;
-    use semio_s_plugin_stdio::artifacts::jpg::schema::mutations::{apply_jpg_mutation, JpgMutation};
+    use semio_s_plugin_stdio::artifacts::jpg::schema::mutations::{apply_jpg_mutation, inverse_jpg_mutation, JpgMutation};
     use semio_s_plugin_stdio::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
     use semio_s_plugin_stdio::artifacts::jpg::io::{decode_jpg, encode_jpg};
     use semio_s_plugin_stdio::artifacts::jpg::JpgSnapshot;
-    use semio_s_plugin_stdio_test_oracle::raster::project_image;
+    use semio_s_plugin_stdio_test_oracle::artifacts::jpg::standards::v_jfif_1_01::subsets::any::project_jpg_mutation;
 
     //#region 🔖️Json
     fn number(value: &Json, key: &str, fallback: f64) -> f64 {
@@ -186,28 +208,31 @@ mod subject {
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
-        let projection = project_image(&output, "jpg")?;
+        let projection = project_jpg_mutation(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
-    /// ↩️ Applies the mutation (proving it re-serializes), then independently restores the document
-    /// by re-parsing the pristine original — the property under test is that this equals what the
-    /// oracle's own independent restore computes, not a literal chained undo of the mutated bytes.
+    /// ↩️ Applies the forward mutation, then applies EVERY mutation `JpgMutation::inverse` returns
+    /// (the vocabulary's own algebraic law, computed against the pre-forward `base`) on top of that
+    /// real forward result. The previous version applied the mutation, threw the result away and
+    /// re-encoded a fresh parse of the pristine original — which restores the document by
+    /// construction and so asserted nothing about the inverse at all.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let bytes = mutable_input(ctx)?;
         let base = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
         let spec = ctx.doc_json()?;
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         let mutation = mutation_from_spec(&spec.str("kind"), &params, &base)?;
-        let mut forward = base.clone();
-        apply_jpg_mutation(&mut forward, &mutation);
-        let _forward_bytes = encode_jpg(&forward).map_err(|error| format!("encode_jpg (forward) failed: {error:?}"))?;
-        let restored = decode_jpg(&bytes).map_err(|error| format!("decode_jpg (restore) failed: {error:?}"))?;
-        let output = encode_jpg(&restored).map_err(|error| format!("encode_jpg (restore) failed: {error:?}"))?;
+        let mut snapshot = base.clone();
+        apply_jpg_mutation(&mut snapshot, &mutation);
+        for undo in inverse_jpg_mutation(&mutation, &base) {
+            apply_jpg_mutation(&mut snapshot, &undo);
+        }
+        let output = encode_jpg(&snapshot).map_err(|error| format!("encode_jpg (restore) failed: {error:?}"))?;
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
-        let projection = project_image(&output, "jpg")?;
+        let projection = project_jpg_mutation(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
@@ -219,7 +244,7 @@ mod subject {
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
-        let projection = project_image(&output, "jpg")?;
+        let projection = project_jpg_mutation(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
     //#endregion 🔖️Handlers

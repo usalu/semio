@@ -1,0 +1,15 @@
+[workspace]
+
+[package]
+name = "w12-obj-probe"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "w12-obj-probe"
+path = "src/main.rs"
+
+[dependencies]
+semio-s-plugin-stdio-test-oracle = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust", features = ["oracles"] }
+semio-repo-test-host = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+json = "0.12"

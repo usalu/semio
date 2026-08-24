@@ -22,7 +22,7 @@ Feature: Apply every typed semio FLOW mutation to the real committed pipeline ar
   committed bytes: the `oracle` role reads the vector literally (no recomputation, no
   reimplementation of mutation semantics) and the `subject` role decodes it into real
   `SemioFlowSnapshot`/`SemioFlowMutation` values and runs the production entry point
-  `apply_semio_flow_mutation`. The `ordered-json-v1` profile compares the two structurally.
+  `apply_semio_flow_mutation`.
 
   The `identity-round-trip` scenario is what keeps the vectors honest, and it is the only scenario
   here that touches raw artifact bytes. It asserts that production's OWN `parse_dsl` of the same

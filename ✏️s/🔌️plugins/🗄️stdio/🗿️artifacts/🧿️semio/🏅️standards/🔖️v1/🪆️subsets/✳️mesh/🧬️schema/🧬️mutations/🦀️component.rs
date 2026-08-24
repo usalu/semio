@@ -154,6 +154,27 @@ pub fn apply_semio_mesh_mutation(snapshot: &mut SemioMeshSnapshot, mutation: &Se
     let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
+/// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
+/// `protocol` extern-crate item (the `mutate-semio-mesh` test adapter, whose `inverse-<kind>` scenarios
+/// need a mutation's own computed inverse) can still reach the inverse law that
+/// [`apply_semio_mesh_mutation`] alone cannot. Same shape as `✳️kit`'s `inverse_semio_kit_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+    use protocol::Mutation;
+    <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
+/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// carry — into a real [`SemioMeshMutation`]. `create-primitive`'s payload embeds a whole `MeshPrimitive`, so decoding it from the committed
+/// vector is the only way the adapter can exercise that kind without restating every coordinate.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_mesh_mutation_json(text: &str) -> Result<SemioMeshMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️OpText

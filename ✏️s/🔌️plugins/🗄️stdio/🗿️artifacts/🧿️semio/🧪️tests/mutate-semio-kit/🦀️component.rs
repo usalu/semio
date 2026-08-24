@@ -78,6 +78,14 @@ const KINDS: &[&str] = &[
     "remove-design",
     "edit-design",
 ];
+
+/// 🗣️ The real committed furniture kit — one type bound to one representation link, one design with
+/// two pieces and a connection, and all three owned child slots populated.
+#[cfg(feature = "sut")]
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio";
+/// 🎒️ The same kit in its binary envelope, written by a separate codec from the DSL text.
+#[cfg(feature = "sut")]
+const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️OracleFixtures
@@ -197,7 +205,7 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{apply_semio_kit_mutation, decode_kit_mutation_json, inverse_semio_kit_mutation};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{decode_kit_snapshot_json, encode_kit_snapshot_json};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{decode_kit_snapshot_json, decode_semio_kit_pack, encode_kit_snapshot_json, encode_semio_kit_pack, parse_semio_kit_dsl, print_semio_kit_dsl};
 
     //#region 🔖️FixtureDecode
     /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds via
@@ -214,6 +222,17 @@ mod subject {
         let (_before, mutation, _after) = super::fixture_text(kind);
         decode_kit_mutation_json(mutation).unwrap_or_else(|error| panic!("mutate-semio-kit: committed mutation fixture for {kind:?} must decode: {error}"))
     }
+
+    fn decode_after(kind: &str) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot {
+        let (_before, _mutation, after) = super::fixture_text(kind);
+        decode_kit_snapshot_json(after).unwrap_or_else(|error| panic!("mutate-semio-kit: committed after-snapshot fixture for {kind:?} must decode: {error}"))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both fixtures are written
+    /// in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot, expected: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", encode_kit_snapshot_json(got), encode_kit_snapshot_json(expected))
+    }
     //#endregion 🔖️FixtureDecode
 
     //#region 🔖️Projection
@@ -228,13 +247,21 @@ mod subject {
     //#endregion 🔖️Projection
 
     //#region 🔖️Handlers
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot. The assertion lives here rather than in the comparison because a recorded
+    /// no-oracle case runs no oracle role: a handler that merely returned `Ok` would report a pass
+    /// having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
             let mut base = decode_base(kind);
             let mutation = decode_mutation(kind);
+            let expected = decode_after(kind);
             let outcome = apply_semio_kit_mutation(&mut base, &mutation);
             if !outcome.messages().is_empty() {
                 return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+            }
+            if base != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &base, &expected));
             }
             let (bytes, json) = project(&base);
             Ok(Outcome::with_raw(bytes, json))
@@ -257,9 +284,48 @@ mod subject {
                     return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
                 }
             }
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
+            }
             let (bytes, json) = project(&current);
             Ok(Outcome::with_raw(bytes, json))
         }
+    }
+
+    /// 🔁️ The real committed furniture kit through both of its committed encodings — the one
+    /// document that carries a type with a representation LINK, a design with pieces and a
+    /// connection, and all three owned child slots at once, so a codec that dropped either the link
+    /// pool or a child handle shows up here rather than in a per-kind fixture that only exercises
+    /// one of them. The DSL text and the pack envelope are separate committed files produced by
+    /// separate codecs, so agreeing on one snapshot cannot be achieved by smuggling bytes from
+    /// either. Byte-identical re-emission IS expected — the committed text is this codec's own
+    /// output, not a foreign writer's — so the wave's usual "output must not equal input" tripwire
+    /// does not apply and the text/binary cross-check carries that evidence instead.
+    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed furniture artifact is not UTF-8: {error}"))?;
+        let parsed = parse_semio_kit_dsl(&text)?;
+        if parsed.types.len() != 1 || parsed.designs.len() != 1 || parsed.representations.len() != 1 {
+            return Err(format!(
+                "identity-round-trip: the committed furniture kit is the one-type, one-design, one-representation fixture this case describes, but parsed {}/{}/{}",
+                parsed.types.len(),
+                parsed.designs.len(),
+                parsed.representations.len()
+            ));
+        }
+        let reparsed = parse_semio_kit_dsl(&print_semio_kit_dsl(&parsed))?;
+        if reparsed != parsed {
+            return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
+        }
+        let unpacked = decode_semio_kit_pack(&ctx.fixture_bytes(super::PACK_ASSET)?)?;
+        if unpacked != parsed {
+            return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different kit than the committed text artifact", &unpacked, &parsed));
+        }
+        let repacked = decode_semio_kit_pack(&encode_semio_kit_pack(&parsed))?;
+        if repacked != parsed {
+            return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &parsed));
+        }
+        let (bytes, json) = project(&parsed);
+        Ok(Outcome::with_raw(bytes, json))
     }
     //#endregion 🔖️Handlers
 }
@@ -275,6 +341,10 @@ pub fn adapter() -> Adapter {
         {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
         }
+    }
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("identity-round-trip", subject::round_trip);
     }
     built
 }

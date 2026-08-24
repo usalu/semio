@@ -24,7 +24,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo ar
   committed bytes: the `oracle` role reads the vector literally (no recomputation, no
   reimplementation of mutation semantics) and the `subject` role decodes it into real
   `SemioDocumentSnapshot`/`SemioDocumentMutation` values and runs the production entry point
-  `apply_semio_document_mutation`. The `ordered-json-v1` profile compares the two structurally.
+  `apply_semio_document_mutation`.
 
   What genuinely distinguishes this vocabulary from its siblings is `DocBlockPath` — a block is
   addressed by a segment chain that descends through `Quote`, list-item and table-cell containers

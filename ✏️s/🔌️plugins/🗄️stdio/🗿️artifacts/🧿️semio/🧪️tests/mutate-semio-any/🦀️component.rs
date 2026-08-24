@@ -19,6 +19,14 @@
 //! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
 //! compiles the local implementation; the Rust SUBJECT phase is blocked this wave by a concurrent
 //! os-kernel refactor, so it is written and gated but not run.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
+//! the written statement of the reference answer rather than a second running party. Every law this
+//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
+//! printed. A handler that merely ran the mutation and returned would report a pass having checked
+//! nothing.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -65,49 +73,89 @@ fn outcome_of(subset: &str, diagnostics: &[String], matches_reference: bool) -> 
 }
 //#endregion 🔖️Projection
 
+//#region 🔖️Law
+/// 📐️ The routing law each scenario's own `Then` steps declare, stated ONCE for both roles: the
+/// envelope's subset tag after routing, the fault codes raised, and whether the routed document
+/// still equals the one the scenario started from. The `oracle` role answers with it; the `subject`
+/// role is CHECKED against it. Because this case records a no-oracle decision the runner executes no
+/// oracle role at all, so a subject handler that merely reported its measurements would report a
+/// pass having compared them with nothing — that is why the law lives here rather than in the
+/// comparison profile.
+fn expected_routing(scenario: &str, kind: &str) -> (String, Vec<String>, bool) {
+    match scenario {
+        // ▶️ A routed forward verb reaches its arm and changes it, raising nothing. `no-mutation` is
+        // the identity, so it alone still equals the document it started from. Only the two
+        // envelope-owned verbs run against the committed `value` leaf; every delegated verb runs
+        // against an envelope of its own subset.
+        "mutate" => (envelope_arm(kind), Vec::new(), kind == "no-mutation"),
+        // ↩️ The inverse law: whatever the forward verb did, its own computed inverse puts back,
+        // leaving the subset tag untouched and raising nothing.
+        "inverse" => (envelope_arm(kind), Vec::new(), true),
+        // 🚫️ A wrapped `image` verb against a `value` envelope is refused with
+        // `mutation.target-missing`, leaving the document exactly as it stood.
+        "rejects-a-mismatched-arm" => (LEAF_SUBSET.to_string(), vec!["mutation.target-missing".to_string()], true),
+        // 🔁️ `set-snapshot` is the ONE verb that may change the subset kind, so the envelope comes
+        // back carrying `image` and no longer equals what it was.
+        "set-snapshot-changes-the-subset-kind" => ("image".to_string(), Vec::new(), false),
+        // 🔁️ Rebuilding the committed envelope from an empty one must land on that same envelope.
+        "identity-round-trip" => (LEAF_SUBSET.to_string(), Vec::new(), true),
+        other => panic!("mutate-semio-any: no declared routing law for scenario {other:?}"),
+    }
+}
+
+/// 🏷️ The subset tag the envelope must carry after a scenario's verb. Only the two envelope-OWNED
+/// verbs (`no-mutation`, `set-snapshot`) run against the committed `value` leaf; for every one of
+/// the eighteen delegated verbs the kind name IS the arm name, which is the routing identity this
+/// case exists to pin.
+fn envelope_arm(kind: &str) -> String {
+    if kind == "no-mutation" || kind == "set-snapshot" {
+        LEAF_SUBSET.to_string()
+    } else {
+        kind.to_string()
+    }
+}
+//#endregion 🔖️Law
+
 //#region 🔖️Oracle
-/// 🔮️ The reference answer for a routed forward mutation: the arm is unchanged, nothing is raised,
-/// and the document is no longer what it was. `no-mutation` is the identity, so it alone still
-/// matches.
+/// 🔮️ The reference answer for a routed forward mutation, read straight off the declared law.
 fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let subset = if kind == "no-mutation" || kind == "set-snapshot" { LEAF_SUBSET } else { kind };
-        Ok(outcome_of(subset, &[], kind == "no-mutation"))
+        let (subset, raised, matches) = expected_routing("mutate", kind);
+        Ok(outcome_of(&subset, &raised, matches))
     }
 }
 
-/// 🔮️ The reference answer for the inverse law: the arm is unchanged, nothing is raised, and the
-/// document is exactly the one the scenario started from.
+/// 🔮️ The reference answer for the inverse law, read straight off the declared law.
 fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |_ctx: &Context| {
-        let subset = if kind == "no-mutation" || kind == "set-snapshot" { LEAF_SUBSET } else { kind };
-        Ok(outcome_of(subset, &[], true))
+        let (subset, raised, matches) = expected_routing("inverse", kind);
+        Ok(outcome_of(&subset, &raised, matches))
     }
 }
 
-/// 🔮️ The reference answer for the mismatch law: `mutation.target-missing`, and the document left
-/// exactly as it stood.
+/// 🔮️ The reference answer for the mismatch law.
 fn mismatch_oracle(_ctx: &Context) -> Result<Outcome, String> {
-    Ok(outcome_of(LEAF_SUBSET, &["mutation.target-missing".to_string()], true))
+    let (subset, raised, matches) = expected_routing("rejects-a-mismatched-arm", "");
+    Ok(outcome_of(&subset, &raised, matches))
 }
 
-/// 🔮️ The reference answer for the retyping law: `set-snapshot` is the one verb that may change the
-/// subset kind, so the envelope comes back carrying `image`.
+/// 🔮️ The reference answer for the retyping law.
 fn retype_oracle(_ctx: &Context) -> Result<Outcome, String> {
-    Ok(outcome_of("image", &[], false))
+    let (subset, raised, matches) = expected_routing("set-snapshot-changes-the-subset-kind", "");
+    Ok(outcome_of(&subset, &raised, matches))
 }
 
-/// 🔮️ The reference answer for the completeness law: rebuilding the committed envelope from an empty
-/// one must land on that same committed envelope.
+/// 🔮️ The reference answer for the completeness law.
 fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
-    Ok(outcome_of(LEAF_SUBSET, &[], true))
+    let (subset, raised, matches) = expected_routing("identity-round-trip", "");
+    Ok(outcome_of(&subset, &raised, matches))
 }
 //#endregion 🔖️Oracle
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{leaf_before_uri, leaf_mutation_uri, outcome_of};
+    use super::{expected_routing, leaf_before_uri, leaf_mutation_uri, outcome_of, routing_json};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::{apply_semio_mutation, inverse_semio_mutation, semio_subset_tag, SemioMutation};
@@ -308,14 +356,35 @@ mod subject {
         }
     }
 
+    /// ⚖️ Measures the four envelope-level facts and checks them against the routing law
+    /// `../🦀️component.rs::expected_routing` states for this scenario, failing with both
+    /// projections printed. Every handler below goes through here, so no scenario in this case can
+    /// pass by producing a result nobody looked at.
+    fn checked(scenario: &str, kind: &str, subset: &str, raised: &[String], matches: bool) -> Result<Outcome, String> {
+        let (want_subset, want_raised, want_matches) = expected_routing(scenario, kind);
+        if subset != want_subset.as_str() || raised != want_raised.as_slice() || matches != want_matches {
+            return Err(format!(
+                "{scenario}-{kind}: the envelope routed differently from the law this feature declares\n     got: {}\nexpected: {}",
+                routing_json(subset, raised, matches).to_string(),
+                routing_json(&want_subset, &want_raised, want_matches).to_string()
+            ));
+        }
+        Ok(outcome_of(subset, raised, matches))
+    }
+
+    /// 🎯️ A routed forward verb must reach its arm, change it, raise nothing, and leave the
+    /// envelope tagged with the arm it was routed to.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let (base, mutation) = scenario_input(kind, ctx)?;
             let (routed, raised) = apply(&base, &mutation);
-            Ok(outcome_of(semio_subset_tag(&routed), &raised, routed == base))
+            checked("mutate", kind, semio_subset_tag(&routed), &raised, routed == base)
         }
     }
 
+    /// ↩️ The inverse law at envelope level: whatever the routed verb did to its arm, the mutation's
+    /// own computed inverse must put back, restoring the whole envelope — arm contents included,
+    /// since `matchesReference` is `SemioSnapshot`'s own derived `PartialEq`.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let (base, mutation) = scenario_input(kind, ctx)?;
@@ -325,7 +394,7 @@ mod subject {
                 current = next;
                 raised.extend(more);
             }
-            Ok(outcome_of(semio_subset_tag(&current), &raised, current == base))
+            checked("inverse", kind, semio_subset_tag(&current), &raised, current == base)
         }
     }
 
@@ -334,14 +403,14 @@ mod subject {
     pub fn mismatch(ctx: &Context) -> Result<Outcome, String> {
         let base = leaf_document(ctx)?;
         let (routed, raised) = apply(&base, &SemioMutation::Image(SemioImageMutation::SetDimensions { width: 4, height: 2 }));
-        Ok(outcome_of(semio_subset_tag(&routed), &raised, routed == base))
+        checked("rejects-a-mismatched-arm", "", semio_subset_tag(&routed), &raised, routed == base)
     }
 
     /// 🔁️ The retyping law: `set-snapshot` is the only verb that may change the subset kind.
     pub fn retype(ctx: &Context) -> Result<Outcome, String> {
         let base = leaf_document(ctx)?;
         let (routed, raised) = apply(&base, &SemioMutation::SetSnapshot { snapshot: empty_envelope("image") });
-        Ok(outcome_of(semio_subset_tag(&routed), &raised, routed == base))
+        checked("set-snapshot-changes-the-subset-kind", "", semio_subset_tag(&routed), &raised, routed == base)
     }
 
     /// 🔁️ The completeness law: the envelope's own full-replace verb must carry an empty envelope all
@@ -349,7 +418,7 @@ mod subject {
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let committed = leaf_document(ctx)?;
         let (rebuilt, raised) = apply(&SemioSnapshot::default(), &SemioMutation::SetSnapshot { snapshot: committed.clone() });
-        Ok(outcome_of(semio_subset_tag(&rebuilt), &raised, rebuilt == committed))
+        checked("identity-round-trip", "", semio_subset_tag(&rebuilt), &raised, rebuilt == committed)
     }
     //#endregion 🔖️Handlers
 }

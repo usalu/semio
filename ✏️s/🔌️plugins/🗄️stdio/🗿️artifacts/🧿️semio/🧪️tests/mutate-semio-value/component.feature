@@ -37,6 +37,17 @@ Feature: Apply every typed semio VALUE mutation to its committed specification f
   subset's own full-replace `set-snapshot` diff must reconstruct the committed before-document node
   for node, so no slot of the recursive typed model is silently dropped on the way through.
 
+  ⚖️ Because this case records a no-oracle decision, the runner executes NO oracle role: it resolves
+  an oracle implementation from an `@oracle-` tag this feature deliberately does not carry, so the
+  comparison profile never receives two sides to compare and the `oracle` handlers below are the
+  written statement of the reference answer rather than a second running party. Every law this
+  feature claims is therefore asserted INSIDE the subject handler, which fails with both documents
+  printed. A handler that merely ran the mutation and returned would report a pass having checked
+  nothing. Here that means the applied document is checked against the committed
+  after-snapshot with list and map-entry POSITION significant, which is what makes
+  `remove-list-item`'s and `remove-map-entry`'s position-restoring multi-step undo checkable rather
+  than merely runnable.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

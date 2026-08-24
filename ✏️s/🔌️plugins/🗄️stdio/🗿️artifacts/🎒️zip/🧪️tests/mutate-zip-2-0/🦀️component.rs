@@ -11,7 +11,7 @@
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::any::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_mutation};
-use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, round_trip_preserves, unordered};
+use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves, unordered};
 
 //#region 🔖️Input
 /// 🦠️ Every declared `ZipMutation` variant, kebab-case — mirrors `../../🏅️standards/🔖️2.0/🪆️subsets/
@@ -35,10 +35,16 @@ fn spec(ctx: &Context) -> Result<Json, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 🦠️ The forward half, with observability asserted in role: the reference applies the kind to the
+/// real archive and the result has to differ from the untouched one under the very profile the case
+/// is measured by — member ORDER excepted, since `semantic-archive-mutate-v1` declares
+/// `arrays: "set"` and a reordering is not a change the comparison would ever see.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
-    let bytes = oracle_apply_mutation(&input, &spec(ctx)?)?;
+    let scenario_spec = spec(ctx)?;
+    let bytes = oracle_apply_mutation(&input, &scenario_spec)?;
     let projection = project_zip_mutation(&bytes)?;
+    mutation_is_observable(&scenario_spec.str("kind"), &unordered(&projection, &["entries"]), &unordered(&project_zip_mutation(&input)?, &["entries"]), &[])?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 

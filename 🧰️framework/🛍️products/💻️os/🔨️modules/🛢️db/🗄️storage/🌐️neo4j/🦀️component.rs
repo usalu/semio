@@ -49,8 +49,10 @@ use crate::db_storage::{
 macro_rules! with_admitted_artifact {
     ($operation:expr, $document:expr, $artifact:ident, $call:expr) => {{
         let mut owner = DbIoArtifactId::try_from_text($operation, $document)?;
-        let $artifact = owner.as_artifact();
+        let artifact_value = ArtifactId(owner.as_str().to_string());
+        let $artifact = &artifact_value;
         let terminal = $call.await;
+        drop(artifact_value);
         owner.close_step()?;
         terminal
     }};

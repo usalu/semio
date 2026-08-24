@@ -11,14 +11,16 @@
 //!
 //! **Standard mismatch, resolved**: this subset's OWN codec (`../🚪️io/🦀️component.rs`'s
 //! `decode_stl_ascii`/`encode_stl_ascii`) is genuinely ASCII text — matching the `ascii` standard
-//! this subset is filed under — but `stl_io` 0.8's own top-level doc comment states "Writing is
-//! limited to binary STL", confirmed in its source (`writer.rs` hardcodes a zeroed 80-byte header
-//! with no name field at all; `read_stl`'s `IndexedMesh` carries no name either). `stl_io` therefore
-//! cannot express the ASCII form OR the solid name in either direction. Six of the seven declared
-//! kinds round-trip the triangle soup through `stl_io`'s `IndexedMesh`/`write_stl` regardless (the
-//! byte FORM is writer freedom under `semantic-mesh-v1`'s projection-based comparison); the seventh,
-//! `set-solid-name` — whose whole payload IS the field `stl_io` cannot touch — is instead applied as
-//! a direct ASCII header/trailer substitution on the same real document.
+//! this subset is filed under — and `stl_io` 0.8 READS that form perfectly well, which is the half
+//! that matters for an independent reader. Its WRITER cannot serve: its own top-level doc comment
+//! states "Writing is limited to binary STL", confirmed in its source (`writer.rs` hardcodes a
+//! zeroed 80-byte header with no name field at all; `read_stl`'s `IndexedMesh` carries no name
+//! either). Routing output through it would therefore discard the solid name on every kind — the
+//! very field `set-solid-name` exists to change — and would leave this `ascii` subset's oracle never
+//! once emitting the ascii grammar. So `stl_io` is the READER for every arm here and the ascii
+//! grammar is written by this module directly (`mod ascii`), the same precedent the OBJ subset's
+//! oracle follows for a format whose Rust reference is a reader. Nothing here touches the subject's
+//! own codec, so it stays a genuine second producer rather than a self-comparison.
 //!
 //! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
@@ -26,8 +28,9 @@
 use semio_repo_test_host::Json;
 
 //#region 🔖️TriangleSoup
-/// 🧊️ Independent triangle-soup reading/writing behind `stl_io`, shared by every dispatch arm below
-/// except `set-solid-name` (see this file's top doc comment for why that one is ASCII-text-only).
+/// 🧊️ Independent triangle-soup reading behind `stl_io` — the reader half every dispatch arm below
+/// starts from, including `no-mutation` (see this file's top doc comment for why the writer half
+/// cannot come from the same crate).
 #[cfg(feature = "oracles")]
 mod triangle_soup {
     #[derive(Clone, Copy)]
@@ -44,30 +47,31 @@ mod triangle_soup {
         Ok(mesh.faces.iter().map(|face| RefTriangle { normal: face.normal.0, vertices: [mesh.vertices[face.vertices[0]].0, mesh.vertices[face.vertices[1]].0, mesh.vertices[face.vertices[2]].0] }).collect())
     }
 
-    /// 📤️ Independent write: always binary (`stl_io` has no ASCII writer — see this file's top doc
-    /// comment). Comparison happens on the projection, so the byte FORM never has to match the
-    /// subject's own ASCII output.
-    pub(super) fn write(triangles: &[RefTriangle]) -> Result<Vec<u8>, String> {
-        let faces: Vec<stl_io::Triangle> = triangles.iter().map(|triangle| stl_io::Triangle { normal: stl_io::Normal::new(triangle.normal), vertices: triangle.vertices.map(stl_io::Vertex::new) }).collect();
-        let mut out = std::io::Cursor::new(Vec::new());
-        stl_io::write_stl(&mut out, faces.iter()).map_err(|error| format!("stl write: {error}"))?;
-        Ok(out.into_inner())
-    }
 }
 //#endregion 🔖️TriangleSoup
 
-//#region 🔖️AsciiName
-/// 🏷️ `set-solid-name`'s dedicated path: `stl_io` cannot represent the solid name (see this file's
-/// top doc comment), so the header/trailer are substituted directly on the real ASCII text this
-/// subset's own fixture is committed in — independent of `stl_io`, but still independent of the
-/// subject under test.
+//#region 🔖️Ascii
+/// 🔤️ The ASCII STL grammar — this subset's own standard, and the form every arm below emits.
+///
+/// `stl_io` READS ascii perfectly well; its writer is the half that cannot serve here. That writer
+/// emits binary only (its own doc comment says so, and `writer.rs` hardcodes a zeroed 80-byte
+/// header), and binary STL has no solid-name field at all, so routing the output through it would
+/// throw away the very thing `set-solid-name` exists to change and would leave this `ascii` subset's
+/// oracle never once exercising the ascii grammar. Writing the grammar directly instead is the same
+/// precedent the OBJ subset's oracle already follows for a format whose Rust reference is a reader:
+/// the second producer is this module, the independent READER every result is projected through is
+/// still `stl_io`, and nothing here touches the subject's `decode_stl_ascii`/`encode_stl_ascii`.
 #[cfg(feature = "oracles")]
-mod ascii_name {
+mod ascii {
+    use super::triangle_soup::RefTriangle;
+
     fn text(input: &[u8]) -> Result<String, String> {
-        String::from_utf8(input.to_vec()).map_err(|error| format!("set-solid-name requires ASCII STL text: {error}"))
+        String::from_utf8(input.to_vec()).map_err(|error| format!("ascii STL expected: {error}"))
     }
 
-    pub(super) fn read(input: &[u8]) -> Result<String, String> {
+    /// 🏷️ The solid name off the `solid <name>` header — the one field `stl_io`'s `IndexedMesh` has
+    /// no slot for, so it is read out of the grammar directly.
+    pub(super) fn read_name(input: &[u8]) -> Result<String, String> {
         let source = text(input)?;
         let header = source.lines().next().ok_or_else(|| "stl ascii: empty document".to_string())?;
         if !header.trim_start().starts_with("solid") {
@@ -76,20 +80,22 @@ mod ascii_name {
         Ok(header.trim().strip_prefix("solid").unwrap_or("").trim().to_string())
     }
 
-    pub(super) fn write(input: &[u8], name: &str) -> Result<Vec<u8>, String> {
-        let source = text(input)?;
-        let lines: Vec<&str> = source.lines().collect();
-        let trailer = lines.iter().rposition(|line| line.trim_start().starts_with("endsolid")).ok_or_else(|| "stl ascii: missing 'endsolid' trailer".to_string())?;
+    /// 📤️ Independent write of the whole ascii document from the model alone: header, one
+    /// `facet normal`/`outer loop`/`vertex`×3 block per triangle in order, trailer.
+    pub(super) fn write(name: &str, triangles: &[RefTriangle]) -> Result<Vec<u8>, String> {
         let mut out = format!("solid {name}\n");
-        for line in &lines[1..trailer] {
-            out.push_str(line);
-            out.push('\n');
+        for triangle in triangles {
+            out.push_str(&format!("  facet normal {} {} {}\n    outer loop\n", triangle.normal[0], triangle.normal[1], triangle.normal[2]));
+            for vertex in &triangle.vertices {
+                out.push_str(&format!("      vertex {} {} {}\n", vertex[0], vertex[1], vertex[2]));
+            }
+            out.push_str("    endloop\n  endfacet\n");
         }
         out.push_str(&format!("endsolid {name}\n"));
         Ok(out.into_bytes())
     }
 }
-//#endregion 🔖️AsciiName
+//#endregion 🔖️Ascii
 
 //#region 🔖️SpecReaders
 #[cfg(feature = "oracles")]
@@ -170,14 +176,14 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "no-mutation" => Ok(input.to_vec()),
-        "set-solid-name" => ascii_name::write(input, &string(&params, "name").ok_or("set-solid-name: missing `name`")?),
+        "no-mutation" => ascii::write(&ascii::read_name(input)?, &triangle_soup::read(input)?),
+        "set-solid-name" => ascii::write(&string(&params, "name").ok_or("set-solid-name: missing `name`")?, &triangle_soup::read(input)?),
         "insert-triangle" => {
             let mut triangles = triangle_soup::read(input)?;
             let index = number(&params, "index").ok_or("insert-triangle: missing `index`")? as usize;
             let triangle = triangle_of(params.get("triangle").ok_or("insert-triangle: missing `triangle`")?).ok_or("insert-triangle: malformed `triangle`")?;
             triangles.insert(index.min(triangles.len()), triangle);
-            triangle_soup::write(&triangles)
+            ascii::write(&ascii::read_name(input)?, &triangles)
         }
         "remove-triangle" => {
             let mut triangles = triangle_soup::read(input)?;
@@ -185,7 +191,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             if index < triangles.len() {
                 triangles.remove(index);
             }
-            triangle_soup::write(&triangles)
+            ascii::write(&ascii::read_name(input)?, &triangles)
         }
         "set-triangle-normal" => {
             let mut triangles = triangle_soup::read(input)?;
@@ -194,7 +200,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             if let Some(triangle) = triangles.get_mut(index) {
                 triangle.normal = normal;
             }
-            triangle_soup::write(&triangles)
+            ascii::write(&ascii::read_name(input)?, &triangles)
         }
         "set-triangle-vertices" => {
             let mut triangles = triangle_soup::read(input)?;
@@ -203,9 +209,9 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             if let Some(triangle) = triangles.get_mut(index) {
                 triangle.vertices = vertices;
             }
-            triangle_soup::write(&triangles)
+            ascii::write(&ascii::read_name(input)?, &triangles)
         }
-        "set-snapshot" => triangle_soup::write(&triangles_of(&params, "triangles").ok_or("set-snapshot: missing/malformed `triangles`")?),
+        "set-snapshot" => ascii::write(&ascii::read_name(input)?, &triangles_of(&params, "triangles").ok_or("set-snapshot: missing/malformed `triangles`")?),
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }
@@ -229,7 +235,7 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
     Ok(match spec.str("kind").as_str() {
         "" => return Err("mutation spec carries no `kind`".to_string()),
         "no-mutation" => spec_of("no-mutation", Json::Object(vec![])),
-        "set-solid-name" => spec_of("set-solid-name", Json::Object(vec![("name".to_string(), Json::String(ascii_name::read(base)?))])),
+        "set-solid-name" => spec_of("set-solid-name", Json::Object(vec![("name".to_string(), Json::String(ascii::read_name(base)?))])),
         "insert-triangle" => {
             let triangles = triangle_soup::read(base)?;
             let index = number(&params, "index").ok_or("insert-triangle: missing `index`")? as usize;
@@ -280,13 +286,38 @@ pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Json, String> {
 }
 //#endregion 🔖️Inverse
 
+//#region 🔖️DocumentProjection
+/// 📐️ The two fields a triangle-soup projection cannot carry, and without which two of this
+/// subset's seven declared kinds move nothing at all: the `solid <name>` header, read out of the
+/// ascii grammar, and the EXPLICIT per-facet normal, read back through `stl_io` rather than
+/// recomputed from winding. STL states its normals rather than deriving them, so `set-triangle-
+/// normal` is a real change to the document even when every corner stays exactly where it was —
+/// the shared mesh projection reports resolved corners only and cannot see it.
+#[cfg(feature = "oracles")]
+pub fn oracle_document_projection(input: &[u8]) -> Result<Json, String> {
+    let triangles = triangle_soup::read(input)?;
+    Ok(Json::Object(vec![
+        ("solidName".to_string(), Json::String(ascii::read_name(input)?)),
+        ("facetCount".to_string(), Json::Number(triangles.len() as f64)),
+        ("facetNormals".to_string(), Json::Array(triangles.iter().map(|triangle| Json::Array(triangle.normal.iter().map(|value| Json::Number(*value as f64)).collect())).collect())),
+    ]))
+}
+
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_document_projection(_input: &[u8]) -> Result<Json, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+//#endregion 🔖️DocumentProjection
+
 //#region 🔖️RoundTrip
-/// 🔁️ A genuine independent decode + re-encode with no shortcut — unlike `no-mutation`'s literal
-/// passthrough above, this is what the identity-round-trip scenario needs: real bytes out of a real
-/// parse, guaranteed to differ from ASCII input (`stl_io` writes binary only).
+/// 🔁️ The identity-round-trip scenario's own producer: `stl_io` parses the real ascii document into
+/// its `IndexedMesh` and this module re-emits the whole grammar from that model alone. It is exactly
+/// what `no-mutation` now does — that arm used to hand the input bytes straight back, which proves
+/// nothing about either half — and it cannot coincidentally reproduce the input, because `stl_io`
+/// resolves every coordinate through `f32` while the committed fixture carries `f64` decimals.
 #[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
-    triangle_soup::write(&triangle_soup::read(input)?)
+    ascii::write(&ascii::read_name(input)?, &triangle_soup::read(input)?)
 }
 
 /// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
@@ -308,9 +339,36 @@ mod tests {
     }
 
     #[test]
-    fn no_mutation_is_a_true_byte_identity() {
+    fn no_mutation_re_emits_the_document_rather_than_handing_the_bytes_back() {
         let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("no-mutation", Json::Object(vec![]))).unwrap();
-        assert_eq!(output, FIXTURE.as_bytes());
+        assert_eq!(ascii::read_name(&output).unwrap(), "box", "the solid name survives");
+        assert_eq!(triangle_soup::read(&output).unwrap().len(), 2, "and so does every facet");
+        assert_eq!(String::from_utf8(output).unwrap(), "solid box\n  facet normal 0 0 -1\n    outer loop\n      vertex 0 0 0\n      vertex 0 1 0\n      vertex 1 0 0\n    endloop\n  endfacet\n  facet normal 0 0 1\n    outer loop\n      vertex 0 0 1\n      vertex 1 0 1\n      vertex 0 1 1\n    endloop\n  endfacet\nendsolid box\n", "re-emitted from the parsed model, not copied");
+    }
+
+    #[test]
+    fn every_kind_emits_ascii_that_keeps_the_solid_name() {
+        for (kind, params) in [
+            ("no-mutation", Json::Object(vec![])),
+            ("remove-triangle", Json::Object(vec![("index".to_string(), Json::Number(0.0))])),
+            ("set-triangle-normal", Json::Object(vec![("index".to_string(), Json::Number(0.0)), ("normal".to_string(), Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)]))])),
+        ] {
+            let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec(kind, params)).unwrap();
+            assert_eq!(ascii::read_name(&output).unwrap(), "box", "{kind} must not lose the solid name the way a binary re-encode would");
+        }
+    }
+
+    #[test]
+    fn the_projection_sees_the_two_fields_a_triangle_soup_reader_cannot() {
+        let renamed = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("set-solid-name", Json::Object(vec![("name".to_string(), Json::String("renamed".to_string()))]))).unwrap();
+        let turned = oracle_apply_mutation(
+            FIXTURE.as_bytes(),
+            &spec("set-triangle-normal", Json::Object(vec![("index".to_string(), Json::Number(0.0)), ("normal".to_string(), Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)]))])),
+        )
+        .unwrap();
+        let base = oracle_document_projection(FIXTURE.as_bytes()).unwrap();
+        assert_ne!(oracle_document_projection(&renamed).unwrap(), base, "set-solid-name has to be visible somewhere");
+        assert_ne!(oracle_document_projection(&turned).unwrap(), base, "and so does set-triangle-normal");
     }
 
     #[test]
@@ -380,11 +438,18 @@ mod tests {
         assert_eq!(triangle_soup::read(&output).unwrap().len(), 1);
     }
 
+    /// 🔁️ The real committed fixture is written by a `f64` producer — `0.0`, `-8.881784197001252e-16`
+    /// — while `stl_io` resolves every coordinate through `f32`, so a genuine re-emission cannot
+    /// reproduce it. This vector carries that same shape, which `FIXTURE`'s tidy integers do not:
+    /// against `FIXTURE` the writer legitimately lands on the input again, and asserting otherwise
+    /// there would be asserting a coincidence of formatting rather than the law.
     #[test]
-    fn round_trip_never_passes_bytes_through() {
-        let output = oracle_round_trip(FIXTURE.as_bytes()).unwrap();
-        assert_ne!(output, FIXTURE.as_bytes());
-        assert_eq!(triangle_soup::read(&output).unwrap().len(), 2);
+    fn round_trip_re_emits_a_real_producer_document_rather_than_copying_it() {
+        const REAL_SHAPED: &str = "solid forest\n  facet normal -0.8660253933154181 0.0 -0.5000000181328751\n    outer loop\n      vertex 0.0 2.734999895095825 -8.881784197001252e-16\n      vertex 0.0 3.0 -8.881784197001252e-16\n      vertex 2.700000047683716 3.0 -4.676537036895752\n    endloop\n  endfacet\nendsolid forest\n";
+        let output = oracle_round_trip(REAL_SHAPED.as_bytes()).unwrap();
+        assert_ne!(output, REAL_SHAPED.as_bytes(), "the document was re-emitted from the parsed model, so the f64 source decimals cannot survive verbatim");
+        assert_eq!(triangle_soup::read(&output).unwrap().len(), 1);
+        assert_eq!(ascii::read_name(&output).unwrap(), "forest");
     }
 
     #[test]

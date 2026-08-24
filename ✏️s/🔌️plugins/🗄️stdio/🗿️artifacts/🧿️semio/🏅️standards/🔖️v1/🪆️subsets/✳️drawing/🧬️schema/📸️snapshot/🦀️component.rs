@@ -823,6 +823,65 @@ impl store::ArtifactPack for SemioDrawingSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.drawing` — the shape `mutate-semio-drawing` compares under `ordered-json-v1`,
+/// derived from the snapshot type itself rather than hand-written a second time in the adapter. The
+/// projection is deeply discriminated: `DrawNode` and `PathSegment` are both `#[serde(tag = "kind",
+/// rename_all = "camelCase")]` enums nested to arbitrary depth, so a hand-written adapter
+/// projection would have to reproduce every discriminator at every level. A thin `serde_json`
+/// wrapper (already a direct dependency of this crate, used behind this interface per CLAUDE.md's
+/// "external libraries behind an interface" rule, never a new one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_drawing_snapshot_json(snapshot: &SemioDrawingSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioDrawingSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_drawing_snapshot_json`] — decodes the committed
+/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`SemioDrawingSnapshot`] values, so `mutate-semio-drawing`'s
+/// adapter reads the committed fixture instead of re-declaring a recursive scene graph as a Rust
+/// literal beside it. Reaching `serde_json` from that adapter is impossible — the generated test
+/// host links only this crate — which is why the bridge belongs here rather than there.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_drawing_snapshot_json(text: &str) -> Result<SemioDrawingSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🔖️Wire
+/// 📝️ Parses `s.stdio.semio.drawing` DSL text into a [`SemioDrawingSnapshot`] — a named
+/// pass-through of this snapshot's own `store::ArtifactDsl` impl above, whose trait and error type
+/// are both unnameable outside this crate, so `mutate-semio-drawing`'s `identity-round-trip`
+/// scenario reaches the real committed sketch artifact through this instead.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_drawing_dsl(text: &str) -> Result<SemioDrawingSnapshot, String> {
+    <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Renders a [`SemioDrawingSnapshot`] back as DSL text — the inverse of
+/// [`parse_semio_drawing_dsl`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_drawing_dsl(snapshot: &SemioDrawingSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Encodes a [`SemioDrawingSnapshot`] as a semio pack envelope — the binary twin of the DSL
+/// text, produced by a SEPARATE codec, which is what makes the two committed encodings of one
+/// document able to contradict each other.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_drawing_pack(snapshot: &SemioDrawingSnapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+
+/// 📦️ Decodes a semio pack envelope into a [`SemioDrawingSnapshot`] — the inverse of
+/// [`encode_semio_drawing_pack`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_drawing_pack(bytes: &[u8]) -> Result<SemioDrawingSnapshot, String> {
+    <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+//#endregion 🔖️Wire
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.drawing` document — exercises every `PathSegment`/`DrawNode` variant
 /// at least once (incl. nested `Group.children` recursion) plus every `Option<T>` field non-`None`.

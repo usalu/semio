@@ -8,10 +8,10 @@
 //! half is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
 //! local implementation.
 
-use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_plugin_stdio_test_oracle::artifacts::stl::standards::v_ascii::subsets::any::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip};
+use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_s_plugin_stdio_test_oracle::artifacts::stl::standards::v_ascii::subsets::any::{oracle_apply_mutation, oracle_document_projection, oracle_inverse_spec, oracle_round_trip};
 use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_preserves_within};
+use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, mutation_is_observable_within, round_trip_preserves_within};
 
 //#region 🔖️Kinds
 /// 🧾️ Mirrors `StlMutation::KINDS` (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`)
@@ -21,12 +21,35 @@ const KINDS: [&str; 7] = ["no-mutation", "set-snapshot", "set-solid-name", "inse
 //#endregion 🔖️Kinds
 
 //#region 🔖️Profile
-/// 📏️ `semantic-mesh-v1`'s own declared tolerances (`../../../../🧪️oracle/🔣️component.json`),
-/// mirrored here so an in-handler law check is exactly as strict as the profile the case is
-/// measured by — never stricter, which would invent a failure the comparison itself would forgive.
-const MESH_WRITER_FREEDOM: &[&str] = &["generator", "comment", "byteLength", "fileSize", "precision", "solidName"];
-const MESH_TOLERANCE: f64 = 1e-5;
+/// 📏️ `semantic-stl-ascii-v1`'s own declared tolerances (`../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/
+/// 🧪️oracle/🔣️component.json`), mirrored here so an in-handler law check is exactly as strict as the
+/// profile the case is measured by — never stricter, which would invent a failure the comparison
+/// itself would forgive.
+const STL_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "precision"];
+const STL_TOLERANCE: f64 = 1e-5;
 //#endregion 🔖️Profile
+
+//#region 🔖️Projection
+/// 🔍️ The projection both roles are compared through: `stl_io`'s resolved triangle soup, plus the
+/// `solid <name>` header and the EXPLICIT per-facet normals it cannot carry. Without that second
+/// half `set-solid-name` and `set-triangle-normal` — 2 of the 7 declared kinds — leave the
+/// projection exactly as they found it, and their scenarios measure nothing. Both halves are read
+/// independently of `decode_stl_ascii`.
+fn project(bytes: &[u8]) -> Result<Json, String> {
+    let mut projection = project_stl(bytes)?;
+    match &mut projection {
+        Json::Object(members) => members.push(("document".to_string(), oracle_document_projection(bytes)?)),
+        other => return Err(format!("the mesh reader returned {other:?} rather than an object")),
+    }
+    Ok(projection)
+}
+
+/// 👁️ All 7 declared kinds have to move that composed projection — none is exempt, which is exactly
+/// what the solid name and the facet normals were added to it to make true.
+fn moved_the_document(kind: &str, mutated: &Json, base: &Json) -> Result<(), String> {
+    mutation_is_observable_within(kind, mutated, base, &[], STL_WRITER_FREEDOM, STL_TOLERANCE)
+}
+//#endregion 🔖️Projection
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🧊️hexagonal-cut-concrete-forest-left.stl";
@@ -39,11 +62,15 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
+/// 🦠️ The forward half, with observability asserted in role: the reference applies the kind to the
+/// real solid and the result has to differ from the untouched document under the very profile the
+/// case is measured by.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let spec = ctx.doc_json()?;
     let bytes = oracle_apply_mutation(&input, &spec)?;
-    let projection = project_stl(&bytes)?;
+    let projection = project(&bytes)?;
+    moved_the_document(&spec.str("kind"), &projection, &project(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 
@@ -59,22 +86,23 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let mutated = oracle_apply_mutation(&input, &spec)?;
     let inverse_spec = oracle_inverse_spec(&input, &spec)?;
     let restored = oracle_apply_mutation(&mutated, &inverse_spec)?;
-    let projection = project_stl(&restored)?;
-    inverse_restores_within(&spec.str("kind"), &projection, &project_stl(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
+    let projection = project(&restored)?;
+    inverse_restores_within(&spec.str("kind"), &projection, &project(&input)?, STL_WRITER_FREEDOM, STL_TOLERANCE)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 
-/// 🔁️ The identity law, both halves asserted in role: the triangle soup must survive the
-/// decode/re-encode unchanged, and the output must not be the input back again — `stl_io` writes
-/// BINARY STL, so a bit-identical result against this ASCII fixture could only be a copy.
+/// 🔁️ The identity law, both halves asserted in role: the solid must survive the decode/re-encode
+/// unchanged — name, facet normals and corners alike — and the output must not be the input back
+/// again. `stl_io` resolves every coordinate through `f32` while the committed fixture carries the
+/// `f64` decimals its GLB derivation produced, so a bit-identical result could only be a copy.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let bytes = oracle_round_trip(&input)?;
     if bytes == input {
         return Err("byte pass-through: oracle output is bit-identical to the input".to_string());
     }
-    let projection = project_stl(&bytes)?;
-    round_trip_preserves_within(&projection, &project_stl(&input)?, MESH_WRITER_FREEDOM, MESH_TOLERANCE)?;
+    let projection = project(&bytes)?;
+    round_trip_preserves_within(&projection, &project(&input)?, STL_WRITER_FREEDOM, STL_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -82,13 +110,11 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::mutable_input;
+    use super::{moved_the_document, mutable_input, project};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::io::{decode_stl_ascii, encode_stl_ascii};
     use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::mutations::{apply_stl_mutation, StlMutation};
     use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::schema::snapshot::{StlSnapshot, StlTriangle};
-    use semio_s_plugin_stdio_test_oracle::mesh::project_stl;
-use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_preserves_within};
 
     //#region 🔖️SpecReaders
     fn params_of(spec: &Json) -> Json {
@@ -204,7 +230,8 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_
         let mutation = mutation_of(&spec, &snapshot)?;
         apply_stl_mutation(&mut snapshot, &mutation);
         let bytes = encode_stl_ascii(&snapshot).into_bytes();
-        let projection = project_stl(&bytes)?;
+        let projection = project(&bytes)?;
+        moved_the_document(&spec.str("kind"), &projection, &project(&mutable_input(ctx)?)?)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
@@ -218,7 +245,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_
         apply_stl_mutation(&mut snapshot, &forward);
         apply_stl_mutation(&mut snapshot, &backward);
         let bytes = encode_stl_ascii(&snapshot).into_bytes();
-        let projection = project_stl(&bytes)?;
+        let projection = project(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 
@@ -230,7 +257,7 @@ use semio_s_plugin_stdio_test_oracle::law::{inverse_restores_within, round_trip_
         if bytes == input {
             return Err("byte pass-through: subject output is bit-identical to the input".to_string());
         }
-        let projection = project_stl(&bytes)?;
+        let projection = project(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
     }
 }

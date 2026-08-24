@@ -60,6 +60,30 @@ pub enum SemioDrawingMutation {
     ChangeStrokeColor(change_stroke_color::mutation::ChangeStrokeColor),
     ChangeStrokeWidth(change_stroke_width::mutation::ChangeStrokeWidth),
 }
+
+/// 🏷️ Kebab-case spelling of every `SemioDrawingMutation` variant, in declaration order — the
+/// vocabulary the `semio-v1-drawing` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares
+/// and `mutate-semio-drawing`'s exhaustive test case measures itself against. The framework never
+/// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest.
+pub const KINDS: &[&str] = &[
+    "create-layer",
+    "delete-layer",
+    "create-node",
+    "delete-node",
+    "move-node",
+    "drag-nodes",
+    "rotate",
+    "scale",
+    "reorder-nodes",
+    "group",
+    "ungroup",
+    "flatten",
+    "unflatten",
+    "replace-path",
+    "replace-fill",
+    "change-stroke-color",
+    "change-stroke-width",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -70,6 +94,29 @@ pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutatio
     use protocol::Mutation;
     let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
+}
+
+/// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
+/// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
+/// `protocol` extern-crate item (the `mutate-semio-drawing` test adapter, whose `inverse-<kind>`
+/// scenarios need a mutation's own computed inverse) can still reach the inverse law that
+/// [`apply_semio_drawing_mutation`] alone cannot. Same shape as `✳️kit`'s
+/// `inverse_semio_kit_mutation`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
+    use protocol::Mutation;
+    <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::inverse(mutation, base)
+}
+
+/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
+/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
+/// carry — into a real [`SemioDrawingMutation`]. Node-addressed payloads carry a `NodePath`
+/// (`{"layer": 0, "path": [0]}`) rather than a node id, because `DrawNode` is an anonymous
+/// recursive scene graph with no stable identity of its own.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_drawing_mutation_json(text: &str) -> Result<SemioDrawingMutation, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Apply
 
@@ -333,6 +380,23 @@ mod tests {
         assert_eq!(mutation.semantics().kind, "delete-layer");
         assert_eq!(mutation.semantics().record, "DeletedLayer");
         assert_eq!(mutation.target(), vec!["l0".to_string()]);
+    }
+
+    /// 🏷️ `KINDS` (this facet's own const, consumed by `mutate-semio-drawing`'s adapter) must name
+    /// every declared variant, in the exact order and spelling `#[derive(dsl::Mutations)]` assigns,
+    /// and every one of them must appear in the committed oracle manifest's catalog — the framework
+    /// never parses Rust, so this is what keeps the declaration honest in both directions.
+    #[test]
+    fn kinds_match_the_enum_and_the_catalog() {
+        let descriptors = SemioDrawingMutation::kinds();
+        assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared variant");
+        for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
+            assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        }
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        }
     }
 }
 //#endregion 🧪️Tests

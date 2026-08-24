@@ -126,6 +126,33 @@ pub fn inverse_restores(kind: &str, restored: &Json, original: &Json) -> Result<
     inverse_restores_within(kind, restored, original, &[], 0.0)
 }
 
+/// 👁️ The observability law: a mutation that is not `no-mutation` must move the very surface the
+/// scenario is compared through. A kind whose forward effect lands entirely outside the projection
+/// makes `mutate-<kind>` and `inverse-<kind>` pass identically to `no-mutation` — the projection is
+/// then a claim about nothing, and the scenario reports a green for a mutation it never observed.
+///
+/// `unobservable` names the kinds a subset has established, in code AND in its feature description,
+/// genuinely cannot reach the serialization (the format does not carry the field, or this subset's
+/// own encoder documents that it regenerates it). Naming one there is a claim the reader can check;
+/// leaving one silently passing is not.
+pub fn mutation_is_observable(kind: &str, mutated: &Json, base: &Json, unobservable: &[&str]) -> Result<(), String> {
+    mutation_is_observable_within(kind, mutated, base, unobservable, &[], 0.0)
+}
+
+/// 👁️ [`mutation_is_observable`] measured under the case's own comparison profile rather than under
+/// exact equality. A move confined to keys the profile ignores, or smaller than the slack it allows,
+/// is a move the comparison itself cannot see — so a checker stricter than the profile would accept
+/// a row the profile would still let through unobserved.
+pub fn mutation_is_observable_within(kind: &str, mutated: &Json, base: &Json, unobservable: &[&str], ignore_keys: &[&str], tolerance: f64) -> Result<(), String> {
+    if kind == "no-mutation" || unobservable.contains(&kind) {
+        return Ok(());
+    }
+    match divergence_within(mutated, base, ignore_keys, tolerance) {
+        Some(_) => Ok(()),
+        None => Err(format!("observability law violated: {kind:?} left the compared projection bit-for-bit identical to the untouched input, so this scenario would pass whether or not the mutation was applied at all")),
+    }
+}
+
 /// 🔁️ The identity law's semantic half: decoding and re-encoding must not move the projection.
 pub fn round_trip_preserves_within(reencoded: &Json, original: &Json, ignore_keys: &[&str], tolerance: f64) -> Result<(), String> {
     match divergence_within(reencoded, original, ignore_keys, tolerance) {
@@ -240,6 +267,26 @@ mod tests {
         assert!(inverse_restores("remove-point", &restored, &original).unwrap_err().contains("remove-point"));
         assert!(inverse_restores("remove-point", &restored, &original).unwrap_err().contains("$.count is 4, expected 5"));
         assert!(inverse_restores("remove-point", &original, &original.clone()).is_ok());
+    }
+
+    #[test]
+    fn the_observability_law_exempts_only_no_mutation_and_declared_kinds() {
+        let base = object(vec![("count", Json::Number(5.0))]);
+        let moved = object(vec![("count", Json::Number(6.0))]);
+        assert!(mutation_is_observable("remove-point", &moved, &base, &[]).is_ok());
+        assert!(mutation_is_observable("no-mutation", &base, &base.clone(), &[]).is_ok());
+        assert!(mutation_is_observable("set-restart-interval", &base, &base.clone(), &["set-restart-interval"]).is_ok());
+        let violation = mutation_is_observable("remove-point", &base, &base.clone(), &[]).unwrap_err();
+        assert!(violation.contains("remove-point"), "{violation}");
+        assert!(violation.contains("observability law violated"), "{violation}");
+    }
+
+    #[test]
+    fn the_observability_law_honours_the_profile_it_is_given() {
+        let base = object(vec![("fileSize", Json::Number(10.0))]);
+        let only_metadata_moved = object(vec![("fileSize", Json::Number(99.0))]);
+        assert!(mutation_is_observable("set-comment", &only_metadata_moved, &base, &[]).is_ok());
+        assert!(mutation_is_observable_within("set-comment", &only_metadata_moved, &base, &[], &["fileSize"], 0.0).is_err(), "a move confined to what the profile ignores is not a move the comparison can see");
     }
 
     #[test]

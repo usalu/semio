@@ -6,6 +6,16 @@
 //! duplicating the schema definition.
 
 pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::*;
+
+//#region 🧬️Mutations
+/// 🧬️ This subset's OWN mutation vocabulary — one kind per ISO 10303-214 CC1 (config data only) conformance
+/// rule, derived from `check_cc1_conformance` below rather than copied from a sibling class, and
+/// NOT the `✳️any` subset's generic ISO 10303-21 graph editing. The module re-exports `✳️any`'s
+/// `StepMutation`/`apply_step_mutation` as well, since this explicit declaration shadows the glob
+/// re-export those names used to arrive through.
+#[path = "🧬️mutations/🦀️component.rs"]
+pub mod mutations;
+//#endregion 🧬️Mutations
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::check_cc1_conformance;

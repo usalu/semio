@@ -21,7 +21,18 @@ Feature: Apply every typed semio BREP mutation to its committed specification fi
   the planner digest-pins every file it hands over. The `oracle` role reads the committed after- (or
   before-) snapshot literally, with no recomputation and no reimplementation of mutation semantics;
   the `subject` role decodes the committed before-snapshot and mutation payload, runs the real
-  production entry point, and the `ordered-json-v1` profile compares the two structurally.
+  production entry point,.
+
+  ⚖️ Because this case records a no-oracle decision, the runner executes NO oracle role: it resolves
+  an oracle implementation from an `@oracle-` tag this feature deliberately does not carry, so the
+  comparison profile never receives two sides to compare and the `oracle` handlers below are the
+  written statement of the reference answer rather than a second running party. Every law this
+  feature claims is therefore asserted INSIDE the subject handler, which fails with both documents
+  printed. A handler that merely ran the mutation and returned would report a pass having checked
+  nothing. Here that means the applied topology is checked against the committed
+  after-snapshot in full, so a `delete-face` that removed the face but left its loop pointing at a
+  severed edge fails, and the undone topology against the committed before-snapshot, so a
+  `delete-solid` whose inverse re-added the solid without its shells fails too.
 
   @id-mutate
   @level-exhaustive

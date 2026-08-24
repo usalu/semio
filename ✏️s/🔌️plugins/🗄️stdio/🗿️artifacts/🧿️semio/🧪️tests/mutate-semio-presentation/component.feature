@@ -40,8 +40,17 @@ Feature: Apply every typed semio PRESENTATION mutation to the real committed dec
 
   The `oracle` role reads the committed after- (or before-) snapshot literally — no recomputation,
   no reimplementation of mutation semantics. The `subject` role decodes the committed before-snapshot
-  and mutation payload and runs this repository's own `apply_semio_presentation_mutation`. The
-  `ordered-json-v1` profile compares the two structurally.
+  and mutation payload and runs this repository's own `apply_semio_presentation_mutation`.
+
+  ⚖️ Because this case records a no-oracle decision, the runner executes NO oracle role: it resolves
+  an oracle implementation from an `@oracle-` tag this feature deliberately does not carry, so the
+  comparison profile never receives two sides to compare and the `oracle` handlers below are the
+  written statement of the reference answer rather than a second running party. Every law this
+  feature claims is therefore asserted INSIDE the subject handler, which fails with both documents
+  printed. A handler that merely ran the mutation and returned would report a pass having checked
+  nothing. Here that means the applied deck is checked against the committed
+  after-snapshot with slide and shape ORDER significant, so a removed slide's position — not merely
+  its absence — is what the inverse has to restore.
 
   @id-mutate
   @level-exhaustive

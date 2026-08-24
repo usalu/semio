@@ -494,20 +494,7 @@ struct UiDocumentSlot {
 
 impl Default for UiDocumentSlot {
     fn default() -> Self {
-        Self {
-            epoch: 0,
-            generation: 0,
-            surface: None,
-            revision: UiRevision::default(),
-            root: None,
-            layout_epoch: 0,
-            nodes: UiNodeTable::default(),
-            aliases: 0,
-            occupied: false,
-            complete: false,
-            retiring: false,
-            retire_scalar: 0,
-        }
+        Self { epoch: 0, generation: 0, surface: None, revision: UiRevision::default(), root: None, layout_epoch: 0, nodes: UiNodeTable::default(), aliases: 0, occupied: false, complete: false, retiring: false, retire_scalar: 0 }
     }
 }
 
@@ -550,20 +537,7 @@ impl UiDocumentArena {
         let Some(epoch) = self.slots[slot_index].epoch.checked_add(1) else {
             return Err((UiDocumentBuildError::ArenaFull, surface));
         };
-        self.slots[slot_index] = UiDocumentSlot {
-            epoch,
-            generation,
-            surface: Some(surface),
-            revision,
-            root,
-            layout_epoch,
-            nodes: UiNodeTable::default(),
-            aliases: 1,
-            occupied: true,
-            complete: false,
-            retiring: false,
-            retire_scalar: 0,
-        };
+        self.slots[slot_index] = UiDocumentSlot { epoch, generation, surface: Some(surface), revision, root, layout_epoch, nodes: UiNodeTable::default(), aliases: 1, occupied: true, complete: false, retiring: false, retire_scalar: 0 };
         Ok(UiDocumentHandle { slot: slot_index, epoch, generation })
     }
 
@@ -607,14 +581,7 @@ impl UiDocumentArena {
         }
         let Some(surface) = slot.surface.as_ref() else { return Err(UiDocumentLeaseError::Closing) };
         let Some(root) = slot.root else { return Err(UiDocumentLeaseError::Closing) };
-        Ok(UiDocumentLeaseHeader {
-            generation: handle.generation,
-            surface: surface.clone(),
-            revision: slot.revision,
-            root,
-            layout_epoch: slot.layout_epoch,
-            node_count: slot.nodes.len(),
-        })
+        Ok(UiDocumentLeaseHeader { generation: handle.generation, surface: surface.clone(), revision: slot.revision, root, layout_epoch: slot.layout_epoch, node_count: slot.nodes.len() })
     }
 
     fn page(&self, handle: UiDocumentHandle, index: usize) -> Result<Option<UiDocumentNodePage>, UiDocumentLeaseError> {
@@ -681,11 +648,12 @@ impl UiDocumentArena {
 #[derive(Debug)]
 pub struct UiDocumentBuilder {
     handle: Option<UiDocumentHandle>,
+    released: bool,
 }
 
 impl UiDocumentBuilder {
     pub fn try_new(generation: u64, surface: SurfaceId, revision: UiRevision, root: Option<UiNodeId>, layout_epoch: u64) -> Result<Self, (UiDocumentBuildError, SurfaceId)> {
-        with_ui_document_arena(|arena| arena.reserve(generation, surface, revision, root, layout_epoch)).map(|handle| Self { handle: Some(handle) })
+        with_ui_document_arena(|arena| arena.reserve(generation, surface, revision, root, layout_epoch)).map(|handle| Self { handle: Some(handle), released: false })
     }
 
     pub fn try_push(&mut self, record: UiNodeRecord) -> Result<(), (UiDocumentBuildError, UiNodeRecord)> {
@@ -701,12 +669,32 @@ impl UiDocumentBuilder {
         self.handle = None;
         Ok(UiDocumentLease { handle: Some(handle), released: false })
     }
+
+    pub fn close_step(&mut self) -> bool {
+        let Some(handle) = self.handle else { return true };
+        if !self.released {
+            with_ui_document_arena(|arena| arena.release(handle));
+            self.released = true;
+        }
+        let retired = with_ui_document_arena(UiDocumentArena::retire_one);
+        drop(retired);
+        if !with_ui_document_arena(|arena| arena.active(handle)) {
+            self.handle = None;
+        }
+        self.terminal_is_empty()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.handle.is_none()
+    }
 }
 
 impl Drop for UiDocumentBuilder {
     fn drop(&mut self) {
-        if let Some(handle) = self.handle.take() {
-            with_ui_document_arena(|arena| arena.release(handle));
+        if !self.released {
+            if let Some(handle) = self.handle.take() {
+                with_ui_document_arena(|arena| arena.release(handle));
+            }
         }
     }
 }
@@ -751,6 +739,10 @@ impl UiDocumentLease {
             self.handle = None;
         }
         !active
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.handle.is_none()
     }
 }
 
@@ -848,6 +840,29 @@ mod tests {
         assert_eq!(returned.id, UiNodeId(UI_DOCUMENT_NODES as u64));
         drop(builder);
         while !close_ui_document_page_one() {}
+    }
+
+    #[test]
+    fn document_builder_close_persists_until_terminal_after_one_step() {
+        let surface = SurfaceId::try_from("builder-close").expect("bounded fixture");
+        let mut builder = UiDocumentBuilder::try_new(43, surface, UiRevision(1), Some(UiNodeId(0)), 0).expect("fixed document slot");
+        for id in 0..4 {
+            builder.try_push(leaf_record(id, "node")).expect("fixed node owner");
+        }
+        assert!(!builder.close_step(), "one close opportunity cannot erase a nonterminal builder");
+        assert!(!builder.terminal_is_empty());
+        while !builder.close_step() {}
+        assert!(builder.terminal_is_empty());
+    }
+
+    #[test]
+    fn ordinary_lease_drop_releases_then_global_closer_reaches_terminal() {
+        let surface = SurfaceId::try_from("lease-drop").expect("bounded fixture");
+        let mut builder = UiDocumentBuilder::try_new(44, surface, UiRevision(1), Some(UiNodeId(0)), 0).expect("fixed document slot");
+        builder.try_push(leaf_record(0, "node")).expect("fixed node owner");
+        drop(builder.finish().expect("published lease"));
+        while !close_ui_document_page_one() {}
+        assert!(close_ui_document_page_one(), "drop law leaves no active retirement owner");
     }
 }
 //#endregion 🧪️Tests

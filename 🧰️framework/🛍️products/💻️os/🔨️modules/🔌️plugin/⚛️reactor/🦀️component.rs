@@ -982,6 +982,46 @@ mod wit_bridge {
         static COMMAND_INGRESS: RefCell<[Option<CommandIngressOwner>; 2]> = const { RefCell::new([None, None]) };
     }
 
+    const DIRTY_RENDER_CAPACITY: usize = 64;
+    const DIRTY_INTENT_INSTANCE_CAPACITY: usize = 64;
+    const DIRTY_INTENT_CAPACITY: usize = 64;
+
+    struct DirtyIntentBatch {
+        instance: u32,
+        intents: ui_contract::UiFixedList<ui_contract::UiIntent, DIRTY_INTENT_CAPACITY>,
+    }
+
+    struct DirtyPollOwners {
+        surfaces: ui_contract::UiFixedList<(u32, ui_contract::SurfaceId), DIRTY_RENDER_CAPACITY>,
+        intents: ui_contract::UiFixedList<DirtyIntentBatch, DIRTY_INTENT_INSTANCE_CAPACITY>,
+    }
+
+    impl DirtyPollOwners {
+        fn new() -> Self {
+            Self { surfaces: ui_contract::UiFixedList::default(), intents: ui_contract::UiFixedList::default() }
+        }
+
+        fn try_surface(&mut self, instance: u32, surface: ui_contract::SurfaceId) -> Result<(), ui_contract::SurfaceId> {
+            if self.surfaces.iter().any(|queued| queued.0 == instance && queued.1 == surface) {
+                return Ok(());
+            }
+            self.surfaces.try_push((instance, surface)).map_err(|(_, surface)| surface)
+        }
+
+        fn try_intent(&mut self, instance: u32, intent: ui_contract::UiIntent) -> Result<(), ui_contract::UiIntent> {
+            if let Some(batch) = self.intents.iter_mut().find(|batch| batch.instance == instance) {
+                return batch.intents.try_push(intent);
+            }
+            if self.intents.len() == DIRTY_INTENT_INSTANCE_CAPACITY {
+                return Err(intent);
+            }
+            let mut intents = ui_contract::UiFixedList::default();
+            intents.try_push(intent)?;
+            let _ = self.intents.try_push(DirtyIntentBatch { instance, intents });
+            Ok(())
+        }
+    }
+
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: the raw WIT event, aliased for `poll`'s
     /// `Event::InstanceClose` handling below — the KERNEL `Event::InstanceClose` (SSOT, `🎠️kernel`,
     /// not this packet's file) carries no instance id, so the raw payload must be read BEFORE
@@ -1033,11 +1073,10 @@ mod wit_bridge {
         _budget: semio_framework::kernel::Budget,
         close_instances: &[u32],
     ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
-        let mut dirty_render: Vec<(u32, String)> = Vec::new();
+        let mut dirty = DirtyPollOwners::new();
         // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): intents that survived the revision guard below,
         // batched per instance exactly like `app_commands` — dispatched in its own pass, after
         // `app_commands`, so a mutation from an app command this same turn is already visible.
-        let mut dirty_intents: HashMap<u32, Vec<ui_contract::UiIntent>> = HashMap::new();
 
         for numeric_instance in close_instances {
             JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(*numeric_instance));
@@ -1066,8 +1105,8 @@ mod wit_bridge {
         let _ = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
         let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
         if let Some(surface) = PATCHES.with(patches::PatchTracker::take_deferred_ready) {
-            if let Some(instance) = parse_surface_instance(&surface) {
-                dirty_render.push((instance, surface));
+            if let Some(instance) = parse_surface_instance(surface.as_ref()) {
+                dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
             }
         }
 
@@ -1109,14 +1148,18 @@ mod wit_bridge {
                         if let Ok(intent) = dsl::from_dsl_value::<ui_contract::UiIntent>(intent_value) {
                             let current_revision = PATCHES.with(|patches| patches.revision(&intent.surface.0));
                             if !is_stale_intent(intent.revision, current_revision, DEFAULT_REVISION_TOLERANCE) {
-                                dirty_intents.entry(numeric_instance).or_default().push(intent);
+                                dirty
+                                    .try_intent(numeric_instance, intent)
+                                    .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-intent-capacity"), "fixed dirty intent authority is saturated"))?;
                             }
                         }
                     }
                 }
                 Event::SurfaceVisible { surface } => {
                     if let Some(instance) = parse_surface_instance(&surface) {
-                        dirty_render.push((instance, surface));
+                        let surface =
+                            ui_contract::SurfaceId::try_from(surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+                        dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
                     }
                 }
                 Event::SurfaceHidden { .. } | Event::SurfaceResized { .. } => {}
@@ -1145,7 +1188,12 @@ mod wit_bridge {
                 }
                 Event::JobProgress { job, .. } => {
                     if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().accepted(job)) {
-                        dirty_render.push((binding.instance, format!("{}:window", binding.instance)));
+                        let surface = ui_contract::UiText::try_format(format_args!("{}:window", binding.instance))
+                            .map(ui_contract::SurfaceId)
+                            .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+                        dirty
+                            .try_surface(binding.instance, surface)
+                            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
                     }
                 }
                 Event::JobCompleted { job, result } => {
@@ -1158,7 +1206,12 @@ mod wit_bridge {
                     // correlation table yet" gap `📓️terra-M5-report.md` §4 named (no separate table
                     // needed: the request id already IS the job id).
                     if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().complete(job)) {
-                        dirty_render.push((binding.instance, format!("{}:window", binding.instance)));
+                        let surface = ui_contract::UiText::try_format(format_args!("{}:window", binding.instance))
+                            .map(ui_contract::SurfaceId)
+                            .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+                        dirty
+                            .try_surface(binding.instance, surface)
+                            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
                     }
                     REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), crate::host::outcome_to_result(result)));
                 }
@@ -1304,27 +1357,25 @@ mod wit_bridge {
         }
         if let Some(owner) = retained.take() {
             match owner {
-                CommandIngressOwner::Generic { cursor, command } => {
-                    match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command)))) {
-                        Ok(mut output) => {
-                            match advance_command_cursor(cursor.clone()) {
-                                Ok(terminal) => {
-                                    if let Some((_, command)) = output.retry_command.take() {
-                                        retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
-                                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(terminal);
-                                    } else if let Some(fault) = output.command_terminal_fault.as_ref() {
-                                        command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() };
-                                    } else {
-                                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal);
-                                    }
+                CommandIngressOwner::Generic { cursor, command } => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command)))) {
+                    Ok(mut output) => {
+                        match advance_command_cursor(cursor.clone()) {
+                            Ok(terminal) => {
+                                if let Some((_, command)) = output.retry_command.take() {
+                                    retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
+                                    command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(terminal);
+                                } else if let Some(fault) = output.command_terminal_fault.as_ref() {
+                                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() };
+                                } else {
+                                    command_ingress = semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal);
                                 }
-                                Err(cursor) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
                             }
-                            route_exchange_output(cursor.instance, output, &mut effects);
+                            Err(cursor) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-index-exhausted".to_vec() },
                         }
-                        Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        route_exchange_output(cursor.instance, output, &mut effects);
                     }
-                }
+                    Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                },
                 owner => retained = Some(owner),
             }
         }
@@ -1407,30 +1458,28 @@ mod wit_bridge {
                 }
             } else if cursor.page_index == 0 && retained.is_none() {
                 match semio_framework::kernel::CommandPageSet::try_new() {
-                    Ok(mut pages) => {
-                        match pages.try_push(page) {
-                            Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
-                            Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                                Ok(command) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
-                                    Ok(mut output) => {
-                                        if let Some((_, command)) = output.retry_command.take() {
-                                            retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
-                                        } else {
-                                            retained = Some(CommandIngressOwner::Terminal { cursor: cursor.clone() });
-                                        }
-                                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
-                                        route_exchange_output(cursor.instance, output, &mut effects);
+                    Ok(mut pages) => match pages.try_push(page) {
+                        Err((fault, _page)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
+                            Ok(command) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
+                                Ok(mut output) => {
+                                    if let Some((_, command)) = output.retry_command.take() {
+                                        retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
+                                    } else {
+                                        retained = Some(CommandIngressOwner::Terminal { cursor: cursor.clone() });
                                     }
-                                    Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
-                                },
-                                Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                                    command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
+                                    route_exchange_output(cursor.instance, output, &mut effects);
+                                }
+                                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
                             },
-                            Ok(()) => {
-                                retained = Some(CommandIngressOwner::GenericAssembly { cursor: cursor.clone(), pages });
-                                command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
-                            }
+                            Err((fault, _pages)) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        },
+                        Ok(()) => {
+                            retained = Some(CommandIngressOwner::GenericAssembly { cursor: cursor.clone(), pages });
+                            command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
                         }
-                    }
+                    },
                     Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
                 }
             } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {
@@ -1476,9 +1525,9 @@ mod wit_bridge {
         // already visible to the intent's own dispatch) — via the NEW `plugin_dispatch_intents`, which
         // routes through the app's EXISTING typed command path (`PluginApp::handle_intent_frame` →
         // `ArtifactApp::command_from_intent` → `dispatch_typed_command_inner`), never a parallel path.
-        // Each handled batch's surfaces feed `dirty_render` so the reply patch — the next `UiPatch`
+        // Each handled batch's surfaces feed the retained render set so the reply patch — the next `UiPatch`
         // revision bump — is produced in this SAME turn (design decision: no new reply channel).
-        for (instance, intents) in dirty_intents {
+        for DirtyIntentBatch { instance, intents } in dirty.intents {
             // 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
             // resolve synchronously here for the same reason as `plugin_exchange` above.
             match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents)) {
@@ -1510,17 +1559,15 @@ mod wit_bridge {
                 if surfaces.try_push(intent.surface.0.clone()).is_err() {
                     effects.push(Effect::SendMessage {
                         target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
-                        payload: dsl::encode_fault_bytes(&semio_framework::Fault::new(
-                            semio_framework::FaultOrigin::Os,
-                            semio_framework::FaultCode::new("ui.surface-capacity"),
-                            "dirty render surface capacity exceeded",
-                        )),
+                        payload: dsl::encode_fault_bytes(&semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "dirty render surface capacity exceeded")),
                     });
                     break;
                 }
             }
             for surface in surfaces {
-                dirty_render.push((instance, surface.to_string()));
+                dirty
+                    .try_surface(instance, ui_contract::SurfaceId(surface))
+                    .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
             }
         }
 
@@ -1529,14 +1576,14 @@ mod wit_bridge {
         // reading per poll, not one per presence update.
         let now_ms = u64::try_from(semio_framework::io::resolve_ready(crate::host::now_ms())).unwrap_or(0);
 
-        for (instance, surface) in dirty_render {
+        for (instance, surface) in dirty.surfaces {
             PATCHES.with(|patches| match patches.reserve_mounted(surface) {
                 Ok(grant) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(runtime, instance, "window", "{}")) {
                     Ok(tree) => grant.commit_source(tree.root),
                     Err(_) => grant.cancel(),
                 },
                 Err(surface) => {
-                    patches.defer(surface);
+                    let _ = patches.defer(surface);
                 }
             });
             // 👥️ M2: drains this instance's render-plane presence outbox (`VcsArtifactApp::
@@ -1587,11 +1634,7 @@ mod wit_bridge {
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
         let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
-        let more_work = more_work
-            || reconcile_work
-            || resumes_remain
-            || REACTOR_EXECUTOR.with(|executor| executor.has_pending())
-            || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
+        let more_work = more_work || reconcile_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
 
         let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
         if let Some(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().take_one()) {
@@ -1705,13 +1748,8 @@ mod wit_bridge {
             if let Some(patch) = self.turn_handback.take() {
                 return Some(patch);
             }
-            let index = self
-                .slots
-                .iter()
-                .enumerate()
-                .filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_))))
-                .min_by_key(|(_, slot)| slot.as_ref().map(|slot| slot.sequence))
-                .map(|(index, _)| index)?;
+            let index =
+                self.slots.iter().enumerate().filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_)))).min_by_key(|(_, slot)| slot.as_ref().map(|slot| slot.sequence)).map(|(index, _)| index)?;
             let slot = self.slots[index].take()?;
             match slot.owner {
                 PendingPatchOwner::Reconcile(owner) => {
@@ -1731,15 +1769,8 @@ mod wit_bridge {
             self.turn_handback = Some(patch);
         }
 
-        fn apply_published_ack(
-            &mut self,
-            surface: &str,
-            revision: u64,
-            advance: impl FnOnce(semio_framework_ui_runtime::SurfaceReconcilePublishedAck) -> Result<(), semio_framework_ui_runtime::SurfaceReconcilePublishedAck>,
-        ) -> bool {
-            let Some(index) = self.slots.iter().position(|slot| {
-                slot.as_ref().is_some_and(|slot| matches!(&slot.owner, PendingPatchOwner::Published(owner) if owner.matches(surface, revision)))
-            }) else {
+        fn apply_published_ack(&mut self, surface: &str, revision: u64, advance: impl FnOnce(semio_framework_ui_runtime::SurfaceReconcilePublishedAck) -> Result<(), semio_framework_ui_runtime::SurfaceReconcilePublishedAck>) -> bool {
+            let Some(index) = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| matches!(&slot.owner, PendingPatchOwner::Published(owner) if owner.matches(surface, revision)))) else {
                 return false;
             };
             let Some(slot) = self.slots[index].take() else { return false };
@@ -1821,9 +1852,7 @@ mod wit_bridge {
         }
 
         fn has_unpublished(&self) -> bool {
-            self.turn_handback.is_some()
-                || self.slots.iter().flatten().any(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_)))
-                || self.closing_instances.iter().any(Option::is_some)
+            self.turn_handback.is_some() || self.slots.iter().flatten().any(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_))) || self.closing_instances.iter().any(Option::is_some)
         }
     }
 

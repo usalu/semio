@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC6 (advanced B-Rep, top of the ladder) is a validation-gated dialect over the SAME StepSnapshot the ✳️any subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️any declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc6_conformance` actually reads. CC6 sits at the top of the ladder, so `violations(doc, 6)` is empty for every writable document and `aboveCeiling` is always 0. It therefore declares five kinds, not six: a demotion verb would be one that can never move the projection. It is also the only class the committed real export already conforms to. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🧪️oracle/🦀️component.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself. This subset declares no comparisonProfiles of its own: `semantic-step-conformance-class-v1` is declared once, in ../../✳️cc1/🧪️oracle/🔣️component.json, and the registry aggregator merges every discovered manifest repo-wide.",
+  "oracles": [
+    {
+      "id": "ruststep-step-ap214-cc6-mutate",
+      "ecosystem": "rust",
+      "package": "ruststep",
+      "version": "0.4",
+      "capabilities": [
+        "step-ap214-cc6-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-step-conformance-class-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/ricosjp/ruststep",
+      "rationale": "ruststep 0.4 is the real, independent ISO 10303-21 READER for this subset: `ast::Exchange::from_str` parses the real committed `📐️hexagonal-cut-concrete-forest-left-ap214.stp` (a genuine Rhino 8.31 / ST-Developer v19.2 export, 1,396 real entities) with zero errors, and it is what reads back every result this subset's oracle produces before `semantic-step-conformance-class-v1` compares it. It has NO writer at all (`ast::ser::to_record` only builds an in-memory `Record` from an already-typed struct; no `Display`/`fmt::Formatter` impl exists on `Exchange`/`DataSection`/`Record`/`Parameter`), so per the fleet brief's §6 nothing in this case is typed `@mode-differential` — ruststep cannot be a second PRODUCER of mutated bytes. The re-serializer is this standard's own from-scratch Part-21 writer in ../../../🧪️oracle/🦀️component.rs, deliberately independent of this repository's production `step::engine::part21` writer. What the evidence therefore is, stated plainly: a real third-party parse of the conformance-relevant STRUCTURE of every result — the ladder census, the declared schema and the product identity chain — plus the inverse and identity laws asserted in role, not a byte-level differential claim.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "step-ap214-cc6",
+      "capability": "step-ap214-cc6-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-file-schema",
+        "set-product-identity",
+        "set-shape-representation"
+      ]
+    }
+  ],
+  "comparisonProfiles": []
+}

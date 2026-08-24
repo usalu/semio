@@ -566,9 +566,9 @@ impl RetainedJobPayloadWriter {
     }
 
     pub fn commit_staged_page(&mut self) -> Result<(), JobPayloadAdmissionFault> {
+        let index = self.payload.as_ref().ok_or(JobPayloadAdmissionFault::WriterSealed)?.pages.iter().position(Option::is_none).ok_or(JobPayloadAdmissionFault::WriterFull)?;
         let (ledger, source, length) = self.staged.take().ok_or(JobPayloadAdmissionFault::OpportunityExhausted)?;
-        let payload = self.payload.as_mut().ok_or(JobPayloadAdmissionFault::WriterSealed)?;
-        let index = payload.pages.iter().position(Option::is_none).ok_or(JobPayloadAdmissionFault::WriterFull)?;
+        let payload = self.payload.as_mut().expect("staged page commit preflight retains writer payload");
         payload.pages[index] = Some(JobPayloadPage { source, length });
         payload.page_count += 1;
         payload.length += length;

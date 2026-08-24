@@ -630,14 +630,30 @@ mod oracles {
         write_svg(&doc)
     }
 
-    /// ↩️ Applies `{kind, params}` and then its computed inverse, in sequence — the caller compares
-    /// its projection against the ORIGINAL input's own, proving `apply(inverse(m,base), apply(m,
-    /// base)) == base` against this independent reference implementation.
+    /// ↩️ Applies `{kind, params}` and then its computed inverse to ONE parsed tree — the caller
+    /// compares its projection against the ORIGINAL input's own, proving `apply(inverse(m,base),
+    /// apply(m, base)) == base` against this independent reference implementation.
+    ///
+    /// 🐛️ The two steps deliberately share a tree rather than passing serialized bytes between
+    /// them. Routing the undo through `apply_mutation(&mutated, ...)` re-parsed the intermediate
+    /// document, and XML parsing COALESCES adjacent character data: in this drawing every
+    /// `<g …>\n<rect …/>\n</g>` group holds `[text "\n", rect, text "\n"]`, so removing index 1
+    /// left two adjacent text nodes that re-read as the single node `"\n\n"`, and the undo then
+    /// inserted the rect at index 1 of a ONE-child list. That made `inverse-remove-element` fail
+    /// against the real fixture — a defect in this routing, not in the vocabulary and not in the
+    /// law, since the subject applies both steps to one snapshot with no serialization between.
+    /// The coalescing itself is real and is not being papered over: it is why an inverse addressed
+    /// by index is only meaningful against the tree the forward step left behind.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
+        if kind.is_empty() {
+            return Err("mutation spec carries no `kind`".to_string());
+        }
         let base = parse_svg(input)?;
         let inverse = inverse_spec(&base, kind, params);
-        let mutated = apply_mutation(input, kind, params)?;
-        apply_mutation(&mutated, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))
+        let mut doc = base;
+        apply_kind(&mut doc, kind, params)?;
+        apply_kind(&mut doc, &inverse.str("kind"), inverse.get("params").unwrap_or(&Json::Null))?;
+        write_svg(&doc)
     }
 
     /// 👁️ This subset's own semantic projection — declaration/doctype presence and fields, the

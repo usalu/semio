@@ -1,6 +1,6 @@
 @capability-stl-ascii-mutate
 @oracle-stl-io-ascii-mutate
-@comparison-semantic-mesh-v1
+@comparison-semantic-stl-ascii-v1
 @mutations-stl-ascii-any
 Feature: Apply every typed STL ascii mutation to a real-world mesh
   The input is shared://🧊️hexagonal-cut-concrete-forest-left.stl, a real 958-triangle ASCII STL
@@ -12,18 +12,28 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
   here verbatim. Never a tetrahedron. Every scenario copies the fixture into the case work directory
   before touching it; the committed file is never written to.
 
-  STL is triangle soup with no vertex index, so the projection reports resolved corner positions per
-  triangle (the shared `🧊️mesh` family module's `project_stl`, built on the independent `stl_io`
-  reader). `stl_io` 0.8 reads both ASCII and binary STL, but its own top-level doc comment states
+  STL is triangle soup with no vertex index, so the mesh half of the projection reports resolved
+  corner positions per triangle (the shared `🧊️mesh` family module's `project_stl`, built on the
+  independent `stl_io` reader). That half alone is not enough to judge this vocabulary. STL STATES
+  each facet's normal rather than deriving it from winding, and it names the solid in its header;
+  `set-triangle-normal` and `set-solid-name` change exactly those two fields and nothing else, so
+  under the shared `semantic-mesh-v1` profile — which lists `solidName` as writer freedom and
+  reports no normals at all — 2 of the 7 declared kinds moved nothing and their rows measured
+  nothing. `semantic-stl-ascii-v1` makes both normative, the projection carries them, and every
+  `mutate-<kind>` scenario asserts in role that the kind really did move it.
+
+  `stl_io` 0.8 reads both ASCII and binary STL, and that reader is what every result here is read
+  back through. Its WRITER is the half that cannot serve: its own top-level doc comment states
   "Writing is limited to binary STL" — confirmed in its source, which hardcodes a zeroed 80-byte
-  header with no name field — so it can express neither an ASCII body nor the solid name in either
-  direction. This subset's OWN codec (`decode_stl_ascii`/`encode_stl_ascii`) is genuinely ASCII
-  text, matching the `ascii` standard this subset is filed under, so the derived fixture above is
-  committed in that form. Six of the seven declared kinds round-trip through `stl_io`'s
-  `IndexedMesh`/`write_stl` regardless — comparison is projection-based, so the binary form the
-  oracle emits there never has to match the subject's own ASCII output; `set-solid-name`, the one
-  kind whose whole payload IS the field `stl_io` cannot touch, is instead applied by the oracle as a
-  direct ASCII header/trailer substitution.
+  header with no name field — and binary STL has no solid-name field at all, so emitting through it
+  would discard the name on every kind and leave this `ascii` subset's oracle never once producing
+  the grammar it is filed under. The oracle therefore writes the ASCII document itself, from the
+  triangle soup `stl_io` parsed, the same precedent the OBJ case follows for a format whose Rust
+  reference is a reader; nothing in it touches this repository's `decode_stl_ascii`/
+  `encode_stl_ascii`. `no-mutation` is a real parse and re-emission for the same reason — it used to
+  hand the input bytes straight back. Byte-identical output stays impossible either way: `stl_io`
+  resolves every coordinate through `f32` while the committed fixture carries the `f64` decimals its
+  GLB derivation produced.
 
   @id-mutate
   @level-exhaustive

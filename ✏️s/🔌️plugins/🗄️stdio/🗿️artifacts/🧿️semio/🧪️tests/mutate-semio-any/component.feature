@@ -38,6 +38,17 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   crate cannot name them (the same structural gap wave 7 recorded for `kit`, `object`, `text` and
   `table`). Re-exporting those two traits is the single change that would most strengthen this case.
 
+  ⚖️ Because this case records a no-oracle decision, the runner executes NO oracle role: it resolves
+  an oracle implementation from an `@oracle-` tag this feature deliberately does not carry, so the
+  comparison profile never receives two sides to compare and the `oracle` handlers below are the
+  written statement of the reference answer rather than a second running party. Every law this
+  feature claims is therefore asserted INSIDE the subject handler, which fails with both documents
+  printed. A handler that merely ran the mutation and returned would report a pass having checked
+  nothing. Here that means the four envelope-level facts each scenario measures — the
+  subset tag after routing, the fault codes raised, and whether the routed document still equals the
+  one it started from — are checked against the routing law stated once in the adapter and read by
+  both roles, so a delegated verb that quietly reached no arm at all cannot pass.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

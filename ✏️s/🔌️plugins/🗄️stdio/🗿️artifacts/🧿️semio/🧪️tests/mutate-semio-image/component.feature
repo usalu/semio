@@ -32,6 +32,18 @@ Feature: Apply every typed semio IMAGE mutation to its committed specification f
   subset's own full-replace `set-snapshot` diff must reconstruct the committed three-frame document
   field for field, so no slot of the typed model is silently dropped on the way through.
 
+  ⚖️ Because this case records a no-oracle decision, the runner executes NO oracle role: it resolves
+  an oracle implementation from an `@oracle-` tag this feature deliberately does not carry, so the
+  comparison profile never receives two sides to compare and the `oracle` handlers below are the
+  written statement of the reference answer rather than a second running party. Every law this
+  feature claims is therefore asserted INSIDE the subject handler, which fails with both documents
+  printed. A handler that merely ran the mutation and returned would report a pass having checked
+  nothing. Here that means the applied snapshot is checked against the committed
+  after-snapshot with the colorspace tag, the plane geometry and the frame payload together, so an
+  edit that reached the right frame at the wrong bit depth fails; `no-mutation` is the identity, so
+  its expected answer is the before-snapshot itself rather than the leaf fixture it borrows its
+  document from.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

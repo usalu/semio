@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform. The ✳️any subset registers `lopdf` under `pdf-1-7-mutate` for the DOCUMENT vocabulary; this file registers the same package under a distinct id and the `pdf-1-7-ua-mutate` capability the CONFORMANCE-CLASS case (`mutate-pdf-1-7-ua`) tags, because reusing a neighbour's entry fails the contract with `oracle-capability-mismatch`.",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-7-ua-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-1-7-ua-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-conformance-ua-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "`lopdf` parses and re-serializes the complete COS object graph of a real PDF, which is the exact surface ISO 14289-1 (PDF/UA-1) conformance is defined on: every axis `check_ua_conformance` reads is an indirect object, a catalog key or a dictionary entry, and every one of them is reachable and writable through this crate. It is registered under its own id and capability so this subset's 13-kind conformance catalog is measured against a reference surveyed for that capability rather than borrowing the ✳️any subset's document-vocabulary entry.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-7-ua",
+      "capability": "pdf-1-7-ua-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-mark-info",
+        "remove-mark-info",
+        "set-struct-tree-root",
+        "remove-struct-tree-root",
+        "set-lang",
+        "remove-lang",
+        "set-display-doc-title",
+        "remove-display-doc-title",
+        "set-info-title",
+        "embed-font-file",
+        "remove-font-file"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-pdf-conformance-ua-v1",
+      "description": "A PDF document compared by the CONFORMANCE-CLASS surface check_ua_conformance actually reads, every field read back out of the bytes by the independent `lopdf` object-graph reader: the page count as a stability anchor, plus /Root/MarkInfo's /Marked flag, null when the key is absent; whether /Root carries a /StructTreeRoot; /Root/Lang, null when absent; /Root/ViewerPreferences' /DisplayDocTitle flag, null when the key is absent; the document's Info.Title, null when absent; every /Type /FontDescriptor in object-number order, by which of /FontFile, /FontFile2 or /FontFile3 carries its embedded program and how many bytes that program is. Page CONTENT is deliberately absent — media boxes, content streams and shown text belong to the ✳️any subset's own semantic-pdf-v1 profile, and a conformance class says nothing about them. Object NUMBERS are deliberately absent too: a class is defined on what the document contains, not on where a writer put it, so re-inserting a removed construct at a fresh number is a faithful undo and recording the number would report a false divergence for it. The only numeric fields are the encryption /V and /R, an embedded font program's byte length and the page-box coordinates, all of them exact integers or literal coordinates a writer must reproduce exactly; hence no tolerance.",
+      "tolerance": 0,
+      "ignoreKeys": []
+    }
+  ]
+}

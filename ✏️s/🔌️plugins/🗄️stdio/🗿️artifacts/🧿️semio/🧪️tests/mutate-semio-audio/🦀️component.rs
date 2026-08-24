@@ -19,6 +19,14 @@
 //! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
 //! compiles the local implementation; the Rust SUBJECT phase is blocked this wave by a concurrent
 //! os-kernel refactor (see 📓️w7-fleet-brief.md), so it is written and gated but not run.
+//!
+//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
+//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
+//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
+//! the written statement of the reference answer rather than a second running party. Every law this
+//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
+//! printed. A handler that merely ran the mutation and returned would report a pass having checked
+//! nothing.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -199,28 +207,48 @@ mod subject {
     fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
         ctx.fixture_json(&format!("local://🦠️{kind}.json"))
     }
-    fn before_and_mutation(ctx: &Context, kind: &str) -> Result<(SemioAudioSnapshot, SemioAudioMutation), String> {
+    /// 🧫️ The committed specification vector, decoded into typed values: the before-snapshot the
+    /// kind is applied to, the mutation payload itself, and the after-snapshot the applied result
+    /// has to equal. All three come out of the SAME file the oracle role reads literally.
+    fn vector_of(ctx: &Context, kind: &str) -> Result<(SemioAudioSnapshot, SemioAudioMutation, SemioAudioSnapshot), String> {
         let vector = vector(ctx, kind)?;
         let before = vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?;
-        Ok((snapshot_of(before)?, mutation_of(&vector)?))
+        let after = vector.get("after").ok_or_else(|| "specification vector is missing its \"after\" member".to_string())?;
+        Ok((snapshot_of(before)?, mutation_of(&vector)?, snapshot_of(after)?))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
+    /// vectors are written in, so a red scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioAudioSnapshot, expected: &SemioAudioSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got).to_string(), snapshot_json(expected).to_string())
     }
     //#endregion 🔖️Projection
 
     //#region 🔖️Handlers
+    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
+    /// after-snapshot — sample rate, channel layout and the per-track sample payload together, so an edit
+    /// that reached the right track at the wrong rate still fails. The assertion lives here rather than in the
+    /// comparison because a recorded no-oracle case runs no oracle role: a handler that merely
+    /// returned `Ok` would report a pass having checked nothing.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (mut current, mutation) = before_and_mutation(ctx, kind)?;
+            let (mut current, mutation, expected) = vector_of(ctx, kind)?;
             let applied = apply_semio_audio_mutation(&mut current, &mutation);
             if !applied.messages().is_empty() {
                 return Err(format!("mutate-{kind}: mutation rejected: {:?}", applied.messages()));
+            }
+            if current != expected {
+                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the vector's after-snapshot"), &current, &expected));
             }
             Ok(outcome(snapshot_json(&current)))
         }
     }
 
+    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
+    /// restore the committed before-snapshot exactly — the sample payload a track edit overwrote included, not merely the track's presence.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (base, mutation) = before_and_mutation(ctx, kind)?;
+            let (base, mutation, _expected) = vector_of(ctx, kind)?;
             let mut current = base.clone();
             let applied = apply_semio_audio_mutation(&mut current, &mutation);
             if !applied.messages().is_empty() {
@@ -231,6 +259,9 @@ mod subject {
                 if !undone.messages().is_empty() {
                     return Err(format!("inverse-{kind}: inverse step rejected: {:?}", undone.messages()));
                 }
+            }
+            if current != base {
+                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the vector's before-snapshot"), &current, &base));
             }
             Ok(outcome(snapshot_json(&current)))
         }
@@ -246,7 +277,11 @@ mod subject {
         let printed = print_semio_audio_dsl(&once);
         let twice = parse_semio_audio_dsl(&printed)?;
         if twice != once {
-            return Err("re-parsing the printed DSL did not reproduce the parsed snapshot".to_string());
+            return Err(disagreement("identity-round-trip: re-parsing the printed DSL did not reproduce the parsed snapshot", &twice, &once));
+        }
+        let (declared, _mutation, _after) = vector_of(ctx, "no-mutation")?;
+        if once != declared {
+            return Err(disagreement("identity-round-trip: the real committed tone artifact does not decode to the before-snapshot every specification vector starts from — the vectors describe a document this codec does not produce", &once, &declared));
         }
         Ok(outcome(snapshot_json(&twice)))
     }

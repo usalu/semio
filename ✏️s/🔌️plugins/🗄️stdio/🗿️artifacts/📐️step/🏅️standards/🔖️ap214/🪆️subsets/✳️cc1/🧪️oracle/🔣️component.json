@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC1 (config data only) is a validation-gated dialect over the SAME StepSnapshot the ✳️any subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️any declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc1_conformance` actually reads. CC1 admits no *_SHAPE_REPRESENTATION at all, so its ladder verb is `remove-shape-representation` and it owns no verb that could write one; against the real committed export both representations (#13 at rung 6 and #836 at rung 2) are above its ceiling. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🧪️oracle/🦀️component.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself.",
+  "oracles": [
+    {
+      "id": "ruststep-step-ap214-cc1-mutate",
+      "ecosystem": "rust",
+      "package": "ruststep",
+      "version": "0.4",
+      "capabilities": [
+        "step-ap214-cc1-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-step-conformance-class-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/ricosjp/ruststep",
+      "rationale": "ruststep 0.4 is the real, independent ISO 10303-21 READER for this subset: `ast::Exchange::from_str` parses the real committed `📐️hexagonal-cut-concrete-forest-left-ap214.stp` (a genuine Rhino 8.31 / ST-Developer v19.2 export, 1,396 real entities) with zero errors, and it is what reads back every result this subset's oracle produces before `semantic-step-conformance-class-v1` compares it. It has NO writer at all (`ast::ser::to_record` only builds an in-memory `Record` from an already-typed struct; no `Display`/`fmt::Formatter` impl exists on `Exchange`/`DataSection`/`Record`/`Parameter`), so per the fleet brief's §6 nothing in this case is typed `@mode-differential` — ruststep cannot be a second PRODUCER of mutated bytes. The re-serializer is this standard's own from-scratch Part-21 writer in ../../../🧪️oracle/🦀️component.rs, deliberately independent of this repository's production `step::engine::part21` writer. What the evidence therefore is, stated plainly: a real third-party parse of the conformance-relevant STRUCTURE of every result — the ladder census, the declared schema and the product identity chain — plus the inverse and identity laws asserted in role, not a byte-level differential claim.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "step-ap214-cc1",
+      "capability": "step-ap214-cc1-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-file-schema",
+        "set-product-identity",
+        "remove-shape-representation"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-step-conformance-class-v1",
+      "description": "STEP AP214 exchange structures compared by what a CONFORMANCE CLASS is about, and by nothing else: the declared FILE_SCHEMA, the full *_SHAPE_REPRESENTATION ladder census (id, type name, ISO 10303-214 §4.3 rung), whether the document sits inside the class's ceiling, the count of instances above it, the PRODUCT/formation/definition identity chain, and the instance count. Deliberately NOT the ✳️any subset's whole id-keyed entity graph — 1,396 entities of unrelated real geometry would drown every class-level difference this profile exists to see. Header timestamp, preprocessor and originating-system strings and line wrapping are writer freedom. Declared once, here, for all six ✳️ccN subsets: the registry merges every discovered manifest repo-wide, so declaring it six times would be the copy this arrangement exists to avoid.",
+      "tolerance": 1e-06,
+      "ignoreKeys": [
+        "timestamp",
+        "preprocessorVersion",
+        "originatingSystem",
+        "authorization",
+        "byteLength",
+        "fileSize"
+      ]
+    }
+  ]
+}
