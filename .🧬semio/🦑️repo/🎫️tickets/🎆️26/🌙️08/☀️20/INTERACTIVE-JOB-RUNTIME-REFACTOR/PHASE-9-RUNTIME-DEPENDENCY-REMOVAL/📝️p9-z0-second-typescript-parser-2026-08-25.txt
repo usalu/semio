@@ -1,0 +1,1 @@
+typescript-parser-errors=0

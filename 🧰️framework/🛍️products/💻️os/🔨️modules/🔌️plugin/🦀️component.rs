@@ -7,7 +7,7 @@
 /// loaded. `component-extension-guest` stays declared in `Cargo.toml` (26 extension crates
 /// currently enable it) but now gates the SAME unified `component` module as `component-guest` —
 /// see the `#[cfg]` on `pub mod component` below.
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub mod component {
     //! 🧩️ WASI P2 component exports for `world actor` — the reactor/jobs/checkpoint/describe
     //! turn-loop contract shared by every plugin and extension.
@@ -50,6 +50,58 @@ pub mod component {
         semio::framework::pure::trace_span(name);
     }
 }
+
+//#region 🔖️ComponentPersistentLocal
+#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+#[doc(hidden)]
+pub mod component_persistent_local {
+    use std::{cell::UnsafeCell, mem::MaybeUninit, sync::Once};
+
+    /// 🧵️ Component-async calls receive fresh Rust TLS contexts, so actor state that must survive
+    /// from one exported call to the next lives in the component instance's linear-memory global.
+    pub struct ComponentPersistentLocal<T> {
+        once: Once,
+        value: UnsafeCell<MaybeUninit<T>>,
+        initialize: fn() -> T,
+    }
+
+    impl<T> ComponentPersistentLocal<T> {
+        pub const fn new(initialize: fn() -> T) -> Self {
+            Self { once: Once::new(), value: UnsafeCell::new(MaybeUninit::uninit()), initialize }
+        }
+
+        pub fn with<R>(&'static self, use_value: impl FnOnce(&T) -> R) -> R {
+            self.once.call_once(|| unsafe {
+                (*self.value.get()).write((self.initialize)());
+            });
+            use_value(unsafe { (&*self.value.get()).assume_init_ref() })
+        }
+    }
+
+    unsafe impl<T> Sync for ComponentPersistentLocal<T> {}
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! component_persistent_local {
+    ($( $(#[$attribute:meta])* static $name:ident: $value_type:ty = $initialize:expr; )+) => {
+        $(
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            $(#[$attribute])*
+            static $name: $crate::component_persistent_local::ComponentPersistentLocal<$value_type> =
+                $crate::component_persistent_local::ComponentPersistentLocal::new(|| $initialize);
+        )+
+
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+        std::thread_local! {
+            $(
+                $(#[$attribute])*
+                static $name: $value_type = $initialize;
+            )+
+        }
+    };
+}
+//#endregion 🔖️ComponentPersistentLocal
 
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
@@ -11606,6 +11658,8 @@ pub mod app {
         /// silently reduces to comparing every surface against the same placeholder (ticket
         /// 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-G).
         const APP_ID: &'static str;
+        /// 🔐️ Marks domains whose atomic replacement must never use the unmanaged peer path.
+        const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
         /// 🪪️ The real, runtime-resolved app id an ownership check must compare against. Defaults to
         /// `Self::APP_ID` (correct for every hand-written impl, where the const already IS the real
         /// id); `EditorApp<E>`/`ViewerApp<V>` override it to return their derived `surface_app_id`.
@@ -11678,6 +11732,15 @@ pub mod app {
             _generation: semio_framework_job::Generation,
         ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
             Err(envelope)
+        }
+
+        /// 🔐️ Revalidates domain-owned publication authority in the atomic replacement branch.
+        fn validate_document_store_publication(_operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
+            if Self::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY {
+                Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.publication-authority-missing"), "registered domain did not supply atomic publication authority"))
+            } else {
+                Ok(())
+            }
         }
 
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -12803,6 +12866,28 @@ pub mod app {
     /// 🧬️ Declares an exact bounded-first-step proof catalog in the owning plugin source.
     #[macro_export]
     macro_rules! bounded_first_step_tool_proofs {
+        (
+            owner: $owner:ty,
+            owner_file: $owner_file:literal,
+            controller: $controller:literal,
+            document_schema: $document_schema:literal,
+            factory: $factory:literal,
+            contract: $contract:expr,
+            tools: [$($tool:literal),+ $(,)?]
+        ) => {
+            fn bounded_first_step_tool_proofs() -> Vec<$crate::ArtifactBoundedFirstStepProof> {
+                vec![$(
+                    $crate::ArtifactBoundedFirstStepProof::new::<$owner>(
+                        $owner_file,
+                        $controller,
+                        $factory,
+                        $tool,
+                        $document_schema,
+                        $contract,
+                    )
+                ),+]
+            }
+        };
         (
             owner: $owner:ty,
             owner_file: $owner_file:literal,
@@ -15637,6 +15722,22 @@ pub mod app {
         }
     }
 
+    /// 🔐️ Performs the sole document-store swap only inside its fresh authority decision.
+    pub fn publish_document_store_candidate_if_authoritative<P, Mutation>(
+        live: &mut ArtifactStore<P, Mutation>,
+        candidate: ArtifactStore<P, Mutation>,
+        validate: impl FnOnce() -> Result<(), Fault>,
+    ) -> Result<ArtifactStore<P, Mutation>, (Fault, ArtifactStore<P, Mutation>)>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        if let Err(fault) = validate() {
+            return Err((fault, candidate));
+        }
+        Ok(std::mem::replace(live, candidate))
+    }
+
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum ActiveArtifactStoreReplacementState {
         Initializing,
@@ -16814,7 +16915,16 @@ pub mod app {
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 let candidate = active.retained_store.take().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-candidate-missing"), "ready store replacement lost its exact candidate"))?;
-                let displaced = std::mem::replace(&mut self.store, candidate);
+                let displaced = match publish_document_store_candidate_if_authoritative(&mut self.store, candidate, || A::validate_document_store_publication(active.operation, active.generation, live_generation)) {
+                    Ok(displaced) => displaced,
+                    Err((_fault, candidate)) => {
+                        *active.retained_store = Some(candidate);
+                        *active.retained_disposer = Some(disposer);
+                        active.faulted = true;
+                        active.state = ActiveArtifactStoreReplacementState::RetiringRejectedCandidate;
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                };
                 *active.retained_store = Some(displaced);
                 *active.retained_disposer = Some(disposer);
                 active.committed = true;
@@ -21948,6 +22058,7 @@ pub mod app {
         /// 🎭️ Always `Editor` in practice — defaulted so implementors never restate it.
         const ROLE: AppRole = AppRole::Editor;
         const DIALECT: Dialect;
+        const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
         /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
         type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
@@ -22022,6 +22133,14 @@ pub mod app {
             _generation: semio_framework_job::Generation,
         ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
             Err(envelope)
+        }
+
+        fn validate_document_store_publication(_operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
+            if Self::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY {
+                Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.publication-authority-missing"), "registered editor did not supply atomic publication authority"))
+            } else {
+                Ok(())
+            }
         }
 
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -22379,6 +22498,7 @@ pub mod app {
     impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         const APP_ID: &'static str = "surface";
         const ROLE: AppRole = E::ROLE;
+        const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = E::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY;
         const DOCUMENT_SCHEMA: &'static str = E::DOCUMENT_SCHEMA;
 
         /// 🪪️ Overrides the `APP_ID` placeholder default — every ownership check must see the real
@@ -22428,6 +22548,9 @@ pub mod app {
             generation: semio_framework_job::Generation,
         ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
             E::build_document_store_initialization_job(envelope, operation, generation)
+        }
+        fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
+            E::validate_document_store_publication(operation, generation, live_generation)
         }
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             E::build_document_store_disposer()
@@ -24235,8 +24358,8 @@ pub mod plugin_runtime {
         pub assets: Vec<AssetDeclaration>,
     }
 
-    thread_local! {
-        static PLUGIN_DESCRIPTOR_EXTRAS: RefCell<Option<PluginDescriptorExtras>> = const { RefCell::new(None) };
+    crate::component_persistent_local! {
+        static PLUGIN_DESCRIPTOR_EXTRAS: RefCell<Option<PluginDescriptorExtras>> = RefCell::new(None);
     }
 
     /// 📤️ Installs the builder-declared descriptor extras — called once by `PluginBuilder::try_build()`.
@@ -27050,7 +27173,7 @@ pub mod plugin_runtime {
     #[macro_export]
     macro_rules! plugin_exports {
         ($bundle_fn:expr, $app:ty) => {
-            std::thread_local! {
+            $crate::component_persistent_local! {
                 static __SEMIO_PLUGIN_RUNTIME: $crate::plugin_runtime::PluginRuntime<$app> = $crate::plugin_runtime::PluginRuntime::new();
             }
 
@@ -27470,9 +27593,9 @@ pub mod plugin_runtime {
         }
     }
 
-    thread_local! {
-        static EXTENSION_BUNDLE: RefCell<Option<ExtensionBundle>> = const { RefCell::new(None) };
-        static EXTENSION_ACTIVE: Cell<bool> = const { Cell::new(false) };
+    crate::component_persistent_local! {
+        static EXTENSION_BUNDLE: RefCell<Option<ExtensionBundle>> = RefCell::new(None);
+        static EXTENSION_ACTIVE: Cell<bool> = Cell::new(false);
     }
 
     /// 📤️ Installs the process-local extension bundle (from `extension_exports!`).
@@ -31757,6 +31880,7 @@ pub use app::{
     infer_artifact,
     list_artifact_inference_services,
     node_graph_delete_selection_spec,
+    publish_document_store_candidate_if_authoritative,
     register_artifact_inference_service,
     resolve_ready,
     scene_surface,
@@ -31771,9 +31895,11 @@ pub use app::{
     AppBuilder,
     AppInstance,
     AppOperationContext,
+    AppRenderOperationContext,
     ArtifactAnalysis,
     ArtifactAnalyzer,
     ArtifactApp,
+    ArtifactBoundedFirstStepProof,
     ArtifactBuilder,
     ArtifactCapability,
     ArtifactCapabilityKind,

@@ -768,6 +768,7 @@ struct FillSessionNode {
     work: FillWork,
     retained_outcome: Option<semio_framework_job::StepOutcome>,
     outcome_terminal: bool,
+    terminal_published: bool,
     checkpoint: Option<infinite_canvas::BoardFillCheckpoint>,
     apply: Option<FillPlacementApplyCursor>,
     checkpoint_sequence: u64,
@@ -777,20 +778,43 @@ struct FillSessionNode {
 
 struct FillPlacementApplyCursor {
     placement: Option<infinite_canvas::BoardFillPlacement>,
-    handles: [Option<crate::artifacts::puzzle2d::Puzzle2dHandle>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY],
-    handle: Option<crate::artifacts::puzzle2d::Puzzle2dHandle>,
-    node: Option<crate::artifacts::puzzle2d::Puzzle2dNode>,
+    handles: [Option<FillPlacementHandleOwner>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY],
+    handle: Option<FillPlacementHandleOwner>,
+    node: Option<FillPlacementNodeOwner>,
     edge: Option<FillPlacementEdgeOwner>,
     handle_cursor: usize,
-    handle_transfer_cursor: usize,
+    text_byte: usize,
     stage: FillPlacementApplyStage,
 }
 
+#[derive(Clone, Copy)]
+struct FillPlacementHandleOwner {
+    id: infinite_canvas::BoardFillText,
+    handle_kind: infinite_canvas::BoardFillText,
+    angle: f64,
+    radius: Option<f64>,
+}
+
+#[derive(Clone, Copy)]
+struct FillPlacementNodeOwner {
+    id: infinite_canvas::BoardFillText,
+    node_kind: infinite_canvas::BoardFillText,
+    target_handle_index: usize,
+    shape: infinite_canvas::BoardFillCommitShape,
+    x: f64,
+    y: f64,
+    radius: f64,
+    width: f64,
+    height: f64,
+    icon_kind: Option<infinite_canvas::BoardFillText>,
+}
+
+#[derive(Clone, Copy)]
 struct FillPlacementEdgeOwner {
-    id: String,
-    source: String,
-    target: String,
-    edge_kind: Option<String>,
+    id: infinite_canvas::BoardFillText,
+    source: infinite_canvas::BoardFillText,
+    target: infinite_canvas::BoardFillText,
+    edge_kind: infinite_canvas::BoardFillText,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -804,15 +828,15 @@ enum FillPlacementApplyStage {
     NodeBegin,
     NodeId,
     NodeKind,
+    NodeTarget,
     NodeShape,
     NodeX,
     NodeY,
     NodeText,
     NodeAnchor,
-    NodeHandles,
-    NodeHandleTransfer,
     NodeGeometry,
     NodeHeight,
+    NodeIconBegin,
     NodeIcon,
     EdgeBegin,
     EdgeId,
@@ -828,9 +852,192 @@ enum FillPlacementApplyStep {
     Complete,
 }
 
+fn copy_fill_text_one(source: &infinite_canvas::BoardFillText, destination: &mut infinite_canvas::BoardFillText, byte: &mut usize) -> Result<bool, &'static str> {
+    let source = source.as_str().as_bytes();
+    let Some(value) = source.get(*byte).copied() else {
+        *byte = 0;
+        return Ok(true);
+    };
+    destination.try_push_byte(value).map_err(|_| "puzzle2d-fill-fixed-text")?;
+    *byte += 1;
+    if *byte == source.len() {
+        *byte = 0;
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+fn try_document_str(text: &str) -> Result<String, &'static str> {
+    let mut output = String::new();
+    output.try_reserve_exact(text.len()).map_err(|_| "puzzle2d-fill-document-text")?;
+    output.push_str(text);
+    Ok(output)
+}
+
+fn try_document_text(text: infinite_canvas::BoardFillText) -> Result<String, &'static str> {
+    try_document_str(text.as_str())
+}
+
+#[derive(Clone, Copy)]
+enum FillPlacementPublishHandles<'a> {
+    Commit(&'a [Option<infinite_canvas::BoardFillCommitHandle>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY]),
+    Cursor(&'a [Option<FillPlacementHandleOwner>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY]),
+}
+
+struct FillPlacementPublishView<'a> {
+    node_id: &'a infinite_canvas::BoardFillText,
+    edge_id: &'a infinite_canvas::BoardFillText,
+    edge_kind: &'a infinite_canvas::BoardFillText,
+    node_kind: &'a infinite_canvas::BoardFillText,
+    source_handle_id: &'a infinite_canvas::BoardFillText,
+    target_handle_id: &'a infinite_canvas::BoardFillText,
+    target_handle_index: usize,
+    x: f64,
+    y: f64,
+    shape: infinite_canvas::BoardFillCommitShape,
+    radius: f64,
+    width: f64,
+    height: f64,
+    icon_kind: Option<&'a infinite_canvas::BoardFillText>,
+    handles: FillPlacementPublishHandles<'a>,
+    handle_count: usize,
+}
+
+impl<'a> FillPlacementPublishView<'a> {
+    fn from_commit(placement: &'a infinite_canvas::BoardFillCommitPlacement) -> Self {
+        Self {
+            node_id: &placement.node_id,
+            edge_id: &placement.edge_id,
+            edge_kind: &placement.edge_kind,
+            node_kind: &placement.node_kind,
+            source_handle_id: &placement.source_handle_id,
+            target_handle_id: &placement.target_handle_id,
+            target_handle_index: placement.target_handle_index,
+            x: placement.x,
+            y: placement.y,
+            shape: placement.shape,
+            radius: placement.radius,
+            width: placement.width,
+            height: placement.height,
+            icon_kind: placement.icon_kind.as_ref(),
+            handles: FillPlacementPublishHandles::Commit(&placement.handles),
+            handle_count: placement.handle_count,
+        }
+    }
+
+    fn from_cursor(node: &'a FillPlacementNodeOwner, edge: &'a FillPlacementEdgeOwner, handles: &'a [Option<FillPlacementHandleOwner>; infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY], handle_count: usize) -> Self {
+        Self {
+            node_id: &node.id,
+            edge_id: &edge.id,
+            edge_kind: &edge.edge_kind,
+            node_kind: &node.node_kind,
+            source_handle_id: &edge.source,
+            target_handle_id: &edge.target,
+            target_handle_index: node.target_handle_index,
+            x: node.x,
+            y: node.y,
+            shape: node.shape,
+            radius: node.radius,
+            width: node.width,
+            height: node.height,
+            icon_kind: node.icon_kind.as_ref(),
+            handles: FillPlacementPublishHandles::Cursor(handles),
+            handle_count,
+        }
+    }
+
+    fn handle(&self, index: usize) -> Option<infinite_canvas::BoardFillCommitHandle> {
+        match self.handles {
+            FillPlacementPublishHandles::Commit(handles) => *handles.get(index)?,
+            FillPlacementPublishHandles::Cursor(handles) => handles.get(index)?.map(|handle| infinite_canvas::BoardFillCommitHandle { id: handle.id, handle_kind: handle.handle_kind, angle: handle.angle, radius: handle.radius }),
+        }
+    }
+}
+
+/// 📤️ Pre-credits the final event destination before materializing the fixed terminal owner.
+fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &mut Vec<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>) -> Result<(), &'static str> {
+    if placement.handle_count > infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY {
+        return Err("puzzle2d-fill-apply-handle-capacity");
+    }
+    let shape = match placement.shape {
+        infinite_canvas::BoardFillCommitShape::Circle => "circle",
+        infinite_canvas::BoardFillCommitShape::Rectangle => "rectangle",
+    };
+    let mut required_bytes = std::mem::size_of::<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>()
+        .checked_mul(2)
+        .and_then(|bytes| bytes.checked_add(std::mem::size_of::<crate::artifacts::puzzle2d::Puzzle2dHandle>().checked_mul(placement.handle_count)?))
+        .and_then(|bytes| bytes.checked_add(placement.node_id.as_str().len().checked_mul(2)?))
+        .and_then(|bytes| bytes.checked_add(placement.edge_id.as_str().len()))
+        .and_then(|bytes| bytes.checked_add(placement.edge_kind.as_str().len()))
+        .and_then(|bytes| bytes.checked_add(placement.node_kind.as_str().len()))
+        .and_then(|bytes| bytes.checked_add(placement.source_handle_id.as_str().len()))
+        .and_then(|bytes| bytes.checked_add(placement.target_handle_id.as_str().len()))
+        .and_then(|bytes| bytes.checked_add(placement.icon_kind.map_or(0, |icon| icon.as_str().len())))
+        .and_then(|bytes| bytes.checked_add(shape.len()))
+        .ok_or("puzzle2d-fill-apply-backing")?;
+    for index in 0..placement.handle_count {
+        let handle = placement.handle(index).ok_or("puzzle2d-fill-apply-handle-owner")?;
+        required_bytes = required_bytes.checked_add(handle.id.as_str().len()).and_then(|bytes| bytes.checked_add(handle.handle_kind.as_str().len())).ok_or("puzzle2d-fill-apply-backing")?;
+    }
+    if required_bytes > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES * 2 {
+        return Err("puzzle2d-fill-apply-backing");
+    }
+    mutations.try_reserve_exact(2).map_err(|_| "puzzle2d-fill-mutation-page")?;
+    let mut handles = Vec::new();
+    handles.try_reserve_exact(placement.handle_count).map_err(|_| "puzzle2d-fill-apply-backing")?;
+    for index in 0..placement.handle_count {
+        let handle = placement.handle(index).ok_or("puzzle2d-fill-apply-handle-owner")?;
+        handles.push(crate::artifacts::puzzle2d::Puzzle2dHandle { id: try_document_text(handle.id)?, handle_kind: Some(try_document_text(handle.handle_kind)?), angle: handle.angle, radius: handle.radius, ..Default::default() });
+    }
+    let node = crate::artifacts::puzzle2d::Puzzle2dNode {
+        id: try_document_text(*placement.node_id)?,
+        node_kind: Some(try_document_text(*placement.node_kind)?),
+        shape: Some(try_document_str(shape)?),
+        x: placement.x,
+        y: placement.y,
+        radius: matches!(placement.shape, infinite_canvas::BoardFillCommitShape::Circle).then_some(placement.radius),
+        width: matches!(placement.shape, infinite_canvas::BoardFillCommitShape::Rectangle).then_some(placement.width),
+        height: matches!(placement.shape, infinite_canvas::BoardFillCommitShape::Rectangle).then_some(placement.height),
+        text: Some(try_document_text(*placement.node_id)?),
+        icon_kind: placement.icon_kind.copied().map(try_document_text).transpose()?,
+        anchor: crate::artifacts::puzzle2d::Puzzle2dNodeAnchor::Fixed,
+        handles,
+        ..Default::default()
+    };
+    let edge = crate::artifacts::puzzle2d::mutations::connect_handles(
+        try_document_text(*placement.edge_id)?,
+        try_document_text(*placement.source_handle_id)?,
+        try_document_text(*placement.target_handle_id)?,
+        Some(try_document_text(*placement.edge_kind)?),
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        None,
+        None,
+    );
+    mutations.push(crate::artifacts::puzzle2d::mutations::create_node(node, None));
+    mutations.push(edge);
+    Ok(())
+}
+
+fn publish_commit_candidate(candidate: &semio_framework_job::CommitCandidate, mutations: &mut Vec<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>) -> Option<Result<infinite_canvas::BoardFillResult, &'static str>> {
+    let candidate = infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)?;
+    if let Some(placement) = candidate.placement.as_ref() {
+        if let Err(code) = publish_fixed_placement(FillPlacementPublishView::from_commit(placement), mutations) {
+            return Some(Err(code));
+        }
+    }
+    Some(Ok(candidate.result))
+}
+
 impl FillPlacementApplyCursor {
     fn new(placement: infinite_canvas::BoardFillPlacement) -> Self {
-        Self { placement: Some(placement), handles: std::array::from_fn(|_| None), handle: None, node: None, edge: None, handle_cursor: 0, handle_transfer_cursor: 0, stage: FillPlacementApplyStage::BeginHandle }
+        Self { placement: Some(placement), handles: std::array::from_fn(|_| None), handle: None, node: None, edge: None, handle_cursor: 0, text_byte: 0, stage: FillPlacementApplyStage::BeginHandle }
     }
 
     fn step(&mut self, mutations: &mut Vec<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>) -> Result<FillPlacementApplyStep, &'static str> {
@@ -838,30 +1045,32 @@ impl FillPlacementApplyCursor {
         match self.stage {
             FillPlacementApplyStage::BeginHandle => {
                 if self.handle_cursor < placement.handle_count() {
-                    self.handle = Some(crate::artifacts::puzzle2d::Puzzle2dHandle::default());
+                    self.handle = Some(FillPlacementHandleOwner { id: infinite_canvas::BoardFillText::empty(), handle_kind: infinite_canvas::BoardFillText::empty(), angle: 0.0, radius: None });
                     self.stage = FillPlacementApplyStage::HandleId;
                 } else {
                     self.stage = FillPlacementApplyStage::NodeBegin;
                 }
             }
             FillPlacementApplyStage::HandleId => {
-                let (id, _, _, _) = placement.handle(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
-                self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.id = id.to_string();
-                self.stage = FillPlacementApplyStage::HandleKind;
+                let source = placement.fixed_handle_id(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
+                let destination = &mut self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.id;
+                if copy_fill_text_one(source, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::HandleKind;
+                }
             }
             FillPlacementApplyStage::HandleKind => {
-                let (_, handle_kind, _, _) = placement.handle(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
-                self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.handle_kind = Some(handle_kind.to_string());
-                self.stage = FillPlacementApplyStage::HandleAngle;
+                let source = placement.fixed_handle_kind(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
+                let destination = &mut self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.handle_kind;
+                if copy_fill_text_one(source, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::HandleAngle;
+                }
             }
             FillPlacementApplyStage::HandleAngle => {
-                let (_, _, angle, _) = placement.handle(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
-                self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.angle = angle;
+                self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.angle = placement.fixed_handle_angle(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
                 self.stage = FillPlacementApplyStage::HandleRadius;
             }
             FillPlacementApplyStage::HandleRadius => {
-                let (_, _, _, radius) = placement.handle(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
-                self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.radius = radius;
+                self.handle.as_mut().ok_or("puzzle2d-fill-apply-handle-owner")?.radius = placement.fixed_handle_radius(self.handle_cursor).ok_or("puzzle2d-fill-apply-handle")?;
                 self.stage = FillPlacementApplyStage::HandlePublish;
             }
             FillPlacementApplyStage::HandlePublish => {
@@ -876,19 +1085,42 @@ impl FillPlacementApplyCursor {
                 self.stage = FillPlacementApplyStage::BeginHandle;
             }
             FillPlacementApplyStage::NodeBegin => {
-                self.node = Some(crate::artifacts::puzzle2d::Puzzle2dNode::default());
+                self.node = Some(FillPlacementNodeOwner {
+                    id: infinite_canvas::BoardFillText::empty(),
+                    node_kind: infinite_canvas::BoardFillText::empty(),
+                    target_handle_index: 0,
+                    shape: infinite_canvas::BoardFillCommitShape::Circle,
+                    x: 0.0,
+                    y: 0.0,
+                    radius: 0.0,
+                    width: 0.0,
+                    height: 0.0,
+                    icon_kind: None,
+                });
                 self.stage = FillPlacementApplyStage::NodeId;
             }
             FillPlacementApplyStage::NodeId => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.id = placement.node_id.as_str().to_string();
-                self.stage = FillPlacementApplyStage::NodeKind;
+                let destination = &mut self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.id;
+                if copy_fill_text_one(&placement.node_id, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::NodeKind;
+                }
             }
             FillPlacementApplyStage::NodeKind => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.node_kind = Some(placement.node_kind.as_str().to_string());
+                let destination = &mut self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.node_kind;
+                if copy_fill_text_one(&placement.node_kind, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::NodeTarget;
+                }
+            }
+            FillPlacementApplyStage::NodeTarget => {
+                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.target_handle_index = placement.target_handle_index;
                 self.stage = FillPlacementApplyStage::NodeShape;
             }
             FillPlacementApplyStage::NodeShape => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.shape = Some(placement.shape.to_string());
+                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.shape = match placement.shape {
+                    "circle" => infinite_canvas::BoardFillCommitShape::Circle,
+                    "rectangle" => infinite_canvas::BoardFillCommitShape::Rectangle,
+                    _ => return Err("puzzle2d-fill-node-shape"),
+                };
                 self.stage = FillPlacementApplyStage::NodeX;
             }
             FillPlacementApplyStage::NodeX => {
@@ -900,80 +1132,76 @@ impl FillPlacementApplyCursor {
                 self.stage = FillPlacementApplyStage::NodeText;
             }
             FillPlacementApplyStage::NodeText => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.text = Some(placement.node_id.as_str().to_string());
                 self.stage = FillPlacementApplyStage::NodeAnchor;
             }
             FillPlacementApplyStage::NodeAnchor => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.anchor = crate::artifacts::puzzle2d::Puzzle2dNodeAnchor::Fixed;
-                self.stage = FillPlacementApplyStage::NodeHandles;
-            }
-            FillPlacementApplyStage::NodeHandles => {
-                let node = self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?;
-                node.handles.try_reserve_exact(self.handle_cursor).map_err(|_| "puzzle2d-fill-apply-backing")?;
-                let bytes = node.handles.capacity().checked_mul(std::mem::size_of::<crate::artifacts::puzzle2d::Puzzle2dHandle>()).ok_or("puzzle2d-fill-apply-backing")?;
-                if bytes > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
-                    return Err("puzzle2d-fill-apply-backing");
-                }
-                self.handle_transfer_cursor = 0;
-                self.stage = FillPlacementApplyStage::NodeHandleTransfer;
-            }
-            FillPlacementApplyStage::NodeHandleTransfer => {
-                if self.handle_transfer_cursor < self.handle_cursor {
-                    let handle = self.handles.get_mut(self.handle_transfer_cursor).and_then(Option::take).ok_or("puzzle2d-fill-apply-handle-owner")?;
-                    self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.handles.push(handle);
-                    self.handle_transfer_cursor += 1;
-                } else {
-                    self.stage = FillPlacementApplyStage::NodeGeometry;
-                }
+                self.stage = FillPlacementApplyStage::NodeGeometry;
             }
             FillPlacementApplyStage::NodeGeometry => {
                 let node = self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?;
                 if placement.shape == "rectangle" {
-                    node.width = Some(placement.width);
+                    node.width = placement.width;
                     self.stage = FillPlacementApplyStage::NodeHeight;
                 } else {
-                    node.radius = Some(placement.radius);
-                    self.stage = FillPlacementApplyStage::NodeIcon;
+                    node.radius = placement.radius;
+                    self.stage = FillPlacementApplyStage::NodeIconBegin;
                 }
             }
             FillPlacementApplyStage::NodeHeight => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.height = Some(placement.height);
-                self.stage = FillPlacementApplyStage::NodeIcon;
+                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.height = placement.height;
+                self.stage = FillPlacementApplyStage::NodeIconBegin;
+            }
+            FillPlacementApplyStage::NodeIconBegin => {
+                if placement.icon_kind.as_ref().is_some() {
+                    self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.icon_kind = Some(infinite_canvas::BoardFillText::empty());
+                    self.stage = FillPlacementApplyStage::NodeIcon;
+                } else {
+                    self.stage = FillPlacementApplyStage::EdgeBegin;
+                }
             }
             FillPlacementApplyStage::NodeIcon => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.icon_kind = placement.icon_kind.map(|icon| icon.as_str().to_string());
-                self.stage = FillPlacementApplyStage::EdgeBegin;
+                let source = placement.icon_kind.as_ref().ok_or("puzzle2d-fill-node-icon")?;
+                let destination = self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.icon_kind.as_mut().ok_or("puzzle2d-fill-node-icon-owner")?;
+                if copy_fill_text_one(source, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::EdgeBegin;
+                }
             }
             FillPlacementApplyStage::EdgeBegin => {
-                self.edge = Some(FillPlacementEdgeOwner { id: String::new(), source: String::new(), target: String::new(), edge_kind: None });
+                self.edge =
+                    Some(FillPlacementEdgeOwner { id: infinite_canvas::BoardFillText::empty(), source: infinite_canvas::BoardFillText::empty(), target: infinite_canvas::BoardFillText::empty(), edge_kind: infinite_canvas::BoardFillText::empty() });
                 self.stage = FillPlacementApplyStage::EdgeId;
             }
             FillPlacementApplyStage::EdgeId => {
-                self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.id = placement.edge_id.as_str().to_string();
-                self.stage = FillPlacementApplyStage::EdgeKind;
+                let destination = &mut self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.id;
+                if copy_fill_text_one(&placement.edge_id, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::EdgeKind;
+                }
             }
             FillPlacementApplyStage::EdgeKind => {
-                self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.edge_kind = Some(placement.edge_kind.as_str().to_string());
-                self.stage = FillPlacementApplyStage::EdgeSource;
+                let destination = &mut self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.edge_kind;
+                if copy_fill_text_one(&placement.edge_kind, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::EdgeSource;
+                }
             }
             FillPlacementApplyStage::EdgeSource => {
-                self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.source = placement.source_handle_id.as_str().to_string();
-                self.stage = FillPlacementApplyStage::EdgeTarget;
+                let destination = &mut self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.source;
+                if copy_fill_text_one(&placement.source_handle_id, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::EdgeTarget;
+                }
             }
             FillPlacementApplyStage::EdgeTarget => {
-                self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.target = placement.target_handle_id.as_str().to_string();
-                self.stage = FillPlacementApplyStage::Publish;
+                let destination = &mut self.edge.as_mut().ok_or("puzzle2d-fill-edge-owner")?.target;
+                if copy_fill_text_one(&placement.target_handle_id, destination, &mut self.text_byte)? {
+                    self.stage = FillPlacementApplyStage::Publish;
+                }
             }
             FillPlacementApplyStage::Publish => {
-                mutations.try_reserve_exact(2).map_err(|_| "puzzle2d-fill-mutation-page")?;
-                let bytes = mutations.capacity().checked_mul(std::mem::size_of::<crate::artifacts::puzzle2d::mutations::Puzzle2dMutation>()).ok_or("puzzle2d-fill-mutation-page")?;
-                if bytes > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
-                    return Err("puzzle2d-fill-mutation-page");
-                }
-                let node = self.node.take().ok_or("puzzle2d-fill-node-owner")?;
-                let edge = self.edge.take().ok_or("puzzle2d-fill-edge-owner")?;
-                mutations.push(crate::artifacts::puzzle2d::mutations::create_node(node, None));
-                mutations.push(crate::artifacts::puzzle2d::mutations::connect_handles(edge.id, edge.source, edge.target, edge.edge_kind, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None));
+                let node = self.node.as_ref().ok_or("puzzle2d-fill-node-owner")?;
+                let edge = self.edge.as_ref().ok_or("puzzle2d-fill-edge-owner")?;
+                publish_fixed_placement(FillPlacementPublishView::from_cursor(node, edge, &self.handles, self.handle_cursor), mutations)?;
+                self.node = None;
+                self.edge = None;
+                self.handles = std::array::from_fn(|_| None);
                 self.stage = FillPlacementApplyStage::Close;
             }
             FillPlacementApplyStage::Close => {
@@ -995,41 +1223,10 @@ impl FillPlacementApplyCursor {
             *slot = None;
             return false;
         }
-        if let Some(node) = self.node.as_mut() {
-            if node.handles.pop().is_some() {
-                return false;
-            }
-            if node.handles.capacity() != 0 {
-                node.handles = Vec::new();
-                return false;
-            }
-            if node.icon_kind.take().is_some() || node.text.take().is_some() || node.shape.take().is_some() || node.node_kind.take().is_some() {
-                return false;
-            }
-            if !node.id.is_empty() {
-                let _ = std::mem::take(&mut node.id);
-                return false;
-            }
-            self.node = None;
+        if self.node.take().is_some() {
             return false;
         }
-        if let Some(edge) = self.edge.as_mut() {
-            if edge.edge_kind.take().is_some() {
-                return false;
-            }
-            if !edge.target.is_empty() {
-                let _ = std::mem::take(&mut edge.target);
-                return false;
-            }
-            if !edge.source.is_empty() {
-                let _ = std::mem::take(&mut edge.source);
-                return false;
-            }
-            if !edge.id.is_empty() {
-                let _ = std::mem::take(&mut edge.id);
-                return false;
-            }
-            self.edge = None;
+        if self.edge.take().is_some() {
             return false;
         }
         if let Some(placement) = self.placement.as_mut() {
@@ -1490,6 +1687,7 @@ pub fn begin_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, count: u32, seed: u64
         work: FillWork::AwaitingSnapshot,
         retained_outcome: None,
         outcome_terminal: false,
+        terminal_published: false,
         checkpoint: None,
         apply: None,
         checkpoint_sequence: 0,
@@ -1625,15 +1823,20 @@ fn pump_fill_worker(ctx: &mut Puzzle2dFillActionCtx<'_>, node: &mut FillSessionN
                         node.begin_close();
                     }
                 },
-                semio_framework_job::StepOutcome::Complete(candidate) => match infinite_canvas::BoardFillResult::from_commit_candidate(candidate) {
-                    Some(result) => {
+                semio_framework_job::StepOutcome::Complete(candidate) => match publish_commit_candidate(candidate, ctx.artifact_mutations) {
+                    Some(Ok(result)) => {
                         ctx.runtime.fill_job_accepted_count = u64::from(result.accepted_count);
                         ctx.runtime.fill_job_search_count = result.search_count;
                         node.terminal = Some(FillTerminal::Completed(result));
+                        node.terminal_published = true;
                         ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::AwaitingAdoption;
+                    }
+                    Some(Err(_)) => {
+                        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Applying;
                     }
                     None => {
                         node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-result-missing"));
+                        node.terminal_published = true;
                         fill_fault(ctx, "puzzle2d-fill-result-missing");
                     }
                 },
@@ -1721,6 +1924,29 @@ pub fn step_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, expected_generation: O
         return;
     }
     if let Some(outcome) = node.retained_outcome.as_mut() {
+        if node.outcome_terminal && !node.terminal_published {
+            if let semio_framework_job::StepOutcome::Complete(candidate) = outcome {
+                match publish_commit_candidate(candidate, ctx.artifact_mutations) {
+                    Some(Ok(result)) => {
+                        ctx.runtime.fill_job_accepted_count = u64::from(result.accepted_count);
+                        ctx.runtime.fill_job_search_count = result.search_count;
+                        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::AwaitingAdoption;
+                        node.terminal = Some(FillTerminal::Completed(result));
+                        node.terminal_published = true;
+                    }
+                    Some(Err(_)) => {
+                        ctx.runtime.fill_job_lifecycle = Puzzle2dFillLifecycle::Applying;
+                        queue_fill_adopt(ctx);
+                        return;
+                    }
+                    None => {
+                        node.terminal = Some(FillTerminal::Fault("puzzle2d-fill-result-missing"));
+                        node.terminal_published = true;
+                        fill_fault(ctx, "puzzle2d-fill-result-missing");
+                    }
+                }
+            }
+        }
         if !outcome.terminal_is_empty() {
             let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
             queue_fill_adopt(ctx);
@@ -1729,6 +1955,7 @@ pub fn step_fill_job(ctx: &mut Puzzle2dFillActionCtx<'_>, expected_generation: O
         node.retained_outcome = None;
         if node.outcome_terminal {
             node.outcome_terminal = false;
+            node.terminal_published = false;
             close_session_work_one(node);
             queue_fill_adopt(ctx);
             return;
@@ -1891,6 +2118,7 @@ mod tests {
             work: FillWork::Empty,
             retained_outcome: None,
             outcome_terminal: false,
+            terminal_published: false,
             checkpoint: None,
             apply: None,
             checkpoint_sequence: 0,
@@ -1971,9 +2199,61 @@ mod tests {
             && production.contains("semio_framework_job::MountedWorkerJobSession::try_new(job, params)")
             && production.contains("semio_framework_async::process_worker_pool")
             && production.contains("semio_framework_job::StepOutcome::Complete(candidate)")
-            && production.contains("infinite_canvas::BoardFillResult::from_commit_candidate(candidate)")
+            && production.contains("infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)")
+            && production.matches("publish_commit_candidate(candidate, ctx.artifact_mutations)").count() == 2
+            && production.contains("terminal_published")
             && !production.contains("BoardFillJob::take_result")
             && !production.contains("FillWork::Capture")
+    }
+
+    fn fixed_placement_owner_source_contract(source: &str) -> bool {
+        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
+        let Some(start) = production.find("struct FillSessionNode") else { return false };
+        let Some(end) = production[start..].find("fn try_document_str") else { return false };
+        let owners = &production[start..start + end];
+        let Some(apply_start) = production.find("impl FillPlacementApplyCursor") else { return false };
+        let Some(apply_end) = production[apply_start..].find("impl Drop for FillPlacementApplyCursor") else { return false };
+        let apply = &production[apply_start..apply_start + apply_end];
+        let Some(view_start) = production.find("enum FillPlacementPublishHandles") else { return false };
+        let Some(view_end) = production[view_start..].find("fn publish_fixed_placement") else { return false };
+        let view = &production[view_start..view_start + view_end];
+        owners.contains("edge_kind: infinite_canvas::BoardFillText")
+            && owners.contains("text_byte: usize")
+            && owners.contains("fn copy_fill_text_one")
+            && owners.contains("destination.try_push_byte(value)")
+            && !owners.contains("String")
+            && !owners.contains("Vec<")
+            && !owners.contains("BTreeMap")
+            && !owners.contains("Puzzle2dNode")
+            && !owners.contains("Puzzle2dHandle")
+            && apply.matches("copy_fill_text_one(").count() == 9
+            && apply.contains("fixed_handle_id(self.handle_cursor)")
+            && apply.contains("fixed_handle_kind(self.handle_cursor)")
+            && apply.contains("FillPlacementPublishView::from_cursor")
+            && !apply.contains("let placement = infinite_canvas::BoardFillCommitPlacement")
+            && !apply.contains("handles: std::array::from_fn(|index|")
+            && !apply.contains("= placement.node_id;")
+            && !apply.contains("= placement.edge_kind;")
+            && !apply.contains(".to_string(")
+            && view.contains("edge_kind: &'a infinite_canvas::BoardFillText")
+            && view.contains("FillPlacementPublishHandles::Commit(&placement.handles)")
+            && view.contains("FillPlacementPublishHandles::Cursor(handles)")
+            && !view.contains("String")
+            && !view.contains("Vec<")
+            && !view.contains("BTreeMap")
+    }
+
+    fn full_terminal_candidate_source_contract(source: &str) -> bool {
+        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
+        let Some(start) = production.find("fn publish_commit_candidate") else { return false };
+        let Some(end) = production[start..].find("impl FillPlacementApplyCursor") else { return false };
+        let publish = &production[start..start + end];
+        publish.contains("BoardFillCommitCandidate::from_commit_candidate(candidate)")
+            && publish.contains("if let Some(placement) = candidate.placement.as_ref()")
+            && publish.contains("publish_fixed_placement(FillPlacementPublishView::from_commit(placement), mutations)")
+            && publish.contains("Some(Ok(candidate.result))")
+            && !publish.contains("BoardFillResult::from_commit_candidate")
+            && !publish.contains("take_result")
     }
 
     fn granular_capture_source_contract(source: &str) -> bool {
@@ -2000,12 +2280,13 @@ mod tests {
 
     fn placement_publish_source_contract(source: &str) -> bool {
         let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
-        let Some(start) = production.find("FillPlacementApplyStage::Publish => {") else { return false };
-        let Some(end) = production[start..].find("FillPlacementApplyStage::Close => {") else { return false };
+        let Some(start) = production.find("fn publish_fixed_placement") else { return false };
+        let Some(end) = production[start..].find("fn publish_commit_candidate") else { return false };
         let publish = &production[start..start + end];
         let Some(reserve) = publish.find("mutations.try_reserve_exact(2)") else { return false };
-        let Some(node) = publish.find("let node = self.node.take()") else { return false };
-        reserve < node && !production.contains("ReserveMutations")
+        let Some(handles) = publish.find("let mut handles = Vec::new()") else { return false };
+        let Some(node) = publish.find("let node = crate::artifacts::puzzle2d::Puzzle2dNode") else { return false };
+        reserve < handles && handles < node && publish.contains("Some(try_document_text(*placement.edge_kind)?)") && publish.matches("mutations.push(").count() == 2 && !production.contains("ReserveMutations")
     }
 
     /// 🧵️ Removing worker-owned capture or restoring mutable terminal rereads fails the live source law.
@@ -2015,10 +2296,54 @@ mod tests {
         assert!(mounted_fill_source_contract(source));
         let ui_capture = source.replacen("impl semio_framework_job::InteractiveJob for ArtifactBoardFillJob", "impl semio_framework_job::InteractiveJob for RemovedArtifactBoardFillJob", 1);
         assert!(!mounted_fill_source_contract(&ui_capture));
-        let mutable_terminal = source.replacen("infinite_canvas::BoardFillResult::from_commit_candidate(candidate)", "job.take_result()", 1);
+        let mutable_terminal = source.replacen("infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)", "job.take_result()", 1);
         assert!(!mounted_fill_source_contract(&mutable_terminal));
         let dynamic_runtime = source.replacen("pub runtime: &'a mut crate::editor::puzzle2d::config::Puzzle2dFillRuntime,", "pub runtime: &'a mut crate::editor::puzzle2d::config::Puzzle2dFillRuntime, pub dynamic: Vec<Value>,", 1);
         assert!(!mounted_fill_source_contract(&dynamic_runtime));
+    }
+
+    /// 🧷️ Injected dynamic retained placement text and re-coalesced fixed text both fail the mounted ownership law.
+    #[test]
+    fn mounted_fill_fixed_placement_owner_mutations_are_rejected() {
+        let source = include_str!("🦀️component.rs");
+        assert!(fixed_placement_owner_source_contract(source));
+        let dynamic = source.replacen("edge_kind: infinite_canvas::BoardFillText,", "edge_kind: String,", 1);
+        assert!(!fixed_placement_owner_source_contract(&dynamic));
+        let dynamic_view = source.replacen("edge_kind: &'a infinite_canvas::BoardFillText,", "edge_kind: String,", 1);
+        assert!(!fixed_placement_owner_source_contract(&dynamic_view));
+        let whole_text = source.replacen("if copy_fill_text_one(&placement.edge_kind, destination, &mut self.text_byte)? {", "if { *destination = placement.edge_kind; true } {", 1);
+        assert!(!fixed_placement_owner_source_contract(&whole_text));
+        let whole_candidate =
+            source.replacen("FillPlacementPublishView::from_cursor(node, edge, &self.handles, self.handle_cursor)", "infinite_canvas::BoardFillCommitPlacement { handles: std::array::from_fn(|index| self.handles[index]), ..Default::default() }", 1);
+        assert!(!fixed_placement_owner_source_contract(&whole_candidate));
+    }
+
+    /// 🔡️ A MAX fixed label advances by exactly one character byte per retained apply opportunity.
+    #[test]
+    fn mounted_fill_fixed_placement_text_cursor_is_one_byte_per_turn() {
+        let source = "x".repeat(infinite_canvas::BOARD_FILL_TEXT_BYTES);
+        let source = infinite_canvas::BoardFillText::try_from_str(&source).expect("MAX fixed placement text");
+        let mut destination = infinite_canvas::BoardFillText::empty();
+        let mut byte = 0usize;
+        for index in 0..infinite_canvas::BOARD_FILL_TEXT_BYTES {
+            let complete = copy_fill_text_one(&source, &mut destination, &mut byte).expect("fixed byte copy");
+            assert_eq!(destination.as_str().len(), index + 1);
+            assert_eq!(complete, index + 1 == infinite_canvas::BOARD_FILL_TEXT_BYTES);
+        }
+        assert_eq!(destination, source);
+        let over = "x".repeat(infinite_canvas::BOARD_FILL_TEXT_BYTES + 1);
+        assert!(infinite_canvas::BoardFillText::try_from_str(&over).is_err());
+    }
+
+    /// 📦️ Replacing the full exact terminal placement with a summary decoder fails the live terminal law.
+    #[test]
+    fn mounted_fill_summary_only_terminal_mutation_is_rejected() {
+        let source = include_str!("🦀️component.rs");
+        assert!(full_terminal_candidate_source_contract(source));
+        let summary = source.replacen("BoardFillCommitCandidate::from_commit_candidate(candidate)", "BoardFillResult::from_commit_candidate(candidate)", 1);
+        assert!(!full_terminal_candidate_source_contract(&summary));
+        let discarded = source.replacen("if let Some(placement) = candidate.placement.as_ref() {", "if let Some(placement) = None {", 1);
+        assert!(!full_terminal_candidate_source_contract(&discarded));
     }
 
     /// 🔬️ Re-coalescing source fields or whole text into one worker grant fails the live capture law.

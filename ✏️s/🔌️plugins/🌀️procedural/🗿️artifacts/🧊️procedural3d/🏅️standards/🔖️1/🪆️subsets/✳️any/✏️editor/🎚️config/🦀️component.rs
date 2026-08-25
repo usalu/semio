@@ -65,6 +65,7 @@ pub fn default_sun_json() -> String {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural3dcfg")]
+#[dsl(id = "procedural.procedural3dcfg")]
 #[dsl(layout = "lines")]
 pub struct Procedural3dConfig {
     /// 🎚️ Level-of-detail tessellation deflection.
@@ -293,6 +294,8 @@ mod tests {
         assert_eq!(config.active_utility_id, "move");
         assert_eq!(config.locale, "en-US");
         assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
+        let pack = <Procedural3dConfig as store::ArtifactPack>::encode_pack_with(&config, &store::PackEncodeOptions::default()).expect("the app default must be pack-encodable before the registry constructs its store");
+        assert_eq!(<Procedural3dConfig as store::ArtifactPack>::decode_pack_with(&pack, &store::PackDecodeOptions::default()).expect("the app default pack must decode"), config);
     }
 
     fn config_round_trip(base: &Procedural3dConfig, operation: &Procedural3dConfigMutation) -> Procedural3dConfig {

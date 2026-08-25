@@ -367,12 +367,29 @@ self.addEventListener("message", async (event) => {
 export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
   return `/** @generated semio actor jco component bridge */
 import * as hostShim from "./${PLUGIN_HOST_SHIM_FILE}";
-const { reactor, jobs, checkpoint, describe } = await import("./${componentBase}.js");
+
+const commandIngressKinds = new Map([[0, "idle"], [1, "page-accepted"], [2, "backpressure"], [3, "command-pending"], [4, "command-complete"], [5, "fault"]]);
+
+function normalizeCommandIngress(status) {
+  const tag = commandIngressKinds.get(status.kind);
+  if (!tag) throw new Error(\`unknown command ingress kind: \${status.kind}\`);
+  if (tag === "idle") return { tag };
+  if (tag === "fault") return { tag, val: { cursor: status.cursor, fault: { tag: "fault", val: status.fault } } };
+  return { tag, val: status.cursor };
+}
 
 export async function createActorApi(actorId) {
+  const componentUrl = new URL("./${componentBase}.js", import.meta.url);
+  const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
+  componentUrl.searchParams.set("actor", actorId);
+  if (rebuildVersion) componentUrl.searchParams.set("v", rebuildVersion);
+  const { reactor, jobs, checkpoint, describe } = await import(componentUrl.href);
   hostShim.__bindHostBridge(actorId);
   return {
-    poll: async (events, commandPage, budget) => reactor.poll(events.map(({ kind, payload }) => ({ tag: kind, val: payload })), commandPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 }),
+    poll: async (events, commandPage, budget) => {
+      const result = await reactor.poll(events.map(({ kind, payload }) => kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload })), commandPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
+      return { ...result, commandIngress: normalizeCommandIngress(result.commandIngress) };
+    },
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
     stepJob: async (job, budget) => jobs.stepJob(job, budget),
     cancelJob: async (job) => jobs.cancelJob(job),
@@ -462,6 +479,30 @@ function rewriteJcoAsyncResultLiftingAt(modulePath: string): void {
 }
 //#endregion 🧬️JcoAsyncResultLifting
 
+//#region 🧊️JcoComponentAssetVersioning
+const JCO_COMPONENT_ASSET_URL = /new URL\((['"])(\.\/[^'"]+\.core\d*\.wasm)\1,\s*import\.meta\.url\)/g;
+const JCO_COMPONENT_ASSET_URL_HELPER = `function __semioVersionedComponentAssetUrl(path) {
+  const url = new URL(path, import.meta.url);
+  const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
+  if (rebuildVersion) url.searchParams.set("v", rebuildVersion);
+  return url;
+}`;
+
+/** @emoji 🧊️ Carries the component-module rebuild version into every jco-generated core Wasm fetch. */
+export function rewriteJcoComponentAssetUrls(source: string): string {
+  if (source.includes("function __semioVersionedComponentAssetUrl(path)")) return source;
+  const rewritten = source.replace(JCO_COMPONENT_ASSET_URL, (_match, quote, assetPath) => `__semioVersionedComponentAssetUrl(${quote}${assetPath}${quote})`);
+  return rewritten === source ? source : `${JCO_COMPONENT_ASSET_URL_HELPER}\n\n${rewritten}`;
+}
+
+/** @emoji 💾️ Applies {@link rewriteJcoComponentAssetUrls} to one freshly transpiled jco module. */
+function rewriteJcoComponentAssetUrlsAt(modulePath: string): void {
+  const source = readFileSync(modulePath, "utf8");
+  const rewritten = rewriteJcoComponentAssetUrls(source);
+  if (rewritten !== source) writeFileSync(modulePath, rewritten);
+}
+//#endregion 🧊️JcoComponentAssetVersioning
+
 export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
   // 🧪️ terra-web-bridges (📓️terra-jco-spike-report.md "what must change" #2): NO `--async-mode`
   // flag — confirmed byte-identical to jco's bare/"sync" default for a component whose every WIT
@@ -479,6 +520,7 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
+  rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
   optimizePluginCoreModules(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
@@ -566,6 +608,7 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
+  rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
   await optimizePluginCoreModulesAsync(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }

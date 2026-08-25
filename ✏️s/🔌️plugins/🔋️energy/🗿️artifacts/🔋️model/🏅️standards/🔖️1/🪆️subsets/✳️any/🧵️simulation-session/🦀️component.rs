@@ -231,6 +231,16 @@ fn quality_tier_index(tier: EnergyQualityTier) -> usize {
         EnergyQualityTier::Final => 3,
     }
 }
+
+fn retain_worker_outcome(slot: &mut Option<StepOutcome>, outcome: StepOutcome) -> JobStep {
+    let terminal = matches!(outcome, StepOutcome::Complete(_));
+    *slot = Some(outcome);
+    if terminal {
+        JobStep::Done(Vec::new())
+    } else {
+        JobStep::Running(None)
+    }
+}
 //#endregion 🔖️Contract
 
 //#region 🧮️RetainedInput
@@ -838,6 +848,22 @@ impl ModelCapture {
         self.model
     }
 }
+
+fn take_captured_model_for_admission(
+    capture: &mut Option<ModelCapture>,
+    mounted: MountedIdentity,
+    expected: MountedIdentity,
+    render: AppRenderOperationContext,
+    live_request: u64,
+    retained_config_digest: u64,
+    snapshot_fresh: bool,
+    cancelled: bool,
+) -> Result<Model, &'static str> {
+    if mounted != expected || !mounted.matches_render(render) || mounted.request != live_request || mounted.config_digest != retained_config_digest || !snapshot_fresh || cancelled {
+        return Err("energy.session.admission-stale-or-cancelled");
+    }
+    Ok(std::mem::replace(capture, None).ok_or("energy.session.capture-missing")?.finish())
+}
 //#endregion 🧮️RetainedInput
 
 //#region 🧰️FixedArena
@@ -875,6 +901,11 @@ struct MountedState {
     worker_returned: bool,
     closing: bool,
     close_lane: u8,
+}
+
+enum MountedAdmissionError {
+    Stale { checkpoint: Option<EnergyWirePacket> },
+    Rejected(&'static str),
 }
 
 impl MountedState {
@@ -925,14 +956,19 @@ impl MountedState {
         capture.step_one(source)
     }
 
-    fn admit_job(&mut self, checkpoint: Option<EnergyWirePacket>) -> Result<(), &'static str> {
+    fn admit_job(&mut self, render: AppRenderOperationContext, live_request: u64, expected: MountedIdentity, checkpoint: Option<EnergyWirePacket>) -> Result<(), MountedAdmissionError> {
         if self.config.checkpoint_token != 0 && checkpoint.is_none() {
             self.admission_blocked = true;
             self.projection.status = EnergySimulationStatus::Faulted;
-            return Err("energy.session.checkpoint-token-not-found");
+            return Err(MountedAdmissionError::Rejected("energy.session.checkpoint-token-not-found"));
         }
-        let model = std::mem::replace(&mut self.capture, None).ok_or("energy.session.capture-missing")?.finish();
         let config = self.config.build();
+        let snapshot_fresh = self.snapshot_is_fresh();
+        let cancelled = self.cancel.is_cancelled_now();
+        let model = match take_captured_model_for_admission(&mut self.capture, self.identity, expected, render, live_request, self.config.digest(), snapshot_fresh, cancelled) {
+            Ok(model) => model,
+            Err(_) => return Err(MountedAdmissionError::Stale { checkpoint }),
+        };
         if self.config.checkpoint_token != 0 {
             let packet = checkpoint.expect("checkpoint presence was retained before owner move");
             return match EnergyRestoreJob::admit(self.identity.operation(), model, config, packet, EnergyNumericalBounds::default()) {
@@ -944,7 +980,7 @@ impl MountedState {
                 Err(rejected) => {
                     self.restore_rejected = Some(rejected);
                     self.projection.status = EnergySimulationStatus::Faulted;
-                    Err("energy.session.restore-admission-rejected")
+                    Err(MountedAdmissionError::Rejected("energy.session.restore-admission-rejected"))
                 }
             };
         }
@@ -957,7 +993,7 @@ impl MountedState {
             Err(rejected) => {
                 self.rejected = Some(rejected);
                 self.projection.status = EnergySimulationStatus::Faulted;
-                Err("energy.session.numerical-admission-rejected")
+                Err(MountedAdmissionError::Rejected("energy.session.numerical-admission-rejected"))
             }
         }
     }
@@ -1094,9 +1130,6 @@ impl MountedState {
     }
 
     fn worker_step(&mut self, budget: JobBudget) -> JobStep {
-        if self.projection.adopted {
-            return JobStep::Done(Vec::new());
-        }
         if self.closing || self.cancel.is_cancelled_now() {
             self.projection.status = EnergySimulationStatus::Cancelled;
             return JobStep::Done(Vec::new());
@@ -1149,10 +1182,7 @@ impl MountedState {
                 self.projection.status = EnergySimulationStatus::Cancelled;
                 JobStep::Done(Vec::new())
             }
-            other => {
-                self.outcome = Some(other);
-                JobStep::Running(None)
-            }
+            other => retain_worker_outcome(&mut self.outcome, other),
         }
     }
 
@@ -1452,6 +1482,40 @@ struct CurrentSession {
 }
 
 #[derive(Clone, Copy)]
+struct AdoptedProjectionAuthority {
+    render: AppRenderOperationContext,
+    identity: MountedIdentity,
+    projection: EnergySimulationProjection,
+}
+
+impl AdoptedProjectionAuthority {
+    fn new(identity: MountedIdentity, projection: EnergySimulationProjection) -> Option<Self> {
+        let render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.document_revision, generation: identity.document_generation, canonical_base_revision: identity.canonical_base_revision };
+        let authority = Self { render, identity, projection };
+        authority.matches_render(render).then_some(authority)
+    }
+
+    fn matches_render(&self, render: AppRenderOperationContext) -> bool {
+        self.render == render
+            && self.identity.matches_render(render)
+            && self.projection.adopted
+            && self.projection.request == self.identity.request
+            && self.projection.operation == self.identity.operation
+            && self.projection.generation == self.identity.generation
+            && self.projection.config_digest == self.identity.config_digest
+            && self.projection.tiers.iter().flatten().all(|tier| {
+                tier.app_instance_id == self.identity.app_instance_id
+                    && tier.document_revision == self.identity.document_revision
+                    && tier.document_generation == self.identity.document_generation
+                    && tier.canonical_base_revision == self.identity.canonical_base_revision
+                    && tier.operation == self.identity.operation
+                    && tier.generation == self.identity.generation
+                    && tier.config_digest == self.identity.config_digest
+            })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct RecoveryRecord {
     shell: u16,
     identity: MountedIdentity,
@@ -1470,7 +1534,7 @@ struct Registry {
     apps: [Option<u32>; ACTIVE_SLOTS],
     last_request: [u64; ACTIVE_SLOTS],
     current: [Option<CurrentSession>; ACTIVE_SLOTS],
-    adopted: [Option<(AppRenderOperationContext, EnergySimulationProjection)>; ACTIVE_SLOTS],
+    adopted: [Option<AdoptedProjectionAuthority>; ACTIVE_SLOTS],
     pending: [Option<u16>; ACTIVE_SLOTS],
     preflight: [Option<PendingPreflight>; ACTIVE_SLOTS],
     retiring: [Option<u16>; SHELL_SLOTS],
@@ -1609,6 +1673,12 @@ impl Registry {
 
     fn slot_for(&self, app_instance_id: u32) -> Option<usize> {
         self.apps.iter().position(|app| *app == Some(app_instance_id))
+    }
+
+    fn adopted_projection(&self, render: AppRenderOperationContext) -> Option<&EnergySimulationProjection> {
+        let slot = self.slot_for(render.app_instance_id)?;
+        let authority = self.adopted[slot].as_ref()?;
+        (self.last_request[slot] == authority.identity.request && authority.matches_render(render)).then_some(&authority.projection)
     }
 
     fn app_terminal_is_empty(&self, slot: usize, app_instance_id: u32) -> bool {
@@ -2022,17 +2092,31 @@ pub fn reconcile(doc: &ArtifactView<'_, EnergyModelSnapshot>) -> Vec<Effect> {
                 Err(_) => return Vec::new(),
             };
             let state = owner.as_mut().expect("captured Energy shell remains mounted");
-            if state.admit_job(checkpoint).is_err() {
-                let rejected_identity = state.identity;
-                drop(owner);
-                if let Some(previous) = registry.current[slot] {
-                    if !registry.retire_shell(previous.shell) {
-                        return vec![Effect::Notify { message: "Energy retirement arena is saturated".into() }];
+            match state.admit_job(render, registry.last_request[slot], identity, checkpoint) {
+                Ok(()) => {}
+                Err(MountedAdmissionError::Stale { checkpoint }) => {
+                    if let Some(packet) = checkpoint {
+                        state.checkpoint_packet = Some((checkpoint_token, packet));
                     }
+                    state.begin_close();
+                    drop(owner);
+                    if registry.retire_shell(shell) {
+                        registry.pending[slot] = None;
+                    }
+                    return vec![Effect::Notify { message: "Energy simulation admission authority became stale".into() }];
                 }
-                registry.current[slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity: rejected_identity });
-                registry.pending[slot] = None;
-                return vec![Effect::Notify { message: "Energy simulation admission rejected".into() }];
+                Err(MountedAdmissionError::Rejected(message)) => {
+                    let rejected_identity = state.identity;
+                    drop(owner);
+                    if let Some(previous) = registry.current[slot] {
+                        if !registry.retire_shell(previous.shell) {
+                            return vec![Effect::Notify { message: "Energy retirement arena is saturated".into() }];
+                        }
+                    }
+                    registry.current[slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity: rejected_identity });
+                    registry.pending[slot] = None;
+                    return vec![Effect::Notify { message: message.into() }];
+                }
             }
             drop(owner);
             let previous = registry.current[slot];
@@ -2083,12 +2167,7 @@ pub fn with_adopted_projection<R>(render: Option<AppRenderOperationContext>, rea
     let Some(render) = render else { return read(None) };
     REGISTRY.with(|registry| {
         let registry = registry.borrow();
-        let projection = registry
-            .adopted
-            .iter()
-            .flatten()
-            .find_map(|(authority, projection)| (authority.base_revision == render.base_revision && authority.generation == render.generation && authority.canonical_base_revision == render.canonical_base_revision).then_some(projection));
-        read(projection)
+        read(registry.adopted_projection(render))
     })
 }
 
@@ -2175,15 +2254,7 @@ pub fn maintenance_step(app_instance_id: u32, maximum_items: usize, maximum_byte
         };
         let Some(state) = owner.as_mut() else { return PluginCloseStep::Complete };
         let step = state.maintenance_one(maximum_bytes);
-        let adopted = state.projection.adopted.then_some((
-            AppRenderOperationContext {
-                app_instance_id: state.identity.app_instance_id,
-                base_revision: state.identity.document_revision,
-                generation: state.identity.document_generation,
-                canonical_base_revision: state.identity.canonical_base_revision,
-            },
-            state.projection,
-        ));
+        let adopted = state.projection.adopted.then(|| AdoptedProjectionAuthority::new(state.identity, state.projection)).flatten();
         drop(owner);
         if let Some(adopted) = adopted {
             registry.adopted[slot] = Some(adopted);
@@ -2511,6 +2582,154 @@ mod tests {
         ] {
             assert!(!identity.matches_request(stale));
         }
+    }
+
+    #[test]
+    fn completed_capture_revalidates_every_live_authority_before_model_transfer() {
+        let mounted = MountedIdentity {
+            app_instance_id: 61,
+            request: 19,
+            document_revision: RevisionId(2),
+            document_generation: Generation(3),
+            canonical_base_revision: [4; 32],
+            operation: OperationId(5),
+            generation: Generation(6),
+            config_digest: 7,
+            operation_seed: 8,
+            job: JOB_TAG | 9,
+        };
+        let exact_render = AppRenderOperationContext { app_instance_id: mounted.app_instance_id, base_revision: mounted.document_revision, generation: mounted.document_generation, canonical_base_revision: mounted.canonical_base_revision };
+        let stale_expected = MountedIdentity { generation: Generation(99), ..mounted };
+        let stale_app = AppRenderOperationContext { app_instance_id: 62, ..exact_render };
+        let stale_revision = AppRenderOperationContext { base_revision: RevisionId(99), ..exact_render };
+        let stale_generation = AppRenderOperationContext { generation: Generation(99), ..exact_render };
+        let stale_canonical = AppRenderOperationContext { canonical_base_revision: [99; 32], ..exact_render };
+        for (expected, render, request, digest, snapshot_fresh, cancelled) in [
+            (stale_expected, exact_render, mounted.request, mounted.config_digest, true, false),
+            (mounted, stale_app, mounted.request, mounted.config_digest, true, false),
+            (mounted, stale_revision, mounted.request, mounted.config_digest, true, false),
+            (mounted, stale_generation, mounted.request, mounted.config_digest, true, false),
+            (mounted, stale_canonical, mounted.request, mounted.config_digest, true, false),
+            (mounted, exact_render, mounted.request + 1, mounted.config_digest, true, false),
+            (mounted, exact_render, mounted.request, mounted.config_digest + 1, true, false),
+            (mounted, exact_render, mounted.request, mounted.config_digest, false, false),
+            (mounted, exact_render, mounted.request, mounted.config_digest, true, true),
+        ] {
+            let mut capture = ModelCapture::new();
+            capture.model.name = "stale-capture".into();
+            capture.model.zones.push(crate::model::Zone { id: crate::model::EntityId(1), name: "retained-zone".into(), volume_m3: 1.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true });
+            let mut capture = Some(capture);
+            assert!(take_captured_model_for_admission(&mut capture, mounted, expected, render, request, digest, snapshot_fresh, cancelled).is_err());
+            assert_eq!(capture.as_ref().expect("stale capture remains exact").model.zones[0].name, "retained-zone");
+            let mut close = EnergyModelCloseCursor::new(std::mem::replace(&mut capture, None).expect("retained stale capture").finish());
+            for _ in 0..128 {
+                match close.close_step(4) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
+                        assert!(released_items <= 1);
+                        assert!(released_bytes <= 4);
+                    }
+                    semio_framework_job::InteractiveJobCloseStep::Complete => break,
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("stale captured Model close cannot block"),
+                }
+            }
+            assert!(close.terminal_is_empty());
+        }
+
+        let mut exact = ModelCapture::new();
+        exact.model.name = "exact-capture".into();
+        let mut exact = Some(exact);
+        let model = take_captured_model_for_admission(&mut exact, mounted, mounted, exact_render, mounted.request, mounted.config_digest, true, false).expect("only the current uncancelled capture transfers");
+        assert_eq!(model.name, "exact-capture");
+        assert!(exact.is_none());
+    }
+
+    #[test]
+    fn adopted_projection_is_partitioned_by_application_and_rejects_every_aba_dimension() {
+        let identity = MountedIdentity {
+            app_instance_id: 71,
+            request: 29,
+            document_revision: RevisionId(12),
+            document_generation: Generation(13),
+            canonical_base_revision: [14; 32],
+            operation: OperationId(15),
+            generation: Generation(16),
+            config_digest: 17,
+            operation_seed: 18,
+            job: JOB_TAG | 19,
+        };
+        let render = AppRenderOperationContext { app_instance_id: identity.app_instance_id, base_revision: identity.document_revision, generation: identity.document_generation, canonical_base_revision: identity.canonical_base_revision };
+        let mut projection = EnergySimulationProjection::new(identity);
+        projection.adopted = true;
+        projection.status = EnergySimulationStatus::Adopted;
+        projection.tiers[0] = Some(EnergyTierProjection {
+            app_instance_id: identity.app_instance_id,
+            document_revision: identity.document_revision,
+            document_generation: identity.document_generation,
+            canonical_base_revision: identity.canonical_base_revision,
+            operation: identity.operation,
+            generation: identity.generation,
+            config_digest: identity.config_digest,
+            sequence: 1,
+            tier: EnergyQualityTier::SteadyStateEstimate,
+            stage: EnergyJobStage::Complete,
+            warmup_hour: 0,
+            timestep: 1,
+            total_timesteps: 1,
+            facility_electricity_kwh: 1.0,
+        });
+        let exact = AdoptedProjectionAuthority::new(identity, projection).expect("exact adopted authority");
+        let mut registry = Registry::new();
+        registry.apps[0] = Some(identity.app_instance_id);
+        registry.apps[1] = Some(identity.app_instance_id + 1);
+        registry.last_request[0] = identity.request;
+        registry.adopted[0] = Some(exact);
+        assert_eq!(registry.adopted_projection(render).map(|projection| projection.request), Some(identity.request));
+        let other_app_same_document = AppRenderOperationContext { app_instance_id: identity.app_instance_id + 1, ..render };
+        assert!(registry.adopted_projection(other_app_same_document).is_none(), "matching document provenance cannot cross the application partition");
+
+        for mutation in 0..5 {
+            let mut stale = exact;
+            match mutation {
+                0 => stale.projection.request += 1,
+                1 => stale.projection.operation = OperationId(stale.projection.operation.0 + 1),
+                2 => stale.projection.generation = Generation(stale.projection.generation.0 + 1),
+                3 => stale.projection.config_digest += 1,
+                _ => stale.projection.tiers[0].as_mut().expect("tier").app_instance_id += 1,
+            }
+            registry.adopted[0] = Some(stale);
+            assert!(registry.adopted_projection(render).is_none(), "ABA mutation {mutation} leaked an adopted projection");
+        }
+        registry.adopted[0] = Some(exact);
+        registry.last_request[0] += 1;
+        assert!(registry.adopted_projection(render).is_none(), "a newer request must invalidate the retained adopted authority");
+    }
+
+    #[test]
+    fn acknowledged_numerical_complete_is_retained_then_detaches_the_process_owner() {
+        let mut retained = None;
+        let complete = StepOutcome::Complete(semio_framework_job::CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        });
+        assert!(matches!(retain_worker_outcome(&mut retained, complete), JobStep::Done(bytes) if bytes.is_empty()));
+        assert!(retained.as_ref().is_some_and(StepOutcome::is_terminal));
+        assert!(retained.as_ref().is_some_and(StepOutcome::terminal_is_empty));
+        let identity = MountedIdentity {
+            app_instance_id: 81,
+            request: 82,
+            document_revision: RevisionId(83),
+            document_generation: Generation(84),
+            canonical_base_revision: [85; 32],
+            operation: OperationId(86),
+            generation: Generation(87),
+            config_digest: 88,
+            operation_seed: 89,
+            job: JOB_TAG | 90,
+        };
+        let shell = 5;
+        drop(EnergyMountedBoundedJob { shell_index: shell, shell: Rc::new(RefCell::new(None)), identity });
+        let recovered = RECOVERY.with(|recovery| recovery.borrow_mut()[shell as usize].take()).expect("terminal process Drop publishes the exact fixed recovery witness");
+        assert_eq!(recovered, RecoveryRecord { shell, identity });
     }
 
     #[test]

@@ -1,8 +1,8 @@
-//! @emoji 🎛️ Platform event normalization — the layer that stops `winit` and `web_sys` types from
+//! @emoji 🎛️ Platform event normalization — the layer that stops native and browser SDK types from
 //! leaking upward. A caller in `🦀️window.rs` (same crate) feeds this module the raw pieces of a
 //! platform event; this module hands back `ui_render`'s own multi-pointer, physical/logical-key
 //! vocabulary (`ui_render::dispatch::DispatchEvent` and friends). Nothing above `ui_host` ever names
-//! a `winit` or `web_sys` type — a product/runtime crate consuming [`crate::window::WindowDelegate`]
+//! a platform SDK type — a product/runtime crate consuming [`crate::window::WindowDelegate`]
 //! only ever sees the types re-exported from here.
 //!
 //! Every function below takes primitives or `winit`/web values *by value or reference* and returns a
@@ -23,9 +23,195 @@
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::HashMap;
 
-use ui_render::{DispatchEvent, EventModifiers, ImeEvent, PointerButton, PointerId, PointerInfo, PointerKind};
+use crate::abi::{AbiErrorCode, AbiEvent, AbiHandle};
+#[cfg(not(target_arch = "wasm32"))]
+use ui_render::ImeEvent;
+use ui_render::{DispatchEvent, EventModifiers, PointerButton, PointerId, PointerInfo, PointerKind};
 
 //#region 🔖️Host
+
+//#region 🌐️BrowserHostEvent
+
+pub const BROWSER_EVENT_METRICS: u16 = 1_801;
+pub const BROWSER_EVENT_VISIBILITY: u16 = 1_802;
+pub const BROWSER_EVENT_FRAME: u16 = 1_803;
+pub const BROWSER_EVENT_POINTER_MOVE: u16 = 1_804;
+pub const BROWSER_EVENT_POINTER_DOWN: u16 = 1_805;
+pub const BROWSER_EVENT_POINTER_UP: u16 = 1_806;
+pub const BROWSER_EVENT_WHEEL: u16 = 1_807;
+pub const BROWSER_EVENT_KEY_DOWN: u16 = 1_808;
+pub const BROWSER_EVENT_KEY_UP: u16 = 1_809;
+pub const BROWSER_EVENT_TEXT: u16 = 1_810;
+pub const BROWSER_EVENT_CLOSE: u16 = 1_811;
+pub const BROWSER_HOST_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️browser-host.json");
+pub const BROWSER_HOST_TRACE_FIXTURE: &str = include_str!("../../🧪️fixtures/📒️browser-host.tsv");
+pub const BROWSER_HOST_LIMITS_FIXTURE: &str = include_str!("../../🧪️fixtures/📐️browser-host-limits.tsv");
+pub const BROWSER_HOST_FRAMING_FIXTURE: &str = include_str!("../../🧪️fixtures/📨️browser-host-framing.tsv");
+
+/// 🖼️ Stable browser-canvas identity; zero never aliases a missing canvas.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct CanvasId(u32);
+
+impl CanvasId {
+    pub fn try_new(value: u32) -> Result<Self, AbiErrorCode> {
+        (value != 0).then_some(Self(value)).ok_or(AbiErrorCode::UnknownHandle)
+    }
+
+    pub const fn get(self) -> u32 {
+        self.0
+    }
+}
+
+/// 🎫️ Generation-bearing listener identity protecting callback reuse from ABA.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ListenerId(AbiHandle);
+
+impl ListenerId {
+    pub fn try_new(slot: u32, generation: u32) -> Result<Self, AbiErrorCode> {
+        AbiHandle::try_new(slot, generation).map(Self)
+    }
+
+    pub const fn handle(self) -> AbiHandle {
+        self.0
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct BrowserCanvasMetrics {
+    pub width: u32,
+    pub height: u32,
+    pub scale_factor: f32,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum BrowserHostEvent {
+    Metrics(BrowserCanvasMetrics),
+    Visibility { visible: bool },
+    Frame { timestamp_ms: f64 },
+    Dispatch(DispatchEvent),
+    Closed,
+}
+
+/// 🧱️ Decodes one canonical primitive-only event and rejects a different canvas/listener generation.
+pub fn decode_browser_host_event(event: &AbiEvent, canvas: CanvasId, listener: ListenerId) -> Result<BrowserHostEvent, AbiErrorCode> {
+    let mut decoder = BrowserEventDecoder::new(event.bytes.as_slice());
+    if decoder.u8()? != 1 || decoder.u32()? != canvas.get() {
+        return Err(AbiErrorCode::UnknownHandle);
+    }
+    let actual = ListenerId::try_new(decoder.u32()?, decoder.u32()?)?;
+    if actual != listener {
+        return Err(if actual.handle().generation() < listener.handle().generation() { AbiErrorCode::AbaHandle } else { AbiErrorCode::StaleGeneration });
+    }
+    let decoded = match event.event.get() {
+        BROWSER_EVENT_METRICS => BrowserHostEvent::Metrics(BrowserCanvasMetrics { width: decoder.u32()?, height: decoder.u32()?, scale_factor: decoder.f32()? }),
+        BROWSER_EVENT_VISIBILITY => BrowserHostEvent::Visibility { visible: decoder.boolean()? },
+        BROWSER_EVENT_FRAME => BrowserHostEvent::Frame { timestamp_ms: decoder.f64()? },
+        BROWSER_EVENT_POINTER_MOVE | BROWSER_EVENT_POINTER_DOWN | BROWSER_EVENT_POINTER_UP => {
+            let pointer = pointer_info_from_browser_tag(decoder.i32()?, decoder.u8()?, decoder.f32()?, decoder.f32()?, decoder.f32()?);
+            let x = decoder.f32()?;
+            let y = decoder.f32()?;
+            let button = pointer_button_from_web(decoder.i16()?).ok_or(AbiErrorCode::MalformedTag)?;
+            BrowserHostEvent::Dispatch(match event.event.get() {
+                BROWSER_EVENT_POINTER_MOVE => DispatchEvent::PointerMove { pointer, x, y },
+                BROWSER_EVENT_POINTER_DOWN => DispatchEvent::PointerDown { pointer, x, y, button },
+                _ => DispatchEvent::PointerUp { pointer, x, y, button },
+            })
+        }
+        BROWSER_EVENT_WHEEL => BrowserHostEvent::Dispatch(DispatchEvent::Scroll { x: decoder.f32()?, y: decoder.f32()?, delta_x: decoder.f32()?, delta_y: decoder.f32()? }),
+        BROWSER_EVENT_KEY_DOWN | BROWSER_EVENT_KEY_UP => {
+            let modifiers = modifiers_from_bits(decoder.u8()?);
+            let key = decoder.string()?;
+            BrowserHostEvent::Dispatch(key_dispatch_event(key, modifiers, event.event.get() == BROWSER_EVENT_KEY_DOWN))
+        }
+        BROWSER_EVENT_TEXT => BrowserHostEvent::Dispatch(DispatchEvent::TextInput { text: decoder.string()? }),
+        BROWSER_EVENT_CLOSE => BrowserHostEvent::Closed,
+        _ => return Err(AbiErrorCode::MalformedTag),
+    };
+    decoder.finish()?;
+    Ok(decoded)
+}
+
+fn pointer_info_from_browser_tag(pointer_id: i32, kind: u8, pressure: f32, tilt_x: f32, tilt_y: f32) -> PointerInfo {
+    let kind = match kind {
+        1 => PointerKind::Touch,
+        2 => PointerKind::Pen,
+        3 => PointerKind::Eraser,
+        _ => PointerKind::Mouse,
+    };
+    let pressure = pressure.is_finite().then_some(pressure);
+    let tilt = (tilt_x.is_finite() && tilt_y.is_finite()).then_some((tilt_x, tilt_y));
+    PointerInfo { id: pointer_id_from_web(pointer_id), kind, pressure, tilt }
+}
+
+fn modifiers_from_bits(bits: u8) -> EventModifiers {
+    EventModifiers { shift: bits & 1 != 0, ctrl: bits & 2 != 0, alt: bits & 4 != 0, meta: bits & 8 != 0 }
+}
+
+struct BrowserEventDecoder<'a> {
+    bytes: &'a [u8],
+    cursor: usize,
+}
+
+impl<'a> BrowserEventDecoder<'a> {
+    fn new(bytes: &'a [u8]) -> Self {
+        Self { bytes, cursor: 0 }
+    }
+
+    fn take(&mut self, length: usize) -> Result<&'a [u8], AbiErrorCode> {
+        let end = self.cursor.checked_add(length).ok_or(AbiErrorCode::MalformedLength)?;
+        let bytes = self.bytes.get(self.cursor..end).ok_or(AbiErrorCode::MissingField)?;
+        self.cursor = end;
+        Ok(bytes)
+    }
+
+    fn u8(&mut self) -> Result<u8, AbiErrorCode> {
+        Ok(self.take(1)?[0])
+    }
+
+    fn boolean(&mut self) -> Result<bool, AbiErrorCode> {
+        match self.u8()? {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => Err(AbiErrorCode::MalformedTag),
+        }
+    }
+
+    fn i16(&mut self) -> Result<i16, AbiErrorCode> {
+        Ok(i16::from_le_bytes(self.take(2)?.try_into().expect("fixed")))
+    }
+
+    fn u16(&mut self) -> Result<u16, AbiErrorCode> {
+        Ok(u16::from_le_bytes(self.take(2)?.try_into().expect("fixed")))
+    }
+
+    fn i32(&mut self) -> Result<i32, AbiErrorCode> {
+        Ok(i32::from_le_bytes(self.take(4)?.try_into().expect("fixed")))
+    }
+
+    fn u32(&mut self) -> Result<u32, AbiErrorCode> {
+        Ok(u32::from_le_bytes(self.take(4)?.try_into().expect("fixed")))
+    }
+
+    fn f32(&mut self) -> Result<f32, AbiErrorCode> {
+        Ok(f32::from_le_bytes(self.take(4)?.try_into().expect("fixed")))
+    }
+
+    fn f64(&mut self) -> Result<f64, AbiErrorCode> {
+        Ok(f64::from_le_bytes(self.take(8)?.try_into().expect("fixed")))
+    }
+
+    fn string(&mut self) -> Result<String, AbiErrorCode> {
+        let length = self.u16()? as usize;
+        let text = std::str::from_utf8(self.take(length)?).map_err(|_| AbiErrorCode::InvalidUtf8)?;
+        Ok(text.to_owned())
+    }
+
+    fn finish(self) -> Result<(), AbiErrorCode> {
+        (self.cursor == self.bytes.len()).then_some(()).ok_or(AbiErrorCode::MalformedLength)
+    }
+}
+
+//#endregion 🌐️BrowserHostEvent
 
 //#region 🆔️PointerRegistry
 
@@ -577,12 +763,55 @@ mod tests {
     //#region 🎡️Wheel tests
 
     #[test]
+    fn browser_schema_and_canonical_trace_decode_without_dependencies() {
+        assert!(BROWSER_HOST_SCHEMA_JSON.contains("\"semanticUnitsPerGrant\": 1"));
+        assert!(BROWSER_HOST_SCHEMA_JSON.contains("\"encodedEventBytes\": 1051"));
+        assert!(BROWSER_HOST_LIMITS_FIXTURE.contains("event-bytes\t1024\t1025"));
+        assert!(BROWSER_HOST_LIMITS_FIXTURE.contains("encoded-event-bytes\t1051\t1052\tlimit-exceeded-before-copy"));
+        assert_eq!(BROWSER_HOST_FRAMING_FIXTURE.lines().skip(1).count(), 8);
+        assert!(BROWSER_HOST_FRAMING_FIXTURE.contains("event-exact\t1024\t27\t1051\t1024\t1051\tretained-exact-retry"));
+        let canvas = CanvasId::try_new(1).unwrap();
+        let listener = ListenerId::try_new(1, 1).unwrap();
+        let mut decoded = 0;
+        for row in BROWSER_HOST_TRACE_FIXTURE.lines().skip(1) {
+            let columns: Vec<_> = row.split('\t').collect();
+            assert_eq!(columns.len(), 5);
+            let code: u16 = columns[2].parse().unwrap();
+            let payload = decode_fixture_hex(columns[3]);
+            let event = AbiEvent {
+                request_id: crate::abi::AbiRequestId(decoded + 1),
+                generation: 1,
+                sequence: decoded as u32,
+                event: crate::abi::AbiEventCode::try_new(code).unwrap(),
+                status: crate::abi::AbiStatus::OK,
+                bytes: crate::abi::AbiBytes::try_new(payload).unwrap(),
+            };
+            decode_browser_host_event(&event, canvas, listener).unwrap();
+            decoded += 1;
+        }
+        assert_eq!(decoded, 10);
+    }
+
+    fn decode_fixture_hex(value: &str) -> Vec<u8> {
+        value
+            .as_bytes()
+            .chunks_exact(2)
+            .map(|pair| {
+                let text = std::str::from_utf8(pair).unwrap();
+                u8::from_str_radix(text, 16).unwrap()
+            })
+            .collect()
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
     fn native_line_delta_scales_by_line_height() {
         let (dx, dy) = normalize_wheel_delta_native(winit::event::MouseScrollDelta::LineDelta(1.0, -2.0));
         assert_eq!(dx, WHEEL_LINE_HEIGHT_PX);
         assert_eq!(dy, -2.0 * WHEEL_LINE_HEIGHT_PX);
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn native_pixel_delta_passes_through() {
         let (dx, dy) = normalize_wheel_delta_native(winit::event::MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition::new(3.5, -7.25)));
@@ -609,6 +838,7 @@ mod tests {
 
     //#region ⌨️Modifier tests
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn native_modifiers_map_every_flag() {
         let state = winit::keyboard::ModifiersState::SHIFT | winit::keyboard::ModifiersState::ALT;
@@ -634,6 +864,7 @@ mod tests {
 
     /// 🇫🇷️ On an AZERTY layout the physical `KeyQ` position produces the logical character "a" — the
     /// whole point of the physical/logical split (see `KeyCode::KeyW`'s own docstring example).
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn physical_vs_logical_key_mapping_stays_distinct_across_layouts() {
         let physical = physical_key_from_winit(winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::KeyQ));
@@ -642,17 +873,20 @@ mod tests {
         assert_eq!(logical, "a");
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn named_keys_map_to_their_dom_key_string() {
         assert_eq!(logical_key_to_dispatch_string(&winit::keyboard::Key::Named(winit::keyboard::NamedKey::Enter)), "Enter");
         assert_eq!(logical_key_to_dispatch_string(&winit::keyboard::Key::Named(winit::keyboard::NamedKey::Space)), " ");
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn unidentified_physical_key_degrades_cleanly() {
         assert_eq!(physical_key_from_winit(winit::keyboard::PhysicalKey::Unidentified(winit::keyboard::NativeKeyCode::Unidentified)), PhysicalKeyCode::Unidentified);
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn native_and_web_agree_on_the_same_physical_key() {
         assert_eq!(physical_key_from_winit(winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::ArrowLeft)), physical_key_from_web_code("ArrowLeft"));
@@ -662,12 +896,14 @@ mod tests {
 
     //#region 🈶️IME tests
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn ime_preedit_with_no_cursor_range_falls_back_to_text_end() {
         let event = ime_event_from_winit(winit::event::Ime::Preedit("ab".into(), None));
         assert_eq!(event, ImeEvent::Update { text: "ab".into(), cursor: 2 });
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn ime_disabled_maps_to_cancel() {
         assert_eq!(ime_event_from_winit(winit::event::Ime::Disabled), ImeEvent::Cancel);
@@ -677,6 +913,7 @@ mod tests {
 
     //#region 🆔️Multi-pointer tests
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn two_simultaneous_touches_on_the_same_device_stay_distinct() {
         let mut registry = PointerRegistry::new();
@@ -688,6 +925,7 @@ mod tests {
         assert_eq!(a.kind, PointerKind::Touch);
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn a_mouse_and_a_touch_on_the_same_device_stay_distinct() {
         let mut registry = PointerRegistry::new();
@@ -710,6 +948,7 @@ mod tests {
 
     //#region 🖱️Button tests
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn native_and_web_button_mappings_agree_where_both_define_a_button() {
         assert_eq!(pointer_button_from_winit(winit::event::MouseButton::Left), Some(PointerButton::Primary));
@@ -718,6 +957,7 @@ mod tests {
         assert_eq!(pointer_button_from_web(2), Some(PointerButton::Secondary));
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn buttons_outside_the_closed_set_map_to_none() {
         assert_eq!(pointer_button_from_winit(winit::event::MouseButton::Back), None);

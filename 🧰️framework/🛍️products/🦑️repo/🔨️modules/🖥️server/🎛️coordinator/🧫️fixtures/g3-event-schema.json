@@ -1,0 +1,1 @@
+{"schema":"semio.coordinator.event/1","encoding":"canonical-jsonl-lf","scalar":"nonempty-no-nul","fields":["stream","sequence","id","generation","type","payload","checksum"],"checksum":"sha256(stream+nul+sequence+nul+id+nul+generation+nul+type+nul+canonical-payload)"}

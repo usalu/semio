@@ -1,0 +1,9 @@
+law	kind	operation	payload_hex	outcome
+open_empty	request	2300		session_handle
+run_missing_optional	request	2316	0100000001000000	json_reply
+attach_surface	request	2317	01000000010000000100000001000000	ok
+cancel	control	cancel	020000000000000001000000	cancelled_reply
+close	control	close	0100000001000000	terminal_empty
+ack_page	control	ack	020000000100000000000000	exact_once
+malformed_json	request	2301	01000000010000005b5d	rejected
+selected_nodes	request	2332	0100000001000000	json_reply

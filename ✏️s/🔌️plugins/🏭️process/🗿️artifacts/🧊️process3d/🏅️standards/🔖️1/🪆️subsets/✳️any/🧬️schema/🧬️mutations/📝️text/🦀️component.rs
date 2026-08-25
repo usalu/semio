@@ -179,15 +179,15 @@ impl OpText for Process3dMutation {
     }
 }
 
-/// ⚡️ Binary mirror of the `OpText` bridge above — `Process3dMutationDsl` already derives
-/// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
+/// 🧱️ Delegates binary ownership to the bounded structural Process3d codec; text conversion
+/// remains isolated to explicit text routes.
 impl protocol::OpBinary for Process3dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        process3d_mutation_to_dsl(self).encode_op()
+        crate::artifacts::process3d::spr::encode_op(self)
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(process3d_mutation_from_dsl(Process3dMutationDsl::decode_op(bytes)?))
+        crate::artifacts::process3d::spr::decode_op(bytes)
     }
 }
 //#endregion 🔖️OpText

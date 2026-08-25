@@ -1,0 +1,124 @@
+{
+  "schema": "semio.process3d.retained-envelope-laws",
+  "version": 1,
+  "packBinaryFormat": 2,
+  "limits": {
+    "pageBytes": 4096,
+    "maximumPages": 4096,
+    "maximumBytes": 16777216,
+    "maximumDomainItems": 8192,
+    "retainedStackSlots": 64,
+    "mutationVariants": 16
+  },
+  "ownerCatalog": [
+    "snapshot",
+    "workshop",
+    "machine",
+    "capability",
+    "parameter",
+    "rule",
+    "recipe",
+    "step",
+    "origin",
+    "measure",
+    "stock",
+    "solid",
+    "child-handle",
+    "string",
+    "mutation-field",
+    "history-edit",
+    "history-metadata",
+    "cursor",
+    "checkpoint",
+    "control",
+    "output-page"
+  ],
+  "snapshotFields": [
+    "workshop",
+    "stockId",
+    "stockLabel",
+    "stockPose",
+    "stockPayload",
+    "stockSolid",
+    "steps",
+    "stepPayloads",
+    "toolSolids",
+    "resolvedUpTo"
+  ],
+  "transfers": [
+    "begin-to-registry",
+    "producer-to-admitted-page",
+    "page-to-field-cursor",
+    "field-to-envelope",
+    "envelope-to-initializer",
+    "snapshot-to-runtime",
+    "mutation-to-history-replay",
+    "runtime-to-candidate",
+    "candidate-to-atomic-publication",
+    "terminal-to-ack",
+    "cancel-to-retirement",
+    "fault-to-retirement",
+    "close-to-terminal-empty",
+    "take-to-resumed-registry"
+  ],
+  "cases": [
+    {
+      "id": "zero-capacity",
+      "input": { "pages": 0, "bytes": 0, "items": 0, "outputs": 0, "controls": 0 },
+      "expect": "reject-before-producer-copy"
+    },
+    {
+      "id": "maximum-capacity",
+      "input": { "pages": 4096, "bytes": 16777216, "items": 8192, "outputs": 4, "controls": 1 },
+      "expect": "admit-exactly"
+    },
+    {
+      "id": "capacity-plus-one",
+      "input": { "pages": 4097, "bytes": 16777217, "items": 8193, "outputs": 5, "controls": 2 },
+      "expect": "reject-before-producer-copy"
+    },
+    {
+      "id": "stale-generation",
+      "input": { "operation": 7, "generation": 3, "presentGeneration": 4 },
+      "expect": "reject-with-owner-retained"
+    },
+    {
+      "id": "aba-generation",
+      "input": { "operation": 7, "generation": 3, "reopenedOperation": 7, "presentGeneration": 5 },
+      "expect": "reject-before-publication"
+    },
+    {
+      "id": "complete-before-ack",
+      "input": { "polls": ["pending", "ready", "ready"], "ackAt": 3 },
+      "expect": "same-candidate-owner-until-ack"
+    },
+    {
+      "id": "interrupted-close",
+      "input": { "closeGrants": [0, 1, 0, 1, 1] },
+      "expect": "incremental-terminal-empty"
+    },
+    {
+      "id": "exact-page-handback",
+      "input": { "admittedPages": [11, 12, 13], "cancelAfter": 2 },
+      "expect": "hand-back-11-then-12-with-13-never-admitted"
+    },
+    {
+      "id": "deterministic-ledger",
+      "input": { "history": ["e0:m0", "e0:m1", "e1:m0"], "replays": 2 },
+      "expect": "equal-prefix-digest-and-order"
+    },
+    {
+      "id": "bounded-output-policy",
+      "input": { "progressCapacity": 1, "checkpointCapacity": 1, "previewCapacity": 1, "terminalCapacity": 1 },
+      "expect": "latest-wins-nonterminal-lossless-terminal"
+    }
+  ],
+  "algorithm": [
+    "validate every limit tuple against zero, maximum, and maximum-plus-one",
+    "require every snapshot field and owner kind exactly once in its catalog",
+    "require every transfer to preserve operation and generation identity",
+    "require ready polls before ack to preserve one candidate owner",
+    "require interrupted close to end only after every retained owner is empty",
+    "require identical history sequences to produce identical ledger prefixes"
+  ]
+}

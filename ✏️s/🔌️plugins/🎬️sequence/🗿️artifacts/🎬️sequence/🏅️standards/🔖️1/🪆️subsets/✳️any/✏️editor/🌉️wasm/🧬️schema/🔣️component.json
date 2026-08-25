@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://sequence.browser-abi/v1",
+  "title": "Sequence Browser ABI",
+  "type": "object",
+  "required": ["version", "operations", "events", "limits", "identities", "framing"],
+  "properties": {
+    "version": { "const": 1 },
+    "operations": {
+      "type": "object",
+      "minProperties": 47,
+      "additionalProperties": { "type": "integer", "minimum": 2300, "maximum": 2346 }
+    },
+    "events": {
+      "type": "object",
+      "minProperties": 8,
+      "additionalProperties": { "type": "integer", "minimum": 2400, "maximum": 2407 }
+    },
+    "limits": {
+      "type": "object",
+      "required": ["requestBytes", "inlineReplyBytes", "pageBytes", "transferBytes", "resources", "requests", "outbound", "eventsInFlight"],
+      "properties": {
+        "requestBytes": { "const": 1048576 },
+        "inlineReplyBytes": { "const": 1024 },
+        "pageBytes": { "const": 65536 },
+        "transferBytes": { "const": 16777216 },
+        "resources": { "const": 64 },
+        "requests": { "const": 256 },
+        "outbound": { "const": 64 },
+        "eventsInFlight": { "const": 64 }
+      }
+    },
+    "identities": {
+      "type": "object",
+      "required": ["session", "operation", "surface", "canvas"],
+      "properties": {
+        "session": { "const": ["slot:u32", "generation:u32"] },
+        "operation": { "const": ["slot:u32", "generation:u32"] },
+        "surface": { "const": "nonzero-u32" },
+        "canvas": { "const": "nonzero-u32" }
+      }
+    },
+    "framing": {
+      "const": {
+        "message": "A1-AbiMessage-v1",
+        "requestBody": ["session-slot:u32", "session-generation:u32", "operation-payload:bytes"],
+        "pagedOutput": ["operation-slot:u32", "operation-generation:u32", "total-bytes:u64"],
+        "byteOrder": "little-endian"
+      }
+    }
+  },
+  "version": 1,
+  "operations": {
+    "open": 2300,
+    "loadFixtureJson": 2301,
+    "fixtureJson": 2302,
+    "catalogueJson": 2303,
+    "addStep": 2304,
+    "addStepDropped": 2305,
+    "addStepToSlot": 2306,
+    "setStepCollapsed": 2307,
+    "pickStepIdAtScreen": 2308,
+    "buildPathJson": 2309,
+    "removeStep": 2310,
+    "setStepParamsJson": 2311,
+    "connectSteps": 2312,
+    "disconnectSteps": 2313,
+    "compileText": 2314,
+    "compiledWireLiteral": 2315,
+    "run": 2316,
+    "attachSurface": 2317,
+    "gpuReady": 2318,
+    "setSize": 2319,
+    "renderFrame": 2320,
+    "worldFromScreen": 2321,
+    "pointerDownScreen": 2322,
+    "pointerMoveScreen": 2323,
+    "pointerUpScreen": 2324,
+    "wheelScreen": 2325,
+    "reorganize": 2326,
+    "lodScaleJson": 2327,
+    "setAutomaticLod": 2328,
+    "setForcedDrawLodLabel": 2329,
+    "drawLodLabel": 2330,
+    "setCanvasThemeJson": 2331,
+    "selectedNodeIds": 2332,
+    "setSelection": 2333,
+    "labelOverlayPaintStateJson": 2334,
+    "hoveredNodeId": 2335,
+    "preselectNodeIdsJson": 2336,
+    "selectionPreviewPointsJson": 2337,
+    "selectionPreviewCrossing": 2338,
+    "selectionPreviewMethod": 2339,
+    "selectionUnionBoundsScreenJson": 2340,
+    "setSelectionOptions": 2341,
+    "setGhostStep": 2342,
+    "clearGhostStep": 2343,
+    "play": 2344,
+    "pause": 2345,
+    "stop": 2346
+  },
+  "events": {
+    "admitted": 2400,
+    "progress": 2401,
+    "checkpoint": 2402,
+    "surface": 2403,
+    "render": 2404,
+    "playback": 2405,
+    "output": 2406,
+    "terminal": 2407
+  },
+  "limits": {
+    "requestBytes": 1048576,
+    "inlineReplyBytes": 1024,
+    "pageBytes": 65536,
+    "transferBytes": 16777216,
+    "resources": 64,
+    "requests": 256,
+    "outbound": 64,
+    "eventsInFlight": 64
+  },
+  "identities": {
+    "session": ["slot:u32", "generation:u32"],
+    "operation": ["slot:u32", "generation:u32"],
+    "surface": "nonzero-u32",
+    "canvas": "nonzero-u32"
+  },
+  "framing": {
+    "message": "A1-AbiMessage-v1",
+    "requestBody": ["session-slot:u32", "session-generation:u32", "operation-payload:bytes"],
+    "pagedOutput": ["operation-slot:u32", "operation-generation:u32", "total-bytes:u64"],
+    "byteOrder": "little-endian"
+  }
+}

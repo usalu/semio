@@ -818,14 +818,15 @@ import {
   FrameworkOsShell,
   shellActorId,
   canonicalSurfaceId,
+  reloadRetainsActiveApp,
   directoryCommandFromAction,
 } from "../../../../🧱️elements/ShellHost/🟦️component.tsx";
-export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionId, useMapContextMenuSpecs, TutorialRecorder, type FrameworkOsShellProps, FrameworkOsShell, shellActorId, canonicalSurfaceId, directoryCommandFromAction };
+export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionId, useMapContextMenuSpecs, TutorialRecorder, type FrameworkOsShellProps, FrameworkOsShell, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction };
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime
-import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, applyUiPatchToRetained, serializePerActor } from "../../../../🧱️elements/PluginRuntime/🟦️component.tsx";
-export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, applyUiPatchToRetained, serializePerActor };
+import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, serializeCommandIngressForActor, serializePerActor } from "../../../../🧱️elements/PluginRuntime/🟦️component.tsx";
+export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, serializeCommandIngressForActor, serializePerActor };
 export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 

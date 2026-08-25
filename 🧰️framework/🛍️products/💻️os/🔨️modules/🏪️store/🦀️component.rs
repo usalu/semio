@@ -3771,6 +3771,12 @@ pub mod pack_rt {
     use crate::os_dsl::{DslValue, FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
     use std::collections::HashMap;
 
+    pub use crate::os_pack::{RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
+    pub use pack::{
+        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceCursor,
+        RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_PAGE_BYTES,
+    };
+
     /// @emoji 🚪️ Forwards to `crate::os_pack::encode_document`.
     pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         crate::os_pack::encode_document(spec, record, options)
@@ -3936,6 +3942,17 @@ pub mod pack_rt {
             other => other,
         }
     }
+}
+
+/// 🧵️ Mounted canonical-pack capability surface. It intentionally exports only retained
+/// cursors and wire constants: batch `decode_document`, `decode_record_body`, `RecordValue`, and
+/// their allocation-oriented options are absent from this module's type-level reachability graph.
+pub mod mounted_pack_rt {
+    pub use crate::os_pack::{PackLimits, RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
+    pub use pack::{
+        RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceCursor,
+        RetainedPackSourceEvent, RetainedPackSourceProgress, MAGIC, RETAINED_PACK_PAGE_BYTES,
+    };
 }
 
 //#region 🧬️OwnedSchemaDecode

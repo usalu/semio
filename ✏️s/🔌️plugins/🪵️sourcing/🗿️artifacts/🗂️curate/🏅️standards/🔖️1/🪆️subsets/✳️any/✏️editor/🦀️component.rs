@@ -230,6 +230,18 @@ impl ArtifactEditor for SourcingCurateApp {
     const DIALECT: Dialect = crate::artifacts::curate::SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATE_SCHEMA;
 
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<SourcingCurateApp>,
+        owner_file: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.sourcing.curate@1/*#editor",
+        document_schema: "sourcing.curate/v1",
+        factory: "BoundedFirstStepCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        tools: [
+            "setDocument", "setActiveExample", "stockFromCatalogue", "curateAdd", "curateSetCount", "curateRemove", "dropOnPool", "dropOnCurated", "setFilterQuery", "setFilterModule", "setFilterTypology", "setFilterMinAvailability", "sortTable", "setContributions",
+        ]
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }

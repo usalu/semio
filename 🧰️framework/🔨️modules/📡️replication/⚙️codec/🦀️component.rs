@@ -507,6 +507,99 @@ pub fn deflate_decompress(stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec
     }
 }
 
+/// 🌊️ One-byte retained DEFLATE result used by mounted pack readers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DeflateRetainedStep {
+    NeedInput,
+    Byte(u8),
+    Complete,
+}
+
+/// 🧵️ Incremental raw-DEFLATE decoder with exact producer handback and one output byte per grant.
+#[cfg(feature = "deflate")]
+pub struct DeflateRetainedCursor {
+    state: Option<Box<miniz_oxide::inflate::stream::InflateState>>,
+    pending: Option<u8>,
+    expected: u64,
+    produced: u64,
+    complete: bool,
+}
+
+#[cfg(feature = "deflate")]
+impl DeflateRetainedCursor {
+    pub fn try_new(expected: u64, limit: u64) -> Result<Self, PackError> {
+        if expected > limit {
+            return Err(PackError::LimitExceeded("retained deflate raw length exceeds limit"));
+        }
+        Ok(Self { state: Some(miniz_oxide::inflate::stream::InflateState::new_boxed(miniz_oxide::DataFormat::Raw)), pending: None, expected, produced: 0, complete: false })
+    }
+
+    pub fn admit_byte(&mut self, byte: u8) -> Result<(), u8> {
+        if self.complete || self.pending.is_some() {
+            return Err(byte);
+        }
+        self.pending = Some(byte);
+        Ok(())
+    }
+
+    pub fn grant(&mut self, input_complete: bool) -> Result<DeflateRetainedStep, PackError> {
+        if self.complete {
+            return Ok(DeflateRetainedStep::Complete);
+        }
+        let input = self.pending.as_ref().map(std::slice::from_ref).unwrap_or(&[]);
+        let mut output = [0u8; 1];
+        let result = miniz_oxide::inflate::stream::inflate(
+            self.state.as_mut().ok_or(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decoder is closed".into() })?,
+            input,
+            &mut output,
+            if input_complete { miniz_oxide::MZFlush::Finish } else { miniz_oxide::MZFlush::None },
+        );
+        if result.bytes_consumed == 1 {
+            self.pending = None;
+        }
+        if result.bytes_written == 1 {
+            self.produced = self.produced.checked_add(1).ok_or(PackError::LimitExceeded("retained deflate output overflow"))?;
+            if self.produced > self.expected {
+                return Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decompressed length exceeds declared raw length".into() });
+            }
+            return Ok(DeflateRetainedStep::Byte(output[0]));
+        }
+        match result.status {
+            Ok(miniz_oxide::MZStatus::StreamEnd) => {
+                if self.pending.is_some() || self.produced != self.expected {
+                    return Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decompressed length mismatch or trailing input".into() });
+                }
+                self.complete = true;
+                Ok(DeflateRetainedStep::Complete)
+            }
+            Ok(_) if self.pending.is_none() && !input_complete => Ok(DeflateRetainedStep::NeedInput),
+            Err(miniz_oxide::MZError::Buf) if self.pending.is_none() && !input_complete => Ok(DeflateRetainedStep::NeedInput),
+            _ => Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "incremental decompression failed".into() }),
+        }
+    }
+
+    pub fn can_admit(&self) -> bool {
+        !self.complete && self.pending.is_none()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.complete && self.pending.is_none() && self.state.is_none()
+    }
+
+    pub fn close(&mut self) {
+        self.pending = None;
+        self.complete = true;
+        self.state = None;
+    }
+}
+
+#[cfg(feature = "deflate")]
+impl Drop for DeflateRetainedCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "retained deflate cursor reached Drop before terminal-empty close");
+    }
+}
+
 #[cfg(feature = "deflate")]
 impl CompressionCodec for DeflateCodec {
     fn id(&self) -> CodecId {

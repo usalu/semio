@@ -21,7 +21,6 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -40,7 +39,6 @@ import (
 	"time"
 
 	repopkg "github.com/usalu/semio/repo/go"
-	_ "modernc.org/sqlite"
 )
 
 // #endregion 🔌️Adapters
@@ -94,7 +92,7 @@ func envOrDefaultInt64(key string, fallback int64) int64 {
 // #endregion ⏱️Config
 
 // #region 🎺️Models
-// Data model types for tickets, scopes, warnings, breachs, events, and API request/response payloads. MUST mirror the server SQLite schema.
+// Data model types for tickets, scopes, warnings, breachs, events, and API request/response payloads. MUST mirror the owned event schema.
 
 // 🎫️Ticket represents a tracked work item with lifecycle status.
 type Ticket struct {
@@ -245,329 +243,23 @@ type IndexFileRequest struct {
 
 // #endregion 🎺️Models
 
-// #region 🔷️Database
-// SQLite database layer for persistent storage of tickets, scopes, claims, warnings, breachs, and events. MUST use WAL journal mode.
-
-// 🔌️Database wraps a sql.DB connection to the SQLite store.
-type Database struct {
-	db *sql.DB
-}
-
-// 🗄️openDatabase opens an SQLite database and runs schema migrations.
-// ⏹️MUST enable WAL journal mode and foreign keys.
-func openDatabase(path string) (*Database, error) {
-	db, err := sql.Open("sqlite", path)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
-		return nil, err
-	}
-	if _, err := db.Exec("PRAGMA foreign_keys=ON"); err != nil {
-		return nil, err
-	}
-	store := &Database{db: db}
-	if err := store.migrate(); err != nil {
-		return nil, err
-	}
-	return store, nil
-}
-
-// 🆕️migrate creates database tables if they do not already exist.
-func (d *Database) migrate() error {
-	statements := []string{
-		"CREATE TABLE IF NOT EXISTS repos (id TEXT PRIMARY KEY, name TEXT, path TEXT, created_at DATETIME)",
-		"CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, status TEXT, title TEXT, emoji TEXT, prompt TEXT, summary TEXT, llm TEXT, ui TEXT, author TEXT, github_issue TEXT, created_at DATETIME, closed_at DATETIME)",
-		"CREATE TABLE IF NOT EXISTS scopes (id TEXT PRIMARY KEY, kind TEXT, file_path TEXT, section_path TEXT, definition_name TEXT, start_line INT, end_line INT, updated_at DATETIME)",
-		"CREATE TABLE IF NOT EXISTS ticket_claims (ticket_id TEXT, scope_id TEXT, claim_type TEXT, first_seen_at DATETIME, last_seen_at DATETIME, PRIMARY KEY (ticket_id, scope_id))",
-		"CREATE TABLE IF NOT EXISTS breachs (id TEXT PRIMARY KEY, kind TEXT, priority TEXT, scope_id TEXT, file_path TEXT, line INT, column INT, summary TEXT, excerpt TEXT, autofixable BOOL, detected_at DATETIME, ticket_id TEXT, resolved_at DATETIME)",
-		"CREATE TABLE IF NOT EXISTS warnings (id TEXT PRIMARY KEY, kind TEXT, severity TEXT, message TEXT, ticket_id TEXT, scope_id TEXT, created_at DATETIME, acknowledged_at DATETIME, ack_by TEXT)",
-		"CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, type TEXT, source TEXT, payload_json TEXT, created_at DATETIME)",
-		"CREATE TABLE IF NOT EXISTS contributor_work (github TEXT, kind TEXT, item_id TEXT, PRIMARY KEY (github, kind, item_id))",
-	}
-	for _, stmt := range statements {
-		if _, err := d.db.Exec(stmt); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// 📪️Close closes the underlying SQL database connection.
-// 📪️MUST release all database resources.
-func (d *Database) Close() error {
-	return d.db.Close()
-}
-
-// 💿️insertEvent persists a new event record.
-func (d *Database) insertEvent(ctx context.Context, event Event) error {
-	_, err := d.db.ExecContext(ctx, "INSERT INTO events (id, type, source, payload_json, created_at) VALUES (?, ?, ?, ?, ?)", event.ID, event.Type, event.Source, event.Payload, event.CreatedAt.UTC())
-	return err
-}
-
-// 🎫️upsertTicket inserts or updates a ticket record.
-func (d *Database) upsertTicket(ctx context.Context, ticket Ticket) error {
-	_, err := d.db.ExecContext(ctx, "INSERT INTO tickets (id, status, title, emoji, prompt, summary, llm, ui, author, github_issue, created_at, closed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, title=excluded.title, emoji=excluded.emoji, prompt=excluded.prompt, summary=excluded.summary, llm=excluded.llm, ui=excluded.ui, author=excluded.author, github_issue=excluded.github_issue, closed_at=excluded.closed_at", ticket.ID, ticket.Status, ticket.Title, ticket.Emoji, ticket.Prompt, ticket.Summary, ticket.LLM, ticket.Client, ticket.Author, ticket.GitHub, ticket.CreatedAt.UTC(), ticket.ClosedAt)
-	return err
-}
-
-// 🧹️listTickets queries tickets optionally filtered by status.
-func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, error) {
-	query := "SELECT id, status, title, emoji, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets"
-	args := []interface{}{}
-	if status != "" {
-		query += " WHERE status = ?"
-		args = append(args, status)
-	}
-	rows, err := d.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var tickets []Ticket
-	for rows.Next() {
-		var ticket Ticket
-		var closedAt sql.NullTime
-		if err := rows.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Emoji, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
-			return nil, err
-		}
-		if closedAt.Valid {
-			ticket.ClosedAt = &closedAt.Time
-		}
-		tickets = append(tickets, ticket)
-	}
-	return tickets, nil
-}
-
-// 🔷️getTicket retrieves a single ticket by ID.
-func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, error) {
-	row := d.db.QueryRowContext(ctx, "SELECT id, status, title, emoji, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets WHERE id = ?", ticketID)
-	var ticket Ticket
-	var closedAt sql.NullTime
-	if err := row.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Emoji, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
-		return nil, err
-	}
-	if closedAt.Valid {
-		ticket.ClosedAt = &closedAt.Time
-	}
-	return &ticket, nil
-}
-
-// 🗑️replaceScopes deletes existing scopes for the file and inserts the new ones.
-func (d *Database) replaceScopes(ctx context.Context, filePath string, scopes []Scope) error {
-	if _, err := d.db.ExecContext(ctx, "DELETE FROM scopes WHERE file_path = ?", filePath); err != nil {
-		return err
-	}
-	for _, scope := range scopes {
-		if _, err := d.db.ExecContext(ctx, "INSERT INTO scopes (id, kind, file_path, section_path, definition_name, start_line, end_line, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", scope.ID, scope.Kind, scope.FilePath, scope.SectionPath, scope.Definition, scope.StartLine, scope.EndLine, scope.UpdatedAt.UTC()); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// 🔭️listScopesByFile retrieves all scopes for a given file path.
-func (d *Database) listScopesByFile(ctx context.Context, filePath string) ([]Scope, error) {
-	rows, err := d.db.QueryContext(ctx, "SELECT id, kind, file_path, section_path, definition_name, start_line, end_line, updated_at FROM scopes WHERE file_path = ?", filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var scopes []Scope
-	for rows.Next() {
-		var scope Scope
-		if err := rows.Scan(&scope.ID, &scope.Kind, &scope.FilePath, &scope.SectionPath, &scope.Definition, &scope.StartLine, &scope.EndLine, &scope.UpdatedAt); err != nil {
-			return nil, err
-		}
-		scopes = append(scopes, scope)
-	}
-	return scopes, nil
-}
-
-// 🔁️upsertClaim inserts or updates a ticket-scope claim record.
-func (d *Database) upsertClaim(ctx context.Context, ticketID string, scopeID string, claimType string, now time.Time) error {
-	_, err := d.db.ExecContext(ctx, "INSERT INTO ticket_claims (ticket_id, scope_id, claim_type, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ticket_id, scope_id) DO UPDATE SET claim_type=excluded.claim_type, last_seen_at=excluded.last_seen_at", ticketID, scopeID, claimType, now.UTC(), now.UTC())
-	return err
-}
-
-// 📋️listClaimsByTicket retrieves all scopes claimed by a ticket.
-func (d *Database) listClaimsByTicket(ctx context.Context, ticketID string) ([]Scope, error) {
-	rows, err := d.db.QueryContext(ctx, "SELECT scopes.id, scopes.kind, scopes.file_path, scopes.section_path, scopes.definition_name, scopes.start_line, scopes.end_line, scopes.updated_at FROM scopes JOIN ticket_claims ON scopes.id = ticket_claims.scope_id WHERE ticket_claims.ticket_id = ?", ticketID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var scopes []Scope
-	for rows.Next() {
-		var scope Scope
-		if err := rows.Scan(&scope.ID, &scope.Kind, &scope.FilePath, &scope.SectionPath, &scope.Definition, &scope.StartLine, &scope.EndLine, &scope.UpdatedAt); err != nil {
-			return nil, err
-		}
-		scopes = append(scopes, scope)
-	}
-	return scopes, nil
-}
-
-// ➖️replaceWarnings removes conflict warnings and inserts the new set.
-func (d *Database) replaceWarnings(ctx context.Context, warnings []Warning) error {
-	if _, err := d.db.ExecContext(ctx, "DELETE FROM warnings WHERE kind = ?", "conflict"); err != nil {
-		return err
-	}
-	for _, warning := range warnings {
-		if _, err := d.db.ExecContext(ctx, "INSERT INTO warnings (id, kind, severity, message, ticket_id, scope_id, created_at, acknowledged_at, ack_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", warning.ID, warning.Kind, warning.Severity, warning.Message, warning.TicketID, warning.ScopeID, warning.CreatedAt.UTC(), warning.Acknowledged, warning.AcknowledgedBy); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// ⚠️listWarnings retrieves warnings optionally filtered by ticket ID.
-func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning, error) {
-	query := "SELECT id, kind, severity, message, ticket_id, scope_id, created_at, acknowledged_at, ack_by FROM warnings"
-	args := []interface{}{}
-	if ticketID != "" {
-		query += " WHERE ticket_id = ?"
-		args = append(args, ticketID)
-	}
-	rows, err := d.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var warnings []Warning
-	for rows.Next() {
-		var warning Warning
-		var acknowledged sql.NullTime
-		if err := rows.Scan(&warning.ID, &warning.Kind, &warning.Severity, &warning.Message, &warning.TicketID, &warning.ScopeID, &warning.CreatedAt, &acknowledged, &warning.AcknowledgedBy); err != nil {
-			return nil, err
-		}
-		if acknowledged.Valid {
-			warning.Acknowledged = &acknowledged.Time
-		}
-		warnings = append(warnings, warning)
-	}
-	return warnings, nil
-}
-
-// 🔶️listBreachs retrieves breachs optionally filtered by ticket ID.
-func (d *Database) listBreachs(ctx context.Context, ticketID string) ([]Breach, error) {
-	query := "SELECT id, kind, priority, scope_id, file_path, line, column, summary, excerpt, autofixable, detected_at, ticket_id, resolved_at FROM breachs"
-	args := []interface{}{}
-	if ticketID != "" {
-		query += " WHERE ticket_id = ?"
-		args = append(args, ticketID)
-	}
-	rows, err := d.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var breachs []Breach
-	for rows.Next() {
-		var breach Breach
-		var line sql.NullInt64
-		var column sql.NullInt64
-		var resolved sql.NullTime
-		if err := rows.Scan(&breach.ID, &breach.Kind, &breach.Priority, &breach.ScopeID, &breach.FilePath, &line, &column, &breach.Summary, &breach.Excerpt, &breach.Autofix, &breach.DetectedAt, &breach.TicketID, &resolved); err != nil {
-			return nil, err
-		}
-		if line.Valid {
-			value := int(line.Int64)
-			breach.Line = &value
-		}
-		if column.Valid {
-			value := int(column.Int64)
-			breach.Column = &value
-		}
-		if resolved.Valid {
-			breach.ResolvedAt = &resolved.Time
-		}
-		breachs = append(breachs, breach)
-	}
-	return breachs, nil
-}
-
-// 📬️listConflicts finds scopes claimed by more than one open ticket.
-func (d *Database) listConflicts(ctx context.Context) ([]struct {
-	ScopeID string
-	Tickets []string
-}, error) {
-	rows, err := d.db.QueryContext(ctx, "SELECT scope_id, GROUP_CONCAT(ticket_id) FROM ticket_claims JOIN tickets ON ticket_claims.ticket_id = tickets.id WHERE tickets.status = 'open' GROUP BY scope_id HAVING COUNT(ticket_id) > 1")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var results []struct {
-		ScopeID string
-		Tickets []string
-	}
-	for rows.Next() {
-		var scopeID string
-		var ticketIDs string
-		if err := rows.Scan(&scopeID, &ticketIDs); err != nil {
-			return nil, err
-		}
-		results = append(results, struct {
-			ScopeID string
-			Tickets []string
-		}{ScopeID: scopeID, Tickets: strings.Split(ticketIDs, ",")})
-	}
-	return results, nil
-}
-
-// 🤝️addContributorWork holds the data fields for a addContributorWork record.
-func (d *Database) addContributorWork(ctx context.Context, github string, kind string, itemID string) error {
-	_, err := d.db.ExecContext(ctx, "INSERT OR REPLACE INTO contributor_work (github, kind, item_id) VALUES (?, ?, ?)", github, kind, itemID)
-	return err
-}
-
-// 🚚️removeContributorWork holds the data fields for a removeContributorWork record.
-func (d *Database) removeContributorWork(ctx context.Context, github string, kindsAndIDs []struct{ Kind, ID string }) error {
-	for _, kv := range kindsAndIDs {
-		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = ? AND item_id = ?", github, kv.Kind, kv.ID)
-	}
-	return nil
-}
-
-// 🔖️listContributorsOnItem holds the data fields for a listContributorsOnItem record.
-func (d *Database) listContributorsOnItem(ctx context.Context, kind string, itemID string) ([]string, error) {
-	rows, err := d.db.QueryContext(ctx, "SELECT github FROM contributor_work WHERE kind = ? AND item_id = ?", kind, itemID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var out []string
-	for rows.Next() {
-		var g string
-		if err := rows.Scan(&g); err != nil {
-			return nil, err
-		}
-		out = append(out, g)
-	}
-	return out, nil
-}
-
-// 💾️removeContributorWorkForCheckpoint holds the data fields for a removeContributorWorkForCheckpoint record.
-func (d *Database) removeContributorWorkForCheckpoint(ctx context.Context, github string, files []string) error {
-	for _, f := range files {
-		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = 'file' AND item_id = ?", github, f)
-	}
-	return nil
-}
-
-// #endregion 🔷️Database
-
 // #region ✨️EventBus
 // Asynchronous in-process event bus for decoupled event publishing and subscription. MUST persist events to the database before dispatching.
 
 // 🎯️EventHandler is a callback invoked when an event of a subscribed type is published.
-type EventHandler func(context.Context, Event)
+type EventHandler func(context.Context, Event) error
+
+type eventDispatch struct {
+	ctx    context.Context
+	event  Event
+	result chan error
+}
 
 // 📡️EventBus is a buffered channel-based event dispatcher with persistent storage.
 type EventBus struct {
-	ch       chan Event
+	ch       chan eventDispatch
 	handlers map[string][]EventHandler
-	db       *Database
+	db       CoordinatorRepository
 	ctx      context.Context
 	cancel   context.CancelFunc
 	wg       sync.WaitGroup
@@ -575,10 +267,10 @@ type EventBus struct {
 
 // 🗄️NewEventBus creates a new event bus backed by the given database.
 // 🆕️MUST initialize the channel buffer to 256 and create a cancellable context.
-func NewEventBus(db *Database) *EventBus {
+func NewEventBus(db CoordinatorRepository) *EventBus {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &EventBus{
-		ch:       make(chan Event, 256),
+		ch:       make(chan eventDispatch, 256),
 		handlers: map[string][]EventHandler{},
 		db:       db,
 		ctx:      ctx,
@@ -606,14 +298,24 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 		Payload:   string(payloadBytes),
 		CreatedAt: time.Now().UTC(),
 	}
-	if err := b.db.insertEvent(ctx, event); err != nil {
+	if err := b.db.recordPublishedEvent(ctx, event); err != nil {
 		return err
 	}
+	dispatch := eventDispatch{ctx: ctx, event: event, result: make(chan error, 1)}
 	select {
-	case b.ch <- event:
-		return nil
+	case b.ch <- dispatch:
 	case <-b.ctx.Done():
 		return errors.New("event bus closed")
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	select {
+	case err := <-dispatch.result:
+		return err
+	case <-b.ctx.Done():
+		return errors.New("event bus closed")
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 }
 
@@ -625,12 +327,14 @@ func (b *EventBus) Start() {
 		defer b.wg.Done()
 		for {
 			select {
-			case event := <-b.ch:
-				if handlers := b.handlers[event.Type]; len(handlers) > 0 {
+			case dispatch := <-b.ch:
+				var handlerErr error
+				if handlers := b.handlers[dispatch.event.Type]; len(handlers) > 0 {
 					for _, handler := range handlers {
-						handler(b.ctx, event)
+						handlerErr = errors.Join(handlerErr, handler(dispatch.ctx, dispatch.event))
 					}
 				}
+				dispatch.result <- handlerErr
 			case <-b.ctx.Done():
 				return
 			}
@@ -852,7 +556,7 @@ func buildConflictWarnings(conflicts []struct {
 // 🗄️Server is the main HTTP server holding configuration, database, event bus, and caches.
 type Server struct {
 	config      Config
-	db          *Database
+	db          CoordinatorRepository
 	bus         *EventBus
 	logger      *log.Logger
 	cache       IndexCache
@@ -863,7 +567,7 @@ type Server struct {
 
 // ⚙️NewServer creates a new Server with the given config, database, and event bus.
 // 💾️MUST initialize the index cache and GitHub comment cache.
-func NewServer(config Config, db *Database, bus *EventBus) *Server {
+func NewServer(config Config, db CoordinatorRepository, bus *EventBus) *Server {
 	return &Server{
 		config:      config,
 		db:          db,
@@ -989,11 +693,14 @@ func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 		GitHub:    payload.GitHubIssue,
 		CreatedAt: now,
 	}
-	if err := s.db.upsertTicket(ctx, ticket); err != nil {
+	if err := s.db.recordTicket(ctx, ticket); err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	_ = s.bus.Publish(ctx, "TicketOpened", "repo-cli", ticket)
+	if err := s.bus.Publish(ctx, "TicketOpened", "repo-cli", ticket); err != nil {
+		s.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
@@ -1018,7 +725,7 @@ func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	ticket, err := s.db.getTicket(ctx, payload.TicketID)
+	ticket, err := s.db.projectTicket(ctx, payload.TicketID)
 	if err != nil {
 		s.respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -1027,11 +734,14 @@ func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 	ticket.Status = "closed"
 	ticket.Summary = payload.Summary
 	ticket.ClosedAt = &now
-	if err := s.db.upsertTicket(ctx, *ticket); err != nil {
+	if err := s.db.recordTicket(ctx, *ticket); err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	_ = s.bus.Publish(ctx, "TicketClosed", "repo-cli", ticket)
+	if err := s.bus.Publish(ctx, "TicketClosed", "repo-cli", ticket); err != nil {
+		s.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
@@ -1056,7 +766,7 @@ func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	ticket, err := s.db.getTicket(ctx, payload.TicketID)
+	ticket, err := s.db.projectTicket(ctx, payload.TicketID)
 	if err != nil {
 		s.respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -1068,11 +778,14 @@ func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 		ticket.Title = payload.Title
 	}
 	ticket.ClosedAt = nil
-	if err := s.db.upsertTicket(ctx, *ticket); err != nil {
+	if err := s.db.recordTicket(ctx, *ticket); err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	_ = s.bus.Publish(ctx, "TicketReopened", "repo-cli", ticket)
+	if err := s.bus.Publish(ctx, "TicketReopened", "repo-cli", ticket); err != nil {
+		s.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
@@ -1089,7 +802,7 @@ func (s *Server) handleTicketsQuery(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	tickets, err := s.db.listTickets(ctx, status)
+	tickets, err := s.db.projectTickets(ctx, status)
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1118,7 +831,7 @@ func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	ticket, err := s.db.getTicket(ctx, path)
+	ticket, err := s.db.projectTicket(ctx, path)
 	if err != nil {
 		s.respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -1139,7 +852,7 @@ func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	claims, err := s.db.listClaimsByTicket(ctx, path)
+	claims, err := s.db.projectClaimsByTicket(ctx, path)
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1205,7 +918,10 @@ func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		s.updateIndexForFile(ctx, file, string(content))
+		if err := s.updateIndexForFile(ctx, file, string(content)); err != nil {
+			s.respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	s.writeJSON(w, http.StatusOK, map[string]int{"files": len(files)})
 }
@@ -1231,7 +947,10 @@ func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	s.updateIndexForFile(ctx, payload.FilePath, payload.Content)
+	if err := s.updateIndexForFile(ctx, payload.FilePath, payload.Content); err != nil {
+		s.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	s.writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
@@ -1247,7 +966,7 @@ func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	warnings, err := s.db.listWarnings(ctx, r.URL.Query().Get("ticket_id"))
+	warnings, err := s.db.projectWarnings(ctx, r.URL.Query().Get("ticket_id"))
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1267,7 +986,7 @@ func (s *Server) handleBreachs(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	breachs, err := s.db.listBreachs(ctx, r.URL.Query().Get("ticket_id"))
+	breachs, err := s.db.projectBreachs(ctx, r.URL.Query().Get("ticket_id"))
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1292,7 +1011,7 @@ func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	scopes, err := s.db.listScopesByFile(ctx, filePath)
+	scopes, err := s.db.projectScopesByFile(ctx, filePath)
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1330,7 +1049,9 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 			}
 			content = string(data)
 		}
-		s.updateIndexForFile(ctx, file, content)
+		if err := s.updateIndexForFile(ctx, file, content); err != nil {
+			return ProcessResult{}, nil, nil, err
+		}
 	}
 	s.cacheLock.RLock()
 	var scopes []Scope
@@ -1342,16 +1063,16 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 	now := time.Now().UTC()
 	claimedIDs, _ := mapClaims(scopes, diff)
 	for _, scopeID := range claimedIDs {
-		if err := s.db.upsertClaim(ctx, ticketID, scopeID, "touched", now); err != nil {
+		if err := s.db.recordClaim(ctx, ticketID, scopeID, "touched", now); err != nil {
 			return ProcessResult{}, nil, nil, err
 		}
 	}
-	conflicts, err := s.db.listConflicts(ctx)
+	conflicts, err := s.db.projectConflicts(ctx)
 	if err != nil {
 		return ProcessResult{}, nil, nil, err
 	}
 	warnings := buildConflictWarnings(conflicts)
-	if err := s.db.replaceWarnings(ctx, warnings); err != nil {
+	if err := s.db.recordWarnings(ctx, warnings); err != nil {
 		return ProcessResult{}, nil, nil, err
 	}
 	blockers := []string{}
@@ -1389,7 +1110,7 @@ func snapshotMap(snapshots []FileSnapshot) map[string]string {
 }
 
 // 🗄️updateIndexForFile builds scopes from file content and updates both the database and cache.
-func (s *Server) updateIndexForFile(ctx context.Context, filePath string, content string) {
+func (s *Server) updateIndexForFile(ctx context.Context, filePath string, content string) error {
 	scopes := buildScopesForFile(filePath, content)
 	var fileScope Scope
 	var sections []Scope
@@ -1405,13 +1126,18 @@ func (s *Server) updateIndexForFile(ctx context.Context, filePath string, conten
 			definitions = append(definitions, scope)
 		}
 	}
-	_ = s.db.replaceScopes(ctx, filePath, scopes)
+	if err := s.db.recordScopes(ctx, filePath, scopes); err != nil {
+		return err
+	}
+	if err := s.bus.Publish(ctx, "IndexUpdated", "server", map[string]interface{}{"file": filePath}); err != nil {
+		return err
+	}
 	s.cacheLock.Lock()
 	s.cache.Files[filePath] = fileScope
 	s.cache.Sections[filePath] = sections
 	s.cache.Definitions[filePath] = definitions
 	s.cacheLock.Unlock()
-	_ = s.bus.Publish(ctx, "IndexUpdated", "server", map[string]interface{}{"file": filePath})
+	return nil
 }
 
 // 📄️walkRepoFiles walks the repo root and returns all non-hidden file paths.
@@ -1479,7 +1205,10 @@ func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	eventType := r.Header.Get("X-GitHub-Event")
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	_ = s.bus.Publish(ctx, "GitHubIssueEventReceived", "github", map[string]interface{}{"type": eventType})
+	if err := s.bus.Publish(ctx, "GitHubIssueEventReceived", "github", map[string]interface{}{"type": eventType}); err != nil {
+		s.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	if eventType == "issue_comment" {
 		var payload map[string]interface{}
 		_ = json.Unmarshal(body, &payload)
@@ -1488,12 +1217,18 @@ func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	if eventType == "issues" {
 		var payload map[string]interface{}
 		_ = json.Unmarshal(body, &payload)
-		s.handleGitHubIssueEvent(ctx, payload)
+		if err := s.handleGitHubIssueEvent(ctx, payload); err != nil {
+			s.respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	if eventType == "push" {
 		var payload map[string]interface{}
 		_ = json.Unmarshal(body, &payload)
-		s.handleGitHubPushEvent(ctx, payload)
+		if err := s.handleGitHubPushEvent(ctx, payload); err != nil {
+			s.respondError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 }
@@ -1529,21 +1264,26 @@ func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 }
 
 // 🔓️handleGitHubIssueEvent processes GitHub issue close/reopen events.
-func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]interface{}) {
+func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]interface{}) error {
 	action, _ := payload["action"].(string)
 	issueNumber := extractIssueNumber(payload)
 	repo := extractRepoFullName(payload)
 	actor := extractActorLogin(payload)
 	if issueNumber == 0 || repo == "" || actor == "" {
-		return
+		return nil
 	}
 	comment := s.findCachedComment(repo, issueNumber, actor)
 	if action == "closed" && comment.Body != "" {
-		_ = s.bus.Publish(ctx, "TicketClosed", "github", map[string]interface{}{"issue": issueNumber, "comment": comment.Body})
+		if err := s.bus.Publish(ctx, "TicketClosed", "github", map[string]interface{}{"issue": issueNumber, "comment": comment.Body}); err != nil {
+			return err
+		}
 	}
 	if action == "reopened" && comment.Body != "" {
-		_ = s.bus.Publish(ctx, "TicketReopened", "github", map[string]interface{}{"issue": issueNumber, "comment": comment.Body})
+		if err := s.bus.Publish(ctx, "TicketReopened", "github", map[string]interface{}{"issue": issueNumber, "comment": comment.Body}); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // 💾️findCachedComment retrieves a recently cached GitHub comment for the given issue.
@@ -1595,7 +1335,7 @@ func extractRepoFullName(payload map[string]interface{}) string {
 }
 
 // 💿️handleGitHubPushEvent holds the data fields for a handleGitHubPushEvent record.
-func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]interface{}) {
+func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]interface{}) error {
 	actor := extractActorLogin(payload)
 	if actor == "" {
 		if pusher, ok := payload["pusher"].(map[string]interface{}); ok {
@@ -1626,8 +1366,11 @@ func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]i
 		}
 	}
 	if actor != "" && len(files) > 0 {
-		_ = s.db.removeContributorWorkForCheckpoint(ctx, actor, files)
+		if err := s.db.recordCheckpoint(ctx, actor, files); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // 📤️extractActorLogin extracts the sender login from a GitHub webhook payload.
@@ -1661,14 +1404,17 @@ func (s *Server) notifyDiscord(title string, body string) {
 
 // 🔔️registerNotifications subscribes to ticket lifecycle events and sends Discord notifications.
 func (s *Server) registerNotifications() {
-	s.bus.Subscribe("TicketOpened", func(ctx context.Context, event Event) {
+	s.bus.Subscribe("TicketOpened", func(ctx context.Context, event Event) error {
 		s.notifyDiscord("# Prompt", event.Payload)
+		return nil
 	})
-	s.bus.Subscribe("TicketClosed", func(ctx context.Context, event Event) {
+	s.bus.Subscribe("TicketClosed", func(ctx context.Context, event Event) error {
 		s.notifyDiscord("# Summary", event.Payload)
+		return nil
 	})
-	s.bus.Subscribe("TicketReopened", func(ctx context.Context, event Event) {
+	s.bus.Subscribe("TicketReopened", func(ctx context.Context, event Event) error {
 		s.notifyDiscord("# Prompt", event.Payload)
+		return nil
 	})
 	for _, kind := range []repopkg.EventKind{
 		repopkg.EventTicketOpenEnded, repopkg.EventTicketCloseEnded, repopkg.EventTicketReopenEnded, repopkg.EventTicketChangeEnded,
@@ -1677,46 +1423,52 @@ func (s *Server) registerNotifications() {
 		repopkg.EventTodoCreateEnded, repopkg.EventTodoChangeEnded, repopkg.EventTodoDeleteEnded,
 	} {
 		k := kind
-		s.bus.Subscribe(string(k), func(ctx context.Context, event Event) {
-			s.onCLIEvent(ctx, k, event)
+		s.bus.Subscribe(string(k), func(ctx context.Context, event Event) error {
+			return s.onCLIEvent(ctx, k, event)
 		})
 	}
-	s.bus.Subscribe(string(repopkg.EventCheckpointEnded), func(ctx context.Context, event Event) {
-		s.onCheckpointEvent(ctx, event)
+	s.bus.Subscribe(string(repopkg.EventCheckpointEnded), func(ctx context.Context, event Event) error {
+		return s.onCheckpointEvent(ctx, event)
 	})
 }
 
 // 💿️onCLIEvent holds the data fields for a onCLIEvent record.
-func (s *Server) onCLIEvent(ctx context.Context, kind repopkg.EventKind, event Event) {
-	s.notifyDiscord(string(kind), event.Payload)
+func (s *Server) onCLIEvent(ctx context.Context, kind repopkg.EventKind, event Event) error {
 	author, items := s.extractAuthorAndItems(kind, event.Payload)
 	if author == "" {
-		return
+		return nil
 	}
 	for _, item := range items {
 		if item.Kind == "" || item.ID == "" {
 			continue
 		}
-		others, _ := s.db.listContributorsOnItem(ctx, item.Kind, item.ID)
+		others, err := s.db.projectContributorsOnItem(ctx, item.Kind, item.ID)
+		if err != nil {
+			return err
+		}
 		others = filterOut(others, author)
+		if err := s.db.recordContributorWork(ctx, author, item.Kind, item.ID); err != nil {
+			return err
+		}
+		s.notifyDiscord(string(kind), event.Payload)
 		if len(others) > 0 {
 			s.notifyDiscord("⚠️ Conflict", fmt.Sprintf("%s working on %s:%s (others: %v)", author, item.Kind, item.ID, others))
 		}
-		_ = s.db.addContributorWork(ctx, author, item.Kind, item.ID)
 	}
+	return nil
 }
 
 // 💾️onCheckpointEvent holds the data fields for a onCheckpointEvent record.
-func (s *Server) onCheckpointEvent(ctx context.Context, event Event) {
+func (s *Server) onCheckpointEvent(ctx context.Context, event Event) error {
 	var p repopkg.CheckpointPayload
 	if json.Unmarshal([]byte(event.Payload), &p) != nil {
-		return
+		return errors.New("invalid checkpoint event payload")
 	}
 	files := p.FilesChanged
 	if len(files) == 0 {
 		files = p.Files
 	}
-	_ = s.db.removeContributorWorkForCheckpoint(ctx, p.Author, files)
+	return s.db.recordCheckpoint(ctx, p.Author, files)
 }
 
 // 🧲️extractAuthorAndItems holds the data fields for a extractAuthorAndItems record.

@@ -12,7 +12,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,10 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/graphql-go/graphql"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/spf13/cobra"
-	_ "modernc.org/sqlite"
+	command "github.com/usalu/semio/repo/client/internal/command"
+	eventstore "github.com/usalu/semio/repo/client/internal/eventstore"
+	graphql "github.com/usalu/semio/repo/client/internal/graphql"
+	mcp "github.com/usalu/semio/repo/client/internal/mcp"
 )
 
 // #region 🧬️RepoMetaDir
@@ -1968,7 +1967,7 @@ func (e *recordingGraphQLExecutor) Execute(ctx context.Context, query string, va
 }
 
 func TestSyncCommandRunsGitHubSynchronization(t *testing.T) {
-	newRoot := func(recorder *recordingGraphQLExecutor) *cobra.Command {
+	newRoot := func(recorder *recordingGraphQLExecutor) *command.Command {
 		factory := func(config Config) (*Engine, error) {
 			return NewEngine(recorder), nil
 		}
@@ -4019,8 +4018,8 @@ func TestTestCommandHelp(t *testing.T) {
 
 // #endregion 🔊️Cli
 
-// 📤️#region 🕰️SQLite Export
-// 📤️testExportContext is a mock RepoContext for testing ExportToSQLite.
+// 📤️#region 📤️Event Export
+// 📤️testExportContext is a mock RepoContext for testing event export.
 type testExportContext struct {
 	rootDir      string
 	technologies []*Technology
@@ -4092,7 +4091,7 @@ func (c *testExportContext) ContributorAdd(input ContributorAddInput) (*Contribu
 func (c *testExportContext) ContributorRemove(github string) error { return nil }
 func (c *testExportContext) SyncManagement() (bool, error)         { return false, nil }
 
-func TestExportToSQLiteSchema(t *testing.T) {
+func TestExportToEventLogSchema(t *testing.T) {
 	tmpDir := t.TempDir()
 	srcDir := filepath.Join(tmpDir, "mytechnology", "mybundle", "src")
 	os.MkdirAll(srcDir, 0755)
@@ -4108,7 +4107,7 @@ func TestExportToSQLiteSchema(t *testing.T) {
 
 // App module summary.
 
-// #endregion 🕰️SQLite Export
+// #endregion 📤️Event Export
 
 // #region ⚗️Functions
 // Processes work items.
@@ -4143,10 +4142,10 @@ export function doWork(): void {}
 		},
 	}
 
-	outputPath := filepath.Join(tmpDir, "test.db")
-	result, err := ExportToSQLite(outputPath, ctx)
+	outputPath := filepath.Join(tmpDir, "test.events.jsonl")
+	result, err := ExportToEventLog(outputPath, ctx)
 	if err != nil {
-		t.Fatalf("ExportToSQLite failed: %v", err)
+		t.Fatalf("ExportToEventLog failed: %v", err)
 	}
 
 	if result.Technologies != 1 {
@@ -4161,140 +4160,15 @@ export function doWork(): void {}
 	if result.Files != 1 {
 		t.Errorf("expected 1 file, got %d", result.Files)
 	}
-
-	db, err := sql.Open("sqlite", outputPath)
+	events, err := (eventstore.Store{Path: outputPath}).Replay(context.Background(), nil)
 	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
+		t.Fatalf("event replay failed: %v", err)
 	}
-	defer db.Close()
-
-	var checkpointCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM checkpoint").Scan(&checkpointCount); err != nil {
-		t.Fatalf("failed to count checkpoints: %v", err)
+	if len(events) != result.Technologies+result.Bundles+result.Folders+result.Files+result.Sections+result.Definitions {
+		t.Fatalf("event count = %d, result = %+v", len(events), result)
 	}
-	if checkpointCount != 1 {
-		t.Errorf("expected 1 checkpoint, got %d", checkpointCount)
-	}
-
-	var folderKindCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM folder_kind").Scan(&folderKindCount); err != nil {
-		t.Fatalf("failed to count folder_kind: %v", err)
-	}
-	if folderKindCount != 2 {
-		t.Errorf("expected 2 folder_kind rows, got %d", folderKindCount)
-	}
-	var fileKindCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM file_kind").Scan(&fileKindCount); err != nil {
-		t.Fatalf("failed to count file_kind: %v", err)
-	}
-	if fileKindCount != 8 {
-		t.Errorf("expected 8 file_kind rows, got %d", fileKindCount)
-	}
-
-	var technologyID int
-	var technologyFolderID int
-	var technologyKindID int
-	var technologyName string
-	var technologySummary sql.NullString
-	if err := db.QueryRow("SELECT id, folder_id, technology_kind_id, name, summary FROM technology WHERE id = 1").Scan(&technologyID, &technologyFolderID, &technologyKindID, &technologyName, &technologySummary); err != nil {
-		t.Fatalf("failed to query technology: %v", err)
-	}
-	if technologyName != "mytechnology" {
-		t.Errorf("expected technology name 'mytechnology', got %q", technologyName)
-	}
-	if technologyKindID != 0 {
-		t.Errorf("expected technology_kind_id 0 (user), got %d", technologyKindID)
-	}
-	if technologySummary.Valid && technologySummary.String != "This is the technology summary." {
-		t.Errorf("expected technology summary 'This is the technology summary.', got %q", technologySummary.String)
-	}
-
-	var bundleID int
-	var bundleTechnologyID int
-	var bundleFolderID int
-	var bundleKindID int
-	var bundleName string
-	if err := db.QueryRow("SELECT id, technology_id, folder_id, bundle_kind_id, name FROM bundle WHERE id = 1").Scan(&bundleID, &bundleTechnologyID, &bundleFolderID, &bundleKindID, &bundleName); err != nil {
-		t.Fatalf("failed to query bundle: %v", err)
-	}
-	if bundleName != "mybundle" {
-		t.Errorf("expected bundle name 'mybundle', got %q", bundleName)
-	}
-	if bundleKindID != 0 {
-		t.Errorf("expected bundle_kind_id 0 (library), got %d", bundleKindID)
-	}
-	if bundleTechnologyID != technologyID {
-		t.Errorf("expected bundle technology_id %d, got %d", technologyID, bundleTechnologyID)
-	}
-
-	var folderCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM folder").Scan(&folderCount); err != nil {
-		t.Fatalf("failed to count folders: %v", err)
-	}
-	if folderCount != 3 {
-		t.Errorf("expected 3 folders, got %d", folderCount)
-	}
-	var folderCheckpointID int
-	var folderKindID int
-	if err := db.QueryRow("SELECT checkpoint_id, folder_kind_id FROM folder WHERE id = 1").Scan(&folderCheckpointID, &folderKindID); err != nil {
-		t.Fatalf("failed to query folder: %v", err)
-	}
-	if folderCheckpointID != 1 {
-		t.Errorf("expected folder checkpoint_id 1, got %d", folderCheckpointID)
-	}
-
-	var fileID int
-	var fileParentFolderID sql.NullInt64
-	var fileKindID int
-	var fileName string
-	var fileExtension string
-	if err := db.QueryRow("SELECT id, parent_folder_id, file_kind_id, name, extension FROM file WHERE id = 1").Scan(&fileID, &fileParentFolderID, &fileKindID, &fileName, &fileExtension); err != nil {
-		t.Fatalf("failed to query file: %v", err)
-	}
-	if fileName != "app.ts" {
-		t.Errorf("expected file name 'app.ts', got %q", fileName)
-	}
-	if fileKindID != 0 {
-		t.Errorf("expected file_kind_id 0 (code), got %d", fileKindID)
-	}
-	if fileExtension != "ts" {
-		t.Errorf("expected file extension 'ts', got %q", fileExtension)
-	}
-
-	var sectionCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM section").Scan(&sectionCount); err != nil {
-		t.Fatalf("failed to count sections: %v", err)
-	}
-	if sectionCount == 0 {
-		t.Error("expected at least 1 section")
-	}
-
-	var defCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM definition").Scan(&defCount); err != nil {
-		t.Fatalf("failed to count definitions: %v", err)
-	}
-	if defCount > 0 {
-		var defSectionID int
-		var defKindID int
-		var defName string
-		var defCode sql.NullString
-		if err := db.QueryRow("SELECT section_id, definition_kind_id, name, code FROM definition LIMIT 1").Scan(&defSectionID, &defKindID, &defName, &defCode); err != nil {
-			t.Fatalf("failed to query definition: %v", err)
-		}
-		if defName != "doWork" {
-			t.Errorf("expected definition name 'doWork', got %q", defName)
-		}
-		if defKindID != 0 {
-			t.Errorf("expected definition_kind_id 0 (implementation), got %d", defKindID)
-		}
-		if !defCode.Valid || defCode.String == "" {
-			t.Error("expected definition code to be non-empty")
-		}
-	}
-
-	_, dupErr := db.Exec("INSERT INTO contributor (github, name, alias) VALUES (?, ?, ?)", "export", "Export System", "export")
-	if dupErr == nil {
-		t.Error("expected unique constraint violation for duplicate contributor github")
+	if events[0].Kind != "bundle.recorded" {
+		t.Fatalf("first deterministic event kind = %q", events[0].Kind)
 	}
 }
 
@@ -4340,7 +4214,7 @@ func TestPostgresSchemaIncludesKitVersionControlTables(t *testing.T) {
 	}
 }
 
-func TestExportToSQLiteEmpty(t *testing.T) {
+func TestExportToEventLogEmpty(t *testing.T) {
 	tmpDir := t.TempDir()
 	ctx := &testExportContext{
 		rootDir:      tmpDir,
@@ -4350,180 +4224,21 @@ func TestExportToSQLiteEmpty(t *testing.T) {
 		files:        []*File{},
 	}
 
-	outputPath := filepath.Join(tmpDir, "empty.db")
-	result, err := ExportToSQLite(outputPath, ctx)
+	outputPath := filepath.Join(tmpDir, "empty.events.jsonl")
+	result, err := ExportToEventLog(outputPath, ctx)
 	if err != nil {
-		t.Fatalf("ExportToSQLite failed: %v", err)
+		t.Fatalf("ExportToEventLog failed: %v", err)
 	}
 	if result.Technologies != 0 || result.Bundles != 0 || result.Folders != 0 || result.Files != 0 || result.Sections != 0 || result.Definitions != 0 {
 		t.Errorf("expected all counts to be 0, got technologies=%d bundles=%d folders=%d files=%d sections=%d definitions=%d",
 			result.Technologies, result.Bundles, result.Folders, result.Files, result.Sections, result.Definitions)
 	}
-
-	db, err := sql.Open("sqlite", outputPath)
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
-	defer db.Close()
-	tables := []string{
-		"contributor", "release", "release_contributors", "version", "checkpoint",
-		"folder_kind", "folder", "file_kind", "file",
-		"technology_kind", "technology", "entity", "mechanism", "system", "system_entities",
-		"bundle_kind", "bundle", "section",
-		"definition_kind", "definition",
-		"client_kind", "agent", "session", "event_kind", "event",
-	}
-	for _, table := range tables {
-		var count int
-		if err := db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table)).Scan(&count); err != nil {
-			t.Errorf("table %s does not exist: %v", table, err)
-		}
-	}
-
-	var contributorCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM contributor").Scan(&contributorCount); err != nil {
-		t.Fatalf("failed to count contributors: %v", err)
-	}
-	if contributorCount != 1 {
-		t.Errorf("expected 1 synthetic contributor, got %d", contributorCount)
-	}
-	var checkpointCount int
-	if err := db.QueryRow("SELECT COUNT(*) FROM checkpoint").Scan(&checkpointCount); err != nil {
-		t.Fatalf("failed to count checkpoints: %v", err)
-	}
-	if checkpointCount != 1 {
-		t.Errorf("expected 1 synthetic checkpoint, got %d", checkpointCount)
-	}
-
-	var folderKindCount int
-	db.QueryRow("SELECT COUNT(*) FROM folder_kind").Scan(&folderKindCount)
-	if folderKindCount != 2 {
-		t.Errorf("expected 2 folder_kind rows, got %d", folderKindCount)
-	}
-	var fileKindCount int
-	db.QueryRow("SELECT COUNT(*) FROM file_kind").Scan(&fileKindCount)
-	if fileKindCount != 8 {
-		t.Errorf("expected 8 file_kind rows, got %d", fileKindCount)
-	}
-	var technologyKindCount int
-	db.QueryRow("SELECT COUNT(*) FROM technology_kind").Scan(&technologyKindCount)
-	if technologyKindCount != 3 {
-		t.Errorf("expected 3 technology_kind rows, got %d", technologyKindCount)
-	}
-	var bundleKindCount int
-	db.QueryRow("SELECT COUNT(*) FROM bundle_kind").Scan(&bundleKindCount)
-	if bundleKindCount != 7 {
-		t.Errorf("expected 7 bundle_kind rows, got %d", bundleKindCount)
-	}
-	var defKindCount int
-	db.QueryRow("SELECT COUNT(*) FROM definition_kind").Scan(&defKindCount)
-	if defKindCount != 4 {
-		t.Errorf("expected 4 definition_kind rows, got %d", defKindCount)
+	if _, err := os.Stat(outputPath); !os.IsNotExist(err) {
+		t.Fatalf("empty export created an unnecessary log: %v", err)
 	}
 }
 
-func TestExportKindMappings(t *testing.T) {
-
-	if folderKindToInt(FolderKindOrganization) != 0 {
-		t.Errorf("FolderKindOrganization should map to 0")
-	}
-	if folderKindToInt(FolderKindRequired) != 1 {
-		t.Errorf("FolderKindRequired should map to 1")
-	}
-	if folderKindToInt(FolderKindRoot) != 0 {
-		t.Errorf("FolderKindRoot should default to 0")
-	}
-
-	if technologyKindToInt(TechnologyKindUser) != 0 {
-		t.Errorf("TechnologyKindUser should map to 0")
-	}
-	if technologyKindToInt(TechnologyKindInfrastructure) != 1 {
-		t.Errorf("TechnologyKindInfrastructure should map to 1")
-	}
-	if technologyKindToInt(TechnologyKindResearch) != 2 {
-		t.Errorf("TechnologyKindResearch should map to 2")
-	}
-
-	if bundleKindToInt(BundleKindLibrary) != 0 {
-		t.Errorf("BundleKindLibrary should map to 0")
-	}
-	if bundleKindToInt(BundleKindSchema) != 1 {
-		t.Errorf("BundleKindSchema should map to 1")
-	}
-	if bundleKindToInt(BundleKindBinary) != 2 {
-		t.Errorf("BundleKindBinary should map to 2")
-	}
-	if bundleKindToInt(BundleKindUI) != 3 {
-		t.Errorf("BundleKindUI should map to 3")
-	}
-	if bundleKindToInt("example") != 4 {
-		t.Errorf("BundleKind example should map to 4")
-	}
-	if bundleKindToInt(BundleKindSite) != 5 {
-		t.Errorf("BundleKindSite should map to 5")
-	}
-	if bundleKindToInt(BundleKindAssets) != 6 {
-		t.Errorf("BundleKindAssets should map to 6")
-	}
-
-	if fileKindToInt(FileKindCode) != 0 {
-		t.Errorf("FileKindCode should map to 0")
-	}
-	if fileKindToInt(FileKindLab) != 1 {
-		t.Errorf("FileKindLab should map to 1")
-	}
-	if fileKindToInt(FileKindScript) != 2 {
-		t.Errorf("FileKindScript should map to 2")
-	}
-	if fileKindToInt(FileKindDocs) != 3 {
-		t.Errorf("FileKindDocs should map to 3")
-	}
-	if fileKindToInt(FileKindConfig) != 4 {
-		t.Errorf("FileKindConfig should map to 4")
-	}
-	if fileKindToInt(FileKindResource) != 5 {
-		t.Errorf("FileKindResource should map to 5")
-	}
-	if fileKindToInt(FileKindTemplate) != 6 {
-		t.Errorf("FileKindTemplate should map to 6")
-	}
-	if fileKindToInt(FileKindLicense) != 7 {
-		t.Errorf("FileKindLicense should map to 7")
-	}
-
-	if definitionKindToInt(DefinitionKindImplementation) != 0 {
-		t.Errorf("DefinitionKindImplementation should map to 0")
-	}
-	if definitionKindToInt(DefinitionKindInterface) != 1 {
-		t.Errorf("DefinitionKindInterface should map to 1")
-	}
-	if definitionKindToInt(DefinitionKindConstant) != 2 {
-		t.Errorf("DefinitionKindConstant should map to 2")
-	}
-	if definitionKindToInt(DefinitionKindTest) != 3 {
-		t.Errorf("DefinitionKindTest should map to 3")
-	}
-}
-
-func TestExtractReadmeSummary(t *testing.T) {
-	content := "# Title\n\n### Summary\n\nThis is the summary.\n\n### Specs\n\nSome specs.\n"
-	result := extractReadmeSummary(content)
-	if result != "This is the summary." {
-		t.Errorf("expected 'This is the summary.', got %q", result)
-	}
-
-	empty := extractReadmeSummary("# No summary section\n\nJust text.\n")
-	if empty != "" {
-		t.Errorf("expected empty string, got %q", empty)
-	}
-
-	multiline := extractReadmeSummary("### Summary\n\nLine 1.\nLine 2.\n\n### Specs\n")
-	if multiline != "Line 1.\nLine 2." {
-		t.Errorf("expected multiline summary, got %q", multiline)
-	}
-}
-
-//#endregion 🕰️SQLite Export
+//#endregion 📤️Event Export
 
 // 📜️#region 🔬️Policy
 func TestPolicyListCommand(t *testing.T) {
@@ -12113,9 +11828,9 @@ func TestExhaustiveQueryFlag(t *testing.T) {
 		},
 		{
 			name:        "query command returns matching IDs",
-			args:        []string{"query", "bleve"},
+			args:        []string{"query", "search"},
 			query:       "",
-			expectMatch: "bleve",
+			expectMatch: "search",
 		},
 		{
 			name:        "contributor list --query matches",
@@ -12216,15 +11931,15 @@ func TestExhaustiveCacheIndexAndTreeQuery(t *testing.T) {
 	SetRootDir(repoRoot)
 
 	t.Run("tree query returns multiple resource kinds for shared keyword", func(t *testing.T) {
-		output, err := executeTreeCommand("search", "--query", "bleve", "--text")
+		output, err := executeTreeCommand("search", "--query", "search", "--text")
 		if err != nil {
-			t.Fatalf("tree --query bleve failed: %v\nOutput: %s", err, output)
+			t.Fatalf("tree --query search failed: %v\nOutput: %s", err, output)
 		}
 		hasFile := strings.Contains(output, ".go") || strings.Contains(output, "main")
 		hasGoal := strings.Contains(output, "AI-OPTIMIZED") || strings.Contains(output, "Repo")
-		hasTicket := strings.Contains(output, "ADD-BLEVE") || strings.Contains(output, "02/")
+		hasTicket := strings.Contains(output, "02/")
 		if !hasFile && !hasGoal && !hasTicket {
-			t.Errorf("tree --query bleve should return files, goals, or tickets; got:\n%s", output)
+			t.Errorf("tree --query search should return files, goals, or tickets; got:\n%s", output)
 		}
 		kinds := 0
 		if hasFile {
@@ -12242,9 +11957,9 @@ func TestExhaustiveCacheIndexAndTreeQuery(t *testing.T) {
 	})
 
 	t.Run("query command returns matching resource IDs", func(t *testing.T) {
-		output, err := executeTreeCommand("query", "bleve")
+		output, err := executeTreeCommand("query", "search")
 		if err != nil {
-			t.Fatalf("query bleve failed: %v\nOutput: %s", err, output)
+			t.Fatalf("query search failed: %v\nOutput: %s", err, output)
 		}
 		var nonEmpty int
 		for _, l := range strings.Split(output, "\n") {
@@ -12253,7 +11968,7 @@ func TestExhaustiveCacheIndexAndTreeQuery(t *testing.T) {
 			}
 		}
 		if nonEmpty == 0 {
-			t.Errorf("query bleve should return at least one ID, got:\n%s", output)
+			t.Errorf("query search should return at least one ID, got:\n%s", output)
 		}
 	})
 
@@ -12283,25 +11998,25 @@ func TestExhaustiveCacheIndexAndTreeQuery(t *testing.T) {
 	})
 
 	t.Run("different queries return different resources", func(t *testing.T) {
-		bleveOut, err := executeTreeCommand("search", "--query", "bleve", "--json")
+		searchOut, err := executeTreeCommand("search", "--query", "search", "--json")
 		if err != nil {
-			t.Fatalf("tree --query bleve failed: %v", err)
+			t.Fatalf("tree --query search failed: %v", err)
 		}
 		cliOut, err := executeTreeCommand("search", "--query", "cli", "--json")
 		if err != nil {
 			t.Fatalf("tree --query cli failed: %v", err)
 		}
-		var bleveTree, cliTree map[string]interface{}
-		if json.Unmarshal([]byte(strings.TrimSpace(bleveOut)), &bleveTree) != nil {
-			t.Fatal("bleve output not valid JSON")
+		var searchTree, cliTree map[string]interface{}
+		if json.Unmarshal([]byte(strings.TrimSpace(searchOut)), &searchTree) != nil {
+			t.Fatal("search output not valid JSON")
 		}
 		if json.Unmarshal([]byte(strings.TrimSpace(cliOut)), &cliTree) != nil {
 			t.Fatal("cli output not valid JSON")
 		}
-		bleveStr := fmt.Sprint(bleveTree)
+		searchStr := fmt.Sprint(searchTree)
 		cliStr := fmt.Sprint(cliTree)
-		if bleveStr == cliStr {
-			t.Error("tree --query bleve and tree --query cli should return different results")
+		if searchStr == cliStr {
+			t.Error("tree --query search and tree --query cli should return different results")
 		}
 	})
 }
@@ -13681,7 +13396,7 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 
 	t.Run("uses indexed matches from cache", func(t *testing.T) {
 		indexedTree := makeTree("ultrafastneedle")
-		idx, err := ensureCacheIndexed(context.Background(), indexedTree)
+		idx, err := ensureCacheIndexed(context.Background(), indexedTree, nil)
 		if err != nil {
 			t.Fatalf("ensureCacheIndexed failed: %v", err)
 		}
@@ -13690,7 +13405,10 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 		}
 
 		mutatedTree := makeTree("different-text")
-		result := searchMonorepoTreeWithCache(context.Background(), mutatedTree, "ultrafastneedle")
+		result, err := searchMonorepoTreeWithCache(context.Background(), mutatedTree, "ultrafastneedle")
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		found := false
 		var walk func(*TreeNode)
@@ -13709,7 +13427,10 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 	})
 
 	t.Run("returns empty tree for miss", func(t *testing.T) {
-		result := searchMonorepoTreeWithCache(context.Background(), makeTree("something else"), "no-match-here")
+		result, err := searchMonorepoTreeWithCache(context.Background(), makeTree("something else"), "no-match-here")
+		if err != nil {
+			t.Fatal(err)
+		}
 		if len(result.Children) != 0 {
 			t.Fatalf("expected empty tree, got %d children", len(result.Children))
 		}
@@ -14142,7 +13863,7 @@ func TestSortTreeChildren(t *testing.T) {
 
 func TestTreeCommandFlags(t *testing.T) {
 	t.Run("builds filter from flags", func(t *testing.T) {
-		cmd := &cobra.Command{}
+		cmd := &command.Command{}
 		bindTreeFlags(cmd)
 		cmd.Flags().Set("only-technology", "true")
 		cmd.Flags().Set("no-folder", "true")
@@ -14170,7 +13891,7 @@ func TestTreeCommandFlags(t *testing.T) {
 	})
 
 	t.Run("empty flags produce empty filter", func(t *testing.T) {
-		cmd := &cobra.Command{}
+		cmd := &command.Command{}
 		bindTreeFlags(cmd)
 		filter := buildTreeFilterFromFlags(cmd)
 		if filter.HasOnlyKinds() {
@@ -23391,7 +23112,7 @@ func TestLocCommand(t *testing.T) {
 	})
 	t.Run("root has loc", func(t *testing.T) {
 		root, _ := NewRootWithConfig(testEngineFactory)
-		var found *cobra.Command
+		var found *command.Command
 		for _, c := range root.Commands() {
 			if c.Name() == "loc" {
 				found = c
@@ -23465,7 +23186,7 @@ func TestMcpCommandKinds(t *testing.T) {
 
 func TestMicroCommitCommandExists(t *testing.T) {
 	root, _ := NewRootWithConfig(testEngineFactory)
-	var found *cobra.Command
+	var found *command.Command
 	for _, c := range root.Commands() {
 		if c.Name() == "micro-commit" {
 			found = c
@@ -23591,7 +23312,7 @@ func TestExtractEffortFromArgs(t *testing.T) {
 		{[]string{"--other", "val"}, ""},
 	}
 	for _, tc := range cases {
-		cmd := &cobra.Command{}
+		cmd := &command.Command{}
 		addEffortFlags(cmd)
 		got, _ := extractEffortFromArgs(cmd, tc.args)
 		if got != tc.expected {

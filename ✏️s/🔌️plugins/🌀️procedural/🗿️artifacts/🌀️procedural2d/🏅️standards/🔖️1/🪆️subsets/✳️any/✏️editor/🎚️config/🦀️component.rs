@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase", default)]
 #[dsl(extension = "procedural2dcfg")]
+#[dsl(id = "procedural.procedural2dcfg")]
 #[dsl(layout = "lines")]
 pub struct Procedural2dConfig {
     /// 🗺️ The node-graph camera.

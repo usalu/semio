@@ -1,0 +1,28 @@
+{
+  "manifests": {
+    "cargo": 123,
+    "package": 85,
+    "go": 4,
+    "python": 2,
+    "dotnet": 1
+  },
+  "independentCounts": {
+    "rust": 85,
+    "js": 70,
+    "go": 58,
+    "python": 15,
+    "dotnet": 0
+  },
+  "rawCounts": {
+    "rust": 85,
+    "js": 70,
+    "go": 60,
+    "python": 15,
+    "dotnet": 0
+  },
+  "missingFromVerifier": [],
+  "extraInVerifier": [
+    "go:github.com/usalu/semio/repo/client",
+    "go:github.com/usalu/semio/repo/go"
+  ]
+}

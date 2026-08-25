@@ -621,6 +621,778 @@ fn encode_wire_node(ctx: &mut EncCtx<'_>, node: &WireNode, out: &mut Vec<u8>) {
 }
 //#endregion 🔖️Encode
 
+//#region 🔖️RetainedValue
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedValueRole {
+    Count,
+    FieldId,
+    Integer,
+    Unsigned,
+    Enum,
+    Symbol,
+    Chunk,
+    StringLength,
+    BytesLength,
+    TableRows,
+    TableField,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedValueContainer {
+    Record,
+    Tuple,
+    List,
+    Statements,
+    Map,
+    ChunkedBytes,
+    Table,
+    PackedF64,
+    PackedVarint,
+    Wire,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedValueToken {
+    Tag { offset: u64, value: u8 },
+    Begin { kind: RetainedValueContainer, count: u64 },
+    Unsigned { role: RetainedValueRole, value: u64 },
+    Signed(i64),
+    F64(u64),
+    StringChar(char),
+    Byte(u8),
+    WirePresence(u8),
+    WireNodePresence(u8),
+    WireLabelPresence(u8),
+    TablePresence { rows: u64, value: u8 },
+    TableBitmap { first_row: u64, value: u8 },
+    End(RetainedValueContainer),
+    Complete { bytes: u64 },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RetainedContext {
+    Field,
+    Dsl,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct RetainedVarint {
+    value: u64,
+    bytes: u8,
+}
+
+impl RetainedVarint {
+    fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<u64>, PackError> {
+        if self.bytes >= 10 || (self.bytes == 9 && ((byte & 0x80) != 0 || byte & 0x7f > 1)) {
+            return Err(PackError::Malformed { what: "retained-varint", offset: offset - self.bytes as u64, detail: "overlong varint".into() });
+        }
+        let payload = (byte & 0x7f) as u64;
+        self.value |= payload << (self.bytes as u32 * 7);
+        self.bytes += 1;
+        if byte & 0x80 != 0 {
+            return Ok(None);
+        }
+        if self.bytes > 1 && payload == 0 {
+            return Err(PackError::NonCanonical("non-minimal retained varint"));
+        }
+        Ok(Some(self.value))
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct RetainedUtf8 {
+    value: u32,
+    minimum: u32,
+    remaining: u8,
+}
+
+impl RetainedUtf8 {
+    fn admit(&mut self, byte: u8, offset: u64) -> Result<Option<char>, PackError> {
+        if self.remaining == 0 {
+            match byte {
+                0x00..=0x7f => return Ok(Some(byte as char)),
+                0xc2..=0xdf => (self.value, self.minimum, self.remaining) = ((byte & 0x1f) as u32, 0x80, 1),
+                0xe0..=0xef => (self.value, self.minimum, self.remaining) = ((byte & 0x0f) as u32, 0x800, 2),
+                0xf0..=0xf4 => (self.value, self.minimum, self.remaining) = ((byte & 7) as u32, 0x10000, 3),
+                _ => return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid leading byte".into() }),
+            }
+            return Ok(None);
+        }
+        if byte & 0xc0 != 0x80 {
+            return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid continuation".into() });
+        }
+        self.value = (self.value << 6) | (byte & 0x3f) as u32;
+        self.remaining -= 1;
+        if self.remaining != 0 {
+            return Ok(None);
+        }
+        if self.value < self.minimum || (0xd800..=0xdfff).contains(&self.value) || self.value > 0x10ffff {
+            return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid scalar".into() });
+        }
+        char::from_u32(self.value).map(Some).ok_or(PackError::Malformed { what: "retained-utf8", offset, detail: "invalid scalar".into() })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AfterVarint {
+    Record(u16),
+    Field,
+    Scalar(RetainedValueRole),
+    Sequence(RetainedValueContainer, u16, RetainedContext),
+    Statements(u16),
+    Map(u16, RetainedContext),
+    String,
+    Bytes,
+    Chunks,
+    TableRows(u16),
+    TableColumns(u64, u16),
+    TableField(u64, u64, u16),
+    Packed(RetainedValueContainer),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Expect {
+    Finish,
+    End(RetainedValueContainer),
+    Value(u16, RetainedContext),
+    StringTag,
+    Varint(RetainedVarint, AfterVarint),
+    F64([u8; 8], usize),
+    Utf8(u64, RetainedUtf8),
+    Bytes(u64),
+    Record(u64, u16),
+    Values(u64, u16, RetainedContext),
+    Varints(u64, RetainedValueRole),
+    F64s(u64),
+    Statements(u64, u16),
+    Map(u64, u16, RetainedContext),
+    Wire(u16),
+    WireNode,
+    WireLabel,
+    TableColumns(u64, u64, u16),
+    TablePresence(u64, u64, u16),
+    TableBitmap(u64, u64, u64, u64, u64, u16),
+    TableElem(u64, u64, u64, u16),
+}
+
+pub struct RetainedValueCursor {
+    limits: PackLimits,
+    stack: Vec<Expect>,
+    pending: Option<(u64, u8)>,
+    offset: u64,
+    sealed: bool,
+    closed: bool,
+}
+
+impl RetainedValueCursor {
+    pub fn try_new(limits: PackLimits) -> Result<Self, PackError> {
+        if limits.max_depth == 0 || limits.max_items == 0 {
+            return Err(PackError::LimitExceeded("retained value credits"));
+        }
+        let capacity = usize::from(limits.max_depth).checked_mul(8).ok_or(PackError::LimitExceeded("retained value stack"))?;
+        let mut stack = Vec::new();
+        stack.try_reserve_exact(capacity).map_err(|_| PackError::LimitExceeded("retained value stack reservation"))?;
+        stack.push(Expect::Finish);
+        stack.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Record(0)));
+        Ok(Self { limits, stack, pending: None, offset: 0, sealed: false, closed: false })
+    }
+
+    pub fn admit_byte(&mut self, offset: u64, byte: u8) -> Result<(), (u64, u8)> {
+        if self.closed || self.sealed || self.stack.is_empty() || self.pending.is_some() || offset != self.offset {
+            return Err((offset, byte));
+        }
+        self.pending = Some((offset, byte));
+        Ok(())
+    }
+
+    pub fn seal(&mut self, bytes: u64) -> Result<(), PackError> {
+        if self.closed || self.pending.is_some() || bytes != self.offset {
+            return Err(PackError::Malformed { what: "retained-value", offset: self.offset, detail: "seal position mismatch".into() });
+        }
+        self.sealed = true;
+        Ok(())
+    }
+
+    fn push(&mut self, value: Expect) -> Result<(), PackError> {
+        if self.stack.len() == self.stack.capacity() {
+            return Err(PackError::LimitExceeded("retained value owner stack"));
+        }
+        self.stack.push(value);
+        Ok(())
+    }
+
+    fn count(&self, count: u64) -> Result<(), PackError> {
+        if count > self.limits.max_items {
+            Err(PackError::LimitExceeded("retained value item count"))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn string(&mut self) -> Result<(), PackError> {
+        self.push(Expect::StringTag)
+    }
+
+    fn control(&mut self, value: Expect) -> Result<Option<RetainedValueToken>, PackError> {
+        match value {
+            Expect::End(kind) => Ok(Some(RetainedValueToken::End(kind))),
+            Expect::Finish if self.sealed => Ok(Some(RetainedValueToken::Complete { bytes: self.offset })),
+            Expect::Finish => {
+                self.push(Expect::Finish)?;
+                Ok(None)
+            }
+            Expect::Record(0, _) | Expect::Values(0, _, _) | Expect::Varints(0, _) | Expect::F64s(0) | Expect::Statements(0, _) | Expect::Map(0, _, _) | Expect::TableColumns(0, _, _) | Expect::Utf8(0, _) | Expect::Bytes(0) => Ok(None),
+            Expect::TableBitmap(0, _, rows, present, columns, depth) => {
+                self.push(Expect::TableElem(present, rows, columns, depth))?;
+                Ok(None)
+            }
+            Expect::Record(count, depth) => {
+                self.push(Expect::Record(count - 1, depth))?;
+                self.push(Expect::Value(depth + 1, RetainedContext::Field))?;
+                self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Field))?;
+                Ok(None)
+            }
+            Expect::Values(count, depth, context) => {
+                self.push(Expect::Values(count - 1, depth, context))?;
+                self.push(Expect::Value(depth + 1, context))?;
+                Ok(None)
+            }
+            Expect::Varints(count, role) => {
+                self.push(Expect::Varints(count - 1, role))?;
+                self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Scalar(role)))?;
+                Ok(None)
+            }
+            Expect::F64s(count) => {
+                self.push(Expect::F64s(count - 1))?;
+                self.push(Expect::F64([0; 8], 0))?;
+                Ok(None)
+            }
+            Expect::Statements(count, depth) => {
+                self.push(Expect::Statements(count - 1, depth))?;
+                self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Record(depth + 1)))?;
+                self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Scalar(RetainedValueRole::Symbol)))?;
+                Ok(None)
+            }
+            Expect::Map(count, depth, context) => {
+                self.push(Expect::Map(count - 1, depth, context))?;
+                self.push(Expect::Value(depth + 1, context))?;
+                self.string()?;
+                Ok(None)
+            }
+            Expect::TableColumns(count, rows, depth) => {
+                self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::TableField(rows, count - 1, depth)))?;
+                Ok(None)
+            }
+            other => {
+                self.push(other)?;
+                Ok(None)
+            }
+        }
+    }
+
+    fn after(&mut self, value: u64, after: AfterVarint) -> Result<RetainedValueToken, PackError> {
+        match after {
+            AfterVarint::Record(depth) => {
+                self.count(value)?;
+                self.push(Expect::End(RetainedValueContainer::Record))?;
+                self.push(Expect::Record(value, depth))?;
+                Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::Record, count: value })
+            }
+            AfterVarint::Field => {
+                if value > u16::MAX as u64 {
+                    return Err(PackError::Malformed { what: "field-id", offset: self.offset, detail: "exceeds u16".into() });
+                }
+                Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::FieldId, value })
+            }
+            AfterVarint::Scalar(role) => {
+                if role == RetainedValueRole::Integer {
+                    Ok(RetainedValueToken::Signed(((value >> 1) as i64) ^ -((value & 1) as i64)))
+                } else {
+                    Ok(RetainedValueToken::Unsigned { role, value })
+                }
+            }
+            AfterVarint::Sequence(kind, depth, context) => {
+                self.count(value)?;
+                self.push(Expect::End(kind))?;
+                self.push(Expect::Values(value, depth, context))?;
+                Ok(RetainedValueToken::Begin { kind, count: value })
+            }
+            AfterVarint::Statements(depth) => {
+                self.count(value)?;
+                self.push(Expect::End(RetainedValueContainer::Statements))?;
+                self.push(Expect::Statements(value, depth))?;
+                Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::Statements, count: value })
+            }
+            AfterVarint::Map(depth, context) => {
+                self.count(value)?;
+                self.push(Expect::End(RetainedValueContainer::Map))?;
+                self.push(Expect::Map(value, depth, context))?;
+                Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::Map, count: value })
+            }
+            AfterVarint::String => {
+                if value > self.limits.max_segment_len {
+                    return Err(PackError::LimitExceeded("retained string length"));
+                }
+                self.push(Expect::Utf8(value, RetainedUtf8::default()))?;
+                Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::StringLength, value })
+            }
+            AfterVarint::Bytes => {
+                if value > self.limits.max_segment_len {
+                    return Err(PackError::LimitExceeded("retained bytes length"));
+                }
+                self.push(Expect::Bytes(value))?;
+                Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::BytesLength, value })
+            }
+            AfterVarint::Chunks => {
+                self.count(value)?;
+                self.push(Expect::End(RetainedValueContainer::ChunkedBytes))?;
+                self.push(Expect::Varints(value, RetainedValueRole::Chunk))?;
+                Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::ChunkedBytes, count: value })
+            }
+            AfterVarint::TableRows(depth) => {
+                self.count(value)?;
+                self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::TableColumns(value, depth)))?;
+                Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::TableRows, value })
+            }
+            AfterVarint::TableColumns(rows, depth) => {
+                self.count(value)?;
+                self.push(Expect::End(RetainedValueContainer::Table))?;
+                self.push(Expect::TableColumns(value, rows, depth))?;
+                Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::Table, count: rows })
+            }
+            AfterVarint::TableField(rows, columns, depth) => {
+                if value > u16::MAX as u64 {
+                    return Err(PackError::Malformed { what: "table-field", offset: self.offset, detail: "exceeds u16".into() });
+                }
+                self.push(Expect::TablePresence(columns, rows, depth))?;
+                Ok(RetainedValueToken::Unsigned { role: RetainedValueRole::TableField, value })
+            }
+            AfterVarint::Packed(kind) => {
+                self.count(value)?;
+                self.push(Expect::End(kind))?;
+                self.push(match kind {
+                    RetainedValueContainer::PackedF64 => Expect::F64s(value),
+                    RetainedValueContainer::PackedVarint => Expect::Varints(value, RetainedValueRole::Integer),
+                    _ => unreachable!(),
+                })?;
+                Ok(RetainedValueToken::Begin { kind, count: value })
+            }
+        }
+    }
+
+    fn tag(&mut self, offset: u64, tag: u8, depth: u16, context: RetainedContext) -> Result<RetainedValueToken, PackError> {
+        if depth > self.limits.max_depth {
+            return Err(PackError::LimitExceeded("retained value depth"));
+        }
+        if context == RetainedContext::Dsl && !matches!(tag, TAG_FALSE | TAG_TRUE | TAG_F64 | TAG_STR | TAG_STR_INLINE | TAG_LIST | TAG_MAP | TAG_NULL) {
+            return Err(PackError::Malformed { what: "dsl-value", offset, detail: "field-only tag".into() });
+        }
+        if context == RetainedContext::Field && tag == TAG_NULL {
+            return Err(PackError::Malformed { what: "field-value", offset, detail: "DSL-only null".into() });
+        }
+        match tag {
+            TAG_ABSENT | TAG_FALSE | TAG_TRUE | TAG_NULL => {}
+            TAG_INT => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Scalar(RetainedValueRole::Integer)))?,
+            TAG_UINT => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Scalar(RetainedValueRole::Unsigned)))?,
+            TAG_F64 => self.push(Expect::F64([0; 8], 0))?,
+            TAG_STR => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Scalar(RetainedValueRole::Symbol)))?,
+            TAG_STR_INLINE => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::String))?,
+            TAG_BYTES => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Bytes))?,
+            TAG_BYTES_CHUNKED => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Chunks))?,
+            TAG_ENUM => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Scalar(RetainedValueRole::Enum)))?,
+            TAG_TUPLE | TAG_LIST => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Sequence(if tag == TAG_TUPLE { RetainedValueContainer::Tuple } else { RetainedValueContainer::List }, depth, context)))?,
+            TAG_RECORD => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Record(depth + 1)))?,
+            TAG_BLOCK => self.push(Expect::Value(depth + 1, context))?,
+            TAG_STATEMENTS => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Statements(depth)))?,
+            TAG_MAP => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Map(depth, context)))?,
+            TAG_VALUE => self.push(Expect::Value(depth + 1, RetainedContext::Dsl))?,
+            TAG_WIRE => {
+                self.push(Expect::End(RetainedValueContainer::Wire))?;
+                self.push(Expect::Wire(depth))?;
+            }
+            TAG_TABLE_SOA => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::TableRows(depth)))?,
+            TAG_PACKED_F64 | TAG_PACKED_VARINT => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Packed(if tag == TAG_PACKED_F64 { RetainedValueContainer::PackedF64 } else { RetainedValueContainer::PackedVarint })))?,
+            TAG_EXPR => self.string()?,
+            _ => return Err(PackError::Malformed { what: "retained-tag", offset, detail: "unknown tag".into() }),
+        }
+        if tag == TAG_WIRE {
+            Ok(RetainedValueToken::Begin { kind: RetainedValueContainer::Wire, count: 1 })
+        } else {
+            Ok(RetainedValueToken::Tag { offset, value: tag })
+        }
+    }
+
+    pub fn grant(&mut self) -> Result<Option<RetainedValueToken>, PackError> {
+        let Some(expectation) = self.stack.pop() else { return Ok(None) };
+        let control = matches!(
+            expectation,
+            Expect::Finish
+                | Expect::End(..)
+                | Expect::Record(..)
+                | Expect::Values(..)
+                | Expect::Varints(..)
+                | Expect::F64s(..)
+                | Expect::Statements(..)
+                | Expect::Map(..)
+                | Expect::TableColumns(..)
+                | Expect::Utf8(0, _)
+                | Expect::Bytes(0)
+                | Expect::TableBitmap(0, ..)
+        );
+        if control {
+            return self.control(expectation);
+        }
+        let Some((offset, byte)) = self.pending.take() else {
+            self.stack.push(expectation);
+            return if self.sealed { Err(PackError::Truncated(self.offset)) } else { Ok(None) };
+        };
+        self.offset += 1;
+        match expectation {
+            Expect::Value(depth, context) => self.tag(offset, byte, depth, context).map(Some),
+            Expect::StringTag => match byte {
+                TAG_STR => {
+                    self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Scalar(RetainedValueRole::Symbol)))?;
+                    Ok(Some(RetainedValueToken::Tag { offset, value: byte }))
+                }
+                TAG_STR_INLINE => {
+                    self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::String))?;
+                    Ok(Some(RetainedValueToken::Tag { offset, value: byte }))
+                }
+                _ => Err(PackError::Malformed { what: "retained-string", offset, detail: "expected string tag".into() }),
+            },
+            Expect::Varint(mut cursor, after) => match cursor.admit(byte, offset)? {
+                Some(value) => self.after(value, after).map(Some),
+                None => {
+                    self.push(Expect::Varint(cursor, after))?;
+                    Ok(None)
+                }
+            },
+            Expect::F64(mut bytes, index) => {
+                bytes[index] = byte;
+                if index == 7 {
+                    Ok(Some(RetainedValueToken::F64(u64::from_le_bytes(bytes))))
+                } else {
+                    self.push(Expect::F64(bytes, index + 1))?;
+                    Ok(None)
+                }
+            }
+            Expect::Utf8(remaining, mut cursor) => {
+                let token = cursor.admit(byte, offset)?.map(RetainedValueToken::StringChar);
+                if remaining > 1 {
+                    self.push(Expect::Utf8(remaining - 1, cursor))?;
+                } else if cursor.remaining != 0 {
+                    return Err(PackError::Malformed { what: "retained-utf8", offset, detail: "truncated scalar".into() });
+                }
+                Ok(token)
+            }
+            Expect::Bytes(remaining) => {
+                if remaining > 1 {
+                    self.push(Expect::Bytes(remaining - 1))?;
+                }
+                Ok(Some(RetainedValueToken::Byte(byte)))
+            }
+            Expect::Wire(depth) => {
+                if byte & !7 != 0 || (byte & 2 != 0 && byte & 1 == 0) {
+                    return Err(PackError::Malformed { what: "wire-presence", offset, detail: "invalid bits".into() });
+                }
+                self.push(Expect::Value(depth + 1, RetainedContext::Dsl))?;
+                if byte & 4 != 0 {
+                    self.push(Expect::WireLabel)?;
+                }
+                if byte & 1 != 0 {
+                    self.push(Expect::WireNode)?;
+                }
+                self.push(Expect::WireNode)?;
+                Ok(Some(RetainedValueToken::WirePresence(byte)))
+            }
+            Expect::WireNode => {
+                if byte & !3 != 0 {
+                    return Err(PackError::Malformed { what: "wire-node", offset, detail: "invalid bits".into() });
+                }
+                if byte & 2 != 0 {
+                    self.string()?;
+                }
+                if byte & 1 != 0 {
+                    self.string()?;
+                }
+                self.string()?;
+                Ok(Some(RetainedValueToken::WireNodePresence(byte)))
+            }
+            Expect::WireLabel => {
+                if byte & !3 != 0 {
+                    return Err(PackError::Malformed { what: "wire-label", offset, detail: "invalid bits".into() });
+                }
+                if byte & 2 != 0 {
+                    self.string()?;
+                }
+                if byte & 1 != 0 {
+                    self.string()?;
+                }
+                Ok(Some(RetainedValueToken::WireLabelPresence(byte)))
+            }
+            Expect::TablePresence(columns, rows, depth) => {
+                match byte {
+                    0 => self.push(Expect::TableElem(rows, rows, columns, depth))?,
+                    1 => self.push(Expect::TableBitmap(rows.div_ceil(8), 0, rows, 0, columns, depth))?,
+                    _ => return Err(PackError::Malformed { what: "table-presence", offset, detail: "expected 0 or 1".into() }),
+                }
+                Ok(Some(RetainedValueToken::TablePresence { rows, value: byte }))
+            }
+            Expect::TableBitmap(bytes, row, rows, mut present, columns, depth) => {
+                let used = (rows - row).min(8) as u8;
+                let mask = if used == 8 { u8::MAX } else { ((1u16 << used) - 1) as u8 };
+                if byte & !mask != 0 {
+                    return Err(PackError::NonCanonical("table bitmap padding bits"));
+                }
+                present += (byte & mask).count_ones() as u64;
+                if bytes > 1 {
+                    self.push(Expect::TableBitmap(bytes - 1, row + 8, rows, present, columns, depth))?;
+                } else {
+                    self.push(Expect::TableElem(present, rows, columns, depth))?;
+                }
+                Ok(Some(RetainedValueToken::TableBitmap { first_row: row, value: byte }))
+            }
+            Expect::TableElem(present, rows, columns, depth) => {
+                self.push(Expect::TableColumns(columns, rows, depth))?;
+                self.push(match byte {
+                    ELEM_FALLBACK => Expect::Values(present, depth, RetainedContext::Field),
+                    ELEM_BOOL => Expect::Bytes(rows.div_ceil(8)),
+                    ELEM_INT => Expect::Varints(present, RetainedValueRole::Integer),
+                    ELEM_UINT => Expect::Varints(present, RetainedValueRole::Unsigned),
+                    ELEM_F64 => Expect::F64s(present),
+                    ELEM_STR => Expect::Varints(present, RetainedValueRole::Symbol),
+                    ELEM_ENUM => Expect::Varints(present, RetainedValueRole::Enum),
+                    _ => return Err(PackError::Malformed { what: "table-element", offset, detail: "unknown tag".into() }),
+                })?;
+                Ok(Some(RetainedValueToken::Tag { offset, value: byte }))
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize) -> crate::os_pack::format::RetainedPackCloseStep {
+        self.pending = None;
+        if maximum_items == 0 {
+            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.stack.pop().is_some() {
+            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        self.closed = true;
+        crate::os_pack::format::RetainedPackCloseStep::Complete
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closed && self.stack.is_empty() && self.pending.is_none()
+    }
+}
+
+impl Drop for RetainedValueCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "retained value cursor reached Drop before terminal-empty close");
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainedRecordBodyToken {
+    Catalog { symbols: u64 },
+    SymbolChar { symbol: u64, character: char },
+    CatalogComplete,
+    Value(RetainedValueToken),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RetainedRecordBodyPhase {
+    SymbolCount(RetainedVarint),
+    SymbolLength { symbol: u64, cursor: RetainedVarint },
+    SymbolText { symbol: u64, remaining: u64, cursor: RetainedUtf8 },
+    Value,
+    Closing,
+    Closed,
+}
+
+/// 🧵️ Retained cursor for the canonical container-less record-body wire used by mutations.
+/// It owns a fixed symbol registry and forwards the record value without constructing a
+/// schema-erased record.
+pub struct RetainedRecordBodyCursor {
+    limits: PackLimits,
+    phase: RetainedRecordBodyPhase,
+    symbols: Vec<String>,
+    expected_symbols: u64,
+    offset: u64,
+    value_offset: u64,
+    pending: Option<(u64, u8)>,
+    sealed: bool,
+    value_sealed: bool,
+    value: std::mem::ManuallyDrop<Option<RetainedValueCursor>>,
+}
+
+impl RetainedRecordBodyCursor {
+    pub fn try_new(limits: PackLimits) -> Result<Self, PackError> {
+        if limits.max_symbols == 0 || limits.max_items == 0 || limits.max_depth == 0 {
+            return Err(PackError::LimitExceeded("retained record-body credits"));
+        }
+        Ok(Self {
+            limits,
+            phase: RetainedRecordBodyPhase::SymbolCount(RetainedVarint::default()),
+            symbols: Vec::new(),
+            expected_symbols: 0,
+            offset: 0,
+            value_offset: 0,
+            pending: None,
+            sealed: false,
+            value_sealed: false,
+            value: std::mem::ManuallyDrop::new(None),
+        })
+    }
+
+    pub fn admit_byte(&mut self, offset: u64, value: u8) -> Result<(), (u64, u8)> {
+        if self.sealed || self.pending.is_some() || offset != self.offset || matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed) {
+            return Err((offset, value));
+        }
+        self.pending = Some((offset, value));
+        Ok(())
+    }
+
+    pub fn seal(&mut self, bytes: u64) -> Result<(), PackError> {
+        if self.pending.is_some() || bytes != self.offset {
+            return Err(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "seal position mismatch".into() });
+        }
+        self.sealed = true;
+        Ok(())
+    }
+
+    pub fn symbol_chars(&self, symbol: u64) -> Result<usize, PackError> {
+        self.symbols.get(symbol as usize).map(|value| value.chars().count()).ok_or_else(|| PackError::Malformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry".into() })
+    }
+
+    pub fn symbol_char(&self, symbol: u64, index: usize) -> Result<Option<char>, PackError> {
+        self.symbols.get(symbol as usize).map(|value| value.chars().nth(index)).ok_or_else(|| PackError::Malformed { what: "retained-record-body-symbol", offset: self.offset, detail: "symbol is outside admitted registry".into() })
+    }
+
+    pub fn grant(&mut self) -> Result<Option<RetainedRecordBodyToken>, PackError> {
+        if matches!(self.phase, RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed) {
+            return Err(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "grant after close".into() });
+        }
+        if self.phase == RetainedRecordBodyPhase::Value {
+            if let Some((offset, byte)) = self.pending.take() {
+                self.value.as_mut().ok_or(PackError::Malformed { what: "retained-record-body", offset, detail: "value owner missing".into() })?.admit_byte(self.value_offset, byte).map_err(|_| PackError::Malformed {
+                    what: "retained-record-body",
+                    offset,
+                    detail: "value producer handback".into(),
+                })?;
+                self.offset += 1;
+                self.value_offset += 1;
+            } else if self.sealed && !self.value_sealed {
+                self.value.as_mut().ok_or(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing".into() })?.seal(self.value_offset)?;
+                self.value_sealed = true;
+            }
+            return self.value.as_mut().ok_or(PackError::Malformed { what: "retained-record-body", offset: self.offset, detail: "value owner missing".into() })?.grant().map(|token| token.map(RetainedRecordBodyToken::Value));
+        }
+        let Some((offset, byte)) = self.pending.take() else {
+            return if self.sealed { Err(PackError::Truncated(self.offset)) } else { Ok(None) };
+        };
+        self.offset += 1;
+        match self.phase {
+            RetainedRecordBodyPhase::SymbolCount(mut cursor) => match cursor.admit(byte, offset)? {
+                None => self.phase = RetainedRecordBodyPhase::SymbolCount(cursor),
+                Some(symbols) => {
+                    if symbols > u64::from(self.limits.max_symbols) {
+                        return Err(PackError::LimitExceeded("retained record-body symbol count"));
+                    }
+                    self.symbols.try_reserve_exact(symbols as usize).map_err(|_| PackError::LimitExceeded("retained record-body symbol registry"))?;
+                    self.expected_symbols = symbols;
+                    if symbols == 0 {
+                        *self.value = Some(RetainedValueCursor::try_new(self.limits.clone())?);
+                        self.phase = RetainedRecordBodyPhase::Value;
+                        return Ok(Some(RetainedRecordBodyToken::CatalogComplete));
+                    }
+                    self.phase = RetainedRecordBodyPhase::SymbolLength { symbol: 0, cursor: RetainedVarint::default() };
+                    return Ok(Some(RetainedRecordBodyToken::Catalog { symbols }));
+                }
+            },
+            RetainedRecordBodyPhase::SymbolLength { symbol, mut cursor } => match cursor.admit(byte, offset)? {
+                None => self.phase = RetainedRecordBodyPhase::SymbolLength { symbol, cursor },
+                Some(length) => {
+                    if length > self.limits.max_segment_len {
+                        return Err(PackError::LimitExceeded("retained record-body symbol length"));
+                    }
+                    let mut value = String::new();
+                    value.try_reserve_exact(length as usize).map_err(|_| PackError::LimitExceeded("retained record-body symbol"))?;
+                    self.symbols.push(value);
+                    if length == 0 {
+                        if symbol + 1 == self.expected_symbols {
+                            *self.value = Some(RetainedValueCursor::try_new(self.limits.clone())?);
+                            self.phase = RetainedRecordBodyPhase::Value;
+                            return Ok(Some(RetainedRecordBodyToken::CatalogComplete));
+                        }
+                        self.phase = RetainedRecordBodyPhase::SymbolLength { symbol: symbol + 1, cursor: RetainedVarint::default() };
+                    } else {
+                        self.phase = RetainedRecordBodyPhase::SymbolText { symbol, remaining: length, cursor: RetainedUtf8::default() };
+                    }
+                }
+            },
+            RetainedRecordBodyPhase::SymbolText { symbol, remaining, mut cursor } => {
+                let character = cursor.admit(byte, offset)?;
+                let next = remaining - 1;
+                if next == 0 {
+                    if cursor.remaining != 0 {
+                        return Err(PackError::Malformed { what: "retained-record-body-symbol", offset, detail: "truncated UTF-8 scalar".into() });
+                    }
+                    if symbol + 1 == self.expected_symbols {
+                        *self.value = Some(RetainedValueCursor::try_new(self.limits.clone())?);
+                        self.phase = RetainedRecordBodyPhase::Value;
+                    } else {
+                        self.phase = RetainedRecordBodyPhase::SymbolLength { symbol: symbol + 1, cursor: RetainedVarint::default() };
+                    }
+                } else {
+                    self.phase = RetainedRecordBodyPhase::SymbolText { symbol, remaining: next, cursor };
+                }
+                if let Some(character) = character {
+                    self.symbols[symbol as usize].push(character);
+                    return Ok(Some(RetainedRecordBodyToken::SymbolChar { symbol, character }));
+                }
+                if self.phase == RetainedRecordBodyPhase::Value {
+                    return Ok(Some(RetainedRecordBodyToken::CatalogComplete));
+                }
+            }
+            RetainedRecordBodyPhase::Value | RetainedRecordBodyPhase::Closing | RetainedRecordBodyPhase::Closed => unreachable!(),
+        }
+        Ok(None)
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize) -> crate::os_pack::format::RetainedPackCloseStep {
+        self.phase = RetainedRecordBodyPhase::Closing;
+        self.pending = None;
+        if maximum_items == 0 {
+            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(value) = self.value.as_mut() {
+            if value.close_step(1) != crate::os_pack::format::RetainedPackCloseStep::Complete {
+                return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            drop(self.value.take());
+            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.symbols.pop().is_some() {
+            return crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        self.phase = RetainedRecordBodyPhase::Closed;
+        crate::os_pack::format::RetainedPackCloseStep::Complete
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.phase == RetainedRecordBodyPhase::Closed && self.value.is_none() && self.symbols.is_empty() && self.pending.is_none()
+    }
+}
+
+impl Drop for RetainedRecordBodyCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "retained record-body cursor reached Drop before terminal-empty close");
+    }
+}
+//#endregion 🔖️RetainedValue
+
 //#region 🔖️Decode
 /// @emoji 🧭️ Where symrefs and chunk ids resolve during one decode: a full opened `PackFile`
 /// (the `decode_document` path) or a container-less inline symbol table (the
@@ -1922,6 +2694,110 @@ mod tests {
         let (decoded, report) = decode_record_body(&bytes, &narrow, &DecodeOptions::default()).expect("decode");
         assert_eq!(decoded.get(9), Some(&FieldValue::Text("kept".to_string())));
         assert_eq!(report.unknown_field_ids, vec![9]);
+    }
+
+    #[test]
+    fn retained_value_vm_covers_every_wire_tag_and_terminal_empty_close() {
+        let mut bytes = vec![23];
+        let values: Vec<Vec<u8>> = vec![
+            vec![TAG_ABSENT],
+            vec![TAG_FALSE],
+            vec![TAG_TRUE],
+            vec![TAG_INT, 2],
+            vec![TAG_UINT, 1],
+            [vec![TAG_F64], 1f64.to_le_bytes().to_vec()].concat(),
+            vec![TAG_STR, 0],
+            vec![TAG_STR_INLINE, 1, b'a'],
+            vec![TAG_BYTES, 1, 7],
+            vec![TAG_BYTES_CHUNKED, 1, 0],
+            vec![TAG_ENUM, 1],
+            vec![TAG_TUPLE, 0],
+            vec![TAG_LIST, 0],
+            vec![TAG_RECORD, 0],
+            vec![TAG_BLOCK, TAG_TRUE],
+            vec![TAG_STATEMENTS, 0],
+            vec![TAG_MAP, 0],
+            vec![TAG_VALUE, TAG_NULL],
+            vec![TAG_WIRE, 0, 0, TAG_STR_INLINE, 1, b'n', TAG_NULL],
+            vec![TAG_TABLE_SOA, 0, 0],
+            vec![TAG_PACKED_F64, 0],
+            vec![TAG_PACKED_VARINT, 0],
+            vec![TAG_EXPR, TAG_STR_INLINE, 1, b'x'],
+        ];
+        for (field, value) in values.iter().enumerate() {
+            bytes.push(field as u8);
+            bytes.extend_from_slice(value);
+        }
+        let limits = PackLimits { max_file_len: 4096, max_segment_len: 4096, max_symbols: 8, max_depth: 32, max_items: 64, max_total_alloc: 4096 };
+        let mut cursor = RetainedValueCursor::try_new(limits).expect("cursor");
+        let mut tags = Vec::new();
+        for (offset, byte) in bytes.iter().copied().enumerate() {
+            cursor.admit_byte(offset as u64, byte).expect("admission");
+            while cursor.pending.is_some() {
+                if let Some(RetainedValueToken::Tag { value, .. }) = cursor.grant().expect("grant") {
+                    tags.push(value);
+                }
+            }
+        }
+        cursor.seal(bytes.len() as u64).expect("seal");
+        loop {
+            if matches!(cursor.grant().expect("finish"), Some(RetainedValueToken::Complete { .. })) {
+                break;
+            }
+        }
+        for tag in 0u8..=0x17 {
+            assert!(tags.contains(&tag), "missing retained tag {tag:#04x}");
+        }
+        while cursor.close_step(1) != crate::os_pack::format::RetainedPackCloseStep::Complete {}
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn retained_value_vm_rejects_truncation_utf8_depth_and_counts() {
+        let limits = PackLimits { max_file_len: 64, max_segment_len: 8, max_symbols: 1, max_depth: 1, max_items: 1, max_total_alloc: 64 };
+        let mut truncated = RetainedValueCursor::try_new(limits.clone()).expect("truncated");
+        truncated.admit_byte(0, 1).expect("count");
+        truncated.grant().expect("count grant");
+        truncated.seal(1).expect("seal");
+        while truncated.grant().expect_err("truncated value") != PackError::Truncated(1) {}
+        while truncated.close_step(1) != crate::os_pack::format::RetainedPackCloseStep::Complete {}
+
+        let mut count = RetainedValueCursor::try_new(limits.clone()).expect("count");
+        count.admit_byte(0, 2).expect("count byte");
+        assert!(matches!(count.grant(), Err(PackError::LimitExceeded(_))));
+        while count.close_step(1) != crate::os_pack::format::RetainedPackCloseStep::Complete {}
+
+        let mut utf8 = RetainedValueCursor::try_new(limits).expect("utf8");
+        let mut invalid_utf8 = false;
+        for (offset, byte) in [1, 0, TAG_STR_INLINE, 1, 0xff].into_iter().enumerate() {
+            utf8.admit_byte(offset as u64, byte).expect("utf8 admission");
+            while utf8.pending.is_some() {
+                if utf8.grant().is_err() {
+                    invalid_utf8 = true;
+                    break;
+                }
+            }
+        }
+        assert!(invalid_utf8);
+        while utf8.close_step(1) != crate::os_pack::format::RetainedPackCloseStep::Complete {}
+
+        let depth_limits = PackLimits { max_file_len: 64, max_segment_len: 8, max_symbols: 1, max_depth: 1, max_items: 4, max_total_alloc: 64 };
+        let mut depth = RetainedValueCursor::try_new(depth_limits).expect("depth");
+        let mut depth_failed = false;
+        for (offset, byte) in [1, 0, TAG_BLOCK, TAG_BLOCK, TAG_TRUE].into_iter().enumerate() {
+            depth.admit_byte(offset as u64, byte).expect("depth admission");
+            while depth.pending.is_some() {
+                if matches!(depth.grant(), Err(PackError::LimitExceeded(_))) {
+                    depth_failed = true;
+                    break;
+                }
+            }
+            if depth_failed {
+                break;
+            }
+        }
+        assert!(depth_failed);
+        while depth.close_step(1) != crate::os_pack::format::RetainedPackCloseStep::Complete {}
     }
     //#endregion 🔖️RecordBody
 }

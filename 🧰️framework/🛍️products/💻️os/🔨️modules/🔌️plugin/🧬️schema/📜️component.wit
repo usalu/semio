@@ -993,17 +993,10 @@ interface reactor {
     block-62: command-page-block,
     block-63: command-page-block,
   }
-  record command-ingress-fault {
+  record command-ingress-status {
+    kind: u8,
     cursor: command-page-cursor,
-    fault: plugin-error,
-  }
-  variant command-ingress-status {
-    idle,
-    page-accepted(command-page-cursor),
-    backpressure(command-page-cursor),
-    command-pending(command-page-cursor),
-    command-complete(command-page-cursor),
-    fault(command-ingress-fault),
+    fault: list<u8>,
   }
   variant turn-status {
     idle,

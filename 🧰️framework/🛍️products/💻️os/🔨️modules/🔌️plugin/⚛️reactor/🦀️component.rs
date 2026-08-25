@@ -53,7 +53,7 @@ use std::cell::{Cell, RefCell};
 // collections; all identity and close authority is held by fixed direct registries below.
 use std::collections::{HashMap, VecDeque};
 
-thread_local! {
+crate::component_persistent_local! {
     /// 🩹️ One `PatchTracker` shared by every instance this actor hosts (surfaces are already
     /// namespaced by their own `surface` string, which today embeds the instance — see
     /// `render_surface`'s key).
@@ -96,7 +96,7 @@ thread_local! {
     /// (previously always defaulted — see `wit_event_to_kernel`'s `InstanceOpen` arm) and dropped
     /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.
     static REACTOR_CLOSES: RefCell<ReactorCloseRegistry> = RefCell::new(ReactorCloseRegistry::new());
-    static REACTOR_CLOSE_CURSOR: Cell<usize> = const { Cell::new(0) };
+    static REACTOR_CLOSE_CURSOR: Cell<usize> = Cell::new(0);
 }
 
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): one `AsyncTask` this actor's
@@ -978,8 +978,8 @@ mod wit_bridge {
         Terminal { cursor: semio_framework::kernel::CommandPageCursor },
     }
 
-    thread_local! {
-        static COMMAND_INGRESS: RefCell<[Option<CommandIngressOwner>; 2]> = const { RefCell::new([None, None]) };
+    crate::component_persistent_local! {
+        static COMMAND_INGRESS: RefCell<[Option<CommandIngressOwner>; 2]> = RefCell::new([None, None]);
     }
 
     const DIRTY_RENDER_CAPACITY: usize = 64;
@@ -1519,7 +1519,6 @@ mod wit_bridge {
                 ingress.borrow_mut()[retained_slot] = Some(retained);
             });
         }
-
         // 🎯️ M1: surviving intents dispatch through the SAME `route_app_frame`/effects/events plumbing
         // as `app_commands` above, immediately after it (so a mutation an app command made this turn is
         // already visible to the intent's own dispatch) — via the NEW `plugin_dispatch_intents`, which
@@ -1859,7 +1858,7 @@ mod wit_bridge {
         }
     }
 
-    thread_local! {
+    crate::component_persistent_local! {
         static PENDING_PATCHES: RefCell<PendingPatchAuthority> = RefCell::new(PendingPatchAuthority::new());
     }
 
@@ -2108,6 +2107,26 @@ mod wit_bridge {
         }
     }
 
+    /// 💤️ Canonical cursor payload for the scalar idle command-ingress record.
+    fn idle_command_cursor_to_wit() -> crate::component::component::exports::semio::framework::reactor::CommandPageCursor {
+        use crate::component::component::exports::semio::framework::reactor as wit;
+        wit::CommandPageCursor { owner: 0, generation: 0, command_index: 0, command_count: 0, instance: 0, seq: 0, kind: 0, page_index: 0, page_count: 0, item_count: 0, metadata: 0 }
+    }
+
+    /// 🔢️ Kernel command ingress → scalar WIT record, avoiding nested variant discriminants in async results.
+    fn kernel_command_ingress_to_wit(status: semio_framework::kernel::CommandIngressStatus) -> crate::component::component::exports::semio::framework::reactor::CommandIngressStatus {
+        use crate::component::component::exports::semio::framework::reactor as wit;
+        let (kind, cursor, fault) = match status {
+            semio_framework::kernel::CommandIngressStatus::Idle => (0, idle_command_cursor_to_wit(), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor) => (1, kernel_command_cursor_to_wit(cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::Backpressure(cursor) => (2, kernel_command_cursor_to_wit(cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::CommandPending(cursor) => (3, kernel_command_cursor_to_wit(cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::CommandComplete(cursor) => (4, kernel_command_cursor_to_wit(cursor), Vec::new()),
+            semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault } => (5, kernel_command_cursor_to_wit(cursor), fault),
+        };
+        wit::CommandIngressStatus { kind, cursor, fault }
+    }
+
     fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
         store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default()
     }
@@ -2213,14 +2232,7 @@ mod wit_bridge {
                 TurnStatus::Faulted(bytes) => wit::TurnStatus::Faulted(bytes),
             },
             fuel_used: result.fuel_used,
-            command_ingress: match result.command_ingress {
-                semio_framework::kernel::CommandIngressStatus::Idle => wit::CommandIngressStatus::Idle,
-                semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor) => wit::CommandIngressStatus::PageAccepted(kernel_command_cursor_to_wit(cursor)),
-                semio_framework::kernel::CommandIngressStatus::Backpressure(cursor) => wit::CommandIngressStatus::Backpressure(kernel_command_cursor_to_wit(cursor)),
-                semio_framework::kernel::CommandIngressStatus::CommandPending(cursor) => wit::CommandIngressStatus::CommandPending(kernel_command_cursor_to_wit(cursor)),
-                semio_framework::kernel::CommandIngressStatus::CommandComplete(cursor) => wit::CommandIngressStatus::CommandComplete(kernel_command_cursor_to_wit(cursor)),
-                semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault } => wit::CommandIngressStatus::Fault(wit::CommandIngressFault { cursor: kernel_command_cursor_to_wit(cursor), fault: wit_types::PluginError::Fault(fault) }),
-            },
+            command_ingress: kernel_command_ingress_to_wit(result.command_ingress),
         })
     }
 

@@ -1072,6 +1072,18 @@ impl ArtifactEditor for CadPlayApp {
     const DIALECT: Dialect = crate::artifacts::cad::CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
 
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<CadPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.cad.cad@1/*#editor",
+        document_schema: "cad.scene",
+        factory: "BoundedFirstStepCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        tools: [
+            "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "addNode", "renameNode", "translateSelection", "rotateSelection", "scaleSelection", "applyTransformation", "importCadFile", "patchCadPlayReference", "engagementSubmit", "focusModelDefinition", "setActiveExample", "worldPointerDown", "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast", "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setActiveUtility", "setContributions", "saveSelected", "saveInPlay", "saveCurrent", "loadRawRequest",
+        ]
+    }
+
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::cad::config::schema::app_schema_descriptor())
     }

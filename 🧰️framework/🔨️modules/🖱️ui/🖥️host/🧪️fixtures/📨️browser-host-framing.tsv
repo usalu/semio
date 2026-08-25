@@ -1,0 +1,9 @@
+case	body_bytes	envelope_bytes	encoded_bytes	first_capacity	retry_capacity	expectation
+event-empty	0	27	27	1024	0	copied-once
+event-exact	1024	27	1051	1024	1051	retained-exact-retry
+event-max-plus-one	1025	27	1052	1024	0	rejected-before-copy
+page-exact	1033	18	1051	1024	1051	credited-and-acked-once
+page-max-plus-one	1034	18	1052	1024	0	rejected-before-copy
+cancel-between-polls	1024	27	1051	1024	1051	released-pending
+close-between-polls	1024	27	1051	1024	1051	released-closed
+event-ack	1024	27	1051	1024	1051	acknowledged-once

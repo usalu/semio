@@ -1,0 +1,11 @@
+# s.framework.abi/1 name<TAB>maximum<TAB>maximum-plus-one
+operation-code	4095	4096
+event-code	4095	4096
+body-bytes	1048576	1048577
+page-bytes	65536	65537
+message-bytes	1024	1025
+pages-per-transfer	256	257
+transfer-bytes	16777216	16777217
+in-flight-handles	64	65
+in-flight-requests	256	257
+handle-generation	4294967295	4294967296

@@ -54,10 +54,6 @@ semio-framework-actor = { workspace = true }
 semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 semio-framework-async = { workspace = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.106"
-serde-wasm-bindgen = "0.6.5"
-
 [features]
 default = []
 os-host-full = ["dep:zip", "semio-framework-os-kernel/sync"]

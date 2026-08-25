@@ -2730,6 +2730,7 @@ export interface PluginSource {
  * module). */
 export function createDevPluginSource(registry: readonly PluginRegistryEntry[]): PluginSource {
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
+  const bootVersion = Date.now();
   return {
     id: "dev",
     async list() {
@@ -2738,7 +2739,8 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[]):
     moduleUrl(pluginId, rebuiltAt) {
       const entry = byId.get(pluginId);
       if (!entry) throw new Error(`[DEBUG] plugin source "dev" has no registry entry for ${pluginId}`);
-      return rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`;
+      const separator = entry.moduleUrl.includes("?") ? "&" : "?";
+      return `${entry.moduleUrl}${separator}v=${rebuiltAt ?? bootVersion}`;
     },
     subscribe(listener) {
       if (typeof EventSource === "undefined") return () => {};
@@ -2758,6 +2760,23 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[]):
 /** @emoji 🧩️ Dev-server SSE endpoint for {@link createExtensionSource} — paired with the `/extensions`
  * static route the extension store materializes at install time. */
 export const EXTENSION_SOURCE_WATCH_PATH = "/extensions/watch";
+
+type ExtensionSourceWireEvent =
+  | { readonly kind: "snapshot"; readonly extensions: readonly { readonly extensionId: string; readonly installedAt: number }[] }
+  | { readonly kind: "installed"; readonly extensionId: string; readonly installedAt: number }
+  | { readonly kind: "uninstalled"; readonly extensionId: string };
+
+/** @emoji 🔁️ Converts the extension store's install vocabulary into the runtime's plugin
+ * availability vocabulary. Uninstall events have no availability equivalent and are ignored. */
+export function extensionSourceEventToPluginSourceEvent(event: ExtensionSourceWireEvent): PluginSourceEvent | undefined {
+  if (event.kind === "snapshot") {
+    if (!Array.isArray(event.extensions)) throw new Error("snapshot extensions must be an array");
+    return { kind: "snapshot", plugins: event.extensions.map((extension) => ({ pluginId: extension.extensionId, rebuiltAt: extension.installedAt })) };
+  }
+  if (event.kind === "installed") return { kind: "built", pluginId: event.extensionId, rebuiltAt: event.installedAt };
+  if (event.kind === "uninstalled") return undefined;
+  throw new Error("unknown extension source event kind");
+}
 
 /** @emoji 🧩️ `PluginSource` backed by the extension store's `/extensions` HTTP tree and its watch SSE
  * stream. Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
@@ -2786,7 +2805,8 @@ export function createExtensionSource(catalog: PluginCatalog): PluginSource {
       const source = new EventSource(EXTENSION_SOURCE_WATCH_PATH);
       source.onmessage = (event) => {
         try {
-          listener(JSON.parse(event.data) as PluginSourceEvent);
+          const normalized = extensionSourceEventToPluginSourceEvent(JSON.parse(event.data) as ExtensionSourceWireEvent);
+          if (normalized) listener(normalized);
         } catch (error) {
           console.warn(`[DEBUG] plugin source "extensions" malformed event: ${error instanceof Error ? error.message : String(error)}`);
         }

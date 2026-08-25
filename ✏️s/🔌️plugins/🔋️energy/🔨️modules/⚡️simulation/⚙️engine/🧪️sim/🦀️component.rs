@@ -1816,6 +1816,7 @@ pub struct EnergyJobAuthority {
     output_payload: Option<semio_framework_job::RetainedJobPayload>,
     commit_census: Option<CommitCensusWork>,
     commit_reservation: Option<EnergyCommitReservation>,
+    commit_acknowledged: bool,
     commit_pages_mounted: usize,
     commit_items_encoded: usize,
     encode_section: u8,
@@ -1968,6 +1969,7 @@ impl EnergyJob {
                 output_payload: None,
                 commit_census: None,
                 commit_reservation: None,
+                commit_acknowledged: false,
                 commit_pages_mounted: 0,
                 commit_items_encoded: 0,
                 encode_section: 0,
@@ -2046,7 +2048,13 @@ impl EnergyJob {
     }
 
     pub fn ack_commit_packet(&mut self, lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
-        self.publication.commits.ack(lease)
+        match self.publication.commits.ack(lease) {
+            Ok(()) => {
+                self.commit_acknowledged = true;
+                Ok(())
+            }
+            Err(lease) => Err(lease),
+        }
     }
 
     pub fn take_fault_packet(&mut self, generation: Generation) -> Result<Option<EnergyWireLease>, EnergyWireRejection> {
@@ -3642,6 +3650,12 @@ impl InteractiveJob for EnergyJob {
                 StepOutcome::Yield
             }
             EnergyJobStage::Complete => {
+                if std::mem::take(&mut self.commit_acknowledged) {
+                    return StepOutcome::Complete(CommitCandidate {
+                        state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                    });
+                }
                 let Some(packet) = self.publication.commits.take_terminal() else { return StepOutcome::Yield };
                 StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output: packet.payload })
             }
@@ -4927,6 +4941,42 @@ mod tests {
         assert_eq!(recovered.identity(), identity);
         queue.ack(recovered).expect("empty recovered packet ACKs once");
         assert_eq!(queue.len, 0);
+    }
+
+    #[test]
+    fn p7c3_commit_lease_ack_is_the_exact_terminal_detach_witness() {
+        let operation = Operation::new(allocate_operation_id(), RevisionId(121), Generation(17), 0x7c3);
+        let mut job = EnergyJob::new(operation, test_model_single_zone(), SimulationConfig::default()).expect("terminal witness admission");
+        job.stage = EnergyJobStage::Complete;
+        let identity = job.wire_identity(1);
+        job.publication
+            .commits
+            .push(EnergyWirePacket { kind: EnergyWireKind::Commit, identity, payload: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput), preview: None, reservation: None })
+            .expect("prepared exact commit");
+
+        let lease = job.take_commit_packet(operation.generation).expect("fresh generation").expect("exact final lease");
+        let mut sequence = 0;
+        let mut leased = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_ms, &mut sequence);
+        assert_eq!(job.step(&mut leased), StepOutcome::Yield, "an unacknowledged exact lease must retain terminal ownership");
+        assert_eq!(job.publication.commits.len, 1);
+        assert!(job.publication.commits.in_flight.is_some());
+
+        job.ack_commit_packet(lease).expect("exact empty commit ACK");
+        assert_eq!(job.publication.commits.len, 0);
+        assert!(job.publication.commits.in_flight.is_none());
+        let mut acknowledged = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_ms, &mut sequence);
+        let mut terminal = job.step(&mut acknowledged);
+        assert!(matches!(terminal, StepOutcome::Complete(_)), "the exact ACK must make the numerical authority terminal");
+        assert!(terminal.terminal_is_empty(), "the consumer retained and closed the only commit owner before terminal detach");
+        assert!(matches!(terminal.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete));
+
+        InteractiveJob::begin_close(&mut job);
+        for _ in 0..100_000 {
+            if matches!(InteractiveJob::close_step(&mut job, 1, 4), semio_framework_job::InteractiveJobCloseStep::Complete) {
+                return;
+            }
+        }
+        panic!("ACK-terminal Energy authority did not close")
     }
 
     #[test]

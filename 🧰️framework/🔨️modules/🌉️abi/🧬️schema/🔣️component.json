@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.framework.abi/1",
+  "title": "Owned ABI Message Ledger",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/AbiRequest" },
+    { "$ref": "#/$defs/AbiReply" },
+    { "$ref": "#/$defs/AbiEvent" },
+    { "$ref": "#/$defs/AbiPage" },
+    { "$ref": "#/$defs/AbiControl" }
+  ],
+  "x-semio-binary": {
+    "version": 1,
+    "byteOrder": "little-endian",
+    "lengthType": "u32",
+    "fieldOrder": "declaration"
+  },
+  "$defs": {
+    "Operation": { "type": "integer", "minimum": 1, "maximum": 4095 },
+    "EventCode": { "type": "integer", "minimum": 1, "maximum": 4095 },
+    "Generation": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "RequestId": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "BodyBytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "maxItems": 1048576 },
+    "PageBytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "maxItems": 65536 },
+    "MessageBytes": { "type": "string", "maxLength": 1024, "contentEncoding": "utf-8" },
+    "Handle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "generation"],
+      "properties": {
+        "slot": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "generation": { "type": "integer", "minimum": 1, "maximum": 4294967295 }
+      }
+    },
+    "AbiError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "integer", "minimum": 1, "maximum": 21 },
+        "message": { "$ref": "#/$defs/MessageBytes" }
+      }
+    },
+    "Status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "error": { "oneOf": [{ "$ref": "#/$defs/AbiError" }, { "type": "null" }] }
+      }
+    },
+    "AbiRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "operation", "requestId", "generation", "bytes"],
+      "properties": {
+        "kind": { "const": "request" },
+        "operation": { "$ref": "#/$defs/Operation" },
+        "requestId": { "$ref": "#/$defs/RequestId" },
+        "generation": { "$ref": "#/$defs/Generation" },
+        "bytes": { "$ref": "#/$defs/BodyBytes" }
+      }
+    },
+    "AbiReply": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId", "generation", "status", "bytes"],
+      "properties": {
+        "kind": { "const": "reply" },
+        "requestId": { "$ref": "#/$defs/RequestId" },
+        "generation": { "$ref": "#/$defs/Generation" },
+        "status": { "$ref": "#/$defs/Status" },
+        "bytes": { "$ref": "#/$defs/BodyBytes" }
+      }
+    },
+    "AbiEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "requestId", "generation", "sequence", "event", "status", "bytes"],
+      "properties": {
+        "kind": { "const": "event" },
+        "requestId": { "$ref": "#/$defs/RequestId" },
+        "generation": { "$ref": "#/$defs/Generation" },
+        "sequence": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "event": { "$ref": "#/$defs/EventCode" },
+        "status": { "$ref": "#/$defs/Status" },
+        "bytes": { "$ref": "#/$defs/BodyBytes" }
+      }
+    },
+    "AbiPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "handle", "index", "bytes"],
+      "properties": {
+        "kind": { "const": "page" },
+        "handle": { "$ref": "#/$defs/Handle" },
+        "index": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "bytes": { "$ref": "#/$defs/PageBytes" }
+      }
+    },
+    "AbiControl": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "requestId", "generation"],
+          "properties": {
+            "kind": { "const": "cancel" },
+            "requestId": { "$ref": "#/$defs/RequestId" },
+            "generation": { "$ref": "#/$defs/Generation" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "handle"],
+          "properties": { "kind": { "const": "close" }, "handle": { "$ref": "#/$defs/Handle" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "handle", "index"],
+          "properties": {
+            "kind": { "const": "acknowledge" },
+            "handle": { "$ref": "#/$defs/Handle" },
+            "index": { "type": "integer", "minimum": 0, "maximum": 255 }
+          }
+        }
+      ]
+    }
+  }
+}

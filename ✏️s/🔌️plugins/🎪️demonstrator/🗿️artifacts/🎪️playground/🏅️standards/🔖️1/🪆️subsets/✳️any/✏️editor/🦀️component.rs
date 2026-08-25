@@ -51,6 +51,17 @@ impl ArtifactEditor for PlaygroundEditor {
     const DIALECT: Dialect = PLAYGROUND_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
 
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<PlaygroundEditor>,
+        owner_file: "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.demonstrator.playground@1/*#editor",
+        document_schema: "playground.playground",
+        factory: "BoundedFirstStepCommandJobFactory",
+        tools: {
+            "changeSchema" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+        }
+    }
+
     async fn initial_snapshot() -> PlaygroundSnapshot {
         empty_playground_snapshot()
     }
@@ -153,6 +164,11 @@ mod tests {
         let command = PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: "playground.custom".into() });
         let emit = command.dispatch(&doc, &cfg).expect("dispatch");
         assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })]);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn registry_backed_editor_installs_its_exact_bounded_command_proof() {
+        let _app = semio_framework_plugin::testkit::new_app_with_registry::<EditorApp<PlaygroundEditor>>(testkit::playground_editor_manifest_for_testkit).await;
     }
 
     #[test]

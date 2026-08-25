@@ -14,6 +14,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -38,10 +39,26 @@ func main() {
 		}
 		return
 	}
-	if err := client.RunMCP(); err != nil {
+	if _, err := runMCP(context.Background(), stdioTransport{reader: os.Stdin, writer: os.Stdout}, ClientRepository{}); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func runMCP(ctx context.Context, transport Transport, repository RepositoryHandlers) (*Server, error) {
+	server, err := NewRepositoryServer(repository)
+	if err != nil {
+		return nil, err
+	}
+	return serveMCP(ctx, transport, server)
+}
+
+func serveMCP(ctx context.Context, transport Transport, server *Server) (*Server, error) {
+	err := server.Serve(ctx, "stdio", transport)
+	if errors.Is(err, ErrPeerDropped) {
+		err = nil
+	}
+	return server, err
 }
 
 // #endregion 🦀️Mcp

@@ -44,6 +44,7 @@ import {
   hostShimSource,
   PLUGIN_HOST_SHIM_FILE,
   pluginComponentBridgeSource,
+  rewriteJcoComponentAssetUrls,
   SHARD_WORKER_FILE,
   shardWorkerSource,
   rewriteJcoAsyncResultLifting,
@@ -5469,13 +5470,41 @@ if (import.meta.vitest) {
   describe("pluginComponentBridgeSource", () => {
     it("adapts the shard envelope into the canonical jco variant representation", () => {
       const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
-      expect(source).toContain("events.map(({ kind, payload }) => ({ tag: kind, val: payload }))");
+      expect(source).toContain('kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload })');
     });
 
     it("adapts the actor grant into the reactor budget vocabulary", () => {
       const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
       expect(source).toContain("fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs");
       expect(source).toContain("maxFrames: 8");
+    });
+
+    it("normalizes the scalar command-ingress wire record without relying on async variant discriminants", () => {
+      const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
+      expect(source).toContain("function normalizeCommandIngress(status)");
+      expect(source).toContain('[0, "idle"], [1, "page-accepted"], [2, "backpressure"], [3, "command-pending"], [4, "command-complete"], [5, "fault"]');
+      expect(source).toContain("commandIngress: normalizeCommandIngress(result.commandIngress)");
+    });
+
+    it("gives every actor a distinct component module while carrying the rebuild version", () => {
+      const source = pluginComponentBridgeSource("plugin_component", "plugin_component.core.wasm");
+      expect(source).toContain('componentUrl.searchParams.set("actor", actorId)');
+      expect(source).toContain('componentUrl.searchParams.set("v", rebuildVersion)');
+      expect(source).toContain("await import(componentUrl.href)");
+      expect(source).not.toContain('await import("./plugin_component.js")');
+    });
+  });
+
+  describe("rewriteJcoComponentAssetUrls", () => {
+    it("propagates a component module rebuild version to every extracted core wasm fetch", () => {
+      const generated = `const module0 = fetchCompile(new URL('./plugin_component.core.wasm', import.meta.url));
+const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.meta.url));`;
+      const rewritten = rewriteJcoComponentAssetUrls(generated);
+      expect(rewritten).toContain("function __semioVersionedComponentAssetUrl(path)");
+      expect(rewritten).toContain("const rebuildVersion = new URL(import.meta.url).searchParams.get(\"v\")");
+      expect(rewritten).toContain("__semioVersionedComponentAssetUrl('./plugin_component.core.wasm')");
+      expect(rewritten).toContain("__semioVersionedComponentAssetUrl('./plugin_component.core2.wasm')");
+      expect(rewriteJcoComponentAssetUrls(rewritten)).toBe(rewritten);
     });
   });
 

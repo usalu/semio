@@ -1,0 +1,14 @@
+{
+  "schema": "semio.retained-canonical-pack-laws.v1",
+  "wire": "SPK/1.0",
+  "admission": {
+    "pageBytes": 4096,
+    "opportunitiesPerGrant": 1,
+    "cases": ["zero", "maximum", "maximum-plus-one", "missing-preflight", "producer-handback"]
+  },
+  "anchors": ["header-magic", "header-crc32c", "header-reserved", "footer-magic", "footer-crc32c", "version", "required-flags", "file-length", "manifest-span"],
+  "segments": ["kind", "flags", "stored-length", "raw-length", "raw-byte", "crc32c", "end", "footer"],
+  "registries": ["manifest", "utf8-symbol", "chunk"],
+  "hostile": ["malformed-varint", "truncated", "invalid-utf8", "segment-crc", "anchor-crc", "depth", "count", "span", "interruption", "cancellation", "terminal-empty"],
+  "valueTags": ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "0a", "0b", "0c", "0d", "0e", "0f", "10", "11", "12", "13", "14", "15", "16", "17"]
+}

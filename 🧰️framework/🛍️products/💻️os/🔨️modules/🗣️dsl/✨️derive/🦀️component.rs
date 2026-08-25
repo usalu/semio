@@ -633,13 +633,13 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident.clone();
     let container = parse_container_attrs(&input);
-    let envelope_id = match container.id.or(container.extension) {
+    let envelope_id = match container.id.clone().or_else(|| container.extension.clone()) {
         Some(id) => id,
         None => {
             return syn::Error::new_spanned(&input, "DslArtifact requires #[dsl(id = \"plugin.artifact\")] or #[dsl(extension = \"...\")]").to_compile_error().into();
         }
     };
-    let extension_suffix = envelope_id.rsplit('.').next().unwrap_or(&envelope_id);
+    let extension_suffix = container.extension.as_deref().unwrap_or_else(|| envelope_id.rsplit('.').next().unwrap_or(&envelope_id));
     let envelope_id_lit = envelope_id.as_str();
     let extension_suffix_lit = extension_suffix;
     let Data::Struct(data) = &input.data else {

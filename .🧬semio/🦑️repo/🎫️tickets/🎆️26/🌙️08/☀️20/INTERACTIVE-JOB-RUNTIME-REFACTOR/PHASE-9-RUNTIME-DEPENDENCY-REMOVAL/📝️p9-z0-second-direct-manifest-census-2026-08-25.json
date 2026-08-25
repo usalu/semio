@@ -1,0 +1,12 @@
+{
+  "uniqueIdentities": 230,
+  "uniqueByEcosystem": {
+    "rust": 85,
+    "js": 70,
+    "go": 60,
+    "python": 15,
+    "dotnet": 0
+  },
+  "directDeclarationRows": 853,
+  "missingDirectDeclarations": []
+}

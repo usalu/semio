@@ -7460,13 +7460,11 @@ export class VerifyScript extends Script {
   }
 
   /**
-   * 🔒️ `verify dependencies [write-baseline]` — the Phase 0 dependency freeze. With no argument,
-   * compares the current third-party dependency inventory (Rust `Cargo.toml` + JS `package.json`,
-   * `compose/` excluded) against the committed `🔒️dependencies.json` baseline and fails on any NEW
-   * dependency; removals always pass (ratchet). `write-baseline` (re)generates the baseline from the
-   * current tree — the mechanism for deliberately approving a new dependency.
+   * 🔒️ `verify dependencies` keeps the baseline ratchet and prints the all-ecosystem literal truth;
+   * `summary`, `list`, `self-test`, and the red-until-zero `literal-external` mode are source-only.
    */
   private runDependencyFreeze(args: string[]): void {
+    dependencyAssertRepoPolicyImportBoundary(this.root);
     if (args[0] === "parity") {
       if (args[1] !== "js") throw new Error("[verify dependencies] parity currently supports only the 'js' ecosystem.");
       const formatIndex = args.indexOf("--format");
@@ -7490,10 +7488,31 @@ export class VerifyScript extends Script {
       console.log("[verify dependencies parity js] clean.");
       return;
     }
+    if (args[0] === "self-test") {
+      console.log(`[verify dependencies self-test] hostile-mutations=${dependencyTruthSelfTests()} clean.`);
+      return;
+    }
+    if (args[0] === "summary" || args[0] === "literal-external") {
+      const formatIndex = args.indexOf("--format");
+      const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
+      if (format !== "text" && format !== "json") throw new Error(`[verify dependencies ${args[0]}] unsupported format ${JSON.stringify(format)}.`);
+      const report = dependencyTruthReport(this.root);
+      console.log(format === "json" ? JSON.stringify(report, null, 2) : dependencyTruthSummaryText(report));
+      if (args[0] === "literal-external" && !report.meetsTarget) {
+        if (report.oracleConflicts.length > 0) for (const conflict of report.oracleConflicts) console.error(`  oracle-conflict ${conflict.ecosystem}:${conflict.name} declared by ${conflict.users.join(", ")}`);
+        if (report.toolchainConflicts.length > 0) for (const conflict of report.toolchainConflicts) console.error(`  toolchain-owner-conflict js:${conflict.name}@${conflict.version} declared by ${conflict.user} (lock-owned=${conflict.lockOwned})`);
+        if (report.auditedToolchain.failures.length > 0) for (const failure of report.auditedToolchain.failures) console.error(`  toolchain-audit ${failure}`);
+        throw new Error(`[verify dependencies literal-external] target=0, current=${report.totals.literalExternal}, oracle-conflicts=${report.oracleConflicts.length}, toolchain-owner-conflicts=${report.toolchainConflicts.length}, toolchain-failures=${report.auditedToolchain.failures.length}.`);
+      }
+      return;
+    }
     if (args[0] === "list") {
-      const ecosystem = args[1] as DependencyEcosystem | undefined;
-      if (ecosystem && ecosystem !== "rust" && ecosystem !== "js") throw new Error("[verify dependencies] list ecosystem must be 'rust' or 'js'.");
-      const current = dependencyFreezeCurrentThirdParty(this.root).filter((entry) => !ecosystem || entry.ecosystem === ecosystem);
+      const requested = args.slice(1).find((arg) => !arg.startsWith("--"));
+      const ecosystem = requested === undefined || requested === "all" ? undefined : (requested as DependencyEcosystem);
+      if (ecosystem && !DEPENDENCY_ECOSYSTEMS.includes(ecosystem)) throw new Error(`[verify dependencies] list ecosystem must be 'all' or one of ${DEPENDENCY_ECOSYSTEMS.join(", ")}.`);
+      const report = dependencyTruthReport(this.root);
+      const entries = args.includes("--raw") ? report.entries.raw : args.includes("--literal-external") ? report.entries.literalExternal : report.entries.raw.filter((entry) => entry.disposition !== "first-party").map(dependencyTruthBaselineEntry);
+      const current = entries.filter((entry) => !ecosystem || entry.ecosystem === ecosystem);
       console.log(JSON.stringify(current, null, 2));
       return;
     }
@@ -7504,6 +7523,7 @@ export class VerifyScript extends Script {
     }
     const result = dependencyFreezeCheck(this.root);
     console.log(`[verify dependencies] baseline: ${result.baseline.entries.length} third-party dependenc(y/ies) (commit ${result.baseline.commit || "none — run write-baseline first"}); current: ${result.current.length}.`);
+    console.log(dependencyTruthSummaryText(dependencyTruthReport(this.root, result.current)));
     if (result.removedDeps.length > 0) {
       console.log(`[verify dependencies] ${result.removedDeps.length} dependenc(y/ies) removed since baseline (always passes — ratchet only tightens):`);
       for (const d of result.removedDeps) console.log(`  ${d.ecosystem}:${d.name}`);
@@ -13639,6 +13659,7 @@ function interactivityMcpHttpTransportSelfTests(): void {
 //#region 🔖️DependencyFreeze
 /** 🔒️Ecosystems the dependency freeze tracks — all five the repository actually ships. */
 type DependencyEcosystem = "rust" | "js" | "go" | "python" | "dotnet";
+const DEPENDENCY_ECOSYSTEMS: readonly DependencyEcosystem[] = ["rust", "js", "go", "python", "dotnet"];
 /**
  * 🔒️Which phase a dependency is pulled in for. A dependency can serve more than one, so this is a
  * set per baseline entry. The two `production-*` classes are the only ones the purity gate cares
@@ -13662,7 +13683,8 @@ function dependencyKindOf(intent: "runtime" | "build" | "test" | "tooling"): Dep
 }
 
 /** 🔒️One third-party dependency's baseline record — the unit the freeze ratchet compares by `${ecosystem}:${name}` identity (version excluded from identity so routine patch bumps don't trip the gate; recorded for information only). */
-type DependencyBaselineEntry = { ecosystem: DependencyEcosystem; name: string; version: string; kinds: DependencyKind[]; users: string[]; productionReachable: boolean; oracleIds?: string[] };
+type DependencyDeclaration = { user: string; version: string; kind: DependencyKind };
+type DependencyBaselineEntry = { ecosystem: DependencyEcosystem; name: string; version: string; kinds: DependencyKind[]; users: string[]; productionReachable: boolean; declarations?: DependencyDeclaration[]; oracleIds?: string[]; oracleConflictUsers?: string[] };
 
 /** 🔒️The committed freeze baseline file's shape — `🔒️dependencies.json` at the repo root. */
 type DependencyBaseline = { schemaVersion: number; generatedAt: string; commit: string; entries: DependencyBaselineEntry[] };
@@ -13738,7 +13760,7 @@ function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDe
     }
     const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
     if (sectionMatch) {
-      const depMatch = sectionMatch[1]!.match(DEPENDENCY_CARGO_SECTION_RE)?.[1] as CargoDepSection | undefined;
+      const depMatch = sectionMatch[1] === "workspace.dependencies" ? undefined : (sectionMatch[1]!.match(DEPENDENCY_CARGO_SECTION_RE)?.[1] as CargoDepSection | undefined);
       currentSection = depMatch ?? null;
       continue;
     }
@@ -14238,9 +14260,10 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
     if (existing) {
       if (!existing.kinds.includes(kind)) existing.kinds.push(kind);
       if (!existing.users.includes(user)) existing.users.push(user);
+      if (!existing.declarations!.some((declaration) => declaration.user === user && declaration.version === version && declaration.kind === kind)) existing.declarations!.push({ user, version, kind });
       return;
     }
-    byKey.set(key, { ecosystem, name, version, kinds: [kind], users: [user], productionReachable: false });
+    byKey.set(key, { ecosystem, name, version, kinds: [kind], users: [user], productionReachable: false, declarations: [{ user, version, kind }] });
   };
 
   const cargoManifests = policyDiscoverCargoTomlFiles(repoRoot).filter((p) => !p.startsWith("compose/"));
@@ -14265,20 +14288,24 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
   dependencyCollectPython(repoRoot, record);
   dependencyCollectDotnet(repoRoot, record);
 
-  // 📇️A package an approved oracle registry entry claims is a test oracle, whatever manifest it
-  // appears in. Reclassifying here — rather than trusting placement — is what makes the purity gate
-  // able to say "this library is only ever reachable from a test host".
   const oracles = dependencyOracleRegistryPackages(repoRoot);
   for (const entry of byKey.values()) {
-    if (oracles.has(entry.name)) {
-      entry.kinds = ["test-oracle"];
-      entry.oracleIds = [...oracles.get(entry.name)!];
-    }
+    dependencyClassifyOracleEntry(entry, oracles.get(entry.name));
+    entry.declarations?.sort((left, right) => left.user.localeCompare(right.user) || left.kind.localeCompare(right.kind) || left.version.localeCompare(right.version));
     entry.kinds.sort();
     entry.users.sort();
     entry.productionReachable = entry.kinds.some((kind) => kind === "production-runtime" || kind === "production-build");
   }
   return [...byKey.values()].sort((a, b) => (a.ecosystem === b.ecosystem ? a.name.localeCompare(b.name) : a.ecosystem.localeCompare(b.ecosystem)));
+}
+
+/** 📇️An oracle name changes classification only when every declaration is owned by the test/oracle domain; product declarations remain honest and become conflicts. */
+function dependencyClassifyOracleEntry(entry: DependencyBaselineEntry, oracleIds: readonly string[] | undefined): void {
+  if (!oracleIds) return;
+  entry.oracleIds = [...oracleIds].sort();
+  const productUsers = entry.users.filter((user) => !/(?:^|\/)🧪️(?:oracle|test)\//u.test(user));
+  if (productUsers.length === 0) entry.kinds = ["test-oracle"];
+  else entry.oracleConflictUsers = productUsers.sort();
 }
 
 /** 📇️Package name → approved oracle ids, from the registry that claims them as test-only references. */
@@ -14328,9 +14355,7 @@ function dependencyDiscoverContributionManifests(repoRoot: string, dirName: stri
 }
 
 /** 🐹️Module directories `go.work` declares, minus any `compose/` path — the hard forbidden area. */
-function dependencyGoModuleDirs(repoRoot: string): string[] {
-  const content = policyReadFileSafe(repoRoot, "go.work");
-  if (!content) return [];
+function dependencyParseGoModuleDirs(content: string): string[] {
   const dirs: string[] = [];
   const single = content.match(/^\s*use\s+(\S+)\s*$/gm) ?? [];
   for (const line of single) dirs.push(line.replace(/^\s*use\s+/, "").trim());
@@ -14339,35 +14364,68 @@ function dependencyGoModuleDirs(repoRoot: string): string[] {
     const trimmed = line.trim();
     if (trimmed && !trimmed.startsWith("//")) dirs.push(trimmed);
   }
-  return dirs.map((dir) => dir.replace(/^\.\//, "")).filter((dir) => dir !== "" && !dir.startsWith("compose/") && dir !== "compose");
+  return [...new Set(dirs.map((dir) => dir.replace(/^\.\//, "")).filter((dir) => dir !== "" && !dir.startsWith("compose/") && dir !== "compose"))].sort();
+}
+
+function dependencyGoModuleDirs(repoRoot: string): string[] {
+  return dependencyParseGoModuleDirs(policyReadFileSafe(repoRoot, "go.work"));
+}
+
+type DependencyGoRequirement = { name: string; version: string; kind: DependencyKind };
+
+/** 🐹️Reads module identity and local replacements without invoking the Go toolchain. */
+function dependencyParseGoModule(content: string): { module?: string; localReplaces: string[]; requirements: DependencyGoRequirement[] } {
+  const module = content.match(/^\s*module\s+(\S+)\s*$/mu)?.[1];
+  const localReplaces: string[] = [];
+  const requirements: DependencyGoRequirement[] = [];
+  let block: "require" | "replace" | null = null;
+  for (const raw of content.split(/\r?\n/u)) {
+    const line = raw.trim();
+    if (/^(require|replace)\s*\($/u.test(line)) {
+      block = line.startsWith("require") ? "require" : "replace";
+      continue;
+    }
+    if (block && line === ")") {
+      block = null;
+      continue;
+    }
+    const requireBody = block === "require" ? line : line.startsWith("require ") ? line.slice("require ".length) : "";
+    const requirement = requireBody.match(/^([^\s]+)\s+([^\s]+)(\s*\/\/\s*indirect)?/u);
+    if (requirement) requirements.push({ name: requirement[1]!, version: requirement[2]!, kind: dependencyKindOf(requirement[3] ? "build" : "runtime") });
+    const replaceBody = block === "replace" ? line : line.startsWith("replace ") ? line.slice("replace ".length) : "";
+    const replacement = replaceBody.match(/^([^\s]+)(?:\s+v[^\s]+)?\s+=>\s+([^\s]+)/u);
+    if (replacement && /^(?:\.{1,2}[\\/]|[\\/]|[A-Za-z]:[\\/])/u.test(replacement[2]!)) localReplaces.push(replacement[1]!);
+  }
+  return { module, localReplaces: [...new Set(localReplaces)].sort(), requirements };
+}
+
+/** 🐹️First-party module paths proven by `go.work` membership or a local `replace`. */
+function dependencyGoInternalModules(repoRoot: string, dirs = dependencyGoModuleDirs(repoRoot)): Set<string> {
+  const internal = new Set<string>();
+  for (const replaced of dependencyParseGoModule(policyReadFileSafe(repoRoot, "go.work")).localReplaces) internal.add(replaced);
+  for (const dir of dirs) {
+    const parsed = dependencyParseGoModule(policyReadFileSafe(repoRoot, `${dir}/go.mod`));
+    if (parsed.module) internal.add(parsed.module);
+    for (const replaced of parsed.localReplaces) internal.add(replaced);
+  }
+  return internal;
 }
 
 /** 🐹️Third-party requirements of every non-compose Go module. `// indirect` requirements are transitive
  * evidence rather than a declared use, so they are classed as build-phase rather than runtime. */
-function dependencyCollectGo(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void): void {
-  for (const dir of dependencyGoModuleDirs(repoRoot)) {
+function dependencyCollectGo(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void, recordFirstParty?: (entry: DependencyBaselineEntry) => void): void {
+  const dirs = dependencyGoModuleDirs(repoRoot);
+  const internal = dependencyGoInternalModules(repoRoot, dirs);
+  for (const dir of dirs) {
     const relPath = `${dir}/go.mod`.replace(/^\/+/, "");
-    const content = policyReadFileSafe(repoRoot, relPath);
-    if (!content) continue;
-    const lines = content.split(/\r?\n/);
-    let inBlock = false;
-    for (const raw of lines) {
-      const line = raw.trim();
-      if (line.startsWith("require (")) {
-        inBlock = true;
-        continue;
-      }
-      if (inBlock && line === ")") {
-        inBlock = false;
-        continue;
-      }
-      const body = inBlock ? line : line.startsWith("require ") ? line.slice("require ".length) : "";
-      if (body === "" || body.startsWith("//")) continue;
-      const match = body.match(/^([^\s]+)\s+([^\s]+)(\s*\/\/\s*indirect)?/);
-      if (!match) continue;
-      const name = match[1]!;
+    for (const requirement of dependencyParseGoModule(policyReadFileSafe(repoRoot, relPath)).requirements) {
+      const { name, version, kind } = requirement;
       if (!name.includes(".") || name.startsWith("semio.tech/")) continue;
-      record("go", name, match[2]!, dependencyKindOf(match[3] ? "build" : "runtime"), relPath);
+      if (internal.has(name)) {
+        recordFirstParty?.({ ecosystem: "go", name, version, kinds: [kind], users: [relPath], productionReachable: kind === "production-runtime" || kind === "production-build" });
+        continue;
+      }
+      record("go", name, version, kind, relPath);
     }
   }
 }
@@ -14417,6 +14475,271 @@ function dependencyCollectPython(repoRoot: string, record: (ecosystem: Dependenc
   }
 }
 
+/** 🐍️The root Python manifest is Composition-scoped only when its declared UV workspace is non-empty and every member stays below `compose/`. */
+function dependencyIsRootCompositionPython(content: string): boolean {
+  if (!/^\s*\[tool\.uv\.workspace\]\s*$/mu.test(content)) return false;
+  const workspace = content.slice(content.search(/^\s*\[tool\.uv\.workspace\]\s*$/mu));
+  const members = workspace.match(/^\s*members\s*=\s*\[([^\]]*)\]/mu)?.[1];
+  if (members === undefined) return false;
+  const paths = [...members.matchAll(/["']([^"']+)["']/gu)].map((match) => match[1]!.replace(/^\.\//u, ""));
+  return paths.length > 0 && paths.every((path) => path === "compose" || path.startsWith("compose/"));
+}
+
+type DependencyTruthDisposition = "literal-external" | "first-party" | "composition-scoped" | "mandated-toolchain";
+type DependencyTruthEntry = DependencyBaselineEntry & { disposition: DependencyTruthDisposition; rationale: string; literalExternalUsers?: string[]; mandatedToolchainUsers?: string[] };
+type DependencyTruthEcosystemSummary = { ecosystem: DependencyEcosystem; raw: number; thirdParty: number; firstParty: number; compositionScoped: number; mandatedToolchain: number; corrected: number; literalExternal: number; productionReachable: number; kinds: Record<DependencyKind, number> };
+type DependencyToolchainRow = DependencyDeclaration & { name: string; lockVersion?: string; lockOwned: boolean };
+type DependencyTruthReport = {
+  zeroTarget: 0;
+  meetsTarget: boolean;
+  ecosystems: DependencyTruthEcosystemSummary[];
+  totals: Omit<DependencyTruthEcosystemSummary, "ecosystem" | "kinds">;
+  auditedToolchain: { bun: { engine: string; packageManager: string; valid: boolean }; nxPackages: string[]; authorizedRows: DependencyToolchainRow[]; unauthorizedRows: DependencyToolchainRow[]; failures: string[] };
+  oracleConflicts: { ecosystem: DependencyEcosystem; name: string; users: string[] }[];
+  toolchainConflicts: DependencyToolchainRow[];
+  entries: { raw: DependencyTruthEntry[]; literalExternal: DependencyTruthEntry[]; firstParty: DependencyTruthEntry[]; compositionScoped: DependencyTruthEntry[]; mandatedToolchain: DependencyTruthEntry[]; mandatedToolchainRows: DependencyToolchainRow[] };
+};
+
+const DEPENDENCY_MANDATED_NX_PACKAGES = new Set(["nx", "@nx/devkit", "@nx/js"]);
+const DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS = new Set(["package.json"]);
+const DEPENDENCY_REPO_POLICY_ROOT = "🧰️framework/🛍️products/🦑️repo";
+const DEPENDENCY_REPO_POLICY_LIBRARY = `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts`;
+const DEPENDENCY_REPO_POLICY_ROUTERS = [`${DEPENDENCY_REPO_POLICY_ROOT}/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/💻️client/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📜️script.ts`] as const;
+
+function dependencyRepoPolicyLibrarySpecifier(repoRoot: string, script: string): string {
+  const specifier = relative(dirname(join(repoRoot, script)), join(repoRoot, DEPENDENCY_REPO_POLICY_LIBRARY)).replaceAll("\\", "/");
+  return specifier.startsWith(".") ? specifier : `./${specifier}`;
+}
+
+function dependencyRepoPolicyImportBoundaryFailure(repoRoot: string, script: string, source = policyReadFileSafe(repoRoot, script), pathExists: (path: string) => boolean = existsSync): string | undefined {
+  const expected = dependencyRepoPolicyLibrarySpecifier(repoRoot, script);
+  const imports = [...source.matchAll(/\bfrom\s+["']([^"']+)["']/gu)].map((match) => match[1]!);
+  if (!imports.includes(expected)) return `[verify dependencies import-boundary] ${script} must import its policy APIs from owned module ${expected}; found ${imports.join(",") || "no static import"}.`;
+  const target = resolve(dirname(join(repoRoot, script)), expected);
+  const targetRelative = relative(repoRoot, target);
+  if (targetRelative.startsWith("..") || targetRelative === "") return `[verify dependencies import-boundary] ${script} resolves outside the repository: ${targetRelative || "."}.`;
+  if (!pathExists(target)) return `[verify dependencies import-boundary] ${script} imports missing owned module ${targetRelative}; update the repo-native boundary without a shim.`;
+  return undefined;
+}
+
+function dependencyRepoPolicyRouterSetFailure(discovered: readonly string[]): string | undefined {
+  const expected = new Set<string>(DEPENDENCY_REPO_POLICY_ROUTERS);
+  const actual = new Set(discovered);
+  const missing = [...expected].filter((script) => !actual.has(script));
+  const unenumerated = [...actual].filter((script) => !expected.has(script));
+  if (missing.length > 0 || unenumerated.length > 0) return `[verify dependencies import-boundary] repo policy router set drifted; missing=${missing.join(",") || "none"}; unenumerated=${unenumerated.join(",") || "none"}.`;
+  return undefined;
+}
+
+function dependencyDiscoverRepoPolicyRouters(repoRoot: string): string[] {
+  return policyDiscoverScriptTsFiles(join(repoRoot, DEPENDENCY_REPO_POLICY_ROOT))
+    .map((script) => `${DEPENDENCY_REPO_POLICY_ROOT}/${script}`)
+    .filter((script) => /\brunPolicyOnlyMain\s*\(/u.test(policyReadFileSafe(repoRoot, script)));
+}
+
+function dependencyAssertRepoPolicyImportBoundary(repoRoot: string): void {
+  const setFailure = dependencyRepoPolicyRouterSetFailure(dependencyDiscoverRepoPolicyRouters(repoRoot));
+  if (setFailure) throw new Error(setFailure);
+  for (const script of DEPENDENCY_REPO_POLICY_ROUTERS) {
+    const failure = dependencyRepoPolicyImportBoundaryFailure(repoRoot, script);
+    if (failure) throw new Error(failure);
+  }
+}
+
+function dependencyTruthBaselineEntry(entry: DependencyTruthEntry): DependencyBaselineEntry {
+  return { ecosystem: entry.ecosystem, name: entry.name, version: entry.version, kinds: entry.kinds, users: entry.users, productionReachable: entry.productionReachable, ...(entry.oracleIds ? { oracleIds: entry.oracleIds } : {}), ...(entry.oracleConflictUsers ? { oracleConflictUsers: entry.oracleConflictUsers } : {}) };
+}
+
+function dependencyTruthRootToolchain(rootPackageContent: string): { bun: { engine: string; packageManager: string; valid: boolean }; nxPackages: Set<string>; failures: string[] } {
+  let pkg: { devDependencies?: Record<string, string>; engines?: Record<string, string>; packageManager?: string } = {};
+  try {
+    pkg = JSON.parse(rootPackageContent) as typeof pkg;
+  } catch {
+    return { bun: { engine: "", packageManager: "", valid: false }, nxPackages: new Set(), failures: ["root package.json is unreadable"] };
+  }
+  const engine = pkg.engines?.bun ?? "";
+  const packageManager = pkg.packageManager ?? "";
+  const bunValid = engine !== "" && /^bun@[^\s]+$/u.test(packageManager);
+  const nxPackages = new Set(Object.keys(pkg.devDependencies ?? {}).filter((name) => DEPENDENCY_MANDATED_NX_PACKAGES.has(name)));
+  const failures: string[] = [];
+  if (!bunValid) failures.push("root package.json must audit both engines.bun and packageManager bun@…");
+  if (!nxPackages.has("nx")) failures.push("root package.json must directly declare the Nx runner");
+  return { bun: { engine, packageManager, valid: bunValid }, nxPackages, failures };
+}
+
+function dependencyTruthDeclarations(entry: DependencyBaselineEntry): DependencyDeclaration[] {
+  return entry.declarations ?? entry.users.map((user) => ({ user, version: entry.version, kind: entry.kinds[0] ?? "repository-tooling" }));
+}
+
+function dependencyToolchainLockVersions(content: string): Map<string, string> {
+  const versions = new Map<string, string>();
+  try {
+    const workspaces = (Bun.JSONC.parse(content) as { workspaces?: Record<string, { devDependencies?: Record<string, string> }> }).workspaces ?? {};
+    for (const [workspace, snapshot] of Object.entries(workspaces)) {
+      const user = workspace === "" ? "package.json" : `${workspace}/package.json`;
+      for (const [name, version] of Object.entries(snapshot.devDependencies ?? {})) versions.set(`${user}\0${name}`, version);
+    }
+  } catch {
+    return versions;
+  }
+  return versions;
+}
+
+/** 🔒️Classifies only the narrow audited exceptions; every other third-party identity remains literal external inventory. */
+function dependencyTruthReportFromEntries(thirdParty: readonly DependencyBaselineEntry[], firstParty: readonly DependencyBaselineEntry[], rootPythonContent: string, rootPackageContent: string, lockContent = ""): DependencyTruthReport {
+  const toolchain = dependencyTruthRootToolchain(rootPackageContent);
+  const lockVersions = dependencyToolchainLockVersions(lockContent);
+  const authorizedRows: DependencyToolchainRow[] = [];
+  const unauthorizedRows: DependencyToolchainRow[] = [];
+  const classifiedThirdParty: DependencyTruthEntry[] = thirdParty.map((entry) => {
+    if (entry.ecosystem === "python" && entry.users.length > 0 && entry.users.every((user) => user === "pyproject.toml") && dependencyIsRootCompositionPython(rootPythonContent)) return { ...entry, disposition: "composition-scoped", rationale: "root pyproject.toml declares a compose-only UV workspace" };
+    if (entry.ecosystem === "js" && DEPENDENCY_MANDATED_NX_PACKAGES.has(entry.name)) {
+      const declarations = dependencyTruthDeclarations(entry);
+      const exactAuthorized = declarations.filter((declaration) => toolchain.nxPackages.has(entry.name) && DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS.has(declaration.user) && declaration.kind === "repository-tooling");
+      const external = declarations.filter((declaration) => !exactAuthorized.includes(declaration));
+      const row = (declaration: DependencyDeclaration): DependencyToolchainRow => {
+        const lockVersion = lockVersions.get(`${declaration.user}\0${entry.name}`);
+        return { ...declaration, name: entry.name, ...(lockVersion ? { lockVersion } : {}), lockOwned: lockVersion === declaration.version };
+      };
+      authorizedRows.push(...exactAuthorized.map(row));
+      unauthorizedRows.push(...external.map(row));
+      if (exactAuthorized.length > 0 && external.length === 0) return { ...entry, disposition: "mandated-toolchain", rationale: "exact AGENTS-mandated Nx package declared only by an authorized orchestration manifest", mandatedToolchainUsers: exactAuthorized.map((declaration) => declaration.user) };
+      return { ...entry, disposition: "literal-external", rationale: "Nx identity has a non-authorized owner or non-tooling declaration", literalExternalUsers: external.map((declaration) => declaration.user), ...(exactAuthorized.length > 0 ? { mandatedToolchainUsers: exactAuthorized.map((declaration) => declaration.user) } : {}) };
+    }
+    return { ...entry, disposition: "literal-external", rationale: "third-party source, build, test, runner, or tooling dependency" };
+  });
+  const classifiedFirstParty = firstParty.map<DependencyTruthEntry>((entry) => ({ ...entry, disposition: "first-party", rationale: "Go workspace module or locally replaced module" }));
+  const raw = [...classifiedThirdParty, ...classifiedFirstParty].sort((left, right) => left.ecosystem.localeCompare(right.ecosystem) || left.name.localeCompare(right.name));
+  const literalExternal = classifiedThirdParty.filter((entry) => entry.disposition === "literal-external");
+  const compositionScoped = classifiedThirdParty.filter((entry) => entry.disposition === "composition-scoped");
+  const mandatedToolchain = classifiedThirdParty.filter((entry) => entry.disposition === "mandated-toolchain");
+  const kinds = (): Record<DependencyKind, number> => ({ "production-runtime": 0, "production-build": 0, "repository-tooling": 0, "test-runner": 0, "test-oracle": 0 });
+  const ecosystems = DEPENDENCY_ECOSYSTEMS.map<DependencyTruthEcosystemSummary>((ecosystem) => {
+    const rawEntries = raw.filter((entry) => entry.ecosystem === ecosystem);
+    const thirdPartyEntries = classifiedThirdParty.filter((entry) => entry.ecosystem === ecosystem);
+    const literalEntries = literalExternal.filter((entry) => entry.ecosystem === ecosystem);
+    const kindCounts = kinds();
+    for (const entry of thirdPartyEntries) for (const kind of entry.kinds) kindCounts[kind] += 1;
+    return {
+      ecosystem,
+      raw: rawEntries.length,
+      thirdParty: thirdPartyEntries.length,
+      firstParty: rawEntries.filter((entry) => entry.disposition === "first-party").length,
+      compositionScoped: thirdPartyEntries.filter((entry) => entry.disposition === "composition-scoped").length,
+      mandatedToolchain: thirdPartyEntries.filter((entry) => entry.disposition === "mandated-toolchain").length,
+      corrected: literalEntries.length,
+      literalExternal: literalEntries.length,
+      productionReachable: literalEntries.filter((entry) => entry.productionReachable).length,
+      kinds: kindCounts,
+    };
+  });
+  const sum = (field: keyof Omit<DependencyTruthEcosystemSummary, "ecosystem" | "kinds">): number => ecosystems.reduce((total, entry) => total + entry[field], 0);
+  const totals = { raw: sum("raw"), thirdParty: sum("thirdParty"), firstParty: sum("firstParty"), compositionScoped: sum("compositionScoped"), mandatedToolchain: sum("mandatedToolchain"), corrected: sum("corrected"), literalExternal: sum("literalExternal"), productionReachable: sum("productionReachable") };
+  const oracleConflicts = classifiedThirdParty.filter((entry) => (entry.oracleConflictUsers?.length ?? 0) > 0).map((entry) => ({ ecosystem: entry.ecosystem, name: entry.name, users: entry.oracleConflictUsers! }));
+  authorizedRows.sort((left, right) => left.name.localeCompare(right.name) || left.user.localeCompare(right.user));
+  unauthorizedRows.sort((left, right) => left.name.localeCompare(right.name) || left.user.localeCompare(right.user));
+  if (lockContent !== "") for (const row of authorizedRows) if (!row.lockOwned) toolchain.failures.push(`authorized ${row.user} ${row.name}@${row.version} is not owned by the same bun.lock workspace snapshot`);
+  return {
+    zeroTarget: 0,
+    meetsTarget: totals.literalExternal === 0 && oracleConflicts.length === 0 && unauthorizedRows.length === 0 && toolchain.failures.length === 0,
+    ecosystems,
+    totals,
+    auditedToolchain: { bun: toolchain.bun, nxPackages: [...toolchain.nxPackages].sort(), authorizedRows, unauthorizedRows, failures: toolchain.failures },
+    oracleConflicts,
+    toolchainConflicts: unauthorizedRows,
+    entries: { raw, literalExternal, firstParty: classifiedFirstParty, compositionScoped, mandatedToolchain, mandatedToolchainRows: authorizedRows },
+  };
+}
+
+function dependencyTruthReport(repoRoot: string, thirdParty = dependencyFreezeCurrentThirdParty(repoRoot)): DependencyTruthReport {
+  const firstPartyByKey = new Map<string, DependencyBaselineEntry>();
+  dependencyCollectGo(repoRoot, () => {}, (entry) => {
+    const key = `${entry.ecosystem}:${entry.name}`;
+    const existing = firstPartyByKey.get(key);
+    if (!existing) firstPartyByKey.set(key, entry);
+    else {
+      if (!existing.kinds.includes(entry.kinds[0]!)) existing.kinds.push(entry.kinds[0]!);
+      if (!existing.users.includes(entry.users[0]!)) existing.users.push(entry.users[0]!);
+      existing.productionReachable ||= entry.productionReachable;
+    }
+  });
+  return dependencyTruthReportFromEntries(thirdParty, [...firstPartyByKey.values()], policyReadFileSafe(repoRoot, "pyproject.toml"), policyReadFileSafe(repoRoot, "package.json"), policyReadFileSafe(repoRoot, "bun.lock"));
+}
+
+function dependencyTruthSummaryText(report: DependencyTruthReport): string {
+  const lines = ["ecosystem\traw\tthird-party\tfirst-party\tcomposition-scoped\tmandated-toolchain\tcorrected/literal-external\tproduction-reachable\tkind-census"];
+  for (const row of report.ecosystems) {
+    const kindCensus = Object.entries(row.kinds)
+      .filter(([, count]) => count > 0)
+      .map(([kind, count]) => `${kind}:${count}`)
+      .join(",");
+    lines.push(`${row.ecosystem}\t${row.raw}\t${row.thirdParty}\t${row.firstParty}\t${row.compositionScoped}\t${row.mandatedToolchain}\t${row.literalExternal}\t${row.productionReachable}\t${kindCensus || "none"}`);
+  }
+  lines.push(`total\t${report.totals.raw}\t${report.totals.thirdParty}\t${report.totals.firstParty}\t${report.totals.compositionScoped}\t${report.totals.mandatedToolchain}\t${report.totals.literalExternal}\t${report.totals.productionReachable}`);
+  lines.push(`zero-target=${report.zeroTarget} literal-external=${report.totals.literalExternal} meets-target=${report.meetsTarget}`);
+  const auditedRows = [...report.auditedToolchain.authorizedRows, ...report.auditedToolchain.unauthorizedRows];
+  lines.push(`audited-toolchain bun=${report.auditedToolchain.bun.packageManager || "missing"} engines.bun=${report.auditedToolchain.bun.engine || "missing"} nx=${report.auditedToolchain.nxPackages.join(",") || "missing"} authorized-rows=${report.auditedToolchain.authorizedRows.length} unauthorized-rows=${report.auditedToolchain.unauthorizedRows.length} lock-owned=${auditedRows.filter((row) => row.lockOwned).length}/${auditedRows.length}`);
+  lines.push(`oracle-conflicts=${report.oracleConflicts.length} toolchain-owner-conflicts=${report.toolchainConflicts.length}`);
+  return lines.join("\n");
+}
+
+/** 🧪️Hostile source-only fixtures for every correction and exception in the literal-external census. */
+function dependencyTruthSelfTests(): number {
+  const rootRouter = DEPENDENCY_REPO_POLICY_ROUTERS[0];
+  const boundarySource = `import { defineLint, runPolicyOnlyMain, type TechnologyLinter } from "${dependencyRepoPolicyLibrarySpecifier(WORKSPACE_ROOT, rootRouter)}";`;
+  const missingBoundary = dependencyRepoPolicyImportBoundaryFailure(WORKSPACE_ROOT, rootRouter, boundarySource, () => false);
+  if (!missingBoundary?.includes("imports missing owned module")) throw new Error("[verify dependencies self-test] a moved repo-owned policy module lacked the owned import-boundary diagnostic.");
+  const staleBoundary = dependencyRepoPolicyImportBoundaryFailure(WORKSPACE_ROOT, rootRouter, 'import { defineLint } from "../../removed/index.ts";', () => true);
+  if (!staleBoundary?.includes("must import its policy APIs from owned module")) throw new Error("[verify dependencies self-test] a stale repo policy import escaped the stable owned-boundary diagnostic.");
+  if (!dependencyRepoPolicyRouterSetFailure(DEPENDENCY_REPO_POLICY_ROUTERS.filter((script) => !script.includes("/💻️client/")) as string[])?.includes("missing=")) throw new Error("[verify dependencies self-test] a missing enumerated repo policy router escaped the owned-boundary diagnostic.");
+  if (!dependencyRepoPolicyRouterSetFailure([...DEPENDENCY_REPO_POLICY_ROUTERS, `${DEPENDENCY_REPO_POLICY_ROOT}/unowned/📜️script.ts`])?.includes("unenumerated=")) throw new Error("[verify dependencies self-test] a newly discovered repo policy router escaped enumeration.");
+  const firstModule = dependencyParseGoModule("module github.com/example/first\n");
+  const consumer = dependencyParseGoModule("module github.com/example/consumer\nrequire (\n github.com/example/first v0.0.0\n example.net/external v1.2.3 // indirect\n)\nreplace github.com/example/replaced => ../replaced\nrequire github.com/example/replaced v0.0.0\n");
+  const internalGo = new Set([firstModule.module!, consumer.module!, ...consumer.localReplaces]);
+  const goExternal = consumer.requirements.filter((entry) => !internalGo.has(entry.name));
+  if (goExternal.some((entry) => entry.name === "github.com/example/first") || goExternal.some((entry) => entry.name === "github.com/example/replaced")) throw new Error("[verify dependencies self-test] first-party Go module or local replace was retained as external.");
+  if (!goExternal.some((entry) => entry.name === "example.net/external" && entry.kind === "production-build")) throw new Error("[verify dependencies self-test] external indirect Go requirement was not retained as production build input.");
+  const oracleRuntime: DependencyBaselineEntry = { ecosystem: "rust", name: "runtime-oracle-name", version: "1", kinds: ["production-runtime"], users: ["product/Cargo.toml"], productionReachable: true };
+  dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"]);
+  if (!oracleRuntime.kinds.includes("production-runtime") || oracleRuntime.oracleConflictUsers?.[0] !== "product/Cargo.toml") throw new Error("[verify dependencies self-test] direct runtime manifest hid behind an oracle registry name.");
+  const oracleOnly: DependencyBaselineEntry = { ecosystem: "rust", name: "isolated-oracle", version: "1", kinds: ["test-runner"], users: ["unit/🧪️oracle/Cargo.toml"], productionReachable: false };
+  dependencyClassifyOracleEntry(oracleOnly, ["isolated"]);
+  if (oracleOnly.kinds.join() !== "test-oracle" || oracleOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] isolated test-only oracle was not classified as an oracle.");
+  const entry = (ecosystem: DependencyEcosystem, name: string, kind: DependencyKind, user: string, version = "1"): DependencyBaselineEntry => ({ ecosystem, name, version, kinds: [kind], users: [user], productionReachable: kind === "production-runtime" || kind === "production-build", declarations: [{ user, version, kind }] });
+  const mixedEntry = (name: string): DependencyBaselineEntry => ({ ecosystem: "js", name, version: "1", kinds: ["repository-tooling"], users: ["package.json", "product/package.json"], productionReachable: false, declarations: [{ user: "package.json", version: "1", kind: "repository-tooling" }, { user: "product/package.json", version: "2", kind: "repository-tooling" }] });
+  const rootPython = "[project]\nname = \"composition\"\ndependencies = []\n[tool.uv.workspace]\nmembers = [\"compose/py\", \"compose/engine\"]\n";
+  const rootPackage = JSON.stringify({ packageManager: "bun@1.2.5", engines: { bun: ">=1.2.0" }, devDependencies: { nx: "1", "@nx/devkit": "1", "@nx/js": "1", eslint: "1" } });
+  const lock = JSON.stringify({ workspaces: { "": { devDependencies: { nx: "1", "@nx/devkit": "1", "@nx/js": "1", eslint: "1" } }, product: { devDependencies: { nx: "2", "@nx/devkit": "2" } } } });
+  const rootOwnerReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", "package.json")], [], rootPython, rootPackage, lock);
+  const nonRootOwnerReport = dependencyTruthReportFromEntries([entry("js", "nx", "repository-tooling", "product/package.json", "2")], [], rootPython, rootPackage, lock);
+  if (!rootOwnerReport.entries.mandatedToolchain.some((item) => item.name === "nx") || rootOwnerReport.toolchainConflicts.length !== 0) throw new Error("[verify dependencies self-test] authorized root Nx runner row was not precisely excepted.");
+  if (!nonRootOwnerReport.entries.literalExternal.some((item) => item.name === "nx") || nonRootOwnerReport.toolchainConflicts[0]?.user !== "product/package.json") throw new Error("[verify dependencies self-test] unauthorized non-root Nx runner row escaped literal-external inventory.");
+  const report = dependencyTruthReportFromEntries(
+    [
+      entry("python", "composition-runner", "test-runner", "pyproject.toml"),
+      entry("python", "product-python", "production-runtime", "product/pyproject.toml"),
+      mixedEntry("@nx/devkit"),
+      entry("js", "@nx/js", "repository-tooling", "package.json"),
+      entry("js", "eslint", "repository-tooling", "package.json"),
+      entry("js", "@nx/undeclared", "repository-tooling", "package.json"),
+      oracleRuntime,
+    ],
+    [entry("go", "github.com/example/first", "production-runtime", "consumer/go.mod")],
+    rootPython,
+    rootPackage,
+    lock,
+  );
+  if (!report.entries.compositionScoped.some((item) => item.name === "composition-runner")) throw new Error("[verify dependencies self-test] root Composition Python dependency was not scoped explicitly.");
+  if (!report.entries.literalExternal.some((item) => item.name === "product-python")) throw new Error("[verify dependencies self-test] external Python dependency outside the root Composition project was hidden.");
+  if (!report.entries.firstParty.some((item) => item.name === "github.com/example/first") || report.entries.literalExternal.some((item) => item.name === "github.com/example/first")) throw new Error("[verify dependencies self-test] synthetic first-party Go identity reached literal-external inventory.");
+  if (!report.entries.mandatedToolchain.some((item) => item.name === "@nx/js") || report.entries.mandatedToolchain.some((item) => item.name === "@nx/devkit")) throw new Error("[verify dependencies self-test] mixed Nx ownership was incorrectly classified as an identity-wide exception.");
+  const mixedDevkit = report.entries.literalExternal.find((item) => item.name === "@nx/devkit");
+  if (mixedDevkit?.literalExternalUsers?.join() !== "product/package.json" || mixedDevkit.mandatedToolchainUsers?.join() !== "package.json") throw new Error("[verify dependencies self-test] mixed Nx identity did not split authorized and literal-external owner rows.");
+  if (!report.auditedToolchain.authorizedRows.every((row) => row.lockOwned) || !report.auditedToolchain.unauthorizedRows.every((row) => row.lockOwned)) throw new Error("[verify dependencies self-test] Bun lock ownership evidence was not attached to every audited Nx owner row.");
+  if (!report.auditedToolchain.bun.valid || report.entries.mandatedToolchain.some((item) => item.name === "eslint") || !report.entries.literalExternal.some((item) => item.name === "eslint") || !report.entries.literalExternal.some((item) => item.name === "@nx/undeclared")) throw new Error("[verify dependencies self-test] illicit root/non-declared Nx tooling escaped literal-external inventory.");
+  return 17;
+}
+
 /** 🔷️`PackageReference`s of every non-compose .NET project; test projects contribute test-runner deps only. */
 function dependencyCollectDotnet(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void): void {
   const projects: string[] = [];
@@ -14462,7 +14785,8 @@ function dependencyFreezeLoadBaseline(repoRoot: string): DependencyBaseline | nu
 function dependencyFreezeWriteBaseline(repoRoot: string): DependencyBaseline {
   const probe = runProbe("git", ["rev-parse", "HEAD"], { cwd: repoRoot });
   const commit = probe.status === 0 ? probe.stdout.trim() : "unknown";
-  const baseline: DependencyBaseline = { schemaVersion: 2, generatedAt: new Date().toISOString(), commit, entries: dependencyFreezeCurrentThirdParty(repoRoot) };
+  const entries = dependencyFreezeCurrentThirdParty(repoRoot).map((entry) => ({ ecosystem: entry.ecosystem, name: entry.name, version: entry.version, kinds: entry.kinds, users: entry.users, productionReachable: entry.productionReachable, ...(entry.oracleIds ? { oracleIds: entry.oracleIds } : {}) }));
+  const baseline: DependencyBaseline = { schemaVersion: 2, generatedAt: new Date().toISOString(), commit, entries };
   writeFileSync(join(repoRoot, DEPENDENCY_BASELINE_REL_PATH), `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
   return baseline;
 }

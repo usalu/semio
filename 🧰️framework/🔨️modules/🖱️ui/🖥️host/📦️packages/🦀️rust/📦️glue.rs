@@ -7,12 +7,14 @@
 //! retargeting a platform costs exactly one alias.
 //!
 //! Platform events are normalized here into the render crate's own multi-pointer vocabulary before
-//! they reach dispatch, so no `winit` or `web_sys` type ever appears above this layer.
+//! they reach dispatch, so no platform SDK type ever appears above this layer.
 //!
 //! Async lives here and only here: the outer event loop awaits, and device construction awaits. The
 //! frame transaction it drives does not (ruling U1, ticket
 //! `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`).
 
+#[path = "../../../../🌉️abi/🦀️component.rs"]
+pub mod abi;
 #[path = "🦀️backend_alias.rs"]
 mod backend_alias;
 #[path = "🦀️enqueue.rs"]

@@ -28,5 +28,3 @@ ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio
 # so a wgpu edge anywhere else in the graph is a boundary violation the CI `cargo tree` gate fails on.
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }
-web-sys = { version = "0.3.98", features = ["Window", "HtmlCanvasElement"] }
-wasm-bindgen = "0.2.106"

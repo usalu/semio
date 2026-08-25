@@ -1,9 +1,9 @@
 //! @emoji 🔌️ Instance → adapter → device → surface construction, and the pure
-//! `wgpu` → `ui_render` capability/format translations `crate::backend::WebGpuBackend::new`/
+//! `wgpu` → `ui_render` capability/format translations `crate::backend::WebGpuBackend`/
 //! `capabilities` need. Ported from `🎯️targets/🧊️wgpu/🦀️gpu.rs`'s `GpuContext::from_window`, adapted
-//! from a `winit::window::Window` target to a directly-supplied `web_sys::HtmlCanvasElement` (this
-//! crate has no window of its own — the embedder owns the canvas).
+//! to an owned surface selector registered by the browser-host shim.
 
+use crate::surface_adapter::SurfaceId;
 use ui_render::{BackendError, DeviceCapabilities, GpuTier, MemoryClass, SurfaceFormat};
 
 //#region 🔖️GpuContext
@@ -81,7 +81,7 @@ pub(crate) fn device_capabilities(info: &wgpu::AdapterInfo, limits: &wgpu::Limit
 
 //#region 🏗️Construct
 
-/// 🏗️ Everything [`crate::backend::WebGpuBackend::new`] needs after the two truly async steps
+/// 🏗️ Everything [`crate::backend::WebGpuBackend`] needs after the two truly async steps
 /// (`request_adapter`/`request_device`) resolve. Kept a plain struct so construction stays a flat
 /// sequence of `?`-checked steps rather than one giant nested closure.
 pub(crate) struct GpuContext {
@@ -98,9 +98,10 @@ impl GpuContext {
     /// 🌐️ The one genuinely async part of this whole backend (ticket brief) — instance → surface →
     /// adapter → device, all real round-trips to the browser's GPU process.
     // 🌐️async: genuinely async device/adapter construction — the one exception U1 itself carves out.
-    pub(crate) async fn new(canvas: web_sys::HtmlCanvasElement) -> Result<Self, BackendError> {
+    pub(crate) async fn new(surface_id: SurfaceId) -> Result<Self, BackendError> {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..Default::default() });
-        let surface = instance.create_surface(wgpu::SurfaceTarget::Canvas(canvas)).map_err(|_| BackendError::CanvasReplaced)?;
+        let target = wgpu::SurfaceTargetUnsafe::RawHandle { raw_display_handle: wgpu::rwh::WebDisplayHandle::new().into(), raw_window_handle: wgpu::rwh::WebWindowHandle::new(surface_id.get()).into() };
+        let surface = unsafe { instance.create_surface_unsafe(target) }.map_err(|_| BackendError::CanvasReplaced)?;
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: Some(&surface), force_fallback_adapter: false })
             .await

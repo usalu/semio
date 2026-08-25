@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
-import { defaultExtensionInstallRoot } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts";
+import { defaultExtensionInstallRoot, semioExtensionStoreVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️brand.ts";
 import { demonstratorRuntimeModuleLayout } from "./📜️script.ts";
 
@@ -81,6 +81,7 @@ export default defineConfig({
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     semioPluginHotSwapVitePlugin(),
+    semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
     ...semioAssetsVitePlugin(repoRoot),
     // 🔌️ Same reasoning as `os/dev`'s vite config: the bundler `resolve.alias` above only covers static
     // imports — plugins are also fetched at runtime via absolute-URL `import()`, which a production build

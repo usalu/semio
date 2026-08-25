@@ -31,6 +31,7 @@ import {
 import {
   createDevPluginSource,
   createExtensionSource,
+  extensionSourceEventToPluginSourceEvent,
   multiplexPluginSources,
   resolvePlaygroundBoot,
   resolvePluginHostConfig,
@@ -789,9 +790,13 @@ if (import.meta.vitest) {
       await expect(source.list()).resolves.toEqual(registry);
     });
 
-    it("moduleUrl() passes through unbusted without rebuiltAt", () => {
+    it("moduleUrl() cache-busts a cold page load even before the build snapshot arrives", () => {
       const source = createDevPluginSource(registry);
-      expect(source.moduleUrl("note")).toBe("/plugin-modules/note/note_plugin.js");
+      const first = new URL(source.moduleUrl("note"), "http://semio.test");
+      const second = new URL(source.moduleUrl("s"), "http://semio.test");
+      expect(first.pathname).toBe("/plugin-modules/note/note_plugin.js");
+      expect(first.searchParams.get("v")).toMatch(/^\d+$/);
+      expect(second.searchParams.get("v")).toBe(first.searchParams.get("v"));
     });
 
     it("moduleUrl() cache-busts with a rebuiltAt query param", () => {
@@ -812,6 +817,19 @@ if (import.meta.vitest) {
       expect(events).toEqual([]);
     });
 
+    it("normalizes extension snapshots and installs into plugin availability events", () => {
+      expect(extensionSourceEventToPluginSourceEvent({ kind: "snapshot", extensions: [{ extensionId: "gamma-extension", installedAt: 1785789943669 }] })).toEqual({
+        kind: "snapshot",
+        plugins: [{ pluginId: "gamma-extension", rebuiltAt: 1785789943669 }],
+      });
+      expect(extensionSourceEventToPluginSourceEvent({ kind: "installed", extensionId: "gamma-extension", installedAt: 1785789943670 })).toEqual({
+        kind: "built",
+        pluginId: "gamma-extension",
+        rebuiltAt: 1785789943670,
+      });
+      expect(extensionSourceEventToPluginSourceEvent({ kind: "uninstalled", extensionId: "gamma-extension" })).toBeUndefined();
+    });
+
     it("multiplexPluginSources() merges list() and resolves moduleUrl from the matching child", async () => {
       const catalog: PluginCatalog = {
         plugins: [],
@@ -827,7 +845,7 @@ if (import.meta.vitest) {
       expect(multiplexed.id).toBe("dev+extensions");
       const listed = await multiplexed.list();
       expect(listed.map((entry) => entry.pluginId).sort()).toEqual([...registry.map((entry) => entry.pluginId), ...catalog.extensions.map((entry) => entry.pluginId)].sort());
-      expect(multiplexed.moduleUrl("note")).toBe("/plugin-modules/note/note_plugin.js");
+      expect(new URL(multiplexed.moduleUrl("note"), "http://semio.test").pathname).toBe("/plugin-modules/note/note_plugin.js");
       expect(() => multiplexed.moduleUrl("missing")).toThrow(/missing/);
     });
   });

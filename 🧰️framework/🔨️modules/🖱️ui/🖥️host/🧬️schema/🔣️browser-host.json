@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Framework UI Browser Host Port",
+  "version": 1,
+  "transport": "semio.framework.abi.v1",
+  "limits": {
+    "eventBytes": 1024,
+    "eventEnvelopeBytes": 27,
+    "encodedEventBytes": 1051,
+    "pageBytes": 1033,
+    "pageEnvelopeBytes": 18,
+    "initialPollBytes": 1024,
+    "retainedPollItems": 1,
+    "acknowledgements": 64,
+    "criticalEvents": 32,
+    "latestEvents": 32,
+    "listeners": 64,
+    "semanticUnitsPerGrant": 1
+  },
+  "identities": {
+    "CanvasId": { "type": "u32", "minimum": 1 },
+    "ListenerId": { "fields": ["slot:u32", "generation:u32"], "minimum": 1 }
+  },
+  "operations": {
+    "attach": 1793,
+    "frame": 1794,
+    "cursor": 1795,
+    "clipboardRead": 1796,
+    "clipboardWrite": 1797,
+    "detach": 1798
+  },
+  "events": {
+    "metrics": 1801,
+    "visibility": 1802,
+    "frame": 1803,
+    "pointerMove": 1804,
+    "pointerDown": 1805,
+    "pointerUp": 1806,
+    "wheel": 1807,
+    "keyDown": 1808,
+    "keyUp": 1809,
+    "text": 1810,
+    "close": 1811
+  },
+  "eventPrefix": ["version:u8", "canvas:u32le", "listenerSlot:u32le", "listenerGeneration:u32le"],
+  "eventStatus": "ok-without-diagnostic-fixed-3-byte-status",
+  "poll": {
+    "shortCapacity": "return-required-length-and-retain",
+    "exactRetry": "copy-once-and-release",
+    "maximumEncodedBytes": 1051,
+    "cancelBetweenPolls": "release-without-copy",
+    "closeBetweenPolls": "release-and-close-without-copy"
+  },
+  "accessibility": {
+    "localizedLabel": "required-with-no-language-default",
+    "focusable": true,
+    "role": "configurable"
+  },
+  "lifecycle": ["request", "progress", "event", "reply", "acknowledge", "cancel", "close", "terminal-empty"],
+  "coalescing": {
+    "metrics": "latest-wins",
+    "pointerMove": "latest-wins-per-pointer",
+    "frame": "at-most-one-pending"
+  }
+}

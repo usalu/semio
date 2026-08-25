@@ -29,8 +29,10 @@ pub fn content_hash(bytes: &[u8]) -> ContentHash {
 #[cfg(feature = "deflate")]
 pub use crate::codec::DeflateCodec;
 pub use crate::format::{
-    encode_symbols, read_footer_only, recover, Footer, Header, Manifest, PackFile, PackIdentitySegment, PackWriter, RecoveryReport, Superblock, VerificationLevel, WriteOptions, FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR,
-    HEADER_SIZE, MAGIC, OPTIONAL_CANONICAL, OPTIONAL_HAS_SCHEMA, OPTIONAL_STREAMED, REQUIRED_CHUNKED, REQUIRED_COMPRESSED, REQUIRED_ENCRYPTED, REQUIRED_FOOTER_CHAIN,
+    encode_symbols, read_footer_only, recover, Footer, Header, Manifest, PackFile, PackIdentitySegment, PackWriter, RecoveryReport, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
+    RetainedPackChunkEntry, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSegmentHeader, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceProgress, Superblock,
+    VerificationLevel, WriteOptions, FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, HEADER_SIZE, MAGIC, OPTIONAL_CANONICAL, OPTIONAL_HAS_SCHEMA, OPTIONAL_STREAMED, REQUIRED_CHUNKED, REQUIRED_COMPRESSED, REQUIRED_ENCRYPTED,
+    REQUIRED_FOOTER_CHAIN, RETAINED_PACK_PAGE_BYTES,
 };
 //#endregion 🔖️Format
 

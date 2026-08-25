@@ -883,6 +883,11 @@ export function canonicalSurfaceId(dialect: ArtifactDialect, role: AppRole): str
   return `${dialectCoordinate(dialect)}#${role}`;
 }
 
+/** 🔌️ Accepts extension-only hot swaps while protecting a plugin-owned active app session. */
+export function reloadRetainsActiveApp(apps: readonly { readonly id: string }[], activeAppId?: string): boolean {
+  return activeAppId === undefined || apps.some((app) => app.id === activeAppId);
+}
+
 /** 🪪️ ticket §C4 — the space's own artifact-index document: kind `s.space`, dialect
  * `s.space.space@1/*`, document id always the literal `"index"` (one per hub space). No TS constant
  * is exported for these (lane 1-E's TS twin re-exports types only, see `📓️w1-e-report.md`), so they
@@ -1673,8 +1678,8 @@ function FrameworkOsShellInner({
    * `PluginHost::hot_swap_plugin` contract (validate → destroy affected instances → swap → recreate the
    * session if it was this plugin's → release the old module) without inventing a separate one:
    * acquires the new module BEFORE tearing anything down (the old handle keeps serving concurrent
-   * traffic during the swap), validates the new manifest still declares apps (and, if this plugin owns
-   * the active session, still declares the session's app id), then only commits. A validation failure
+   * traffic during the swap), validates that a session-owning plugin still declares the session's app
+   * id, then only commits. Extension-only programs intentionally declare no apps. A validation failure
    * disposes the new lease and leaves the old plugin exactly as it was — nothing destroyed, status back
    * to `"loaded"`. */
   const reloadPlugin = useCallback(
@@ -1690,11 +1695,11 @@ function FrameworkOsShellInner({
         const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
         newHandle = await loadPluginModuleResilient(pluginId, moduleUrl);
         if (!newHandle) throw new Error(`program ${pluginId} failed to reload`);
-        if (newHandle.manifest.apps.length === 0) throw new Error(`program ${pluginId} reload declares no apps`);
         const activeSession = sessionRef.current;
         const ownsSession = activeSession?.pluginId === pluginId;
-        if (ownsSession && activeSession && !newHandle.manifest.apps.some((app) => app.id === activeSession.app.id)) {
-          throw new Error(`program ${pluginId} reload dropped the active session's app "${activeSession.app.id}"`);
+        const activeAppId = ownsSession ? activeSession?.app.id : undefined;
+        if (!reloadRetainsActiveApp(newHandle.manifest.apps, activeAppId)) {
+          throw new Error(`program ${pluginId} reload dropped the active session's app "${activeAppId}"`);
         }
 
         const oldAppIds = new Set(current.manifest.apps.map((app) => app.id));

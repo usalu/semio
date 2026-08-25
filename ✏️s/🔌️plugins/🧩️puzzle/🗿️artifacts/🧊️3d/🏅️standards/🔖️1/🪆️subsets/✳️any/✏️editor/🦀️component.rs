@@ -1760,6 +1760,74 @@ puzzle3d_command_variants! {
 }
 
 impl protocol::OpBinary for Puzzle3dCommand {
+    const TOOL_JOB_IDS: &'static [&'static str] = &[
+        "openAddObjectDialog",
+        "transformBegin",
+        "transformEnd",
+        "translateSelection",
+        "rotateSelection",
+        "scaleSelection",
+        "setFixtureJson",
+        "setActiveExample",
+        "setActiveUtility",
+        "setActiveTool",
+        "addObjectKind",
+        "deleteSelection",
+        "duplicateSelection",
+        "selectSameKindSelection",
+        "setCamera",
+        "setProjection",
+        "setProjectionParam",
+        "setVortexShow",
+        "setVortexDirection",
+        "relocateTargetVolume",
+        "worldRelocate",
+        "toggleSun",
+        "setSunAzimuth",
+        "setSunElevation",
+        "setSunIntensity",
+        "setLodAutomatic",
+        "setLodDepthVariable",
+        "setGridVisible",
+        "setLodManual",
+        "setGridSnapEnabled",
+        "setGridSpacing",
+        "setProximityRadius",
+        "setChunkSize",
+        "setSelectableKind",
+        "setSelectionFlag",
+        "patchInspector",
+        "focusSelection",
+        "engagementInput",
+        "engagementSubmit",
+        "engagementRepeatLast",
+        "engagementAbort",
+        "createAttraction",
+        "deleteAttraction",
+        "setTransformGumballFlag",
+        "setVoxelDims",
+        "addTargetVolume",
+        "deleteTargetVolume",
+        "setTargetVolumeFlag",
+        "engagementControlSelect",
+        "addBrushObject",
+        "setFillCount",
+        "setFillCountStep",
+        "setBrushPlacementOverlapBudget",
+        "setObjectKindWeight",
+        "setVortexKindWeight",
+        "cycleBrushCandidate",
+        "cycleBrushCandidateBack",
+        "openVortexSuggestions",
+        "closeVortexSuggestions",
+        "hoverSuggestion",
+        "acceptSuggestion",
+        "suggestionsTick",
+        "fillBuildTick",
+        "registerBrushMesh",
+        "worldPointerDown",
+    ];
+
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
@@ -2379,6 +2447,22 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle3dCommand;
+
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        <Puzzle3dCommand as protocol::OpBinary>::TOOL_JOB_IDS
+            .iter()
+            .map(|tool_id| {
+                semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>>(
+                    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+                    "s.puzzle.puzzle3d@1/*#editor",
+                    "BoundedFirstStepCommandJobFactory",
+                    tool_id,
+                    "puzzle.3d.fixture",
+                    semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+                )
+            })
+            .collect()
+    }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
     /// `crate::editor::puzzle3d::config::schema::register_app_schema()` self-registering call, which

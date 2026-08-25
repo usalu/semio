@@ -831,6 +831,12 @@ mod tests {
         note: Option<String>,
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn derived_artifact_preserves_explicit_file_extension() {
+        assert_eq!(DerivedDocument::__DSL_ENVELOPE_ID, "derived.doc");
+        assert_eq!(DerivedDocument::__DSL_EXTENSION, "derivedoc");
+    }
+
     //#region 🔖️ArtifactCodec
     /// 📜️ Handcrafted ArtifactDsl (P6).
     impl crate::os_store::ArtifactDsl for DerivedDocument {

@@ -57,6 +57,7 @@ export type WireTurnResult = {
   readonly uiPatches: readonly WireUiPatch[];
   readonly effects: readonly WireVariant[];
   readonly nextWake: number | null;
+  readonly commandIngress?: WireVariant;
 };
 
 /** 📥️ Defensive parse of `ShardClient.turn()`'s opaque `unknown` return into the fields a caller
@@ -66,7 +67,8 @@ export function coerceTurnResult(raw: unknown): WireTurnResult {
   const uiPatches = Array.isArray(record.uiPatches) ? (record.uiPatches as WireUiPatch[]) : [];
   const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
-  return { uiPatches, effects, nextWake };
+  const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? (record.commandIngress as WireVariant) : undefined;
+  return { uiPatches, effects, nextWake, commandIngress };
 }
 
 /** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —

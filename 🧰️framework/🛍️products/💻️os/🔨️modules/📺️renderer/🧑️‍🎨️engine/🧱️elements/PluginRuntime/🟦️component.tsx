@@ -65,8 +65,10 @@ import {
   type TurnOutcome,
 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";
 import {
+  createShardCommandIngressPages,
   ShardClient,
   type ShardBudget,
+  type ShardCommandIngressPage,
   type ShardEventEnvelope,
   type ShardWorkerLike,
 } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
@@ -289,6 +291,7 @@ type WireTurnResult = {
   readonly uiPatches: readonly WireUiPatch[];
   readonly effects: readonly WireVariant[];
   readonly nextWake: number | null;
+  readonly commandIngress?: WireVariant;
 };
 
 /** 📥️ Defensive parse of `ShardClient.turn()`'s opaque `unknown` return (typed opaque at that
@@ -299,7 +302,8 @@ function coerceTurnResult(raw: unknown): WireTurnResult {
   const uiPatches = Array.isArray(record.uiPatches) ? (record.uiPatches as WireUiPatch[]) : [];
   const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
-  return { uiPatches, effects, nextWake };
+  const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? (record.commandIngress as WireVariant) : undefined;
+  return { uiPatches, effects, nextWake, commandIngress };
 }
 
 /** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
@@ -534,6 +538,13 @@ export function serializePerActor<T>(actorId: string, run: () => Promise<T>): Pr
     if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] serializePerActor: actor ${actorId}'s queue is full (>${SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} pending turns) — rejected rather than growing unbounded`));
   });
 }
+
+/** 📥️ Holds the actor's complete paged command-ingress sequence as one serialized unit. Every
+ * direct poll operation uses the same key so redraw/completion turns cannot consume the command's
+ * retained pending/terminal status and response effects before its channel caller observes them. */
+export function serializeCommandIngressForActor<T>(actorId: string, run: () => Promise<T>): Promise<T> {
+  return serializePerActor(`command-ingress:${actorId}`, run);
+}
 //#endregion 🔖️GenericThunkQueue
 
 //#region 🔖️PluginTurnScheduler
@@ -550,6 +561,7 @@ interface PluginTurnWaiter {
  * append to one that's already running or already finished. */
 interface PluginTurnPayload {
   events: readonly ShardEventEnvelope[];
+  readonly commandPage?: ShardCommandIngressPage;
   readonly waiters: PluginTurnWaiter[];
   readonly coalesceMapKey?: string;
 }
@@ -571,7 +583,7 @@ function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget>
     runTurn: async (actorId, payload, budget) => {
       if (payload.coalesceMapKey) pendingCoalescedTurns.delete(payload.coalesceMapKey);
       try {
-        const result = coerceTurnResult(await getShardClient().turn(actorId, payload.events, budget));
+        const result = coerceTurnResult(await getShardClient().turn(actorId, payload.events, budget, payload.commandPage));
         for (const waiter of payload.waiters) waiter.resolve(result);
       } catch (error) {
         for (const waiter of payload.waiters) waiter.reject(error);
@@ -604,7 +616,7 @@ function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget>
  * risked, per this repo's own "must not assume" rule — see `📓️terra-web-plugin-runtime-report.md`
  * `## honest gaps`.
  */
-function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[], lane: Lane, coalesceKey?: string): Promise<WireTurnResult> {
+function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[], lane: Lane, coalesceKey?: string, commandPage?: ShardCommandIngressPage): Promise<WireTurnResult> {
   const scheduler = getPluginTurnScheduler();
   return new Promise<WireTurnResult>((resolve, reject) => {
     const waiter: PluginTurnWaiter = { resolve, reject };
@@ -616,7 +628,7 @@ function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[]
         pending.waiters.push(waiter);
         return;
       }
-      const payload: PluginTurnPayload = { events, waiters: [waiter], coalesceMapKey: mapKey };
+      const payload: PluginTurnPayload = { events, waiters: [waiter], coalesceMapKey: mapKey, commandPage };
       pendingCoalescedTurns.set(mapKey, payload);
       const backpressure = scheduler.enqueue(actorId, { lane, coalesce: coalesceKey, payload });
       if (backpressure.kind === "rejected") {
@@ -625,7 +637,7 @@ function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[]
       }
       return;
     }
-    const payload: PluginTurnPayload = { events, waiters: [waiter] };
+    const payload: PluginTurnPayload = { events, waiters: [waiter], commandPage };
     const backpressure = scheduler.enqueue(actorId, { lane, payload });
     if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
   });
@@ -641,15 +653,21 @@ const retainedWindowByActor = new Map<string, RetainedSurface>();
 
 //#endregion 🔖️ActorAdapter
 
+/** 🚦️ Resolves the small descriptor request before starting the shard-worker module graph, keeping
+ * cold browser connection capacity available for the request that lets plugin loading complete. */
+export async function resolveDescriptorBeforeRuntime<TManifest, TRuntime>(loadDescriptor: () => Promise<TManifest>, initializeRuntime: () => TRuntime): Promise<{ readonly manifest: TManifest; readonly runtime: TRuntime }> {
+  const manifest = await loadDescriptor();
+  return { manifest, runtime: initializeRuntime() };
+}
+
 /** 🐚️ Acquires a real actor through `ActivationRegistry`/`ShardClient` (replacing the deleted
  * `acquirePluginModule`/`PluginModuleLease` per-plugin Worker lease — design-runtime.md §3) and
  * adapts it exactly like the old wasm-Worker handle: `dispose()` disposes this instance's worker-side
  * actor entry via `ShardClient.dispose` (not a `LeasePool` release — there is no shared module lease
  * to refcount anymore, one actor belongs to exactly one instance). */
 export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginWasmHandle> {
-  const registry = getActivationRegistry();
+  const { manifest, runtime: registry } = await resolveDescriptorBeforeRuntime(() => fetchDescriptorManifest(pluginId, moduleUrl, signal), getActivationRegistry);
   registry.registerManifest({ pluginId, moduleUrl, caps: [] });
-  const manifest = await fetchDescriptorManifest(pluginId, moduleUrl, signal);
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
   let eventSeq = 0;
@@ -663,9 +681,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * turn (its own doc: "call on every turn, not just activation"); turns dispatch through this file's
    * own {@link submitPluginTurn} rather than `ActivationRegistry.enqueueTurn` (see that decision's
    * write-up above `serializePerActor`), so nothing else would ever call it. */
-  const submitTurn = (actorId: string, events: readonly ShardEventEnvelope[], options?: { readonly lane?: Lane; readonly coalesceKey?: string }): Promise<WireTurnResult> => {
+  const submitTurn = (actorId: string, events: readonly ShardEventEnvelope[], options?: { readonly lane?: Lane; readonly coalesceKey?: string; readonly commandPage?: ShardCommandIngressPage }): Promise<WireTurnResult> => {
     registry.touch(actorId);
-    return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.coalesceKey);
+    return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.coalesceKey, options?.commandPage);
   };
 
   /** 📤️📥️ Backs {@link KernelPluginWasmHandle.enqueue}/`.outcomes` (see this file's own header doc).
@@ -683,11 +701,39 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
     try {
       const actorId = requireActorId(instanceId);
-      const shardEvents: ShardEventEnvelope[] = events.map((frame) => {
-        eventSeq += 1;
-        return { kind: "app-command", payload: { instance: instanceId, seq: eventSeq, command: Array.from(frame) } };
+      const result = await serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
+        const results: WireTurnResult[] = [];
+        for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
+          eventSeq += 1;
+          const pages = createShardCommandIngressPages({
+            owner: BigInt(instanceId),
+            generation: 1n,
+            commandIndex,
+            commandCount: events.length,
+            instance: instanceId,
+            seq: BigInt(eventSeq),
+            command: events[commandIndex]!,
+          });
+          for (const commandPage of pages) results.push(await submitTurn(actorId, [], { commandPage }));
+          let terminal = results.at(-1)?.commandIngress?.tag;
+          const observedStatuses = new Set([terminal ?? "missing"]);
+          for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
+            if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault`);
+            if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
+            const continued = await submitTurn(actorId, []);
+            results.push(continued);
+            terminal = continued.commandIngress?.tag;
+            observedStatuses.add(terminal ?? "missing");
+          }
+          if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations (observed statuses: ${[...observedStatuses].join(", ")})`);
+        }
+        return {
+          uiPatches: results.flatMap((turn) => turn.uiPatches),
+          effects: results.flatMap((turn) => turn.effects),
+          nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
+          commandIngress: results.at(-1)?.commandIngress,
+        };
       });
-      const result = await submitTurn(actorId, shardEvents);
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
       for (const effect of result.effects) {
@@ -762,7 +808,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     // repeatedly for the SAME actor; "UserVisible" (below "Interactive", above "Background") lets a
     // real command preempt it, and the `"surface-visible"` coalesce key collapses the burst to the
     // single latest probe rather than queuing every intermediate one (see `submitPluginTurn`'s doc).
-    const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }], { lane: "UserVisible", coalesceKey: "surface-visible" });
+    const result = await serializeCommandIngressForActor(actorId, () =>
+      submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }], { lane: "UserVisible", coalesceKey: "surface-visible" }),
+    );
     if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
     const retained = retainedWindowByActor.get(actorId);
     if (!retained) return {};
@@ -779,12 +827,14 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * `event.completed`"). */
   const completeExtensionInvoke = async (instanceId: number, req: number, outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<void> => {
     const actorId = requireActorId(instanceId);
-    await submitTurn(actorId, [
-      {
-        kind: "completed",
-        payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(outcome.ok) } : { tag: "fault", val: Array.from(outcome.fault) } },
-      },
-    ]);
+    await serializeCommandIngressForActor(actorId, () =>
+      submitTurn(actorId, [
+        {
+          kind: "completed",
+          payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(outcome.ok) } : { tag: "fault", val: Array.from(outcome.fault) } },
+        },
+      ]),
+    );
   };
 
   return { ...richHandle, refreshUi, completeExtensionInvoke };
@@ -822,15 +872,14 @@ export async function fetchDescriptorManifest(pluginId: string, moduleUrl: strin
   const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️descriptor.json");
   try {
     const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
-    if (response.ok) {
+    const contentType = response.headers?.get?.("content-type") ?? "";
+    if (response.ok && !contentType.includes("text/html")) {
       const descriptor = (await response.json()) as { readonly manifest?: PluginManifest };
       if (descriptor.manifest) return descriptor.manifest;
     }
   } catch (error) {
     if (signal?.aborted) throw error;
-    console.warn(`[DEBUG] fetchDescriptorManifest: ${descriptorUrl} unreachable — using an empty manifest`, error);
   }
-  console.warn(`[DEBUG] fetchDescriptorManifest: no descriptor for ${pluginId} yet (E1-describe/W3 seam) — loading with an empty manifest, no eager instantiation`);
   return { pluginId, label: pluginId, version: "", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [], dependencies: [], contributions: [] } as unknown as PluginManifest;
 }
 
@@ -2159,6 +2208,24 @@ if (import.meta.vitest) {
         const manifest = await fetchDescriptorManifest("p", "https://x/p.js");
         expect(manifest.pluginId).toBe("p");
       } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("treats the dev server's HTML SPA fallback as an absent descriptor without a parse warning", async () => {
+      const originalFetch = globalThis.fetch;
+      const originalWarn = console.warn;
+      let warningCount = 0;
+      console.warn = () => {
+        warningCount += 1;
+      };
+      globalThis.fetch = (async () => new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } })) as typeof fetch;
+      try {
+        const manifest = await fetchDescriptorManifest("p", "https://x/p.js");
+        expect(manifest.pluginId).toBe("p");
+        expect(warningCount).toBe(0);
+      } finally {
+        console.warn = originalWarn;
         globalThis.fetch = originalFetch;
       }
     });

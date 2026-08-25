@@ -1,0 +1,17 @@
+  oracle-conflict rust:image declared by ✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml, ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml, 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml, 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml, 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml
+  oracle-conflict rust:png declared by ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml, ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml, 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml
+  oracle-conflict rust:zip declared by 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml, 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml
+7498 |       const report = dependencyTruthReport(this.root);
+7499 |       console.log(format === "json" ? JSON.stringify(report, null, 2) : dependencyTruthSummaryText(report));
+7500 |       if (args[0] === "literal-external" && !report.meetsTarget) {
+7501 |         if (report.oracleConflicts.length > 0) for (const conflict of report.oracleConflicts) console.error(`  oracle-conflict ${conflict.ecosystem}:${conflict.name} declared by ${conflict.users.join(", ")}`);
+7502 |         if (report.auditedToolchain.failures.length > 0) for (const failure of report.auditedToolchain.failures) console.error(`  toolchain-audit ${failure}`);
+7503 |         throw new Error(`[verify dependencies literal-external] target=0, current=${report.totals.literalExternal}, oracle-conflicts=${report.oracleConflicts.length}, toolchain-failures=${report.auditedToolchain.failures.length}.`);
+                         ^
+error: [verify dependencies literal-external] target=0, current=210, oracle-conflicts=3, toolchain-failures=0.
+      at runDependencyFreeze (/Users/ueli/Documents/semio/📜️script.ts:7503:19)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:10837:9)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1443:68)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1495:16)
+
+Bun v1.3.14 (macOS arm64)

@@ -342,11 +342,11 @@ pub mod board_host {
     }
 
     impl BoardFillText {
-        fn empty() -> Self {
+        pub fn empty() -> Self {
             Self { bytes: [0; BOARD_FILL_TEXT_BYTES], len: 0 }
         }
 
-        fn try_from_str(value: &str) -> Result<Self, BoardFillCaptureFault> {
+        pub fn try_from_str(value: &str) -> Result<Self, BoardFillCaptureFault> {
             if value.len() > BOARD_FILL_TEXT_BYTES {
                 return Err(BoardFillCaptureFault::TextCapacity);
             }
@@ -381,7 +381,7 @@ pub mod board_host {
             Ok(())
         }
 
-        fn try_push_byte(&mut self, byte: u8) -> Result<(), BoardFillCaptureFault> {
+        pub fn try_push_byte(&mut self, byte: u8) -> Result<(), BoardFillCaptureFault> {
             self.try_extend(std::slice::from_ref(&byte))
         }
 
@@ -949,6 +949,22 @@ pub mod board_host {
             Some((handle.id.as_str(), handle.template.handle_kind.as_str(), handle.template.angle, handle.template.radius))
         }
 
+        pub fn fixed_handle_id(&self, index: usize) -> Option<&BoardFillText> {
+            self.handles.get(index).map(|handle| &handle.id)
+        }
+
+        pub fn fixed_handle_kind(&self, index: usize) -> Option<&BoardFillText> {
+            self.handles.get(index).map(|handle| &handle.template.handle_kind)
+        }
+
+        pub fn fixed_handle_angle(&self, index: usize) -> Option<f64> {
+            self.handles.get(index).map(|handle| handle.template.angle)
+        }
+
+        pub fn fixed_handle_radius(&self, index: usize) -> Option<Option<f64>> {
+            self.handles.get(index).map(|handle| handle.template.radius)
+        }
+
         pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> bool {
             if maximum_items == 0 {
                 return false;
@@ -1012,7 +1028,7 @@ pub mod board_host {
         }
 
         pub fn into_closing_job(mut self) -> BoardFillJob {
-            BoardFillJob { operation: self.operation, state: self.state.take(), checkpoint: None, preview: None, commit_writer: None, fault: None, closing: true }
+            BoardFillJob { operation: self.operation, state: self.state.take(), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, fault: None, closing: true }
         }
     }
 
@@ -1022,37 +1038,437 @@ pub mod board_host {
         }
     }
 
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct BoardFillResult {
         pub accepted_count: u32,
         pub stalled: bool,
         pub search_count: u64,
     }
 
-    impl BoardFillResult {
-        const COMMIT_BYTES: usize = 13;
+    /// 🧩️ Fixed handle carried by the exact terminal fill candidate.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct BoardFillCommitHandle {
+        pub id: BoardFillText,
+        pub handle_kind: BoardFillText,
+        pub angle: f64,
+        pub radius: Option<f64>,
+    }
 
-        fn encode(self) -> [u8; Self::COMMIT_BYTES] {
-            let mut bytes = [0; Self::COMMIT_BYTES];
-            bytes[..4].copy_from_slice(&self.accepted_count.to_le_bytes());
-            bytes[4] = u8::from(self.stalled);
-            bytes[5..].copy_from_slice(&self.search_count.to_le_bytes());
-            bytes
+    /// 🔷️ Fixed shape carried by the exact terminal fill candidate.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BoardFillCommitShape {
+        Circle,
+        Rectangle,
+    }
+
+    /// 📦️ Full bounded typed placement carried by the exact terminal candidate.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct BoardFillCommitPlacement {
+        pub node_id: BoardFillText,
+        pub edge_id: BoardFillText,
+        pub edge_kind: BoardFillText,
+        pub node_kind: BoardFillText,
+        pub source_handle_id: BoardFillText,
+        pub target_handle_id: BoardFillText,
+        pub target_handle_index: usize,
+        pub x: f64,
+        pub y: f64,
+        pub shape: BoardFillCommitShape,
+        pub radius: f64,
+        pub width: f64,
+        pub height: f64,
+        pub icon_kind: Option<BoardFillText>,
+        pub handles: [Option<BoardFillCommitHandle>; BOARD_FILL_KIND_HANDLE_CAPACITY],
+        pub handle_count: usize,
+    }
+
+    /// 🎯️ Typed terminal projection decoded while the retained payload remains authoritative.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct BoardFillCommitCandidate {
+        pub result: BoardFillResult,
+        pub placement: Option<BoardFillCommitPlacement>,
+    }
+
+    const BOARD_FILL_COMMIT_MAGIC: [u8; 4] = *b"P7BF";
+    const BOARD_FILL_COMMIT_VERSION: u8 = 1;
+    const BOARD_FILL_COMMIT_HEADER_BYTES: usize = 20;
+    const BOARD_FILL_COMMIT_TEXT_SLOT_BYTES: usize = 2 + BOARD_FILL_TEXT_BYTES;
+    const BOARD_FILL_COMMIT_NODE_ID_OFFSET: usize = BOARD_FILL_COMMIT_HEADER_BYTES;
+    const BOARD_FILL_COMMIT_EDGE_ID_OFFSET: usize = BOARD_FILL_COMMIT_NODE_ID_OFFSET + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+    const BOARD_FILL_COMMIT_EDGE_KIND_OFFSET: usize = BOARD_FILL_COMMIT_EDGE_ID_OFFSET + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+    const BOARD_FILL_COMMIT_NODE_KIND_OFFSET: usize = BOARD_FILL_COMMIT_EDGE_KIND_OFFSET + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+    const BOARD_FILL_COMMIT_SOURCE_OFFSET: usize = BOARD_FILL_COMMIT_NODE_KIND_OFFSET + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+    const BOARD_FILL_COMMIT_TARGET_OFFSET: usize = BOARD_FILL_COMMIT_SOURCE_OFFSET + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+    const BOARD_FILL_COMMIT_TARGET_INDEX_OFFSET: usize = BOARD_FILL_COMMIT_TARGET_OFFSET + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+    const BOARD_FILL_COMMIT_X_OFFSET: usize = BOARD_FILL_COMMIT_TARGET_INDEX_OFFSET + 8;
+    const BOARD_FILL_COMMIT_Y_OFFSET: usize = BOARD_FILL_COMMIT_X_OFFSET + 8;
+    const BOARD_FILL_COMMIT_SHAPE_OFFSET: usize = BOARD_FILL_COMMIT_Y_OFFSET + 8;
+    const BOARD_FILL_COMMIT_RADIUS_OFFSET: usize = BOARD_FILL_COMMIT_SHAPE_OFFSET + 1;
+    const BOARD_FILL_COMMIT_WIDTH_OFFSET: usize = BOARD_FILL_COMMIT_RADIUS_OFFSET + 8;
+    const BOARD_FILL_COMMIT_HEIGHT_OFFSET: usize = BOARD_FILL_COMMIT_WIDTH_OFFSET + 8;
+    const BOARD_FILL_COMMIT_ICON_PRESENT_OFFSET: usize = BOARD_FILL_COMMIT_HEIGHT_OFFSET + 8;
+    const BOARD_FILL_COMMIT_ICON_OFFSET: usize = BOARD_FILL_COMMIT_ICON_PRESENT_OFFSET + 1;
+    const BOARD_FILL_COMMIT_HANDLE_COUNT_OFFSET: usize = BOARD_FILL_COMMIT_ICON_OFFSET + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+    const BOARD_FILL_COMMIT_HANDLE_OFFSET: usize = BOARD_FILL_COMMIT_HANDLE_COUNT_OFFSET + 2;
+    const BOARD_FILL_COMMIT_HANDLE_BYTES: usize = BOARD_FILL_COMMIT_TEXT_SLOT_BYTES * 2 + 8 + 1 + 8;
+    const BOARD_FILL_COMMIT_BYTES: usize = BOARD_FILL_COMMIT_HANDLE_OFFSET + BOARD_FILL_KIND_HANDLE_CAPACITY * BOARD_FILL_COMMIT_HANDLE_BYTES;
+    const BOARD_FILL_COMMIT_PAGE_COUNT: usize = (BOARD_FILL_COMMIT_BYTES + semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1) / semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum BoardFillCommitEncodeStage {
+        Header,
+        Version,
+        Presence,
+        Stalled,
+        Accepted,
+        Search,
+        NodeId,
+        EdgeId,
+        EdgeKind,
+        NodeKind,
+        Source,
+        Target,
+        TargetIndex,
+        X,
+        Y,
+        Shape,
+        Radius,
+        Width,
+        Height,
+        Icon,
+        IconText,
+        HandleCount,
+        HandleId,
+        HandleKind,
+        HandleAngle,
+        HandleRadius,
+        HandleRadiusValue,
+        Complete,
+    }
+
+    struct BoardFillCommitEncoder {
+        bytes: [u8; BOARD_FILL_COMMIT_BYTES],
+        stage: BoardFillCommitEncodeStage,
+        handle: usize,
+        text_byte: usize,
+        text_length_written: bool,
+        output_cursor: usize,
+    }
+
+    impl BoardFillCommitEncoder {
+        fn new() -> Self {
+            Self { bytes: [0; BOARD_FILL_COMMIT_BYTES], stage: BoardFillCommitEncodeStage::Header, handle: 0, text_byte: 0, text_length_written: false, output_cursor: 0 }
+        }
+
+        fn step_text(&mut self, offset: usize, text: &BoardFillText) -> bool {
+            if !self.text_length_written {
+                self.bytes[offset..offset + 2].copy_from_slice(&text.len.to_le_bytes());
+                self.text_length_written = true;
+                return false;
+            }
+            if self.text_byte < usize::from(text.len) {
+                self.bytes[offset + 2 + self.text_byte] = text.bytes[self.text_byte];
+                self.text_byte += 1;
+                if self.text_byte < usize::from(text.len) {
+                    return false;
+                }
+            }
+            self.text_byte = 0;
+            self.text_length_written = false;
+            true
+        }
+
+        fn step(&mut self, state: &BoardFillJobState) -> Result<bool, &'static str> {
+            let placement = state.pending_placement.as_ref();
+            match self.stage {
+                BoardFillCommitEncodeStage::Header => {
+                    self.bytes[..4].copy_from_slice(&BOARD_FILL_COMMIT_MAGIC);
+                    self.stage = BoardFillCommitEncodeStage::Version;
+                }
+                BoardFillCommitEncodeStage::Version => {
+                    self.bytes[4] = BOARD_FILL_COMMIT_VERSION;
+                    self.stage = BoardFillCommitEncodeStage::Presence;
+                }
+                BoardFillCommitEncodeStage::Presence => {
+                    self.bytes[5] = u8::from(placement.is_some());
+                    self.stage = BoardFillCommitEncodeStage::Stalled;
+                }
+                BoardFillCommitEncodeStage::Stalled => {
+                    self.bytes[6] = u8::from(state.stalled);
+                    self.stage = BoardFillCommitEncodeStage::Accepted;
+                }
+                BoardFillCommitEncodeStage::Accepted => {
+                    self.bytes[8..12].copy_from_slice(&state.accepted_count.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::Search;
+                }
+                BoardFillCommitEncodeStage::Search => {
+                    self.bytes[12..20].copy_from_slice(&state.search_count.to_le_bytes());
+                    self.stage = if placement.is_some() { BoardFillCommitEncodeStage::NodeId } else { BoardFillCommitEncodeStage::Complete };
+                }
+                BoardFillCommitEncodeStage::NodeId => {
+                    if self.step_text(BOARD_FILL_COMMIT_NODE_ID_OFFSET, &placement.ok_or("fill-commit-placement")?.node_id) {
+                        self.stage = BoardFillCommitEncodeStage::EdgeId;
+                    }
+                }
+                BoardFillCommitEncodeStage::EdgeId => {
+                    if self.step_text(BOARD_FILL_COMMIT_EDGE_ID_OFFSET, &placement.ok_or("fill-commit-placement")?.edge_id) {
+                        self.stage = BoardFillCommitEncodeStage::EdgeKind;
+                    }
+                }
+                BoardFillCommitEncodeStage::EdgeKind => {
+                    if self.step_text(BOARD_FILL_COMMIT_EDGE_KIND_OFFSET, &placement.ok_or("fill-commit-placement")?.edge_kind) {
+                        self.stage = BoardFillCommitEncodeStage::NodeKind;
+                    }
+                }
+                BoardFillCommitEncodeStage::NodeKind => {
+                    if self.step_text(BOARD_FILL_COMMIT_NODE_KIND_OFFSET, &placement.ok_or("fill-commit-placement")?.node_kind) {
+                        self.stage = BoardFillCommitEncodeStage::Source;
+                    }
+                }
+                BoardFillCommitEncodeStage::Source => {
+                    if self.step_text(BOARD_FILL_COMMIT_SOURCE_OFFSET, &placement.ok_or("fill-commit-placement")?.source_handle_id) {
+                        self.stage = BoardFillCommitEncodeStage::Target;
+                    }
+                }
+                BoardFillCommitEncodeStage::Target => {
+                    if self.step_text(BOARD_FILL_COMMIT_TARGET_OFFSET, &placement.ok_or("fill-commit-placement")?.target_handle_id) {
+                        self.stage = BoardFillCommitEncodeStage::TargetIndex;
+                    }
+                }
+                BoardFillCommitEncodeStage::TargetIndex => {
+                    let index = u64::try_from(placement.ok_or("fill-commit-placement")?.target_handle_index).map_err(|_| "fill-commit-target-index")?;
+                    self.bytes[BOARD_FILL_COMMIT_TARGET_INDEX_OFFSET..BOARD_FILL_COMMIT_X_OFFSET].copy_from_slice(&index.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::X;
+                }
+                BoardFillCommitEncodeStage::X => {
+                    self.bytes[BOARD_FILL_COMMIT_X_OFFSET..BOARD_FILL_COMMIT_Y_OFFSET].copy_from_slice(&placement.ok_or("fill-commit-placement")?.x.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::Y;
+                }
+                BoardFillCommitEncodeStage::Y => {
+                    self.bytes[BOARD_FILL_COMMIT_Y_OFFSET..BOARD_FILL_COMMIT_SHAPE_OFFSET].copy_from_slice(&placement.ok_or("fill-commit-placement")?.y.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::Shape;
+                }
+                BoardFillCommitEncodeStage::Shape => {
+                    self.bytes[BOARD_FILL_COMMIT_SHAPE_OFFSET] = match placement.ok_or("fill-commit-placement")?.shape {
+                        "circle" => 0,
+                        "rectangle" => 1,
+                        _ => return Err("fill-commit-shape"),
+                    };
+                    self.stage = BoardFillCommitEncodeStage::Radius;
+                }
+                BoardFillCommitEncodeStage::Radius => {
+                    self.bytes[BOARD_FILL_COMMIT_RADIUS_OFFSET..BOARD_FILL_COMMIT_WIDTH_OFFSET].copy_from_slice(&placement.ok_or("fill-commit-placement")?.radius.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::Width;
+                }
+                BoardFillCommitEncodeStage::Width => {
+                    self.bytes[BOARD_FILL_COMMIT_WIDTH_OFFSET..BOARD_FILL_COMMIT_HEIGHT_OFFSET].copy_from_slice(&placement.ok_or("fill-commit-placement")?.width.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::Height;
+                }
+                BoardFillCommitEncodeStage::Height => {
+                    self.bytes[BOARD_FILL_COMMIT_HEIGHT_OFFSET..BOARD_FILL_COMMIT_ICON_PRESENT_OFFSET].copy_from_slice(&placement.ok_or("fill-commit-placement")?.height.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::Icon;
+                }
+                BoardFillCommitEncodeStage::Icon => {
+                    if placement.ok_or("fill-commit-placement")?.icon_kind.as_ref().is_some() {
+                        self.bytes[BOARD_FILL_COMMIT_ICON_PRESENT_OFFSET] = 1;
+                        self.stage = BoardFillCommitEncodeStage::IconText;
+                    } else {
+                        self.stage = BoardFillCommitEncodeStage::HandleCount;
+                    }
+                }
+                BoardFillCommitEncodeStage::IconText => {
+                    if self.step_text(BOARD_FILL_COMMIT_ICON_OFFSET, placement.ok_or("fill-commit-placement")?.icon_kind.as_ref().ok_or("fill-commit-icon")?) {
+                        self.stage = BoardFillCommitEncodeStage::HandleCount;
+                    }
+                }
+                BoardFillCommitEncodeStage::HandleCount => {
+                    let count = placement.ok_or("fill-commit-placement")?.handle_count();
+                    let count = u16::try_from(count).map_err(|_| "fill-commit-handle-count")?;
+                    self.bytes[BOARD_FILL_COMMIT_HANDLE_COUNT_OFFSET..BOARD_FILL_COMMIT_HANDLE_OFFSET].copy_from_slice(&count.to_le_bytes());
+                    self.handle = 0;
+                    self.stage = BoardFillCommitEncodeStage::HandleId;
+                }
+                BoardFillCommitEncodeStage::HandleId => {
+                    let placement = placement.ok_or("fill-commit-placement")?;
+                    let Some(handle) = placement.handles.get(self.handle) else {
+                        self.stage = BoardFillCommitEncodeStage::Complete;
+                        return Ok(false);
+                    };
+                    let offset = BOARD_FILL_COMMIT_HANDLE_OFFSET + self.handle * BOARD_FILL_COMMIT_HANDLE_BYTES;
+                    if self.step_text(offset, &handle.id) {
+                        self.stage = BoardFillCommitEncodeStage::HandleKind;
+                    }
+                }
+                BoardFillCommitEncodeStage::HandleKind => {
+                    let handle = placement.ok_or("fill-commit-placement")?.handles.get(self.handle).ok_or("fill-commit-handle")?;
+                    let offset = BOARD_FILL_COMMIT_HANDLE_OFFSET + self.handle * BOARD_FILL_COMMIT_HANDLE_BYTES + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES;
+                    if self.step_text(offset, &handle.template.handle_kind) {
+                        self.stage = BoardFillCommitEncodeStage::HandleAngle;
+                    }
+                }
+                BoardFillCommitEncodeStage::HandleAngle => {
+                    let handle = placement.ok_or("fill-commit-placement")?.handles.get(self.handle).ok_or("fill-commit-handle")?;
+                    let offset = BOARD_FILL_COMMIT_HANDLE_OFFSET + self.handle * BOARD_FILL_COMMIT_HANDLE_BYTES + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES * 2;
+                    self.bytes[offset..offset + 8].copy_from_slice(&handle.template.angle.to_le_bytes());
+                    self.stage = BoardFillCommitEncodeStage::HandleRadius;
+                }
+                BoardFillCommitEncodeStage::HandleRadius => {
+                    let handle = placement.ok_or("fill-commit-placement")?.handles.get(self.handle).ok_or("fill-commit-handle")?;
+                    let offset = BOARD_FILL_COMMIT_HANDLE_OFFSET + self.handle * BOARD_FILL_COMMIT_HANDLE_BYTES + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES * 2 + 8;
+                    if let Some(radius) = handle.template.radius {
+                        self.bytes[offset] = 1;
+                        let _ = radius;
+                        self.stage = BoardFillCommitEncodeStage::HandleRadiusValue;
+                    } else {
+                        self.handle += 1;
+                        self.stage = BoardFillCommitEncodeStage::HandleId;
+                    }
+                }
+                BoardFillCommitEncodeStage::HandleRadiusValue => {
+                    let handle = placement.ok_or("fill-commit-placement")?.handles.get(self.handle).ok_or("fill-commit-handle")?;
+                    let offset = BOARD_FILL_COMMIT_HANDLE_OFFSET + self.handle * BOARD_FILL_COMMIT_HANDLE_BYTES + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES * 2 + 9;
+                    self.bytes[offset..offset + 8].copy_from_slice(&handle.template.radius.ok_or("fill-commit-handle-radius")?.to_le_bytes());
+                    self.handle += 1;
+                    self.stage = BoardFillCommitEncodeStage::HandleId;
+                }
+                BoardFillCommitEncodeStage::Complete => return Ok(true),
+            }
+            Ok(false)
+        }
+    }
+
+    struct BoardFillCommitPayload<'a> {
+        payload: &'a semio_framework_job::RetainedJobPayload,
+    }
+
+    impl<'a> BoardFillCommitPayload<'a> {
+        fn new(payload: &'a semio_framework_job::RetainedJobPayload) -> Option<Self> {
+            (payload.len() == BOARD_FILL_COMMIT_BYTES && payload.page_count() == BOARD_FILL_COMMIT_PAGE_COUNT && payload.page(0)?.len() == BOARD_FILL_COMMIT_BYTES).then_some(Self { payload })
+        }
+
+        fn read<const N: usize>(&self, offset: usize) -> Option<[u8; N]> {
+            let end = offset.checked_add(N)?;
+            if end > BOARD_FILL_COMMIT_BYTES {
+                return None;
+            }
+            let mut output = [0; N];
+            let mut copied = 0usize;
+            while copied < N {
+                let absolute = offset + copied;
+                let page_index = absolute / semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+                let page_offset = absolute % semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+                let page = self.payload.page(page_index)?;
+                let count = (N - copied).min(page.len().checked_sub(page_offset)?);
+                if count == 0 {
+                    return None;
+                }
+                output[copied..copied + count].copy_from_slice(&page[page_offset..page_offset + count]);
+                copied += count;
+            }
+            Some(output)
+        }
+
+        fn byte(&self, offset: usize) -> Option<u8> {
+            Some(self.read::<1>(offset)?[0])
+        }
+    }
+
+    impl BoardFillCommitCandidate {
+        fn read_text(payload: &BoardFillCommitPayload<'_>, offset: usize) -> Option<BoardFillText> {
+            let length = u16::from_le_bytes(payload.read::<2>(offset)?);
+            if usize::from(length) > BOARD_FILL_TEXT_BYTES {
+                return None;
+            }
+            let mut text = BoardFillText::empty();
+            text.bytes = payload.read::<BOARD_FILL_TEXT_BYTES>(offset + 2)?;
+            text.len = length;
+            std::str::from_utf8(&text.bytes[..usize::from(length)]).ok()?;
+            Some(text)
+        }
+
+        fn read_f64(payload: &BoardFillCommitPayload<'_>, offset: usize) -> Option<f64> {
+            let value = f64::from_le_bytes(payload.read::<8>(offset)?);
+            value.is_finite().then_some(value)
         }
 
         pub fn from_commit_candidate(candidate: &semio_framework_job::CommitCandidate) -> Option<Self> {
-            let bytes = candidate.output.single_page()?;
-            if bytes.len() != Self::COMMIT_BYTES || !candidate.state.is_empty() {
+            let payload = BoardFillCommitPayload::new(&candidate.output)?;
+            if !candidate.state.is_empty() || payload.read::<4>(0)? != BOARD_FILL_COMMIT_MAGIC || payload.byte(4)? != BOARD_FILL_COMMIT_VERSION {
                 return None;
             }
-            let accepted_count = u32::from_le_bytes(bytes[..4].try_into().ok()?);
-            let stalled = match bytes[4] {
-                0 => false,
-                1 => true,
+            let result = BoardFillResult {
+                accepted_count: u32::from_le_bytes(payload.read::<4>(8)?),
+                stalled: match payload.byte(6)? {
+                    0 => false,
+                    1 => true,
+                    _ => return None,
+                },
+                search_count: u64::from_le_bytes(payload.read::<8>(12)?),
+            };
+            let placement = match payload.byte(5)? {
+                0 => None,
+                1 => {
+                    let handle_count = usize::from(u16::from_le_bytes(payload.read::<2>(BOARD_FILL_COMMIT_HANDLE_COUNT_OFFSET)?));
+                    if handle_count > BOARD_FILL_KIND_HANDLE_CAPACITY {
+                        return None;
+                    }
+                    let handles = std::array::from_fn(|index| {
+                        if index >= handle_count {
+                            return None;
+                        }
+                        let offset = BOARD_FILL_COMMIT_HANDLE_OFFSET + index * BOARD_FILL_COMMIT_HANDLE_BYTES;
+                        let radius_offset = offset + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES * 2 + 8;
+                        let radius = match payload.byte(radius_offset)? {
+                            0 => None,
+                            1 => Some(Self::read_f64(&payload, radius_offset + 1)?),
+                            _ => return None,
+                        };
+                        Some(BoardFillCommitHandle {
+                            id: Self::read_text(&payload, offset)?,
+                            handle_kind: Self::read_text(&payload, offset + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES)?,
+                            angle: Self::read_f64(&payload, offset + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES * 2)?,
+                            radius,
+                        })
+                    });
+                    if handles[..handle_count].iter().any(Option::is_none) {
+                        return None;
+                    }
+                    let target_handle_index = usize::try_from(u64::from_le_bytes(payload.read::<8>(BOARD_FILL_COMMIT_TARGET_INDEX_OFFSET)?)).ok()?;
+                    if target_handle_index >= handle_count {
+                        return None;
+                    }
+                    let shape = match payload.byte(BOARD_FILL_COMMIT_SHAPE_OFFSET)? {
+                        0 => BoardFillCommitShape::Circle,
+                        1 => BoardFillCommitShape::Rectangle,
+                        _ => return None,
+                    };
+                    let icon_kind = match payload.byte(BOARD_FILL_COMMIT_ICON_PRESENT_OFFSET)? {
+                        0 => None,
+                        1 => Some(Self::read_text(&payload, BOARD_FILL_COMMIT_ICON_OFFSET)?),
+                        _ => return None,
+                    };
+                    Some(BoardFillCommitPlacement {
+                        node_id: Self::read_text(&payload, BOARD_FILL_COMMIT_NODE_ID_OFFSET)?,
+                        edge_id: Self::read_text(&payload, BOARD_FILL_COMMIT_EDGE_ID_OFFSET)?,
+                        edge_kind: Self::read_text(&payload, BOARD_FILL_COMMIT_EDGE_KIND_OFFSET)?,
+                        node_kind: Self::read_text(&payload, BOARD_FILL_COMMIT_NODE_KIND_OFFSET)?,
+                        source_handle_id: Self::read_text(&payload, BOARD_FILL_COMMIT_SOURCE_OFFSET)?,
+                        target_handle_id: Self::read_text(&payload, BOARD_FILL_COMMIT_TARGET_OFFSET)?,
+                        target_handle_index,
+                        x: Self::read_f64(&payload, BOARD_FILL_COMMIT_X_OFFSET)?,
+                        y: Self::read_f64(&payload, BOARD_FILL_COMMIT_Y_OFFSET)?,
+                        shape,
+                        radius: Self::read_f64(&payload, BOARD_FILL_COMMIT_RADIUS_OFFSET)?,
+                        width: Self::read_f64(&payload, BOARD_FILL_COMMIT_WIDTH_OFFSET)?,
+                        height: Self::read_f64(&payload, BOARD_FILL_COMMIT_HEIGHT_OFFSET)?,
+                        icon_kind,
+                        handles,
+                        handle_count,
+                    })
+                }
                 _ => return None,
             };
-            let search_count = u64::from_le_bytes(bytes[5..].try_into().ok()?);
-            Some(Self { accepted_count, stalled, search_count })
+            Some(Self { result, placement })
         }
     }
 
@@ -1062,6 +1478,7 @@ pub mod board_host {
         state: Option<BoardFillJobState>,
         checkpoint: Option<BoardFillCheckpoint>,
         preview: Option<BoardFillPreview>,
+        commit_encoder: Option<BoardFillCommitEncoder>,
         commit_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
         fault: Option<&'static str>,
         closing: bool,
@@ -5846,6 +6263,7 @@ pub mod board_host {
                 }),
                 checkpoint: None,
                 preview: None,
+                commit_encoder: None,
                 commit_writer: None,
                 fault: None,
                 closing: false,
@@ -5857,7 +6275,7 @@ pub mod board_host {
                 return Err(checkpoint);
             }
             let Some(state) = checkpoint.state.take() else { return Err(checkpoint) };
-            Ok(Self { operation, state: Some(state), checkpoint: None, preview: None, commit_writer: None, fault: None, closing: false })
+            Ok(Self { operation, state: Some(state), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, fault: None, closing: false })
         }
 
         pub fn operation(&self) -> semio_framework_job::Operation {
@@ -6416,7 +6834,11 @@ pub mod board_host {
 
         fn publish_prefix(&mut self) -> Result<semio_framework_job::StepOutcome, &'static str> {
             let state = self.state.as_mut().ok_or("missing-fill-state")?;
-            state.stage = if state.accepted_count >= state.max_count { BoardFillStage::Complete } else { BoardFillStage::ResetSources };
+            if state.accepted_count >= state.max_count {
+                state.stage = BoardFillStage::Complete;
+                return Ok(semio_framework_job::StepOutcome::Yield);
+            }
+            state.stage = BoardFillStage::ResetSources;
             let state = self.state.take().ok_or("missing-fill-state")?;
             self.checkpoint = Some(BoardFillCheckpoint { operation: self.operation, state: Some(state) });
             Ok(semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
@@ -6481,20 +6903,45 @@ pub mod board_host {
 
         fn complete(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             let Some(state) = self.state.as_ref() else { return self.fault_outcome("missing-fill-state") };
-            let result = BoardFillResult { accepted_count: state.accepted_count, stalled: state.stalled, search_count: state.search_count };
+            if self.commit_encoder.is_none() {
+                self.commit_encoder = Some(BoardFillCommitEncoder::new());
+                context.consume_fuel(1);
+                return semio_framework_job::StepOutcome::Yield;
+            }
+            let encoder_complete = self.commit_encoder.as_ref().is_some_and(|encoder| encoder.stage == BoardFillCommitEncodeStage::Complete);
+            if !encoder_complete {
+                if let Err(code) = self.commit_encoder.as_mut().ok_or("fill-commit-encoder").and_then(|encoder| encoder.step(state)) {
+                    return self.fault_outcome(code);
+                }
+                context.consume_fuel(1);
+                return semio_framework_job::StepOutcome::Yield;
+            }
             if self.commit_writer.is_none() {
                 self.commit_writer = Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
+                context.consume_fuel(1);
+                return semio_framework_job::StepOutcome::Yield;
             }
-            let Some(writer) = self.commit_writer.as_mut() else { return self.fault_outcome("fill-commit-writer") };
-            let mut page = match writer.admit_page(context) {
-                Ok(page) => page,
-                Err(_) => return semio_framework_job::StepOutcome::Yield,
-            };
-            if page.write(&result.encode()).is_err() {
-                drop(page);
-                return self.fault_outcome("fill-commit-output");
+            let Some(encoder) = self.commit_encoder.as_ref() else { return self.fault_outcome("fill-commit-encoder") };
+            let start = encoder.output_cursor;
+            if start < BOARD_FILL_COMMIT_BYTES {
+                let Some(writer) = self.commit_writer.as_mut() else { return self.fault_outcome("fill-commit-writer") };
+                let mut page = match writer.admit_page(context) {
+                    Ok(page) => page,
+                    Err(_) => return semio_framework_job::StepOutcome::Yield,
+                };
+                let end = start.saturating_add(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).min(BOARD_FILL_COMMIT_BYTES);
+                if page.write(&encoder.bytes[start..end]).is_err() {
+                    drop(page);
+                    return self.fault_outcome("fill-commit-output");
+                }
+                page.commit();
+                let Some(encoder) = self.commit_encoder.as_mut() else { return self.fault_outcome("fill-commit-encoder") };
+                encoder.output_cursor = end;
+                if end < BOARD_FILL_COMMIT_BYTES {
+                    context.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
             }
-            page.commit();
             let Some(writer) = self.commit_writer.take() else { return self.fault_outcome("fill-commit-writer") };
             let output = match writer.finish() {
                 Ok(output) => output,
@@ -6503,6 +6950,7 @@ pub mod board_host {
                     return semio_framework_job::StepOutcome::Yield;
                 }
             };
+            self.commit_encoder = None;
             semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState), output })
         }
 
@@ -6528,10 +6976,12 @@ pub mod board_host {
                 return self.fault_outcome("fill-state-not-adopted");
             };
             if stage == BoardFillStage::PublishPlanPrefix {
-                return match self.publish_prefix() {
+                let outcome = match self.publish_prefix() {
                     Ok(outcome) => outcome,
                     Err(code) => self.fault_outcome(code),
                 };
+                context.consume_fuel(1);
+                return outcome;
             }
             if stage == BoardFillStage::Complete {
                 return self.complete(context);
@@ -6625,6 +7075,9 @@ pub mod board_host {
                     self.state = checkpoint.state.take();
                     return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
+            }
+            if self.commit_encoder.take().is_some() {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(writer) = self.commit_writer.as_mut() {
                 writer.begin_close();
@@ -6720,7 +7173,7 @@ pub mod board_host {
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.closing && self.state.is_none() && self.checkpoint.is_none() && self.preview.is_none() && self.commit_writer.is_none() && self.fault.is_none()
+            self.closing && self.state.is_none() && self.checkpoint.is_none() && self.preview.is_none() && self.commit_encoder.is_none() && self.commit_writer.is_none() && self.fault.is_none()
         }
     }
 
@@ -12496,6 +12949,61 @@ pub mod board_host {
         }
         assert!(turns > 16);
         assert!(retirement.terminal_nonopaque_is_empty());
+    }
+
+    #[cfg(test)]
+    fn fill_full_commit_candidate_contract(source: &str) -> bool {
+        let Some(start) = source.find("pub struct BoardFillResult") else { return false };
+        let Some(end) = source[start..].find("/// 🧵️ Persistent worker-owned fill search") else { return false };
+        let codec = &source[start..start + end];
+        let Some(job_start) = source.find("fn complete(&mut self, context: &mut semio_framework_job::StepContext") else { return false };
+        let Some(job_end) = source[job_start..].find("fn fault_outcome") else { return false };
+        let job = &source[job_start..job_start + job_end];
+        codec.contains("pub struct BoardFillCommitPlacement")
+            && codec.contains("pub edge_kind: BoardFillText")
+            && codec.contains("pub handles: [Option<BoardFillCommitHandle>; BOARD_FILL_KIND_HANDLE_CAPACITY]")
+            && codec.contains("pub placement: Option<BoardFillCommitPlacement>")
+            && codec.contains("struct BoardFillCommitPayload")
+            && codec.contains("BoardFillCommitPayload::new(&candidate.output)")
+            && codec.contains("payload.page_count() == BOARD_FILL_COMMIT_PAGE_COUNT")
+            && codec.contains("payload.page(page_index)")
+            && codec.contains("text_byte: usize")
+            && codec.contains("fn step_text")
+            && codec.contains("self.bytes[offset + 2 + self.text_byte] = text.bytes[self.text_byte]")
+            && !codec.contains("String")
+            && !codec.contains("Vec<")
+            && !codec.contains("BTreeMap")
+            && !codec.contains("single_page()")
+            && !codec.contains("const BOARD_FILL_COMMIT_BYTES: usize = 13")
+            && !codec.contains("result.encode")
+            && job.contains("start.saturating_add(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)")
+            && job.contains("if end < BOARD_FILL_COMMIT_BYTES")
+            && job.contains("encoder.output_cursor = end")
+    }
+
+    /// 📦️ Dynamic placement strings and summary-only or single-page terminal restorations fail the full candidate law.
+    #[cfg(test)]
+    #[test]
+    fn fill_full_commit_candidate_mutations_are_rejected() {
+        let source = include_str!("🦀️component.rs");
+        assert_eq!(BOARD_FILL_COMMIT_BYTES, 10_406);
+        assert_eq!(BOARD_FILL_COMMIT_PAGE_COUNT, 1);
+        assert!(BOARD_FILL_COMMIT_BYTES <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES * BOARD_FILL_COMMIT_PAGE_COUNT);
+        assert!(fill_full_commit_candidate_contract(source));
+        let dynamic = source.replacen("pub struct BoardFillCommitPlacement {\n        pub node_id: BoardFillText,", "pub struct BoardFillCommitPlacement {\n        pub dynamic: String,\n        pub node_id: BoardFillText,", 1);
+        assert!(!fill_full_commit_candidate_contract(&dynamic));
+        let summary = source.replacen("const BOARD_FILL_COMMIT_BYTES: usize = BOARD_FILL_COMMIT_HANDLE_OFFSET + BOARD_FILL_KIND_HANDLE_CAPACITY * BOARD_FILL_COMMIT_HANDLE_BYTES;", "const BOARD_FILL_COMMIT_BYTES: usize = 13;", 1);
+        assert!(!fill_full_commit_candidate_contract(&summary));
+    }
+
+    /// 🔡️ Re-coalescing fixed text fails the retained candidate cursor law.
+    #[cfg(test)]
+    #[test]
+    fn fill_commit_candidate_granularity_mutations_are_rejected() {
+        let source = include_str!("🦀️component.rs");
+        assert!(fill_full_commit_candidate_contract(source));
+        let text = source.replacen("self.bytes[offset + 2 + self.text_byte] = text.bytes[self.text_byte];", "self.bytes[offset + 2..offset + BOARD_FILL_COMMIT_TEXT_SLOT_BYTES].copy_from_slice(&text.bytes);", 1);
+        assert!(!fill_full_commit_candidate_contract(&text));
     }
 
     #[cfg(test)]

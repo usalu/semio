@@ -152,3 +152,82 @@ The shared root verifier was explicitly outside this packet. A later serialized 
 ## Handoff
 
 The P7b source/static packet is ready for an independent Terra audit. Runtime/build acceptance remains deliberately deferred.
+
+## Fourth independent RED remediation
+
+The fourth independent re-audit found two remaining P0s: dynamic strings in the retained placement applier and a summary-only terminal candidate. Both are now closed in the live mounted path.
+
+### Fixed retained placement ownership
+
+`FillPlacementApplyCursor`, `FillPlacementHandleOwner`, `FillPlacementNodeOwner`, and `FillPlacementEdgeOwner` now retain only fixed `BoardFillText`, fixed scalar/enumeration fields, a fixed 16-slot handle array, and the exact typed placement/page owner. IDs, kinds, metadata, source/target IDs, and source edge kind advance through a shared retained byte cursor. One action continuation copies at most one character byte or one independent scalar/owner; fixed handle publication transfers one exact owner. Node icon presence and icon bytes have separate stages.
+
+The final typed document mutation boundary remains intentionally same-turn and atomic. It first computes cumulative backing credits for both mutations, the schema handle array, every text buffer, the duplicated node label, shape, and optional icon. It then fallibly reserves the two mutation slots and exact handle capacity before constructing the schema-owned node and edge. Allocation refusal publishes neither mutation and leaves the authoritative fixed placement or terminal candidate retained for retry. The only three production `String` references in this region are these same-turn fallible output constructors; the retained owner slice has zero `String`, `Vec`, `BTreeMap`, `Puzzle2dNode`, or `Puzzle2dHandle` matches.
+
+Checkpoint and terminal publication both pass an ephemeral borrowed `FillPlacementPublishView` over their authoritative fixed owners. The checkpoint path does not reassemble or copy a whole 10,406-byte commit placement or sixteen-slot handle array before publication. The publish-view slice itself owns only fixed references and scalars and has zero `String`, `Vec`, or `BTreeMap` matches.
+
+### Full exact terminal candidate
+
+`BoardFillResult` is no longer the whole terminal payload. The producer now commits a versioned fixed `BoardFillCommitCandidate` containing:
+
+- accepted/stalled/search result scalars;
+- optional full typed final placement;
+- node ID and kind, geometry, shape, icon, and target-handle index;
+- edge ID, exact source edge kind, source handle ID, and target handle ID;
+- all sixteen possible fixed handle IDs/kinds/angles/radii plus exact handle count.
+
+The canonical fixed codec is exactly 10,406 bytes and one admitted 16 KiB commit-output page at the current 256-byte text and 16-handle maxima. Encoding retains a field stage plus text byte cursor: header/result scalars, text lengths, every text byte, geometry scalar, handle field, writer construction, and page admission are distinct bounded worker opportunities. The exact payload decoder requires canonical magic/version, exact byte length, exact page count and page length, empty commit state, bounded handle count/target index, valid UTF-8, finite geometry, valid shape/presence tags, and the complete fixed placement.
+
+The final accepted placement remains in `BoardFillJobState` instead of being emitted as a checkpoint. `StepOutcome::Complete(CommitCandidate)` therefore owns the exact full terminal projection. Both the initial pump and retained-outcome retry path decode that candidate and call the same pre-credited typed node-and-edge publication helper in the same action turn. Publication refusal retains the untouched exact `StepOutcome` page for retry. Only after publication succeeds, or a malformed terminal is faulted, does incremental ACK close one payload page and continue session/state retirement. No mutable `take_result` path exists.
+
+The brush fixture now consumes the terminal placement as well as checkpoint placements, including exact edge kind, so count-one sessions witness the full candidate rather than losing their final placement from the oracle.
+
+### Exact ownership and close table
+
+| Owner | Refusal/stale/cancel behavior | Terminal close |
+| --- | --- | --- |
+| Fixed apply cursor | Keeps the exact source placement/page, partial fixed text, byte cursor, scalar stage, fixed handle array, node owner, and edge owner; no dynamic retained field can ordinary-drop. | Retires one fixed handle/owner or one placement item/page per action continuation. |
+| Commit encoder | Keeps the canonical fixed 10,406-byte inline projection, field/text cursors, and output cursor inside the already admitted job backing. Deadline/cancel/stale prevents the next field or page opportunity. | Removes the fixed encoder as one owner; it has no separate heap backing. |
+| Commit writer/page | Admission refusal remains in `RetainedJobPayloadWriter`; the next worker turn retries the exact page source. | Writer close releases one rejected/staged/committed page or writer owner per close grant. |
+| Complete outcome | The exact full candidate page remains in `retained_outcome` until typed node+edge publication succeeds. | ACK closes one retained payload page per action continuation, then closes the mounted session and original job state incrementally. |
+| Same-turn schema output | Cumulative backing is checked and both vector slots are reserved before node/edge construction or publication. | A failed construction emits no mutation; the authoritative fixed source remains retained. Successful construction transfers exactly the two typed mutation owners. |
+
+### Fourth-remediation hostile laws
+
+New permanent local laws reject:
+
+1. injecting `String` into `FillPlacementEdgeOwner`;
+2. injecting `String` into the complete mounted publish-view ownership slice;
+3. replacing a retained per-byte edge-kind copy with a whole fixed-text assignment;
+4. restoring whole fixed commit-placement and handle-array assembly in the checkpoint publish turn;
+5. replacing the full candidate decoder with a summary decoder;
+6. discarding `candidate.placement` while keeping only result scalars;
+7. removing same-turn `try_reserve_exact(2)` destination credit;
+8. injecting `String` into `BoardFillCommitPlacement`;
+9. restoring a 13-byte `BOARD_FILL_COMMIT_BYTES` terminal;
+10. replacing one-byte terminal text encoding with whole-slot `copy_from_slice`.
+
+An executable MAX/MAX+1 law additionally advances a 256-byte fixed placement label one byte per cursor call, proves each call grows the destination by exactly one byte, and rejects 257 bytes. The Board law fixes the full candidate layout at 10,406 bytes and exactly one admitted page.
+
+### Fourth-remediation residual census and gates
+
+The post-format production census is:
+
+- retained placement-owner slice: `String=0`, `Vec<` `=0`, `BTreeMap=0`, `Puzzle2dNode=0`, `Puzzle2dHandle=0`, fixed `BoardFillText=11`;
+- borrowed publish-view slice: `String=0`, `Vec<` `=0`, `BTreeMap=0`, exact commit-view binding `=1`, fixed cursor-view authority matches `=2`;
+- retained apply implementation: exactly nine `copy_fill_text_one` call sites;
+- retained apply implementation: whole commit-placement assembly `=0`, whole handle-array reassembly `=0`;
+- terminal codec slice: `String=0`, `Vec<` `=0`, `BTreeMap=0`, `single_page()=0`, 13-byte terminal constants `=0`, full placement definitions `=1`, exact edge-kind field `=1`, fixed text encoder `=1`;
+- mounted action production: exact full-candidate decoder `=1`, initial/retry terminal publication calls `=2`, `BoardFillJob::take_result=0`, summary-result decoder `=0`;
+- fixed-page core: `try_push_owned=11`, discarded `.is_err()` handbacks `=0`;
+- early fill branch preservation: `config.clone()=0`, whole config snapshot mutation `=0`, `BoardHost=0`, whole document clone `=0`.
+
+Current source/static gates:
+
+- edition-2021 rustfmt and a subsequent `--check --config skip_children=true` across the Board file plus all eleven declared Puzzle2d Rust files: GREEN;
+- Bun JSON schema parse: GREEN;
+- four new live source-predicate baselines plus all ten fourth-remediation mutations: GREEN; every mutation was rejected;
+- six preserved mounted capture/dispatch/runtime/ingress/handback predicate baselines: GREEN;
+- scoped `git diff HEAD --check` across the sixteen source/schema files and this report: GREEN;
+- exact residual census above: GREEN.
+
+No Cargo, Nx, Wasm, browser, compiler, runtime, or watchdog gate was run. P7b remains source/static audit-ready, not self-accepted.

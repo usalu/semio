@@ -132,7 +132,7 @@ pub type BoundedJobFactory = fn(u64, &[u8]) -> Result<Box<dyn BoundedJob>, Vec<u
 
 //#region 🔖️Registry
 
-thread_local! {
+crate::component_persistent_local! {
     static KIND_REGISTRY: RefCell<HashMap<&'static str, JobFn>> = RefCell::new(builtin_registry());
     static BOUNDED_KIND_REGISTRY: RefCell<HashMap<&'static str, BoundedJobFactory>> = RefCell::new(HashMap::new());
 }
@@ -307,7 +307,7 @@ struct JobSlot {
     body: JobBody,
 }
 
-thread_local! {
+crate::component_persistent_local! {
     static JOBS: RefCell<HashMap<u64, JobSlot>> = RefCell::new(HashMap::new());
     /// 🧵️ A SEPARATE `LocalExecutor` instance from the reactor turn loop's own — see module doc.
     // 🌉️ `thread_local!` initializer runs in a plain non-async context — bridged via `resolve_ready`

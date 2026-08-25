@@ -2478,18 +2478,15 @@ fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPageCur
 }
 
 fn wit_command_ingress_to_kernel(status: wit_reactor::CommandIngressStatus) -> semio_framework::kernel::CommandIngressStatus {
-    match status {
-        wit_reactor::CommandIngressStatus::Idle => semio_framework::kernel::CommandIngressStatus::Idle,
-        wit_reactor::CommandIngressStatus::PageAccepted(cursor) => semio_framework::kernel::CommandIngressStatus::PageAccepted(wit_command_cursor_to_kernel(cursor)),
-        wit_reactor::CommandIngressStatus::Backpressure(cursor) => semio_framework::kernel::CommandIngressStatus::Backpressure(wit_command_cursor_to_kernel(cursor)),
-        wit_reactor::CommandIngressStatus::CommandPending(cursor) => semio_framework::kernel::CommandIngressStatus::CommandPending(wit_command_cursor_to_kernel(cursor)),
-        wit_reactor::CommandIngressStatus::CommandComplete(cursor) => semio_framework::kernel::CommandIngressStatus::CommandComplete(wit_command_cursor_to_kernel(cursor)),
-        wit_reactor::CommandIngressStatus::Fault(fault) => {
-            let bytes = match fault.fault {
-                wit_types::PluginError::Fault(bytes) => bytes,
-            };
-            semio_framework::kernel::CommandIngressStatus::Fault { cursor: wit_command_cursor_to_kernel(fault.cursor), fault: bytes }
-        }
+    let cursor = wit_command_cursor_to_kernel(status.cursor);
+    match status.kind {
+        0 => semio_framework::kernel::CommandIngressStatus::Idle,
+        1 => semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor),
+        2 => semio_framework::kernel::CommandIngressStatus::Backpressure(cursor),
+        3 => semio_framework::kernel::CommandIngressStatus::CommandPending(cursor),
+        4 => semio_framework::kernel::CommandIngressStatus::CommandComplete(cursor),
+        5 => semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: status.fault },
+        _ => semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-ingress-kind".to_vec() },
     }
 }
 

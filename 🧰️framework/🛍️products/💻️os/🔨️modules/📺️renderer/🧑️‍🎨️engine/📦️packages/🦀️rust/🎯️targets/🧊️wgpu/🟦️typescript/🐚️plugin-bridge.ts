@@ -68,7 +68,7 @@ import {
   type TurnOutcome,
 } from "@semio-tech/framework";
 import { AppChannelClient, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
-import { ShardClient, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts";
 import {
   applyUiPatchToRetained,
@@ -109,10 +109,10 @@ function getActivationRegistry(): ActivationRegistry {
  * file's header doc for why this is deliberately simpler than `PluginRuntime`'s lane/coalescing
  * `TurnScheduler`. */
 const actorTurnChains = new Map<string, Promise<unknown>>();
-function submitTurn(actorId: string, events: readonly ShardEventEnvelope[]): Promise<WireTurnResult> {
+function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], commandPage?: ShardCommandIngressPage): Promise<WireTurnResult> {
   getActivationRegistry().touch(actorId);
   const previousSettled = (actorTurnChains.get(actorId) ?? Promise.resolve()).catch(() => undefined);
-  const next = previousSettled.then(() => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET));
+  const next = previousSettled.then(() => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage));
   actorTurnChains.set(actorId, next);
   return next.then(coerceTurnResult);
 }
@@ -194,15 +194,14 @@ async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, sign
   const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️descriptor.json");
   try {
     const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
-    if (response.ok) {
+    const contentType = response.headers?.get?.("content-type") ?? "";
+    if (response.ok && !contentType.includes("text/html")) {
       const descriptor = (await response.json()) as { readonly manifest?: PluginManifest };
       if (descriptor.manifest) return descriptor.manifest;
     }
   } catch (error) {
     if (signal?.aborted) throw error;
-    console.warn(`[DEBUG] fetchDescriptorManifest: ${descriptorUrl} unreachable — using an empty manifest`, error);
   }
-  console.warn(`[DEBUG] fetchDescriptorManifest: no descriptor for ${pluginId} yet — loading with an empty manifest, no eager instantiation`);
   return { pluginId, label: pluginId, version: "", apps: [], workflows: [], examples: [] };
 }
 //#endregion 🔖️DescriptorManifest
@@ -265,11 +264,35 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
     try {
       const actorId = requireActorId(instanceId);
-      const shardEvents: ShardEventEnvelope[] = events.map((frame) => {
+      const results: WireTurnResult[] = [];
+      for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
         eventSeq += 1;
-        return { kind: "app-command", payload: { instance: instanceId, seq: eventSeq, command: Array.from(frame) } };
-      });
-      const result = await submitTurn(actorId, shardEvents);
+        const pages = createShardCommandIngressPages({
+          owner: BigInt(instanceId),
+          generation: 1n,
+          commandIndex,
+          commandCount: events.length,
+          instance: instanceId,
+          seq: BigInt(eventSeq),
+          command: events[commandIndex]!,
+        });
+        for (const commandPage of pages) results.push(await submitTurn(actorId, [], commandPage));
+        let terminal = results.at(-1)?.commandIngress?.tag;
+        for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
+          if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault`);
+          if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
+          const continued = await submitTurn(actorId, []);
+          results.push(continued);
+          terminal = continued.commandIngress?.tag;
+        }
+        if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations`);
+      }
+      const result: WireTurnResult = {
+        uiPatches: results.flatMap((turn) => turn.uiPatches),
+        effects: results.flatMap((turn) => turn.effects),
+        nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
+        commandIngress: results.at(-1)?.commandIngress,
+      };
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
       for (const effect of result.effects) {

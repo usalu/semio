@@ -60,6 +60,96 @@ export interface ShardEventEnvelope {
   readonly payload: unknown;
 }
 
+export interface ShardCommandPageCursor {
+  readonly owner: bigint;
+  readonly generation: bigint;
+  readonly commandIndex: number;
+  readonly commandCount: number;
+  readonly instance: number;
+  readonly seq: bigint;
+  readonly kind: number;
+  readonly pageIndex: number;
+  readonly pageCount: number;
+  readonly itemCount: number;
+  readonly metadata: number;
+}
+
+export interface ShardCommandPageBlock {
+  readonly word0: bigint;
+  readonly word1: bigint;
+  readonly word2: bigint;
+  readonly word3: bigint;
+  readonly word4: bigint;
+  readonly word5: bigint;
+  readonly word6: bigint;
+  readonly word7: bigint;
+}
+
+export type ShardCommandIngressPage = { readonly cursor: ShardCommandPageCursor; readonly length: number } & {
+  readonly [key in `block${string}`]: ShardCommandPageBlock;
+};
+
+export const SHARD_COMMAND_PAGE_BYTES = 4_096;
+export const SHARD_COMMAND_MAXIMUM_PAGES = 64;
+
+/** 📥️ Encodes channel command bytes into the exact fixed WIT command-page authority shared with Rust. */
+export function createShardCommandIngressPages(input: {
+  readonly owner: bigint;
+  readonly generation: bigint;
+  readonly commandIndex: number;
+  readonly commandCount: number;
+  readonly instance: number;
+  readonly seq: bigint;
+  readonly command: Uint8Array;
+}): readonly ShardCommandIngressPage[] {
+  if (input.command.length === 0) throw new Error("[DEBUG] command ingress cannot encode an empty command");
+  const pageCount = Math.ceil(input.command.length / SHARD_COMMAND_PAGE_BYTES);
+  if (pageCount > SHARD_COMMAND_MAXIMUM_PAGES) throw new Error(`[DEBUG] command ingress exceeds ${SHARD_COMMAND_MAXIMUM_PAGES} pages`);
+  const pages: ShardCommandIngressPage[] = [];
+  for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
+    const start = pageIndex * SHARD_COMMAND_PAGE_BYTES;
+    const bytes = input.command.subarray(start, Math.min(start + SHARD_COMMAND_PAGE_BYTES, input.command.length));
+    const blocks: Record<string, ShardCommandPageBlock> = {};
+    for (let blockIndex = 0; blockIndex < 64; blockIndex += 1) {
+      const words: bigint[] = [];
+      for (let wordIndex = 0; wordIndex < 8; wordIndex += 1) {
+        let word = 0n;
+        const wordStart = blockIndex * 64 + wordIndex * 8;
+        for (let byteIndex = 0; byteIndex < 8; byteIndex += 1) word |= BigInt(bytes[wordStart + byteIndex] ?? 0) << BigInt(byteIndex * 8);
+        words.push(word);
+      }
+      blocks[`block${blockIndex.toString().padStart(2, "0")}`] = {
+        word0: words[0]!,
+        word1: words[1]!,
+        word2: words[2]!,
+        word3: words[3]!,
+        word4: words[4]!,
+        word5: words[5]!,
+        word6: words[6]!,
+        word7: words[7]!,
+      };
+    }
+    pages.push({
+      cursor: {
+        owner: input.owner,
+        generation: input.generation,
+        commandIndex: input.commandIndex,
+        commandCount: input.commandCount,
+        instance: input.instance,
+        seq: input.seq,
+        kind: input.command[0]!,
+        pageIndex,
+        pageCount,
+        itemCount: 0,
+        metadata: 0,
+      },
+      length: bytes.length,
+      ...blocks,
+    } as ShardCommandIngressPage);
+  }
+  return pages;
+}
+
 /** 🪶️ One named asset pack delivered on `instance-open` (design-runtime.md §3: `guestSlimAssets`
  * becomes a declared asset here rather than a worker-bootstrap special case) — `events::
  * instance-open-event.assets: list<tuple<string, pack>>`. `bytes` is transferred structured-clone
@@ -273,7 +363,7 @@ const MAX_SEGMENTED_DOWNLOAD_OPERATION_ID = (1n << 64n) - 1n;
 //#region 📨️WireMessages
 type OutboundMessage =
   | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
-  | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly events: readonly ShardEventEnvelope[]; readonly budget: ShardBudget }
+  | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget }
   | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly jobKind: string; readonly input: Uint8Array }
   | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: number; readonly budget: ShardJobBudget }
   | { readonly kind: "cancelJob"; readonly actorId: string; readonly job: number }
@@ -594,12 +684,12 @@ export class ShardClient {
    * `turn()` call for the same actor before the first resolves is a caller bug (the scheduler's own
    * per-actor serialization, not this transport's job, per design's "runs one turn at a time per
    * actor"), so it is rejected rather than silently queued. */
-  async turn(actorId: string, events: readonly ShardEventEnvelope[], budget: ShardBudget): Promise<unknown> {
+  async turn(actorId: string, events: readonly ShardEventEnvelope[], budget: ShardBudget, commandPage?: ShardCommandIngressPage): Promise<unknown> {
     const shardIndex = this.actorShard.get(actorId);
     if (shardIndex === undefined) throw new Error(`[DEBUG] ShardClient.turn(${actorId}): not activated on any shard`);
     const slot = this.shards[shardIndex]!;
     const requestId = this.nextRequestId();
-    return this.send(slot, { kind: "turn", requestId, actorId, events, budget }, requestId);
+    return this.send(slot, { kind: "turn", requestId, actorId, events, commandPage, budget }, requestId);
   }
 
   /** 📨️ terra-web-shardframe: `ShardFrame::Envelope` passthrough — wraps ONE envelope's worth of work
@@ -1417,6 +1507,30 @@ if (import.meta.vitest) {
       expect(turnMsg.kind).toBe("turn");
       workers[0]!.deliver({ kind: "result", requestId: turnMsg.requestId, ok: true, value: { effects: [] } });
       await expect(turnPromise).resolves.toEqual({ effects: [] });
+    });
+  });
+
+  describe("fixed command ingress pages", () => {
+    it("matches a DataView little-endian oracle across a full page boundary", () => {
+      const command = Uint8Array.from({ length: SHARD_COMMAND_PAGE_BYTES + 5 }, (_, index) => index & 0xff);
+      const pages = createShardCommandIngressPages({ owner: 7n, generation: 11n, commandIndex: 1, commandCount: 3, instance: 13, seq: 17n, command });
+      expect(pages).toHaveLength(2);
+      expect(pages.map((page) => page.length)).toEqual([SHARD_COMMAND_PAGE_BYTES, 5]);
+      expect(pages[0]!.cursor).toMatchObject({ owner: 7n, generation: 11n, commandIndex: 1, commandCount: 3, instance: 13, seq: 17n, kind: 0, pageIndex: 0, pageCount: 2 });
+      const oracle = new DataView(command.buffer, command.byteOffset, command.byteLength);
+      expect(pages[0]!.block00.word0).toBe(oracle.getBigUint64(0, true));
+      expect(pages[0]!.block63.word7).toBe(oracle.getBigUint64(SHARD_COMMAND_PAGE_BYTES - 8, true));
+      expect(pages[1]!.block00.word0).toBe(0x0000000403020100n);
+      expect(pages[1]!.block00.word1).toBe(0n);
+      expect(pages[1]!.block63.word7).toBe(0n);
+    });
+
+    it("forwards the fixed page as the dedicated turn argument", async () => {
+      const { client, workers } = harness(1);
+      await activateActor(client, workers, "paged");
+      const page = createShardCommandIngressPages({ owner: 1n, generation: 1n, commandIndex: 0, commandCount: 1, instance: 1, seq: 1n, command: Uint8Array.of(9, 8, 7) })[0]!;
+      void client.turn("paged", [], BUDGET, page);
+      expect(workers[0]!.sent.at(-1)).toMatchObject({ kind: "turn", actorId: "paged", events: [], commandPage: page });
     });
   });
 

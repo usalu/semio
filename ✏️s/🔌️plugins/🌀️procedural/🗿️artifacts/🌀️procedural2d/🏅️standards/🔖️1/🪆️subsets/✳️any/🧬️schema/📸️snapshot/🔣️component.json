@@ -1,6 +1,7 @@
 {
   "$id": "https://semio.tech/schema/s/procedural/procedural2d/snapshot.json",
   "title": "Procedural2dSnapshot",
+  "x-semio-retained-discriminator": "P2D2",
   "type": "object",
   "additionalProperties": false,
   "required": [

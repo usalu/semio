@@ -10,17 +10,15 @@
 //!    thread; there is nothing to `.await` in event-loop *construction* on native), but a caller is
 //!    free to `.await` its own async setup (adapter/device selection) *before* calling either — the
 //!    delegate it hands in is constructed however it likes.
-//! 2. On wasm32, [`ClipboardHost`]'s browser clipboard read is genuinely `Promise`-based
-//!    (`BrowserClipboard::read_text_async`) — the one real `async fn` in this crate, driven via
-//!    `wasm_bindgen_futures::spawn_local` by whatever owns the canvas, never via `block_on` on the
-//!    render/event thread (U-program R4 forbids that outright and this crate does not want a bridge
-//!    here anyway).
+//! 2. On wasm32, [`BrowserClipboard`] turns clipboard work into correlated owned requests. The host
+//!    shim settles them later as replies/events; no renderer callback blocks or owns a browser value.
 //!
 //! **Never `ControlFlow::Poll`, never an unconditional `request_redraw`.** [`should_request_redraw`]
 //! is the single decision point both [`NativeHost`] and the browser [`CanvasHost`] funnel through —
 //! it is [`ui_render::FrameScheduler::should_render`] under a name that reads at the call site; a
 //! clean window drains no dirty mask and neither host asks for a frame.
 
+use crate::abi::{AbiBytes, AbiControl, AbiErrorCode, AbiEvent, AbiMessage, AbiOperation, AbiPage, AbiPort, AbiPortPoll, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatusCode, AbiWorkBudget};
 use ui_render::{CursorRequest, DispatchEvent, FrameScheduler, ImeDirective, InvalidationReason, PhysicalSize};
 
 //#region 🔖️Host
@@ -29,7 +27,7 @@ use ui_render::{CursorRequest, DispatchEvent, FrameScheduler, ImeDirective, Inva
 
 /// 📐️ Physical size plus the scale factor that relates it to logical pixels — the pair every
 /// scale-factor-change or resize needs to hand a delegate in one shot, platform-neutral so it is
-/// testable with no `winit`/`web_sys` in scope at all.
+/// testable with no platform SDK in scope at all.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct WindowMetrics {
     pub physical: PhysicalSize,
@@ -55,7 +53,7 @@ impl WindowMetrics {
 
 /// 🎯️ Whether a wake should turn into exactly one redraw — a thin, platform-neutral name for
 /// [`FrameScheduler::should_render`] so both [`NativeHost::about_to_wait`] and the browser
-/// [`CanvasHost`]'s `requestAnimationFrame` callback funnel through one obviously-shared decision
+/// [`CanvasHost`]'s frame callback funnel through one obviously-shared decision
 /// point. Returning `None` for a clean window is the entire defect this crate exists to fix — see
 /// `🦀️schedule.rs`'s own docstring.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -109,26 +107,12 @@ pub fn apply_window_cursor(window: &winit::window::Window, cursor: CursorRequest
     window.set_cursor(cursor_icon_for(cursor));
 }
 
-/// 🌐️ Ported from `wgpu-old`'s `🦀️cursor.rs::apply_canvas_cursor`, same dedup rule.
-#[cfg(target_arch = "wasm32")]
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn apply_canvas_cursor(canvas: &web_sys::HtmlCanvasElement, cursor: CursorRequest, last: &mut Option<CursorRequest>) {
-    use wasm_bindgen::JsCast;
-    if *last == Some(cursor) {
-        return;
-    }
-    *last = Some(cursor);
-    if let Some(element) = canvas.dyn_ref::<web_sys::HtmlElement>() {
-        let _ = element.style().set_property("cursor", cursor_css_for(cursor));
-    }
-}
-
 //#endregion 🖱️Cursor
 
 //#region 📋️Clipboard
 
-/// 📋️ Wraps the browser Clipboard API behind an interface so it does not leak past this crate.
-#[cfg(target_arch = "wasm32")]
+/// 📋️ Platform-neutral clipboard surface. Browser implementations stage asynchronous owned
+/// requests and expose only already-settled text through `read_text`.
 pub trait ClipboardHost {
     fn write_text(&mut self, text: &str);
     fn read_text(&mut self) -> Option<String>;
@@ -228,38 +212,30 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
     }
 }
 
-/// 🌐️ The browser Clipboard API is entirely `Promise`-based — `write_text` fires the write without
-/// awaiting it (the `Promise` already starts executing the instant it's created, exactly like a
-/// browser's own Ctrl+C never blocking the page), and `read_text` always returns `None` since a
-/// synchronous read has no browser equivalent; a caller needing a paste result uses
-/// [`BrowserClipboard::read_text_async`] instead.
-#[cfg(target_arch = "wasm32")]
+/// 📋️ Owned asynchronous clipboard mailbox. It never retains a platform promise or callback.
 #[derive(Default)]
-pub struct BrowserClipboard;
+pub struct BrowserClipboard {
+    staged_write: Option<String>,
+    settled_read: Option<String>,
+}
 
-#[cfg(target_arch = "wasm32")]
 impl ClipboardHost for BrowserClipboard {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn write_text(&mut self, text: &str) {
-        if let Some(window) = web_sys::window() {
-            let _ = window.navigator().clipboard().write_text(text);
-        }
+        self.staged_write = Some(text.to_owned());
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_text(&mut self) -> Option<String> {
-        None
+        self.settled_read.take()
     }
 }
 
-#[cfg(target_arch = "wasm32")]
 impl BrowserClipboard {
-    /// 📋️ The one sanctioned `async fn` outside the event loop itself (see this file's own
-    /// docstring) — a caller drives this via `wasm_bindgen_futures::spawn_local`, then feeds the
-    /// result back in as a normal [`DispatchEvent::Paste`].
-    pub async fn read_text_async() -> Option<String> {
-        let promise = web_sys::window()?.navigator().clipboard().read_text();
-        wasm_bindgen_futures::JsFuture::from(promise).await.ok()?.as_string()
+    pub fn take_staged_write(&mut self) -> Option<String> {
+        self.staged_write.take()
+    }
+
+    pub fn settle_read(&mut self, text: String) {
+        self.settled_read = Some(text);
     }
 }
 
@@ -382,7 +358,7 @@ pub struct RedrawOutcome {
 /// 🧩️ What a product/runtime crate implements to receive this host's normalized events and
 /// scheduler-gated redraw ticks — the one seam that keeps `🦀️window.rs` itself ignorant of
 /// `ui_render::Dispatcher`/`FrameEngine`, which belong to later packets (`runtime-present`, `os-host`).
-/// Nothing in this trait's signature ever names a `winit` or `web_sys` type.
+/// Nothing in this trait's signature ever names a platform SDK type.
 pub trait WindowDelegate {
     /// ⏱️ The scheduler this delegate's own frame-building code invalidates — [`NativeHost`]/
     /// [`CanvasHost`] only ever read it through [`should_request_redraw`]/`next_deadline`, never
@@ -693,212 +669,874 @@ pub use native::*;
 
 //#region 🌐️Browser
 
-#[cfg(target_arch = "wasm32")]
 mod browser {
     use super::*;
-    use std::cell::RefCell;
-    use std::rc::Rc;
-    use wasm_bindgen::closure::Closure;
-    use wasm_bindgen::JsCast;
+    use crate::event::{decode_browser_host_event, BrowserHostEvent, CanvasId, ListenerId};
 
-    /// 🧵️ Browser-only split that forbids a RAF callback from invoking the frame-building
-    /// [`WindowDelegate::redraw`] contract. Implementations enqueue/coalesce worker work and expose
-    /// only the newest already-prepared directives for presentation.
+    pub const BROWSER_HOST_MAX_EVENT_BODY_BYTES: usize = 1_024;
+    pub const BROWSER_HOST_EVENT_ENVELOPE_BYTES: usize = 27;
+    pub const BROWSER_HOST_MAX_ENCODED_EVENT_BYTES: usize = BROWSER_HOST_MAX_EVENT_BODY_BYTES + BROWSER_HOST_EVENT_ENVELOPE_BYTES;
+    pub const BROWSER_HOST_PAGE_ENVELOPE_BYTES: usize = 18;
+    pub const BROWSER_HOST_MAX_PAGE_BODY_BYTES: usize = BROWSER_HOST_MAX_ENCODED_EVENT_BYTES - BROWSER_HOST_PAGE_ENVELOPE_BYTES;
+    pub const BROWSER_HOST_INITIAL_POLL_BYTES: usize = BROWSER_HOST_MAX_EVENT_BODY_BYTES;
+    pub const BROWSER_HOST_OPERATION_ATTACH: u16 = 1_793;
+    pub const BROWSER_HOST_OPERATION_FRAME: u16 = 1_794;
+    pub const BROWSER_HOST_OPERATION_CURSOR: u16 = 1_795;
+    pub const BROWSER_HOST_OPERATION_CLIPBOARD_READ: u16 = 1_796;
+    pub const BROWSER_HOST_OPERATION_CLIPBOARD_WRITE: u16 = 1_797;
+    pub const BROWSER_HOST_OPERATION_DETACH: u16 = 1_798;
+
+    /// 🔌️ A1 port specialization implemented by an owned host shim.
+    pub trait BrowserHostPort: AbiPort {}
+    impl<T: AbiPort> BrowserHostPort for T {}
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BrowserHostUnavailable {
+        Window,
+        Document,
+        Canvas,
+        Clipboard,
+        Listener,
+        Callback,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum BrowserHostError {
+        Abi(AbiErrorCode),
+        Unavailable(BrowserHostUnavailable),
+        MalformedHostReply,
+        Closed,
+        Busy,
+    }
+
+    impl From<AbiErrorCode> for BrowserHostError {
+        fn from(value: AbiErrorCode) -> Self {
+            Self::Abi(value)
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ClipboardOperation {
+        Read,
+        Write,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct ClipboardRequest {
+        pub request_id: AbiRequestId,
+        pub generation: u32,
+        pub operation: ClipboardOperation,
+        pub text: Vec<u8>,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct FrameSchedulerEnvelope {
+        pub canvas: CanvasId,
+        pub generation: u32,
+        pub timestamp_ms: f64,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct BrowserHostProgress {
+        pub completed_units: u32,
+        pub total_units: u32,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum BrowserHostStep {
+        Progress(BrowserHostProgress),
+        AwaitingHost,
+        Event,
+        Frame(FrameSchedulerEnvelope),
+        Clipboard { request_id: AbiRequestId, text: Option<String> },
+        Unavailable(BrowserHostUnavailable),
+        Closed,
+    }
+
+    struct PendingEvent {
+        event: AbiEvent,
+        inspected_bytes: usize,
+    }
+
+    struct PendingReply {
+        reply: AbiReply,
+        inspected_bytes: usize,
+    }
+
+    struct PendingPage {
+        page: AbiPage,
+        inspected_bytes: usize,
+    }
+
+    /// 🧵️ Browser delegate split preserving worker frame preparation.
     pub trait BrowserWindowDelegate: WindowDelegate {
         fn enqueue_browser_frame(&mut self, reason: InvalidationReason);
         fn present_browser_frame(&mut self) -> RedrawOutcome;
     }
 
-    //#region 🕰️BrowserClock
-
-    /// 🕰️ `performance.now()`-backed clock — `std::time::Instant` is unavailable on
-    /// `wasm32-unknown-unknown` (no monotonic clock without JS glue), so this crate's browser half
-    /// needs its own. ⚠️ Needs the `"Performance"` `web-sys` feature — not yet in this crate's
-    /// registrar-owned `Cargo.toml`; see this packet's report registrar-requests.
-    pub struct BrowserClock {
-        origin_ms: f64,
-    }
-
-    impl BrowserClock {
-        pub fn new() -> Self {
-            Self { origin_ms: performance_now() }
-        }
-
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-        pub fn now_seconds(&self) -> f64 {
-            (performance_now() - self.origin_ms) / 1000.0
-        }
-    }
-
-    impl Default for BrowserClock {
-        fn default() -> Self {
-            Self::new()
-        }
-    }
-
-    fn performance_now() -> f64 {
-        web_sys::window().and_then(|window| window.performance()).map(|performance| performance.now()).unwrap_or(0.0)
-    }
-
-    //#endregion 🕰️BrowserClock
-
-    //#region 🌐️CanvasHost
-
-    struct CanvasHostState<D: BrowserWindowDelegate> {
-        canvas: web_sys::HtmlCanvasElement,
-        clock: BrowserClock,
-        raf_pending: bool,
-        document_hidden: bool,
-        last_cursor: Option<CursorRequest>,
-        /// 🔁️ Lives here rather than on [`CanvasHost`] itself so [`on_animation_frame`]'s own re-arm
-        /// path (which only ever sees this `Rc<RefCell<..>>`, never the outer struct) can re-request a
-        /// frame through the exact same [`request_wake_from_state`] the public API uses — one dedup
-        /// path, not two.
-        raf_closure: Option<Closure<dyn FnMut(f64)>>,
+    /// 🌐️ Browser state machine over an owned A1 port.
+    pub struct CanvasHost<P: BrowserHostPort, D: BrowserWindowDelegate> {
+        canvas: CanvasId,
+        generation: u32,
+        port: P,
         delegate: D,
-        /// 🎫️ Same rationale as `NativeHost`'s own field — minted once, here, at construction.
+        replies: AbiReplyLedger,
+        listener: Option<ListenerId>,
+        outbound: Option<AbiMessage>,
+        outbound_inspected_bytes: usize,
+        pending_event: Option<PendingEvent>,
+        pending_reply: Option<PendingReply>,
+        pending_page: Option<PendingPage>,
+        latest_metrics: Option<(AbiEvent, WindowMetrics)>,
+        latest_pointer: Option<(AbiEvent, DispatchEvent)>,
+        pending_dispatch: Option<(AbiEvent, DispatchEvent)>,
+        pending_frame: Option<(AbiEvent, FrameSchedulerEnvelope)>,
+        clipboard: Option<ClipboardRequest>,
+        clipboard_mailbox: BrowserClipboard,
+        last_cursor: Option<CursorRequest>,
+        pending_cursor: Option<CursorRequest>,
+        frame_pending: bool,
+        next_request_id: u64,
+        closing: bool,
+        detach_sent: bool,
+        detach_request: Option<AbiRequestId>,
+        detach_acknowledged: bool,
         _ui_token: crate::enqueue::UiThreadToken,
     }
 
-    /// 🌐️ The canvas equivalent of [`super::NativeHost`] (see this crate's `native` module —
-    /// unavailable on wasm32): `requestAnimationFrame` requested **only** when dirty or a deadline is
-    /// due, `ResizeObserver` for size + `devicePixelRatio` for scale, and `visibilitychange`
-    /// suspending [`FrameScheduler`]'s visibility flag (deadlines still accumulate while hidden — see
-    /// `🦀️schedule.rs`'s own `should_render` docstring — only actual rendering is suspended).
-    ///
-    /// **Duplicate-`rAF`-request avoidance.** [`Self::request_wake`] is the *only* call site that ever
-    /// invokes `requestAnimationFrame`, and it is guarded by `raf_pending`: every invalidation
-    /// (an input event, a resize, a delegate-side `scheduler.invalidate`) calls it, but a second call
-    /// while a frame is already in flight is a no-op — one pending `rAF` absorbs any number of
-    /// invalidations that arrive before it fires, exactly mirroring
-    /// [`FrameScheduler::should_render`]'s own N-invalidations-coalesce-into-one-frame contract. The
-    /// callback itself clears `raf_pending` *before* doing anything else, so a fresh invalidation that
-    /// arrives during the callback's own `redraw` call is free to schedule the *next* frame rather than
-    /// being silently dropped.
-    pub struct CanvasHost<D: BrowserWindowDelegate + 'static> {
-        state: Rc<RefCell<CanvasHostState<D>>>,
-        _resize_observer: web_sys::ResizeObserver,
-        _resize_closure: Closure<dyn FnMut(js_sys::Array)>,
-        _visibility_closure: Closure<dyn FnMut()>,
-    }
-
-    impl<D: BrowserWindowDelegate + 'static> CanvasHost<D> {
-        pub fn new(canvas: web_sys::HtmlCanvasElement, delegate: D) -> Self {
-            let state = Rc::new(RefCell::new(CanvasHostState {
-                canvas: canvas.clone(),
-                clock: BrowserClock::new(),
-                raf_pending: false,
-                document_hidden: false,
-                last_cursor: None,
-                raf_closure: None,
+    impl<P: BrowserHostPort, D: BrowserWindowDelegate> CanvasHost<P, D> {
+        pub fn new(canvas: CanvasId, port: P, delegate: D) -> Result<Self, BrowserHostError> {
+            let request_id = AbiRequestId(canvas.get() as u64);
+            let attach = request(BROWSER_HOST_OPERATION_ATTACH, request_id, 1, canvas_payload(canvas))?;
+            let mut replies = AbiReplyLedger::new();
+            replies.admit(request_id, 1)?;
+            Ok(Self {
+                canvas,
+                generation: 1,
+                port,
                 delegate,
+                replies,
+                listener: None,
+                outbound: Some(AbiMessage::Request(attach)),
+                outbound_inspected_bytes: 0,
+                pending_event: None,
+                pending_reply: None,
+                pending_page: None,
+                latest_metrics: None,
+                latest_pointer: None,
+                pending_dispatch: None,
+                pending_frame: None,
+                clipboard: None,
+                clipboard_mailbox: BrowserClipboard::default(),
+                last_cursor: None,
+                pending_cursor: None,
+                frame_pending: false,
+                next_request_id: canvas.get() as u64 + 1,
+                closing: false,
+                detach_sent: false,
+                detach_request: None,
+                detach_acknowledged: false,
                 _ui_token: crate::enqueue::UiThreadToken::mint(),
-            }));
+            })
+        }
 
-            let raf_state = state.clone();
-            let raf_closure = Closure::wrap(Box::new(move |timestamp_ms: f64| on_animation_frame(&raf_state, timestamp_ms)) as Box<dyn FnMut(f64)>);
-            state.borrow_mut().raf_closure = Some(raf_closure);
-
-            let resize_state = state.clone();
-            let resize_closure = Closure::wrap(Box::new(move |_entries: js_sys::Array| on_resize(&resize_state)) as Box<dyn FnMut(js_sys::Array)>);
-            let resize_observer = web_sys::ResizeObserver::new(resize_closure.as_ref().unchecked_ref()).expect("ResizeObserver::new");
-            resize_observer.observe(&canvas);
-
-            let visibility_state = state.clone();
-            let visibility_closure = Closure::wrap(Box::new(move || on_visibility_change(&visibility_state)) as Box<dyn FnMut()>);
-            if let Some(document) = web_sys::window().and_then(|window| window.document()) {
-                let _ = document.add_event_listener_with_callback("visibilitychange", visibility_closure.as_ref().unchecked_ref());
+        pub fn request_wake(&mut self) -> Result<bool, BrowserHostError> {
+            if self.closing {
+                return Err(BrowserHostError::Closed);
             }
-
-            let host = Self { state: state.clone(), _resize_observer: resize_observer, _resize_closure: resize_closure, _visibility_closure: visibility_closure };
-            request_wake_from_state(&state);
-            host
-        }
-
-        /// 🎯️ Call after handing the delegate any normalized event that might have invalidated it —
-        /// see this type's own docstring for the dedup contract.
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-        pub fn request_wake(&self) {
-            request_wake_from_state(&self.state);
-        }
-    }
-
-    /// 🎯️ The one call site that ever invokes `requestAnimationFrame` — see [`CanvasHost`]'s own
-    /// docstring for the full dedup contract. Both [`CanvasHost::request_wake`] (invalidation-driven)
-    /// and [`on_animation_frame`]'s own re-arm path (deadline-driven) funnel through here.
-    fn request_wake_from_state<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
-        let mut host = state.borrow_mut();
-        if host.raf_pending || host.document_hidden {
-            return;
-        }
-        let Some(window) = web_sys::window() else { return };
-        let Some(closure) = host.raf_closure.as_ref() else { return };
-        if window.request_animation_frame(closure.as_ref().unchecked_ref()).is_ok() {
-            host.raf_pending = true;
-        }
-    }
-
-    /// 🈶️ IME positioning (unlike [`apply_ime_directive`]) has no browser call here at all —
-    /// `winit::Window::set_ime_cursor_area`'s own docs mark Web unsupported, and the browser's native
-    /// IME already follows the focused `contenteditable`/`<input>` element with no host-level call
-    /// needed, so a `RedrawOutcome::ime` directive is simply not applied on this platform.
-    ///
-    /// 🕰️ Re-arming for a future deadline goes through the same [`request_wake_from_state`] path as an
-    /// invalidation — a scaffold-quality wait, not a true zero-cost sleep: a pending deadline costs one
-    /// no-op `rAF` callback per display refresh until it is due (no pixels repaint on those ticks, the
-    /// `should_request_redraw` gate below still applies every time). A `setTimeout`-based long-wait
-    /// path is a fair follow-up; see this packet's report deviations.
-    fn on_animation_frame<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>, _timestamp_ms: f64) {
-        let has_pending_deadline = {
-            let mut host = state.borrow_mut();
-            host.raf_pending = false;
-            let now = host.clock.now_seconds();
-            if let Some(reason) = should_request_redraw(host.delegate.scheduler_mut(), now) {
-                host.delegate.enqueue_browser_frame(reason);
-                let outcome = host.delegate.present_browser_frame();
-                let canvas = host.canvas.clone();
-                apply_canvas_cursor(&canvas, outcome.cursor, &mut host.last_cursor);
+            if self.frame_pending {
+                return Ok(false);
             }
-            host.delegate.scheduler_mut().next_deadline().is_some()
-        };
-        if has_pending_deadline {
-            request_wake_from_state(state);
+            let request_id = self.next_request();
+            let frame = request(BROWSER_HOST_OPERATION_FRAME, request_id, self.generation, canvas_payload(self.canvas))?;
+            self.stage_request(frame)?;
+            self.frame_pending = true;
+            Ok(true)
+        }
+
+        pub fn request_clipboard_read(&mut self) -> Result<AbiRequestId, BrowserHostError> {
+            self.stage_clipboard(ClipboardOperation::Read, Vec::new())
+        }
+
+        pub fn request_clipboard_write(&mut self, text: String) -> Result<AbiRequestId, BrowserHostError> {
+            self.clipboard_mailbox.write_text(&text);
+            self.stage_clipboard(ClipboardOperation::Write, text.into_bytes())
+        }
+
+        pub fn cancel_clipboard(&mut self) -> Result<bool, BrowserHostError> {
+            let Some(request) = self.clipboard.take() else { return Ok(false) };
+            if let Some(message) = self.outbound.take() {
+                if !matches!(&message, AbiMessage::Request(value) if value.request_id == request.request_id) {
+                    self.outbound = Some(message);
+                    self.clipboard = Some(request);
+                    return Err(BrowserHostError::Busy);
+                }
+                self.replies.lose(request.request_id, request.generation)?;
+                return Ok(true);
+            }
+            self.replies.lose(request.request_id, request.generation)?;
+            self.outbound = Some(AbiMessage::Control(AbiControl::Cancel { request_id: request.request_id, generation: request.generation }));
+            self.outbound_inspected_bytes = 0;
+            Ok(true)
+        }
+
+        pub fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        pub fn terminal_is_empty(&self) -> bool {
+            self.closing
+                && self.detach_sent
+                && self.detach_acknowledged
+                && self.listener.is_none()
+                && self.outbound.is_none()
+                && self.pending_event.is_none()
+                && self.pending_reply.is_none()
+                && self.pending_page.is_none()
+                && self.latest_metrics.is_none()
+                && self.latest_pointer.is_none()
+                && self.pending_dispatch.is_none()
+                && self.pending_frame.is_none()
+                && self.clipboard.is_none()
+                && self.pending_cursor.is_none()
+        }
+
+        pub fn delegate(&self) -> &D {
+            &self.delegate
+        }
+
+        pub fn delegate_mut(&mut self) -> &mut D {
+            &mut self.delegate
+        }
+
+        pub fn step(&mut self, budget: AbiWorkBudget) -> Result<BrowserHostStep, BrowserHostError> {
+            validate_budget(budget)?;
+            if self.closing {
+                return self.close_step(budget);
+            }
+            if self.outbound.is_some() {
+                let total = message_body_bytes(self.outbound.as_ref().expect("checked")).max(1);
+                self.outbound_inspected_bytes += 1;
+                if self.outbound_inspected_bytes < total {
+                    return Ok(progress(self.outbound_inspected_bytes as u32, total as u32));
+                }
+                let message = self.outbound.take().expect("checked");
+                self.port.try_send(message, one_credit(budget)).map_err(|rejection| {
+                    self.outbound = Some(rejection.message);
+                    self.outbound_inspected_bytes = total.saturating_sub(1);
+                    BrowserHostError::Abi(rejection.code)
+                })?;
+                self.outbound_inspected_bytes = 0;
+                return Ok(progress(1, 1));
+            }
+            if let Some(cursor) = self.pending_cursor.take() {
+                self.stage_cursor(cursor)?;
+                return Ok(progress(1, 1));
+            }
+            if let Some(pending) = self.pending_reply.as_mut() {
+                pending.inspected_bytes += 1;
+                let total = pending.reply.bytes.len().max(1);
+                if pending.inspected_bytes < total {
+                    return Ok(progress(pending.inspected_bytes as u32, total as u32));
+                }
+                let pending = self.pending_reply.take().expect("checked");
+                return self.accept_reply(pending.reply);
+            }
+            if let Some(pending) = self.pending_page.as_mut() {
+                pending.inspected_bytes += 1;
+                let total = pending.page.bytes.len().max(1);
+                if pending.inspected_bytes < total {
+                    return Ok(progress(pending.inspected_bytes as u32, total as u32));
+                }
+                let page = self.pending_page.take().expect("checked").page;
+                self.outbound = Some(AbiMessage::Control(AbiControl::Acknowledge { handle: page.handle, index: page.index }));
+                self.outbound_inspected_bytes = 0;
+                return Ok(progress(total as u32, total as u32));
+            }
+            if let Some((event, dispatch)) = self.pending_dispatch.take() {
+                self.delegate.handle_event(dispatch);
+                self.acknowledge_event(event)?;
+                return Ok(BrowserHostStep::Event);
+            }
+            if self.pending_frame.is_some() && self.latest_metrics.is_some() {
+                let (event, metrics) = self.latest_metrics.take().expect("checked");
+                self.delegate.handle_metrics(metrics);
+                self.acknowledge_event(event)?;
+                return Ok(BrowserHostStep::Event);
+            }
+            if self.pending_frame.is_some() && self.latest_pointer.is_some() {
+                let (event, dispatch) = self.latest_pointer.take().expect("checked");
+                self.delegate.handle_event(dispatch);
+                self.acknowledge_event(event)?;
+                return Ok(BrowserHostStep::Event);
+            }
+            if let Some((event, frame)) = self.pending_frame.take() {
+                self.frame_pending = false;
+                if let Some(reason) = should_request_redraw(self.delegate.scheduler_mut(), frame.timestamp_ms / 1_000.0) {
+                    self.delegate.enqueue_browser_frame(reason);
+                    let outcome = self.delegate.present_browser_frame();
+                    if self.last_cursor != Some(outcome.cursor) {
+                        self.pending_cursor = Some(outcome.cursor);
+                    }
+                }
+                self.acknowledge_event(event)?;
+                return Ok(BrowserHostStep::Frame(frame));
+            }
+            if let Some(pending) = self.pending_event.as_mut() {
+                pending.inspected_bytes += 1;
+                let total = pending.event.bytes.len().max(1);
+                if pending.inspected_bytes < total {
+                    return Ok(progress(pending.inspected_bytes as u32, total as u32));
+                }
+                let pending = self.pending_event.take().expect("checked");
+                self.classify_event(pending.event)?;
+                return Ok(progress(total as u32, total as u32));
+            }
+            match self.port.poll(one_credit(budget))? {
+                AbiPortPoll::Pending => {
+                    if let Some((event, metrics)) = self.latest_metrics.take() {
+                        self.delegate.handle_metrics(metrics);
+                        self.acknowledge_event(event)?;
+                        Ok(BrowserHostStep::Event)
+                    } else if let Some((event, dispatch)) = self.latest_pointer.take() {
+                        self.delegate.handle_event(dispatch);
+                        self.acknowledge_event(event)?;
+                        Ok(BrowserHostStep::Event)
+                    } else {
+                        Ok(BrowserHostStep::AwaitingHost)
+                    }
+                }
+                AbiPortPoll::Closed => {
+                    self.begin_close();
+                    Ok(BrowserHostStep::Closed)
+                }
+                AbiPortPoll::Message(message) => self.accept_message(message),
+            }
+        }
+
+        fn accept_message(&mut self, message: AbiMessage) -> Result<BrowserHostStep, BrowserHostError> {
+            match message {
+                AbiMessage::Event(event) => {
+                    if event.generation != self.generation || event.bytes.len() > BROWSER_HOST_MAX_EVENT_BODY_BYTES {
+                        let code = if event.generation < self.generation { AbiErrorCode::AbaHandle } else { AbiErrorCode::StaleGeneration };
+                        return Err(BrowserHostError::Abi(code));
+                    }
+                    self.pending_event = Some(PendingEvent { event, inspected_bytes: 0 });
+                    Ok(progress(1, 1))
+                }
+                AbiMessage::Reply(reply) => {
+                    self.pending_reply = Some(PendingReply { reply, inspected_bytes: 0 });
+                    Ok(progress(1, 1))
+                }
+                AbiMessage::Page(page) => {
+                    if page.bytes.len() > BROWSER_HOST_MAX_PAGE_BODY_BYTES {
+                        return Err(BrowserHostError::Abi(AbiErrorCode::LimitExceeded));
+                    }
+                    self.pending_page = Some(PendingPage { page, inspected_bytes: 0 });
+                    Ok(progress(1, 1))
+                }
+                AbiMessage::Control(AbiControl::Close { handle }) => {
+                    let listener = self.listener.ok_or(BrowserHostError::Unavailable(BrowserHostUnavailable::Listener))?;
+                    validate_listener_handle(listener, handle)?;
+                    self.begin_close();
+                    Ok(BrowserHostStep::Closed)
+                }
+                _ => Err(BrowserHostError::Abi(AbiErrorCode::MalformedTag)),
+            }
+        }
+
+        fn accept_reply(&mut self, reply: AbiReply) -> Result<BrowserHostStep, BrowserHostError> {
+            self.replies.accept(&reply)?;
+            if self.detach_request == Some(reply.request_id) {
+                self.detach_request = None;
+                self.detach_acknowledged = true;
+                return if reply.status.code == AbiStatusCode::Ok { Ok(BrowserHostStep::Closed) } else { Ok(BrowserHostStep::Unavailable(unavailable_from_reply(&reply))) };
+            }
+            if reply.status.code != AbiStatusCode::Ok {
+                let unavailable = unavailable_from_reply(&reply);
+                if self.clipboard.as_ref().is_some_and(|request| request.request_id == reply.request_id) {
+                    self.clipboard = None;
+                }
+                return Ok(BrowserHostStep::Unavailable(unavailable));
+            }
+            if self.listener.is_none() && reply.request_id == AbiRequestId(self.canvas.get() as u64) {
+                self.listener = Some(parse_listener(reply.bytes.as_slice())?);
+                return Ok(BrowserHostStep::Event);
+            }
+            if self.clipboard.as_ref().is_some_and(|request| request.request_id == reply.request_id) {
+                let request = self.clipboard.take().expect("checked");
+                let text = if request.operation == ClipboardOperation::Read {
+                    let text = String::from_utf8(reply.bytes.into_vec()).map_err(|_| BrowserHostError::Abi(AbiErrorCode::InvalidUtf8))?;
+                    self.clipboard_mailbox.settle_read(text.clone());
+                    self.delegate.handle_event(DispatchEvent::Paste { text: text.clone() });
+                    Some(text)
+                } else {
+                    None
+                };
+                return Ok(BrowserHostStep::Clipboard { request_id: request.request_id, text });
+            }
+            Ok(BrowserHostStep::Event)
+        }
+
+        fn classify_event(&mut self, event: AbiEvent) -> Result<(), BrowserHostError> {
+            let listener = self.listener.ok_or(BrowserHostError::Unavailable(BrowserHostUnavailable::Listener))?;
+            match decode_browser_host_event(&event, self.canvas, listener)? {
+                BrowserHostEvent::Metrics(metrics) => {
+                    if let Some((replaced, _)) = self.latest_metrics.replace((event, WindowMetrics { physical: PhysicalSize::new(metrics.width, metrics.height), scale_factor: metrics.scale_factor })) {
+                        self.acknowledge_event(replaced)?;
+                    }
+                }
+                BrowserHostEvent::Visibility { visible } => {
+                    self.delegate.scheduler_mut().set_visible(visible);
+                    self.acknowledge_event(event)?;
+                }
+                BrowserHostEvent::Frame { timestamp_ms } => {
+                    self.pending_frame = Some((event, FrameSchedulerEnvelope { canvas: self.canvas, generation: self.generation, timestamp_ms }));
+                }
+                BrowserHostEvent::Dispatch(dispatch) => {
+                    if matches!(dispatch, DispatchEvent::PointerMove { .. }) {
+                        if let Some((replaced, _)) = self.latest_pointer.replace((event, dispatch)) {
+                            self.acknowledge_event(replaced)?;
+                        }
+                    } else {
+                        self.pending_dispatch = Some((event, dispatch));
+                    }
+                }
+                BrowserHostEvent::Closed => self.begin_close(),
+            }
+            Ok(())
+        }
+
+        fn acknowledge_event(&mut self, event: AbiEvent) -> Result<(), BrowserHostError> {
+            if self.outbound.is_some() {
+                return Err(BrowserHostError::Busy);
+            }
+            self.outbound = Some(AbiMessage::Reply(AbiReply { request_id: event.request_id, generation: event.generation, status: crate::abi::AbiStatus::OK, bytes: AbiBytes::default() }));
+            self.outbound_inspected_bytes = 0;
+            Ok(())
+        }
+
+        fn stage_cursor(&mut self, cursor: CursorRequest) -> Result<(), BrowserHostError> {
+            if self.last_cursor == Some(cursor) {
+                return Ok(());
+            }
+            self.last_cursor = Some(cursor);
+            let request_id = self.next_request();
+            let mut bytes = canvas_payload(self.canvas);
+            bytes.push(cursor_tag(cursor));
+            self.stage_request(request(BROWSER_HOST_OPERATION_CURSOR, request_id, self.generation, bytes)?)
+        }
+
+        fn stage_clipboard(&mut self, operation: ClipboardOperation, text: Vec<u8>) -> Result<AbiRequestId, BrowserHostError> {
+            if self.closing {
+                return Err(BrowserHostError::Closed);
+            }
+            if self.clipboard.is_some() || self.outbound.is_some() {
+                return Err(BrowserHostError::Busy);
+            }
+            let request_id = self.next_request();
+            let mut bytes = canvas_payload(self.canvas);
+            bytes.extend_from_slice(&text);
+            let code = if operation == ClipboardOperation::Read { BROWSER_HOST_OPERATION_CLIPBOARD_READ } else { BROWSER_HOST_OPERATION_CLIPBOARD_WRITE };
+            let request = request(code, request_id, self.generation, bytes)?;
+            self.replies.admit(request_id, self.generation)?;
+            self.outbound = Some(AbiMessage::Request(request));
+            self.outbound_inspected_bytes = 0;
+            self.clipboard = Some(ClipboardRequest { request_id, generation: self.generation, operation, text });
+            Ok(request_id)
+        }
+
+        fn stage_request(&mut self, request: AbiRequest) -> Result<(), BrowserHostError> {
+            if self.outbound.is_some() {
+                return Err(BrowserHostError::Busy);
+            }
+            self.replies.admit(request.request_id, request.generation)?;
+            self.outbound = Some(AbiMessage::Request(request));
+            self.outbound_inspected_bytes = 0;
+            Ok(())
+        }
+
+        fn next_request(&mut self) -> AbiRequestId {
+            let request = AbiRequestId(self.next_request_id);
+            self.next_request_id = self.next_request_id.checked_add(1).unwrap_or(1);
+            request
+        }
+
+        fn close_step(&mut self, budget: AbiWorkBudget) -> Result<BrowserHostStep, BrowserHostError> {
+            if let Some(request) = self.clipboard.take() {
+                self.replies.lose(request.request_id, request.generation)?;
+                self.outbound = Some(AbiMessage::Control(AbiControl::Cancel { request_id: request.request_id, generation: request.generation }));
+                self.outbound_inspected_bytes = 0;
+                return Ok(progress(1, 3));
+            }
+            if self.outbound.is_some() {
+                let total = message_body_bytes(self.outbound.as_ref().expect("checked")).max(1);
+                self.outbound_inspected_bytes += 1;
+                if self.outbound_inspected_bytes < total {
+                    return Ok(progress(self.outbound_inspected_bytes as u32, total as u32));
+                }
+                let message = self.outbound.take().expect("checked");
+                self.port.try_send(message, one_credit(budget)).map_err(|rejection| {
+                    self.outbound = Some(rejection.message);
+                    self.outbound_inspected_bytes = total.saturating_sub(1);
+                    BrowserHostError::Abi(rejection.code)
+                })?;
+                self.outbound_inspected_bytes = 0;
+                return Ok(progress(1, 2));
+            }
+            if let Some(pending) = self.pending_reply.as_mut() {
+                pending.inspected_bytes += 1;
+                let total = pending.reply.bytes.len().max(1);
+                if pending.inspected_bytes < total {
+                    return Ok(progress(pending.inspected_bytes as u32, total as u32));
+                }
+                let pending = self.pending_reply.take().expect("checked");
+                return self.accept_reply(pending.reply);
+            }
+            if let Some(pending) = self.pending_event.as_mut() {
+                pending.inspected_bytes += 1;
+                let total = pending.event.bytes.len().max(1);
+                if pending.inspected_bytes < total {
+                    return Ok(progress(pending.inspected_bytes as u32, total as u32));
+                }
+                let event = self.pending_event.take().expect("checked").event;
+                self.acknowledge_event(event)?;
+                return Ok(progress(total as u32, total as u32));
+            }
+            if let Some(pending) = self.pending_page.as_mut() {
+                pending.inspected_bytes += 1;
+                let total = pending.page.bytes.len().max(1);
+                if pending.inspected_bytes < total {
+                    return Ok(progress(pending.inspected_bytes as u32, total as u32));
+                }
+                let page = self.pending_page.take().expect("checked").page;
+                self.outbound = Some(AbiMessage::Control(AbiControl::Acknowledge { handle: page.handle, index: page.index }));
+                self.outbound_inspected_bytes = 0;
+                return Ok(progress(total as u32, total as u32));
+            }
+            if let Some((event, _)) = self.pending_dispatch.take() {
+                self.acknowledge_event(event)?;
+                return Ok(progress(1, 1));
+            }
+            if let Some((event, _)) = self.latest_metrics.take() {
+                self.acknowledge_event(event)?;
+                return Ok(progress(1, 1));
+            }
+            if let Some((event, _)) = self.latest_pointer.take() {
+                self.acknowledge_event(event)?;
+                return Ok(progress(1, 1));
+            }
+            if let Some((event, _)) = self.pending_frame.take() {
+                self.acknowledge_event(event)?;
+                return Ok(progress(1, 1));
+            }
+            if let Some(listener) = self.listener.take() {
+                self.outbound = Some(AbiMessage::Control(AbiControl::Close { handle: listener.handle() }));
+                self.outbound_inspected_bytes = 0;
+                return Ok(progress(1, 2));
+            }
+            if !self.detach_sent {
+                let request_id = self.next_request();
+                let detach = request(BROWSER_HOST_OPERATION_DETACH, request_id, self.generation, canvas_payload(self.canvas))?;
+                self.replies.admit(request_id, self.generation)?;
+                self.outbound = Some(AbiMessage::Request(detach));
+                self.outbound_inspected_bytes = 0;
+                self.detach_sent = true;
+                self.detach_request = Some(request_id);
+                self.pending_cursor = None;
+                return Ok(progress(1, 1));
+            }
+            if self.detach_acknowledged {
+                return Ok(BrowserHostStep::Closed);
+            }
+            match self.port.poll(one_credit(budget))? {
+                AbiPortPoll::Pending => Ok(BrowserHostStep::AwaitingHost),
+                AbiPortPoll::Closed => Err(BrowserHostError::Closed),
+                AbiPortPoll::Message(AbiMessage::Event(event)) => {
+                    if event.generation != self.generation || event.bytes.len() > BROWSER_HOST_MAX_EVENT_BODY_BYTES {
+                        let code = if event.generation < self.generation { AbiErrorCode::AbaHandle } else { AbiErrorCode::StaleGeneration };
+                        return Err(BrowserHostError::Abi(code));
+                    }
+                    self.pending_event = Some(PendingEvent { event, inspected_bytes: 0 });
+                    Ok(progress(1, 1))
+                }
+                AbiPortPoll::Message(AbiMessage::Reply(reply)) => {
+                    self.pending_reply = Some(PendingReply { reply, inspected_bytes: 0 });
+                    Ok(progress(1, 1))
+                }
+                AbiPortPoll::Message(AbiMessage::Page(page)) => {
+                    if page.bytes.len() > BROWSER_HOST_MAX_PAGE_BODY_BYTES {
+                        return Err(BrowserHostError::Abi(AbiErrorCode::LimitExceeded));
+                    }
+                    self.pending_page = Some(PendingPage { page, inspected_bytes: 0 });
+                    Ok(progress(1, 1))
+                }
+                AbiPortPoll::Message(AbiMessage::Control(AbiControl::Close { .. })) => Ok(progress(1, 1)),
+                AbiPortPoll::Message(_) => Err(BrowserHostError::Abi(AbiErrorCode::MalformedTag)),
+            }
         }
     }
 
-    fn on_resize<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
-        {
-            let mut host = state.borrow_mut();
-            let canvas = host.canvas.clone();
-            let dpr = web_sys::window().map(|window| window.device_pixel_ratio()).unwrap_or(1.0);
-            let width = (canvas.client_width().max(0) as f64 * dpr) as u32;
-            let height = (canvas.client_height().max(0) as f64 * dpr) as u32;
-            canvas.set_width(width);
-            canvas.set_height(height);
-            host.delegate.handle_metrics(WindowMetrics { physical: PhysicalSize::new(width, height), scale_factor: dpr as f32 });
-        }
-        request_wake_from_state(state);
+    fn request(operation: u16, request_id: AbiRequestId, generation: u32, bytes: Vec<u8>) -> Result<AbiRequest, BrowserHostError> {
+        Ok(AbiRequest { operation: AbiOperation::try_new(operation)?, request_id, generation, bytes: AbiBytes::try_new(bytes).map_err(|rejected| rejected.code)? })
     }
 
-    /// 👁️ Whatever accumulated in the dirty mask while hidden (deadlines still fire per
-    /// [`FrameScheduler::should_render`]'s own docstring) only becomes visible to `should_render` once
-    /// `visible` flips back — so becoming visible again requests the wake that period was owed.
-    fn on_visibility_change<D: BrowserWindowDelegate>(state: &Rc<RefCell<CanvasHostState<D>>>) {
-        let hidden = web_sys::window().and_then(|window| window.document()).map(|document| document.hidden()).unwrap_or(false);
-        {
-            let mut host = state.borrow_mut();
-            host.document_hidden = hidden;
-            host.delegate.scheduler_mut().set_visible(!hidden);
+    fn canvas_payload(canvas: CanvasId) -> Vec<u8> {
+        let mut bytes = vec![1];
+        bytes.extend_from_slice(&canvas.get().to_le_bytes());
+        bytes
+    }
+
+    fn parse_listener(bytes: &[u8]) -> Result<ListenerId, BrowserHostError> {
+        if bytes.len() != 9 || bytes[0] != 1 {
+            return Err(BrowserHostError::MalformedHostReply);
         }
-        if !hidden {
-            request_wake_from_state(state);
+        ListenerId::try_new(u32::from_le_bytes(bytes[1..5].try_into().expect("fixed")), u32::from_le_bytes(bytes[5..9].try_into().expect("fixed"))).map_err(BrowserHostError::Abi)
+    }
+
+    fn validate_listener_handle(listener: ListenerId, actual: crate::abi::AbiHandle) -> Result<(), BrowserHostError> {
+        let expected = listener.handle();
+        if actual.slot() != expected.slot() {
+            Err(BrowserHostError::Abi(AbiErrorCode::UnknownHandle))
+        } else if actual.generation() < expected.generation() {
+            Err(BrowserHostError::Abi(AbiErrorCode::AbaHandle))
+        } else if actual.generation() > expected.generation() {
+            Err(BrowserHostError::Abi(AbiErrorCode::StaleGeneration))
+        } else {
+            Ok(())
         }
     }
 
-    //#endregion 🌐️CanvasHost
+    fn unavailable_from_reply(reply: &AbiReply) -> BrowserHostUnavailable {
+        match reply.bytes.as_slice().first().copied() {
+            Some(1) => BrowserHostUnavailable::Window,
+            Some(2) => BrowserHostUnavailable::Document,
+            Some(3) => BrowserHostUnavailable::Canvas,
+            Some(4) => BrowserHostUnavailable::Clipboard,
+            Some(5) => BrowserHostUnavailable::Listener,
+            _ => BrowserHostUnavailable::Callback,
+        }
+    }
+
+    fn cursor_tag(cursor: CursorRequest) -> u8 {
+        match cursor {
+            CursorRequest::Default => 0,
+            CursorRequest::Pointer => 1,
+            CursorRequest::Text => 2,
+            CursorRequest::Grab => 3,
+            CursorRequest::Grabbing => 4,
+        }
+    }
+
+    fn validate_budget(budget: AbiWorkBudget) -> Result<(), BrowserHostError> {
+        if budget.cancelled {
+            Err(BrowserHostError::Abi(AbiErrorCode::Cancelled))
+        } else if budget.interrupted {
+            Err(BrowserHostError::Abi(AbiErrorCode::Interrupted))
+        } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
+            Err(BrowserHostError::Abi(AbiErrorCode::DeadlineExceeded))
+        } else if budget.byte_credit == 0 {
+            Err(BrowserHostError::Abi(AbiErrorCode::NoCredit))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn one_credit(budget: AbiWorkBudget) -> AbiWorkBudget {
+        AbiWorkBudget { byte_credit: 1, ..budget }
+    }
+
+    fn progress(completed_units: u32, total_units: u32) -> BrowserHostStep {
+        BrowserHostStep::Progress(BrowserHostProgress { completed_units, total_units })
+    }
+
+    fn message_body_bytes(message: &AbiMessage) -> usize {
+        match message {
+            AbiMessage::Request(value) => value.bytes.len(),
+            AbiMessage::Reply(value) => value.bytes.len(),
+            AbiMessage::Event(value) => value.bytes.len(),
+            AbiMessage::Page(value) => value.bytes.len(),
+            AbiMessage::Control(_) => 0,
+        }
+    }
+
+    /// 🧠️ Low-level Wasm import adapter with an owned public surface.
+    #[derive(Default)]
+    pub struct LinearMemoryBrowserHostPort;
+
+    #[cfg(all(target_arch = "wasm32", not(test)))]
+    #[link(wasm_import_module = "semio_browser_host")]
+    unsafe extern "C" {
+        #[link_name = "send"]
+        fn browser_host_send(message_pointer: *const u8, message_length: usize) -> i32;
+        #[link_name = "poll"]
+        fn browser_host_poll(message_pointer: *mut u8, message_capacity: usize) -> i32;
+    }
+
+    #[cfg(all(target_arch = "wasm32", test))]
+    unsafe fn browser_host_send(message_pointer: *const u8, message_length: usize) -> i32 {
+        linear_memory_test_import::send(message_pointer, message_length)
+    }
+
+    #[cfg(all(target_arch = "wasm32", test))]
+    unsafe fn browser_host_poll(message_pointer: *mut u8, message_capacity: usize) -> i32 {
+        linear_memory_test_import::poll(message_pointer, message_capacity)
+    }
+
+    #[cfg(all(target_arch = "wasm32", test))]
+    pub(super) mod linear_memory_test_import {
+        use std::cell::RefCell;
+        use std::collections::VecDeque;
+
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        pub(crate) enum AfterProbe {
+            None,
+            Cancel,
+            Close,
+        }
+
+        #[derive(Default)]
+        struct State {
+            incoming: VecDeque<Vec<u8>>,
+            sent: Vec<Vec<u8>>,
+            capacities: Vec<usize>,
+            copies: usize,
+            closed: bool,
+            after_probe: Option<AfterProbe>,
+        }
+
+        thread_local! {
+            static STATE: RefCell<State> = RefCell::new(State::default());
+        }
+
+        pub(crate) fn reset() {
+            STATE.with(|state| *state.borrow_mut() = State::default());
+        }
+
+        pub(crate) fn enqueue(bytes: Vec<u8>) {
+            STATE.with(|state| state.borrow_mut().incoming.push_back(bytes));
+        }
+
+        pub(crate) fn after_probe(action: AfterProbe) {
+            STATE.with(|state| state.borrow_mut().after_probe = Some(action));
+        }
+
+        pub(crate) fn census() -> (Vec<usize>, usize, usize, bool) {
+            STATE.with(|state| {
+                let state = state.borrow();
+                (state.capacities.clone(), state.copies, state.incoming.len(), state.closed)
+            })
+        }
+
+        pub(crate) fn sent_lengths() -> Vec<usize> {
+            STATE.with(|state| state.borrow().sent.iter().map(Vec::len).collect())
+        }
+
+        pub(super) unsafe fn send(pointer: *const u8, length: usize) -> i32 {
+            let bytes = unsafe { std::slice::from_raw_parts(pointer, length) }.to_vec();
+            STATE.with(|state| state.borrow_mut().sent.push(bytes));
+            1
+        }
+
+        pub(super) unsafe fn poll(pointer: *mut u8, capacity: usize) -> i32 {
+            STATE.with(|state| {
+                let mut state = state.borrow_mut();
+                state.capacities.push(capacity);
+                let Some(bytes) = state.incoming.front() else { return if state.closed { -1 } else { 0 } };
+                let length = bytes.len();
+                if length > capacity {
+                    match state.after_probe.take().unwrap_or(AfterProbe::None) {
+                        AfterProbe::None => {}
+                        AfterProbe::Cancel => {
+                            state.incoming.pop_front();
+                        }
+                        AfterProbe::Close => {
+                            state.incoming.clear();
+                            state.closed = true;
+                        }
+                    }
+                    return length as i32;
+                }
+                unsafe { std::ptr::copy_nonoverlapping(bytes.as_ptr(), pointer, length) };
+                state.incoming.pop_front();
+                state.copies += 1;
+                length as i32
+            })
+        }
+    }
+
+    impl AbiPort for LinearMemoryBrowserHostPort {
+        fn try_send(&mut self, message: AbiMessage, budget: AbiWorkBudget) -> Result<(), crate::abi::AbiPortRejection> {
+            if let Err(error) = validate_budget(budget) {
+                let BrowserHostError::Abi(code) = error else { unreachable!() };
+                return Err(crate::abi::AbiPortRejection { code, message });
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let bytes = crate::abi::encode_abi_message(&message);
+                if bytes.len() > BROWSER_HOST_MAX_ENCODED_EVENT_BYTES {
+                    return Err(crate::abi::AbiPortRejection { code: AbiErrorCode::LimitExceeded, message });
+                }
+                if unsafe { browser_host_send(bytes.as_ptr(), bytes.len()) } == 1 {
+                    Ok(())
+                } else {
+                    Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Interrupted, message })
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Closed, message })
+        }
+
+        fn poll(&mut self, budget: AbiWorkBudget) -> Result<AbiPortPoll, AbiErrorCode> {
+            validate_budget(budget).map_err(|error| match error {
+                BrowserHostError::Abi(code) => code,
+                _ => AbiErrorCode::Interrupted,
+            })?;
+            #[cfg(target_arch = "wasm32")]
+            {
+                let mut bytes = vec![0; BROWSER_HOST_INITIAL_POLL_BYTES];
+                let mut length = unsafe { browser_host_poll(bytes.as_mut_ptr(), bytes.len()) };
+                if length == 0 {
+                    return Ok(AbiPortPoll::Pending);
+                }
+                if length < 0 {
+                    return Ok(AbiPortPoll::Closed);
+                }
+                let required = length as usize;
+                if required > BROWSER_HOST_MAX_ENCODED_EVENT_BYTES {
+                    return Err(AbiErrorCode::LimitExceeded);
+                }
+                if required > bytes.len() {
+                    bytes.resize(required, 0);
+                    length = unsafe { browser_host_poll(bytes.as_mut_ptr(), bytes.len()) };
+                    if length == 0 {
+                        return Ok(AbiPortPoll::Pending);
+                    }
+                    if length < 0 {
+                        return Ok(AbiPortPoll::Closed);
+                    }
+                    if length as usize > BROWSER_HOST_MAX_ENCODED_EVENT_BYTES {
+                        return Err(AbiErrorCode::LimitExceeded);
+                    }
+                    if length as usize != required {
+                        return Err(AbiErrorCode::MalformedLength);
+                    }
+                }
+                bytes.truncate(length as usize);
+                let message = crate::abi::decode_abi_message(&bytes)?;
+                match &message {
+                    AbiMessage::Event(event) if event.bytes.len() > BROWSER_HOST_MAX_EVENT_BODY_BYTES => return Err(AbiErrorCode::LimitExceeded),
+                    AbiMessage::Page(page) if page.bytes.len() > BROWSER_HOST_MAX_PAGE_BODY_BYTES => return Err(AbiErrorCode::LimitExceeded),
+                    _ => {}
+                }
+                Ok(AbiPortPoll::Message(message))
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            Ok(AbiPortPoll::Closed)
+        }
+    }
 }
 
-#[cfg(target_arch = "wasm32")]
 pub use browser::*;
 
 //#endregion 🌐️Browser
@@ -992,6 +1630,374 @@ mod tests {
     }
 
     //#endregion 🖱️Cursor tests
+
+    //#region 🌐️Browser host laws
+
+    #[derive(Default)]
+    struct BrowserFixtureState {
+        incoming: std::collections::VecDeque<AbiMessage>,
+        sent: Vec<AbiMessage>,
+        reject_next: bool,
+        closed: bool,
+    }
+
+    #[derive(Clone, Default)]
+    struct BrowserFixturePort(std::rc::Rc<std::cell::RefCell<BrowserFixtureState>>);
+
+    impl AbiPort for BrowserFixturePort {
+        fn try_send(&mut self, message: AbiMessage, _budget: AbiWorkBudget) -> Result<(), crate::abi::AbiPortRejection> {
+            let mut state = self.0.borrow_mut();
+            if state.reject_next {
+                state.reject_next = false;
+                return Err(crate::abi::AbiPortRejection { code: AbiErrorCode::Interrupted, message });
+            }
+            state.sent.push(message);
+            Ok(())
+        }
+
+        fn poll(&mut self, _budget: AbiWorkBudget) -> Result<AbiPortPoll, AbiErrorCode> {
+            let mut state = self.0.borrow_mut();
+            Ok(state.incoming.pop_front().map(AbiPortPoll::Message).unwrap_or(if state.closed { AbiPortPoll::Closed } else { AbiPortPoll::Pending }))
+        }
+    }
+
+    struct BrowserFixtureDelegate {
+        scheduler: FrameScheduler,
+        events: Vec<DispatchEvent>,
+        metrics: Vec<WindowMetrics>,
+        frames: usize,
+    }
+
+    impl Default for BrowserFixtureDelegate {
+        fn default() -> Self {
+            Self { scheduler: FrameScheduler::new(), events: Vec::new(), metrics: Vec::new(), frames: 0 }
+        }
+    }
+
+    impl WindowDelegate for BrowserFixtureDelegate {
+        fn scheduler_mut(&mut self) -> &mut FrameScheduler {
+            &mut self.scheduler
+        }
+
+        fn handle_event(&mut self, event: DispatchEvent) {
+            self.events.push(event);
+        }
+
+        fn handle_metrics(&mut self, metrics: WindowMetrics) {
+            self.metrics.push(metrics);
+        }
+
+        fn redraw(&mut self, _reason: InvalidationReason) -> RedrawOutcome {
+            RedrawOutcome { cursor: CursorRequest::Pointer, ime: None }
+        }
+    }
+
+    impl BrowserWindowDelegate for BrowserFixtureDelegate {
+        fn enqueue_browser_frame(&mut self, _reason: InvalidationReason) {
+            self.frames += 1;
+        }
+
+        fn present_browser_frame(&mut self) -> RedrawOutcome {
+            self.redraw(InvalidationReason::PAINT)
+        }
+    }
+
+    fn browser_fixture() -> (CanvasHost<BrowserFixturePort, BrowserFixtureDelegate>, BrowserFixturePort) {
+        let port = BrowserFixturePort::default();
+        let host = CanvasHost::new(crate::event::CanvasId::try_new(1).unwrap(), port.clone(), BrowserFixtureDelegate::default()).unwrap();
+        (host, port)
+    }
+
+    fn attach_browser(host: &mut CanvasHost<BrowserFixturePort, BrowserFixtureDelegate>, port: &BrowserFixturePort) {
+        while port.0.borrow().sent.is_empty() {
+            host.step(AbiWorkBudget::credits(1)).unwrap();
+        }
+        let body = AbiBytes::try_new([vec![1], 1_u32.to_le_bytes().to_vec(), 1_u32.to_le_bytes().to_vec()].concat()).unwrap();
+        port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: crate::abi::AbiStatus::OK, bytes: body }));
+        host.step(AbiWorkBudget::credits(1)).unwrap();
+        for _ in 0..8 {
+            assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
+        }
+        assert_eq!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Event);
+    }
+
+    fn browser_event(code: u16, sequence: u32, tail: Vec<u8>, generation: u32) -> AbiMessage {
+        let mut bytes = vec![1];
+        bytes.extend_from_slice(&1_u32.to_le_bytes());
+        bytes.extend_from_slice(&1_u32.to_le_bytes());
+        bytes.extend_from_slice(&1_u32.to_le_bytes());
+        bytes.extend_from_slice(&tail);
+        AbiMessage::Event(AbiEvent { request_id: AbiRequestId(100 + sequence as u64), generation, sequence, event: crate::abi::AbiEventCode::try_new(code).unwrap(), status: crate::abi::AbiStatus::OK, bytes: AbiBytes::try_new(bytes).unwrap() })
+    }
+
+    fn raw_browser_event(body_bytes: usize) -> AbiMessage {
+        AbiMessage::Event(AbiEvent {
+            request_id: AbiRequestId(900),
+            generation: 1,
+            sequence: 1,
+            event: crate::abi::AbiEventCode::try_new(crate::event::BROWSER_EVENT_TEXT).unwrap(),
+            status: crate::abi::AbiStatus::OK,
+            bytes: AbiBytes::try_new(vec![0; body_bytes]).unwrap(),
+        })
+    }
+
+    fn inspect_and_classify(host: &mut CanvasHost<BrowserFixturePort, BrowserFixtureDelegate>, bytes: usize) {
+        assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
+        for _ in 0..bytes {
+            assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
+        }
+    }
+
+    #[test]
+    fn browser_missing_objects_and_interrupted_send_are_owned_failures() {
+        let (mut host, port) = browser_fixture();
+        port.0.borrow_mut().reject_next = true;
+        for _ in 0..4 {
+            assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
+        }
+        assert_eq!(host.step(AbiWorkBudget::credits(1)), Err(BrowserHostError::Abi(AbiErrorCode::Interrupted)));
+        host.step(AbiWorkBudget::credits(1)).unwrap();
+        port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: crate::abi::AbiStatus { code: AbiStatusCode::Failed, error: None }, bytes: AbiBytes::try_new(vec![2]).unwrap() }));
+        host.step(AbiWorkBudget::credits(1)).unwrap();
+        assert_eq!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Unavailable(BrowserHostUnavailable::Document));
+        for (code, expected) in [(1, BrowserHostUnavailable::Window), (3, BrowserHostUnavailable::Canvas), (4, BrowserHostUnavailable::Clipboard)] {
+            let (mut host, port) = browser_fixture();
+            while port.0.borrow().sent.is_empty() {
+                host.step(AbiWorkBudget::credits(1)).unwrap();
+            }
+            port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id: AbiRequestId(1), generation: 1, status: crate::abi::AbiStatus { code: AbiStatusCode::Failed, error: None }, bytes: AbiBytes::try_new(vec![code]).unwrap() }));
+            host.step(AbiWorkBudget::credits(1)).unwrap();
+            assert_eq!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Unavailable(expected));
+        }
+    }
+
+    #[test]
+    fn browser_resize_storm_is_latest_wins_and_one_byte_is_inspected_per_grant() {
+        let (mut host, port) = browser_fixture();
+        attach_browser(&mut host, &port);
+        for (sequence, width) in [(1, 10_u32), (2, 20_u32)] {
+            let mut tail = width.to_le_bytes().to_vec();
+            tail.extend_from_slice(&30_u32.to_le_bytes());
+            tail.extend_from_slice(&1_f32.to_le_bytes());
+            let message = browser_event(crate::event::BROWSER_EVENT_METRICS, sequence, tail, 1);
+            let length = match &message {
+                AbiMessage::Event(event) => event.bytes.len(),
+                _ => 0,
+            };
+            port.0.borrow_mut().incoming.push_back(message);
+            inspect_and_classify(&mut host, length);
+        }
+        assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
+        assert_eq!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Event);
+        assert_eq!(host.delegate().metrics, vec![WindowMetrics { physical: PhysicalSize::new(20, 30), scale_factor: 1.0 }]);
+    }
+
+    #[test]
+    fn browser_frame_is_bounded_and_stale_generation_is_rejected() {
+        let (mut host, port) = browser_fixture();
+        attach_browser(&mut host, &port);
+        assert_eq!(host.request_wake().unwrap(), true);
+        assert_eq!(host.request_wake().unwrap(), false);
+        let sent = port.0.borrow().sent.len();
+        while port.0.borrow().sent.len() == sent {
+            host.step(AbiWorkBudget::credits(1)).unwrap();
+        }
+        port.0.borrow_mut().incoming.push_back(browser_event(crate::event::BROWSER_EVENT_FRAME, 1, 16_f64.to_le_bytes().to_vec(), 2));
+        assert_eq!(host.step(AbiWorkBudget::credits(1)), Err(BrowserHostError::Abi(AbiErrorCode::StaleGeneration)));
+    }
+
+    #[test]
+    fn browser_frame_ack_and_cursor_are_separate_bounded_steps() {
+        let (mut host, port) = browser_fixture();
+        attach_browser(&mut host, &port);
+        host.delegate_mut().scheduler.invalidate(InvalidationReason::PAINT);
+        assert!(host.request_wake().unwrap());
+        let sent = port.0.borrow().sent.len();
+        while port.0.borrow().sent.len() == sent {
+            host.step(AbiWorkBudget::credits(1)).unwrap();
+        }
+        let message = browser_event(crate::event::BROWSER_EVENT_FRAME, 1, 16_f64.to_le_bytes().to_vec(), 1);
+        let length = match &message {
+            AbiMessage::Event(event) => event.bytes.len(),
+            _ => unreachable!(),
+        };
+        port.0.borrow_mut().incoming.push_back(message);
+        inspect_and_classify(&mut host, length);
+        assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Frame(_)));
+        host.step(AbiWorkBudget::credits(1)).unwrap();
+        host.step(AbiWorkBudget::credits(1)).unwrap();
+        for _ in 0..6 {
+            host.step(AbiWorkBudget::credits(1)).unwrap();
+        }
+        assert_eq!(host.delegate().frames, 1);
+        assert!(port.0.borrow().sent.iter().any(|message| matches!(message, AbiMessage::Request(request) if request.operation.get() == BROWSER_HOST_OPERATION_CURSOR)));
+    }
+
+    #[test]
+    fn browser_clipboard_cancel_before_during_after_and_close_are_deterministic() {
+        let (mut before, before_port) = browser_fixture();
+        attach_browser(&mut before, &before_port);
+        before.request_clipboard_read().unwrap();
+        assert_eq!(before.cancel_clipboard().unwrap(), true);
+        assert_eq!(before.cancel_clipboard().unwrap(), false);
+
+        let (mut during, during_port) = browser_fixture();
+        attach_browser(&mut during, &during_port);
+        during.request_clipboard_read().unwrap();
+        let sent = during_port.0.borrow().sent.len();
+        while during_port.0.borrow().sent.len() == sent {
+            during.step(AbiWorkBudget::credits(1)).unwrap();
+        }
+        assert_eq!(during.cancel_clipboard().unwrap(), true);
+
+        let (mut after, after_port) = browser_fixture();
+        attach_browser(&mut after, &after_port);
+        let request_id = after.request_clipboard_read().unwrap();
+        let sent = after_port.0.borrow().sent.len();
+        while after_port.0.borrow().sent.len() == sent {
+            after.step(AbiWorkBudget::credits(1)).unwrap();
+        }
+        after_port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id, generation: 1, status: crate::abi::AbiStatus::OK, bytes: AbiBytes::try_new(b"x".to_vec()).unwrap() }));
+        after.step(AbiWorkBudget::credits(1)).unwrap();
+        assert!(matches!(after.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Clipboard { text: Some(text), .. } if text == "x"));
+        assert_eq!(after.cancel_clipboard().unwrap(), false);
+
+        during.begin_close();
+        assert_eq!(during.step(AbiWorkBudget { interrupted: true, ..AbiWorkBudget::credits(1) }), Err(BrowserHostError::Abi(AbiErrorCode::Interrupted)));
+        let mut detach_replied = false;
+        for _ in 0..64 {
+            during.step(AbiWorkBudget::credits(1)).unwrap();
+            if !detach_replied {
+                let detach = during_port.0.borrow().sent.iter().find_map(|message| match message {
+                    AbiMessage::Request(request) if request.operation.get() == BROWSER_HOST_OPERATION_DETACH => Some((request.request_id, request.generation)),
+                    _ => None,
+                });
+                if let Some((request_id, generation)) = detach {
+                    assert!(!during.terminal_is_empty());
+                    during_port.0.borrow_mut().incoming.push_back(AbiMessage::Reply(AbiReply { request_id, generation, status: crate::abi::AbiStatus::OK, bytes: AbiBytes::default() }));
+                    detach_replied = true;
+                }
+            }
+            if during.terminal_is_empty() {
+                break;
+            }
+        }
+        assert!(detach_replied);
+        assert!(during.terminal_is_empty());
+    }
+
+    #[test]
+    fn browser_listener_aba_and_event_decoder_terminal_laws() {
+        let listener = crate::event::ListenerId::try_new(1, 2).unwrap();
+        let event = match browser_event(crate::event::BROWSER_EVENT_CLOSE, 1, Vec::new(), 1) {
+            AbiMessage::Event(event) => event,
+            _ => unreachable!(),
+        };
+        assert_eq!(crate::event::decode_browser_host_event(&event, crate::event::CanvasId::try_new(1).unwrap(), listener), Err(AbiErrorCode::AbaHandle));
+        assert_eq!(crate::event::CanvasId::try_new(0), Err(AbiErrorCode::UnknownHandle));
+        let (mut host, port) = browser_fixture();
+        attach_browser(&mut host, &port);
+        port.0.borrow_mut().incoming.push_back(AbiMessage::Control(AbiControl::Close { handle: crate::abi::AbiHandle::try_new(1, 2).unwrap() }));
+        assert_eq!(host.step(AbiWorkBudget::credits(1)), Err(BrowserHostError::Abi(AbiErrorCode::StaleGeneration)));
+        port.0.borrow_mut().incoming.push_back(AbiMessage::Control(AbiControl::Close { handle: crate::abi::AbiHandle::try_new(2, 1).unwrap() }));
+        assert_eq!(host.step(AbiWorkBudget::credits(1)), Err(BrowserHostError::Abi(AbiErrorCode::UnknownHandle)));
+    }
+
+    #[test]
+    fn browser_linear_memory_exact_envelope_retry_and_preflight_laws() {
+        use super::browser::linear_memory_test_import::{self as seam, AfterProbe};
+
+        seam::reset();
+        let empty = crate::abi::encode_abi_message(&raw_browser_event(0));
+        assert_eq!(empty.len(), BROWSER_HOST_EVENT_ENVELOPE_BYTES);
+        seam::enqueue(empty);
+        let mut port = LinearMemoryBrowserHostPort;
+        assert!(matches!(port.poll(AbiWorkBudget::credits(1)).unwrap(), AbiPortPoll::Message(AbiMessage::Event(event)) if event.bytes.is_empty()));
+        assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES], 1, 0, false));
+
+        seam::reset();
+        let maximum = crate::abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES));
+        assert_eq!(maximum.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES);
+        seam::enqueue(maximum);
+        assert!(matches!(port.poll(AbiWorkBudget::credits(1)).unwrap(), AbiPortPoll::Message(AbiMessage::Event(event)) if event.bytes.len() == BROWSER_HOST_MAX_EVENT_BODY_BYTES));
+        assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES, BROWSER_HOST_MAX_ENCODED_EVENT_BYTES], 1, 0, false));
+        assert_eq!(port.poll(AbiWorkBudget::credits(1)).unwrap(), AbiPortPoll::Pending);
+
+        seam::reset();
+        let maximum_send = raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES);
+        port.try_send(maximum_send, AbiWorkBudget::credits(1)).unwrap();
+        assert_eq!(seam::sent_lengths(), vec![BROWSER_HOST_MAX_ENCODED_EVENT_BYTES]);
+        let oversized_send = raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES + 1);
+        let rejection = port.try_send(oversized_send.clone(), AbiWorkBudget::credits(1)).unwrap_err();
+        assert_eq!(rejection.code, AbiErrorCode::LimitExceeded);
+        assert_eq!(rejection.message, oversized_send);
+        assert_eq!(seam::sent_lengths(), vec![BROWSER_HOST_MAX_ENCODED_EVENT_BYTES]);
+
+        seam::reset();
+        let oversized = crate::abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES + 1));
+        assert_eq!(oversized.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES + 1);
+        seam::enqueue(oversized);
+        assert_eq!(port.poll(AbiWorkBudget::credits(1)), Err(AbiErrorCode::LimitExceeded));
+        assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES], 0, 1, false));
+
+        seam::reset();
+        let page = AbiPage::try_new(crate::abi::AbiHandle::try_new(1, 1).unwrap(), 0, vec![7; BROWSER_HOST_MAX_PAGE_BODY_BYTES]).unwrap();
+        let encoded_page = crate::abi::encode_abi_message(&AbiMessage::Page(page));
+        assert_eq!(encoded_page.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES);
+        seam::enqueue(encoded_page);
+        assert!(matches!(port.poll(AbiWorkBudget::credits(1)).unwrap(), AbiPortPoll::Message(AbiMessage::Page(page)) if page.bytes.len() == BROWSER_HOST_MAX_PAGE_BODY_BYTES));
+        assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES, BROWSER_HOST_MAX_ENCODED_EVENT_BYTES], 1, 0, false));
+
+        seam::reset();
+        let oversized_page = AbiPage::try_new(crate::abi::AbiHandle::try_new(1, 1).unwrap(), 0, vec![7; BROWSER_HOST_MAX_PAGE_BODY_BYTES + 1]).unwrap();
+        let encoded_page = crate::abi::encode_abi_message(&AbiMessage::Page(oversized_page));
+        assert_eq!(encoded_page.len(), BROWSER_HOST_MAX_ENCODED_EVENT_BYTES + 1);
+        seam::enqueue(encoded_page);
+        assert_eq!(port.poll(AbiWorkBudget::credits(1)), Err(AbiErrorCode::LimitExceeded));
+        assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES], 0, 1, false));
+
+        for (action, expected, closed) in [(AfterProbe::Cancel, AbiPortPoll::Pending, false), (AfterProbe::Close, AbiPortPoll::Closed, true)] {
+            seam::reset();
+            seam::enqueue(crate::abi::encode_abi_message(&raw_browser_event(BROWSER_HOST_MAX_EVENT_BODY_BYTES)));
+            seam::after_probe(action);
+            assert_eq!(port.poll(AbiWorkBudget::credits(1)).unwrap(), expected);
+            assert_eq!(seam::census(), (vec![BROWSER_HOST_INITIAL_POLL_BYTES, BROWSER_HOST_MAX_ENCODED_EVENT_BYTES], 0, 0, closed));
+        }
+    }
+
+    #[test]
+    fn browser_exact_event_and_page_are_credited_and_acknowledged_once() {
+        let (mut host, port) = browser_fixture();
+        attach_browser(&mut host, &port);
+        let text_length = BROWSER_HOST_MAX_EVENT_BODY_BYTES - 15;
+        let mut text = (text_length as u16).to_le_bytes().to_vec();
+        text.extend(std::iter::repeat(b'x').take(text_length));
+        let event = browser_event(crate::event::BROWSER_EVENT_TEXT, 1, text, 1);
+        let event_bytes = match &event {
+            AbiMessage::Event(event) => event.bytes.len(),
+            _ => unreachable!(),
+        };
+        assert_eq!(event_bytes, BROWSER_HOST_MAX_EVENT_BODY_BYTES);
+        port.0.borrow_mut().incoming.push_back(event);
+        inspect_and_classify(&mut host, event_bytes);
+        assert_eq!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Event);
+        host.step(AbiWorkBudget::credits(1)).unwrap();
+        let event_acks = port.0.borrow().sent.iter().filter(|message| matches!(message, AbiMessage::Reply(reply) if reply.request_id == AbiRequestId(101))).count();
+        assert_eq!(event_acks, 1);
+
+        let handle = crate::abi::AbiHandle::try_new(9, 1).unwrap();
+        let page = AbiPage::try_new(handle, 0, vec![5; BROWSER_HOST_MAX_PAGE_BODY_BYTES]).unwrap();
+        port.0.borrow_mut().incoming.push_back(AbiMessage::Page(page));
+        assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
+        for _ in 0..BROWSER_HOST_MAX_PAGE_BODY_BYTES {
+            assert!(matches!(host.step(AbiWorkBudget::credits(1)).unwrap(), BrowserHostStep::Progress(_)));
+        }
+        host.step(AbiWorkBudget::credits(1)).unwrap();
+        let page_acks = port.0.borrow().sent.iter().filter(|message| matches!(message, AbiMessage::Control(AbiControl::Acknowledge { handle: actual, index: 0 }) if *actual == handle)).count();
+        assert_eq!(page_acks, 1);
+    }
+
+    //#endregion 🌐️Browser host laws
 }
 
 //#endregion Tests

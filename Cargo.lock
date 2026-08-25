@@ -6129,12 +6129,10 @@ dependencies = [
  "semio-framework-ui",
  "semio-s-plugin-stdio",
  "serde",
- "serde-wasm-bindgen",
  "serde_json",
  "tiny-skia",
  "tokio",
  "usvg 0.45.1",
- "wasm-bindgen",
  "zip 2.4.2",
 ]
 
@@ -6593,8 +6591,6 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "semio-framework-ui-render",
- "wasm-bindgen",
- "web-sys",
  "wgpu",
 ]
 
@@ -6612,7 +6608,6 @@ name = "semio-framework-ui-host"
 version = "0.1.0"
 dependencies = [
  "arboard",
- "js-sys",
  "raw-window-handle",
  "rfd",
  "semio-framework-job",
@@ -6622,9 +6617,6 @@ dependencies = [
  "semio-framework-ui-backend-webgpu",
  "semio-framework-ui-contract",
  "semio-framework-ui-render",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
  "winit",
 ]
 
@@ -7387,6 +7379,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

@@ -1,0 +1,1 @@
+{"stream":"coordinator","sequence":1,"id":"evt-1","generation":7,"type":"ticket.recorded","payload":{"id":"T-1","status":"open"},"checksum":"6d6e63ada99d3b4b6ed21114f00421e3c0bb6d480c830351f4b7f323c6fa82ec"}

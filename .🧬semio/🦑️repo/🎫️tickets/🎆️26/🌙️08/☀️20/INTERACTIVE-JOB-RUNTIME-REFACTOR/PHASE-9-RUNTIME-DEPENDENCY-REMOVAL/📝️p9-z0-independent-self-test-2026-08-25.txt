@@ -1,0 +1,1 @@
+[verify dependencies self-test] hostile-mutations=8 clean.

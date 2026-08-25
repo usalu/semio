@@ -21,9 +21,9 @@ use crate::editor::procedural2d::panels::{catalogue as catalogue_panel, document
 use crate::editor::procedural2d::terminology::{procedural2d_labels, Procedural2dLabels};
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode,
-    SelectionSpec, TopologyNode,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Effect, Emit, Fault, FaultCode, FaultOrigin,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaForm, MediaType, MergeMode, NoDraft, NoDraftMutation,
+    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use serde_json::Value;
 use store::EngineHandles;
@@ -135,6 +135,33 @@ impl ArtifactEditor for Procedural2dPlayApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Procedural2dCommand;
+
+    const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
+
+    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::procedural2d::spr::procedural2d_envelope_decode_owner_bundle())
+    }
+
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::procedural2d::spr::procedural2d_document_store_owners())
+    }
+
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(crate::artifacts::procedural2d::spr::procedural2d_document_store_initialization_job(envelope, operation, generation))
+    }
+
+    fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
+        crate::artifacts::procedural2d::spr::procedural2d_validate_atomic_publication_authority(operation, generation, live_generation)
+            .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Procedural2d atomic publication authority is absent or stale"))
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
 
     const DIALECT: Dialect = PROCEDURAL2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURAL_2D_SCHEMA;
@@ -286,8 +313,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
             document_panel::PROCEDURAL2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             catalogue_panel::PROCEDURAL2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             inspection_panel::PROCEDURAL2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
         })?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
@@ -526,6 +552,183 @@ mod tests {
     use flow::Widget;
     use semio_framework_plugin::testkit::assert_undo_redo_round_trip;
     use semio_framework_plugin::PluginApp;
+
+    fn production_initial_snapshot(label: &str) -> Procedural2dSnapshot {
+        let mut snapshot = Procedural2dSnapshot::default();
+        snapshot.fixture.schema = label.into();
+        for (id, text) in [("replace-target", "before replacement"), ("delete-target", "delete me"), ("move-target", "move me"), ("clear-target", "clear me")] {
+            snapshot.fixture.widgets.push(flow::Widget::InputNote { id: id.into(), text: text.into() });
+        }
+        snapshot.fixture.synapses.push(flow::SynapseSpec { id: "replace-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "old".into(), to_port: "old".into() });
+        snapshot.fixture.synapses.push(flow::SynapseSpec { id: "disconnect-synapse".into(), from: "move-target".into(), to: "clear-target".into(), from_port: String::new(), to_port: String::new() });
+        snapshot.fixture.layout.insert("move-target".into(), flow::WidgetLayout { x: 1.0, y: 2.0 });
+        snapshot.fixture.layout.insert("clear-target".into(), flow::WidgetLayout { x: 3.0, y: 4.0 });
+        for (id, name) in [("delete-generation", "Delete"), ("rename-generation", "Before Rename"), ("change-generation", "Change Value")] {
+            snapshot.generation.generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: serde_json::Map::new() });
+        }
+        snapshot.generation.selected_generation_id = Some("rename-generation".into());
+        snapshot
+    }
+
+    fn production_mutations() -> Vec<Procedural2dMutation> {
+        use crate::artifacts::procedural2d::mutations::*;
+        let params = flow::neural::Dictionary::new()
+            .insert("integer", flow::neural::Value::Atom(flow::neural::Atom::Integer(7)))
+            .insert("nested", flow::neural::Value::Dictionary(flow::neural::Dictionary::new().insert("text", flow::neural::Value::Atom(flow::neural::Atom::String("production".into())))));
+        vec![
+            create_widget(0, flow::Widget::Neuron { id: "created-widget".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true }),
+            replace_widget(flow::Widget::Cluster { id: "replace-target".into(), name: "After Replacement".into(), tree: Default::default(), flow: Default::default() }),
+            delete_widget("delete-target".into()),
+            connect_synapse(0, flow::SynapseSpec { id: "created-synapse".into(), from: "created-widget".into(), to: "replace-target".into(), from_port: "out".into(), to_port: "in".into() }),
+            replace_synapse(flow::SynapseSpec { id: "replace-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "new-out".into(), to_port: "new-in".into() }),
+            disconnect_synapse("disconnect-synapse".into()),
+            move_widget("move-target".into(), flow::WidgetLayout { x: 31.0, y: -17.0 }),
+            clear_widget_layout("clear-target".into()),
+            update_camera(flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 }),
+            change_schema("flow.fixture.production-retained".into()),
+            create_generation(flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: serde_json::Map::new() }),
+            delete_generation("delete-generation".into()),
+            rename_generation("rename-generation".into(), "After Rename".into()),
+            change_generation_value("change-generation".into(), "deep-answer".into(), serde_json::json!({"object": {"array": [1.0, false, "retained"]}})),
+        ]
+    }
+
+    fn production_hex(bytes: &[u8]) -> String {
+        const DIGITS: &[u8; 16] = b"0123456789abcdef";
+        let mut value = String::new();
+        value.try_reserve_exact(bytes.len() * 2).expect("P2 production hex preflight");
+        for byte in bytes {
+            value.push(char::from(DIGITS[usize::from(byte >> 4)]));
+            value.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
+        }
+        value
+    }
+
+    fn production_semantic_digest(snapshot: &Procedural2dSnapshot) -> [u8; 32] {
+        let mut digest = store::ArtifactStoreInitializationDigest::new(b"procedural2d.production-law.semantic");
+        digest.observe(&crate::artifacts::procedural2d::snapshot::binary::encode(snapshot));
+        digest.finish()
+    }
+
+    fn production_envelope_wire(label: &str) -> (Vec<u8>, Procedural2dSnapshot, [u8; 32]) {
+        let snapshot = production_initial_snapshot(label);
+        let mutations = production_mutations();
+        assert_eq!(mutations.len(), 14, "production ingress carries every P2 mutation variant including clear-widget-layout");
+        let mut mutation_hex = Vec::new();
+        mutation_hex.try_reserve_exact(mutations.len()).expect("P2 production mutation owner preflight");
+        for mutation in &mutations {
+            mutation_hex.push(production_hex(&crate::artifacts::procedural2d::spr::encode_op(mutation).expect("P2 production mutation encoding")));
+        }
+        let mut expected = production_initial_snapshot(label);
+        crate::artifacts::procedural2d::spr::procedural2d_apply_retained_mutations_for_test(&mut expected, &mutations);
+        let expected_digest = production_semantic_digest(&expected);
+        let wire = serde_json::to_vec(&serde_json::json!({
+            "schema": crate::artifacts::procedural2d::PROCEDURAL_2D_SCHEMA,
+            "id": "procedural2d-production-mounted-law",
+            "vcs": {
+                "initialSnapshot": production_hex(&crate::artifacts::procedural2d::snapshot::binary::encode(&snapshot)),
+                "edits": [{
+                    "id": "procedural2d-production-all14-edit",
+                    "actor": "procedural2d-production-law",
+                    "forwards": mutation_hex,
+                    "inverse": [],
+                    "sequenceNumber": 1,
+                    "startedAt": "1"
+                }],
+                "changes": [],
+                "checkpoints": [],
+                "alternatives": []
+            },
+            "editMessages": [],
+            "conflicts": []
+        }))
+        .expect("schema-first P2 production fixture envelope");
+        (wire, expected, expected_digest)
+    }
+
+    fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
+        crate::artifacts::procedural2d::spr::procedural2d_admit_publication_authority(
+            handle.operation,
+            handle.generation,
+            handle.generation.0,
+            handle.generation.0,
+            handle.generation.0,
+            8_192,
+            crate::artifacts::procedural2d::spr::PROCEDURAL2D_MOUNTED_OUTPUT_CHANNELS,
+            crate::artifacts::procedural2d::spr::PROCEDURAL2D_MOUNTED_CONTROL_CREDITS,
+        )
+        .expect("P2 production publication authority");
+        for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+            bytes[..chunk.len()].copy_from_slice(chunk);
+            let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded P2 production envelope page");
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P2 production envelope page admission failed: {fault}"));
+        }
+        assert!(app.seal_artifact_envelope_ingress(handle).expect("P2 production envelope seal"));
+        handle
+    }
+
+    fn drive_production_envelope(
+        app: &mut semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>,
+        handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle,
+    ) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+        for _ in 0..300_000 {
+            crate::artifacts::procedural2d::spr::procedural2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("P2 authority refresh immediately before production maintenance");
+            PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P2 production maintenance turn");
+            let poll = app.advance_artifact_envelope_load(handle).expect("P2 production load advancement");
+            if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+                return poll;
+            }
+            std::thread::yield_now();
+        }
+        panic!("P2 production envelope load did not reach terminal");
+    }
+
+    /// 🔐️ LAW: non-empty P2D2 canonical ingress reaches the real VCS maintenance replacement,
+    /// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
+    #[semio_framework_async_macros::async_test]
+    async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
+        let mut accepted = semio_framework_plugin::VcsArtifactApp::<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>::new(semio_framework_plugin::EditorApp::default()).await;
+        let base_generation = accepted.artifact_generation_now();
+        let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
+        let handle = admit_production_envelope(&mut accepted, &wire);
+        assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+        assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
+        let snapshot = accepted.snapshot().await.expect("accepted P2 production snapshot");
+        assert_eq!(&*snapshot, &expected, "real maintenance must publish all P2 snapshot and all-14 replay fields");
+        assert_eq!(production_semantic_digest(&snapshot), expected_digest);
+        assert!(snapshot.fixture.layout.contains_key("move-target"));
+        assert!(!snapshot.fixture.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
+        assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P2 terminal ACK"));
+        assert!(crate::artifacts::procedural2d::spr::procedural2d_release_publication_authority(handle.operation, handle.generation));
+
+        use crate::artifacts::procedural2d::spr::Procedural2dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+        for (hostile, expected_code) in [
+            (Missing, "procedural2d-publication.authority-missing"),
+            (WrongOperation, "procedural2d-publication.wrong-operation"),
+            (WrongGeneration, "procedural2d-publication.wrong-generation"),
+            (WrongBase, "procedural2d-publication.wrong-base"),
+            (WrongParent, "procedural2d-publication.wrong-parent"),
+        ] {
+            let mut app = semio_framework_plugin::VcsArtifactApp::<semio_framework_plugin::EditorApp<Procedural2dPlayApp>>::new(semio_framework_plugin::EditorApp::default()).await;
+            let last_valid = app.snapshot().await.expect("last-valid P2 snapshot");
+            let last_valid_digest = production_semantic_digest(&last_valid);
+            let base_generation = app.artifact_generation_now();
+            let (wire, _, _) = production_envelope_wire("rejected-production-candidate");
+            let handle = admit_production_envelope(&mut app, &wire);
+            crate::artifacts::procedural2d::spr::procedural2d_arm_publication_hostile(handle.operation, hostile);
+            assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+            assert_eq!(crate::artifacts::procedural2d::spr::procedural2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
+            assert_eq!(app.artifact_generation_now(), base_generation);
+            let retained = app.snapshot().await.expect("last-valid P2 snapshot after rejected candidate");
+            assert_eq!(production_semantic_digest(&retained), last_valid_digest);
+            assert_eq!(retained, last_valid);
+            assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P2 terminal ACK after candidate retirement"));
+            assert!(crate::artifacts::procedural2d::spr::procedural2d_release_publication_authority(handle.operation, handle.generation));
+        }
+    }
 
     //#region 🔖️CommandSurface
     #[test]

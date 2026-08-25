@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://framework/os/host/codec-abi/v1",
+  "title": "OS Host Codec ABI",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "operations", "errors", "request", "reply", "limits"],
+  "properties": {
+    "version": { "const": 1 },
+    "operations": {
+      "const": {
+        "decodeWorkflowFixturePack": 1537,
+        "parseWorkflowFixtureDsl": 1538,
+        "mediaAcceptFilterKinds": 1539,
+        "normalizeStdioFormatKind": 1540
+      }
+    },
+    "errors": {
+      "const": {
+        "malformedRequest": 1,
+        "malformedPack": 2,
+        "malformedDsl": 3,
+        "missingKindArray": 4,
+        "unknownKind": 5,
+        "invalidUtf8": 6,
+        "inputLimit": 7,
+        "outputLimit": 8,
+        "invalidState": 9
+      }
+    },
+    "request": {
+      "const": {
+        "metadataOrder": ["version:u8", "inputBytes:u32le"],
+        "workflowPackOrder": ["magic:WFP1", "version:u8", "canonicalDslBytes:u32le", "canonicalDslUtf8"],
+        "workflowDslCanonical": ["name", "graph", "dirty-node-ids", "expected-deliveries", "terminal-newline"],
+        "filterOrder": ["version:u8", "kindCount:u16le", "kinds:(byteLength:u16le,utf8)*"],
+        "filterRetainedState": ["header:3bytes", "currentLength:2bytes", "currentKind:max1024bytes", "resolvedOutput"],
+        "normalizeOrder": ["kindUtf8:max1024bytes"],
+        "normalizeRetainedState": ["currentKind:max1024bytes", "resolvedOutput"],
+        "admission": "one-byte-or-completed-item-opportunity-per-grant"
+      }
+    },
+    "reply": {
+      "const": {
+        "payloadOrder": ["version:u8", "kind:u8", "byteLength:u32le", "bytes"],
+        "kinds": { "workflowFixtureDsl": 1, "acceptFilterUtf8": 2, "normalizedKindUtf8": 3 },
+        "summaryOrder": ["version:u8", "kind:u8", "outputBytes:u32le"]
+      }
+    },
+    "limits": {
+      "const": {
+        "inputBytes": 1048576,
+        "outputBytes": 1048576,
+        "pageBytes": 65536,
+        "transferPages": 256,
+        "kindCount": 256,
+        "kindBytes": 1024,
+        "diagnosticBytes": 1024
+      }
+    }
+  }
+}

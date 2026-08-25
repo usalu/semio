@@ -26,6 +26,7 @@ mod tests {
     #[derive(Debug, PartialEq)]
     struct FillPlacementWitness {
         node_kind: String,
+        edge_kind: String,
         source: String,
         target: String,
         x: f64,
@@ -142,6 +143,7 @@ mod tests {
                             let mut placement = checkpoint.take_pending_placement().expect("checkpoint placement");
                             placements.push(FillPlacementWitness {
                                 node_kind: placement.node_kind.as_str().to_string(),
+                                edge_kind: placement.edge_kind.as_str().to_string(),
                                 source: placement.source_handle_id.as_str().to_string(),
                                 target: placement.target_handle_id.as_str().to_string(),
                                 x: placement.x,
@@ -156,7 +158,18 @@ mod tests {
                             session.resume().expect("checkpoint resume");
                         }
                         StepOutcome::Complete(candidate) => {
-                            result = infinite_canvas::BoardFillResult::from_commit_candidate(candidate);
+                            let candidate = infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate).expect("typed full fill candidate");
+                            if let Some(placement) = candidate.placement {
+                                placements.push(FillPlacementWitness {
+                                    node_kind: placement.node_kind.as_str().to_string(),
+                                    edge_kind: placement.edge_kind.as_str().to_string(),
+                                    source: placement.source_handle_id.as_str().to_string(),
+                                    target: placement.target_handle_id.as_str().to_string(),
+                                    x: placement.x,
+                                    y: placement.y,
+                                });
+                            }
+                            result = Some(candidate.result);
                             while !outcome.terminal_is_empty() {
                                 let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                             }

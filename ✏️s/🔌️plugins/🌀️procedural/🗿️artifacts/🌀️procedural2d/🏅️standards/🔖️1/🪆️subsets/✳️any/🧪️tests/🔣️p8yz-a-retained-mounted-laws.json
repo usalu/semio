@@ -1,0 +1,69 @@
+{
+  "schema": "semio.phase8.retained-mounted-laws/v1",
+  "artifact": "s.procedural.procedural2d@1/*",
+  "discriminator": "P2D2",
+  "forbiddenDiscriminators": ["P3D3"],
+  "credits": {
+    "dimensions": ["operations", "pages", "items", "bytes", "outputs", "controls"],
+    "cases": ["zero", "maximum", "maximum-plus-one"],
+    "producerConstructedOnlyAfterPreflight": true,
+    "exactHandback": true
+  },
+  "lifecycle": [
+    "begin",
+    "preflight",
+    "admit",
+    "seal",
+    "poll",
+    "take",
+    "resume",
+    "acknowledge-output",
+    "acknowledge-load",
+    "cancel",
+    "retry",
+    "close-step"
+  ],
+  "publication": [
+    "operation-live",
+    "generation-live",
+    "base-live",
+    "parent-live",
+    "atomic-validation-immediately-before-swap",
+    "stale-aba-retired",
+    "last-valid-visible"
+  ],
+  "outputs": {
+    "boundedLatestWins": ["progress", "checkpoint", "preview"],
+    "lossless": ["terminal"],
+    "cases": ["complete-before-ack", "lease-loss", "resume", "explicit-ack"]
+  },
+  "terminal": [
+    "cancel",
+    "fault",
+    "panic",
+    "handle-loss",
+    "interrupted-close",
+    "terminal-empty",
+    "no-populated-ordinary-drop"
+  ],
+  "determinism": ["progress-ledger", "checkpoint-ledger", "preview-ledger", "terminal-ledger"],
+  "productionMaintenanceSwap": "non-empty",
+  "principalSnapshotProof": [
+    "explicit-valid-synapse",
+    "exact-synapse-row-count",
+    "exact-synapse-row-equality",
+    "field-delimited-synapse-digest",
+    "full-typed-snapshot-equality"
+  ],
+  "productionPayload": [
+    "unchanged-canonical-spk-after-p2d2",
+    "all-fourteen-mutations",
+    "non-empty-recursive-neural-dictionary",
+    "cluster-tree-flow",
+    "nested-generation-json",
+    "direct-history-replay",
+    "validated-swap",
+    "explicit-ack",
+    "stale-displaced-close"
+  ]
+}

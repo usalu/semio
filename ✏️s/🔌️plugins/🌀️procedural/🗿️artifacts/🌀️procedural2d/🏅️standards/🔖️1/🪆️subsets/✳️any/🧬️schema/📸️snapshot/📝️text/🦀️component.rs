@@ -365,11 +365,20 @@ impl store::ArtifactDsl for Procedural2dSnapshot {
 /// `dsl::DslArtifact`'s derive already gives `Procedural2dSnapshotDsl` its own `ArtifactPack` impl.
 impl store::ArtifactPack for Procedural2dSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <Procedural2dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
+        let document = procedural2d_document_to_dsl(self);
+        let inner = store::pack_rt::encode_document(&Procedural2dSnapshotDsl::__dsl_spec(), &document.__dsl_to_record(), options)?;
+        let mut bytes = Vec::with_capacity(4 + inner.len());
+        bytes.extend_from_slice(b"P2D2");
+        bytes.extend_from_slice(&inner);
+        Ok(bytes)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <Procedural2dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
+        if !bytes.starts_with(b"P2D2") {
+            return Err(store::PackError::Schema("procedural2d pack discriminator mismatch".into()));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&bytes[4..], &Procedural2dSnapshotDsl::__dsl_spec(), options)?;
+        let parsed = Procedural2dSnapshotDsl::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
         procedural2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 }

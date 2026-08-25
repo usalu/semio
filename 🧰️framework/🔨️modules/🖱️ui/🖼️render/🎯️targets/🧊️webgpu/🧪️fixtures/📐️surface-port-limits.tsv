@@ -1,0 +1,9 @@
+# resource	max	max_plus_one	law
+sessions	8	9	preflight-before-surface-owner-move
+in_flight_frames	4	5	preflight-before-frame-owner-move
+in_flight_pages	8	9	retain-until-ack-or-close
+in_flight_controls	8	9	bounded-control-admission
+frame_bytes	4096	4097	exact-frame-handback
+outcome_bytes	8192	8193	paged-outcome-bound
+callback_work_units	64	65	one-callback-step-bound
+callback_milliseconds	8	9	watchdog-contract

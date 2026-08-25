@@ -225,15 +225,15 @@ struct ClosingInstance {
 }
 
 struct PatchTrackerState {
-    slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    rejected: [Option<RejectedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    terminals: [Option<TerminalSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    producer_terminals: [Option<MountedTreeTerminal>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    rejected_reserved: [Option<u64>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    deferred: [Option<ui_contract::SurfaceId>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    unadmitted: [Option<UnadmittedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS + 1],
-    closing_instances: [Option<ClosingInstance>; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    ready: [Option<ReadySlot>; READY_PATCH_CAPACITY],
+    slots: Box<[Option<SurfaceSlot>]>,
+    rejected: Box<[Option<RejectedSlot>]>,
+    terminals: Box<[Option<TerminalSlot>]>,
+    producer_terminals: Box<[Option<MountedTreeTerminal>]>,
+    rejected_reserved: Box<[Option<u64>]>,
+    deferred: Box<[Option<ui_contract::SurfaceId>]>,
+    unadmitted: Box<[Option<UnadmittedSlot>]>,
+    closing_instances: Box<[Option<ClosingInstance>]>,
+    ready: Box<[Option<ReadySlot>]>,
     next_generation: u64,
     generation_exhausted: bool,
     drive_cursor: usize,
@@ -243,21 +243,25 @@ struct PatchTrackerState {
 impl Default for PatchTrackerState {
     fn default() -> Self {
         Self {
-            slots: std::array::from_fn(|_| None),
-            rejected: std::array::from_fn(|_| None),
-            terminals: std::array::from_fn(|_| None),
-            producer_terminals: std::array::from_fn(|_| None),
-            rejected_reserved: [None; SURFACE_RECONCILE_ADMISSION_SLOTS],
-            deferred: std::array::from_fn(|_| None),
-            unadmitted: std::array::from_fn(|_| None),
-            closing_instances: [None; SURFACE_RECONCILE_ADMISSION_SLOTS],
-            ready: std::array::from_fn(|_| None),
+            slots: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            rejected: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            terminals: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            producer_terminals: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            rejected_reserved: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            deferred: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            unadmitted: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS + 1),
+            closing_instances: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            ready: fixed_slots(READY_PATCH_CAPACITY),
             next_generation: 0,
             generation_exhausted: false,
             drive_cursor: 0,
             close_cursor: 0,
         }
     }
+}
+
+fn fixed_slots<T>(capacity: usize) -> Box<[Option<T>]> {
+    std::iter::repeat_with(|| None).take(capacity).collect::<Vec<_>>().into_boxed_slice()
 }
 
 /// 🧵️ Fixed surface, rejected-owner, terminal-owner, and ready-publication authority.
@@ -911,7 +915,11 @@ mod tests {
     #[test]
     fn tracker_initialization_fits_the_component_stack_budget() {
         let bytes = std::mem::size_of::<PatchTrackerState>();
-        assert!(bytes <= 512 * 1_024, "PatchTrackerState requires {bytes} bytes");
+        assert!(bytes <= 256, "PatchTrackerState requires {bytes} bytes");
+        let state = PatchTrackerState::default();
+        assert_eq!(state.slots.len(), SURFACE_RECONCILE_ADMISSION_SLOTS);
+        assert_eq!(state.unadmitted.len(), SURFACE_RECONCILE_ADMISSION_SLOTS + 1);
+        assert_eq!(state.ready.len(), READY_PATCH_CAPACITY);
     }
 
     #[test]

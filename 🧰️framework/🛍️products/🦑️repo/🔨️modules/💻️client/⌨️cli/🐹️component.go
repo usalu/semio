@@ -17,32 +17,27 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
-	"github.com/blevesearch/bleve/v2"
-	blevequery "github.com/blevesearch/bleve/v2/search/query"
-	"github.com/bmatcuk/doublestar/v4"
-	"github.com/dustin/go-humanize"
-	"github.com/google/uuid"
-	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/graphql/language/ast"
-	"github.com/graphql-go/graphql/language/parser"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
-	ignore "github.com/sabhiram/go-gitignore"
-	"github.com/spf13/cobra"
+	command "github.com/usalu/semio/repo/client/internal/command"
+	glob "github.com/usalu/semio/repo/client/internal/glob"
+	graphql "github.com/usalu/semio/repo/client/internal/graphql"
+	humanize "github.com/usalu/semio/repo/client/internal/humanize"
+	idgen "github.com/usalu/semio/repo/client/internal/id"
+	ignore "github.com/usalu/semio/repo/client/internal/ignore"
+	mcp "github.com/usalu/semio/repo/client/internal/mcp"
+	server "github.com/usalu/semio/repo/client/internal/mcpserver"
+	search "github.com/usalu/semio/repo/client/internal/search"
+	templatefunc "github.com/usalu/semio/repo/client/internal/templatefunc"
+	yaml "github.com/usalu/semio/repo/client/internal/yaml"
 	repopkg "github.com/usalu/semio/repo/go"
-	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
 	"math"
 	"math/rand"
-	_ "modernc.org/sqlite"
 	"net/http"
 	"os"
 	"os/exec"
@@ -135,7 +130,7 @@ var (
 
 // 💿️templateFuncMap holds the data fields for a templateFuncMap record.
 func templateFuncMap() template.FuncMap {
-	fm := sprig.TxtFuncMap()
+	fm := templatefunc.TxtFuncMap()
 	fm["colorize"] = func(s, color string, isTTY bool) string {
 		return colorize(s, colorNameToANSI(color), isTTY)
 	}
@@ -606,7 +601,7 @@ const (
 // #endregion 🎖️Engine
 
 // #region 🌧️Cli Adapter
-// CLI adapter that wires cobra commands to the engine and renders output.
+// CLI adapter that wires command commands to the engine and renders output.
 
 // ⚙️Config holds the data fields for a config record.
 type Config struct {
@@ -653,16 +648,16 @@ func (e ExitError) Error() string {
 
 // 🌱️NewRoot MUST initialize all required fields and return a valid Root.
 // 🌱️NewRoot creates and returns a new Root instance.
-func NewRoot(factory EngineFactory) *cobra.Command {
+func NewRoot(factory EngineFactory) *command.Command {
 	root, _ := NewRootWithConfig(factory)
 	return root
 }
 
 // 🔷️NewRootWithConfig MUST initialize all required fields and return a valid RootWithConfig.
 // 🆕️NewRootWithConfig creates and returns a new RootWithConfig instance.
-func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
+func NewRootWithConfig(factory EngineFactory) (*command.Command, *Config) {
 	config := Config{}
-	root := &cobra.Command{
+	root := &command.Command{
 		Use:           "repo",
 		Short:         "Monorepo CLI for Compose",
 		SilenceUsage:  true,
@@ -672,7 +667,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.PersistentFlags().BoolP("md", "", false, "Shorthand for --format md")
 	root.PersistentFlags().BoolP("text", "", false, "Shorthand for --format text")
 	root.PersistentFlags().BoolP("json", "", false, "Shorthand for --format json")
-	root.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	root.PersistentPreRunE = func(cmd *command.Command, args []string) error {
 		if b, _ := cmd.Flags().GetBool("json"); b {
 			config.Format = "json"
 		} else if b, _ := cmd.Flags().GetBool("text"); b {
@@ -764,15 +759,15 @@ func RunMCP() error {
 // Auth command for server authentication.
 
 // 🆕️authCommand creates the auth command with whoami subcommand.
-func authCommand(config *Config) *cobra.Command {
-	auth := &cobra.Command{
+func authCommand(config *Config) *command.Command {
+	auth := &command.Command{
 		Use:   "auth",
 		Short: "Server authentication",
 	}
-	auth.AddCommand(&cobra.Command{
+	auth.AddCommand(&command.Command{
 		Use:   "whoami",
 		Short: "Show current authenticated developer",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			info, err := serverWhoami()
 			if err != nil {
 				return fmt.Errorf("not authenticated: %w", err)
@@ -788,10 +783,10 @@ func authCommand(config *Config) *cobra.Command {
 			return nil
 		},
 	})
-	auth.AddCommand(&cobra.Command{
+	auth.AddCommand(&command.Command{
 		Use:   "status",
 		Short: "Show server connection status",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			addr := getServerAddr()
 			if addr == "" {
 				fmt.Println("Server: not configured (set COMPOSE_SERVER_ADDR)")
@@ -819,11 +814,11 @@ func authCommand(config *Config) *cobra.Command {
 // #endregion 🎵️Auth Command
 
 // 🔹️syncCommand holds the data fields for a syncCommand record.
-func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
-	sync := &cobra.Command{
+func syncCommand(factory EngineFactory, config *Config) *command.Command {
+	sync := &command.Command{
 		Use:   "sync",
 		Short: "Synchronize monorepo artifacts",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			if len(args) > 0 {
 				return fmt.Errorf("unknown sync target %q", args[0])
 			}
@@ -836,41 +831,41 @@ func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🐙️syncGitHubCommand wires the explicit GitHub synchronization CLI command.
-func syncGitHubCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
+func syncGitHubCommand(factory EngineFactory, config *Config) *command.Command {
+	return &command.Command{
 		Use:   "github",
 		Short: "Synchronize local state with GitHub",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			return runSyncManagementMutation(cmd, factory, config)
 		},
 	}
 }
 
 // 🔸️syncManagementCommand holds the data fields for a syncManagementCommand record.
-func syncManagementCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
+func syncManagementCommand(factory EngineFactory, config *Config) *command.Command {
+	return &command.Command{
 		Use:   "management",
 		Short: "Synchronize local state with management provider",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			return runSyncManagementMutation(cmd, factory, config)
 		},
 	}
 }
 
 // 🔁️runSyncManagementMutation executes the shared management synchronization mutation.
-func runSyncManagementMutation(cmd *cobra.Command, factory EngineFactory, config *Config) error {
+func runSyncManagementMutation(cmd *command.Command, factory EngineFactory, config *Config) error {
 	query := `mutation SyncManagement { syncManagement }`
 	return runGraphQL(cmd, factory, config, query, nil)
 }
 
 // 🔺️mcpCommand holds the data fields for a mcpCommand record.
-func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
+func mcpCommand(factory EngineFactory, config *Config) *command.Command {
 	var dryRun bool
-	cmd := &cobra.Command{
+	cmd := &command.Command{
 		Use:   "mcp [kind]",
 		Short: "Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			if dryRun {
 				return nil
 			}
@@ -903,14 +898,14 @@ func serveMcp(ctx context.Context, kind McpClientKind, toolTimeout time.Duration
 }
 
 // 🕸️graphqlCommand holds the data fields for a graphqlCommand record.
-func graphqlCommand(factory EngineFactory, config *Config) *cobra.Command {
+func graphqlCommand(factory EngineFactory, config *Config) *command.Command {
 	var query string
 	var variablesJSON string
-	cmd := &cobra.Command{
+	cmd := &command.Command{
 		Use:   "graphql [query]",
 		Short: "Execute a GraphQL query",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			resolvedQuery := query
 			if resolvedQuery == "" && len(args) > 0 {
 				resolvedQuery = args[0]
@@ -948,12 +943,12 @@ func graphqlCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // #region 🪅️Analyze Command
-func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func analyzeCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "analyze <id>",
 		Short: "Analyze an entity by its ID",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.ExactArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			ctx := cmd.Context()
 			id := args[0]
 			buildOpts := TreeBuildOptions{}
@@ -1088,11 +1083,11 @@ func AllEntityEmojis() []string {
 	return result
 }
 
-func entityEmojisCommand(config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func entityEmojisCommand(config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "entity-emojis",
 		Short: "List all entity-identifying emojis",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			emojis := AllEntityEmojis()
 			switch {
 			case config.IsJSON():
@@ -1114,12 +1109,12 @@ func entityEmojisCommand(config *Config) *cobra.Command {
 
 // #endregion 🖥️Entity Emojis Command
 // ⌨️searchCommand holds the data fields for a searchCommand record.
-func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func searchCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "search [query]",
 		Short: "Search monorepo tree",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			ctx := cmd.Context()
 
 			filter := buildTreeFilterFromFlags(cmd)
@@ -1135,7 +1130,10 @@ func searchCommand(factory EngineFactory, config *Config) *cobra.Command {
 					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
-			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
+			tree, err := searchMonorepoTreeWithCache(ctx, tree, filter.Query)
+			if err != nil {
+				return err
+			}
 			tree = FilterMonorepoTree(tree, &filter)
 
 			var output string
@@ -1170,12 +1168,12 @@ func flattenTreeNodes(node *TreeNode, out *[]*TreeNode) {
 }
 
 // ⬛️listCommand holds the data fields for a listCommand record.
-func listCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func listCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "list [query]",
 		Short: "Stream a flat list of monorepo items",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			ctx := cmd.Context()
 			sorted, _ := cmd.Flags().GetBool("sorted")
 			limit, _ := cmd.Flags().GetInt("limit")
@@ -1191,7 +1189,10 @@ func listCommand(factory EngineFactory, config *Config) *cobra.Command {
 					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			tree := BuildMonorepoTreeCached(ctx, buildOpts)
-			tree = searchMonorepoTreeWithCache(ctx, tree, filter.Query)
+			tree, err := searchMonorepoTreeWithCache(ctx, tree, filter.Query)
+			if err != nil {
+				return err
+			}
 			tree = FilterMonorepoTree(tree, &filter)
 			var nodes []*TreeNode
 			flattenTreeNodes(tree, &nodes)
@@ -1275,21 +1276,21 @@ type boolFlagPairSpec struct {
 }
 
 // 🔘️bindBoolFlags MUST register all boolean flags from the input specs.
-func bindBoolFlags(cmd *cobra.Command, specs []boolFlagSpec) {
+func bindBoolFlags(cmd *command.Command, specs []boolFlagSpec) {
 	for _, spec := range specs {
 		cmd.Flags().Bool(spec.Name, false, spec.Usage)
 	}
 }
 
 // 🚩️bindOnlyNoFlagPairs MUST register only/no boolean flag pairs from the input specs.
-func bindOnlyNoFlagPairs(cmd *cobra.Command, specs []boolFlagPairSpec) {
+func bindOnlyNoFlagPairs(cmd *command.Command, specs []boolFlagPairSpec) {
 	for _, spec := range specs {
 		cmd.Flags().Bool(spec.OnlyName, false, spec.OnlyUsage)
 		cmd.Flags().Bool(spec.NoName, false, spec.NoUsage)
 	}
 }
 
-func bindTreeFlags(cmd *cobra.Command) {
+func bindTreeFlags(cmd *command.Command) {
 	bindOnlyNoFlagPairs(cmd, []boolFlagPairSpec{
 		{OnlyName: "only-technology", NoName: "no-technology", OnlyUsage: "Only show technologies", NoUsage: "Exclude technologies"},
 		{OnlyName: "only-bundle", NoName: "no-bundle", OnlyUsage: "Only show bundles", NoUsage: "Exclude bundles"},
@@ -1345,16 +1346,16 @@ func bindTreeFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("no-contributor-name", nil, "Exclude specific contributors")
 	cmd.Flags().StringSlice("only-policy-name", nil, "Only show specific policies")
 	cmd.Flags().StringSlice("no-policy-name", nil, "Exclude specific policies")
-	cmd.Flags().String("query", "", "Bleve full-text search query")
+	cmd.Flags().String("query", "", "Full-text search query")
 }
 
 // 🔍️queryCommand holds the data fields for a queryCommand record.
-func queryCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func queryCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "query [keywords]",
 		Short: "Keyword search across monorepo resources",
-		Args:  cobra.ArbitraryArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.ArbitraryArgs,
+		RunE: func(cmd *command.Command, args []string) error {
 			ctx := cmd.Context()
 			query := strings.Join(args, " ")
 			tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{IncludeSections: true})
@@ -1375,7 +1376,7 @@ func queryCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🧹️buildTreeFilterFromFlags holds the data fields for a buildTreeFilterFromFlags record.
-func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
+func buildTreeFilterFromFlags(cmd *command.Command) TreeFilter {
 	filter := TreeFilter{
 		OnlyKinds:       make(map[TreeNodeKind]bool),
 		ExcludeKinds:    make(map[TreeNodeKind]bool),
@@ -1478,13 +1479,13 @@ func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 }
 
 // 📤️exportCommand holds the data fields for a exportCommand record.
-func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
+func exportCommand(factory EngineFactory, config *Config) *command.Command {
+	return &command.Command{
 		Use:   "export [output]",
-		Short: "Export repo data to SQLite database",
-		Long:  `Export repo data (technologies, bundles, folders, files, sections, definitions) to a SQLite database file.`,
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Short: "Export repo data to an event log",
+		Long:  `Export repo data as deterministic append-only events for replay.`,
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			outputPath := ""
 			if len(args) > 0 {
 				outputPath = args[0]
@@ -1494,7 +1495,7 @@ func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 				repoRoot = findRepoRoot(".")
 			}
 			ctx := NewRepoContext(repoRoot)
-			result, err := ExportToSQLite(outputPath, ctx)
+			result, err := ExportToEventLogContext(cmd.Context(), outputPath, ctx, nil)
 			if err != nil {
 				return err
 			}
@@ -1711,7 +1712,7 @@ func resolveTestScopeFromFileSubPath(filePath string, lang string, subPath strin
 }
 
 // 🔶️runTestScope executes tests for a resolved testScope and streams results.
-func runTestScope(scope testScope, cmd *cobra.Command) error {
+func runTestScope(scope testScope, cmd *command.Command) error {
 	switch scope.Kind {
 	case testScopeAll:
 		return runAllTests(cmd)
@@ -1730,7 +1731,7 @@ func runTestScope(scope testScope, cmd *cobra.Command) error {
 }
 
 // 🔹️runAllTests holds the data fields for a runAllTests record.
-func runAllTests(cmd *cobra.Command) error {
+func runAllTests(cmd *command.Command) error {
 	bundles := LoadBundles()
 	var firstErr error
 	for _, b := range bundles {
@@ -1746,7 +1747,7 @@ func runAllTests(cmd *cobra.Command) error {
 }
 
 // 🛠️runTechnologyTests holds the data fields for a runTechnologyTests record.
-func runTechnologyTests(technologyName string, cmd *cobra.Command) error {
+func runTechnologyTests(technologyName string, cmd *command.Command) error {
 	bundles := LoadBundles()
 	flatTechnology := Flat(technologyName)
 	var firstErr error
@@ -1767,7 +1768,7 @@ func runTechnologyTests(technologyName string, cmd *cobra.Command) error {
 }
 
 // 🔸️runBundleTests holds the data fields for a runBundleTests record.
-func runBundleTests(bundleRoot string, lang string, fileFilter string, testFilter string, cmd *cobra.Command) error {
+func runBundleTests(bundleRoot string, lang string, fileFilter string, testFilter string, cmd *command.Command) error {
 	absRoot := bundleRoot
 	if !filepath.IsAbs(absRoot) {
 		absRoot = filepath.Join(rootDir, absRoot)
@@ -1859,7 +1860,7 @@ func detectJSTestRunner(absRoot string, testFilter string) (string, []string) {
 }
 
 // 🔺️runFileTests holds the data fields for a runFileTests record.
-func runFileTests(filePath string, lang string, testFilter string, cmd *cobra.Command) error {
+func runFileTests(filePath string, lang string, testFilter string, cmd *command.Command) error {
 	if lang == "" {
 		l := GetLanguage(filePath)
 		if l != nil {
@@ -1922,7 +1923,7 @@ func runFileTests(filePath string, lang string, testFilter string, cmd *cobra.Co
 	return fmt.Errorf("unsupported language %q for file test", lang)
 }
 
-func runSectionTests(filePath string, lang string, section string, cmd *cobra.Command) error {
+func runSectionTests(filePath string, lang string, section string, cmd *command.Command) error {
 
 	if lang == "" {
 		l := GetLanguage(filePath)
@@ -2000,7 +2001,7 @@ func collectGoTestsInSection(filePath string, sectionName string) string {
 }
 
 // 📖️runDefinitionTest holds the data fields for a runDefinitionTest record.
-func runDefinitionTest(filePath string, lang string, bundleRoot string, testName string, cmd *cobra.Command) error {
+func runDefinitionTest(filePath string, lang string, bundleRoot string, testName string, cmd *command.Command) error {
 	if lang == "" {
 		l := GetLanguage(filePath)
 		if l != nil {
@@ -2076,7 +2077,7 @@ func unflattenTestName(flat string) string {
 }
 
 // 🔻️runExternalCommand holds the data fields for a runExternalCommand record.
-func runExternalCommand(dir string, name string, args []string, cmd *cobra.Command) error {
+func runExternalCommand(dir string, name string, args []string, cmd *command.Command) error {
 	c := exec.Command(name, args...)
 	c.Dir = dir
 	c.Stdout = cmd.OutOrStdout()
@@ -2091,8 +2092,8 @@ func runExternalCommand(dir string, name string, args []string, cmd *cobra.Comma
 }
 
 // ⬛️testCommand holds the data fields for a testCommand record.
-func testCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
+func testCommand(factory EngineFactory, config *Config) *command.Command {
+	return &command.Command{
 		Use:   "test [testable-id-or-uri]...",
 		Short: "Run tests for given entities",
 		Long: `Run tests for one or more testable entities identified by their entity IDs or URIs.
@@ -2105,8 +2106,8 @@ Supported entity scopes (narrowing order):
   🧰️technology⌨️bundle🥼️file         - all tests in the test file
   🧰️technology⌨️bundle🥼️file🔖️sec    - all tests in the section
   🧰️technology⌨️bundle🥼️file🔖️sec🧪️fn - a single test function`,
-		Args: cobra.ArbitraryArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args: command.ArbitraryArgs,
+		RunE: func(cmd *command.Command, args []string) error {
 			scopes := resolveTestScopes(args)
 			var firstErr error
 			for _, scope := range scopes {
@@ -2120,7 +2121,7 @@ Supported entity scopes (narrowing order):
 }
 
 // 🧠️extractLLMFromArgs extracts LLM from command flags and positional arguments.
-func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
+func extractLLMFromArgs(cmd *command.Command, args []string) (string, []string) {
 	if llm, _ := cmd.Flags().GetString("llm"); llm != "" {
 		return llm, args
 	}
@@ -2161,7 +2162,7 @@ func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 }
 
 // 🏋️extractEffortFromArgs extracts reasoning effort from command flags and positional arguments.
-func extractEffortFromArgs(cmd *cobra.Command, args []string) (string, []string) {
+func extractEffortFromArgs(cmd *command.Command, args []string) (string, []string) {
 	if effort, _ := cmd.Flags().GetString("effort"); effort != "" {
 		return effort, args
 	}
@@ -2202,7 +2203,7 @@ func extractEffortFromArgs(cmd *cobra.Command, args []string) (string, []string)
 }
 
 // 🧲️extractClientFromArgs holds the data fields for a extractClientFromArgs record.
-func extractClientFromArgs(cmd *cobra.Command, args []string) (string, []string) {
+func extractClientFromArgs(cmd *command.Command, args []string) (string, []string) {
 
 	if client, _ := cmd.Flags().GetString("client"); client != "" {
 		return client, args
@@ -2244,7 +2245,7 @@ func extractClientFromArgs(cmd *cobra.Command, args []string) (string, []string)
 }
 
 // ➕️addLLMFlags holds the data fields for a addLLMFlags record.
-func addLLMFlags(cmd *cobra.Command) {
+func addLLMFlags(cmd *command.Command) {
 	for _, llm := range AllowedLLMs {
 		if cmd.Flags().Lookup(llm) == nil {
 			cmd.Flags().Bool(llm, false, fmt.Sprintf("Use %s as LLM", llm))
@@ -2253,7 +2254,7 @@ func addLLMFlags(cmd *cobra.Command) {
 }
 
 // 🏋️addEffortFlags adds boolean flags for all allowed effort values.
-func addEffortFlags(cmd *cobra.Command) {
+func addEffortFlags(cmd *command.Command) {
 	for _, effort := range AllowedEfforts {
 		if cmd.Flags().Lookup(effort) == nil {
 			cmd.Flags().Bool(effort, false, fmt.Sprintf("Use %s as LLM reasoning effort", effort))
@@ -2262,7 +2263,7 @@ func addEffortFlags(cmd *cobra.Command) {
 }
 
 // 💻️addClientFlags holds the data fields for a addClientFlags record.
-func addClientFlags(cmd *cobra.Command) {
+func addClientFlags(cmd *command.Command) {
 	for _, client := range AllowedClients {
 		if cmd.Flags().Lookup(client) == nil {
 			cmd.Flags().Bool(client, false, fmt.Sprintf("Use %s as Client", client))
@@ -2271,12 +2272,12 @@ func addClientFlags(cmd *cobra.Command) {
 }
 
 // ⬜️draftCommand holds the data fields for a draftCommand record.
-func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "draft", Short: "Draft management commands"}
-	createCmd := &cobra.Command{
+func draftCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "draft", Short: "Draft management commands"}
+	createCmd := &command.Command{
 		Use:   "create [title]",
 		Short: "Create a new draft",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			if len(args) < 1 {
 				return fmt.Errorf("missing title")
 			}
@@ -2300,10 +2301,10 @@ func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	createCmd.Flags().StringSlice("files", nil, "Files to include in the draft")
 
-	deleteCmd := &cobra.Command{
+	deleteCmd := &command.Command{
 		Use:   "delete [slug]",
 		Short: "Delete a draft",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			if len(args) < 1 {
 				return fmt.Errorf("missing slug")
 			}
@@ -2327,13 +2328,13 @@ func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // ✅️todoCommand holds the data fields for a todoCommand record.
-func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "todo", Short: "Todo management commands"}
-	createCmd := &cobra.Command{
+func todoCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "todo", Short: "Todo management commands"}
+	createCmd := &command.Command{
 		Use:   "create [parent-id] [name] [description]",
 		Short: "Create a todo",
-		Args:  cobra.MaximumNArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(3),
+		RunE: func(cmd *command.Command, args []string) error {
 			parentID, _ := cmd.Flags().GetString("parent")
 			name, _ := cmd.Flags().GetString("name")
 			description, _ := cmd.Flags().GetString("description")
@@ -2364,11 +2365,11 @@ func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 	createCmd.Flags().String("name", "", "Todo name")
 	createCmd.Flags().String("description", "", "Todo description")
 
-	changeCmd := &cobra.Command{
+	changeCmd := &command.Command{
 		Use:   "change [id] --name <new-name> --description <new-description>",
 		Short: "Change a todo",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			id, _ := cmd.Flags().GetString("id")
 			if id == "" && len(args) > 0 {
 				id = args[0]
@@ -2396,11 +2397,11 @@ func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 	changeCmd.Flags().String("name", "", "New name")
 	changeCmd.Flags().String("description", "", "New description")
 
-	deleteCmd := &cobra.Command{
+	deleteCmd := &command.Command{
 		Use:   "delete [id]",
 		Short: "Delete a todo",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			id, _ := cmd.Flags().GetString("id")
 			if id == "" && len(args) > 0 {
 				id = args[0]
@@ -2415,11 +2416,11 @@ func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	deleteCmd.Flags().String("id", "", "Todo ID")
 
-	searchCmd := &cobra.Command{
+	searchCmd := &command.Command{
 		Use:   "search [search-string]",
 		Short: "Search todos",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			search := ""
 			if len(args) > 0 {
 				search = args[0]
@@ -2438,12 +2439,12 @@ func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🎫️ticketCommand holds the data fields for a ticketCommand record.
-func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "ticket", Short: "Ticket management commands"}
-	openCmd := &cobra.Command{
+func ticketCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "ticket", Short: "Ticket management commands"}
+	openCmd := &command.Command{
 		Use:   "open [emoji] [goal] [title] [prompt] [client] [llm]",
 		Short: "Open a new ticket",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			emoji, _ := cmd.Flags().GetString("emoji")
 			title, _ := cmd.Flags().GetString("title")
 			prompt, _ := cmd.Flags().GetString("prompt")
@@ -2549,10 +2550,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addLLMFlags(openCmd)
 	addEffortFlags(openCmd)
 	addClientFlags(openCmd)
-	closeCmd := &cobra.Command{
+	closeCmd := &command.Command{
 		Use:   "close [path] [summary] [files...]",
 		Short: "Close a ticket",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			year, _ := cmd.Flags().GetInt("year")
 			month, _ := cmd.Flags().GetInt("month")
 			day, _ := cmd.Flags().GetInt("day")
@@ -2635,10 +2636,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	closeCmd.Flags().String("summary", "", "Summary")
 	closeCmd.Flags().StringSlice("files", nil, "Files")
 	closeCmd.Flags().String("title", "", "Title")
-	reopenCmd := &cobra.Command{
+	reopenCmd := &command.Command{
 		Use:   "reopen [path] [prompt] [client] [llm]",
 		Short: "Reopen a ticket",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			year, _ := cmd.Flags().GetInt("year")
 			month, _ := cmd.Flags().GetInt("month")
 			day, _ := cmd.Flags().GetInt("day")
@@ -2742,11 +2743,11 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addEffortFlags(reopenCmd)
 	addClientFlags(reopenCmd)
 
-	changeCmd := &cobra.Command{
+	changeCmd := &command.Command{
 		Use:   "change <path>",
 		Short: "Change a ticket",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.ExactArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			path := args[0]
 			parts := strings.Split(path, "/")
 			if len(parts) < 4 {
@@ -2828,10 +2829,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addEffortFlags(changeCmd)
 	addClientFlags(changeCmd)
 
-	purgeArtifactsCmd := &cobra.Command{
+	purgeArtifactsCmd := &command.Command{
 		Use:   "purge-artifacts [path]",
 		Short: "Delete ticket-folder files above 5 MiB and subfolders above 10 MiB",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			all, _ := cmd.Flags().GetBool("all")
 			if all || len(args) == 0 {
 				count, err := PurgeAllOversizedTicketArtifacts()
@@ -2868,13 +2869,13 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // ⛳️goalCommand holds the data fields for a goalCommand record.
-func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "goal", Short: "Goal management commands"}
-	changeCmd := &cobra.Command{
+func goalCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "goal", Short: "Goal management commands"}
+	changeCmd := &command.Command{
 		Use:   "change <SLUG>",
 		Short: "Change a goal",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.ExactArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			id := args[0]
 			title, _ := cmd.Flags().GetString("title")
 			description, _ := cmd.Flags().GetString("description")
@@ -2932,10 +2933,10 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addLLMFlags(changeCmd)
 	addEffortFlags(changeCmd)
 
-	openCmd := &cobra.Command{
+	openCmd := &command.Command{
 		Use:   "open [title] [description] [prompt] [client] [llm]",
 		Short: "Open a new goal",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			title, _ := cmd.Flags().GetString("title")
 			description, _ := cmd.Flags().GetString("description")
 			prompt, _ := cmd.Flags().GetString("prompt")
@@ -3034,10 +3035,10 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addEffortFlags(openCmd)
 	addClientFlags(openCmd)
 
-	closeCmd := &cobra.Command{
+	closeCmd := &command.Command{
 		Use:   "close [id] [summary]",
 		Short: "Close a goal",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			id := ""
 			summary := ""
 			if len(args) > 0 {
@@ -3071,10 +3072,10 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	closeCmd.Flags().Bool("no-management", false, "Skip management provider synchronization")
 	closeCmd.Flags().MarkHidden("no-management")
 
-	reopenCmd := &cobra.Command{
+	reopenCmd := &command.Command{
 		Use:   "reopen [id] [prompt] [client] [llm]",
 		Short: "Reopen a goal",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			id := ""
 			prompt, _ := cmd.Flags().GetString("prompt")
 			title, _ := cmd.Flags().GetString("title")
@@ -3168,12 +3169,12 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🟥️interactionCommand holds the data fields for a interactionCommand record.
-func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "interaction", Short: "Interaction management commands"}
-	listCmd := &cobra.Command{
+func interactionCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "interaction", Short: "Interaction management commands"}
+	listCmd := &command.Command{
 		Use:   "list",
 		Short: "List all interactions",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			sorted, _ := cmd.Flags().GetBool("sorted")
 			stream := make(chan Event)
 			go func() {
@@ -3211,10 +3212,10 @@ func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	listCmd.Flags().Bool("sorted", false, "Sort interactions by date instead of streaming")
 	bindStreamFlags(listCmd)
-	treeCmd := &cobra.Command{
+	treeCmd := &command.Command{
 		Use:   "tree",
 		Short: "Show interactions within goal/ticket tree",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
@@ -3285,12 +3286,12 @@ func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🟧️statuteCommand holds the data fields for a statuteCommand record.
-func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "statute", Short: "Statute management commands"}
-	listCmd := &cobra.Command{
+func statuteCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "statute", Short: "Statute management commands"}
+	listCmd := &command.Command{
 		Use:   "list",
 		Short: "List statutes",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
@@ -3313,10 +3314,10 @@ func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 	bindStreamFlags(listCmd)
-	treeCmd := &cobra.Command{
+	treeCmd := &command.Command{
 		Use:   "tree",
 		Short: "Show statute tree",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
@@ -3389,12 +3390,12 @@ func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-func checkpointCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "checkpoint", Short: "Checkpoint management commands"}
-	listCmd := &cobra.Command{
+func checkpointCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "checkpoint", Short: "Checkpoint management commands"}
+	listCmd := &command.Command{
 		Use:   "list",
 		Short: "List checkpoints",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			limit := 100
 			if l, _ := cmd.Flags().GetInt("limit"); l > 0 {
@@ -3427,13 +3428,13 @@ func checkpointCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🤝️contributorCommand holds the data fields for a contributorCommand record.
-func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "contributor", Short: "Contributor management commands"}
-	addCmd := &cobra.Command{
+func contributorCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "contributor", Short: "Contributor management commands"}
+	addCmd := &command.Command{
 		Use:   "add",
 		Short: "Add a contributor",
-		Args:  cobra.MaximumNArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(3),
+		RunE: func(cmd *command.Command, args []string) error {
 			github, _ := cmd.Flags().GetString("github")
 			name, _ := cmd.Flags().GetString("name")
 			emails, _ := cmd.Flags().GetStringSlice("email")
@@ -3466,11 +3467,11 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addCmd.Flags().String("github", "", "GitHub username")
 	addCmd.Flags().String("name", "", "Contributor name")
 	addCmd.Flags().StringSlice("email", nil, "Contributor emails")
-	removeCmd := &cobra.Command{
+	removeCmd := &command.Command{
 		Use:   "remove",
 		Short: "Remove a contributor",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			github, _ := cmd.Flags().GetString("github")
 			if github == "" && len(args) > 0 {
 				github = args[0]
@@ -3490,13 +3491,13 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🛠️technologyCommand holds the data fields for a technologyCommand record.
-func technologyCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func technologyCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:                "technology",
 		Short:              "Manage technologies",
 		DisableFlagParsing: false,
-		Args:               cobra.ArbitraryArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:               command.ArbitraryArgs,
+		RunE: func(cmd *command.Command, args []string) error {
 			if len(args) == 3 && args[1] == "generate" {
 				technologyName := args[0]
 				kind := args[2]
@@ -3515,20 +3516,20 @@ func technologyCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 
-	listCmd := &cobra.Command{
+	listCmd := &command.Command{
 		Use:   "list",
 		Short: "List technologies",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			return runTechnologyList(factory, *config, cmd, args)
 		},
 	}
 	bindStreamFlags(listCmd)
 	cmd.AddCommand(listCmd)
 
-	treeCmd := &cobra.Command{
+	treeCmd := &command.Command{
 		Use:   "tree",
 		Short: "Show technology tree Structure",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			return runTechnologyTree(factory, *config, cmd, args)
 		},
 	}
@@ -4140,12 +4141,12 @@ func findFolderReadmes(bundleRoot string) []string {
 }
 
 // 📦️bundleCommand holds the data fields for a bundleCommand record.
-func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "bundle", Short: "Bundle management commands"}
-	listCmd := &cobra.Command{
+func bundleCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "bundle", Short: "Bundle management commands"}
+	listCmd := &command.Command{
 		Use:   "list",
 		Short: "List bundles",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			statusFilter := getStatusFilter(cmd)
 			var bundlesWithOpenTickets map[string]bool
@@ -4190,10 +4191,10 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 	bindStreamFlags(listCmd)
 	bindStatusFlags(listCmd)
 
-	treeCmd := &cobra.Command{
+	treeCmd := &command.Command{
 		Use:   "tree",
 		Short: "Show bundle tree",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			statusFilter := getStatusFilter(cmd)
 			var bundlesWithOpenTickets map[string]bool
@@ -4256,13 +4257,13 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 💠️folderCommand holds the data fields for a folderCommand record.
-func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "folder", Short: "Folder management commands"}
-	createCmd := &cobra.Command{
+func folderCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "folder", Short: "Folder management commands"}
+	createCmd := &command.Command{
 		Use:   "create",
 		Short: "Create a folder",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			path, _ := cmd.Flags().GetString("path")
 			if path == "" && len(args) > 0 {
 				path = args[0]
@@ -4276,11 +4277,11 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 	createCmd.Flags().String("path", "", "Folder path")
-	moveCmd := &cobra.Command{
+	moveCmd := &command.Command{
 		Use:   "move",
 		Short: "Move a folder",
-		Args:  cobra.MaximumNArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(2),
+		RunE: func(cmd *command.Command, args []string) error {
 			src, _ := cmd.Flags().GetString("source")
 			dst, _ := cmd.Flags().GetString("target")
 			if (src == "" || dst == "") && len(args) > 0 {
@@ -4301,11 +4302,11 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	moveCmd.Flags().String("source", "", "Source path")
 	moveCmd.Flags().String("target", "", "Target path")
-	deleteCmd := &cobra.Command{
+	deleteCmd := &command.Command{
 		Use:   "delete",
 		Short: "Delete a folder",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			path, _ := cmd.Flags().GetString("path")
 			if path == "" && len(args) > 0 {
 				path = args[0]
@@ -4327,7 +4328,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🔳️bindStreamFlags holds the data fields for a bindStreamFlags record.
-func bindStreamFlags(cmd *cobra.Command) {
+func bindStreamFlags(cmd *command.Command) {
 	bindBoolFlags(cmd, []boolFlagSpec{
 		{Name: "show-ignored", Usage: "Show ignored folders and files"},
 		{Name: "show-generated", Usage: "Show generated folders and files"},
@@ -4370,21 +4371,21 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("only-breach", nil, "Only show statutes")
 
 	cmd.Flags().String("filter", "", "Filter string")
-	cmd.Flags().String("query", "", "Bleve full-text search query")
+	cmd.Flags().String("query", "", "Full-text search query")
 	cmd.Flags().Bool("regex", false, "Use regex for filter")
 	cmd.Flags().Bool("match-case", false, "Match case for filter")
 	cmd.Flags().Bool("match-whole-word", false, "Match whole word for filter")
 }
 
 // 🔲️bindStatusFlags holds the data fields for a bindStatusFlags record.
-func bindStatusFlags(cmd *cobra.Command) {
+func bindStatusFlags(cmd *command.Command) {
 	cmd.Flags().Bool("open", false, "Show only open items")
 	cmd.Flags().Bool("closed", false, "Show only closed items")
 	cmd.Flags().String("status", "", "Filter by status (open or closed)")
 }
 
 // ▪️getStatusFilter holds the data fields for a getStatusFilter record.
-func getStatusFilter(cmd *cobra.Command) *string {
+func getStatusFilter(cmd *command.Command) *string {
 	open, _ := cmd.Flags().GetBool("open")
 	closed, _ := cmd.Flags().GetBool("closed")
 	status, _ := cmd.Flags().GetString("status")
@@ -4429,7 +4430,7 @@ func getBundlesWithOpenTickets() map[string]bool {
 }
 
 // ▫️getStreamOptions holds the data fields for a getStreamOptions record.
-func getStreamOptions(cmd *cobra.Command) StreamOptions {
+func getStreamOptions(cmd *command.Command) StreamOptions {
 	showIgnored, _ := cmd.Flags().GetBool("show-ignored")
 	showGenerated, _ := cmd.Flags().GetBool("show-generated")
 
@@ -4615,13 +4616,13 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 }
 
 // ◾fileCommand holds the data fields for a fileCommand record.
-func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "file", Short: "File management commands"}
-	createCmd := &cobra.Command{
+func fileCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "file", Short: "File management commands"}
+	createCmd := &command.Command{
 		Use:   "create",
 		Short: "Create a file",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			path, _ := cmd.Flags().GetString("path")
 			if path == "" && len(args) > 0 {
 				path = args[0]
@@ -4635,11 +4636,11 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 	createCmd.Flags().String("path", "", "File path")
-	moveCmd := &cobra.Command{
+	moveCmd := &command.Command{
 		Use:   "move",
 		Short: "Move a file",
-		Args:  cobra.MaximumNArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(2),
+		RunE: func(cmd *command.Command, args []string) error {
 			src, _ := cmd.Flags().GetString("source")
 			dst, _ := cmd.Flags().GetString("target")
 			if (src == "" || dst == "") && len(args) > 0 {
@@ -4660,11 +4661,11 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	moveCmd.Flags().String("source", "", "Source path")
 	moveCmd.Flags().String("target", "", "Target path")
-	deleteCmd := &cobra.Command{
+	deleteCmd := &command.Command{
 		Use:   "delete",
 		Short: "Delete a file",
-		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			path, _ := cmd.Flags().GetString("path")
 			if path == "" && len(args) > 0 {
 				path = args[0]
@@ -4686,13 +4687,13 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // ◽sectionCommand holds the data fields for a sectionCommand record.
-func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "section", Short: "Section management commands"}
-	createCmd := &cobra.Command{
+func sectionCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "section", Short: "Section management commands"}
+	createCmd := &command.Command{
 		Use:   "create",
 		Short: "Create a section",
-		Args:  cobra.MaximumNArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(3),
+		RunE: func(cmd *command.Command, args []string) error {
 			file, _ := cmd.Flags().GetString("file")
 			name, _ := cmd.Flags().GetString("name")
 			parent, _ := cmd.Flags().GetString("parent")
@@ -4719,11 +4720,11 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	createCmd.Flags().String("file", "", "File path")
 	createCmd.Flags().String("name", "", "Section name")
 	createCmd.Flags().String("parent", "", "Parent section")
-	moveCmd := &cobra.Command{
+	moveCmd := &command.Command{
 		Use:   "move",
 		Short: "Move a section",
-		Args:  cobra.MaximumNArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(3),
+		RunE: func(cmd *command.Command, args []string) error {
 			file, _ := cmd.Flags().GetString("file")
 			oldName, _ := cmd.Flags().GetString("old")
 			newName, _ := cmd.Flags().GetString("new")
@@ -4747,11 +4748,11 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	moveCmd.Flags().String("file", "", "File path")
 	moveCmd.Flags().String("old", "", "Old section name")
 	moveCmd.Flags().String("new", "", "New section name")
-	deleteCmd := &cobra.Command{
+	deleteCmd := &command.Command{
 		Use:   "delete",
 		Short: "Delete a section",
-		Args:  cobra.MaximumNArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(2),
+		RunE: func(cmd *command.Command, args []string) error {
 			file, _ := cmd.Flags().GetString("file")
 			name, _ := cmd.Flags().GetString("name")
 			if file == "" && len(args) > 0 {
@@ -4770,11 +4771,11 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	deleteCmd.Flags().String("file", "", "File path")
 	deleteCmd.Flags().String("name", "", "Section name")
-	integrateCmd := &cobra.Command{
+	integrateCmd := &command.Command{
 		Use:   "integrate",
 		Short: "Integrate source code into a target file section",
-		Args:  cobra.MaximumNArgs(4),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(4),
+		RunE: func(cmd *command.Command, args []string) error {
 			source, _ := cmd.Flags().GetString("source")
 			targetSection, _ := cmd.Flags().GetString("target-section")
 			targetFile, _ := cmd.Flags().GetString("target-file")
@@ -4811,11 +4812,11 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	integrateCmd.Flags().String("target-file", "", "Target file path")
 	integrateCmd.Flags().String("target-parent", "", "Target parent section name")
 
-	extractCmd := &cobra.Command{
+	extractCmd := &command.Command{
 		Use:   "extract",
 		Short: "Extract a section from a source file into a target file",
-		Args:  cobra.MaximumNArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(3),
+		RunE: func(cmd *command.Command, args []string) error {
 			sourceFile, _ := cmd.Flags().GetString("source-file")
 			sourceSection, _ := cmd.Flags().GetString("source-section")
 			targetFile, _ := cmd.Flags().GetString("target-file")
@@ -4856,14 +4857,14 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // ◻definitionCommand holds the data fields for a definitionCommand record.
-func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "definition", Short: "Definition management commands"}
-	listCmd := &cobra.Command{
+func definitionCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{Use: "definition", Short: "Definition management commands"}
+	listCmd := &command.Command{
 		Use:     "list",
 		Aliases: []string{"tree"},
 		Short:   "List definitions",
-		Args:    cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:    command.MaximumNArgs(1),
+		RunE: func(cmd *command.Command, args []string) error {
 			path, _ := cmd.Flags().GetString("file")
 			if path == "" && len(args) > 0 {
 				path = args[0]
@@ -4903,13 +4904,13 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // 🚚️moveCommand holds the data fields for a moveCommand record.
-func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
+func moveCommand(factory EngineFactory, config *Config) *command.Command {
+	return &command.Command{
 		Use:   "move <source> <target>",
 		Short: "Move an artifact from source to target",
 		Long:  "Move an artifact (file, folder, section) between locations. Supports cross-kind moves: file→section calls integrate, section→file calls extract.",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.ExactArgs(2),
+		RunE: func(cmd *command.Command, args []string) error {
 			_, err := factory(*config)
 			if err != nil {
 				return err
@@ -4969,12 +4970,12 @@ func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 }
 
-func integrateCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func integrateCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "integrate [source] [target]",
 		Short: "Integrate source code into a target file section",
-		Args:  cobra.MaximumNArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(2),
+		RunE: func(cmd *command.Command, args []string) error {
 			_, err := factory(*config)
 			if err != nil {
 				return err
@@ -5034,12 +5035,12 @@ func integrateCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // ◼extractCommand holds the data fields for a extractCommand record.
-func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+func extractCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "extract [source] [target]",
 		Short: "Extract a section from a source file into a target file",
-		Args:  cobra.MaximumNArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.MaximumNArgs(2),
+		RunE: func(cmd *command.Command, args []string) error {
 			_, err := factory(*config)
 			if err != nil {
 				return err
@@ -5258,14 +5259,14 @@ func ToolRename(oldToken, newToken, scope string) ToolResult {
 	}}
 }
 
-// 🔤️renameCommand returns a cobra command that renames a token across the repo in all case variants.
-func renameCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
+// 🔤️renameCommand returns a command command that renames a token across the repo in all case variants.
+func renameCommand(factory EngineFactory, config *Config) *command.Command {
+	return &command.Command{
 		Use:   "rename <old> <new> [scope]",
 		Short: "Rename a token across non-gitignored files (all case variants)",
 		Long:  "Rewrite UPPER, Title and lower case variants of <old> to <new> in every non-gitignored file's contents and filenames (including folder names) under the optional scope directory (default: repo root). Example: repo rename model representation compose.",
-		Args:  cobra.RangeArgs(2, 3),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.RangeArgs(2, 3),
+		RunE: func(cmd *command.Command, args []string) error {
 			_, err := factory(*config)
 			if err != nil {
 				return err
@@ -6601,28 +6602,39 @@ func collapseFilteredKinds(node *TreeNode, filter *TreeFilter) {
 	node.Children = newChildren
 }
 
-func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query string) *TreeNode {
+func searchMonorepoTreeWithCache(ctx context.Context, root *TreeNode, query string) (*TreeNode, error) {
 	if query == "" {
-		return root
+		return root, nil
 	}
-	idx, err := ensureCacheIndexed(ctx, root)
+	idx, err := ensureCacheIndexed(ctx, root, nil)
 	if err != nil {
-		return searchTreeInMemory(root, query)
+		return nil, err
 	}
-	defer idx.Close()
 
-	matchedIDs, err := queryCacheIndex(idx, query, countSearchableTreeNodes(root))
+	searchable, err := countSearchableTreeNodes(ctx, root)
 	if err != nil {
-		return searchTreeInMemory(root, query)
+		_ = idx.Close()
+		return nil, err
+	}
+	matchedIDs, err := queryCacheIndex(ctx, idx, query, searchable, nil)
+	if err != nil {
+		_ = idx.Close()
+		return nil, err
+	}
+	if err := idx.Close(); err != nil {
+		return nil, err
 	}
 	if len(matchedIDs) == 0 {
-		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}, nil
 	}
-	pruned := pruneUnmatched(root, sliceToSet(matchedIDs))
+	pruned, err := pruneUnmatchedContext(ctx, root, sliceToSet(matchedIDs))
+	if err != nil {
+		return nil, err
+	}
 	if pruned == nil {
-		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}, nil
 	}
-	return pruned
+	return pruned, nil
 }
 
 // 📝️SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
@@ -6634,22 +6646,36 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	return searchTreeInMemory(root, query)
 }
 
-func countSearchableTreeNodes(root *TreeNode) int {
+func countSearchableTreeNodes(ctx context.Context, root *TreeNode) (int, error) {
+	if root == nil {
+		return 0, errors.New("search tree is required")
+	}
 	count := 0
-	var walk func(node *TreeNode)
-	walk = func(node *TreeNode) {
+	visited := 0
+	stack := []*TreeNode{root}
+	for len(stack) > 0 {
+		if err := ctx.Err(); err != nil {
+			return 0, err
+		}
+		last := len(stack) - 1
+		node := stack[last]
+		stack = stack[:last]
+		visited++
+		if visited > search.MaxTraversalNodes {
+			return 0, fmt.Errorf("%w: tree nodes > %d", search.ErrTooLarge, search.MaxTraversalNodes)
+		}
 		if node.Kind != TreeNodeCategory {
 			count++
+			if count > search.MaxDocuments {
+				return 0, fmt.Errorf("%w: tree documents > %d", search.ErrTooLarge, search.MaxDocuments)
+			}
 		}
-		for _, child := range node.Children {
-			walk(child)
-		}
+		stack = append(stack, node.Children...)
 	}
-	walk(root)
 	if count == 0 {
-		return 1
+		return 1, nil
 	}
-	return count
+	return count, nil
 }
 
 func sliceToSet(values []string) map[string]bool {
@@ -6815,11 +6841,19 @@ func searchTreeInMemory(root *TreeNode, query string) *TreeNode {
 
 // 🎯️pruneUnmatched holds the data fields for a pruneUnmatched record.
 func pruneUnmatched(node *TreeNode, matchedIDs map[string]bool) *TreeNode {
-	return pruneUnmatchedInner(node, matchedIDs, false)
+	result, _ := pruneUnmatchedContext(context.Background(), node, matchedIDs)
+	return result
+}
+
+func pruneUnmatchedContext(ctx context.Context, node *TreeNode, matchedIDs map[string]bool) (*TreeNode, error) {
+	return pruneUnmatchedInner(ctx, node, matchedIDs, false)
 }
 
 // 🔸️pruneUnmatchedInner holds the data fields for a pruneUnmatchedInner record.
-func pruneUnmatchedInner(node *TreeNode, matchedIDs map[string]bool, ancestorMatched bool) *TreeNode {
+func pruneUnmatchedInner(ctx context.Context, node *TreeNode, matchedIDs map[string]bool, ancestorMatched bool) (*TreeNode, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	docID := node.ID
 	if docID == "" {
 		docID = node.Label
@@ -6828,20 +6862,23 @@ func pruneUnmatchedInner(node *TreeNode, matchedIDs map[string]bool, ancestorMat
 	keepDescendants := ancestorMatched || selfMatched
 	var kept []*TreeNode
 	for _, c := range node.Children {
-		fc := pruneUnmatchedInner(c, matchedIDs, keepDescendants)
+		fc, err := pruneUnmatchedInner(ctx, c, matchedIDs, keepDescendants)
+		if err != nil {
+			return nil, err
+		}
 		if fc != nil {
 			kept = append(kept, fc)
 		}
 	}
 	if keepDescendants || len(kept) > 0 || node.Kind == TreeNodeCategory {
 		if node.Kind == TreeNodeCategory && len(kept) == 0 && !selfMatched && !ancestorMatched {
-			return nil
+			return nil, nil
 		}
 		copy := *node
 		copy.Children = kept
-		return &copy
+		return &copy, nil
 	}
-	return nil
+	return nil, nil
 }
 
 // 🎨️RenderMonorepoTree MUST produce a complete monorepo tree output.
@@ -6984,7 +7021,7 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // #endregion 🩻️Monorepo Tree
 
 // #region 🎊️Query Cache
-// Local Bleve index under .🦑️repo/⚡️cache for keyword search. Uses composite git fingerprint (supertechnology HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
+// Local event index under .🦑️repo/⚡️cache for keyword search. Uses a composite repository fingerprint for invalidation.
 // 📌️cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
 const cacheSchemaVersion = 3
 
@@ -7010,17 +7047,34 @@ func getCacheDir() string {
 }
 
 func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
+	fp, meta, _ = computeCompositeFingerprintContext(context.Background(), repoRoot)
+	return fp, meta
+}
+
+func computeCompositeFingerprintContext(ctx context.Context, repoRoot string) (fp string, meta *cacheMeta, err error) {
 	meta = &cacheMeta{
 		SchemaVersion:     cacheSchemaVersion,
 		SubmodulePointers: map[string]string{},
 		SubmoduleHeads:    map[string]string{},
 		SubmoduleDirty:    map[string]string{},
 	}
-	stdout, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, repoRoot)
+	if err := ctx.Err(); err != nil {
+		return "", nil, err
+	}
+	stdout, _, _ := ExecCommandContext(ctx, "git", []string{"rev-parse", "HEAD"}, repoRoot)
+	if err := ctx.Err(); err != nil {
+		return "", nil, err
+	}
 	meta.SuperHead = strings.TrimSpace(stdout)
-	statusOut, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, repoRoot)
+	statusOut, _, _ := ExecCommandContext(ctx, "git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, repoRoot)
+	if err := ctx.Err(); err != nil {
+		return "", nil, err
+	}
 	meta.SuperDirtyHash = hashString(statusOut)
-	subOut := getSubmoduleStatus(repoRoot)
+	subOut, err := getSubmoduleStatusContext(ctx, repoRoot)
+	if err != nil {
+		return "", nil, err
+	}
 	lines := strings.Split(strings.TrimSpace(subOut), "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -7036,10 +7090,16 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 		if strings.HasPrefix(parts[0], "-") {
 			continue
 		}
+		if err := ctx.Err(); err != nil {
+			return "", nil, err
+		}
 		subPath := filepath.Join(repoRoot, path)
-		subHead, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, subPath)
+		subHead, _, _ := ExecCommandContext(ctx, "git", []string{"rev-parse", "HEAD"}, subPath)
 		meta.SubmoduleHeads[path] = strings.TrimSpace(subHead)
-		subStatus, _, _ := ExecCommand("git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, subPath)
+		subStatus, _, _ := ExecCommandContext(ctx, "git", []string{"status", "--porcelain", "-z", "--untracked-files=no"}, subPath)
+		if err := ctx.Err(); err != nil {
+			return "", nil, err
+		}
 		meta.SubmoduleDirty[path] = hashString(subStatus)
 	}
 	meta.PointersHash = hashString(subOut)
@@ -7052,24 +7112,41 @@ func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
 	for _, path := range paths {
 		subWork = append(subWork, path+"="+meta.SubmoduleHeads[path]+":"+meta.SubmoduleDirty[path])
 	}
+	if err := ctx.Err(); err != nil {
+		return "", nil, err
+	}
 	composeMetaHash := hashComposeMetaState(repoRoot)
+	if err := ctx.Err(); err != nil {
+		return "", nil, err
+	}
 	meta.SubWorkingHash = hashString(strings.Join(subWork, "|"))
 	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + composeMetaHash + strconv.Itoa(cacheSchemaVersion))
 	meta.Fingerprint = fp
-	return fp, meta
+	return fp, meta, nil
 }
 
 // 🧭️getSubmoduleStatus returns recursive submodule status when available.
 func getSubmoduleStatus(repoRoot string) string {
-	stdout, _, exitCode := ExecCommand("git", []string{"submodule", "status", "--recursive"}, repoRoot)
-	if exitCode == 0 {
-		return stdout
-	}
-	fallback, _, fallbackExitCode := ExecCommand("git", []string{"submodule", "status"}, repoRoot)
-	if fallbackExitCode == 0 {
-		return fallback
-	}
+	stdout, _ := getSubmoduleStatusContext(context.Background(), repoRoot)
 	return stdout
+}
+
+func getSubmoduleStatusContext(ctx context.Context, repoRoot string) (string, error) {
+	stdout, _, exitCode := ExecCommandContext(ctx, "git", []string{"submodule", "status", "--recursive"}, repoRoot)
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if exitCode == 0 {
+		return stdout, nil
+	}
+	fallback, _, fallbackExitCode := ExecCommandContext(ctx, "git", []string{"submodule", "status"}, repoRoot)
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if fallbackExitCode == 0 {
+		return fallback, nil
+	}
+	return stdout, nil
 }
 
 // ♻️hashComposeMetaState MUST produce a stable hash for compose metadata state changes.
@@ -7122,8 +7199,8 @@ func hashString(s string) string {
 }
 
 // 🔷️loadCacheMeta holds the data fields for a loadCacheMeta record.
-func loadCacheMeta() (*cacheMeta, error) {
-	p := filepath.Join(getCacheDir(), "meta.json")
+func loadCacheMeta(indexPath string) (*cacheMeta, error) {
+	p := filepath.Join(indexPath, "meta.json")
 	data, err := os.ReadFile(p)
 	if err != nil {
 		return nil, err
@@ -7139,8 +7216,8 @@ func loadCacheMeta() (*cacheMeta, error) {
 }
 
 // 🔶️saveCacheMeta holds the data fields for a saveCacheMeta record.
-func saveCacheMeta(m *cacheMeta) error {
-	dir := getCacheDir()
+func saveCacheMeta(indexPath string, m *cacheMeta) error {
+	dir := indexPath
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
@@ -7247,146 +7324,260 @@ func pathToNodesMap(root *TreeNode) map[string][]*TreeNode {
 	return m
 }
 
-// 🔸️ensureCacheIndexed holds the data fields for a ensureCacheIndexed record.
-func ensureCacheIndexed(ctx context.Context, root *TreeNode) (bleve.Index, error) {
+const maxSearchCacheLockAttempts = 60
+
+// 🔸️ensureCacheIndexed builds a bounded staged index and atomically commits it after verification.
+func ensureCacheIndexed(ctx context.Context, root *TreeNode, progress func(search.Progress)) (search.Index, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	repoRoot := GetRootDir()
-	fp, newMeta := computeCompositeFingerprint(repoRoot)
+	reportSearchProgress(progress, search.Progress{Step: "fingerprinting"})
+	fingerprint, newMeta, err := computeCompositeFingerprintContext(ctx, repoRoot)
+	if err != nil {
+		return nil, err
+	}
 	dir := getCacheDir()
-	idxPath := filepath.Join(dir, "index.bleve")
-	lockPath := filepath.Join(dir, ".lock")
-
-	existing, loadErr := loadCacheMeta()
-	if loadErr == nil && existing.Fingerprint == fp {
-		idx, openErr := bleve.Open(idxPath)
-		if openErr == nil {
-			return idx, nil
-		}
-	}
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	indexPath := filepath.Join(dir, "index.search")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
-	var lock *os.File
-	var err error
-	for i := 0; i < 60; i++ {
-		lock, err = os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-		if err == nil {
-			break
-		}
-		if fi, e := os.Stat(lockPath); e == nil && time.Since(fi.ModTime()) > 5*time.Minute {
-			os.Remove(lockPath)
-		}
-		if i < 59 {
-			time.Sleep(200 * time.Millisecond)
-		}
-	}
+	release, err := acquireSearchCacheLock(ctx, filepath.Join(dir, ".lock"), progress)
 	if err != nil {
 		return nil, err
 	}
-	lock.Close()
-	defer os.Remove(lockPath)
-
-	idx, openErr := bleve.Open(idxPath)
-	if openErr == nil {
-		changedPaths := getChangedPathsFromGit(repoRoot)
-		if len(changedPaths) > 0 {
-			pathsToUpdate := expandPathsWithAncestors(changedPaths)
-			pathToNodes := pathToNodesMap(root)
-			for _, scopePath := range pathsToUpdate {
-				for _, node := range pathToNodes[scopePath] {
-					docID := node.ID
-					if docID == "" {
-						docID = node.Label
-					}
-					idx.Delete(docID)
-				}
-			}
-			indexDoc := func(node *TreeNode) {
-				if node.Kind == TreeNodeCategory {
-					return
-				}
-				docID := node.ID
-				if docID == "" {
-					docID = node.Label
-				}
-				doc := map[string]interface{}{"text": buildSearchDocumentText(node)}
-				if p := treeNodeScopePath(node); p != "" {
-					doc["path"] = p
-				}
-				idx.Index(docID, doc)
-			}
-			for _, scopePath := range pathsToUpdate {
-				for _, node := range pathToNodes[scopePath] {
-					indexDoc(node)
-				}
-			}
-			if err := saveCacheMeta(newMeta); err != nil {
-				idx.Close()
-				return nil, err
-			}
-			return idx, nil
-		}
-		idx.Close()
+	defer release()
+	if err := recoverSearchIndexSwap(indexPath); err != nil {
+		return nil, err
 	}
-
-	os.RemoveAll(idxPath)
-	time.Sleep(100 * time.Millisecond)
-	os.RemoveAll(idxPath)
-	mapping := bleve.NewIndexMapping()
-	idx, err = bleve.New(idxPath, mapping)
+	existing, metaErr := loadCacheMeta(indexPath)
+	if metaErr == nil && existing.Fingerprint == fingerprint {
+		index, err := search.Open(indexPath)
+		if err != nil {
+			return nil, fmt.Errorf("open current search index: %w", err)
+		}
+		reportSearchProgress(progress, search.Progress{Current: 1, Total: 1, Step: "ready"})
+		return index, nil
+	}
+	if metaErr != nil && !os.IsNotExist(metaErr) {
+		return nil, fmt.Errorf("load search index metadata: %w", metaErr)
+	}
+	nodes, err := collectSearchIndexNodes(ctx, root, progress)
 	if err != nil {
 		return nil, err
 	}
-
-	var indexNodes func(node *TreeNode)
-	indexNodes = func(node *TreeNode) {
-		if node.Kind != TreeNodeCategory {
-			docID := node.ID
-			if docID == "" {
-				docID = node.Label
-			}
-			doc := map[string]interface{}{"text": buildSearchDocumentText(node)}
-			if p := treeNodeScopePath(node); p != "" {
-				doc["path"] = p
-			}
-			idx.Index(docID, doc)
-		}
-		for _, c := range node.Children {
-			indexNodes(c)
-		}
-	}
-	indexNodes(root)
-
-	if err := saveCacheMeta(newMeta); err != nil {
-		idx.Close()
+	stagedPath := indexPath + ".next"
+	if err := os.RemoveAll(stagedPath); err != nil {
 		return nil, err
 	}
-	return idx, nil
+	staged, err := search.New(stagedPath, search.NewIndexMapping())
+	if err != nil {
+		return nil, err
+	}
+	cleanup := func() { _ = os.RemoveAll(stagedPath) }
+	for offset, node := range nodes {
+		if err := ctx.Err(); err != nil {
+			cleanup()
+			return nil, err
+		}
+		documentID := node.ID
+		if documentID == "" {
+			documentID = node.Label
+		}
+		document := map[string]interface{}{"text": buildSearchDocumentText(node)}
+		if path := treeNodeScopePath(node); path != "" {
+			document["path"] = path
+		}
+		if err := staged.IndexContext(ctx, documentID, document, nil); err != nil {
+			cleanup()
+			return nil, fmt.Errorf("index %q: %w", documentID, err)
+		}
+		reportSearchProgress(progress, search.Progress{Current: offset + 1, Total: len(nodes), Step: "indexed"})
+	}
+	if err := ctx.Err(); err != nil {
+		cleanup()
+		return nil, err
+	}
+	if err := staged.CloseContext(ctx, func(value search.Progress) {
+		value.Step = "persisting-" + value.Step
+		reportSearchProgress(progress, value)
+	}); err != nil {
+		cleanup()
+		return nil, fmt.Errorf("persist staged search index: %w", err)
+	}
+	if err := saveCacheMeta(stagedPath, newMeta); err != nil {
+		cleanup()
+		return nil, err
+	}
+	verified, err := search.Open(stagedPath)
+	if err != nil {
+		cleanup()
+		return nil, fmt.Errorf("verify staged search index: %w", err)
+	}
+	if err := verified.Close(); err != nil {
+		cleanup()
+		return nil, err
+	}
+	if err := ctx.Err(); err != nil {
+		cleanup()
+		return nil, err
+	}
+	if err := commitSearchIndexSwap(indexPath, stagedPath); err != nil {
+		cleanup()
+		return nil, err
+	}
+	reportSearchProgress(progress, search.Progress{Current: len(nodes), Total: len(nodes), Step: "committed"})
+	index, err := search.Open(indexPath)
+	if err != nil {
+		return nil, fmt.Errorf("open committed search index: %w", err)
+	}
+	return index, nil
 }
 
-// 🔍️queryCacheIndex holds the data fields for a queryCacheIndex record.
-func queryCacheIndex(idx bleve.Index, query string, limit int) ([]string, error) {
+func acquireSearchCacheLock(ctx context.Context, path string, progress func(search.Progress)) (func(), error) {
+	for attempt := 0; attempt < maxSearchCacheLockAttempts; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		lock, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+		if err == nil {
+			if err := lock.Close(); err != nil {
+				_ = os.Remove(path)
+				return nil, err
+			}
+			return func() { _ = os.Remove(path) }, nil
+		}
+		if !os.IsExist(err) {
+			return nil, err
+		}
+		if info, statErr := os.Stat(path); statErr == nil && time.Since(info.ModTime()) > 5*time.Minute {
+			if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+				return nil, err
+			}
+			continue
+		}
+		reportSearchProgress(progress, search.Progress{Current: attempt + 1, Total: maxSearchCacheLockAttempts, Step: "waiting-lock"})
+		timer := time.NewTimer(200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return nil, ctx.Err()
+		case <-timer.C:
+		}
+	}
+	return nil, errors.New("search index lock timeout")
+}
+
+func collectSearchIndexNodes(ctx context.Context, root *TreeNode, progress func(search.Progress)) ([]*TreeNode, error) {
+	if root == nil {
+		return nil, errors.New("search tree is required")
+	}
+	stack := []*TreeNode{root}
+	nodes := make([]*TreeNode, 0)
+	visited := 0
+	for len(stack) > 0 {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		last := len(stack) - 1
+		node := stack[last]
+		stack = stack[:last]
+		visited++
+		if visited > search.MaxTraversalNodes {
+			return nil, fmt.Errorf("%w: tree nodes > %d", search.ErrTooLarge, search.MaxTraversalNodes)
+		}
+		if node.Kind != TreeNodeCategory {
+			if len(nodes) >= search.MaxDocuments {
+				return nil, fmt.Errorf("%w: tree documents > %d", search.ErrTooLarge, search.MaxDocuments)
+			}
+			nodes = append(nodes, node)
+		}
+		for index := len(node.Children) - 1; index >= 0; index-- {
+			stack = append(stack, node.Children[index])
+		}
+		reportSearchProgress(progress, search.Progress{Current: visited, Step: "collecting"})
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return nodes, nil
+}
+
+func recoverSearchIndexSwap(indexPath string) error {
+	stagedPath := indexPath + ".next"
+	backupPath := indexPath + ".previous"
+	_, backupErr := os.Stat(backupPath)
+	if backupErr == nil {
+		if _, currentErr := os.Stat(indexPath); os.IsNotExist(currentErr) {
+			if err := os.Rename(backupPath, indexPath); err != nil {
+				return err
+			}
+		} else if currentErr != nil {
+			return currentErr
+		} else if err := os.RemoveAll(backupPath); err != nil {
+			return err
+		}
+	} else if !os.IsNotExist(backupErr) {
+		return backupErr
+	}
+	return os.RemoveAll(stagedPath)
+}
+
+func commitSearchIndexSwap(indexPath, stagedPath string) error {
+	backupPath := indexPath + ".previous"
+	hadCurrent := false
+	if _, err := os.Stat(indexPath); err == nil {
+		hadCurrent = true
+		if err := os.Rename(indexPath, backupPath); err != nil {
+			return err
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	if err := os.Rename(stagedPath, indexPath); err != nil {
+		if hadCurrent {
+			_ = os.Rename(backupPath, indexPath)
+		}
+		return err
+	}
+	if hadCurrent {
+		_ = os.RemoveAll(backupPath)
+	}
+	return nil
+}
+
+func reportSearchProgress(progress func(search.Progress), value search.Progress) {
+	if progress != nil {
+		progress(value)
+	}
+}
+
+// 🔍️queryCacheIndex queries the owned index with cancellation and progress.
+func queryCacheIndex(ctx context.Context, idx search.Index, query string, limit int, progress func(int, int)) ([]string, error) {
 	if query == "" {
 		return nil, nil
 	}
 	terms := strings.Fields(query)
-	queries := make([]blevequery.Query, 0, len(terms))
+	queries := make([]search.Query, 0, len(terms))
 	for _, term := range terms {
-		match := bleve.NewMatchQuery(term)
+		match := search.NewMatchQuery(term)
 		match.SetFuzziness(2)
 		queries = append(queries, match)
 	}
-	var q blevequery.Query
+	var q search.Query
 	switch len(queries) {
 	case 0:
 		return nil, nil
 	case 1:
 		q = queries[0]
 	default:
-		q = bleve.NewConjunctionQuery(queries...)
+		q = search.NewConjunctionQuery(queries...)
 	}
-	req := bleve.NewSearchRequest(q)
+	req := search.NewSearchRequest(q)
 	req.Size = limit
-	results, err := idx.Search(req)
+	results, err := idx.SearchContext(ctx, req, progress)
 	if err != nil {
 		return nil, err
 	}
@@ -8131,7 +8322,7 @@ func formatMarkdownFile(file map[string]interface{}) string {
 }
 
 // 🔸️renderStream holds the data fields for a renderStream record.
-func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
+func renderStream(cmd *command.Command, config *Config, stream <-chan Event) error {
 	var renderer StreamRenderer
 	if config.IsJSON() {
 		renderer = NDJSONRenderer{}
@@ -8235,7 +8426,7 @@ func toolResultFromTreeRender(nodeKind TreeNodeKind) ToolResult {
 }
 
 // 🕸️runGraphQL holds the data fields for a runGraphQL record.
-func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query string, variables map[string]interface{}) error {
+func runGraphQL(cmd *command.Command, factory EngineFactory, config *Config, query string, variables map[string]interface{}) error {
 	argsPayload := GraphQLArgs{Query: query, Variables: variables}
 	payloadBytes, err := json.Marshal(argsPayload)
 	if err != nil {
@@ -9037,7 +9228,7 @@ func locContributorEmojiID(alias string) string {
 }
 
 // 🫡️ runLocCommand runs `loc` and prints using global --format.
-func runLocCommand(cmd *cobra.Command, config *Config, languages []string, history, byContrib bool, historyBranch, contribFilter string) error {
+func runLocCommand(cmd *command.Command, config *Config, languages []string, history, byContrib bool, historyBranch, contribFilter string) error {
 	repoRoot := config.Repo
 	if strings.TrimSpace(repoRoot) == "" {
 		if wd, err := os.Getwd(); err == nil {
@@ -9329,15 +9520,15 @@ func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY
 	}
 }
 
-// 🔢️ locCommand wires the `loc` Cobra subcommand.
-func locCommand(factory EngineFactory, config *Config) *cobra.Command {
+// 🔢️ locCommand wires the `loc` command.
+func locCommand(factory EngineFactory, config *Config) *command.Command {
 	_ = factory
-	cmd := &cobra.Command{
+	cmd := &command.Command{
 		Use:   "loc",
 		Short: "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)",
 		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from the repo client's MCP Go implementation into the platform-specific client binary. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳️wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳️wip, 🔀️abc1234, 🧑️‍💻️alias).",
-		Args:  cobra.NoArgs,
-		RunE: func(c *cobra.Command, args []string) error {
+		Args:  command.NoArgs,
+		RunE: func(c *command.Command, args []string) error {
 			langs, _ := c.Flags().GetStringSlice("languages")
 			if len(langs) == 0 {
 				langs = []string{"TypeScript", "Go", "C#", "Python", "Rust"}
@@ -9645,34 +9836,34 @@ func MermaidLocByLanguage() string {
 	return sb.String()
 }
 
-func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{
+func mermaidCommand(factory EngineFactory, config *Config) *command.Command {
+	root := &command.Command{
 		Use:   "mermaid <visualization>",
 		Short: "Generate mermaid diagram strings",
 	}
-	root.AddCommand(&cobra.Command{
+	root.AddCommand(&command.Command{
 		Use:   "loc-by-technologies-bundles-folders-files",
 		Short: "LOC treemap grouped by technology, bundle, folder, file",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.NoArgs,
+		RunE: func(cmd *command.Command, args []string) error {
 			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByTechnologiesBundlesFoldersFiles())
 			return nil
 		},
 	})
-	root.AddCommand(&cobra.Command{
+	root.AddCommand(&command.Command{
 		Use:   "loc-by-contributors",
 		Short: "LOC treemap grouped by contributor (via git blame)",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.NoArgs,
+		RunE: func(cmd *command.Command, args []string) error {
 			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByContributors())
 			return nil
 		},
 	})
-	root.AddCommand(&cobra.Command{
+	root.AddCommand(&command.Command{
 		Use:   "loc-by-language",
 		Short: "LOC treemap grouped by programming language",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args:  command.NoArgs,
+		RunE: func(cmd *command.Command, args []string) error {
 			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByLanguage())
 			return nil
 		},
@@ -17095,7 +17286,7 @@ func matchesIgnorePattern(path string, isDir bool, pattern string) bool {
 			continue
 		}
 		for _, candidatePath := range candidates {
-			if matched, _ := doublestar.Match(candidatePattern, candidatePath); matched {
+			if matched, _ := glob.Match(candidatePattern, candidatePath); matched {
 				return true
 			}
 		}
@@ -17119,7 +17310,7 @@ func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGiti
 	allIgnore := append(ignorePatterns, gitignorePatterns...)
 	var files []string
 	absPattern := filepath.Join(cwd, pattern)
-	matches, err := doublestar.FilepathGlob(absPattern)
+	matches, err := glob.FilepathGlob(absPattern)
 	if err != nil {
 		return nil, err
 	}
@@ -17338,10 +17529,15 @@ func StatuteIdValueToPath(idValue string) string {
 
 // ▪️ExecCommand MUST complete the operation and return consistent results.
 func ExecCommand(command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
+	return ExecCommandContext(context.Background(), command, args, cwd)
+}
+
+// ▫️ExecCommandContext runs a child process with explicit cancellation and deadline propagation.
+func ExecCommandContext(ctx context.Context, command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
 	if cwd == "" {
 		cwd = rootDir
 	}
-	cmd := exec.Command(command, args...)
+	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Dir = cwd
 	var stdoutBuf, stderrBuf strings.Builder
 	cmd.Stdout = &stdoutBuf
@@ -19145,7 +19341,7 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 		if targetScope.FilePath != "" {
 			normalizedTarget := NormalizePath(targetScope.FilePath)
 			normalizedPattern := NormalizePath(pattern)
-			if matched, _ := doublestar.Match(normalizedPattern, normalizedTarget); matched {
+			if matched, _ := glob.Match(normalizedPattern, normalizedTarget); matched {
 				return true
 			}
 		}
@@ -20570,7 +20766,7 @@ func godfileMatchesPath(godfile *Godfile, relPath string) bool {
 		return true
 	}
 	for _, pattern := range godfile.Globs {
-		matched, err := doublestar.Match(pattern, relPath)
+		matched, err := glob.Match(pattern, relPath)
 		if err != nil {
 			continue
 		}
@@ -23963,7 +24159,7 @@ func StreamTechnologies(ctx context.Context, out chan<- Technology, opts ...Stre
 }
 
 // 🟢️runTechnologyList holds the data fields for a runTechnologyList record.
-func runTechnologyList(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
+func runTechnologyList(factory EngineFactory, config Config, cmd *command.Command, args []string) error {
 	opts := getStreamOptions(cmd)
 	stream := make(chan Event)
 	go func() {
@@ -23989,7 +24185,7 @@ func runTechnologyList(factory EngineFactory, config Config, cmd *cobra.Command,
 }
 
 // 🌳️runTechnologyTree holds the data fields for a runTechnologyTree record.
-func runTechnologyTree(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
+func runTechnologyTree(factory EngineFactory, config Config, cmd *command.Command, args []string) error {
 	opts := getStreamOptions(cmd)
 	stream := make(chan Event)
 	go func() {
@@ -24105,17 +24301,17 @@ func matchesQuery(text string, opts StreamOptions) bool {
 	if strings.Contains(lowerText, lowerQuery) {
 		return true
 	}
-	mapping := bleve.NewIndexMapping()
-	index, err := bleve.NewMemOnly(mapping)
+	mapping := search.NewIndexMapping()
+	index, err := search.NewMemOnly(mapping)
 	if err != nil {
 		return true
 	}
 	defer index.Close()
 	doc := map[string]interface{}{"text": text}
 	index.Index("item", doc)
-	mq := bleve.NewMatchQuery(opts.Query)
+	mq := search.NewMatchQuery(opts.Query)
 	mq.SetFuzziness(2)
-	searchRequest := bleve.NewSearchRequest(mq)
+	searchRequest := search.NewSearchRequest(mq)
 	searchRequest.Size = 1
 	results, err := index.Search(searchRequest)
 	if err != nil {
@@ -24130,8 +24326,8 @@ type queryableItem struct {
 	idx  int
 }
 
-// ⚪️bleveFilterItems holds the data fields for a bleveFilterItems record.
-func bleveFilterItems(items []queryableItem, query string) map[int]bool {
+// ⚪️searchFilterItems returns the matching item positions.
+func searchFilterItems(items []queryableItem, query string) map[int]bool {
 	result := make(map[int]bool)
 	if query == "" {
 		for _, item := range items {
@@ -24139,8 +24335,8 @@ func bleveFilterItems(items []queryableItem, query string) map[int]bool {
 		}
 		return result
 	}
-	mapping := bleve.NewIndexMapping()
-	index, err := bleve.NewMemOnly(mapping)
+	mapping := search.NewIndexMapping()
+	index, err := search.NewMemOnly(mapping)
 	if err != nil {
 		for _, item := range items {
 			result[item.idx] = true
@@ -24152,9 +24348,9 @@ func bleveFilterItems(items []queryableItem, query string) map[int]bool {
 		doc := map[string]interface{}{"text": item.text}
 		index.Index(fmt.Sprintf("%d", item.idx), doc)
 	}
-	mq := bleve.NewMatchQuery(query)
+	mq := search.NewMatchQuery(query)
 	mq.SetFuzziness(2)
-	searchRequest := bleve.NewSearchRequest(mq)
+	searchRequest := search.NewSearchRequest(mq)
 	searchRequest.Size = len(items)
 	results, err := index.Search(searchRequest)
 	if err != nil {
@@ -26763,838 +26959,6 @@ func ToolUpdateMetabolism() ToolResult {
 	output.Success(stdout)
 	return ToolResult{Output: *output}
 }
-
-// #region 🕰️SQLite Export
-// SQLite export functions for persisting repository data to the normalized schema defined in repo/sqlite/📐️schema.sql.
-
-// 📤️exportSchemaSQL is the embedded SQLite schema for repo export, matching repo/sqlite/📐️schema.sql exactly.
-const exportSchemaSQL = `
-CREATE TABLE IF NOT EXISTS contributor (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    alias TEXT NOT NULL UNIQUE CHECK (length (trim(alias)) > 0),
-    github TEXT NOT NULL UNIQUE CHECK (length (trim(github)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0)
-);
-CREATE TABLE IF NOT EXISTS release (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    initial_month INTEGER NOT NULL CHECK (initial_month >= 0),
-    number INTEGER NOT NULL CHECK (number > 0),
-    due INTEGER CHECK (due IS NULL OR due >= 0),
-    published INTEGER CHECK (published IS NULL OR published >= 0),
-    description TEXT NOT NULL CHECK (length (trim(description)) > 0),
-    UNIQUE (initial_month, number)
-);
-CREATE TABLE IF NOT EXISTS release_contributors (
-    release_id INTEGER NOT NULL,
-    contributor_id INTEGER NOT NULL,
-    UNIQUE (release_id, contributor_id),
-    FOREIGN KEY (release_id) REFERENCES release (id) ON DELETE CASCADE,
-    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS version (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    release_id INTEGER NOT NULL,
-    contributor_id INTEGER NOT NULL,
-    number INTEGER NOT NULL CHECK (number > 0),
-    second INTEGER NOT NULL CHECK (second >= 0),
-    message TEXT NOT NULL CHECK (length (trim(message)) > 0),
-    UNIQUE (release_id, number),
-    FOREIGN KEY (release_id) REFERENCES release (id) ON DELETE CASCADE,
-    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS checkpoint (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    version_id INTEGER NOT NULL,
-    contributor_id INTEGER NOT NULL,
-    number INTEGER NOT NULL CHECK (number > 0),
-    second INTEGER NOT NULL CHECK (second >= 0),
-    message TEXT NOT NULL CHECK (length (trim(message)) > 0),
-    UNIQUE (version_id, contributor_id, number),
-    FOREIGN KEY (version_id) REFERENCES version (id) ON DELETE CASCADE,
-    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS folder_kind (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0)
-);
-CREATE TABLE IF NOT EXISTS folder (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    checkpoint_id INTEGER NOT NULL,
-    parent_folder_id INTEGER,
-    folder_kind_id INTEGER NOT NULL,
-    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
-    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
-    UNIQUE (checkpoint_id, parent_folder_id, name),
-    FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_folder_id) REFERENCES folder (id) ON DELETE CASCADE,
-    FOREIGN KEY (folder_kind_id) REFERENCES folder_kind (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS file_kind (
-    id INTEGER PRIMARY KEY,
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
-);
-CREATE TABLE IF NOT EXISTS file (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    checkpoint_id INTEGER NOT NULL,
-    parent_folder_id INTEGER,
-    file_kind_id INTEGER NOT NULL,
-    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
-    extension TEXT NOT NULL CHECK (length (trim(extension)) > 0),
-    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
-    UNIQUE (checkpoint_id, parent_folder_id, file_kind_id, name, extension),
-    FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_folder_id) REFERENCES folder (id) ON DELETE CASCADE,
-    FOREIGN KEY (file_kind_id) REFERENCES file_kind (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS technology_kind (
-    id INTEGER PRIMARY KEY,
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
-);
-CREATE TABLE IF NOT EXISTS technology (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    folder_id INTEGER NOT NULL,
-    technology_kind_id INTEGER NOT NULL,
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    summary TEXT,
-    FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
-    FOREIGN KEY (technology_kind_id) REFERENCES technology_kind (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS entity (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    technology_id INTEGER,
-    bundle_id INTEGER,
-    folder_id INTEGER,
-    file_id INTEGER,
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
-    specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
-    UNIQUE (name),
-    UNIQUE (emoji),
-    FOREIGN KEY (technology_id) REFERENCES technology (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS mechanism (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
-    specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
-    UNIQUE (name, emoji)
-);
-CREATE TABLE IF NOT EXISTS system (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    summary TEXT NOT NULL CHECK (length (trim(summary)) > 0),
-    specification TEXT NOT NULL CHECK (length (trim(specification)) > 0),
-    UNIQUE (name, emoji)
-);
-CREATE TABLE IF NOT EXISTS system_entities (
-    system_id INTEGER NOT NULL,
-    entity_id INTEGER NOT NULL,
-    UNIQUE (system_id, entity_id),
-    FOREIGN KEY (system_id) REFERENCES system (id) ON DELETE CASCADE,
-    FOREIGN KEY (entity_id) REFERENCES entity (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS bundle_kind (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0)
-);
-CREATE TABLE IF NOT EXISTS bundle (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    technology_id INTEGER NOT NULL,
-    folder_id INTEGER NOT NULL,
-    bundle_kind_id INTEGER NOT NULL,
-    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
-    summary TEXT,
-    UNIQUE (technology_id, bundle_kind_id, name),
-    FOREIGN KEY (technology_id) REFERENCES technology (id) ON DELETE CASCADE,
-    FOREIGN KEY (folder_id) REFERENCES folder (id) ON DELETE CASCADE,
-    FOREIGN KEY (bundle_kind_id) REFERENCES bundle_kind (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS section (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    file_id INTEGER NOT NULL,
-    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
-    summary TEXT,
-    UNIQUE (file_id, name),
-    FOREIGN KEY (file_id) REFERENCES file (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS definition_kind (
-    id INTEGER PRIMARY KEY,
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
-);
-CREATE TABLE IF NOT EXISTS definition (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    section_id INTEGER NOT NULL,
-    definition_kind_id INTEGER NOT NULL,
-    name TEXT NOT NULL CHECK (length (trim(name)) > 0),
-    summary TEXT,
-    code TEXT,
-    UNIQUE (section_id, definition_kind_id, name),
-    FOREIGN KEY (section_id) REFERENCES section (id) ON DELETE CASCADE,
-    FOREIGN KEY (definition_kind_id) REFERENCES definition_kind (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS client_kind (
-    id INTEGER PRIMARY KEY,
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    description TEXT NOT NULL CHECK (length (trim(description)) > 0)
-);
-CREATE TABLE IF NOT EXISTS agent (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    emoji TEXT NOT NULL UNIQUE CHECK (length (trim(emoji)) > 0),
-    name TEXT NOT NULL UNIQUE CHECK (length (trim(name)) > 0),
-    prompt TEXT NOT NULL CHECK (length (trim(prompt)) > 0)
-);
-CREATE TABLE IF NOT EXISTS session (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contributor_id INTEGER NOT NULL,
-    client_kind_id INTEGER NOT NULL,
-    initial_second INTEGER NOT NULL CHECK (initial_second >= 0),
-    agent_id INTEGER NOT NULL,
-    session_id TEXT NOT NULL UNIQUE CHECK (length (trim(session_id)) > 0),
-    checkpoint_sha TEXT,
-    UNIQUE (contributor_id, initial_second),
-    FOREIGN KEY (agent_id) REFERENCES agent (id) ON DELETE CASCADE,
-    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS event_kind (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    parent_kind_id INTEGER,
-    FOREIGN KEY (parent_kind_id) REFERENCES event_kind (id) ON DELETE CASCADE
-);
-CREATE TABLE IF NOT EXISTS event (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    kind_id INTEGER NOT NULL,
-    contributor_id INTEGER NOT NULL,
-    second INTEGER NOT NULL CHECK (second >= 0),
-    client_id INTEGER NOT NULL,
-    agent_id INTEGER NOT NULL,
-    session_id INTEGER NOT NULL,
-    policy_id INTEGER NOT NULL,
-    ticket_id INTEGER NOT NULL,
-    FOREIGN KEY (kind_id) REFERENCES event_kind (id) ON DELETE CASCADE,
-    FOREIGN KEY (contributor_id) REFERENCES contributor (id) ON DELETE CASCADE
-);
-`
-
-// 💿️ExportResult holds the data fields for a export result record.
-type ExportResult struct {
-	Path         string `json:"path"`
-	Technologies int    `json:"technologies"`
-	Bundles      int    `json:"bundles"`
-	Folders      int    `json:"folders"`
-	Files        int    `json:"files"`
-	Sections     int    `json:"sections"`
-	Definitions  int    `json:"definitions"`
-}
-
-func folderKindToInt(k FolderKind) int {
-	switch k {
-	case FolderKindRequired:
-		return 1
-	default:
-		return 0
-	}
-}
-
-func technologyKindToInt(k TechnologyKind) int {
-	switch k {
-	case TechnologyKindUser:
-		return 0
-	case TechnologyKindInfrastructure:
-		return 1
-	case TechnologyKindResearch:
-		return 2
-	default:
-		return 0
-	}
-}
-
-func bundleKindToInt(k BundleKind) int {
-	switch k {
-	case BundleKindLibrary:
-		return 0
-	case BundleKindSchema:
-		return 1
-	case BundleKindBinary:
-		return 2
-	case BundleKindUI:
-		return 3
-	case "example", "examples":
-		return 4
-	case BundleKindSite:
-		return 5
-	case BundleKindAssets:
-		return 6
-	default:
-		return 0
-	}
-}
-
-func fileKindToInt(kind string) int {
-	switch kind {
-	case FileKindCode:
-		return 0
-	case FileKindLab:
-		return 1
-	case FileKindScript:
-		return 2
-	case FileKindDocs:
-		return 3
-	case FileKindConfig:
-		return 4
-	case FileKindResource:
-		return 5
-	case FileKindTemplate:
-		return 6
-	case FileKindLicense:
-		return 7
-	default:
-		return 0
-	}
-}
-
-func definitionKindToInt(k DefinitionKind) int {
-	switch k {
-	case DefinitionKindImplementation:
-		return 0
-	case DefinitionKindInterface:
-		return 1
-	case DefinitionKindConstant:
-		return 2
-	case DefinitionKindTest:
-		return 3
-	default:
-		return 0
-	}
-}
-
-func seedKindTables(tx *sql.Tx) error {
-	folderKinds := []struct {
-		id    int
-		name  string
-		emoji string
-	}{
-		{0, "organizational", "🗃️"},
-		{1, "required", "🛅️"},
-	}
-	for _, fk := range folderKinds {
-		if _, err := tx.Exec(`INSERT INTO folder_kind (id, name, emoji) VALUES (?, ?, ?)`, fk.id, fk.name, fk.emoji); err != nil {
-			return fmt.Errorf("failed to seed folder_kind %d: %w", fk.id, err)
-		}
-	}
-	fileKinds := []struct {
-		id          int
-		emoji       string
-		name        string
-		description string
-	}{
-		{0, "💻️", "code", "Source code file"},
-		{1, "🥼️", "lab", "Laboratory or notebook file"},
-		{2, "📜️", "script", "Script file"},
-		{3, "📝️", "docs", "Documentation file"},
-		{4, "⚙️", "config", "Configuration file"},
-		{5, "💾️", "binary", "Binary or resource file"},
-		{6, "📋️", "template", "Template file"},
-		{7, "⚖️", "license", "License file"},
-	}
-	for _, fk := range fileKinds {
-		if _, err := tx.Exec(`INSERT INTO file_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, fk.id, fk.emoji, fk.name, fk.description); err != nil {
-			return fmt.Errorf("failed to seed file_kind %d: %w", fk.id, err)
-		}
-	}
-	technologyKinds := []struct {
-		id          int
-		emoji       string
-		name        string
-		description string
-	}{
-		{0, "👤️", "user", "User-facing technology"},
-		{1, "🧰️", "infrastructure", "Infrastructure technology"},
-		{2, "🔬️", "research", "Research technology"},
-	}
-	for _, pk := range technologyKinds {
-		if _, err := tx.Exec(`INSERT INTO technology_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, pk.id, pk.emoji, pk.name, pk.description); err != nil {
-			return fmt.Errorf("failed to seed technology_kind %d: %w", pk.id, err)
-		}
-	}
-	bundleKinds := []struct {
-		id   int
-		name string
-	}{
-		{0, "library"},
-		{1, "schema"},
-		{2, "binary"},
-		{3, "ui"},
-		{4, "examples"},
-		{5, "site"},
-		{6, "assets"},
-	}
-	for _, bk := range bundleKinds {
-		if _, err := tx.Exec(`INSERT INTO bundle_kind (id, name) VALUES (?, ?)`, bk.id, bk.name); err != nil {
-			return fmt.Errorf("failed to seed bundle_kind %d: %w", bk.id, err)
-		}
-	}
-	definitionKinds := []struct {
-		id          int
-		emoji       string
-		name        string
-		description string
-	}{
-		{0, "🛠️", "implementation", "An implementation definition"},
-		{1, "🔌️", "interface", "An interface definition"},
-		{2, "🪨️", "constant", "A constant definition"},
-		{3, "🧪️", "test", "A test definition"},
-	}
-	for _, dk := range definitionKinds {
-		if _, err := tx.Exec(`INSERT INTO definition_kind (id, emoji, name, description) VALUES (?, ?, ?, ?)`, dk.id, dk.emoji, dk.name, dk.description); err != nil {
-			return fmt.Errorf("failed to seed definition_kind %d: %w", dk.id, err)
-		}
-	}
-	return nil
-}
-
-// ✏️ExportToSQLite MUST write the complete output to the target using exactly the schema defined in repo/sqlite/📐️schema.sql.
-// ✔️ExportToSQLite exports repo data to a SQLite database using the normalized schema with FK-based kind references and a synthetic snapshot checkpoint.
-func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
-	if outputPath == "" {
-		outputPath = filepath.Join(ctx.GetRootDir(), "repo.db")
-	}
-	if err := os.Remove(outputPath); err != nil && !os.IsNotExist(err) {
-		return nil, fmt.Errorf("failed to remove existing database: %w", err)
-	}
-	db, err := sql.Open("sqlite", outputPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
-	}
-	if _, err := db.Exec(exportSchemaSQL); err != nil {
-		return nil, fmt.Errorf("failed to execute schema: %w", err)
-	}
-	tx, err := db.Begin()
-	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer tx.Rollback()
-	result := &ExportResult{Path: outputPath}
-
-	if err := seedKindTables(tx); err != nil {
-		return nil, fmt.Errorf("failed to seed kind tables: %w", err)
-	}
-
-	now := time.Now().Unix()
-	if _, err := tx.Exec(`INSERT INTO contributor (github, name, alias) VALUES (?, ?, ?)`,
-		"export", "Export System", "export"); err != nil {
-		return nil, fmt.Errorf("failed to insert synthetic contributor: %w", err)
-	}
-	if _, err := tx.Exec(`INSERT INTO release (initial_month, number, description) VALUES (?, ?, ?)`,
-		0, 1, "Export Snapshot"); err != nil {
-		return nil, fmt.Errorf("failed to insert synthetic release: %w", err)
-	}
-	if _, err := tx.Exec(`INSERT INTO version (release_id, contributor_id, number, second, message) VALUES (?, ?, ?, ?, ?)`,
-		1, 1, 1, now, "Export Snapshot"); err != nil {
-		return nil, fmt.Errorf("failed to insert synthetic version: %w", err)
-	}
-	if _, err := tx.Exec(`INSERT INTO checkpoint (version_id, contributor_id, number, second, message) VALUES (?, ?, ?, ?, ?)`,
-		1, 1, 1, now, "Export Snapshot"); err != nil {
-		return nil, fmt.Errorf("failed to insert synthetic checkpoint: %w", err)
-	}
-	const snapshotCheckpointID = int64(1)
-
-	folderIDs := make(map[string]int64)
-	if result.Folders, err = exportFoldersNew(tx, ctx, snapshotCheckpointID, folderIDs); err != nil {
-		return nil, fmt.Errorf("failed to export folders: %w", err)
-	}
-
-	technologyIDs := make(map[string]int64)
-	if result.Technologies, err = exportTechnologiesNew(tx, ctx, folderIDs, technologyIDs); err != nil {
-		return nil, fmt.Errorf("failed to export technologies: %w", err)
-	}
-
-	if result.Bundles, err = exportBundlesNew(tx, ctx, technologyIDs, folderIDs); err != nil {
-		return nil, fmt.Errorf("failed to export bundles: %w", err)
-	}
-
-	fileIDs := make(map[string]int64)
-	if result.Files, err = exportFilesNew(tx, ctx, snapshotCheckpointID, folderIDs, fileIDs); err != nil {
-		return nil, fmt.Errorf("failed to export files: %w", err)
-	}
-
-	sectionIDs := make(map[string]int64)
-	if result.Sections, err = exportSectionsNew(tx, ctx, fileIDs, sectionIDs); err != nil {
-		return nil, fmt.Errorf("failed to export sections: %w", err)
-	}
-
-	if result.Definitions, err = exportDefinitionsNew(tx, ctx, fileIDs, sectionIDs); err != nil {
-		return nil, fmt.Errorf("failed to export definitions: %w", err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
-	}
-	return result, nil
-}
-
-func exportFoldersNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64) (int, error) {
-	folders := ctx.GetFolders()
-	stmt, err := tx.Prepare(`INSERT INTO folder (checkpoint_id, parent_folder_id, folder_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-
-	pathToFolder := make(map[string]*Folder)
-	for _, f := range folders {
-		pathToFolder[f.Path] = f
-	}
-
-	var insertFolder func(f *Folder) (int64, error)
-	insertFolder = func(f *Folder) (int64, error) {
-		if id, ok := folderIDs[f.Path]; ok {
-			return id, nil
-		}
-		var parentID interface{}
-		parentPath := filepath.Dir(f.Path)
-		if parentPath != "." && parentPath != "" {
-			if parentFolder, ok := pathToFolder[parentPath]; ok {
-				pid, err := insertFolder(parentFolder)
-				if err != nil {
-					return 0, err
-				}
-				parentID = pid
-			}
-		}
-		kindID := folderKindToInt(f.Kind)
-		summary := f.Name
-		readmePath := filepath.Join(ctx.GetRootDir(), f.Path, "README.md")
-		if content, err := ReadTextFile(readmePath); err == nil {
-			if s := extractReadmeSummary(content); s != "" {
-				summary = s
-			}
-		}
-		res, err := stmt.Exec(checkpointID, parentID, kindID, f.Name, summary)
-		if err != nil {
-			return 0, err
-		}
-		id, err := res.LastInsertId()
-		if err != nil {
-			return 0, err
-		}
-		folderIDs[f.Path] = id
-		return id, nil
-	}
-
-	for _, f := range folders {
-		if _, err := insertFolder(f); err != nil {
-			return 0, err
-		}
-	}
-	return len(folders), nil
-}
-
-func extractReadmeSummary(content string) string {
-	lines := strings.Split(content, "\n")
-	inSummary := false
-	var summaryLines []string
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "### Summary" {
-			inSummary = true
-			continue
-		}
-		if inSummary {
-			if strings.HasPrefix(trimmed, "#") {
-				break
-			}
-			if trimmed != "" {
-				summaryLines = append(summaryLines, trimmed)
-			}
-		}
-	}
-	return strings.TrimSpace(strings.Join(summaryLines, "\n"))
-}
-
-func exportTechnologiesNew(tx *sql.Tx, ctx RepoContext, folderIDs map[string]int64, technologyIDs map[string]int64) (int, error) {
-	technologies := ctx.GetTechnologies()
-	stmt, err := tx.Prepare(`INSERT INTO technology (folder_id, technology_kind_id, name, summary) VALUES (?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-	for _, p := range technologies {
-		folderID, ok := folderIDs[p.Root]
-		if !ok {
-			continue
-		}
-		kindID := technologyKindToInt(p.Kind)
-		var summary interface{}
-		readmePath := filepath.Join(ctx.GetRootDir(), p.Root, "README.md")
-		if content, err := ReadTextFile(readmePath); err == nil {
-			if s := extractReadmeSummary(content); s != "" {
-				summary = s
-			}
-		}
-		res, err := stmt.Exec(folderID, kindID, p.Name, summary)
-		if err != nil {
-			return 0, err
-		}
-		id, err := res.LastInsertId()
-		if err != nil {
-			return 0, err
-		}
-		technologyIDs[p.Name] = id
-	}
-	return len(technologies), nil
-}
-
-func exportBundlesNew(tx *sql.Tx, ctx RepoContext, technologyIDs map[string]int64, folderIDs map[string]int64) (int, error) {
-	bundles := ctx.GetBundles()
-	stmt, err := tx.Prepare(`INSERT INTO bundle (technology_id, folder_id, bundle_kind_id, name, summary) VALUES (?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-	count := 0
-	for _, b := range bundles {
-		technologyID, ok := technologyIDs[b.TechnologyName]
-		if !ok {
-			continue
-		}
-		folderID, ok := folderIDs[b.Root]
-		if !ok {
-			continue
-		}
-		kindID := bundleKindToInt(b.Kind)
-		bundleName := b.Name
-		parts := strings.SplitN(b.Name, "/", 2)
-		if len(parts) > 1 {
-			bundleName = parts[1]
-		}
-		var summary interface{}
-		readmePath := filepath.Join(ctx.GetRootDir(), b.Root, "README.md")
-		if content, err := ReadTextFile(readmePath); err == nil {
-			if s := extractReadmeSummary(content); s != "" {
-				summary = s
-			}
-		}
-		if _, err := stmt.Exec(technologyID, folderID, kindID, bundleName, summary); err != nil {
-			return 0, err
-		}
-		count++
-	}
-	return count, nil
-}
-
-func exportFilesNew(tx *sql.Tx, ctx RepoContext, checkpointID int64, folderIDs map[string]int64, fileIDs map[string]int64) (int, error) {
-	files := ctx.GetFiles()
-	stmt, err := tx.Prepare(`INSERT INTO file (checkpoint_id, parent_folder_id, file_kind_id, name, extension, summary) VALUES (?, ?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-	for _, f := range files {
-		var parentFolderID interface{}
-		folder := filepath.Dir(f.Path)
-		if folder != "." && folder != "" {
-			if fid, ok := folderIDs[folder]; ok {
-				parentFolderID = fid
-			}
-		}
-		kindID := fileKindToInt(DeriveFileKind(f.Name))
-		ext := f.Extension
-		if ext == "" {
-			ext = strings.TrimPrefix(filepath.Ext(f.Name), ".")
-		}
-		if ext == "" {
-			ext = "bin"
-		}
-		summary := filepath.Base(f.Path)
-		fileSummary := ExtractFileHeaderSummary(filepath.Join(ctx.GetRootDir(), f.Path))
-		if fileSummary != "" {
-			summary = fileSummary
-		}
-		res, err := stmt.Exec(checkpointID, parentFolderID, kindID, filepath.Base(f.Path), ext, summary)
-		if err != nil {
-			return 0, err
-		}
-		id, err := res.LastInsertId()
-		if err != nil {
-			return 0, err
-		}
-		fileIDs[f.Path] = id
-	}
-	return len(files), nil
-}
-
-func exportSectionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
-	files := ctx.GetFiles()
-	stmt, err := tx.Prepare(`INSERT INTO section (file_id, name, summary) VALUES (?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-	totalSections := 0
-	for _, f := range files {
-		fileID, ok := fileIDs[f.Path]
-		if !ok {
-			continue
-		}
-		absPath := filepath.Join(ctx.GetRootDir(), f.Path)
-		content, err := ReadTextFile(absPath)
-		if err != nil {
-			continue
-		}
-		sections := ParseSections(content, f.Path)
-		lang := GetLanguage(f.Path)
-		var prefix string
-		if lang != nil {
-			prefix = lang.CommentPrefix()
-		}
-		count, err := exportSectionsRecursiveNew(stmt, sections, fileID, f.Path, content, prefix, sectionIDs)
-		if err != nil {
-			return 0, err
-		}
-		totalSections += count
-	}
-	return totalSections, nil
-}
-
-func exportSectionsRecursiveNew(stmt *sql.Stmt, sections []Section, fileID int64, filePath string, content string, commentPrefix string, sectionIDs map[string]int64) (int, error) {
-	count := 0
-	for _, s := range sections {
-		var summary interface{}
-		if commentPrefix != "" {
-			_, summaryText := ExtractSectionLeadComments(content, s, commentPrefix)
-			if summaryText != "" {
-				summary = summaryText
-			}
-		}
-		sectionKey := filePath + "#" + s.Name
-		res, err := stmt.Exec(fileID, s.Name, summary)
-		if err != nil {
-			return 0, err
-		}
-		id, err := res.LastInsertId()
-		if err != nil {
-			return 0, err
-		}
-		sectionIDs[sectionKey] = id
-		count++
-		if len(s.Children) > 0 {
-			childCount, err := exportSectionsRecursiveNew(stmt, s.Children, fileID, filePath, content, commentPrefix, sectionIDs)
-			if err != nil {
-				return 0, err
-			}
-			count += childCount
-		}
-	}
-	return count, nil
-}
-
-func exportDefinitionsNew(tx *sql.Tx, ctx RepoContext, fileIDs map[string]int64, sectionIDs map[string]int64) (int, error) {
-	files := ctx.GetFiles()
-	stmt, err := tx.Prepare(`INSERT INTO definition (section_id, definition_kind_id, name, summary, code) VALUES (?, ?, ?, ?, ?)`)
-	if err != nil {
-		return 0, err
-	}
-	defer stmt.Close()
-	totalDefs := 0
-	for _, f := range files {
-		_, ok := fileIDs[f.Path]
-		if !ok {
-			continue
-		}
-		absPath := filepath.Join(ctx.GetRootDir(), f.Path)
-		content, err := ReadTextFile(absPath)
-		if err != nil {
-			continue
-		}
-		lang := GetLanguage(f.Path)
-		if lang == nil || !lang.SupportsDefinitions() {
-			continue
-		}
-		contentLines := strings.Split(content, "\n")
-		defs := lang.ParseDefinitions(content, contentLines)
-		sections := ParseSections(content, f.Path)
-		commentPrefix := lang.CommentPrefix()
-		for _, d := range defs {
-			sectionPath := findSectionForDefinition(sections, d.Start, d.End, "")
-			sectionKey := ""
-			if sectionPath != "" {
-				parts := strings.Split(sectionPath, "#")
-				lastSection := parts[len(parts)-1]
-				sectionKey = f.Path + "#" + lastSection
-			}
-			sectionID, ok := sectionIDs[sectionKey]
-			if !ok {
-				continue
-			}
-			defKind := DeriveDefinitionKind(d.Kind)
-			kindInt := definitionKindToInt(defKind)
-			var summary interface{}
-			defObj := Definition{
-				Name:      d.Name,
-				Kind:      defKind,
-				StartLine: d.Start,
-				EndLine:   d.End,
-			}
-			if commentPrefix != "" {
-				_, summaryText := ExtractDefinitionDocstring(content, defObj, commentPrefix)
-				if summaryText != "" {
-					summary = summaryText
-				}
-			}
-			var code interface{}
-			if d.Start > 0 && d.End <= len(contentLines) {
-				codeLines := contentLines[d.Start-1 : d.End]
-				codeText := strings.Join(codeLines, "\n")
-				if codeText != "" {
-					code = codeText
-				}
-			}
-			if _, err := stmt.Exec(sectionID, kindInt, d.Name, summary, code); err != nil {
-				return 0, err
-			}
-			totalDefs++
-		}
-	}
-	return totalDefs, nil
-}
-
-// 🔷️ToolExport MUST complete the operation successfully.
-func ToolExport(outputPath string) ToolResult {
-	repopkg.Emit(repopkg.EventExportStarting, "repo-cli", repopkg.FilePayload{Path: outputPath})
-	output := NewOutput()
-	output.Info("\n📦️Exporting repo to SQLite...")
-	ctx := NewRepoContext(rootDir)
-	result, err := ExportToSQLite(outputPath, ctx)
-	if err != nil {
-		return toolErrorResult(err)
-	}
-	repopkg.Emit(repopkg.EventExportEnded, "repo-cli", repopkg.FilePayload{Path: outputPath})
-	output.Success(fmt.Sprintf("Exported to: %s", result.Path))
-	output.Plain(fmt.Sprintf("  Technologies: %d", result.Technologies))
-	output.Plain(fmt.Sprintf("  Bundles: %d", result.Bundles))
-	output.Plain(fmt.Sprintf("  Folders: %d", result.Folders))
-	output.Plain(fmt.Sprintf("  Files: %d", result.Files))
-	output.Plain(fmt.Sprintf("  Sections: %d", result.Sections))
-	output.Plain(fmt.Sprintf("  Definitions: %d", result.Definitions))
-	return ToolResult{Output: *output, Data: result}
-}
-
-// #endregion 🕰️SQLite Export
 
 // #endregion 📋️Tickets
 
@@ -30744,33 +30108,13 @@ func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[
 // 🔍️ValidateQuery MUST return nil when valid and a descriptive error otherwise.
 // 🕸️ValidateQuery checks the query for correctness and returns any errors.
 func (e *Executor) ValidateQuery(query string) error {
-	_, err := parser.Parse(parser.ParseParams{
-		Source: query,
-		Options: parser.ParseOptions{
-			NoLocation: true,
-		},
-	})
-	return err
+	return graphql.Validate(query)
 }
 
 // 📨️GetOperationType MUST retrieve the requested value or return an error.
 // 🔖️GetOperationType retrieves and returns the operation type.
 func (e *Executor) GetOperationType(query string) (string, error) {
-	doc, err := parser.Parse(parser.ParseParams{
-		Source: query,
-		Options: parser.ParseOptions{
-			NoLocation: true,
-		},
-	})
-	if err != nil {
-		return "", err
-	}
-	for _, def := range doc.Definitions {
-		if opDef, ok := def.(*ast.OperationDefinition); ok {
-			return string(opDef.Operation), nil
-		}
-	}
-	return "query", nil
+	return graphql.OperationType(query)
 }
 
 // #endregion 🧱️GraphQL Executor
@@ -34728,8 +34072,8 @@ type RepoResolver interface {
 // #region 🦀️Mcp
 // MCP protocol handlers for the model context protocol server.
 
-// 💿️runMcpServer is kept for cobra wiring compatibility.
-func runMcpServer(cmd *cobra.Command, args []string) error {
+// 💿️runMcpServer is kept for command wiring compatibility.
+func runMcpServer(cmd *command.Command, args []string) error {
 	kind := McpClientGeneric
 	if len(args) > 0 {
 		parsed, err := ParseMcpClientKind(args[0])
@@ -34944,7 +34288,7 @@ func renderPromptTemplate(name string, data map[string]string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmpl, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(string(content))
+	tmpl, err := template.New(name).Funcs(templatefunc.TxtFuncMap()).Parse(string(content))
 	if err != nil {
 		return "", err
 	}
@@ -36173,10 +35517,10 @@ func printGQL(query string, variables map[string]interface{}) error {
 // #region 🪅️Analyze Command
 // Analyze command implementation for policy breach detection.
 // 🔬️analyzeCmd holds the data fields for a analyzeCmd record.
-var analyzeCmd = &cobra.Command{
+var analyzeCmd = &command.Command{
 	Use:   "analyze [scope]",
 	Short: "Analyze codebase for breachs",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *command.Command, args []string) error {
 		var scope *string
 		if len(args) > 0 {
 			scope = &args[0]
@@ -36224,10 +35568,10 @@ var analyzeCmd = &cobra.Command{
 
 // 🔧️Fix command implementation for automatic policy breach repair.
 // 🔧️autofixCmd holds the data fields for a autofixCmd record.
-var autofixCmd = &cobra.Command{
+var autofixCmd = &command.Command{
 	Use:   "autofix [scope]",
 	Short: "Apply autofixes for breachs",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *command.Command, args []string) error {
 		var scope *string
 		if len(args) > 0 {
 			scope = &args[0]
@@ -37455,7 +36799,7 @@ func ToolPolicyBreachList(policyID string) ToolResult {
 // Benchmark command implementation for performance measurement.
 
 // 💿️benchmarkCmd holds the data fields for a benchmarkCmd record.
-var benchmarkCmd = &cobra.Command{
+var benchmarkCmd = &command.Command{
 	Use:   "benchmark",
 	Short: "Run benchmarks for all ecosystems",
 	RunE:  runBenchmark,
@@ -37472,7 +36816,7 @@ type BenchmarkResult struct {
 }
 
 // 🔹️runBenchmark holds the data fields for a runBenchmark record.
-func runBenchmark(cmd *cobra.Command, args []string) error {
+func runBenchmark(cmd *command.Command, args []string) error {
 	if benchmarkDryRun {
 		return nil
 	}
@@ -39042,9 +38386,9 @@ func runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, paren
 	return nil
 }
 
-// 🆕️hookCommand creates the `hook <event> <client>` cobra command.
-func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+// 🆕️hookCommand creates the `hook <event> <client>` command command.
+func hookCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "hook <event> <client>",
 		Short: "Run a lifecycle hook (git or agent)",
 		Long: `Run a lifecycle hook for a given event and client.
@@ -39086,8 +38430,8 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
   windsurf-chat:   pre_user_prompt, post_cascade_response, post_setup_worktree, pre_mcp_tool_use, post_mcp_tool_use, pre_read_code, post_read_code, pre_write_code, post_write_code, pre_run_command, post_run_command
   claude-code/droid/codex/antigravity: SessionStart, SessionEnd, SubagentStart, SubagentStop, Stop, UserPromptSubmit, PreCompact, PreToolUse, PostToolUse, PostToolUseFailure, TaskCompleted, Notification
   kiro-cli:        agentSpawn, userPromptSubmit, preToolUse, postToolUse, stop`,
-		Args: cobra.RangeArgs(1, 2),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Args: command.RangeArgs(1, 2),
+		RunE: func(cmd *command.Command, args []string) error {
 			eventStr := args[0]
 			client := ""
 			if len(args) > 1 {
@@ -39203,12 +38547,12 @@ func removeGitHooks(repoRoot string) ([]string, error) {
 	return removed, nil
 }
 
-// 🆕️configureCommand creates the `configure` cobra command.
-func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
-	cmd := &cobra.Command{
+// 🆕️configureCommand creates the `configure` command command.
+func configureCommand(factory EngineFactory, config *Config) *command.Command {
+	cmd := &command.Command{
 		Use:   "configure",
 		Short: "Remove blocking git hooks; repo config files are edited manually",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			repoRoot := config.Repo
 			if repoRoot == "" {
 				cwd, err := os.Getwd()
@@ -39241,11 +38585,11 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 // #region 🔖️MicroCommit
 // micro-commit delegates to the monorepo script.ts implementation (entry point is always the repo binary).
 
-func microCommitCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
+func microCommitCommand(factory EngineFactory, config *Config) *command.Command {
+	return &command.Command{
 		Use:   "micro-commit [subcommand] [args...]",
 		Short: "Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *command.Command, args []string) error {
 			repoRoot := config.Repo
 			if repoRoot == "" {
 				cwd, err := os.Getwd()
@@ -39326,7 +38670,7 @@ func resolveBunBinary(repoRoot string) (string, error) {
 // #endregion 🔖️MicroCommit
 // Update command implementation for dependency updates.
 // ✏️updateCmd holds the data fields for a updateCmd record.
-var updateCmd = &cobra.Command{
+var updateCmd = &command.Command{
 	Use:   "update [target]",
 	Short: "Update dependencies (npm, python, rust, go, dotnet)",
 	RunE:  runUpdate,
@@ -39390,7 +38734,7 @@ type Constraint struct {
 }
 
 // ⬜️runUpdate holds the data fields for a runUpdate record.
-func runUpdate(cmd *cobra.Command, args []string) error {
+func runUpdate(cmd *command.Command, args []string) error {
 	target := "all"
 	if len(args) > 0 {
 		target = args[0]
@@ -44447,7 +43791,7 @@ func resolveTestFilesFromCommand(command string, cwd string) []string {
 
 // #endregion 🪨️Missing Hook Functions
 func generateHookSessionID() string {
-	return uuid.New().String()
+	return idgen.New().String()
 }
 
 // 📖️resolveAllTestDefinitionIDs resolves all test definition IDs.

@@ -1991,6 +1991,9 @@ pub mod action_bus;
 #[path = "../../🔨️modules/🚪️io/🦀️component.rs"]
 pub mod io;
 
+#[path = "../../🔨️modules/🌉️abi/🦀️component.rs"]
+pub mod abi;
+
 // 🧬️ ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A task 1: the io vocabulary
 // (`StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect`/`ArtifactKindId`/`ArtifactRef`) is mounted
 // ONCE, in the os-kernel crate (`io_schema` there) — re-exported here rather than remounted, so
@@ -2058,6 +2061,7 @@ pub use semio_framework_mesh_engine::{
 // CommandFieldSpec/CommandVariantSpec/CommandGrammar relocated from `mesh` into `manifest` (ticket
 // 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 4a) — reachable below via `pub use manifest::*;`
 // instead, so no external call site needs to change.
+pub use abi::*;
 pub use interaction::*;
 pub use io::{
     dialects_for as io_dialects_for,

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://framework/ui/render/webgpu/surface-port/v1",
+  "title": "Browser WebGPU Surface Port",
+  "type": "object",
+  "required": ["version", "operations", "hostStatuses", "lossReasons", "outcomes", "limits", "binary"],
+  "properties": {
+    "version": { "const": 1 },
+    "operations": {
+      "const": {
+        "create": 1825,
+        "resize": 1826,
+        "frame": 1827,
+        "deviceLoss": 1828,
+        "recover": 1829,
+        "drop": 1830
+      }
+    },
+    "hostStatuses": { "const": { "ready": 0, "missingCanvas": 1, "badCanvas": 2, "unsupportedAdapter": 3 } },
+    "lossReasons": { "const": { "surface": 1, "device": 2, "timeout": 3 } },
+    "outcomes": {
+      "const": {
+        "created": 1,
+        "resized": 2,
+        "frameAccepted": 3,
+        "lost": 4,
+        "recovered": 5,
+        "dropped": 6,
+        "cancelled": 7,
+        "rejected": 8
+      }
+    },
+    "limits": {
+      "const": {
+        "sessions": 8,
+        "inFlightFrames": 4,
+        "inFlightPages": 8,
+        "inFlightControls": 8,
+        "frameBytes": 4096,
+        "outcomeBytes": 8192,
+        "callbackWorkUnits": 64,
+        "callbackMilliseconds": 8
+      }
+    },
+    "binary": {
+      "const": {
+        "endianness": "little",
+        "create": ["version:u8", "hostStatus:u8", "surface:u32", "canvas:u32", "generation:u32", "width:u32", "height:u32", "scaleFactor:f32"],
+        "resize": ["version:u8", "surface:u32", "generation:u32", "width:u32", "height:u32", "scaleFactor:f32"],
+        "frame": ["version:u8", "surface:u32", "generation:u32", "frame:u64", "bytes:u32+bytes"],
+        "deviceLoss": ["version:u8", "surface:u32", "generation:u32", "reason:u8"],
+        "recover": ["version:u8", "surface:u32", "generation:u32"],
+        "drop": ["version:u8", "surface:u32", "generation:u32"],
+        "outcomePage": ["version:u8", "outcome:u8", "request:u64", "surface:u32", "generation:u32", "detail:variant"]
+      }
+    }
+  },
+  "additionalProperties": false
+}

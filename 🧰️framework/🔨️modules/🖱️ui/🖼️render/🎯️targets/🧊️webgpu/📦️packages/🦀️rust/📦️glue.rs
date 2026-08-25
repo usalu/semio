@@ -8,24 +8,20 @@
 //!
 //! ⚠️ SCAFFOLD — owned by packet `backend-webgpu`. Replace this placeholder wholesale.
 //!
-//! **Every module below is `target_arch = "wasm32"`-gated.** `Cargo.toml` puts `wgpu`/`web-sys`/
-//! `wasm-bindgen` behind `[target.'cfg(target_arch = "wasm32")'.dependencies]`, so on any native host
-//! those crates are not even in the dependency graph — ungated `mod` declarations would still try to
-//! resolve `use wgpu::…;`/`use web_sys::…;` and fail with cascading "can't find crate" errors.
+//! Device-shaped modules below are `target_arch = "wasm32"`-gated. `Cargo.toml` puts `wgpu` behind
+//! `[target.'cfg(target_arch = "wasm32")'.dependencies]`, so native hosts never resolve it. The owned
+//! byte/page surface adapter remains target-neutral so its lifecycle laws run without a browser.
 //!
-//! **On a non-wasm32 host this crate compiles to an empty, zero-item lib — deliberately, not an
-//! oversight.** It used to gate on a hard `compile_error!` instead, but that made `cargo check
-//! --workspace` (this refactor's exit gate) fail on every native host merely because this crate is a
-//! workspace member, independent of whether anything actually depends on it. Wrong-platform *use* is
-//! already prevented one layer up, structurally rather than by a banner: `🖥️host/📦️packages/🦀️rust/
-//! Cargo.toml` only pulls this crate in under `[target.'cfg(target_arch = "wasm32")'.dependencies]`, so
-//! no consumer on macOS/Linux/Windows ever sees this crate's dependency edge, let alone its (absent)
-//! symbols — referencing `WebGpuBackend` from such a consumer fails with a plain "unresolved import",
-//! same category of error a `compile_error!` banner would have produced, just raised at the actual
-//! misuse site instead of unconditionally at this crate's own root. Same discipline applied to the
-//! Vulkan/D3D12/Metal backends' `📦️glue.rs`; see those files' headers for the identical reasoning.
+//! On a non-browser target only the dependency-free contract, codec, admission ledger, and state
+//! machine compile. Device resources remain absent, so referencing `WebGpuBackend` from a native
+//! consumer still fails at the misuse site while native tests can execute the complete surface ABI.
 
 //#region 🔖️Backend
+
+#[path = "../../../../../../🌉️abi/🦀️component.rs"]
+pub mod abi;
+#[path = "🦀️surface_adapter.rs"]
+mod surface_adapter;
 
 #[cfg(target_arch = "wasm32")]
 #[path = "🦀️backend.rs"]
@@ -60,5 +56,6 @@ mod surface_state;
 
 #[cfg(target_arch = "wasm32")]
 pub use backend::WebGpuBackend;
+pub use surface_adapter::*;
 
 //#endregion 🔖️Backend

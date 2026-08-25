@@ -1,0 +1,41 @@
+{
+  "auditedRows": 5,
+  "ownedRows": 5,
+  "rows": [
+    {
+      "name": "@nx/devkit",
+      "user": "package.json",
+      "manifestVersion": "21.6.11",
+      "lockVersion": "21.6.11",
+      "lockOwned": true
+    },
+    {
+      "name": "@nx/js",
+      "user": "package.json",
+      "manifestVersion": "21.6.11",
+      "lockVersion": "21.6.11",
+      "lockOwned": true
+    },
+    {
+      "name": "nx",
+      "user": "package.json",
+      "manifestVersion": "21.6.11",
+      "lockVersion": "21.6.11",
+      "lockOwned": true
+    },
+    {
+      "name": "@nx/devkit",
+      "user": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "manifestVersion": "21.4.1",
+      "lockVersion": "21.4.1",
+      "lockOwned": true
+    },
+    {
+      "name": "nx",
+      "user": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "manifestVersion": "^21.4.1",
+      "lockVersion": "^21.4.1",
+      "lockOwned": true
+    }
+  ]
+}

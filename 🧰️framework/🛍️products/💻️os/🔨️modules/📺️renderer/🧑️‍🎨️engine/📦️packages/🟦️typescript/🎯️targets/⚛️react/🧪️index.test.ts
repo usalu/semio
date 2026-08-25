@@ -136,11 +136,13 @@ import {
   appWindowLabel,
   adaptPluginHandle,
   fetchDescriptorManifest,
+  resolveDescriptorBeforeRuntime,
   applyUiPatchToRetained,
   UiDocumentStore,
   type UiInterpreterContext,
   UiPresenceOverlayContext,
   type UiPresenceOverlayEntry,
+  serializeCommandIngressForActor,
   serializePerActor,
   applyUiRefreshResponseToCache,
   resolveAppBreadcrumb,
@@ -159,6 +161,7 @@ import {
   parseShellRoute,
   shellActorId,
   canonicalSurfaceId,
+  reloadRetainsActiveApp,
   directoryCommandFromAction,
   AUTO_CHECKIN_IDLE_MS,
   AUTO_CHECKIN_EDIT_THRESHOLD,
@@ -1269,6 +1272,24 @@ describe("framework plugin runtime", () => {
     }
   });
 
+  it("resolves the descriptor before initializing the shard runtime", async () => {
+    const order: string[] = [];
+    const resolved = await resolveDescriptorBeforeRuntime(
+      async () => {
+        order.push("descriptor-start");
+        await Promise.resolve();
+        order.push("descriptor-ready");
+        return "manifest";
+      },
+      () => {
+        order.push("runtime");
+        return "shards";
+      },
+    );
+    expect(order).toEqual(["descriptor-start", "descriptor-ready", "runtime"]);
+    expect(resolved).toEqual({ manifest: "manifest", runtime: "shards" });
+  });
+
   // 🧬️ H1-react — design-runtime.md §1 `SceneStore` / packet brief item 2: the retained-tree
   // reconciliation `PluginRuntime`'s `loadPluginModule` applies every `TurnResult.uiPatches` entry
   // through. Exercised directly (not through a fake wasm turn) since it is a pure function — real
@@ -1396,6 +1417,35 @@ describe("framework plugin runtime", () => {
     await expect(failing).rejects.toThrow("turn faulted");
     await expect(succeeding).resolves.toBe("ok");
     expect(order).toEqual(["first", "second"]);
+  });
+
+  it("serializes complete multi-turn command ingress sequences for one actor", async () => {
+    const order: string[] = [];
+    let releaseFirst!: () => void;
+    let markFirstStarted!: () => void;
+    const firstStarted = new Promise<void>((resolve) => {
+      markFirstStarted = resolve;
+    });
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const first = serializeCommandIngressForActor("actor-ingress", async () => {
+      order.push("first-page");
+      markFirstStarted();
+      await firstGate;
+      order.push("first-terminal");
+    });
+    await firstStarted;
+    const second = serializeCommandIngressForActor("actor-ingress", async () => {
+      order.push("second-page");
+      await Promise.resolve();
+      order.push("second-terminal");
+    });
+    await Promise.resolve();
+    expect(order).toEqual(["first-page"]);
+    releaseFirst();
+    await Promise.all([first, second]);
+    expect(order).toEqual(["first-page", "first-terminal", "second-page", "second-terminal"]);
   });
 
   // 🧬️ H1-react — `AppFrame::Effects`/`Events` no longer exist (channel v12, A4-channel). Effects
@@ -4180,6 +4230,12 @@ describe("s workflow flow routing", () => {
   it("canonicalSurfaceId formats <kind>@<standard>/<subset>#<role>", () => {
     expect(canonicalSurfaceId({ artifactKind: "s.space.space", standard: "1", subset: "*" }, "editor")).toBe("s.space.space@1/*#editor");
     expect(canonicalSurfaceId({ artifactKind: "s.space.space", standard: "1", subset: "*" }, "viewer")).toBe("s.space.space@1/*#viewer");
+  });
+
+  it("reloadRetainsActiveApp accepts extension-only programs and rejects a dropped active app", () => {
+    expect(reloadRetainsActiveApp([], undefined)).toBe(true);
+    expect(reloadRetainsActiveApp([{ id: "active" }], "active")).toBe(true);
+    expect(reloadRetainsActiveApp([], "active")).toBe(false);
   });
 
   it("directoryCommandFromAction maps all 7 frozen os.directory.* ids, share-link sugaring to create-invite", () => {

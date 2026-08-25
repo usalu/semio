@@ -1,0 +1,17 @@
+[verify dependencies] baseline: 232 third-party dependenc(y/ies) (commit 215e369d07d8014806a43f8f75a1bba3c6015908); current: 228.
+ecosystem	raw	third-party	first-party	composition-scoped	mandated-toolchain	corrected/literal-external	production-reachable	kind-census
+rust	85	85	0	0	0	85	65	production-runtime:65,production-build:2,test-runner:3,test-oracle:20
+js	70	70	0	0	3	67	31	production-runtime:31,repository-tooling:41,test-oracle:3
+go	60	58	2	0	0	58	58	production-runtime:11,production-build:58
+python	15	15	0	15	0	0	0	test-runner:15
+dotnet	0	0	0	0	0	0	0	none
+total	230	228	2	15	3	210	154
+zero-target=0 literal-external=210 meets-target=false
+audited-toolchain bun=bun@1.2.5 engines.bun=>=1.2.0 nx=@nx/devkit,@nx/js,nx
+oracle-conflicts=3
+[verify dependencies] 4 dependenc(y/ies) removed since baseline (always passes — ratchet only tightens):
+  go:github.com/usalu/semio/repo/client
+  go:github.com/usalu/semio/repo/go
+  python:pypdf
+  python:simplejson
+[verify dependencies] clean — no new third-party dependencies.

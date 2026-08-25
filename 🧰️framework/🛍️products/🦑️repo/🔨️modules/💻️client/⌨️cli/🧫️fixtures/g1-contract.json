@@ -1,0 +1,44 @@
+{
+  "schema": "semio.repo.cli.g1/1",
+  "command": {
+    "invalidArgs": ["inspect", "--unknown"],
+    "errorContains": "unknown flag",
+    "helpArgs": ["inspect", "--help"],
+    "helpContains": "inspect a target",
+    "dispatchArgs": ["inspect", "target"]
+  },
+  "glob": {
+    "pattern": "**/*.go",
+    "paths": ["root.go", "a/one.go", "a/b/two.go"],
+    "matches": ["a/b/two.go", "a/one.go", "root.go"]
+  },
+  "template": {
+    "invalid": "{{ if }}",
+    "error": true
+  },
+  "search": {
+    "query": "event replay",
+    "documents": {
+      "a": "deterministic event replay",
+      "b": "recursive glob matcher",
+      "c": "event storage"
+    },
+    "matches": ["a"],
+    "reindexInterruptPhases": ["collecting", "indexed", "persisting-persisted"],
+    "maxDocumentBytes": 1048576
+  },
+  "eventStore": {
+    "inputs": [
+      {"id": "folder:a", "kind": "folder.recorded", "data": {"path": "a"}},
+      {"id": "file:a/x.go", "kind": "file.recorded", "data": {"path": "a/x.go"}}
+    ],
+    "sequences": [1, 2],
+    "interruptPhases": ["encoded", "staged", "appended", "synced"]
+  },
+  "yaml": {
+    "source": "name: semio\npaths:\n  - a\n  - b\nenabled: true\n",
+    "name": "semio",
+    "paths": ["a", "b"],
+    "enabled": true
+  }
+}

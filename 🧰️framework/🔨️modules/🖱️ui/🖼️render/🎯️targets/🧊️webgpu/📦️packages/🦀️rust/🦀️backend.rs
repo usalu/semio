@@ -8,6 +8,7 @@ use crate::pipelines::Pipelines;
 use crate::resources::GpuResources;
 use crate::scene_target::SceneColorTarget;
 use crate::surface_state::{DeviceHealth, SurfaceState};
+use crate::{GpuOutcome, SurfaceGeneration, SurfaceId};
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
 use ui_render::{BackendError, DeviceCapabilities, DeviceStatus, GraphicsBackend, LossReason, PhysicalSize, RecoveredResources, RenderPacket, RenderReport, ResourceOp};
@@ -60,9 +61,10 @@ fn padded_bytes_per_row(width: u32) -> u32 {
 
 //#region 🌐️WebGpuBackend
 
-/// 🌐️ The browser WebGPU backend. Construction (`Self::new`) is this crate's one genuinely async
-/// step; every [`GraphicsBackend`] method below is a plain `fn`.
+/// 🌐️ Browser WebGPU resources admitted by the owned surface-port state machine.
 pub struct WebGpuBackend {
+    surface_id: SurfaceId,
+    generation: SurfaceGeneration,
     device: wgpu::Device,
     queue: wgpu::Queue,
     surface: wgpu::Surface<'static>,
@@ -85,14 +87,17 @@ pub struct WebGpuBackend {
 }
 
 impl WebGpuBackend {
-    /// 🌐️ Instance → surface → adapter → device, then every pipeline/resource table this crate needs.
-    /// The one genuinely async fn in this crate (ticket brief) — construction is the exception U1
-    /// itself carves out.
-    // 🌐️async: genuinely async device/adapter construction — the one exception U1 itself carves out.
-    pub async fn new(canvas: web_sys::HtmlCanvasElement) -> Result<Self, BackendError> {
-        let width = canvas.width().max(1);
-        let height = canvas.height().max(1);
-        let context = GpuContext::new(canvas).await?;
+    /// 🧊️ Consumes only a successful owned create/recover outcome; browser objects remain in JS/A2.
+    // 🌐️async: adapter/device construction remains inside the owned renderer interface until P9-C.
+    pub async fn from_outcome(outcome: &GpuOutcome) -> Result<Self, BackendError> {
+        let (surface_id, generation, metrics) = match outcome {
+            GpuOutcome::Created { surface, generation, metrics, .. } => (*surface, *generation, *metrics),
+            GpuOutcome::Recovered { surface, generation, metrics, .. } => (*surface, *generation, *metrics),
+            _ => return Err(BackendError::CanvasReplaced),
+        };
+        let width = metrics.width.max(1);
+        let height = metrics.height.max(1);
+        let context = GpuContext::new(surface_id).await?;
         context.configure(width, height);
 
         let pipelines = Pipelines::new(&context.device, context.view_format);
@@ -112,9 +117,11 @@ impl WebGpuBackend {
         });
 
         let mut state = SurfaceState::default();
-        state.resize(PhysicalSize::new(width, height), 1.0);
+        state.resize(PhysicalSize::new(metrics.width, metrics.height), metrics.scale_factor);
 
         Ok(Self {
+            surface_id,
+            generation,
             device: context.device,
             queue: context.queue,
             surface: context.surface,
@@ -135,6 +142,14 @@ impl WebGpuBackend {
             #[cfg(feature = "backend-testing")]
             pending_readback: None,
         })
+    }
+
+    pub const fn surface_id(&self) -> SurfaceId {
+        self.surface_id
+    }
+
+    pub const fn surface_generation(&self) -> SurfaceGeneration {
+        self.generation
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -263,8 +278,8 @@ impl GraphicsBackend for WebGpuBackend {
     /// permanently unusable, and truly rebuilding one needs `request_adapter`/`request_device` again —
     /// genuinely async steps this trait's `recover` (a plain `fn`) cannot perform. This resets
     /// bookkeeping and reports every id that was resident before the loss, exactly like
-    /// `NullBackend::recover` — the caller still needs to reconstruct a fresh `WebGpuBackend` via
-    /// `Self::new` for rendering to actually resume. See this packet's report.
+    /// `NullBackend::recover` — the caller still needs to reconstruct a fresh `WebGpuBackend` from
+    /// the adapter's generation-bearing recovered outcome for rendering to resume.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError> {
         self.loss_flag.store(LOSS_NONE, Ordering::SeqCst);

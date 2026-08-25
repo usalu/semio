@@ -18,6 +18,10 @@
     "cancelDuringEveryTier": true,
     "deadlineBeforeEveryChannelTransition": true,
     "dropRequeuesGeneration": true,
-    "finalTransferExactOnce": true
+    "finalTransferExactOnce": true,
+    "commitLeaseAckMakesNumericalTerminal": true,
+    "revisionChangeAfterCaptureBeforeAdmissionRetainsOwner": true,
+    "crossAppSameDocumentAdoptRejected": true,
+    "adoptedRequestOperationGenerationConfigAbaRejected": true
   }
 }
