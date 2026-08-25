@@ -3,6 +3,7 @@
 use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use neural::{Atom, Dictionary, Neuron, Synapse, Tree, Value as NeuralValue};
 use serde::{Deserialize, Serialize};
@@ -21,7 +22,7 @@ use crate::os_spr::{ArtifactId, Edit, SchemaId};
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
 use crate::os_store::ArtifactCommand;
-use crate::os_store::{ArtifactEnvelope, ArtifactStore};
+use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, MemberStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -819,6 +820,137 @@ impl crate::os_spr::OpBinary for FlowMutation {
 
 pub type FlowEnvelope = ArtifactEnvelope<FlowFixture, FlowMutation>;
 pub type FlowStore = ArtifactStore<FlowFixture, FlowMutation>;
+
+struct FlowFixtureRetirement {
+    fixture: Option<FlowFixture>,
+}
+
+impl FlowFixtureRetirement {
+    fn new(fixture: FlowFixture) -> Self {
+        Self { fixture: Some(fixture) }
+    }
+}
+
+impl ErasedSnapshotRetirement for FlowFixtureRetirement {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        let Some(fixture) = self.fixture.as_mut() else {
+            return Ok(SnapshotRetirementStep::Complete);
+        };
+        if fixture.widgets.pop().is_some() || fixture.synapses.pop().is_some() || fixture.layout.pop_last().is_some() || fixture.schema.pop().is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        self.fixture = None;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.fixture.is_none()
+    }
+}
+
+impl Drop for FlowFixtureRetirement {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "FlowFixtureRetirement must reach terminal-empty before release");
+    }
+}
+
+struct FlowSnapshotRetirement {
+    snapshot: Option<Arc<FlowFixture>>,
+    fixture: Option<FlowFixtureRetirement>,
+}
+
+impl SnapshotRetirementFactory<FlowFixture> for FlowSnapshotRetirementFactory {
+    fn retire(&self, snapshot: Arc<FlowFixture>) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(FlowSnapshotRetirement { snapshot: Some(snapshot), fixture: None })
+    }
+}
+
+struct FlowSnapshotRetirementFactory;
+
+impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if let Some(snapshot) = self.snapshot.take() {
+            match Arc::try_unwrap(snapshot) {
+                Ok(fixture) => self.fixture = Some(FlowFixtureRetirement::new(fixture)),
+                Err(snapshot) => {
+                    self.snapshot = Some(snapshot);
+                    return Ok(SnapshotRetirementStep::Blocked);
+                }
+            }
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        let Some(fixture) = self.fixture.as_mut() else {
+            return Ok(SnapshotRetirementStep::Complete);
+        };
+        let step = fixture.close_step(maximum_items, maximum_bytes)?;
+        if matches!(step, SnapshotRetirementStep::Complete) {
+            if !fixture.terminal_is_empty() {
+                return Err("flow snapshot fixture reported Complete before terminal-empty".into());
+            }
+            self.fixture = None;
+        }
+        Ok(step)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.snapshot.is_none() && self.fixture.is_none()
+    }
+}
+
+impl Drop for FlowSnapshotRetirement {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "FlowSnapshotRetirement must reach terminal-empty before release");
+    }
+}
+
+struct FlowOwnedFixtureRetirementFactory;
+
+impl ArtifactOwnedValueRetirementFactory<FlowFixture> for FlowOwnedFixtureRetirementFactory {
+    fn retire_owned(&self, fixture: FlowFixture) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(FlowFixtureRetirement::new(fixture))
+    }
+}
+
+struct FlowMutationRetirement {
+    mutation: Option<FlowMutation>,
+}
+
+impl ErasedSnapshotRetirement for FlowMutationRetirement {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.mutation = None;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.mutation.is_none()
+    }
+}
+
+impl Drop for FlowMutationRetirement {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "FlowMutationRetirement must reach terminal-empty before release");
+    }
+}
+
+struct FlowMutationRetirementFactory;
+
+impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetirementFactory {
+    fn retire_owned(&self, mutation: FlowMutation) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(FlowMutationRetirement { mutation: Some(mutation) })
+    }
+}
+
+impl MemberStoreOwner<FlowMutation> for FlowFixture {
+    fn member_store_owners() -> MemberStoreOwners<Self, FlowMutation> {
+        MemberStoreOwners::new(Arc::new(FlowSnapshotRetirementFactory), Arc::new(FlowOwnedFixtureRetirementFactory), Arc::new(FlowMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<FlowFixture, FlowMutation>::new()))
+    }
+}
 
 pub fn empty_flow_snapshot() -> FlowFixture {
     FlowFixture::default()

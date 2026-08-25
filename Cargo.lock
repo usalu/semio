@@ -6149,6 +6149,7 @@ dependencies = [
  "semio-framework-2d",
  "semio-framework-3d",
  "semio-framework-graph",
+ "semio-framework-job",
  "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -6506,6 +6507,7 @@ version = "0.1.0"
 dependencies = [
  "image",
  "js-sys",
+ "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-ui-styling",
@@ -6871,6 +6873,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-scene",
  "semio-s-plugin-cad",
  "semio-s-plugin-gis",
  "semio-s-plugin-procedural",

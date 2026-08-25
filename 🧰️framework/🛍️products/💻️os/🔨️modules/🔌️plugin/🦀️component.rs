@@ -5060,6 +5060,17 @@ pub mod app {
             self
         }
 
+        /// 🧵️ Explicitly assigns one execution disposition to every action and command already declared by this app.
+        pub async fn interactive_jobs(mut self, classification: semio_framework::InteractiveJobClassification) -> Self {
+            for action in self.actions.iter_mut().chain(self.window_kinds.iter_mut().flat_map(|window| window.actions.iter_mut())) {
+                action.semantics.execution.interactive_job = classification;
+            }
+            for command in self.commands.iter_mut().chain(self.modes.iter_mut().flat_map(|mode| mode.commands.iter_mut())) {
+                command.semantics.execution.interactive_job = classification;
+            }
+            self
+        }
+
         /// @emoji 🎛️ Declares a fully specified app-owned command.
         pub async fn command(mut self, command: CommandDefinition) -> Self {
             self.commands.push(command);
@@ -7900,12 +7911,22 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn release_catalog_rejects_unclassified_and_retains_explicit_non_ui_dispositions() {
-            use semio_framework::InteractiveJobClassification::{BatchOnlyPendingRewrite, Deleted, ForbiddenFromUi, Unclassified};
+            use semio_framework::InteractiveJobClassification::{BatchOnlyPendingRewrite, Deleted, ForbiddenFromUi, Migrated, Unclassified};
 
             let mut unclassified = ActionDefinition::bounded_catalog("blockedAction", LocalizedLabel::data("Blocked"), ActionKind::Mutation);
             unclassified.semantics.execution.interactive_job = Unclassified;
             let error = minimal_app("unclassified-action").await.action_with(unclassified).await.try_build_definition().expect_err("unclassified declarations must block release");
             assert_eq!(error.code, "app-definition.interactive-job-classification");
+
+            let migrated = minimal_app("migrated-inventory")
+                .await
+                .action_with(ActionDefinition::bounded_catalog("migratedAction", LocalizedLabel::data("Migrated"), ActionKind::Mutation))
+                .await
+                .interactive_jobs(Migrated)
+                .await
+                .try_build_definition()
+                .expect("an explicit app-wide disposition classifies its existing inventory");
+            assert!(migrated.window_kinds.iter().flat_map(|window| &window.actions).all(|action| action.semantics.execution.interactive_job == Migrated));
 
             for (index, classification) in [BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted].into_iter().enumerate() {
                 let mut action = ActionDefinition::bounded_catalog("blockedAction", LocalizedLabel::data("Blocked"), ActionKind::Mutation);
@@ -19007,8 +19028,23 @@ pub mod app {
             Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-exact-key"), "typed command frames require an owner-qualified manifest command key before deserialization"))
         }
 
-        fn require_complete_tool_operation_pipeline(&self, admission: &AdmittedToolCommand) -> Result<(), Fault> {
-            Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.full-operation-pending"), format!("typed command '{}' has exact handler/factory authority but no bounded prepare/reducer/commit operation authority", admission.verb)))
+        fn require_complete_tool_operation_pipeline(&self, admission: &AdmittedToolCommand, meta: &ActionMeta) -> Result<(), Fault> {
+            if self.live_runtime_instance_id != Some(meta.instance_id) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.live-instance"), format!("typed command '{}' does not belong to the mounted live app instance", admission.verb)));
+            }
+            let contract = admission.proof.contract();
+            let exact = admission.decoded_items <= contract.max_decoded_items
+                && contract.max_work_units_per_step != 0
+                && contract.max_output_bytes != 0
+                && contract.max_step_micros != 0
+                && contract.max_step_micros < semio_framework::ToolExecutionContract::INTERACTIVE_MAX_STEP_MICROS
+                && matches!(contract.cancellation, semio_framework::ToolCancellationPolicy::PerOperation)
+                && matches!(contract.freshness, semio_framework::ToolFreshnessPolicy::ValidateImmediatelyBeforeExposure)
+                && matches!(contract.shape, semio_framework::ToolExecutionShape::Resumable | semio_framework::ToolExecutionShape::BoundedFirstStep);
+            if !exact {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.incomplete-operation-authority"), format!("typed command '{}' has no complete bounded prepare/reducer/commit authority", admission.verb)));
+            }
+            Ok(())
         }
 
         async fn dispatch_typed_command_inner(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
@@ -19016,7 +19052,7 @@ pub mod app {
             if admission.verb != verb {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.command-identity"), format!("exact admitted command '{}' decoded as '{verb}'", admission.verb)));
             }
-            self.require_complete_tool_operation_pipeline(&admission)?;
+            self.require_complete_tool_operation_pipeline(&admission, meta)?;
             let operation_id = semio_framework_job::allocate_operation_id();
             if !self.tool_operations.can_insert(operation_id.0) || !self.segmented_downloads.can_insert(operation_id.0) || !self.segmented_closures.can_insert(operation_id.0) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "fixed typed-operation and segmented-output authorities did not pre-admit the exact operation slot"));
@@ -21015,7 +21051,10 @@ pub mod app {
     // than each app hand-rolling a text/table/tree/image/mesh/document/media window from scratch.
 
     /// 🏗️ Shared `WindowKindDefinition` scaffold — every kit differs only in id/label/surface/icon/actions.
-    fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, actions: Vec<ActionDefinition>) -> WindowKindDefinition {
+    fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, mut actions: Vec<ActionDefinition>) -> WindowKindDefinition {
+        for action in &mut actions {
+            action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
+        }
         WindowKindDefinition {
             id: id.into(),
             label: LocalizedLabel::native(en, de),
@@ -21714,6 +21753,7 @@ pub mod app {
                 assert_eq!(def.actions.len(), 1, "{command_id} editable kind must declare exactly one action");
                 assert_eq!(def.actions[0].id, command_id);
                 assert_eq!(def.actions[0].kind, ActionKind::Mutation);
+                assert_eq!(def.actions[0].semantics.execution.interactive_job, semio_framework::InteractiveJobClassification::Migrated);
             }
         }
 
@@ -22798,6 +22838,7 @@ pub mod app {
         action_with(action: ActionDefinition),
         action_args(action_id: impl AsRef<str>, args: Vec<ActionArgDef>),
         action_interactive_job(action_id: impl AsRef<str>, classification: semio_framework::InteractiveJobClassification),
+        interactive_jobs(classification: semio_framework::InteractiveJobClassification),
         command(command: CommandDefinition),
         app_command(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind),
         command_args(command_id: impl AsRef<str>, args: Vec<ActionArgDef>),

@@ -17,8 +17,12 @@
 //! and its inverse genuinely put it back.
 //!
 //! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
-//! compiles the local implementation; the Rust SUBJECT phase is blocked this wave by a concurrent
-//! os-kernel refactor, so it is written and gated but not run.
+//! compiles the local implementation; the Rust SUBJECT phase RUNS. The os-kernel blocker earlier waves
+//! recorded here was cleared on 2026-08-24 — `cargo check -p semio-framework-os-kernel --lib` exits 0 and
+//! `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case
+//! mutate-semio-any` really executes every scenario below. The gate keeps the two BUILDS apart; it has
+//! never been a reason the subject half goes unmeasured, and for this recorded no-oracle case the subject
+//! phase is the only phase that runs at all.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
@@ -41,6 +45,11 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "brep", "mesh", "model",
 /// 🌐️ The envelope schema id every projection carries — the value `SemioSnapshot::default()` and the
 /// committed leaf fixture both use.
 const ENVELOPE_SCHEMA: &str = "stdio.semio";
+
+/// 🌐️ The envelope's OWN committed real artifact, in both of its committed encodings — the byte
+/// carriers `identity-round-trip` measures alongside the typed full-replace routing law.
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio";
+const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio";
 
 /// 📄️ The committed `(before, mutation, after, diff)` specification vector for the two
 /// envelope-owned verbs. Its arm is the `value` subset.
@@ -157,6 +166,9 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{expected_routing, leaf_before_uri, leaf_mutation_uri, outcome_of, routing_json};
     use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{decode_semio_envelope_pack, encode_semio_envelope_pack, parse_semio_envelope_dsl, print_semio_envelope_dsl};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusal_codes;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::{apply_semio_mutation, inverse_semio_mutation, semio_subset_tag, SemioMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
@@ -223,7 +235,7 @@ mod subject {
             "kit" => SemioSubsetSnapshot::Kit(Default::default()),
             other => panic!("mutate-semio-any: no empty envelope for subset {other:?}"),
         };
-        SemioSnapshot { subset, ..Default::default() }
+        SemioSnapshot { subset: arm, ..Default::default() }
     }
 
     /// 🚚 One real, minimal verb per arm — the smallest mutation each subset's own vocabulary offers
@@ -332,7 +344,7 @@ mod subject {
     fn apply(base: &SemioSnapshot, mutation: &SemioMutation) -> (SemioSnapshot, Vec<String>) {
         let mut current = base.clone();
         let outcome = apply_semio_mutation(&mut current, mutation);
-        let raised = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
+        let raised = semio_mutation_refusal_codes(&outcome);
         (current, raised)
     }
     //#endregion 🔖️Apply
@@ -415,9 +427,35 @@ mod subject {
 
     /// 🔁️ The completeness law: the envelope's own full-replace verb must carry an empty envelope all
     /// the way to the committed document.
+    /// 🔒️ **The byte half of the identity law, and where it lives for the envelope.** The routing
+    /// check above moves no bytes at all — it compares typed values — so this handler also reads
+    /// the envelope's OWN committed real artifact in both of its committed encodings and asserts
+    /// `carrier_is_exact` on each. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio`
+    /// its binary twin; both committed files were produced by these very codecs, so reproducing
+    /// them byte for byte is the CORRECT answer and `law::reparsed_not_copied` would be exactly
+    /// backwards — the same reading `mutate-dag-1` records for `.dag.dsl.semio`. The two carriers
+    /// also cross-check each other: the pack must decode to the same envelope the text does, which
+    /// no single codec can arrange on its own, and the envelope carries a real ARM (the committed
+    /// example wraps a `flow` document), so the delegation the rest of this case measures on typed
+    /// values is exercised here on bytes.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let committed = leaf_document(ctx)?;
         let (rebuilt, raised) = apply(&SemioSnapshot::default(), &SemioMutation::SetSnapshot { snapshot: committed.clone() });
+        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed envelope artifact is not UTF-8: {error}"))?;
+        let parsed = parse_semio_envelope_dsl(&text)?;
+        let printed = print_semio_envelope_dsl(&parsed);
+        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
+        let pack_bytes = ctx.fixture_bytes(super::PACK_ASSET)?;
+        let unpacked = decode_semio_envelope_pack(&pack_bytes)?;
+        if unpacked != parsed {
+            return Err(format!(
+                "identity-round-trip: the committed binary twin decodes to a different envelope than the committed text artifact\n     got: {}\nexpected: {}",
+                semio_subset_tag(&unpacked),
+                semio_subset_tag(&parsed)
+            ));
+        }
+        let repacked_bytes = encode_semio_envelope_pack(&parsed);
+        carrier_is_exact(&repacked_bytes, &pack_bytes)?;
         checked("identity-round-trip", "", semio_subset_tag(&rebuilt), &raised, rebuilt == committed)
     }
     //#endregion 🔖️Handlers

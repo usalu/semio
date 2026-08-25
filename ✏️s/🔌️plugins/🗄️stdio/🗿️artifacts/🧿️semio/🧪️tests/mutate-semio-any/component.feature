@@ -49,6 +49,15 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   one it started from — are checked against the routing law stated once in the adapter and read by
   both roles, so a delegated verb that quietly reached no arm at all cannot pass.
 
+  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
+  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
+  and both committed example files were produced by these very codecs — so re-printing the parsed
+  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
+  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
+  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
+  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
+  the same document the text does, which no single codec can arrange on its own.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance
@@ -168,7 +177,11 @@ Feature: Route every typed semio ENVELOPE mutation into the subset arm it names
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Rebuilding the committed envelope from an empty one carries the whole document
+  Scenario: Rebuild the committed envelope from an empty one, and reproduce the real envelope artifact byte for byte
     Given the committed before-envelope asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json
-    When the empty envelope is replaced with it through apply_semio_mutation
+    And the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio
+    When the empty envelope is replaced with the committed one through apply_semio_mutation
+    And the text artifact is parsed and printed back to DSL, and the binary twin is decoded and re-encoded
     Then the envelope carries the value subset, raises no diagnostic, and matches the committed before-envelope
+    And both encodings decode to the same envelope and each re-encoding reproduces its committed file byte for byte

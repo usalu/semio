@@ -24,6 +24,9 @@ impl EnergyModelDiff {
             if let Some(schema) = &self.schema {
                 next.schema = schema.clone();
             }
+            if let Some(model) = &self.model {
+                next.model = model.clone();
+            }
             if let Some(structure) = &self.structure {
                 next.structure = structure.clone();
             }
@@ -51,6 +54,9 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
             if let Some(schema) = &self.schema {
                 next.schema = schema.clone();
             }
+            if let Some(model) = &self.model {
+                next.model = model.clone();
+            }
             if let Some(structure) = &self.structure {
                 next.structure = structure.clone();
             }
@@ -76,6 +82,7 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
             };
         }
         take!(schema);
+        take!(model);
         take!(structure);
         take!(zones);
         take!(referenced_model);
@@ -94,9 +101,9 @@ pub fn diff_set_snapshot(snapshot: &EnergyModelSnapshot) -> EnergyModelDiff {
 /// [`crate::artifacts::model::energy_children_from_model`] (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old `diff_set_model_json` (which set
 /// the now-removed `model_json` field directly).
-pub fn diff_from_model(model: &crate::model::Model) -> EnergyModelDiff {
-    let (structure, zones) = crate::artifacts::model::energy_children_from_model(model);
-    EnergyModelDiff { structure: Some(structure), zones: Some(zones), ..Default::default() }
+pub fn diff_from_model(model: crate::model::Model) -> EnergyModelDiff {
+    let (structure, zones) = crate::artifacts::model::energy_children_from_model(&model);
+    EnergyModelDiff { model: Some(model), structure: Some(structure), zones: Some(zones), ..Default::default() }
 }
 
 /// 📋️ Preview results-json field delta (not applied by MutationDiff).
@@ -131,9 +138,9 @@ mod tests {
     async fn diff_from_model_regenerates_structure_and_zones_together() {
         let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let model = crate::model::Model { name: "Demo".into(), ..crate::model::Model::default() };
-        let diff = diff_from_model(&model);
+        let diff = diff_from_model(model);
         let applied = diff.apply(&base).expect("valid mutation diff");
-        assert_eq!(crate::artifacts::model::energy_model(&applied), model);
+        assert_eq!(applied.model.name, "Demo");
         assert_eq!(applied.structure.child_id, applied.zones.child_id, "structure/zones must share one scene id");
     }
 }

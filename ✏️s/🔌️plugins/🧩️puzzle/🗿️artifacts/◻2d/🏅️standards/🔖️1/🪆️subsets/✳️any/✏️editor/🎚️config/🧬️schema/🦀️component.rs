@@ -4,6 +4,24 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Puzzle2dFillLifecycle {
+    #[default]
+    Idle,
+    Capturing,
+    Queued,
+    Running,
+    CheckpointReady,
+    Applying,
+    AwaitingAdoption,
+    Closing,
+    Completed,
+    Cancelled,
+    Faulted,
+    Discarded,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.puzzle.puzzle2d.config")]
@@ -27,17 +45,25 @@ pub struct Puzzle2dConfig {
     #[state(config)]
     pub fill_count: u32,
     #[state(config)]
-    pub fill_job_checkpoint: Option<Vec<u8>>,
-    #[state(config)]
     pub fill_job_operation: u64,
     #[state(config)]
     pub fill_job_generation: u64,
     #[state(config)]
     pub fill_job_seed: u64,
     #[state(config)]
-    pub fill_job_applied_count: usize,
+    pub fill_job_base_revision: u64,
     #[state(config)]
-    pub fill_job_preview: Option<Value>,
+    pub fill_job_checkpoint_sequence: u64,
+    #[state(config)]
+    pub fill_job_accepted_count: u64,
+    #[state(config)]
+    pub fill_job_search_count: u64,
+    #[state(config)]
+    pub fill_job_stage: String,
+    #[state(config)]
+    pub fill_job_lifecycle: Puzzle2dFillLifecycle,
+    #[state(config)]
+    pub fill_job_fault_code: Option<String>,
     #[state(config)]
     pub grid_snap_enabled: bool,
     #[state(config)]

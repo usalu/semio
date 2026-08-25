@@ -587,6 +587,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // `.workflow(...)` — the old `"reuse-map"` app-level example registration and the no-op
             // `.workflow("gis2d", …)` call are dropped here (not silently: reported in the migration
             // notes). The subset's own `📚️examples/🎬️demo` facet is the modern replacement surface.
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             .build_definition()
 }
 //#endregion 🔖️Manifest

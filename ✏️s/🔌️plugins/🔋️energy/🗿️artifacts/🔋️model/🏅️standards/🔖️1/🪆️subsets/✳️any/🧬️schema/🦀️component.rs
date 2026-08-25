@@ -39,6 +39,8 @@ pub struct EnergyModelArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
+    pub model: crate::model::Model,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     pub structure: EnergyStructureChild,
     #[state(artifact)]
@@ -64,17 +66,18 @@ impl Default for EnergyModelArtifact {
 impl EnergyModelArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> EnergyModelSnapshot {
-        EnergyModelSnapshot { schema: self.schema.clone(), structure: self.structure.clone(), zones: self.zones.clone(), referenced_model: self.referenced_model.clone() }
+        EnergyModelSnapshot { schema: self.schema.clone(), model: self.model.clone(), structure: self.structure.clone(), zones: self.zones.clone(), referenced_model: self.referenced_model.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving preview empty.
     pub fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
-        Self { schema: snapshot.schema, structure: snapshot.structure, zones: snapshot.zones, referenced_model: snapshot.referenced_model, results_json: String::new() }
+        Self { schema: snapshot.schema, model: snapshot.model, structure: snapshot.structure, zones: snapshot.zones, referenced_model: snapshot.referenced_model, results_json: String::new() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: EnergyModelSnapshot) {
         self.schema = snapshot.schema;
+        self.model = snapshot.model;
         self.structure = snapshot.structure;
         self.zones = snapshot.zones;
         self.referenced_model = snapshot.referenced_model;

@@ -2195,6 +2195,215 @@ pub struct DagHost {
     minimap_widget_drag: Option<(f64, f64)>,
 }
 
+/// 🧹️ Retained DAG host owner that releases one admitted graph item or text scalar per grant.
+pub struct DagHostRetirement {
+    fixture: DagFixture,
+    engine: DagBoardEngine,
+    node_id_map: HashMap<NodeId, usize>,
+    handle_key_map: HashMap<HandleId, String>,
+    handle_port_shape: HashMap<HandleId, PortShape>,
+    handle_port_visible: HashMap<HandleId, bool>,
+    edge_id_map: HashMap<EdgeId, String>,
+    edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
+    pending_port_insert: Option<(DagPortSide, String, usize)>,
+    dimmed: HashSet<NodeId>,
+    icon_paint_cache: graph::IconPaintCache,
+    ghost_node: Option<DagNodeSpec>,
+    pending_cluster_explode: Option<String>,
+    pending_export_click: Option<String>,
+    pending_open_instance_id: Option<String>,
+    last_pointer_down_node_id: Option<String>,
+    computing_active: Option<NodeId>,
+    computing_stale: HashSet<NodeId>,
+    node_eval_status: HashMap<NodeId, DagNodeEvalStatusKind>,
+    unresolved_input_ports: HashSet<(NodeId, String)>,
+    editing_note: Option<NoteEditState>,
+    released: bool,
+}
+
+impl DagHostRetirement {
+    pub fn new(host: DagHost) -> Self {
+        let DagHost {
+            fixture,
+            engine,
+            canvas_theme: _,
+            width: _,
+            height: _,
+            dpr: _,
+            last_screen_x: _,
+            last_screen_y: _,
+            node_id_map,
+            handle_key_map,
+            handle_port_shape,
+            handle_port_visible,
+            edge_id_map,
+            edge_route_style,
+            widget_drag: _,
+            pending_port_insert,
+            last_logged_lod: _,
+            dimmed,
+            wheel_zoom_active: _,
+            wheel_zoom_render_lod: _,
+            automatic_lod: _,
+            forced_draw_lod: _,
+            grid_visible: _,
+            grid_snap_enabled: _,
+            grid_factor: _,
+            icon_paint_cache,
+            ghost_node,
+            pending_cluster_explode,
+            pending_export_click,
+            pending_open_instance_id,
+            last_pointer_down_at_ms: _,
+            last_pointer_down_world: _,
+            last_pointer_down_node_id,
+            computing_active,
+            computing_stale,
+            computing_active_anim_phase: _,
+            computing_stale_anim_phase: _,
+            node_eval_status,
+            unresolved_input_ports,
+            editing_note,
+            caret_visible: _,
+            pan_anchor: _,
+            minimap_widget_visible: _,
+            minimap_widget_hovered: _,
+            minimap_widget_drag: _,
+        } = host;
+        Self {
+            fixture,
+            engine,
+            node_id_map,
+            handle_key_map,
+            handle_port_shape,
+            handle_port_visible,
+            edge_id_map,
+            edge_route_style,
+            pending_port_insert,
+            dimmed,
+            icon_paint_cache,
+            ghost_node,
+            pending_cluster_explode,
+            pending_export_click,
+            pending_open_instance_id,
+            last_pointer_down_node_id,
+            computing_active,
+            computing_stale,
+            node_eval_status,
+            unresolved_input_ports,
+            editing_note,
+            released: false,
+        }
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.released {
+            return true;
+        }
+        if !self.engine.close_step() || !self.engine.terminal_is_empty() {
+            return false;
+        }
+        if !self.icon_paint_cache.close_step() || !self.icon_paint_cache.terminal_is_empty() {
+            return false;
+        }
+        if self.fixture.schema.pop().is_some()
+            || self.fixture.nodes.pop().is_some()
+            || self.fixture.edges.pop().is_some()
+            || self.pending_port_insert.as_mut().is_some_and(|(_, value, _)| value.pop().is_some())
+            || self.pending_cluster_explode.as_mut().is_some_and(|value| value.pop().is_some())
+            || self.pending_export_click.as_mut().is_some_and(|value| value.pop().is_some())
+            || self.pending_open_instance_id.as_mut().is_some_and(|value| value.pop().is_some())
+            || self.last_pointer_down_node_id.as_mut().is_some_and(|value| value.pop().is_some())
+            || self.editing_note.as_mut().is_some_and(|value| value.node_id.pop().is_some())
+        {
+            return false;
+        }
+        if let Some(key) = self.node_id_map.keys().next().copied() {
+            self.node_id_map.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.handle_key_map.keys().next().copied() {
+            self.handle_key_map.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.handle_port_shape.keys().next().copied() {
+            self.handle_port_shape.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.handle_port_visible.keys().next().copied() {
+            self.handle_port_visible.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.edge_id_map.keys().next().copied() {
+            self.edge_id_map.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.edge_route_style.keys().next().copied() {
+            self.edge_route_style.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.dimmed.iter().next().copied() {
+            self.dimmed.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.computing_stale.iter().next().copied() {
+            self.computing_stale.remove(&key);
+            return false;
+        }
+        if let Some(key) = self.node_eval_status.keys().next().copied() {
+            self.node_eval_status.remove(&key);
+            return false;
+        }
+        if self.unresolved_input_ports.extract_if(|_| true).next().is_some() {
+            return false;
+        }
+        self.pending_port_insert = None;
+        self.pending_cluster_explode = None;
+        self.pending_export_click = None;
+        self.pending_open_instance_id = None;
+        self.last_pointer_down_node_id = None;
+        self.editing_note = None;
+        if self.ghost_node.take().is_some() || self.computing_active.take().is_some() {
+            return false;
+        }
+        self.released = true;
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.released
+            && self.engine.terminal_is_empty()
+            && self.fixture.schema.is_empty()
+            && self.fixture.nodes.is_empty()
+            && self.fixture.edges.is_empty()
+            && self.node_id_map.is_empty()
+            && self.handle_key_map.is_empty()
+            && self.handle_port_shape.is_empty()
+            && self.handle_port_visible.is_empty()
+            && self.edge_id_map.is_empty()
+            && self.edge_route_style.is_empty()
+            && self.pending_port_insert.is_none()
+            && self.dimmed.is_empty()
+            && self.icon_paint_cache.terminal_is_empty()
+            && self.ghost_node.is_none()
+            && self.pending_cluster_explode.is_none()
+            && self.pending_export_click.is_none()
+            && self.pending_open_instance_id.is_none()
+            && self.last_pointer_down_node_id.is_none()
+            && self.computing_active.is_none()
+            && self.computing_stale.is_empty()
+            && self.node_eval_status.is_empty()
+            && self.unresolved_input_ports.is_empty()
+            && self.editing_note.is_none()
+    }
+}
+
+impl Drop for DagHostRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_is_empty(), "DagHostRetirement must reach terminal-empty before release");
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum DagNodeEvalStatusKind {
     Ok,

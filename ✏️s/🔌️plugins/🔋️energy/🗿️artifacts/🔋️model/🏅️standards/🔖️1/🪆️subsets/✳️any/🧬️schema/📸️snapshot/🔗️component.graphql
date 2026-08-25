@@ -2,5 +2,8 @@
 
 type EnergyModelSnapshot {
   schema: String!
-  modelJson: String!
+  model: JSON!
+  structure: JSON!
+  zones: JSON!
+  referencedModel: JSON
 }

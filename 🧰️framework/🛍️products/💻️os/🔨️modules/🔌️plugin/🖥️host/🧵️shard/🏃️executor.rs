@@ -660,9 +660,9 @@ impl ShardExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{GuestRuntime, MockGuestRuntime, PackageHash, PackageId, PackageRef};
-    use semio_framework::kernel::Budget;
-    use semio_framework_actor::{ActorId, Envelope, JobOperation, Payload, ShardKind, ShardTable};
+    use crate::{GuestRuntime, JobStep, MockGuestRuntime, PackageHash, PackageId, PackageRef};
+    use semio_framework::kernel::{Budget, Effect, JobPlacement};
+    use semio_framework_actor::{ActorId, Envelope, JobOperation, JobReplayRequest, JobTurn, Payload, ShardKind, ShardTable};
     use semio_framework_async::{ProcessKind, WorkerPoolConfig};
     use std::time::Duration;
 
@@ -719,6 +719,99 @@ mod tests {
                 assert_eq!(result.usage.fuel, 77, "the scripted turn's own fuel_used must round-trip through the pool job, proving it genuinely ran pump() there");
             }
             other => panic!("expected ShardOutcome::Turn from the pool job, got {other:?}"),
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_fixed_replay_uses_the_same_shard_guest_route_at_one_two_four_and_host_default_workers() {
+        let host_default = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
+        for worker_count in [1, 2, 4, host_default] {
+            let mock = Arc::new(MockGuestRuntime::new().await);
+            let actor = ActorId(103);
+            let job = 107;
+            let kind = "action-bus.fixture".to_string();
+            let input = vec![1, 3, 5, 7];
+            let request = JobReplayRequest::from_spawn(&kind, &input);
+            let package = PackageRef { package: PackageId(format!("replay-workers-{worker_count}")), hash: PackageHash([worker_count as u8; 32]) };
+            let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+            let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+            let mut scripted = MockGuestRuntime::idle_turn().await;
+            scripted.effects.push(Effect::SpawnJob { job, kind, input, placement: JobPlacement::Inline });
+            mock.script_turn(actor, scripted).await;
+
+            let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, worker_count)));
+            let outcomes = OutcomeSink::new();
+            let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), vec![(actor, instance)], outcomes.clone()).await;
+            let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
+            let event = Envelope {
+                to: actor,
+                from: semio_framework_actor::Origin::Kernel,
+                lane: semio_framework_actor::Lane::Interactive,
+                seq: 1,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::Wake).expect("wake") },
+            };
+            let submit_started = std::time::Instant::now();
+            executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![event] }).await, semio_framework_actor::Lane::Interactive).await;
+            assert!(submit_started.elapsed() < Duration::from_millis(8), "one mounted replay ingress opportunity exceeded 8ms");
+            assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
+
+            let ready_deadline = std::time::Instant::now() + Duration::from_secs(2);
+            let mut ready = false;
+            while std::time::Instant::now() < ready_deadline {
+                ready = executor.state.lock().unwrap_or_else(PoisonError::into_inner).shard.as_ref().is_some_and(|shard| shard.running_jobs.contains(&(actor.0, job)));
+                if ready {
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            assert!(ready, "fixed replay seed activation did not reach the mounted running set");
+            let operation = JobOperation { operation: 1, base_revision: 0, generation: u64::from(actor.generation()) + 1, preview_sequence: 0, seed: 1u64.rotate_left(17) ^ actor.0 ^ job };
+            let turn = JobTurn { job, operation, step_sequence: 0 };
+            mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
+            mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+            let step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
+            executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![step] }).await, semio_framework_actor::Lane::Interactive).await;
+            let original = wait_for_one(&outcomes);
+            assert!(
+                matches!(&original, ShardOutcome::Job { request: observed, publication, .. } if *observed == request && matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))
+            );
+            assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
+
+            let replay = Envelope {
+                to: actor,
+                from: semio_framework_actor::Origin::Kernel,
+                lane: semio_framework_actor::Lane::Interactive,
+                seq: 3,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::JobReplay { turn, request, worker_count: u16::try_from(worker_count).expect("worker count"), worker_slot: 0 },
+            };
+            executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![replay] }).await, semio_framework_actor::Lane::Interactive).await;
+            assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Resumed { actor: reported, operation: observed } if reported == actor.0 && observed == operation));
+            mock.script_job_step(actor, JobStep::Done { output: vec![11, 13] }).await;
+            mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+            let replay_step = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 4, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } };
+            executor.send_frame(encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![replay_step] }).await, semio_framework_actor::Lane::Interactive).await;
+            assert!(
+                matches!(wait_for_one(&outcomes), ShardOutcome::Job { request: observed, publication, .. } if observed == request && matches!(publication.outcome, semio_framework_actor::JobStepOutcome::Complete { candidate } if candidate.output == [11, 13]))
+            );
+            assert!(matches!(wait_for_one(&outcomes), ShardOutcome::Turn { actor: reported, .. } if reported == actor.0));
+
+            executor.send_frame(encode_frame(super::super::ShardFrame::Unregister { actor }).await, semio_framework_actor::Lane::Maintenance).await;
+            let close_deadline = std::time::Instant::now() + Duration::from_secs(2);
+            let mut terminal = false;
+            while std::time::Instant::now() < close_deadline {
+                terminal = executor.state.lock().unwrap_or_else(PoisonError::into_inner).shard.as_ref().is_some_and(|shard| shard.replay_seeds.iter().all(Option::is_none));
+                if terminal {
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            assert!(terminal, "unregister must incrementally close every retained replay owner");
         }
     }
 

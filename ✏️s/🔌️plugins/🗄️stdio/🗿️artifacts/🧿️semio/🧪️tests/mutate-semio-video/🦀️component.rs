@@ -16,8 +16,12 @@
 //! itself writes, so a vector and the real file read alike.
 //!
 //! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
-//! compiles the local implementation; the Rust SUBJECT phase is blocked this wave by a concurrent
-//! os-kernel refactor (see 📓️w7-fleet-brief.md), so it is written and gated but not run.
+//! compiles the local implementation; the Rust SUBJECT phase RUNS. The os-kernel blocker earlier waves
+//! recorded here was cleared on 2026-08-24 — `cargo check -p semio-framework-os-kernel --lib` exits 0 and
+//! `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case
+//! mutate-semio-video` really executes every scenario below. The gate keeps the two BUILDS apart; it has
+//! never been a reason the subject half goes unmeasured, and for this recorded no-oracle case the subject
+//! phase is the only phase that runs at all.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
@@ -79,6 +83,8 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, inverse_semio_video_mutation, SemioVideoMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{parse_semio_video_dsl, print_semio_video_dsl, SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 
@@ -258,8 +264,8 @@ mod subject {
         move |ctx: &Context| {
             let (mut current, mutation, expected) = vector_of(ctx, kind)?;
             let applied = apply_semio_video_mutation(&mut current, &mutation);
-            if !applied.messages().is_empty() {
-                return Err(format!("mutate-{kind}: mutation rejected: {:?}", applied.messages()));
+            if !semio_mutation_refusals(&applied).is_empty() {
+                return Err(format!("mutate-{kind}: mutation rejected: {:?}", semio_mutation_refusals(&applied)));
             }
             if current != expected {
                 return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the vector's after-snapshot"), &current, &expected));
@@ -275,13 +281,13 @@ mod subject {
             let (base, mutation, _expected) = vector_of(ctx, kind)?;
             let mut current = base.clone();
             let applied = apply_semio_video_mutation(&mut current, &mutation);
-            if !applied.messages().is_empty() {
-                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", applied.messages()));
+            if !semio_mutation_refusals(&applied).is_empty() {
+                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", semio_mutation_refusals(&applied)));
             }
             for step in &inverse_semio_video_mutation(&mutation, &base) {
                 let undone = apply_semio_video_mutation(&mut current, step);
-                if !undone.messages().is_empty() {
-                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", undone.messages()));
+                if !semio_mutation_refusals(&undone).is_empty() {
+                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", semio_mutation_refusals(&undone)));
                 }
             }
             if current != base {
@@ -294,11 +300,24 @@ mod subject {
     /// 🔁️ The real committed artifact, parsed into the typed snapshot, printed back to DSL text and
     /// parsed again — the only channel from input to output is the model, so nothing of the source
     /// bytes can be smuggled into the projection.
+    /// 🔒️ **The byte half of the identity law — asserted, and asserted as `carrier_is_exact`.**
+    /// `.dsl.semio` is a fixed-layout record grammar and the committed example artifact this
+    /// scenario reads was produced by this very printer, so reproducing it BYTE FOR BYTE is the
+    /// correct answer here and `law::reparsed_not_copied` would be exactly backwards — the same
+    /// reading `mutate-dag-1` records for `.dag.dsl.semio` and `mutate-bmp-v3` for its own
+    /// reference-authored fixture. Saying so in prose alone would leave the claim an excuse;
+    /// asserting it makes it checkable, and it fails with the offset of the first differing byte
+    /// the moment the printer drifts. Nor is it a self-comparison: one side is a file committed to
+    /// the repository, the other is computed now. This subset's committed `.pack.semio` twin is NOT
+    /// read here — no `encode`/`decode_semio_<subset>_pack` bridge is exported for it — so the byte
+    /// claim this scenario makes is about the text carrier alone, and says nothing about the binary
+    /// one.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let bytes = ctx.fixture_bytes("asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio")?;
         let source = String::from_utf8(bytes).map_err(|error| format!("the committed clip artifact must be UTF-8: {error}"))?;
         let once = parse_semio_video_dsl(&source)?;
         let printed = print_semio_video_dsl(&once);
+        carrier_is_exact(printed.as_bytes(), source.as_bytes())?;
         let twice = parse_semio_video_dsl(&printed)?;
         if twice != once {
             return Err(disagreement("identity-round-trip: re-parsing the printed DSL did not reproduce the parsed snapshot", &twice, &once));

@@ -39,6 +39,7 @@ import {
   type AppRouter,
   type AppWindowKindDefinition,
   type ArtifactDialect,
+  type BuiltNode,
   dialectCoordinate,
   type CommandAddress,
   type CommandDefinition,
@@ -87,10 +88,8 @@ import {
   type ToolDefinition,
   type TutorialUiChange,
   type TutorialUiSnapshot,
-  type UiControlNode,
   type UiDirtyScope,
-  type UiNode,
-  type UiTreeNode,
+  type UiIntent,
   type UtilityDefinition,
   type UtilityNode,
   type WindowEngagement,
@@ -166,13 +165,10 @@ import {
   WindowMeasureTreeLeaf,
 } from "@semio-tech/ui-react";
 import {
-  declarativeTreeDragController,
   InterpretedUiNode,
-  interpretUiNode,
-  renderUiControl,
-  uiTreeNodeToTreePanelConfig,
   wireLabel,
 } from "../Interpreter/🟦️component.tsx";
+import { builtNodeToSnapshot, UiDocumentStore } from "../UiDocumentStore/🟦️component.tsx";
 import {
   type ActionPaneState,
   actionStageKey,
@@ -1502,7 +1498,7 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
 export function panelTabDefinitionToNode(
   tab: AppPanelTabDefinition,
   group: string,
-  panelUiByKey: Readonly<Record<string, UiNode>>,
+  panelUiByKey: Readonly<Record<string, BuiltNode>>,
   onAction: (action: ActionDescriptor) => void,
   order: number,
   appLabelsOverlay: PluginAppLabelsOverlay,
@@ -1636,140 +1632,50 @@ export function spawnedWindowChromeForKind(
   };
 }
 
-function isTreeNode(node: UiNode): node is UiTreeNode {
-  return node.type === "tree";
+function uiIntentPayload(intent: UiIntent): unknown {
+  if (intent.input === null) return intent.args ?? undefined;
+  if (intent.args === null) return intent.input;
+  if (typeof intent.args === "object" && !Array.isArray(intent.args) && typeof intent.input === "object" && !Array.isArray(intent.input)) return { ...intent.args, ...intent.input };
+  return intent.input;
 }
 
-export function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
-  const treeHasDrag = node.type === "tree" && node.sections.some((s) => s.items.some((i) => i.draggable || i.dragData));
-  if (isTreeNode(node)) {
-    return {
-      ...uiTreeNodeToTreePanelConfig(node, onAction),
-      dragAndDropController: node.dropAction || treeHasDrag ? declarativeTreeDragController(node, onAction) : undefined,
-    };
-  }
-  return declarativeUiNodeToTreePanelConfig(node, onAction);
+/** @emoji 🌉️ Bridges one semantic UI intent onto the existing plugin action address. Version one is the direct `ActionFactory` mapping; later versions stay explicit in the action name until the host wire owns a version field. */
+export function uiIntentToActionDescriptor(intent: UiIntent): ActionDescriptor {
+  const payload = uiIntentPayload(intent);
+  return {
+    controllerId: intent.action.scope,
+    action: intent.action.version === 1 ? intent.action.name : `${intent.action.name}@${intent.action.version}`,
+    ...(payload === undefined ? {} : { args: payload }),
+  };
 }
 
-/** @emoji 🌲️ Maps non-tree declarative UI (stack/section/field/controls) to the same TreePanel shape Settings/Theme use — never an empty-label wrapper host (that rendered as a lone document icon above nested content). */
-function declarativeUiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
-  if (node.type === "stack") {
-    const emphasized = node.children.find((child) => child.type === "text" && child.emphasize);
-    const bodyChildren = node.children.filter((child) => !(child.type === "text" && child.emphasize));
-    const sectionNodes = bodyChildren.filter((child) => child.type === "section");
-    if (sectionNodes.length > 0 && sectionNodes.length === bodyChildren.length) {
-      return {
-        sections: sectionNodes.map((section) => ({
-          id: section.id,
-          label: section.label ?? "",
-          defaultOpen: section.defaultOpen,
-          items: section.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${section.id}.${index}`, onAction)),
-        })),
-        sortableSections: false,
-      };
-    }
-    return {
-      sections: [
-        {
-          id: node.id ?? "panel.body",
-          label: emphasized && emphasized.type === "text" ? emphasized.value : "",
-          defaultOpen: true,
-          items: bodyChildren.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${node.id ?? "panel.body"}.${index}`, onAction)),
-        },
-      ],
-      sortableSections: false,
-    };
-  }
-  if (node.type === "section") {
-    return {
-      sections: [
-        {
-          id: node.id,
-          label: node.label ?? "",
-          defaultOpen: node.defaultOpen,
-          items: node.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${node.id}.${index}`, onAction)),
-        },
-      ],
-      sortableSections: false,
-    };
-  }
+/** @emoji 🌲️ Hosts an authored semantic {@link BuiltNode} in the shell's panel-tree leaf without reviving the removed recursive `UiNode` compatibility model. */
+export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
+  const store = new UiDocumentStore(`panel:${node.key}`);
+  store.loadSnapshot(builtNodeToSnapshot(`panel:${node.key}`, node));
   return {
     sections: [
       {
-        id: "panel.body",
+        id: `${node.key}.section`,
         label: "",
         defaultOpen: true,
-        items: declarativeUiChildToTreeItems(node, "panel.body.0", onAction),
+        items: [
+          {
+            id: node.key,
+            label: "",
+            control: (
+              <ShellFaultBoundary boundaryId={`panel-${node.key}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                <div className="min-h-0 min-w-0 w-full flex-1">
+                  <InterpretedUiNode store={store} onAction={onAction} onIntent={(intent) => onAction(uiIntentToActionDescriptor(intent))} />
+                </div>
+              </ShellFaultBoundary>
+            ),
+          },
+        ],
       },
     ],
     sortableSections: false,
   };
-}
-
-function isUiControlNode(node: UiNode): node is UiControlNode {
-  switch (node.type) {
-    case "button":
-    case "input":
-    case "select":
-    case "toggle":
-    case "slider":
-    case "numberStepper":
-    case "ring":
-    case "iconSelect":
-    case "keyValue":
-      return true;
-    default:
-      return false;
-  }
-}
-
-function declarativeUiChildToTreeItems(node: UiNode, fallbackId: string, onAction: (action: ActionDescriptor) => void): TreeDataItem[] {
-  switch (node.type) {
-    case "field": {
-      const control = isUiControlNode(node.child) ? renderUiControl(node.child, onAction) : <InterpretedUiNode node={node.child} onAction={onAction} />;
-      return [{ id: node.id, label: node.label, description: node.description, control }];
-    }
-    case "text":
-      return [{ id: `${fallbackId}.text`, label: node.value }];
-    case "button":
-      return [{ id: node.id ?? fallbackId, label: node.label, control: renderUiControl(node, onAction) }];
-    case "input":
-    case "select":
-    case "toggle":
-    case "slider":
-    case "numberStepper":
-    case "ring":
-    case "iconSelect":
-    case "keyValue":
-      return [{ id: node.id, label: node.placeholder ?? node.id, control: renderUiControl(node, onAction) }];
-    case "stack":
-      return node.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${fallbackId}.${index}`, onAction));
-    case "group":
-      return [
-        {
-          id: node.id,
-          label: node.label,
-          defaultOpen: node.defaultOpen,
-          items: node.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${node.id}.${index}`, onAction)),
-        },
-      ];
-    case "tree":
-      return uiTreeNodeToTreePanelConfig(node, onAction).sections.flatMap((section) => section.items);
-    case "separator":
-      return [{ id: `${fallbackId}.sep`, label: "—" }];
-    default:
-      return [
-        {
-          id: fallbackId,
-          label: node.type,
-          control: (
-            <ShellFaultBoundary boundaryId={`panel-${fallbackId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-              <ChromeAwareWindowScrollSurface className="min-h-0 flex-1">{interpretUiNode(node, { onAction })}</ChromeAwareWindowScrollSurface>
-            </ShellFaultBoundary>
-          ),
-        },
-      ];
-  }
 }
 
 export function shellTabIcon(iconId: IconName | string): React.FC<{ size?: number }> {

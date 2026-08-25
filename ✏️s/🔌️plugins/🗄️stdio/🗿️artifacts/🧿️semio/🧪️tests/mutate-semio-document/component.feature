@@ -43,7 +43,7 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo ar
   one. This is the scenario that caught the `Q[{}.await]` defect described below. Note that unlike a
   foreign-writer format, byte-identical re-emission IS the expected result here: the committed text
   is this codec's own output, so the wave's usual "output must not equal input" tripwire does not
-  apply and the pack/DSL cross-check carries that evidence instead.
+  apply; its mirror law is asserted in its place (see the next paragraph).
 
   Writing this case found a real, isolated defect in the subset's own text codec, fixed under this
   ticket: `enc_block`'s `Quote` arm in `../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🔺️diff/
@@ -52,6 +52,15 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo ar
   carrying a blockquote therefore could not round-trip through its own DSL text codec, and the
   committed real memo carries exactly one. The committed artifact predates the defect, which is why
   it still holds the correct form.
+
+  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
+  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
+  and both committed example files were produced by these very codecs — so re-printing the parsed
+  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
+  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
+  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
+  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
+  the same document the text does, which no single codec can arrange on its own.
 
   @id-mutate
   @level-exhaustive

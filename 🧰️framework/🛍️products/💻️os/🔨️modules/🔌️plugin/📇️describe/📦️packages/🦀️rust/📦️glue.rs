@@ -245,6 +245,13 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
 /// bounding a runaway to seconds. Re-measure, do not re-estimate, if a larger plugin trips it.
 const DESCRIBE_FUEL_BUDGET: u64 = 2_000_000_000;
 
+/// ⏳️ Aggregate plugin bundles build several complete app catalogs in one pure descriptor call.
+/// The ten-surface demonstrator exceeded the former single-plugin 60-second wall cap in an
+/// unoptimized WASI build while remaining within the measured fuel bound. Five minutes preserves a
+/// finite cancellation deadline without rejecting valid multi-app packages on slower development
+/// machines.
+const DESCRIBE_DEADLINE_MS: u32 = 300_000;
+
 /// 🚨️ Every way `describe_component` can fail, rendered as a plain message for the CLI's stderr.
 #[derive(Debug)]
 pub struct DescribeError(pub String);
@@ -283,7 +290,7 @@ async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<Vec<
     runtime
         .describe(
             &compiled,
-            semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: 60_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 },
+            semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 },
         )
         .await
         .map_err(|error| DescribeError(format!("calling owned describe() on {}: {error}", source.display())))

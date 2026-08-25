@@ -55,42 +55,129 @@ impl Dispatcher {
     }
 
     /// 🎛️ Distribute load across equipment per dispatch scheme.
-    pub fn dispatch(&self, request: &DispatchRequest) -> Vec<DispatchResult> {
-        let mut sorted = self.equipment.clone();
-        sorted.sort_by_key(|e| e.priority);
+    #[cfg(test)]
+    pub(crate) fn dispatch(&self, request: &DispatchRequest) -> Vec<DispatchResult> {
+        let mut builder = DispatchBuilder::new(request.clone());
+        while !builder.is_complete() {
+            builder.step(self);
+        }
+        builder.finish().expect("test dispatch backing")
+    }
+}
 
-        match self.scheme {
-            DispatchScheme::Sequential => self.dispatch_sequential(&sorted, request),
-            DispatchScheme::Uniform | DispatchScheme::UniformPartLoadRatio => self.dispatch_uniform(&sorted, request),
-            DispatchScheme::Optimal => self.dispatch_optimal(&sorted, request),
-            _ => self.dispatch_sequential(&sorted, request),
+/// 🎛️ Stable one-equipment-at-a-time dispatch cursor over pre-admitted input order.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub(crate) struct DispatchBuilder {
+    request: DispatchRequest,
+    stage: DispatchStage,
+    cursor: usize,
+    previous_priority: Option<u32>,
+    total_capacity_w: f64,
+    remaining_w: f64,
+    results: Vec<DispatchResult>,
+    fault: Option<DispatchFault>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum DispatchFault {
+    ResultBacking,
+    UnorderedPriority,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub(crate) enum DispatchStage {
+    Reserve,
+    ValidateOrder,
+    AccumulateCapacity,
+    Emit,
+    Complete,
+}
+
+impl DispatchBuilder {
+    pub(crate) fn new(request: DispatchRequest) -> Self {
+        let remaining_w = request.total_load_w;
+        Self { request, stage: DispatchStage::Reserve, cursor: 0, previous_priority: None, total_capacity_w: 0.0, remaining_w, results: Vec::new(), fault: None }
+    }
+
+    pub(crate) fn is_complete(&self) -> bool {
+        self.stage == DispatchStage::Complete
+    }
+
+    pub(crate) fn fault(&self) -> Option<DispatchFault> {
+        self.fault
+    }
+
+    pub(crate) fn step(&mut self, dispatcher: &Dispatcher) {
+        match self.stage {
+            DispatchStage::Reserve => {
+                if self.results.try_reserve_exact(dispatcher.equipment.len()).is_err() {
+                    self.fault = Some(DispatchFault::ResultBacking);
+                    self.stage = DispatchStage::Complete;
+                } else {
+                    self.stage = DispatchStage::ValidateOrder;
+                }
+            }
+            DispatchStage::ValidateOrder => {
+                if let Some(equipment) = dispatcher.equipment.get(self.cursor) {
+                    if self.previous_priority.is_some_and(|priority| priority > equipment.priority) {
+                        self.fault = Some(DispatchFault::UnorderedPriority);
+                        self.stage = DispatchStage::Complete;
+                        return;
+                    }
+                    self.previous_priority = Some(equipment.priority);
+                    self.cursor += 1;
+                } else {
+                    self.cursor = 0;
+                    self.stage = if matches!(dispatcher.scheme, DispatchScheme::Uniform | DispatchScheme::UniformPartLoadRatio | DispatchScheme::Optimal) { DispatchStage::AccumulateCapacity } else { DispatchStage::Emit };
+                }
+            }
+            DispatchStage::AccumulateCapacity => {
+                if let Some(equipment) = dispatcher.equipment.get(self.cursor) {
+                    if equipment.capacity_w > 0.0 {
+                        self.total_capacity_w += equipment.capacity_w;
+                    }
+                    self.cursor += 1;
+                } else {
+                    self.cursor = 0;
+                    self.stage = DispatchStage::Emit;
+                }
+            }
+            DispatchStage::Emit => {
+                let Some(equipment) = dispatcher.equipment.get(self.cursor) else {
+                    self.stage = DispatchStage::Complete;
+                    return;
+                };
+                let uniform = matches!(dispatcher.scheme, DispatchScheme::Uniform | DispatchScheme::UniformPartLoadRatio | DispatchScheme::Optimal);
+                let part_load_ratio = if uniform {
+                    if self.total_capacity_w > 0.0 {
+                        (self.request.total_load_w / self.total_capacity_w).clamp(0.0, 1.0)
+                    } else {
+                        0.0
+                    }
+                } else if equipment.capacity_w > 0.0 {
+                    self.remaining_w.min(equipment.capacity_w).max(0.0) / equipment.capacity_w
+                } else {
+                    0.0
+                };
+                let load_w = if uniform { equipment.capacity_w * part_load_ratio } else { self.remaining_w.min(equipment.capacity_w).max(0.0) };
+                self.results.push(DispatchResult { equipment_id: equipment.equipment_id, load_w, part_load_ratio, runtime_fraction: if load_w > 0.0 { 1.0 } else { 0.0 } });
+                self.remaining_w -= load_w;
+                self.cursor += 1;
+            }
+            DispatchStage::Complete => {}
         }
     }
 
-    fn dispatch_sequential(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
-        let mut remaining = request.total_load_w;
-        let mut results = Vec::new();
-        for eq in equipment {
-            let load = remaining.min(eq.capacity_w).max(0.0);
-            let plr = if eq.capacity_w > 0.0 { load / eq.capacity_w } else { 0.0 };
-            results.push(DispatchResult { equipment_id: eq.equipment_id, load_w: load, part_load_ratio: plr, runtime_fraction: if load > 0.0 { 1.0 } else { 0.0 } });
-            remaining -= load;
-        }
-        results
+    #[cfg(test)]
+    pub(crate) fn finish(self) -> Result<Vec<DispatchResult>, DispatchFault> {
+        self.fault.map_or(Ok(self.results), Err)
     }
 
-    fn dispatch_uniform(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
-        let active: Vec<_> = equipment.iter().filter(|e| e.capacity_w > 0.0).collect();
-        if active.is_empty() {
-            return Vec::new();
+    pub(crate) fn close_step(&mut self, maximum_items: usize) -> bool {
+        if maximum_items == 0 {
+            return false;
         }
-        let total_cap: f64 = active.iter().map(|e| e.capacity_w).sum();
-        let plr = (request.total_load_w / total_cap).clamp(0.0, 1.0);
-        active.iter().map(|eq| DispatchResult { equipment_id: eq.equipment_id, load_w: eq.capacity_w * plr, part_load_ratio: plr, runtime_fraction: if plr > 0.01 { 1.0 } else { 0.0 } }).collect()
-    }
-
-    fn dispatch_optimal(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
-        self.dispatch_uniform(equipment, request)
+        self.results.pop().is_none()
     }
 }
 // #endregion 🔖️Dispatcher

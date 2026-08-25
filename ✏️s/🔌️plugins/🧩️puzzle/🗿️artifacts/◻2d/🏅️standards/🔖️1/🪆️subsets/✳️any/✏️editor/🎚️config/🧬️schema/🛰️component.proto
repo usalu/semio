@@ -20,35 +20,58 @@ message Puzzle2dConfig {
   // @state config
   uint32 fill_count = 9;
   // @state config
-  optional bytes fill_job_checkpoint = 10;
+  uint64 fill_job_operation = 10;
   // @state config
-  uint64 fill_job_operation = 11;
+  uint64 fill_job_generation = 11;
   // @state config
-  uint64 fill_job_generation = 12;
+  uint64 fill_job_seed = 12;
   // @state config
-  uint64 fill_job_seed = 13;
+  uint64 fill_job_base_revision = 13;
   // @state config
-  uint64 fill_job_applied_count = 14;
+  uint64 fill_job_checkpoint_sequence = 14;
   // @state config
-  optional string fill_job_preview = 15;
+  uint64 fill_job_accepted_count = 15;
   // @state config
-  bool grid_snap_enabled = 16;
+  uint64 fill_job_search_count = 16;
   // @state config
-  double grid_factor = 17;
+  string fill_job_stage = 17;
   // @state config
-  double suggestion_offset = 18;
+  Puzzle2dFillLifecycle fill_job_lifecycle = 18;
   // @state config
-  map<string, double> node_kind_weights = 19;
+  optional string fill_job_fault_code = 19;
   // @state config
-  map<string, double> handle_kind_weights = 20;
+  bool grid_snap_enabled = 20;
   // @state config
-  map<string, string> active_utility_by_window_id = 21;
+  double grid_factor = 21;
   // @state config
-  string locale = 22;
+  double suggestion_offset = 22;
   // @state config
-  string terminology = 23;
+  map<string, double> node_kind_weights = 23;
   // @state config
-  uint64 example_load_generation = 24;
+  map<string, double> handle_kind_weights = 24;
   // @state config
-  optional string example_load_id = 25;
+  map<string, string> active_utility_by_window_id = 25;
+  // @state config
+  string locale = 26;
+  // @state config
+  string terminology = 27;
+  // @state config
+  uint64 example_load_generation = 28;
+  // @state config
+  optional string example_load_id = 29;
+}
+
+enum Puzzle2dFillLifecycle {
+  PUZZLE2D_FILL_LIFECYCLE_IDLE = 0;
+  PUZZLE2D_FILL_LIFECYCLE_CAPTURING = 1;
+  PUZZLE2D_FILL_LIFECYCLE_QUEUED = 2;
+  PUZZLE2D_FILL_LIFECYCLE_RUNNING = 3;
+  PUZZLE2D_FILL_LIFECYCLE_CHECKPOINT_READY = 4;
+  PUZZLE2D_FILL_LIFECYCLE_APPLYING = 5;
+  PUZZLE2D_FILL_LIFECYCLE_AWAITING_ADOPTION = 6;
+  PUZZLE2D_FILL_LIFECYCLE_CLOSING = 7;
+  PUZZLE2D_FILL_LIFECYCLE_COMPLETED = 8;
+  PUZZLE2D_FILL_LIFECYCLE_CANCELLED = 9;
+  PUZZLE2D_FILL_LIFECYCLE_FAULTED = 10;
+  PUZZLE2D_FILL_LIFECYCLE_DISCARDED = 11;
 }

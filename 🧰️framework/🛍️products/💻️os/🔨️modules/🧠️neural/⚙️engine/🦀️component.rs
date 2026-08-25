@@ -1139,6 +1139,57 @@ pub struct NeuralCache {
     epoch: AtomicU64,
 }
 
+/// 🧹 Incremental exact-owner retirement for one cache control and its retained entries.
+pub struct NeuralCacheRetirement {
+    cache: Option<std::sync::Arc<NeuralCache>>,
+    entries: Option<HashMap<u64, (u64, Dictionary)>>,
+    terminal: bool,
+}
+
+impl NeuralCacheRetirement {
+    pub fn new(cache: std::sync::Arc<NeuralCache>) -> Self {
+        Self { cache: Some(cache), entries: None, terminal: false }
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if let Some(cache) = self.cache.take() {
+            if std::sync::Arc::strong_count(&cache) != 1 {
+                drop(cache);
+                self.terminal = true;
+                return true;
+            }
+            let cache = match std::sync::Arc::try_unwrap(cache) {
+                Ok(cache) => cache,
+                Err(cache) => {
+                    self.cache = Some(cache);
+                    return false;
+                }
+            };
+            self.entries = Some(cache.entries.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));
+            return false;
+        }
+        if let Some(entries) = self.entries.as_mut() {
+            if entries.extract_if(|_, _| true).next().is_some() {
+                return false;
+            }
+            self.entries = None;
+            return false;
+        }
+        self.terminal = true;
+        true
+    }
+
+    pub fn terminal_nonopaque_is_empty(&self) -> bool {
+        self.terminal && self.cache.is_none() && self.entries.is_none()
+    }
+}
+
+impl Drop for NeuralCacheRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_nonopaque_is_empty(), "NeuralCacheRetirement must reach terminal-empty before release");
+    }
+}
+
 impl NeuralCache {
     pub fn new() -> Self {
         Self::default()

@@ -31,6 +31,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// calls `self.try_build()`, so both are functionally identical, but `try_build` is the semantically
 /// honest choice now that this plugin carries real document apps).
 pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
+    crate::energy_simulation_session::initialize();
     Plugin::<EnergyApps>::builder("energy")
         .label("Energy")
         .version("0.1.0")

@@ -1,12 +1,14 @@
 //! 🏗️ Typed building energy model entities, validation, and cross-references.
 
+#[cfg(test)]
 use crate::error::{Diagnostics, Error, Severity};
 use serde::{Deserialize, Serialize};
+#[cfg(test)]
 use std::collections::HashSet;
 
 // #region 🔖️Ids
 /// 🆔️ Stable internal entity identifier.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct EntityId(pub u32);
 
 impl EntityId {
@@ -15,6 +17,152 @@ impl EntityId {
     }
 }
 // #endregion 🔖️Ids
+
+// #region 🔖️FixedTable
+/// 🧺️ One-time admitted stable table with sorted deterministic lookup and no post-admission growth.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub(crate) struct FixedTable<K, V> {
+    slots: Box<[Option<(K, V)>]>,
+    len: usize,
+    admitted: bool,
+    faulted: bool,
+}
+
+impl<K, V> Default for FixedTable<K, V> {
+    fn default() -> Self {
+        Self { slots: Box::default(), len: 0, admitted: false, faulted: false }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FixedTableError {
+    AlreadyAdmitted,
+    Allocation,
+    Overflow,
+    Unordered,
+}
+
+impl<K: Ord, V> FixedTable<K, V> {
+    pub(crate) fn admit(&mut self, observed_capacity: usize) -> Result<(), FixedTableError> {
+        if self.admitted {
+            self.faulted = true;
+            return Err(FixedTableError::AlreadyAdmitted);
+        }
+        let mut slots = Vec::new();
+        if slots.try_reserve_exact(observed_capacity).is_err() {
+            self.faulted = true;
+            return Err(FixedTableError::Allocation);
+        }
+        slots.resize_with(observed_capacity, || None);
+        self.slots = slots.into_boxed_slice();
+        self.admitted = true;
+        Ok(())
+    }
+
+    pub(crate) fn insert(&mut self, key: K, value: V) -> Result<Option<V>, FixedTableError> {
+        if !self.admitted {
+            self.faulted = true;
+            return Err(FixedTableError::Overflow);
+        }
+        match self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(&key)) {
+            Ok(index) => Ok(Some(std::mem::replace(&mut self.slots[index].as_mut().expect("occupied fixed slot").1, value))),
+            Err(index) if index == self.len && self.len < self.slots.len() => {
+                self.slots[index] = Some((key, value));
+                self.len += 1;
+                Ok(None)
+            }
+            Err(_) => {
+                self.faulted = true;
+                Err(FixedTableError::Unordered)
+            }
+        }
+    }
+
+    pub(crate) fn insert_stable(&mut self, key: K, value: V) -> Result<(), FixedTableError> {
+        if !self.admitted || self.len >= self.slots.len() {
+            self.faulted = true;
+            return Err(FixedTableError::Overflow);
+        }
+        self.slots[self.len] = Some((key, value));
+        self.len += 1;
+        Ok(())
+    }
+
+    pub(crate) fn get(&self, key: &K) -> Option<&V> {
+        self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(key)).ok().map(|index| &self.slots[index].as_ref().expect("occupied fixed slot").1)
+    }
+
+    pub(crate) fn get_mut(&mut self, key: &K) -> Option<&mut V> {
+        let index = self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(key)).ok()?;
+        Some(&mut self.slots[index].as_mut().expect("occupied fixed slot").1)
+    }
+
+    pub(crate) fn contains_key(&self, key: &K) -> bool {
+        self.get(key).is_some()
+    }
+
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (&K, &V)> {
+        self.slots[..self.len].iter().map(|slot| {
+            let (key, value) = slot.as_ref().expect("occupied fixed slot");
+            (key, value)
+        })
+    }
+
+    pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
+        self.slots[..self.len].iter().map(|slot| &slot.as_ref().expect("occupied fixed slot").1)
+    }
+
+    pub(crate) fn values_mut(&mut self) -> impl Iterator<Item = &mut V> {
+        self.slots[..self.len].iter_mut().map(|slot| &mut slot.as_mut().expect("occupied fixed slot").1)
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.len
+    }
+
+    pub(crate) fn capacity(&self) -> usize {
+        self.slots.len()
+    }
+
+    pub(crate) fn faulted(&self) -> bool {
+        self.faulted
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub(crate) fn pop(&mut self) -> Option<(K, V)> {
+        if self.len == 0 {
+            return None;
+        }
+        self.len -= 1;
+        self.slots[self.len].take()
+    }
+
+    pub(crate) fn last_mut(&mut self) -> Option<(&mut K, &mut V)> {
+        let (key, value) = self.slots.get_mut(self.len.checked_sub(1)?)?.as_mut()?;
+        Some((key, value))
+    }
+
+    pub(crate) fn get_index(&self, index: usize) -> Option<&V> {
+        self.slots.get(index)?.as_ref().map(|(_, value)| value)
+    }
+
+    pub(crate) fn get_index_mut(&mut self, index: usize) -> Option<&mut V> {
+        self.slots.get_mut(index)?.as_mut().map(|(_, value)| value)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_index_of(&self, predicate: impl Fn(&K) -> bool) -> Option<usize> {
+        self.iter().position(|(key, _)| predicate(key))
+    }
+
+    fn occupied(&self) -> &[Option<(K, V)>] {
+        &self.slots[..self.len]
+    }
+}
+// #endregion 🔖️FixedTable
 
 // #region 🔖️Site
 /// 🌍️ Site location and orientation.
@@ -578,7 +726,8 @@ pub struct Model {
 
 impl Model {
     /// ✅️ Validate model topology, references, and SI ranges.
-    pub fn validate(&self) -> Result<(), Diagnostics> {
+    #[cfg(test)]
+    pub(crate) fn validate(&self) -> Result<(), Diagnostics> {
         let mut diag = Diagnostics::default();
         let zone_ids: HashSet<_> = self.zones.iter().map(|z| z.id).collect();
         let surface_ids: HashSet<_> = self.surfaces.iter().map(|s| s.id).collect();
@@ -702,19 +851,23 @@ impl Model {
         }
     }
 
-    pub fn zone_by_id(&self, id: EntityId) -> Option<&Zone> {
+    #[cfg(test)]
+    pub(crate) fn zone_by_id(&self, id: EntityId) -> Option<&Zone> {
         self.zones.iter().find(|z| z.id == id)
     }
 
-    pub fn construction_by_id(&self, id: EntityId) -> Option<&Construction> {
+    #[cfg(test)]
+    pub(crate) fn construction_by_id(&self, id: EntityId) -> Option<&Construction> {
         self.constructions.iter().find(|c| c.id == id)
     }
 
-    pub fn material_by_id(&self, id: EntityId) -> Option<&Material> {
+    #[cfg(test)]
+    pub(crate) fn material_by_id(&self, id: EntityId) -> Option<&Material> {
         self.materials.iter().find(|m| m.id == id)
     }
 
-    pub fn surfaces_for_zone(&self, zone_id: EntityId) -> Vec<&Surface> {
+    #[cfg(test)]
+    pub(crate) fn surfaces_for_zone(&self, zone_id: EntityId) -> Vec<&Surface> {
         self.surfaces.iter().filter(|s| s.zone_id == zone_id).collect()
     }
 }

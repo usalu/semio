@@ -92,7 +92,6 @@ import {
   START_INTRODUCTION_ACTION_ID,
   START_TUTORIAL_ACTION_ID,
   type StoragePort,
-  type SurfaceId,
   TUTORIAL_CONVERGE_MS,
   type TutorialAssetSrc,
   type TutorialCameraState,
@@ -106,10 +105,6 @@ import {
   type TutorialVideoCue,
   type BuiltNode,
   type UiDirtyScope,
-  type UiIntent,
-  type UiNodeRecord,
-  type UiRevision,
-  type UiSnapshot,
   type UtilityNode,
   waitForEvent,
   windowElementId,
@@ -312,7 +307,7 @@ import {
   ShellContextMenuFallbackContext,
   wireLabel,
 } from "../Interpreter/🟦️component.tsx";
-import { UiDocumentStore } from "../UiDocumentStore/🟦️component.tsx";
+import { builtNodeToSnapshot, UiDocumentStore } from "../UiDocumentStore/🟦️component.tsx";
 import {
   actionStageKey,
   type ActiveSession,
@@ -448,6 +443,7 @@ import {
   syncPillText,
   synthesizeLocalizedLabel,
   toolIdFromPanelTabId,
+  uiIntentToActionDescriptor,
   type SyncPillState,
   viewerReadOnlyNoticeText,
   useUIHistory,
@@ -503,52 +499,6 @@ import { coerceWireBytes } from "../PluginRuntime/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️BuiltNodeReconciler
-/** 🧬️ Mints a flat `UiSnapshot` from an authored `BuiltNode` tree — the retained-mode contract's own
- * "ids get minted at reconciliation" step (see `BuiltNode`'s own doc comment on `@semio-tech/framework`).
- * `ShellHost` performs this locally because the trees it holds (`pendingWindowUiNode()` placeholders,
- * `refreshUi` results merged by `mergeRecordPreservingIdentity`) are authored directly, never received
- * as an already-reconciled snapshot over a patch wire. Ids are minted fresh on every call (a DFS
- * pre-order counter, unique only for the lifetime of one snapshot) — safe because every caller feeds
- * the result straight into `UiDocumentStore.loadSnapshot`, whose own doc explains a whole-body replace
- * deliberately never tries to preserve node identity ACROSS calls, only per-node content reference
- * equality WITHIN one loaded snapshot (`notifyDiff`). `BuiltNode` carries no `transition` field (that's
- * a patch-time hint with no meaning for a from-scratch load), so every minted record gets `null`. */
-function builtNodeToSnapshot(surface: SurfaceId, root: BuiltNode, revision: UiRevision = 0, layoutEpoch: bigint = 0n): UiSnapshot {
-  const nodes: UiNodeRecord[] = [];
-  let nextId = 1;
-  const mint = (node: BuiltNode): number => {
-    const id = nextId++;
-    const children = node.children.map(mint);
-    nodes.push({
-      id,
-      key: node.key,
-      component: node.component,
-      layout: node.layout,
-      style: node.style,
-      activity: node.activity,
-      disabled: node.disabled,
-      transition: null,
-      accessibility: node.accessibility,
-      bindings: node.bindings,
-      menu: node.menu,
-      children,
-    });
-    return id;
-  };
-  const root_ = mint(root);
-  return { surface, revision, root: root_, nodes, layoutEpoch };
-}
-
-/** 🎬️ `InterpretedUiNode`'s required `onIntent` — no plugin-facing dispatch exists yet for `UiIntent`
- * (`PluginWasmHandle` carries `handleAction` for the legacy `ActionDescriptor` channel only, no
- * `UiIntent`-shaped counterpart), the same `ActionId`-versioning gap flagged for `ShellHelpers`' own
- * tree-panel-config subsystem (see that file's `ActionBinding`/`ActionId` doc comments). Reported
- * loudly rather than silently dropped, matching `Interpreter`'s own "never throw, never silently
- * drop" convention for an unresolved contract gap — wiring a real plugin-facing `UiIntent` dispatch is
- * its own packet. */
-function reportUnwiredUiIntent(intent: UiIntent): void {
-  console.error("[os-shell] UiIntent dispatch has no plugin-facing channel yet", intent);
-}
 
 /** 🩹️ `WindowKindDefinition.label` has no owned schema mirror yet (`unknown` — see that generated type's own
  * doc comment, and `resolveManifestLabel`'s "some call sites may still see the pre-migration shape
@@ -3829,6 +3779,7 @@ function FrameworkOsShellInner({
   // route them through this permanently-stable ref indirection so `interpretUiNode`'s `React.memo`
   // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
   const onActionStable = useCallback((action: Parameters<typeof onAction>[0]) => onActionRef.current(action), []);
+  const onIntentStable = useCallback((intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => onActionStable(uiIntentToActionDescriptor(intent)), [onActionStable]);
 
   //#region 🎥️TutorialOrchestration
   /** ⏱️ Real-time throttle for the director's UI/document/event application (~10Hz) — camera stays
@@ -4496,12 +4447,19 @@ function FrameworkOsShellInner({
    * empty rather than the whole shell. */
   const appRouter = useMemo((): AppRouter | null => {
     try {
-      return AppRouter.build(loadedPlugins.map((entry): AppRouterManifest => ({ pluginId: entry.handle.pluginId, apps: entry.manifest.apps as unknown as Record<string, unknown>[], artifactKinds: entry.manifest.artifactKinds, dependencies: entry.manifest.dependencies })));
+      return AppRouter.build(
+        loadedPlugins.map((entry): AppRouterManifest => ({
+          pluginId: entry.handle.pluginId,
+          apps: entry.manifest.apps as unknown as Record<string, unknown>[],
+          artifactKinds: entry.manifest.artifactKinds,
+          dependencies: entry.manifest.dependencies?.length ? entry.manifest.dependencies : registry.find((candidate) => candidate.pluginId === entry.handle.pluginId)?.dependencies,
+        })),
+      );
     } catch (buildError) {
       console.error("[DEBUG] AppRouter.build failed", buildError);
       return null;
     }
-  }, [loadedPlugins]);
+  }, [loadedPlugins, registry]);
   const pluginLabelById = useMemo(() => new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.manifest.label || entry.handle.pluginId])), [loadedPlugins]);
   /** 👁️✏️ Every dialect any loaded app declares — read straight off `AppDefinition.dialect`
    * (contract freeze §1), never inferred from a surface id string. Feeds the Settings
@@ -6575,7 +6533,7 @@ function FrameworkOsShellInner({
             children: (
               <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
                 <ShellFaultBoundary boundaryId={`window-${spawned.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                  <InterpretedUiNode store={builtNodeStoreFor("spawned", spawnedWindowUi)} onAction={onActionStable} onIntent={reportUnwiredUiIntent} />
+                  <InterpretedUiNode store={builtNodeStoreFor("spawned", spawnedWindowUi)} onAction={onActionStable} onIntent={onIntentStable} />
                 </ShellFaultBoundary>
               </ChromeAwareWindowScrollSurface>
             ),
@@ -6609,7 +6567,7 @@ function FrameworkOsShellInner({
           <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
               <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                <InterpretedUiNode store={builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={reportUnwiredUiIntent} />
+                <InterpretedUiNode store={builtNodeStoreFor(`window:${kind.id}`, windowUiByWindowId[kind.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={onIntentStable} />
               </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
@@ -6654,7 +6612,7 @@ function FrameworkOsShellInner({
             >
               <WindowInstanceIdContext.Provider value={instance.id}>
                 <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                  <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={reportUnwiredUiIntent} />
+                  <InterpretedUiNode store={builtNodeStoreFor(`window:${instance.id}`, windowUiByWindowId[instance.id] ?? pendingWindowUiNode())} onAction={onActionStable} onIntent={onIntentStable} />
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>

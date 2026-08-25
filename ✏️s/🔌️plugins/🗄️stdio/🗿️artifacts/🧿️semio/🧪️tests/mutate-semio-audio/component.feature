@@ -32,6 +32,14 @@ Feature: Apply every typed semio AUDIO mutation to the decoded real tone artifac
   every vector starts from — so a mistake in the vectors surfaces as a red scenario rather than a
   quietly agreeable one.
 
+  `identity-round-trip` measures BYTES here, not only meaning. The committed `🎵️tone` artifact is a
+  226-byte `.dsl.semio` record written by this subset's own printer, so re-printing the snapshot it
+  parses to must land on those same 226 bytes; `law::carrier_is_exact` says so and fails with the
+  offset of the first byte that drifts. The must-differ tripwire the wave applies to third-party
+  carriers would be backwards for a codec reading its own output. `✳️audio` exports no pack bridge,
+  so the committed `🎒️example.pack.semio` twin is NOT read by this case and no claim is made about it
+  — one carrier, measured, and the other named as unmeasured.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

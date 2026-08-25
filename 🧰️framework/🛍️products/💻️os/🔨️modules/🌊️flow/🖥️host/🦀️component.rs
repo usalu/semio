@@ -17,7 +17,7 @@ use crate::artifact::*;
 use crate::bridge::*;
 use crate::catalogue::*;
 use crate::drawing::*;
-use crate::os_store::{create_document_envelope, ArtifactCommand};
+use crate::os_store::{create_document_envelope, ArtifactCommand, MemberStoreOwner, SnapshotRetirementStep, SpaceMember};
 use crate::registry::*;
 use crate::vcs::*;
 use semio_framework::io::resolve_ready;
@@ -185,7 +185,8 @@ impl FlowHost {
         // 🌱️ A throwaway placeholder, same as `dag` below — `rebuild_dag` (via `sync_from_dag`)
         // settles auto-computed layout onto `self.fixture` before the real undo/redo baseline is
         // captured, so a fresh host never starts with a spurious undoable step.
-        let history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None))).expect("failed to create flow history store");
+        let mut history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None))).expect("failed to create flow history store");
+        history_store.install_member_store_owners_exact(FlowFixture::member_store_owners());
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
@@ -215,6 +216,7 @@ impl FlowHost {
         host.rebuild_dag();
         host.refresh_interaction_projection();
         host.history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None))).expect("failed to create flow history store");
+        host.history_store.install_member_store_owners_exact(FlowFixture::member_store_owners());
         host
     }
 
@@ -256,6 +258,7 @@ impl FlowHost {
             // 🌱️ Captured AFTER `rebuild_dag` (see `from_fixture_with_cache`'s matching comment) so the
             // new undo/redo baseline is the settled, auto-laid-out fixture, not the raw input.
             self.history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None))).expect("failed to create flow history store");
+            self.history_store.install_member_store_owners_exact(FlowFixture::member_store_owners());
             self.pending_change = false;
             self.gesture_active = false;
         }
@@ -2006,6 +2009,167 @@ impl FlowHost {
         !resolve_ready(self.history_store.redo_edit_ids()).is_empty()
     }
     // #endregion History
+}
+
+/// 🧹 Incremental exact-owner retirement for one retained flow host.
+pub struct FlowHostRetirement {
+    fixture: FlowFixture,
+    dag: Option<dag::DagHostRetirement>,
+    outputs: HashMap<String, Dictionary>,
+    export_payloads: HashMap<String, Dictionary>,
+    last_eval_json: String,
+    eval_bridge: Option<EvalBridge>,
+    host_catalogue_json: String,
+    kind_infos: HashMap<String, OperatorInfo>,
+    neural_cache: Option<neural::NeuralCacheRetirement>,
+    previous_snapshot: Option<TreeSnapshot>,
+    previous_channels: Option<EvalChannels>,
+    ghost_node: Option<DagNodeSpec>,
+    history_store: Option<FlowStore>,
+    pending_extension_eval: Option<neural::PendingExtensionEval>,
+    interaction_projection: Option<dag::DagInteractionProjection>,
+    terminal: bool,
+    faulted: bool,
+}
+
+impl FlowHostRetirement {
+    pub fn new(host: FlowHost) -> Self {
+        let FlowHost {
+            fixture,
+            dag,
+            outputs,
+            export_payloads,
+            last_eval_json,
+            eval_bridge,
+            host_catalogue_json,
+            kind_infos,
+            neural_cache,
+            previous_snapshot,
+            previous_channels,
+            next_widget_serial: _,
+            next_synapse_serial: _,
+            viewport_w: _,
+            viewport_h: _,
+            viewport_dpr: _,
+            pan_anchor: _,
+            ghost_node,
+            history_store,
+            pending_change: _,
+            gesture_active: _,
+            pending_extension_eval,
+            interaction_revision: _,
+            interaction_projection,
+        } = host;
+        Self {
+            fixture,
+            dag: Some(dag::DagHostRetirement::new(dag)),
+            outputs,
+            export_payloads,
+            last_eval_json,
+            eval_bridge,
+            host_catalogue_json,
+            kind_infos,
+            neural_cache: Some(neural::NeuralCacheRetirement::new(neural_cache)),
+            previous_snapshot,
+            previous_channels,
+            ghost_node,
+            history_store: Some(history_store),
+            pending_extension_eval,
+            interaction_projection,
+            terminal: false,
+            faulted: false,
+        }
+    }
+
+    pub fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+        if context.should_yield() || self.faulted {
+            return false;
+        }
+        if let Some(dag) = self.dag.as_mut() {
+            if dag.close_step() {
+                if !dag.terminal_is_empty() {
+                    self.faulted = true;
+                    return false;
+                }
+                self.dag = None;
+            }
+            context.consume_fuel(1);
+            return false;
+        }
+        if self.fixture.widgets.pop().is_some()
+            || self.fixture.synapses.pop().is_some()
+            || self.fixture.layout.pop_last().is_some()
+            || self.fixture.schema.pop().is_some()
+            || self.outputs.extract_if(|_, _| true).next().is_some()
+            || self.export_payloads.extract_if(|_, _| true).next().is_some()
+            || self.last_eval_json.pop().is_some()
+            || self.eval_bridge.take().is_some()
+            || self.host_catalogue_json.pop().is_some()
+            || self.kind_infos.extract_if(|_, _| true).next().is_some()
+            || self.previous_snapshot.take().is_some()
+            || self.previous_channels.take().is_some()
+            || self.ghost_node.take().is_some()
+            || self.pending_extension_eval.take().is_some()
+            || self.interaction_projection.take().is_some()
+        {
+            context.consume_fuel(1);
+            return false;
+        }
+        if let Some(cache) = self.neural_cache.as_mut() {
+            if cache.close_step() {
+                if !cache.terminal_nonopaque_is_empty() {
+                    self.faulted = true;
+                    return false;
+                }
+                self.neural_cache = None;
+            }
+            context.consume_fuel(1);
+            return false;
+        }
+        if let Some(store) = self.history_store.as_mut() {
+            match store.close_owned_step(1, 4_096) {
+                Ok(SnapshotRetirementStep::Complete) if store.close_owned_terminal_is_empty() => {
+                    self.history_store = None;
+                }
+                Ok(_) => {}
+                Err(_) => self.faulted = true,
+            }
+            context.consume_fuel(1);
+            return false;
+        }
+        self.terminal = true;
+        context.consume_fuel(1);
+        true
+    }
+
+    pub fn terminal_nonopaque_is_empty(&self) -> bool {
+        self.terminal
+            && !self.faulted
+            && self.dag.is_none()
+            && self.fixture.widgets.is_empty()
+            && self.fixture.synapses.is_empty()
+            && self.fixture.layout.is_empty()
+            && self.fixture.schema.is_empty()
+            && self.outputs.is_empty()
+            && self.export_payloads.is_empty()
+            && self.last_eval_json.is_empty()
+            && self.eval_bridge.is_none()
+            && self.host_catalogue_json.is_empty()
+            && self.kind_infos.is_empty()
+            && self.neural_cache.is_none()
+            && self.previous_snapshot.is_none()
+            && self.previous_channels.is_none()
+            && self.ghost_node.is_none()
+            && self.history_store.is_none()
+            && self.pending_extension_eval.is_none()
+            && self.interaction_projection.is_none()
+    }
+}
+
+impl Drop for FlowHostRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_nonopaque_is_empty(), "FlowHostRetirement must reach terminal-empty before release");
+    }
 }
 
 // #region 🔖️EvalSession

@@ -545,6 +545,73 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
 }
 
 impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
+    /// 🧹️ Releases one retained graph owner or scalar from the engine per call.
+    pub fn close_step(&mut self) -> bool {
+        if self.edges.pop_first().is_some()
+            || self.edge_semantics.pop_first().is_some()
+            || self.events.pop().is_some()
+            || self.handles.pop_first().is_some()
+            || self.nodes.pop_first().is_some()
+            || self.selection.edge_ids.pop_first().is_some()
+            || self.selection.handle_ids.pop_first().is_some()
+            || self.selection.node_ids.pop_first().is_some()
+            || self.preselect.edge_ids.pop_first().is_some()
+            || self.preselect.handle_ids.pop_first().is_some()
+            || self.preselect.node_ids.pop_first().is_some()
+            || self.preselect_removed.edge_ids.pop_first().is_some()
+            || self.preselect_removed.handle_ids.pop_first().is_some()
+            || self.preselect_removed.node_ids.pop_first().is_some()
+            || self.selection_preview_points.pop().is_some()
+            || self.area_initial.edge_ids.pop_first().is_some()
+            || self.area_initial.handle_ids.pop_first().is_some()
+            || self.area_initial.node_ids.pop_first().is_some()
+            || self.area_points.pop().is_some()
+            || self.area_screen_points.pop().is_some()
+            || self.drag_start_positions.pop_first().is_some()
+            || self.selection_options.method.pop().is_some()
+            || self.selection_options.mode.pop().is_some()
+        {
+            return false;
+        }
+        self.hover = None;
+        self.interaction = InteractionMode::default();
+        self.proximity_distance_override = None;
+        self.proximity_connection = None;
+        true
+    }
+
+    /// 🔍️ Proves every non-scalar graph owner governed by `close_step` is empty.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.edges.is_empty()
+            && self.edge_semantics.is_empty()
+            && self.events.is_empty()
+            && self.handles.is_empty()
+            && self.nodes.is_empty()
+            && self.selection.edge_ids.is_empty()
+            && self.selection.handle_ids.is_empty()
+            && self.selection.node_ids.is_empty()
+            && self.preselect.edge_ids.is_empty()
+            && self.preselect.handle_ids.is_empty()
+            && self.preselect.node_ids.is_empty()
+            && self.preselect_removed.edge_ids.is_empty()
+            && self.preselect_removed.handle_ids.is_empty()
+            && self.preselect_removed.node_ids.is_empty()
+            && self.selection_preview_points.is_empty()
+            && self.area_initial.edge_ids.is_empty()
+            && self.area_initial.handle_ids.is_empty()
+            && self.area_initial.node_ids.is_empty()
+            && self.area_points.is_empty()
+            && self.area_screen_points.is_empty()
+            && self.drag_start_positions.is_empty()
+            && self.selection_options.method.is_empty()
+            && self.selection_options.mode.is_empty()
+            && self.hover.is_none()
+            && self.proximity_distance_override.is_none()
+            && self.proximity_connection.is_none()
+    }
+}
+
+impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     pub fn new() -> Self {
         Self::default()
     }

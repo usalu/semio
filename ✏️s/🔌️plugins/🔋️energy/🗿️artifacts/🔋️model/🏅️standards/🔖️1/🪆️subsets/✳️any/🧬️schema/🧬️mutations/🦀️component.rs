@@ -112,9 +112,7 @@ mod tests {
 /// (`../../🧪️oracle/🔣️component.json`) declares and the `mutate-energy-model-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
-pub const KINDS: &[&str] = &[
-    "replace-model",
-];
+pub const KINDS: &[&str] = &["replace-model"];
 //#endregion 🔖️Kinds
 
 //#region 🌉️TestBridge

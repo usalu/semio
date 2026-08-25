@@ -32,10 +32,11 @@ use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, Plug
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
-use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobStepOutcome, JobTurn, Payload, ShardTransport};
+use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobReplayRequest, JobStepOutcome, JobTurn, Payload, ShardTransport};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
 use std::collections::{BTreeSet, HashMap};
-use std::mem::size_of;
+use std::mem::{size_of, ManuallyDrop, MaybeUninit};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 #[cfg(test)]
 use std::sync::Mutex;
@@ -152,6 +153,10 @@ async fn job_budget_from_grant(budget: semio_framework_actor::Budget) -> JobBudg
 /// patch owner into a generation-qualified fixed transport lease and advances one fixed patch
 /// operation per yield before publishing the complete lease token. `status` maps 1:1.
 pub async fn to_actor_turn_result(mut result: TurnResult, session: u64, wall_us: u64, memory_bytes: u64) -> Result<semio_framework_actor::TurnResult, semio_framework::Fault> {
+    to_actor_turn_result_in_place(&mut result, session, wall_us, memory_bytes).await
+}
+
+async fn to_actor_turn_result_in_place(result: &mut TurnResult, session: u64, wall_us: u64, memory_bytes: u64) -> Result<semio_framework_actor::TurnResult, semio_framework::Fault> {
     let status = match &result.status {
         semio_framework::kernel::TurnStatus::Idle => semio_framework_actor::TurnStatus::Idle,
         semio_framework::kernel::TurnStatus::MoreWork => semio_framework_actor::TurnStatus::MoreWork,
@@ -198,6 +203,8 @@ pub enum ShardOutcome {
     Job {
         actor: u64,
         authority: JobTurn,
+        request: JobReplayRequest,
+        placement: JobPlacement,
         publication: JobPublication,
     },
     Fault {
@@ -231,10 +238,20 @@ impl ShardOutcome {
                 semio_framework_actor::pack::write_u64(out, *actor).await;
                 result.pack_encode(out).await;
             }
-            Self::Job { actor, authority, publication } => {
+            Self::Job { actor, authority, request, placement, publication } => {
                 semio_framework_actor::pack::write_u8(out, 1).await;
                 semio_framework_actor::pack::write_u64(out, *actor).await;
                 authority.pack_encode(out).await;
+                request.pack_encode(out).await;
+                semio_framework_actor::pack::write_u8(
+                    out,
+                    match placement {
+                        JobPlacement::Inline => 0,
+                        JobPlacement::Isolated => 1,
+                        JobPlacement::Exclusive => 2,
+                    },
+                )
+                .await;
                 publication.pack_encode(out).await;
             }
             Self::Fault { actor, message } => {
@@ -265,7 +282,17 @@ impl ShardOutcome {
         let actor = semio_framework_actor::pack::read_u64(bytes, pos, "ShardOutcome::actor").await?;
         match tag {
             0 => Ok(Self::Turn { actor, result: semio_framework_actor::TurnResult::pack_decode(bytes, pos).await? }),
-            1 => Ok(Self::Job { actor, authority: JobTurn::pack_decode(bytes, pos).await?, publication: JobPublication::pack_decode(bytes, pos).await? }),
+            1 => {
+                let authority = JobTurn::pack_decode(bytes, pos).await?;
+                let request = JobReplayRequest::pack_decode(bytes, pos).await?;
+                let placement = match semio_framework_actor::pack::read_u8(bytes, pos, "ShardOutcome::Job::placement").await? {
+                    0 => JobPlacement::Inline,
+                    1 => JobPlacement::Isolated,
+                    2 => JobPlacement::Exclusive,
+                    tag => return Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardOutcome::Job::placement", tag, offset: *pos }),
+                };
+                Ok(Self::Job { actor, authority, request, placement, publication: JobPublication::pack_decode(bytes, pos).await? })
+            }
             2 => Ok(Self::Fault { actor, message: semio_framework_actor::pack::read_str(bytes, pos, "ShardOutcome::Fault::message").await? }),
             3 => Ok(Self::Checkpoint { actor, operation: JobOperation::pack_decode(bytes, pos).await?, checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
             4 => Ok(Self::Resumed { actor, operation: JobOperation::pack_decode(bytes, pos).await? }),
@@ -294,7 +321,11 @@ pub struct ShardLoop {
     /// 🪪️ Active replay identity and sequence cursor for every running job.
     job_turns: HashMap<(u64, u64), JobTurn>,
     /// 📰️ Independently minted operation identity retained from spawn until terminal outcome.
-    job_authorities: HashMap<(u64, u64), JobTurn>,
+    job_authorities: HashMap<(u64, u64), JobAuthority>,
+    /// 📄️ Fixed, generation-qualified original spawn owners retained for live restart and replay.
+    replay_seeds: [Option<MountedReplaySeed>; JOB_REPLAY_SEED_SLOT_CAPACITY],
+    replay_seed_refusals: [Option<ReplaySpawnRefusal>; JOB_REPLAY_REFUSAL_SLOT_CAPACITY],
+    replay_seed_cursor: usize,
     next_job_operation: u64,
     /// 🚦 `JobPlacement` (inline/isolated/exclusive) captured per `running_jobs` entry at
     /// `Effect::SpawnJob` admission — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `placement` used
@@ -336,6 +367,352 @@ pub struct ShardLoop {
     next_frame_epoch: u64,
     last_drive_consumed_epoch: Option<u64>,
 }
+
+#[derive(Clone, Copy)]
+struct JobAuthority {
+    turn: JobTurn,
+    request: JobReplayRequest,
+}
+
+//#region 📄️FixedReplaySeed
+const JOB_REPLAY_SEED_PAGE_BYTES: usize = semio_framework_actor::JOB_REPLAY_PAGE_BYTES;
+const JOB_REPLAY_KIND_PAGE_CAPACITY: usize = 16;
+const JOB_REPLAY_INPUT_PAGE_CAPACITY: usize = semio_framework_actor::JOB_REPLAY_RECORD_CAPACITY;
+const JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY: usize = semio_framework_actor::JOB_REPLAY_RECORD_CAPACITY;
+const JOB_REPLAY_SEED_SLOT_CAPACITY: usize = SHARD_DEFERRED_ITEMS;
+const JOB_REPLAY_REFUSAL_SLOT_CAPACITY: usize = 512;
+const JOB_REPLAY_SEED_PROCESS_PAGES: usize = semio_framework_actor::JOB_REPLAY_PROCESS_PAGE_CAPACITY;
+
+static JOB_REPLAY_SEED_PAGES: AtomicUsize = AtomicUsize::new(0);
+static JOB_REPLAY_ABI_BYTES: AtomicUsize = AtomicUsize::new(0);
+
+struct FixedReplaySeedPage {
+    storage: ManuallyDrop<Option<Box<[MaybeUninit<u8>; JOB_REPLAY_SEED_PAGE_BYTES]>>>,
+    length: usize,
+}
+
+impl FixedReplaySeedPage {
+    fn try_copy(bytes: &[u8]) -> Result<Self, ()> {
+        if bytes.len() > JOB_REPLAY_SEED_PAGE_BYTES {
+            return Err(());
+        }
+        JOB_REPLAY_SEED_PAGES.fetch_update(Ordering::AcqRel, Ordering::Acquire, |pages| pages.checked_add(1).filter(|pages| *pages <= JOB_REPLAY_SEED_PROCESS_PAGES)).map_err(|_| ())?;
+        let mut storage = Box::new([MaybeUninit::uninit(); JOB_REPLAY_SEED_PAGE_BYTES]);
+        unsafe { std::ptr::copy_nonoverlapping(bytes.as_ptr(), storage.as_mut_ptr().cast::<u8>(), bytes.len()) };
+        Ok(Self { storage: ManuallyDrop::new(Some(storage)), length: bytes.len() })
+    }
+
+    fn bytes(&self) -> &[u8] {
+        let storage = self.storage.as_ref().expect("fixed replay seed page owns backing");
+        unsafe { std::slice::from_raw_parts(storage.as_ptr().cast::<u8>(), self.length) }
+    }
+
+    fn close(&mut self) -> usize {
+        let storage = self.storage.take().expect("fixed replay seed page closes once");
+        drop(storage);
+        JOB_REPLAY_SEED_PAGES.fetch_sub(1, Ordering::AcqRel);
+        self.length
+    }
+}
+
+impl Drop for FixedReplaySeedPage {
+    fn drop(&mut self) {
+        if self.storage.is_none() {
+            unsafe { ManuallyDrop::drop(&mut self.storage) };
+        } else {
+            debug_assert!(false, "fixed replay seed page requires admitted close");
+        }
+    }
+}
+
+struct FixedReplaySeed {
+    request: JobReplayRequest,
+    kind: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_KIND_PAGE_CAPACITY]>,
+    input: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_INPUT_PAGE_CAPACITY]>,
+    checkpoint: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY]>,
+    kind_pages: usize,
+    input_pages: usize,
+    checkpoint_pages: usize,
+    kind_length: usize,
+    input_length: usize,
+    checkpoint_length: usize,
+    close_cursor: usize,
+}
+
+impl FixedReplaySeed {
+    fn new(request: JobReplayRequest, kind_length: usize, input_length: usize) -> Result<Self, ()> {
+        if kind_length.div_ceil(JOB_REPLAY_SEED_PAGE_BYTES) > JOB_REPLAY_KIND_PAGE_CAPACITY || input_length.div_ceil(JOB_REPLAY_SEED_PAGE_BYTES) > JOB_REPLAY_INPUT_PAGE_CAPACITY {
+            return Err(());
+        }
+        Ok(Self {
+            request,
+            kind: ManuallyDrop::new(std::array::from_fn(|_| None)),
+            input: ManuallyDrop::new(std::array::from_fn(|_| None)),
+            checkpoint: ManuallyDrop::new(std::array::from_fn(|_| None)),
+            kind_pages: 0,
+            input_pages: 0,
+            checkpoint_pages: 0,
+            kind_length,
+            input_length,
+            checkpoint_length: 0,
+            close_cursor: 0,
+        })
+    }
+
+    fn copy_kind_page(&mut self, bytes: &[u8], cursor: &mut usize) -> Result<bool, ()> {
+        if *cursor == bytes.len() {
+            return Ok(true);
+        }
+        let end = cursor.checked_add(JOB_REPLAY_SEED_PAGE_BYTES).unwrap_or(bytes.len()).min(bytes.len());
+        let page = FixedReplaySeedPage::try_copy(&bytes[*cursor..end])?;
+        let slot = self.kind.get_mut(self.kind_pages).ok_or(())?;
+        *slot = Some(page);
+        self.kind_pages += 1;
+        *cursor = end;
+        Ok(*cursor == bytes.len())
+    }
+
+    fn copy_input_page(&mut self, bytes: &[u8], cursor: &mut usize) -> Result<bool, ()> {
+        if *cursor == bytes.len() {
+            return Ok(true);
+        }
+        let end = cursor.checked_add(JOB_REPLAY_SEED_PAGE_BYTES).unwrap_or(bytes.len()).min(bytes.len());
+        let page = FixedReplaySeedPage::try_copy(&bytes[*cursor..end])?;
+        let slot = self.input.get_mut(self.input_pages).ok_or(())?;
+        *slot = Some(page);
+        self.input_pages += 1;
+        *cursor = end;
+        Ok(*cursor == bytes.len())
+    }
+
+    fn copy_checkpoint_page(&mut self, bytes: &[u8], cursor: &mut usize) -> Result<bool, ()> {
+        if bytes.len().div_ceil(JOB_REPLAY_SEED_PAGE_BYTES) > JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY {
+            return Err(());
+        }
+        self.checkpoint_length = bytes.len();
+        if *cursor == bytes.len() {
+            return Ok(true);
+        }
+        let end = cursor.checked_add(JOB_REPLAY_SEED_PAGE_BYTES).unwrap_or(bytes.len()).min(bytes.len());
+        let page = FixedReplaySeedPage::try_copy(&bytes[*cursor..end])?;
+        let slot = self.checkpoint.get_mut(self.checkpoint_pages).ok_or(())?;
+        *slot = Some(page);
+        self.checkpoint_pages += 1;
+        *cursor = end;
+        Ok(*cursor == bytes.len())
+    }
+
+    fn close_one(&mut self) -> bool {
+        let total = JOB_REPLAY_KIND_PAGE_CAPACITY + JOB_REPLAY_INPUT_PAGE_CAPACITY + JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY;
+        for offset in 0..total {
+            let index = (self.close_cursor + offset) % total;
+            let page = if index < JOB_REPLAY_KIND_PAGE_CAPACITY {
+                self.kind[index].as_mut()
+            } else if index < JOB_REPLAY_KIND_PAGE_CAPACITY + JOB_REPLAY_INPUT_PAGE_CAPACITY {
+                self.input[index - JOB_REPLAY_KIND_PAGE_CAPACITY].as_mut()
+            } else {
+                self.checkpoint[index - JOB_REPLAY_KIND_PAGE_CAPACITY - JOB_REPLAY_INPUT_PAGE_CAPACITY].as_mut()
+            };
+            let Some(page) = page else { continue };
+            let _ = page.close();
+            if index < JOB_REPLAY_KIND_PAGE_CAPACITY {
+                self.kind[index] = None;
+                self.kind_pages -= 1;
+            } else if index < JOB_REPLAY_KIND_PAGE_CAPACITY + JOB_REPLAY_INPUT_PAGE_CAPACITY {
+                self.input[index - JOB_REPLAY_KIND_PAGE_CAPACITY] = None;
+                self.input_pages -= 1;
+            } else {
+                self.checkpoint[index - JOB_REPLAY_KIND_PAGE_CAPACITY - JOB_REPLAY_INPUT_PAGE_CAPACITY] = None;
+                self.checkpoint_pages -= 1;
+            }
+            self.close_cursor = (index + 1) % total;
+            return false;
+        }
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.kind_pages == 0 && self.input_pages == 0 && self.checkpoint_pages == 0 && self.kind.iter().all(Option::is_none) && self.input.iter().all(Option::is_none) && self.checkpoint.iter().all(Option::is_none)
+    }
+}
+
+impl Drop for FixedReplaySeed {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.kind);
+                ManuallyDrop::drop(&mut self.input);
+                ManuallyDrop::drop(&mut self.checkpoint);
+            }
+        } else {
+            debug_assert!(false, "fixed replay seed requires one-page admitted close");
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ReplaySeedPhase {
+    CaptureKind,
+    CaptureInput,
+    Checkpoint,
+    CaptureCheckpoint,
+    RetireCheckpointOwner,
+    Start,
+    RetireKindOwner,
+    ActivateAuthority,
+    ActivateTurn,
+    ActivateRunning,
+    ActivatePlacement,
+    ActivateReady,
+    Retained,
+    MaterializeKind,
+    MaterializeInput,
+    MaterializeCheckpoint,
+    Restore,
+    RetireMaterializedCheckpoint,
+    PrepareReplayKind,
+    Restart,
+    RetireReplayKind,
+    Closing,
+    RetireSeedShell,
+    RetireMountedShell,
+}
+
+struct MountedReplaySeed {
+    actor: u64,
+    job: u64,
+    authority: JobTurn,
+    placement: JobPlacement,
+    worker_count: u16,
+    worker_slot: u16,
+    phase: ReplaySeedPhase,
+    seed: ManuallyDrop<Option<FixedReplaySeed>>,
+    kind_owner: ManuallyDrop<Option<String>>,
+    input_owner: ManuallyDrop<Option<Vec<u8>>>,
+    checkpoint_owner: ManuallyDrop<Option<Vec<u8>>>,
+    kind_cursor: usize,
+    input_cursor: usize,
+    checkpoint_cursor: usize,
+    materialized_kind: ManuallyDrop<Option<Vec<u8>>>,
+    materialized_input: ManuallyDrop<Option<Vec<u8>>>,
+    materialized_checkpoint: ManuallyDrop<Option<Vec<u8>>>,
+    replay_kind_owner: ManuallyDrop<Option<String>>,
+    materialize_page: usize,
+    abi_reserved: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ReplaySpawnRefusalPhase {
+    RetireInput,
+    RetireKind,
+    Publish,
+    RetireShell,
+}
+
+struct ReplaySpawnRefusal {
+    actor: u64,
+    job: u64,
+    reason: &'static [u8],
+    input: ManuallyDrop<Option<Vec<u8>>>,
+    kind: ManuallyDrop<Option<String>>,
+    phase: ReplaySpawnRefusalPhase,
+}
+
+impl ReplaySpawnRefusal {
+    fn new(actor: u64, job: u64, reason: &'static [u8], kind: String, input: Vec<u8>) -> Self {
+        Self { actor, job, reason, input: ManuallyDrop::new(Some(input)), kind: ManuallyDrop::new(Some(kind)), phase: ReplaySpawnRefusalPhase::RetireInput }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.input.is_none() && self.kind.is_none() && self.phase == ReplaySpawnRefusalPhase::RetireShell
+    }
+}
+
+impl Drop for ReplaySpawnRefusal {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.input);
+                ManuallyDrop::drop(&mut self.kind);
+            }
+        } else {
+            debug_assert!(false, "rejected replay spawn requires exact incremental close");
+        }
+    }
+}
+
+impl MountedReplaySeed {
+    fn new(actor: u64, job: u64, authority: JobTurn, request: JobReplayRequest, placement: JobPlacement, kind: String, input: Vec<u8>) -> Result<Self, (String, Vec<u8>)> {
+        let seed = match FixedReplaySeed::new(request, kind.len(), input.len()) {
+            Ok(seed) => seed,
+            Err(()) => return Err((kind, input)),
+        };
+        Ok(Self {
+            actor,
+            job,
+            authority,
+            placement,
+            worker_count: 0,
+            worker_slot: 0,
+            phase: ReplaySeedPhase::CaptureKind,
+            seed: ManuallyDrop::new(Some(seed)),
+            kind_owner: ManuallyDrop::new(Some(kind)),
+            input_owner: ManuallyDrop::new(Some(input)),
+            checkpoint_owner: ManuallyDrop::new(None),
+            kind_cursor: 0,
+            input_cursor: 0,
+            checkpoint_cursor: 0,
+            materialized_kind: ManuallyDrop::new(None),
+            materialized_input: ManuallyDrop::new(None),
+            materialized_checkpoint: ManuallyDrop::new(None),
+            replay_kind_owner: ManuallyDrop::new(None),
+            materialize_page: 0,
+            abi_reserved: 0,
+        })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.seed.is_none()
+            && self.kind_owner.is_none()
+            && self.input_owner.is_none()
+            && self.checkpoint_owner.is_none()
+            && self.materialized_kind.is_none()
+            && self.materialized_input.is_none()
+            && self.materialized_checkpoint.is_none()
+            && self.replay_kind_owner.is_none()
+            && self.abi_reserved == 0
+    }
+}
+
+impl Drop for MountedReplaySeed {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.seed);
+                ManuallyDrop::drop(&mut self.kind_owner);
+                ManuallyDrop::drop(&mut self.input_owner);
+                ManuallyDrop::drop(&mut self.checkpoint_owner);
+                ManuallyDrop::drop(&mut self.materialized_kind);
+                ManuallyDrop::drop(&mut self.materialized_input);
+                ManuallyDrop::drop(&mut self.materialized_checkpoint);
+                ManuallyDrop::drop(&mut self.replay_kind_owner);
+            }
+        } else {
+            debug_assert!(false, "mounted replay seed requires discoverable incremental close");
+        }
+    }
+}
+
+fn try_replay_abi_buffer(bytes: usize) -> Result<Vec<u8>, ()> {
+    JOB_REPLAY_ABI_BYTES.fetch_update(Ordering::AcqRel, Ordering::Acquire, |owned| owned.checked_add(bytes).filter(|owned| *owned <= SHARD_DEFERRED_BYTES)).map_err(|_| ())?;
+    let mut buffer = Vec::new();
+    if buffer.try_reserve_exact(bytes).is_err() {
+        JOB_REPLAY_ABI_BYTES.fetch_sub(bytes, Ordering::AcqRel);
+        return Err(());
+    }
+    Ok(buffer)
+}
+//#endregion 📄️FixedReplaySeed
 
 pub enum ShardDrive {
     Idle { consumed_epoch: Option<u64> },
@@ -460,6 +837,7 @@ pub enum DeferredAuthority {
     Unregister { actor: ActorId },
     Event { actor: u64, event: Event },
     JobStep { actor: u64, turn: JobTurn },
+    JobReplay { actor: u64, turn: JobTurn, request: JobReplayRequest, worker_count: u16, worker_slot: u16 },
     Cancel(CancelCursor),
     Suspend { actor: u64, operation: JobOperation, applied_progress: u64 },
     Resume { actor: u64, operation: JobOperation, checkpoint: JobCheckpoint },
@@ -517,6 +895,9 @@ impl ShardLoop {
             running_jobs: BTreeSet::new(),
             job_turns: HashMap::new(),
             job_authorities: HashMap::new(),
+            replay_seeds: std::array::from_fn(|_| None),
+            replay_seed_refusals: std::array::from_fn(|_| None),
+            replay_seed_cursor: 0,
             next_job_operation: 1,
             job_placement: HashMap::new(),
             terminal_authorities: FixedOwnerRing::new(SHARD_DEFERRED_BYTES.saturating_mul(SHARD_DEFERRED_ITEMS)),
@@ -566,6 +947,367 @@ impl ShardLoop {
     /// against those two files in case a `Grant`-level field is still wanted for a future packet.
     fn actor_lane(&self, actor: u64) -> semio_framework_actor::Lane {
         self.actor_lanes.get(&actor).copied().unwrap_or(semio_framework_actor::Lane::Maintenance)
+    }
+
+    fn consume_replay_opportunity(&mut self, actor: u64) -> bool {
+        if !self.actor_generation_is_current(ActorId(actor)) {
+            return false;
+        }
+        let budget = self.granted_budgets.entry(actor).or_insert_with(|| semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance));
+        if budget.fuel == 0 || budget.wall_ms == 0 {
+            return false;
+        }
+        budget.fuel -= 1;
+        true
+    }
+
+    fn consume_replay_close_opportunity(&mut self, actor: u64) -> bool {
+        let budget = self.granted_budgets.entry(actor).or_insert_with(|| semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance));
+        if budget.fuel == 0 || budget.wall_ms == 0 {
+            return false;
+        }
+        budget.fuel -= 1;
+        true
+    }
+
+    async fn drive_replay_refusal(&mut self) -> Result<bool, PluginHostError> {
+        let Some(index) = self.replay_seed_refusals.iter().position(Option::is_some) else {
+            return Ok(false);
+        };
+        let actor = self.replay_seed_refusals[index].as_ref().expect("selected replay refusal").actor;
+        if !self.consume_replay_close_opportunity(actor) {
+            return Ok(false);
+        }
+        let refusal = self.replay_seed_refusals[index].as_mut().expect("selected replay refusal");
+        match refusal.phase {
+            ReplaySpawnRefusalPhase::RetireInput => {
+                drop(refusal.input.take().expect("rejected input closes once"));
+                refusal.phase = ReplaySpawnRefusalPhase::RetireKind;
+            }
+            ReplaySpawnRefusalPhase::RetireKind => {
+                drop(refusal.kind.take().expect("rejected kind closes once"));
+                refusal.phase = ReplaySpawnRefusalPhase::Publish;
+            }
+            ReplaySpawnRefusalPhase::Publish => {
+                let actor = refusal.actor;
+                let job = refusal.job;
+                let reason = refusal.reason.to_vec();
+                refusal.phase = ReplaySpawnRefusalPhase::RetireShell;
+                let lane = self.actor_lane(actor);
+                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, lane, actor, Event::JobCompleted { job, result: RequestOutcome::Err(reason) })?;
+            }
+            ReplaySpawnRefusalPhase::RetireShell => {
+                let refusal = self.replay_seed_refusals[index].take().expect("terminal replay refusal");
+                drop(refusal);
+            }
+        }
+        Ok(true)
+    }
+
+    fn validate_replay_request(&self, actor: u64, turn: JobTurn, request: JobReplayRequest) -> Result<(), PluginHostError> {
+        let Some(seed) = self.replay_seeds.iter().flatten().find(|seed| seed.actor == actor && seed.job == turn.job) else {
+            return Err(PluginHostError::Plugin(format!("ShardLoop::replay: no retained seed for actor {actor}, job {}", turn.job)));
+        };
+        let retained = seed.seed.as_ref().ok_or_else(|| PluginHostError::Plugin(format!("ShardLoop::replay: seed for actor {actor}, job {} is closing", turn.job)))?;
+        if seed.authority.operation.operation != turn.operation.operation
+            || seed.authority.operation.base_revision != turn.operation.base_revision
+            || seed.authority.operation.generation != turn.operation.generation
+            || seed.authority.operation.seed != turn.operation.seed
+            || turn.step_sequence != 0
+            || retained.request != request
+        {
+            return Err(PluginHostError::Plugin(format!("ShardLoop::replay: route, seed, generation, or first ordinal mismatch for actor {actor}, job {}", turn.job)));
+        }
+        Ok(())
+    }
+
+    fn begin_replay_seed(&mut self, actor: u64, turn: JobTurn, request: JobReplayRequest, worker_count: u16, worker_slot: u16) -> Result<(), PluginHostError> {
+        self.validate_replay_request(actor, turn, request)?;
+        if worker_count == 0 || worker_slot == u16::MAX {
+            return Err(PluginHostError::Plugin(format!("ShardLoop::replay: invalid worker identity for actor {actor}, job {}", turn.job)));
+        }
+        let seed = self.replay_seeds.iter_mut().flatten().find(|seed| seed.actor == actor && seed.job == turn.job).expect("validated replay seed remains mounted");
+        if !matches!(seed.phase, ReplaySeedPhase::Retained) {
+            return Err(PluginHostError::Plugin(format!("ShardLoop::replay: seed for actor {actor}, job {} is busy", turn.job)));
+        }
+        seed.authority = turn;
+        seed.worker_count = worker_count;
+        seed.worker_slot = worker_slot;
+        seed.kind_cursor = 0;
+        seed.input_cursor = 0;
+        seed.checkpoint_cursor = 0;
+        seed.materialize_page = 0;
+        seed.phase = ReplaySeedPhase::MaterializeKind;
+        Ok(())
+    }
+
+    async fn drive_replay_seed(&mut self) -> Result<bool, PluginHostError> {
+        let Some(index) = (0..JOB_REPLAY_SEED_SLOT_CAPACITY)
+            .map(|offset| (self.replay_seed_cursor + offset) % JOB_REPLAY_SEED_SLOT_CAPACITY)
+            .find(|index| self.replay_seeds[*index].as_ref().is_some_and(|seed| !matches!(seed.phase, ReplaySeedPhase::Retained) || !self.instances.contains_key(&seed.actor)))
+        else {
+            return Ok(false);
+        };
+        let actor = self.replay_seeds[index].as_ref().expect("selected replay seed").actor;
+        let closing = self.replay_seeds[index].as_ref().is_some_and(|seed| matches!(seed.phase, ReplaySeedPhase::Closing | ReplaySeedPhase::RetireSeedShell | ReplaySeedPhase::RetireMountedShell) || !self.instances.contains_key(&seed.actor));
+        if if closing { !self.consume_replay_close_opportunity(actor) } else { !self.consume_replay_opportunity(actor) } {
+            return Ok(false);
+        }
+        self.replay_seed_cursor = (index + 1) % JOB_REPLAY_SEED_SLOT_CAPACITY;
+        let phase = self.replay_seeds[index].as_ref().expect("selected replay seed").phase;
+        if !self.instances.contains_key(&actor) && !matches!(phase, ReplaySeedPhase::Closing | ReplaySeedPhase::RetireSeedShell | ReplaySeedPhase::RetireMountedShell) {
+            self.replay_seeds[index].as_mut().expect("stale mounted replay seed").phase = ReplaySeedPhase::Closing;
+            return Ok(true);
+        }
+        match phase {
+            ReplaySeedPhase::CaptureKind => {
+                let seed = self.replay_seeds[index].as_mut().expect("capture seed");
+                let complete = seed.seed.as_mut().expect("capture fixed seed").copy_kind_page(seed.kind_owner.as_ref().expect("capture kind").as_bytes(), &mut seed.kind_cursor).is_ok_and(|complete| complete);
+                if complete {
+                    seed.phase = ReplaySeedPhase::CaptureInput;
+                }
+            }
+            ReplaySeedPhase::CaptureInput => {
+                let seed = self.replay_seeds[index].as_mut().expect("capture seed");
+                let complete = seed.seed.as_mut().expect("capture fixed seed").copy_input_page(seed.input_owner.as_ref().expect("capture input"), &mut seed.input_cursor).is_ok_and(|complete| complete);
+                if complete {
+                    seed.phase = ReplaySeedPhase::Checkpoint;
+                }
+            }
+            ReplaySeedPhase::Checkpoint => {
+                let checkpoint = match self.instances.get_mut(&actor) {
+                    Some(instance) => self.runtime.checkpoint(instance).await,
+                    None => return Err(PluginHostError::Plugin(format!("ShardLoop::replay: actor {actor} lost its instance before seed checkpoint"))),
+                }?;
+                let seed = self.replay_seeds[index].as_mut().expect("checkpoint seed");
+                *seed.checkpoint_owner = Some(checkpoint);
+                seed.phase = ReplaySeedPhase::CaptureCheckpoint;
+            }
+            ReplaySeedPhase::CaptureCheckpoint => {
+                let seed = self.replay_seeds[index].as_mut().expect("checkpoint seed");
+                let complete = seed.seed.as_mut().expect("capture fixed seed").copy_checkpoint_page(seed.checkpoint_owner.as_ref().expect("checkpoint owner"), &mut seed.checkpoint_cursor).is_ok_and(|complete| complete);
+                if complete {
+                    seed.phase = ReplaySeedPhase::RetireCheckpointOwner;
+                }
+            }
+            ReplaySeedPhase::RetireCheckpointOwner => {
+                let seed = self.replay_seeds[index].as_mut().expect("checkpoint seed");
+                drop(seed.checkpoint_owner.take().expect("captured checkpoint owner retires once"));
+                seed.phase = ReplaySeedPhase::Start;
+            }
+            ReplaySeedPhase::Start => {
+                let (job, kind, input) = {
+                    let seed = self.replay_seeds[index].as_mut().expect("start seed");
+                    (seed.job, seed.kind_owner.take().expect("original kind checked out once"), seed.input_owner.take().expect("original input transfers once"))
+                };
+                let result = match self.instances.get_mut(&actor) {
+                    Some(instance) => self.runtime.start_job(instance, job, &kind, input).await,
+                    None => return Err(PluginHostError::Plugin(format!("ShardLoop::replay: actor {actor} lost its instance before live start"))),
+                };
+                let seed = self.replay_seeds[index].as_mut().expect("started seed");
+                *seed.kind_owner = Some(kind);
+                if let Err(fault) = result {
+                    seed.phase = ReplaySeedPhase::Closing;
+                    return Err(PluginHostError::Plugin(format!("ShardLoop::replay: live start failed for actor {actor}, job {job}: {}", turn_fault_message(&fault))));
+                }
+                seed.phase = ReplaySeedPhase::RetireKindOwner;
+            }
+            ReplaySeedPhase::RetireKindOwner => {
+                let seed = self.replay_seeds[index].as_mut().expect("started seed");
+                drop(seed.kind_owner.take().expect("fixed kind pages supersede original owner"));
+                seed.phase = ReplaySeedPhase::ActivateAuthority;
+            }
+            ReplaySeedPhase::ActivateAuthority => {
+                let seed = self.replay_seeds[index].as_mut().expect("activate seed");
+                self.job_authorities.insert((actor, seed.job), JobAuthority { turn: seed.authority, request: seed.seed.as_ref().expect("retained seed").request });
+                seed.phase = ReplaySeedPhase::ActivateTurn;
+            }
+            ReplaySeedPhase::ActivateTurn => {
+                let seed = self.replay_seeds[index].as_mut().expect("activate seed");
+                self.job_turns.insert((actor, seed.job), seed.authority);
+                seed.phase = ReplaySeedPhase::ActivateRunning;
+            }
+            ReplaySeedPhase::ActivateRunning => {
+                let seed = self.replay_seeds[index].as_mut().expect("activate seed");
+                self.running_jobs.insert((actor, seed.job));
+                seed.phase = ReplaySeedPhase::ActivatePlacement;
+            }
+            ReplaySeedPhase::ActivatePlacement => {
+                let seed = self.replay_seeds[index].as_mut().expect("activate seed");
+                self.job_placement.insert((actor, seed.job), seed.placement);
+                seed.phase = ReplaySeedPhase::ActivateReady;
+            }
+            ReplaySeedPhase::ActivateReady => {
+                let seed = self.replay_seeds[index].as_mut().expect("activate seed");
+                let replay = seed.worker_count != 0;
+                let authority = seed.authority;
+                seed.phase = ReplaySeedPhase::Retained;
+                if replay {
+                    self.send_outcome(&ShardOutcome::Resumed { actor, operation: authority.operation }).await?;
+                }
+            }
+            ReplaySeedPhase::MaterializeKind => {
+                let seed = self.replay_seeds[index].as_mut().expect("materialize seed");
+                let fixed = seed.seed.as_ref().expect("materialize fixed seed");
+                if seed.materialized_kind.is_none() {
+                    let buffer = try_replay_abi_buffer(fixed.kind_length).map_err(|()| PluginHostError::Plugin("ShardLoop::replay: kind ABI admission refused".to_string()))?;
+                    seed.abi_reserved += fixed.kind_length;
+                    *seed.materialized_kind = Some(buffer);
+                } else if seed.materialize_page < fixed.kind_pages {
+                    let page = fixed.kind[seed.materialize_page].as_ref().expect("fixed kind page");
+                    seed.materialized_kind.as_mut().expect("kind ABI buffer").extend_from_slice(page.bytes());
+                    seed.materialize_page += 1;
+                } else {
+                    seed.materialize_page = 0;
+                    seed.phase = ReplaySeedPhase::MaterializeInput;
+                }
+            }
+            ReplaySeedPhase::MaterializeInput => {
+                let seed = self.replay_seeds[index].as_mut().expect("materialize seed");
+                let fixed = seed.seed.as_ref().expect("materialize fixed seed");
+                if seed.materialized_input.is_none() {
+                    let buffer = try_replay_abi_buffer(fixed.input_length).map_err(|()| PluginHostError::Plugin("ShardLoop::replay: input ABI admission refused".to_string()))?;
+                    seed.abi_reserved += fixed.input_length;
+                    *seed.materialized_input = Some(buffer);
+                } else if seed.materialize_page < fixed.input_pages {
+                    let page = fixed.input[seed.materialize_page].as_ref().expect("fixed input page");
+                    seed.materialized_input.as_mut().expect("input ABI buffer").extend_from_slice(page.bytes());
+                    seed.materialize_page += 1;
+                } else {
+                    seed.materialize_page = 0;
+                    seed.phase = ReplaySeedPhase::MaterializeCheckpoint;
+                }
+            }
+            ReplaySeedPhase::MaterializeCheckpoint => {
+                let seed = self.replay_seeds[index].as_mut().expect("materialize seed");
+                let fixed = seed.seed.as_ref().expect("materialize fixed seed");
+                if seed.materialized_checkpoint.is_none() {
+                    let buffer = try_replay_abi_buffer(fixed.checkpoint_length).map_err(|()| PluginHostError::Plugin("ShardLoop::replay: checkpoint ABI admission refused".to_string()))?;
+                    seed.abi_reserved += fixed.checkpoint_length;
+                    *seed.materialized_checkpoint = Some(buffer);
+                } else if seed.materialize_page < fixed.checkpoint_pages {
+                    let page = fixed.checkpoint[seed.materialize_page].as_ref().expect("fixed checkpoint page");
+                    seed.materialized_checkpoint.as_mut().expect("checkpoint ABI buffer").extend_from_slice(page.bytes());
+                    seed.materialize_page += 1;
+                } else {
+                    seed.materialize_page = 0;
+                    seed.phase = ReplaySeedPhase::Restore;
+                }
+            }
+            ReplaySeedPhase::Restore => {
+                let checkpoint = self.replay_seeds[index].as_ref().expect("restore seed").materialized_checkpoint.as_ref().expect("materialized checkpoint");
+                match self.instances.get_mut(&actor) {
+                    Some(instance) => self.runtime.restore(instance, checkpoint).await?,
+                    None => return Err(PluginHostError::Plugin(format!("ShardLoop::replay: actor {actor} lost its instance before restore"))),
+                }
+                self.replay_seeds[index].as_mut().expect("restored seed").phase = ReplaySeedPhase::RetireMaterializedCheckpoint;
+            }
+            ReplaySeedPhase::RetireMaterializedCheckpoint => {
+                let seed = self.replay_seeds[index].as_mut().expect("restored seed");
+                drop(seed.materialized_checkpoint.take().expect("restored checkpoint retires once"));
+                let bytes = seed.seed.as_ref().expect("retained seed").checkpoint_length;
+                seed.abi_reserved -= bytes;
+                JOB_REPLAY_ABI_BYTES.fetch_sub(bytes, Ordering::AcqRel);
+                seed.phase = ReplaySeedPhase::PrepareReplayKind;
+            }
+            ReplaySeedPhase::PrepareReplayKind => {
+                let seed = self.replay_seeds[index].as_mut().expect("prepare replay kind");
+                let kind = String::from_utf8(seed.materialized_kind.take().expect("materialized replay kind")).map_err(|_| PluginHostError::Plugin("ShardLoop::replay: retained kind is not UTF-8".to_string()))?;
+                *seed.replay_kind_owner = Some(kind);
+                seed.phase = ReplaySeedPhase::Restart;
+            }
+            ReplaySeedPhase::Restart => {
+                let (job, kind, input, input_bytes) = {
+                    let seed = self.replay_seeds[index].as_mut().expect("restart seed");
+                    let kind = seed.replay_kind_owner.take().expect("prepared replay kind checks out once");
+                    let input = seed.materialized_input.take().expect("materialized replay input");
+                    let input_bytes = seed.seed.as_ref().expect("retained seed").input_length;
+                    (seed.job, kind, input, input_bytes)
+                };
+                let result = match self.instances.get_mut(&actor) {
+                    Some(instance) => self.runtime.start_job(instance, job, &kind, input).await,
+                    None => return Err(PluginHostError::Plugin(format!("ShardLoop::replay: actor {actor} lost its instance before restart"))),
+                };
+                let seed = self.replay_seeds[index].as_mut().expect("restarted seed");
+                *seed.replay_kind_owner = Some(kind);
+                seed.abi_reserved -= input_bytes;
+                JOB_REPLAY_ABI_BYTES.fetch_sub(input_bytes, Ordering::AcqRel);
+                if let Err(fault) = result {
+                    seed.phase = ReplaySeedPhase::Closing;
+                    return Err(PluginHostError::Plugin(format!("ShardLoop::replay: restart failed for actor {actor}, job {job}: {}", turn_fault_message(&fault))));
+                }
+                seed.phase = ReplaySeedPhase::RetireReplayKind;
+            }
+            ReplaySeedPhase::RetireReplayKind => {
+                let seed = self.replay_seeds[index].as_mut().expect("restarted seed");
+                drop(seed.replay_kind_owner.take().expect("fixed kind pages supersede replay ABI owner"));
+                let bytes = seed.seed.as_ref().expect("retained seed").kind_length;
+                seed.abi_reserved -= bytes;
+                JOB_REPLAY_ABI_BYTES.fetch_sub(bytes, Ordering::AcqRel);
+                seed.phase = ReplaySeedPhase::ActivateAuthority;
+            }
+            ReplaySeedPhase::Closing => {
+                let seed = self.replay_seeds[index].as_mut().expect("closing replay seed");
+                if let Some(owner) = seed.replay_kind_owner.take() {
+                    let capacity = seed.seed.as_ref().expect("closing fixed seed").kind_length;
+                    drop(owner);
+                    seed.abi_reserved -= capacity;
+                    JOB_REPLAY_ABI_BYTES.fetch_sub(capacity, Ordering::AcqRel);
+                    return Ok(true);
+                }
+                if let Some(owner) = seed.materialized_checkpoint.take() {
+                    let capacity = seed.seed.as_ref().expect("closing fixed seed").checkpoint_length;
+                    drop(owner);
+                    seed.abi_reserved -= capacity;
+                    JOB_REPLAY_ABI_BYTES.fetch_sub(capacity, Ordering::AcqRel);
+                    return Ok(true);
+                }
+                if let Some(owner) = seed.materialized_input.take() {
+                    let capacity = seed.seed.as_ref().expect("closing fixed seed").input_length;
+                    drop(owner);
+                    seed.abi_reserved -= capacity;
+                    JOB_REPLAY_ABI_BYTES.fetch_sub(capacity, Ordering::AcqRel);
+                    return Ok(true);
+                }
+                if let Some(owner) = seed.materialized_kind.take() {
+                    let capacity = seed.seed.as_ref().expect("closing fixed seed").kind_length;
+                    drop(owner);
+                    seed.abi_reserved -= capacity;
+                    JOB_REPLAY_ABI_BYTES.fetch_sub(capacity, Ordering::AcqRel);
+                    return Ok(true);
+                }
+                if let Some(owner) = seed.checkpoint_owner.take() {
+                    drop(owner);
+                    return Ok(true);
+                }
+                if let Some(owner) = seed.input_owner.take() {
+                    drop(owner);
+                    return Ok(true);
+                }
+                if let Some(owner) = seed.kind_owner.take() {
+                    drop(owner);
+                    return Ok(true);
+                }
+                if !seed.seed.as_mut().expect("closing fixed seed").close_one() {
+                    return Ok(true);
+                }
+                seed.phase = ReplaySeedPhase::RetireSeedShell;
+            }
+            ReplaySeedPhase::RetireSeedShell => {
+                let seed = self.replay_seeds[index].as_mut().expect("terminal replay seed");
+                let fixed = seed.seed.take().expect("terminal fixed seed");
+                drop(fixed);
+                seed.phase = ReplaySeedPhase::RetireMountedShell;
+            }
+            ReplaySeedPhase::RetireMountedShell => {
+                let seed = self.replay_seeds[index].take().expect("terminal replay seed");
+                drop(seed);
+            }
+            ReplaySeedPhase::Retained => {
+                self.replay_seeds[index].as_mut().expect("stale retained replay seed").phase = ReplaySeedPhase::Closing;
+            }
+        }
+        Ok(true)
     }
 
     /// 📌️ Adds an already-instantiated actor to this shard's live set — called once per
@@ -621,7 +1363,11 @@ impl ShardLoop {
     }
 
     pub fn has_pending_work(&self) -> bool {
-        !self.pending_interactive.is_empty() || !self.pending_background.is_empty() || self.rejected_frame.is_some() || !self.running_jobs.is_empty()
+        !self.pending_interactive.is_empty()
+            || !self.pending_background.is_empty()
+            || self.rejected_frame.is_some()
+            || self.replay_seed_refusals.iter().any(Option::is_some)
+            || self.replay_seeds.iter().flatten().any(|seed| !matches!(seed.phase, ReplaySeedPhase::Retained) || !self.instances.contains_key(&seed.actor))
     }
 
     pub fn take_terminal_frame(&mut self) -> Option<Vec<u8>> {
@@ -671,7 +1417,10 @@ impl ShardLoop {
     /// `primed: None` (what [`Self::pump`] passes) behaves identically to the pre-`ShardFrame`
     /// `pump()`.
     pub async fn pump_primed(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
-        let has_deferred = !self.pending_interactive.is_empty() || !self.pending_background.is_empty() || !self.running_jobs.is_empty();
+        let has_deferred = !self.pending_interactive.is_empty()
+            || !self.pending_background.is_empty()
+            || self.replay_seed_refusals.iter().any(Option::is_some)
+            || self.replay_seeds.iter().flatten().any(|seed| !matches!(seed.phase, ReplaySeedPhase::Retained) || !self.instances.contains_key(&seed.actor));
         let mut frame = self.rejected_frame.take();
         if frame.is_none() {
             if let Some(bytes) = primed {
@@ -702,6 +1451,9 @@ impl ShardLoop {
             }
         }
 
+        if self.drive_replay_refusal().await? {
+            return Ok(1);
+        }
         let authority = if let Some((_, authority)) = self.pending_interactive.pop_front() {
             Some((semio_framework_actor::Lane::Interactive, authority))
         } else {
@@ -724,6 +1476,10 @@ impl ShardLoop {
                     return Ok(1);
                 }
                 DeferredAuthority::JobStep { actor, turn } => selected_step = Some((actor, turn)),
+                DeferredAuthority::JobReplay { actor, turn, request, worker_count, worker_slot } => {
+                    self.begin_replay_seed(actor, turn, request, worker_count, worker_slot)?;
+                    return Ok(1);
+                }
                 DeferredAuthority::Cancel(cursor) => {
                     self.cancel_one(cursor, lane).await?;
                     return Ok(1);
@@ -738,7 +1494,10 @@ impl ShardLoop {
                 }
             }
         }
-        let selected_step = selected_step.or_else(|| self.running_jobs.iter().find_map(|pair| self.job_turns.get(pair).copied().map(|turn| (pair.0, turn))));
+        if selected_step.is_none() && self.drive_replay_seed().await? {
+            return Ok(1);
+        }
+        let selected_step = selected_step;
         if let Some((actor_id, turn)) = selected_step {
             let job = turn.job;
             let Some(authority) = self.job_authorities.get(&(actor_id, job)).copied() else {
@@ -748,6 +1507,21 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: job {job} has no independently admitted operation authority") }).await?;
                 return Ok(1);
             };
+            let Some(placement) = self.job_placement.get(&(actor_id, job)).copied() else {
+                self.running_jobs.remove(&(actor_id, job));
+                self.job_turns.remove(&(actor_id, job));
+                self.job_authorities.remove(&(actor_id, job));
+                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: job {job} has no retained placement authority") }).await?;
+                return Ok(1);
+            };
+            if turn.step_sequence == u64::MAX || turn.operation.preview_sequence == u64::MAX {
+                self.running_jobs.remove(&(actor_id, job));
+                self.job_turns.remove(&(actor_id, job));
+                self.job_authorities.remove(&(actor_id, job));
+                self.job_placement.remove(&(actor_id, job));
+                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: job {job} exhausted its checked replay sequence") }).await?;
+                return Ok(1);
+            }
             // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id));
             let actor_lane = self.actor_lane(actor_id);
@@ -766,15 +1540,25 @@ impl ShardLoop {
                     let step_outcome = match step {
                         JobStep::Running { progress: Some(preview) } => JobStepOutcome::PreviewReady { preview },
                         JobStep::Running { progress: None } => JobStepOutcome::Yield,
-                        JobStep::Done { output } => {
-                            let state = self.runtime.checkpoint(instance).await.unwrap_or_default();
-                            self.running_jobs.remove(&(actor_id, job));
-                            self.job_turns.remove(&(actor_id, job));
-                            self.job_authorities.remove(&(actor_id, job));
-                            self.job_placement.remove(&(actor_id, job));
-                            defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) })?;
-                            JobStepOutcome::Complete { candidate: JobCommitCandidate { state, output } }
-                        }
+                        JobStep::Done { output } => match self.runtime.checkpoint(instance).await {
+                            Ok(state) => {
+                                self.running_jobs.remove(&(actor_id, job));
+                                self.job_turns.remove(&(actor_id, job));
+                                self.job_authorities.remove(&(actor_id, job));
+                                self.job_placement.remove(&(actor_id, job));
+                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) })?;
+                                JobStepOutcome::Complete { candidate: JobCommitCandidate { state, output } }
+                            }
+                            Err(fault) => {
+                                self.running_jobs.remove(&(actor_id, job));
+                                self.job_turns.remove(&(actor_id, job));
+                                self.job_authorities.remove(&(actor_id, job));
+                                self.job_placement.remove(&(actor_id, job));
+                                let detail = start_job_fault_bytes(&TurnFault::from(fault));
+                                defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(detail.clone()) })?;
+                                JobStepOutcome::Fault { detail }
+                            }
+                        },
                         JobStep::Failed { error } => {
                             self.running_jobs.remove(&(actor_id, job));
                             self.job_turns.remove(&(actor_id, job));
@@ -786,12 +1570,12 @@ impl ShardLoop {
                     };
                     let mut published_turn = turn;
                     if matches!(step_outcome, JobStepOutcome::PreviewReady { .. }) {
-                        published_turn.operation.preview_sequence = published_turn.operation.preview_sequence.saturating_add(1);
+                        published_turn.operation.preview_sequence += 1;
                     }
                     if !matches!(step_outcome, JobStepOutcome::Complete { .. } | JobStepOutcome::Cancelled | JobStepOutcome::Fault { .. }) {
-                        self.job_turns.insert((actor_id, job), JobTurn { step_sequence: turn.step_sequence.saturating_add(1), ..published_turn });
+                        self.job_turns.insert((actor_id, job), JobTurn { step_sequence: turn.step_sequence + 1, ..published_turn });
                     }
-                    ShardOutcome::Job { actor: actor_id, authority, publication: JobPublication { turn: published_turn, outcome: step_outcome } }
+                    ShardOutcome::Job { actor: actor_id, authority: authority.turn, request: authority.request, placement, publication: JobPublication { turn: published_turn, outcome: step_outcome } }
                 }
                 Err(fault) => {
                     self.running_jobs.remove(&(actor_id, job));
@@ -843,7 +1627,9 @@ impl ShardLoop {
             self.runtime.execute_turn(instance, &events, turn_budget.await).await
         };
         let outcome = match turn_outcome {
-            Ok(result) => {
+            Ok(mut result) => {
+                let base_revision = result.ui_patches.iter().map(|patch| patch.revision.0).max().unwrap_or_default();
+                let bridged = to_actor_turn_result_in_place(&mut result, actor_id, 0, 0).await;
                 // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1): the
                 // generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet closes — see
                 // `running_jobs`'s own doc comment. `placement` (inline/isolated/exclusive) is
@@ -853,46 +1639,52 @@ impl ShardLoop {
                 // the actor pool `Kernel::activate`/`ShardTable` builds, `design-runtime.md` §1,
                 // `🎭️actor` territory a single `ShardLoop` cannot reach on its own — documented gap,
                 // not a silently faked one, see the K1 report's lease-request).
-                for effect in &result.effects {
+                for effect in std::mem::take(&mut result.effects) {
                     match effect {
                         Effect::SpawnJob { job, kind, input, placement } => {
+                            if self.next_job_operation == u64::MAX {
+                                defer_completion(
+                                    &mut self.pending_interactive,
+                                    &mut self.pending_background,
+                                    &mut self.terminal_authorities,
+                                    actor_lane,
+                                    actor_id,
+                                    Event::JobCompleted { job, result: RequestOutcome::Err(b"checked replay operation identity exhausted".to_vec()) },
+                                )?;
+                                continue;
+                            }
                             let operation = self.next_job_operation;
-                            self.next_job_operation = self.next_job_operation.wrapping_add(1).max(1);
-                            let base_revision = result.ui_patches.iter().map(|patch| patch.revision.0).max().unwrap_or_default();
-                            let authority = JobTurn {
-                                job: *job,
-                                operation: JobOperation { operation, base_revision, generation: u64::from(ActorId(actor_id).generation()), preview_sequence: 0, seed: operation.rotate_left(17) ^ actor_id ^ *job },
-                                step_sequence: 0,
-                            };
-                            self.job_authorities.insert((actor_id, *job), authority);
-                            self.job_turns.insert((actor_id, *job), authority);
-                            match self.runtime.start_job(instance, *job, kind, input.clone()).await {
-                                Ok(()) => {
-                                    self.running_jobs.insert((actor_id, *job));
-                                    self.job_placement.insert((actor_id, *job), *placement);
+                            self.next_job_operation += 1;
+                            let authority =
+                                JobTurn { job, operation: JobOperation { operation, base_revision, generation: u64::from(ActorId(actor_id).generation()) + 1, preview_sequence: 0, seed: operation.rotate_left(17) ^ actor_id ^ job }, step_sequence: 0 };
+                            let request = JobReplayRequest::from_spawn(&kind, &input);
+                            let mounted = if self.replay_seeds.iter().any(Option::is_none) { MountedReplaySeed::new(actor_id, job, authority, request, placement, kind, input) } else { Err((kind, input)) };
+                            match mounted {
+                                Ok(seed) => {
+                                    let slot = self.replay_seeds.iter_mut().find(|slot| slot.is_none()).expect("preflighted fixed replay seed slot");
+                                    *slot = Some(seed);
                                 }
-                                Err(fault) => {
-                                    self.job_authorities.remove(&(actor_id, *job));
-                                    self.job_turns.remove(&(actor_id, *job));
-                                    defer_completion(
-                                        &mut self.pending_interactive,
-                                        &mut self.pending_background,
-                                        &mut self.terminal_authorities,
-                                        actor_lane,
-                                        actor_id,
-                                        Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) },
-                                    )?;
+                                Err((kind, input)) => {
+                                    let reason: &'static [u8] = if self.replay_seeds.iter().any(Option::is_none) { b"fixed replay seed exceeds admitted page capacity" } else { b"fixed replay seed registry refused the exact spawn owner" };
+                                    let refusal = ReplaySpawnRefusal::new(actor_id, job, reason, kind, input);
+                                    let slot = self.replay_seed_refusals.iter_mut().find(|slot| slot.is_none()).expect("one empty refusal slot per granted maximum effect");
+                                    *slot = Some(refusal);
                                 }
                             }
                         }
                         Effect::CancelJob { job } => {
-                            if self.running_jobs.contains(&(actor_id, *job)) {
-                                match self.runtime.cancel_job(instance, *job).await {
+                            if let Some(seed) = self.replay_seeds.iter_mut().flatten().find(|seed| seed.actor == actor_id && seed.job == job && !matches!(seed.phase, ReplaySeedPhase::Retained)) {
+                                seed.phase = ReplaySeedPhase::Closing;
+                            } else if self.running_jobs.contains(&(actor_id, job)) {
+                                match self.runtime.cancel_job(instance, job).await {
                                     Ok(()) => {
-                                        self.running_jobs.remove(&(actor_id, *job));
-                                        self.job_turns.remove(&(actor_id, *job));
-                                        self.job_authorities.remove(&(actor_id, *job));
-                                        self.job_placement.remove(&(actor_id, *job));
+                                        self.running_jobs.remove(&(actor_id, job));
+                                        self.job_turns.remove(&(actor_id, job));
+                                        self.job_authorities.remove(&(actor_id, job));
+                                        self.job_placement.remove(&(actor_id, job));
+                                        if let Some(seed) = self.replay_seeds.iter_mut().flatten().find(|seed| seed.actor == actor_id && seed.job == job) {
+                                            seed.phase = ReplaySeedPhase::Closing;
+                                        }
                                     }
                                     Err(fault) => {
                                         let message = format!("ShardLoop::pump: cancel-job {job} failed; actor {actor_id} retired: {}", turn_fault_message(&fault));
@@ -906,7 +1698,7 @@ impl ShardLoop {
                         _ => {}
                     }
                 }
-                match to_actor_turn_result(result, actor_id, 0, 0).await {
+                match bridged {
                     Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
                     Err(fault) => ShardOutcome::Fault { actor: actor_id, message: fault.message },
                 }
@@ -1047,6 +1839,7 @@ impl ShardLoop {
                     serde_json::from_slice::<Event>(bytes)?;
                 }
                 Payload::JobStep { turn } => self.validate_job_turn(envelope.to.0, *turn)?,
+                Payload::JobReplay { turn, request, .. } => self.validate_replay_request(envelope.to.0, *turn, *request)?,
                 Payload::Suspend { .. } | Payload::Resume { .. } | Payload::Cancel { .. } => {}
             }
         }
@@ -1099,6 +1892,7 @@ impl ShardLoop {
                 self.accept_job_turn(actor, turn)?;
                 DeferredAuthority::JobStep { actor, turn }
             }
+            Payload::JobReplay { turn, request, worker_count, worker_slot } => DeferredAuthority::JobReplay { actor, turn, request, worker_count, worker_slot },
             Payload::Suspend { operation, applied_progress } => DeferredAuthority::Suspend { actor, operation, applied_progress },
             Payload::Resume { operation, checkpoint } => DeferredAuthority::Resume { actor, operation, checkpoint },
             Payload::Cancel { seq: _ } => DeferredAuthority::Cancel(CancelCursor { actor, after_job: None, owner_bytes }),
@@ -1984,7 +2778,13 @@ mod tests {
                     usage: semio_framework_actor::Usage { fuel: 4, wall_us: 5, memory_bytes: 6 },
                 },
             },
-            ShardOutcome::Job { actor: 11, authority: turn, publication: JobPublication { turn, outcome: JobStepOutcome::PreviewReady { preview: vec![7] } } },
+            ShardOutcome::Job {
+                actor: 11,
+                authority: turn,
+                request: JobReplayRequest::from_spawn("remodel.reconstruct", b"fixture"),
+                placement: JobPlacement::Isolated,
+                publication: JobPublication { turn, outcome: JobStepOutcome::PreviewReady { preview: vec![7] } },
+            },
             ShardOutcome::Fault { actor: 11, message: "fault".to_string() },
             ShardOutcome::Checkpoint { actor: 11, operation, checkpoint: JobCheckpoint { state: vec![8], applied_progress: 9 } },
             ShardOutcome::Resumed { actor: 11, operation },
@@ -2531,6 +3331,112 @@ mod tests {
         assert_eq!(ring.len(), 2, "one grant advances one mixed lifecycle authority");
         assert!(matches!(ring.pop_front(), Some((_, DeferredAuthority::Suspend { actor: owner, .. })) if owner == actor.0));
         assert!(matches!(ring.pop_front(), Some((_, DeferredAuthority::Resume { actor: owner, .. })) if owner == actor.0));
+    }
+
+    #[test]
+    fn replay_seed_max_plus_one_returns_the_exact_spawn_owners_unchanged() {
+        let kind = "k".repeat(JOB_REPLAY_KIND_PAGE_CAPACITY * JOB_REPLAY_SEED_PAGE_BYTES + 1);
+        let input = vec![7; JOB_REPLAY_SEED_PAGE_BYTES];
+        let kind_identity = kind.as_ptr();
+        let input_identity = input.as_ptr();
+        let turn = test_job_turn(ActorId(61), 9, 0, 0);
+        let request = JobReplayRequest::from_spawn(&kind, &input);
+        let (kind, input) = match MountedReplaySeed::new(61, 9, turn, request, JobPlacement::Inline, kind, input) {
+            Ok(_) => panic!("page maximum plus one must refuse"),
+            Err(owners) => owners,
+        };
+        assert_eq!(kind.as_ptr(), kind_identity);
+        assert_eq!(input.as_ptr(), input_identity);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_work_and_closes_one_owner_per_sub_eight_ms_opportunity() {
+        let actor = ActorId(63);
+        let job = 11;
+        let turn = test_job_turn(actor, job, 0, 0);
+        let kind = "action-bus.fixture".to_string();
+        let input = vec![1, 2, 3];
+        let request = JobReplayRequest::from_spawn(&kind, &input);
+        let process_pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
+        let abi_bytes_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
+        let runtime = Arc::new(GuestRuntimes::Mock(Arc::new(MockGuestRuntime::new().await)));
+        let mut shard = ShardLoop::new(runtime, ShardTransports::Loopback(LoopbackTransport::default())).await;
+        shard.replay_seeds[0] = Some(MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed"));
+
+        let initial_phase = shard.replay_seeds[0].as_ref().expect("mounted seed").phase;
+        shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 0, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+        assert!(!shard.drive_replay_seed().await.expect("zero fuel refuses unchanged"));
+        assert_eq!(shard.replay_seeds[0].as_ref().expect("unchanged seed").phase, initial_phase);
+        shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 0, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+        assert!(!shard.drive_replay_seed().await.expect("expired deadline refuses unchanged"));
+        assert_eq!(shard.replay_seeds[0].as_ref().expect("unchanged seed").phase, initial_phase);
+
+        let mut wrong_route = request;
+        wrong_route.digest[0] ^= 1;
+        assert!(shard.validate_replay_request(actor.0, turn, wrong_route).is_err());
+        assert!(shard.validate_replay_request(actor.0, JobTurn { operation: JobOperation { seed: turn.operation.seed ^ 1, ..turn.operation }, ..turn }, request).is_err());
+        assert!(shard.validate_replay_request(actor.0, JobTurn { operation: JobOperation { generation: turn.operation.generation + 1, ..turn.operation }, ..turn }, request).is_err());
+        shard.replay_seeds[0].as_mut().expect("mounted seed").phase = ReplaySeedPhase::Retained;
+        assert!(shard.begin_replay_seed(actor.0, turn, request, 0, 0).is_err());
+        assert!(shard.begin_replay_seed(actor.0, turn, request, 1, u16::MAX).is_err());
+
+        shard.replay_seeds[0].as_mut().expect("mounted seed").phase = ReplaySeedPhase::CaptureInput;
+        shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+        let stale_started = std::time::Instant::now();
+        assert!(shard.drive_replay_seed().await.expect("stale actor starts exact close"));
+        assert!(stale_started.elapsed() < std::time::Duration::from_millis(8));
+        assert_eq!(shard.replay_seeds[0].as_ref().expect("stale seed remains discoverable").phase, ReplaySeedPhase::Closing);
+        while shard.replay_seeds[0].is_some() {
+            shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+            let started = std::time::Instant::now();
+            assert!(shard.drive_replay_seed().await.expect("one close opportunity"));
+            assert!(started.elapsed() < std::time::Duration::from_millis(8));
+        }
+        assert_eq!(JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire), process_pages_before);
+        assert_eq!(JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire), abi_bytes_before);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before_another_job_step() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
+        let actor = ActorId(65);
+        let job = 13;
+        let package = PackageRef { package: PackageId("mounted-replay-cancel".to_string()), hash: PackageHash([17; 32]) };
+        let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        let turn = test_job_turn(actor, job, 0, 0);
+        let kind = "action-bus.cancel".to_string();
+        let input = vec![2, 3, 5, 7];
+        let request = JobReplayRequest::from_spawn(&kind, &input);
+        let process_pages_before = JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire);
+        let abi_bytes_before = JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire);
+        let (transport, _) = LoopbackTransport::paired().await;
+        let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
+        shard.register(actor, instance);
+        let mut seed = MountedReplaySeed::new(actor.0, job, turn, request, JobPlacement::Inline, kind, input).expect("fixed mounted replay seed");
+        seed.phase = ReplaySeedPhase::Retained;
+        shard.replay_seeds[0] = Some(seed);
+        shard.running_jobs.insert((actor.0, job));
+        shard.job_turns.insert((actor.0, job), turn);
+        shard.job_authorities.insert((actor.0, job), JobAuthority { turn, request });
+        shard.job_placement.insert((actor.0, job), JobPlacement::Inline);
+        let mut cancel = MockGuestRuntime::idle_turn().await;
+        cancel.effects.push(Effect::CancelJob { job });
+        mock.script_turn(actor, cancel).await;
+
+        shard.execute_turn_for(actor.0, Event::Wake).await.expect("mounted cancel turn");
+        assert_eq!(mock.cancel_admissions(), 1);
+        assert_eq!(mock.step_admissions(), 0, "cancel closes before another guest job step");
+        assert_eq!(shard.replay_seeds[0].as_ref().expect("cancelled seed remains discoverable").phase, ReplaySeedPhase::Closing);
+        assert!(!shard.running_jobs.contains(&(actor.0, job)));
+        while shard.replay_seeds[0].is_some() {
+            shard.granted_budgets.insert(actor.0, semio_framework_actor::Budget { fuel: 1, wall_ms: 1, ..semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance) });
+            let started = std::time::Instant::now();
+            assert!(shard.drive_replay_seed().await.expect("one cancelled-owner close opportunity"));
+            assert!(started.elapsed() < std::time::Duration::from_millis(8));
+        }
+        assert_eq!(JOB_REPLAY_SEED_PAGES.load(Ordering::Acquire), process_pages_before);
+        assert_eq!(JOB_REPLAY_ABI_BYTES.load(Ordering::Acquire), abi_bytes_before);
     }
     //#endregion 🔖️LanePriorityAndEpochYield
 }

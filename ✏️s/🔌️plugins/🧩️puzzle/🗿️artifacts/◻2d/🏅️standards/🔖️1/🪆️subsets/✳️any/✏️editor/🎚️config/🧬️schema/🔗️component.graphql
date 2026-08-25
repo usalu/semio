@@ -8,12 +8,16 @@ type Puzzle2dConfig {
   brushCandidates: [JsonValue!]! @state(class: CONFIG)
   brushCandidateSourceHandleId: String! @state(class: CONFIG)
   fillCount: Int! @state(class: CONFIG)
-  fillJobCheckpoint: [Int!] @state(class: CONFIG)
   fillJobOperation: Long! @state(class: CONFIG)
   fillJobGeneration: Long! @state(class: CONFIG)
   fillJobSeed: Long! @state(class: CONFIG)
-  fillJobAppliedCount: Long! @state(class: CONFIG)
-  fillJobPreview: JsonValue @state(class: CONFIG)
+  fillJobBaseRevision: Long! @state(class: CONFIG)
+  fillJobCheckpointSequence: Long! @state(class: CONFIG)
+  fillJobAcceptedCount: Long! @state(class: CONFIG)
+  fillJobSearchCount: Long! @state(class: CONFIG)
+  fillJobStage: String! @state(class: CONFIG)
+  fillJobLifecycle: Puzzle2dFillLifecycle! @state(class: CONFIG)
+  fillJobFaultCode: String @state(class: CONFIG)
   gridSnapEnabled: Boolean! @state(class: CONFIG)
   gridFactor: Float! @state(class: CONFIG)
   suggestionOffset: Float! @state(class: CONFIG)
@@ -24,6 +28,21 @@ type Puzzle2dConfig {
   terminology: String! @state(class: CONFIG)
   exampleLoadGeneration: Long! @state(class: CONFIG)
   exampleLoadId: String @state(class: CONFIG)
+}
+
+enum Puzzle2dFillLifecycle {
+  IDLE
+  CAPTURING
+  QUEUED
+  RUNNING
+  CHECKPOINT_READY
+  APPLYING
+  AWAITING_ADOPTION
+  CLOSING
+  COMPLETED
+  CANCELLED
+  FAULTED
+  DISCARDED
 }
 
 type StringEntry {

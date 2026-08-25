@@ -240,6 +240,87 @@ pub struct EditorHost {
     chrome_edgeless_scroll: bool,
 }
 
+/// 🧹️ Retained text-editor owner that releases one scalar or collection item per close grant.
+pub struct EditorHostRetirement {
+    text: String,
+    semantic_tokens: Vec<SemanticTokenJson>,
+    selectable_spans: Vec<SelectableSpanJson>,
+    diagnostics: Vec<DiagnosticJson>,
+    placeholders: Vec<PlaceholderJson>,
+    hover_occurrences: Vec<ByteRangeJson>,
+    selection_occurrences: Vec<ByteRangeJson>,
+    extra_carets: Vec<usize>,
+    released: bool,
+}
+
+impl EditorHostRetirement {
+    pub fn new(host: EditorHost) -> Self {
+        let EditorHost {
+            text,
+            caret: _,
+            anchor: _,
+            camera: _,
+            viewport: _,
+            semantic_tokens,
+            selectable_spans,
+            diagnostics,
+            placeholders,
+            hover_occurrences,
+            selection_occurrences,
+            extra_carets,
+            font_px: _,
+            line_height: _,
+            show_line_numbers: _,
+            tab_size: _,
+            drag_selecting: _,
+            hover_token_start: _,
+            hover_token_end: _,
+            theme: _,
+            caret_visible: _,
+            dead_line_y: _,
+            chrome_edgeless_scroll: _,
+        } = host;
+        Self { text, semantic_tokens, selectable_spans, diagnostics, placeholders, hover_occurrences, selection_occurrences, extra_carets, released: false }
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.released {
+            return true;
+        }
+        if self.text.pop().is_some()
+            || self.semantic_tokens.pop().is_some()
+            || self.selectable_spans.pop().is_some()
+            || self.diagnostics.pop().is_some()
+            || self.placeholders.pop().is_some()
+            || self.hover_occurrences.pop().is_some()
+            || self.selection_occurrences.pop().is_some()
+            || self.extra_carets.pop().is_some()
+        {
+            return false;
+        }
+        self.released = true;
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.released
+            && self.text.is_empty()
+            && self.semantic_tokens.is_empty()
+            && self.selectable_spans.is_empty()
+            && self.diagnostics.is_empty()
+            && self.placeholders.is_empty()
+            && self.hover_occurrences.is_empty()
+            && self.selection_occurrences.is_empty()
+            && self.extra_carets.is_empty()
+    }
+}
+
+impl Drop for EditorHostRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_is_empty(), "EditorHostRetirement must reach terminal-empty before release");
+    }
+}
+
 impl Default for EditorHost {
     fn default() -> Self {
         Self::new()

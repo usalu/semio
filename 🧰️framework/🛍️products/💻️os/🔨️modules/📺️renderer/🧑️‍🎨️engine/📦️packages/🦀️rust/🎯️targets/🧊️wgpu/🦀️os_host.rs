@@ -21,6 +21,7 @@ use crate::deadlines::{CaretBlink, HotSwapPoll};
 use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, AtomicUsize, Ordering};
 use ui_render::{CursorRequest, FrameScheduler};
 
 //#region 🔖️OsHost
@@ -135,7 +136,7 @@ pub struct OsHost {
     pub(crate) surface_resize: crate::surface_lane::SurfaceResizeAuthority,
 }
 
-pub(crate) struct OsHostRetirement {
+struct OsHostRetirementState {
     runtime: Option<RuntimeMailbox>,
     presenter: Option<AppPresenter>,
     scheduler: Option<FrameScheduler>,
@@ -148,10 +149,236 @@ pub(crate) struct OsHostRetirement {
     snapshot_sink: Option<RenderSnapshotSink>,
     frame_build: Option<crate::frame_job::FrameBuildHandle>,
     surface_resize: Option<crate::surface_lane::SurfaceResizeAuthority>,
+    engine_surfaces: PairedEngineSurfaceClose,
     raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose>,
     cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
     kernel_progress_close: Option<crate::kernel_runtime::KernelCloseHandle>,
+}
+
+pub(crate) struct OsHostRetirement {
+    state: Option<Box<OsHostRetirementState>>,
+    abandonment: Option<OsHostRetirementAbandonment>,
+}
+
+const OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY: usize = 64;
+
+#[derive(Clone, Copy)]
+struct OsHostRetirementAbandonment {
+    slot: u8,
+    generation: u64,
+}
+
+struct OsHostRetirementAbandonmentSlot {
+    generation: AtomicU64,
+    exhausted: AtomicBool,
+    owner: AtomicPtr<OsHostRetirementState>,
+}
+
+impl OsHostRetirementAbandonmentSlot {
+    const fn new() -> Self {
+        Self { generation: AtomicU64::new(0), exhausted: AtomicBool::new(false), owner: AtomicPtr::new(std::ptr::null_mut()) }
+    }
+}
+
+static OS_HOST_RETIREMENT_ABANDONMENTS: [OsHostRetirementAbandonmentSlot; OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY] = [const { OsHostRetirementAbandonmentSlot::new() }; OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY];
+static OS_HOST_RETIREMENT_ABANDONMENT_SCAN: AtomicUsize = AtomicUsize::new(0);
+static OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED: AtomicUsize = AtomicUsize::new(0);
+
+fn os_host_retirement_reservation_marker() -> *mut OsHostRetirementState {
+    std::ptr::NonNull::<OsHostRetirementState>::dangling().as_ptr()
+}
+
+fn reserve_os_host_retirement_abandonment() -> Option<OsHostRetirementAbandonment> {
+    let marker = os_host_retirement_reservation_marker();
+    for (index, slot) in OS_HOST_RETIREMENT_ABANDONMENTS.iter().enumerate() {
+        if slot.exhausted.load(Ordering::Acquire) || slot.owner.compare_exchange(std::ptr::null_mut(), marker, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            continue;
+        }
+        let current = slot.generation.load(Ordering::Acquire);
+        let Some(generation) = current.checked_add(1).filter(|generation| *generation != 0) else {
+            slot.exhausted.store(true, Ordering::Release);
+            slot.owner.store(std::ptr::null_mut(), Ordering::Release);
+            continue;
+        };
+        if slot.generation.compare_exchange(current, generation, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+            return Some(OsHostRetirementAbandonment { slot: index as u8, generation });
+        }
+        slot.owner.store(std::ptr::null_mut(), Ordering::Release);
+    }
+    None
+}
+
+fn release_os_host_retirement_abandonment(token: OsHostRetirementAbandonment) -> bool {
+    let Some(slot) = OS_HOST_RETIREMENT_ABANDONMENTS.get(usize::from(token.slot)) else {
+        return false;
+    };
+    slot.generation.load(Ordering::Acquire) == token.generation && slot.owner.compare_exchange(os_host_retirement_reservation_marker(), std::ptr::null_mut(), Ordering::AcqRel, Ordering::Acquire).is_ok()
+}
+
+fn publish_os_host_retirement_abandonment(token: OsHostRetirementAbandonment, state: Box<OsHostRetirementState>) -> Result<(), Box<OsHostRetirementState>> {
+    let Some(slot) = OS_HOST_RETIREMENT_ABANDONMENTS.get(usize::from(token.slot)) else {
+        return Err(state);
+    };
+    if slot.generation.load(Ordering::Acquire) != token.generation {
+        return Err(state);
+    }
+    let pointer = Box::into_raw(state);
+    match slot.owner.compare_exchange(os_host_retirement_reservation_marker(), pointer, Ordering::AcqRel, Ordering::Acquire) {
+        Ok(_) => {
+            OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.fetch_add(1, Ordering::AcqRel);
+            Ok(())
+        }
+        Err(_) => Err(unsafe { Box::from_raw(pointer) }),
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PairedEngineSurfaceClosePhase {
+    Scan,
+    BeginCpu,
+    BeginGpu,
+    Cpu,
+    Gpu,
+    Witness,
+    Advance,
+    Terminal,
+}
+
+struct PairedEngineSurfaceClose {
+    operation: semio_framework_trace::OperationId,
+    sequence: u64,
+    scan: usize,
+    token: Option<crate::engine_canvas::EngineSurfaceToken>,
+    cpu_present: bool,
+    gpu_present: bool,
+    phase: PairedEngineSurfaceClosePhase,
+    faulted: bool,
+}
+
+impl PairedEngineSurfaceClose {
+    fn new() -> Self {
+        Self { operation: semio_framework_trace::allocate_operation_id(), sequence: 0, scan: 0, token: None, cpu_present: false, gpu_present: false, phase: PairedEngineSurfaceClosePhase::Scan, faulted: false }
+    }
+
+    fn close_step(&mut self, runtime: &RuntimeMailbox, presenter: &mut AppPresenter) -> bool {
+        if self.faulted {
+            return false;
+        }
+        match self.phase {
+            PairedEngineSurfaceClosePhase::Scan => {
+                if self.scan == crate::engine_canvas::ENGINE_SURFACE_CAPACITY {
+                    self.phase = PairedEngineSurfaceClosePhase::Terminal;
+                    return false;
+                }
+                let Ok(cpu) = crate::engine_canvas::engine_surface_token_at(self.scan) else {
+                    return false;
+                };
+                let gpu = presenter.engine_surface_token_at(self.scan);
+                if cpu.is_some() && gpu.is_some() && cpu != gpu {
+                    self.faulted = true;
+                    return false;
+                }
+                self.token = cpu.or(gpu);
+                self.cpu_present = cpu.is_some();
+                self.gpu_present = gpu.is_some();
+                self.phase = if self.token.is_some() { PairedEngineSurfaceClosePhase::BeginCpu } else { PairedEngineSurfaceClosePhase::Advance };
+            }
+            PairedEngineSurfaceClosePhase::BeginCpu => {
+                let Some(token) = self.token else {
+                    self.faulted = true;
+                    return false;
+                };
+                if self.cpu_present {
+                    match runtime.begin_engine_surface_close(token) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            self.faulted = true;
+                            return false;
+                        }
+                        Err(()) => return false,
+                    }
+                }
+                self.phase = PairedEngineSurfaceClosePhase::BeginGpu;
+            }
+            PairedEngineSurfaceClosePhase::BeginGpu => {
+                let Some(token) = self.token else {
+                    self.faulted = true;
+                    return false;
+                };
+                if self.gpu_present && !presenter.begin_engine_surface_close(token) {
+                    self.faulted = true;
+                    return false;
+                }
+                self.phase = PairedEngineSurfaceClosePhase::Cpu;
+            }
+            PairedEngineSurfaceClosePhase::Cpu => {
+                let Some(token) = self.token else {
+                    self.faulted = true;
+                    return false;
+                };
+                if self.cpu_present && !runtime.close_engine_surface_step(token, self.operation, &mut self.sequence) {
+                    return false;
+                }
+                self.phase = PairedEngineSurfaceClosePhase::Gpu;
+            }
+            PairedEngineSurfaceClosePhase::Gpu => {
+                let Some(token) = self.token else {
+                    self.faulted = true;
+                    return false;
+                };
+                if self.gpu_present {
+                    match presenter.close_engine_surface_step(token) {
+                        Ok(true) => {}
+                        Ok(false) => return false,
+                        Err(_) => {
+                            self.faulted = true;
+                            return false;
+                        }
+                    }
+                }
+                self.phase = PairedEngineSurfaceClosePhase::Witness;
+            }
+            PairedEngineSurfaceClosePhase::Witness => {
+                let Some(token) = self.token else {
+                    self.faulted = true;
+                    return false;
+                };
+                if self.cpu_present {
+                    match runtime.engine_surface_terminal_is_empty(token) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            self.faulted = true;
+                            return false;
+                        }
+                        Err(()) => return false,
+                    }
+                }
+                if self.gpu_present && !presenter.engine_surface_terminal_is_empty(token) {
+                    self.faulted = true;
+                    return false;
+                }
+                self.phase = PairedEngineSurfaceClosePhase::Advance;
+            }
+            PairedEngineSurfaceClosePhase::Advance => {
+                let Some(next) = self.scan.checked_add(1) else {
+                    self.faulted = true;
+                    return false;
+                };
+                self.scan = next;
+                self.token = None;
+                self.cpu_present = false;
+                self.gpu_present = false;
+                self.phase = PairedEngineSurfaceClosePhase::Scan;
+            }
+            PairedEngineSurfaceClosePhase::Terminal => return true,
+        }
+        false
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.phase == PairedEngineSurfaceClosePhase::Terminal && self.token.is_none() && !self.cpu_present && !self.gpu_present && !self.faulted
+    }
 }
 
 impl OsHost {
@@ -184,10 +411,13 @@ impl OsHost {
         self.clock.now_seconds()
     }
 
-    pub(crate) fn into_retirement(self) -> OsHostRetirement {
+    pub(crate) fn try_into_retirement(self) -> Result<OsHostRetirement, Self> {
+        let Some(abandonment) = reserve_os_host_retirement_abandonment() else {
+            return Err(self);
+        };
         let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build, surface_resize } =
             self;
-        OsHostRetirement {
+        let state = OsHostRetirementState {
             runtime: Some(runtime),
             presenter: Some(presenter),
             scheduler: Some(scheduler),
@@ -200,11 +430,13 @@ impl OsHost {
             snapshot_sink: Some(snapshot_sink),
             frame_build: Some(frame_build),
             surface_resize: Some(surface_resize),
+            engine_surfaces: PairedEngineSurfaceClose::new(),
             raster_uploads: Some(crate::scenes::begin_pending_raster_authority_close()),
             cursor_wake_requested,
             #[cfg(not(target_arch = "wasm32"))]
             kernel_progress_close: crate::kernel_runtime::KernelClient::get().begin_close_realm().ok(),
-        }
+        };
+        Ok(OsHostRetirement { state: Some(Box::new(state)), abandonment: Some(abandonment) })
     }
 
     pub(crate) fn retain_cursor_wake_directive(&mut self, token: crate::infinite_world::world::WorldCursorWakeToken) {
@@ -218,8 +450,8 @@ impl OsHost {
     }
 }
 
-impl OsHostRetirement {
-    pub(crate) fn close_step(&mut self) -> bool {
+impl OsHostRetirementState {
+    fn close_step(&mut self) -> bool {
         if !crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step() {
             return false;
         }
@@ -270,10 +502,31 @@ impl OsHostRetirement {
             if !presenter.close_cursor_wake_step() {
                 return false;
             }
+            if !matches!(presenter.close_frame_owners_step(), Ok(true)) {
+                return false;
+            }
+        }
+        if !self.engine_surfaces.terminal_is_empty() {
+            let (Some(runtime), Some(presenter)) = (self.runtime.as_ref(), self.presenter.as_mut()) else {
+                return false;
+            };
+            if !self.engine_surfaces.close_step(runtime, presenter) {
+                return false;
+            }
+            if !self.engine_surfaces.terminal_is_empty() {
+                return false;
+            }
+        }
+        if let Some(runtime) = self.runtime.as_ref() {
+            if !runtime.close_input_step() {
+                return false;
+            }
+        }
+        if let Some(presenter) = self.presenter.as_mut() {
             if !matches!(presenter.close_world_owners_step(), Ok(true)) {
                 return false;
             }
-            if !presenter.world_owners_terminal_is_empty() {
+            if !presenter.world_owners_terminal_is_empty() || !presenter.engine_surfaces_terminal_is_empty() {
                 return false;
             }
         }
@@ -301,7 +554,7 @@ impl OsHostRetirement {
         self.terminal_is_empty()
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    fn terminal_is_empty(&self) -> bool {
         self.runtime.is_none()
             && self.presenter.is_none()
             && self.scheduler.is_none()
@@ -315,6 +568,7 @@ impl OsHostRetirement {
             && self.frame_build.is_none()
             && self.surface_resize.is_none()
             && self.raster_uploads.is_none()
+            && self.engine_surfaces.terminal_is_empty()
             && self.cursor_wake_requested.is_none()
             && {
                 #[cfg(not(target_arch = "wasm32"))]
@@ -329,42 +583,150 @@ impl OsHostRetirement {
     }
 }
 
+impl Drop for OsHostRetirementState {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_is_empty(), "OsHostRetirementState must reach terminal-empty before release");
+    }
+}
+
+impl OsHostRetirement {
+    pub(crate) fn close_abandoned_step() -> bool {
+        if OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.load(Ordering::Acquire) == 0 {
+            return true;
+        }
+        let index = match OS_HOST_RETIREMENT_ABANDONMENT_SCAN.fetch_update(Ordering::AcqRel, Ordering::Acquire, |index| Some(index.checked_add(1).map_or(0, |next| next % OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY))) {
+            Ok(index) | Err(index) => index % OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY,
+        };
+        let slot = &OS_HOST_RETIREMENT_ABANDONMENTS[index];
+        let pointer = slot.owner.load(Ordering::Acquire);
+        if pointer.is_null() || pointer == os_host_retirement_reservation_marker() {
+            return false;
+        }
+        if slot.owner.compare_exchange(pointer, os_host_retirement_reservation_marker(), Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return false;
+        }
+        let mut state = unsafe { Box::from_raw(pointer) };
+        if state.close_step() && state.terminal_is_empty() {
+            drop(state);
+            slot.owner.store(std::ptr::null_mut(), Ordering::Release);
+            OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.fetch_sub(1, Ordering::AcqRel);
+        } else {
+            slot.owner.store(Box::into_raw(state), Ordering::Release);
+        }
+        false
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        if !Self::close_abandoned_step() {
+            return false;
+        }
+        let Some(state) = self.state.as_mut() else {
+            return self.terminal_is_empty();
+        };
+        if !state.close_step() || !state.terminal_is_empty() {
+            return false;
+        }
+        let state = self.state.take();
+        drop(state);
+        let Some(token) = self.abandonment.take() else {
+            return false;
+        };
+        if !release_os_host_retirement_abandonment(token) {
+            std::process::abort();
+        }
+        true
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.state.is_none() && self.abandonment.is_none()
+    }
+}
+
 impl Drop for OsHostRetirement {
     fn drop(&mut self) {
-        drop(self.surface_resize.take());
-        for owner in [
-            &mut self.snapshot_sink as &mut dyn RetirementOwner,
-            &mut self.ui_token,
-            &mut self.hot_swap,
-            &mut self.caret,
-            &mut self.clock,
-            &mut self.kernel,
-            &mut self.scheduler,
-            &mut self.runtime,
-            &mut self.presenter,
-            &mut self.events,
-            &mut self.frame_build,
-            &mut self.raster_uploads,
-        ] {
-            owner.forget();
+        let Some(state) = self.state.take() else {
+            if let Some(token) = self.abandonment.take() {
+                if !release_os_host_retirement_abandonment(token) {
+                    std::process::abort();
+                }
+            }
+            return;
+        };
+        let Some(token) = self.abandonment.take() else {
+            let _state = std::mem::ManuallyDrop::new(state);
+            std::process::abort();
+        };
+        if let Err(state) = publish_os_host_retirement_abandonment(token, state) {
+            let _state = std::mem::ManuallyDrop::new(state);
+            std::process::abort();
         }
     }
 }
 
 trait RetirementOwner {
     fn retire(&mut self) -> bool;
-    fn forget(&mut self);
 }
 
 impl<T> RetirementOwner for Option<T> {
     fn retire(&mut self) -> bool {
         self.take().is_some()
     }
+}
 
-    fn forget(&mut self) {
-        if let Some(owner) = self.take() {
-            std::mem::forget(owner);
-        }
+#[cfg(test)]
+fn terminal_os_host_retirement_state() -> OsHostRetirementState {
+    OsHostRetirementState {
+        runtime: None,
+        presenter: None,
+        scheduler: None,
+        kernel: None,
+        clock: None,
+        caret: None,
+        hot_swap: None,
+        events: None,
+        ui_token: None,
+        snapshot_sink: None,
+        frame_build: None,
+        surface_resize: None,
+        engine_surfaces: PairedEngineSurfaceClose {
+            operation: semio_framework_trace::allocate_operation_id(),
+            sequence: 0,
+            scan: crate::engine_canvas::ENGINE_SURFACE_CAPACITY,
+            token: None,
+            cpu_present: false,
+            gpu_present: false,
+            phase: PairedEngineSurfaceClosePhase::Terminal,
+            faulted: false,
+        },
+        raster_uploads: None,
+        cursor_wake_requested: None,
+        #[cfg(not(target_arch = "wasm32"))]
+        kernel_progress_close: None,
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn interrupted_host_retirement_is_rediscovered_and_fixed_registry_refuses_max_plus_one() {
+    let token = reserve_os_host_retirement_abandonment().expect("fixed host retirement reservation");
+    let stale = OsHostRetirementAbandonment { slot: token.slot, generation: token.generation.checked_add(1).expect("test generation") };
+    assert!(!release_os_host_retirement_abandonment(stale));
+    drop(OsHostRetirement { state: Some(Box::new(terminal_os_host_retirement_state())), abandonment: Some(token) });
+    assert_eq!(OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.load(Ordering::Acquire), 1);
+    let mut turns = 0usize;
+    while !OsHostRetirement::close_abandoned_step() {
+        turns += 1;
+        assert!(turns <= OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY);
+    }
+    assert_eq!(OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.load(Ordering::Acquire), 0);
+    let mut reservations = [None; OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY];
+    for reservation in &mut reservations {
+        *reservation = reserve_os_host_retirement_abandonment();
+        assert!(reservation.is_some());
+    }
+    assert!(reserve_os_host_retirement_abandonment().is_none());
+    for reservation in reservations.into_iter().flatten() {
+        assert!(release_os_host_retirement_abandonment(reservation));
     }
 }
 

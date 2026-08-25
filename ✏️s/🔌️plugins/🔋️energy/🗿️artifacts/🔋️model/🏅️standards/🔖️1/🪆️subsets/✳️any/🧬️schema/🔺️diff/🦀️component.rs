@@ -19,6 +19,8 @@ pub struct EnergyModelDiff {
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
+    pub model: Option<crate::model::Model>,
+    #[state(artifact)]
     pub structure: Option<EnergyStructureChild>,
     #[state(artifact)]
     pub zones: Option<EnergyZonesChild>,

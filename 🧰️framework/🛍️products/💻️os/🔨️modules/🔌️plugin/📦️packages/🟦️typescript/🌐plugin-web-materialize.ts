@@ -387,15 +387,20 @@ export async function createActorApi(actorId) {
 `;
 }
 
+const PREVIEW2_SHIM_IMPORT = /(from\s+['"])(?:@bytecodealliance\/preview2-shim|(?:\.\.\/)+(?:plugin-modules\/)?_vendor\/@bytecodealliance\/preview2-shim)\/([\w-]+)(?:\.js)?(['"])/g;
+
+/** @emoji 🪢️ Rewrites bare or previously staged Preview2 imports to one caller-resolved directory prefix. */
+export function rewritePreview2ShimImportSource(source: string, prefix: string): string {
+  return source.replace(PREVIEW2_SHIM_IMPORT, (_match, lead, subpath, trail) => `${lead}${prefix}${subpath}.js${trail}`);
+}
+
 export function rewritePreview2ShimImports(componentJsPath: string, preview2VendorDir: string): void {
   const outDir = dirname(componentJsPath);
   const rel = relative(outDir, preview2VendorDir).replace(/\\/g, "/");
   const prefix = rel.endsWith("/") ? rel : `${rel}/`;
-  let content = readFileSync(componentJsPath, "utf8");
-  const bareSpecifier = /(from\s+['"])@bytecodealliance\/preview2-shim\/([\w-]+)(['"])/g;
-  if (!bareSpecifier.test(content)) return;
-  content = content.replace(bareSpecifier, (_match, lead, subpath, trail) => `${lead}${prefix}${subpath}.js${trail}`);
-  writeFileSync(componentJsPath, content);
+  const content = readFileSync(componentJsPath, "utf8");
+  const rewritten = rewritePreview2ShimImportSource(content, prefix);
+  if (rewritten !== content) writeFileSync(componentJsPath, rewritten);
 }
 
 const WASM_OPT_ARGS: readonly string[] = [
@@ -437,6 +442,26 @@ function optimizePluginCoreModules(outDir: string, componentBase: string, ctx: P
   }
 }
 
+//#region 🧬️JcoAsyncResultLifting
+const JCO_INDIRECT_RESULT_MEMORY_GUARD = "if (!ctx.memory) {\n      _debugLog('missing memory despite indirect param usage'";
+const JCO_RESOLVED_RESULT_MEMORY_GUARD = "if (!memory) {\n      _debugLog('missing memory despite indirect param usage'";
+const JCO_DIRECT_RESULT_CONTEXT = /useDirectParams: true,(\r?\n\s*getMemoryFn: \(\) => memory\d+,)/g;
+
+/** @emoji 🧬️ Corrects jco 1.27's async-export callback adapter to follow the canonical ABI emitted by wit-bindgen: non-empty task results arrive as one indirect return pointer, including results whose flattened shape would otherwise fit jco's four-value direct threshold. The generated generic adapter also checks `ctx.memory`, a field its own context never defines, instead of the resolved `memory` returned by `getMemoryFn`. */
+export function rewriteJcoAsyncResultLifting(source: string): string {
+  return source
+    .replace(JCO_INDIRECT_RESULT_MEMORY_GUARD, JCO_RESOLVED_RESULT_MEMORY_GUARD)
+    .replace(JCO_DIRECT_RESULT_CONTEXT, "useDirectParams: false,$1");
+}
+
+/** @emoji 💾️ Applies {@link rewriteJcoAsyncResultLifting} to one freshly transpiled jco module. */
+function rewriteJcoAsyncResultLiftingAt(modulePath: string): void {
+  const source = readFileSync(modulePath, "utf8");
+  const rewritten = rewriteJcoAsyncResultLifting(source);
+  if (rewritten !== source) writeFileSync(modulePath, rewritten);
+}
+//#endregion 🧬️JcoAsyncResultLifting
+
 export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
   // 🧪️ terra-web-bridges (📓️terra-jco-spike-report.md "what must change" #2): NO `--async-mode`
   // flag — confirmed byte-identical to jco's bare/"sync" default for a component whose every WIT
@@ -453,6 +478,7 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
   ) {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
+  rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
   optimizePluginCoreModules(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
@@ -539,6 +565,7 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
   } catch {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
+  rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
   await optimizePluginCoreModulesAsync(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }

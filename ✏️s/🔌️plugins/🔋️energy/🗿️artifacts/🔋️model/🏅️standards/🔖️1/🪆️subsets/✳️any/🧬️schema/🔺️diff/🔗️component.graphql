@@ -3,12 +3,18 @@
 type EnergyModelDiff {
   artifact: EnergyModelArtifact
   schema: String
-  modelJson: String
+  model: JSON
+  structure: JSON
+  zones: JSON
+  referencedModel: JSON
   resultsJson: String
 }
 
 type EnergyModelArtifact {
   schema: String!
-  modelJson: String!
+  model: JSON!
+  structure: JSON!
+  zones: JSON!
+  referencedModel: JSON
   resultsJson: String!
 }

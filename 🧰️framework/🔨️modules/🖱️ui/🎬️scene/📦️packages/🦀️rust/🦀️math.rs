@@ -1911,7 +1911,7 @@ mod tests {
         let replacement = authority.begin(8, 12, schema).expect("reused fixed slot");
         assert_eq!(replacement.slot, token.slot);
         assert_ne!(replacement.epoch, token.epoch);
-        assert_eq!(authority.ready(lease).unwrap_err(), Mesh3dFault::Stale);
+        assert!(matches!(authority.ready(lease), Err(Mesh3dFault::Stale)));
         authority.begin_close_write(replacement).unwrap();
         assert!(authority.close_step(replacement.slot, replacement.epoch).unwrap());
     }

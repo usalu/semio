@@ -45,6 +45,11 @@ semio_framework_plugin::app_labels! {
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
+        fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
+        fill_cancel: native_en "Cancel fill", native_de "Füllen abbrechen", reuse_en "Cancel fill", reuse_de "Füllen abbrechen";
+        fill_retry: native_en "Retry fill", native_de "Füllen erneut versuchen", reuse_en "Retry fill", reuse_de "Füllen erneut versuchen";
+        fill_fault: native_en "Fill failed", native_de "Füllen fehlgeschlagen", reuse_en "Fill failed", reuse_de "Füllen fehlgeschlagen";
+        fill_result: native_en "Fill result", native_de "Füllergebnis", reuse_en "Fill result", reuse_de "Füllergebnis";
         // example picker
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
     }

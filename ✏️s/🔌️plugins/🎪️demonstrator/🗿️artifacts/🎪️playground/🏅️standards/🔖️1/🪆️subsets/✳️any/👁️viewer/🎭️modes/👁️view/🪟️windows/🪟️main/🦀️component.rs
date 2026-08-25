@@ -31,6 +31,7 @@ pub fn render(document: &PlaygroundSnapshot) -> UiAssemblyResult<BuiltNode> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::Component;
 
     #[test]
     fn definition_declares_a_read_only_text_window() {
@@ -43,9 +44,12 @@ mod tests {
     #[test]
     fn render_carries_the_schema_field_as_read_only_text() {
         let document = PlaygroundSnapshot { schema: "playground.custom".into() };
-        let json = serde_json::to_string(&render(&document).expect("render")).expect("serialize render");
-        assert!(json.contains("playground.custom"));
-        assert!(json.contains("readOnly"));
+        let node = render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
+        let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
+        assert_eq!(scene.buffer, "playground.custom");
+        assert_eq!(scene.language.as_deref(), Some("playground"));
+        assert_eq!(scene.settings_json.as_deref(), Some("{\"readOnly\":true}"));
     }
 }
 //#endregion 🧪️Tests

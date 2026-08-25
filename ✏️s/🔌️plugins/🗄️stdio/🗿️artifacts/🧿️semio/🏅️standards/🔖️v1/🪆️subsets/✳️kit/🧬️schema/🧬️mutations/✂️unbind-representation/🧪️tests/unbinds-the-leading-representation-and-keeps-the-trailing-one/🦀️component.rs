@@ -38,21 +38,30 @@ async fn unbinds_the_link_at_index_zero() {
     assert_eq!(produced.types, base.types, "unbinding must not touch the type the link named as its role");
 }
 
-/// ↩️ The undo re-binds the captured link — target, pin and role all read back out of `base`.
-#[semio_framework_async_macros::async_test]
-async fn the_undo_bind_representation_restores_the_captured_link() {
+/// ↩️ The undo restores the captured link AT ITS OWN INDEX, which for index 0 of a two-link pool
+/// means re-declaring the tail rather than re-binding one link. `bind-representation` can only
+/// append, so the single `bind` this test used to demand left the pool as `[trailing, leading]` —
+/// the right two links in the wrong order — and the `assert_eq!(current, base)` below was the
+/// assertion that caught it once `mutate-semio-kit`'s subject phase started running (ticket
+/// 26/08/23/END-TO-END-TESTING-REFACTOR). The shape assertions now describe the real remedy: lift
+/// the tail off with index-addressed unbinds, then re-declare it in order.
+#[test]
+fn the_undo_restores_the_captured_link_at_its_own_index() {
     let base = before();
     let mutation = mutation();
     let undo = mutation.inverse(&base);
-    assert_eq!(undo.len(), 1, "unbind-representation of an existing link undoes as exactly one bind-representation");
-    let SemioKitMutation::BindRepresentation(rebind) = &undo[0] else { panic!("unbind-representation must undo as bind-representation") };
+    let tail = base.representations.len();
+    assert_eq!(undo.len(), 2 * tail - 1, "undoing an unbind at index 0 lifts off the whole tail and re-declares it: {} unbind(s) then {} bind(s)", tail - 1, tail);
+    assert!(matches!(undo[0], SemioKitMutation::UnbindRepresentation(_)), "the tail is lifted off first");
+    let SemioKitMutation::BindRepresentation(rebind) = &undo[1] else { panic!("the escrowed link is re-declared first, as a bind-representation") };
     assert_eq!(rebind.target, base.representations[0].target, "the undo must recapture the unbound link's own target");
     assert_eq!(rebind.role, base.representations[0].role, "and its own role");
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward unbind-representation applies");
     for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo bind-representation applies");
+        current = step.diff(&current).diff().apply(&current).expect("every undo step applies");
     }
     assert_eq!(current, base, "unbind-representation/unbinds-the-leading-representation-and-keeps-the-trailing-one: the undo did not restore the before-snapshot");
+    assert_eq!(current.representations[0], base.representations[0], "and it put the escrowed link back at index 0, not at the end");
 }
 
 /// 🔣️ Snapshots and the `{"UnbindRepresentation":{"index":0}}` payload are canonical — links are index-addressed, so the payload carries a number rather than an id.

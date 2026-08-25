@@ -46,6 +46,8 @@ import {
   pluginComponentBridgeSource,
   SHARD_WORKER_FILE,
   shardWorkerSource,
+  rewriteJcoAsyncResultLifting,
+  rewritePreview2ShimImportSource,
   rewritePreview2ShimImports,
   transpilePluginComponentAsync,
   type PluginWebMaterializeContext,
@@ -867,6 +869,13 @@ function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string)
   const stagingDir = join(extensionOutRoot, `.staging-${target.pluginId}-${Date.now()}`);
   const retiredDir = join(extensionOutRoot, `.retired-${target.pluginId}-${Date.now()}`);
   cpSync(builtOutDir, stagingDir, { recursive: true });
+  for (const file of readdirSync(stagingDir)) {
+    if (!file.endsWith(".js")) continue;
+    const filePath = join(stagingDir, file);
+    const source = readFileSync(filePath, "utf8");
+    const rewritten = rewritePreview2ShimImportSource(source, "../../plugin-modules/_vendor/@bytecodealliance/preview2-shim/");
+    if (rewritten !== source) writeFileSync(filePath, rewritten);
+  }
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
   const moduleUrl = `/extensions/${target.pluginId}/${jsBase}.js`;
   const installedAt = Date.now();
@@ -888,7 +897,7 @@ function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string)
 }
 
 /** @emoji 🧩️ Seeds `/extensions` from any extension crates already present under `plugin-modules/` (covers restart without rebuild). */
-function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistryEntry[]): void {
+export function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistryEntry[]): void {
   for (const target of entries) {
     if (target.role !== "extension") continue;
     const builtOutDir = join(pluginOutRoot, target.pluginId);
@@ -5467,6 +5476,39 @@ if (import.meta.vitest) {
       const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
       expect(source).toContain("fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs");
       expect(source).toContain("maxFrames: 8");
+    });
+  });
+
+  describe("rewriteJcoAsyncResultLifting", () => {
+    it("matches wit-bindgen's indirect callback ABI for jco-generated compound task results", () => {
+      const jcoGenerated = `function taskReturn(ctx) {
+  const memory = ctx.getMemoryFn();
+  if (!ctx.memory) {
+      _debugLog('missing memory despite indirect param usage', { ctx });
+  }
+}
+const trampoline0 = taskReturn.bind(null, {
+  useDirectParams: true,
+  getMemoryFn: () => null,
+});
+const trampoline22 = taskReturn.bind(null, {
+  useDirectParams: true,
+  getMemoryFn: () => memory0,
+});`;
+      const rewritten = rewriteJcoAsyncResultLifting(jcoGenerated);
+      expect(rewritten).toContain("if (!memory) {");
+      expect(rewritten).toContain("useDirectParams: false,\n  getMemoryFn: () => memory0,");
+      expect(rewritten).toContain("useDirectParams: true,\n  getMemoryFn: () => null,");
+      expect(rewriteJcoAsyncResultLifting(rewritten)).toBe(rewritten);
+    });
+  });
+
+  describe("rewritePreview2ShimImportSource", () => {
+    it("rebases an installed extension from the build tree onto the shared plugin vendor root", () => {
+      const staged = `import { environment } from '../_vendor/@bytecodealliance/preview2-shim/cli.js';`;
+      expect(rewritePreview2ShimImportSource(staged, "../../plugin-modules/_vendor/@bytecodealliance/preview2-shim/")).toBe(
+        `import { environment } from '../../plugin-modules/_vendor/@bytecodealliance/preview2-shim/cli.js';`,
+      );
     });
   });
 

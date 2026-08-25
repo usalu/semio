@@ -1,0 +1,23 @@
+{
+  "schema": "semio.energy.simulation-event.v1",
+  "events": [
+    { "kind": "start", "request": 1, "locale": "en", "checkpointToken": 0, "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7, "runPeriodStartMonth": 1, "runPeriodStartDay": 1, "runPeriodEndMonth": 12, "runPeriodEndDay": 31 },
+    { "kind": "cancel", "request": 1, "operation": 101, "generation": 1, "configDigest": 1001 },
+    { "kind": "retry", "request": 1, "operation": 101, "generation": 1, "configDigest": 1001 },
+    { "kind": "discard", "request": 1, "operation": 101, "generation": 1, "configDigest": 1001 },
+    { "kind": "start", "request": 2, "locale": "de", "checkpointToken": 0, "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 14, "runPeriodStartMonth": 1, "runPeriodStartDay": 1, "runPeriodEndMonth": 1, "runPeriodEndDay": 31 },
+    { "kind": "adopt", "request": 2, "operation": 102, "generation": 2, "configDigest": 1002 }
+  ],
+  "hostile": {
+    "activeSlotMaxPlusOne": 17,
+    "shellMaxPlusOne": 33,
+    "eventMaxPlusOne": 65,
+    "staleGeneration": 0,
+    "queueFullRetainsOwner": true,
+    "cancelBeforeAdmission": true,
+    "cancelDuringEveryTier": true,
+    "deadlineBeforeEveryChannelTransition": true,
+    "dropRequeuesGeneration": true,
+    "finalTransferExactOnce": true
+  }
+}

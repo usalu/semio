@@ -155,72 +155,68 @@ pub fn energy_zones_table_from_model(model: &crate::model::Model) -> semio_s_plu
 /// engine with no document app — see `📦️glue.rs`'s own "Shape note"), matching `layout`'s honest
 /// framing for its own inert `referenced_model` slot: real, tested, not yet wired to a consumer.
 pub fn energy_structure_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
-    energy_structure_from_model(&energy_model(snapshot))
+    energy_structure_from_model(&snapshot.model)
 }
 
 /// 🔎️ Twin of [`energy_structure_content`] for the `zones` child.
 pub fn energy_zones_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
-    energy_zones_table_from_model(&energy_model(snapshot))
+    energy_zones_table_from_model(&snapshot.model)
 }
 //#endregion 🔖️Converters
 
-//#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side cache of the live `Model` behind a `(structure, zones)` handle pair —
-/// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
-/// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet for
-/// this plugin (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only — same
-/// standing gap every prior wave's report documents; also see the migration recipe's §3 finding that
-/// `VcsArtifactApp.children` has zero live content behind it for any plugin yet), so this is the
-/// only way a persisted content-addressed handle round-trips to the real `Model` within one process
-/// — mirrors `mathematical`'s `MATH_SCRATCH`/`forms`'s `FORMS_SCRATCH`. `structure`/`zones` always
-/// share ONE scene id (minted together from the SAME `Model` by [`energy_children_from_model`]), so
-/// one cache entry serves both.
-///
-/// ⚠️ Same documented staleness gap as every prior exemplar: store-level undo/redo bypasses
-/// `ArtifactApp::handle` entirely, so a handle can in principle go uncached (fresh process, or an
-/// undo past this session's history). [`energy_model`] fails soft (`Model::default()`) rather than
-/// panicking.
-pub struct EnergyWorkingScene {
-    pub model: crate::model::Model,
+//#region 🔖️RetainedArtifactState
+/// 🧵️ Exact immutable store owner used by mounted Energy capture. It exposes only a borrowed Model,
+/// revalidates the store generation immediately before every read, and returns the precise snapshot
+/// lease witness to the store retirement pump on close.
+pub struct EnergyModelReadLease {
+    snapshot: Option<store::SnapshotRead<EnergyModelSnapshot>>,
+    returned: Option<store::SnapshotReadReturn>,
+    generation: u64,
+    revision: [u8; 32],
 }
 
-thread_local! {
-    static ENERGY_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, EnergyWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
+impl EnergyModelReadLease {
+    pub fn new(snapshot: store::SnapshotRead<EnergyModelSnapshot>, generation: u64, revision: [u8; 32]) -> Self {
+        Self { snapshot: Some(snapshot), returned: None, generation, revision }
+    }
+
+    pub fn model(&self) -> Option<&crate::model::Model> {
+        let snapshot = self.snapshot.as_ref()?;
+        snapshot.commit_authority_matches(self.generation, self.revision).then_some(&snapshot.model)
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if let Some(snapshot) = self.snapshot.take() {
+            let Some(witness) = snapshot.return_to_registry_witness() else { return false };
+            self.returned = Some(witness);
+            return false;
+        }
+        if self.returned.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
+            return false;
+        }
+        self.returned = None;
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.snapshot.is_none() && self.returned.is_none()
+    }
 }
 
-fn energy_scene_id(model: &crate::model::Model) -> String {
-    use std::hash::{Hash, Hasher};
-    let content_json = serde_json::to_string(model).unwrap_or_default();
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    content_json.hash(&mut hasher);
-    format!("energy-scene-{:016x}", hasher.finish())
-}
-
-/// 🏗️ Mints both composed-child handles for a `Model` AND seeds the scratch cache in one call — the
-/// standard way this plugin's mutation-diff/fixture builders create `structure`/`zones` field
-/// values; never construct these handles without also caching, or [`energy_model`] will read back
-/// `Model::default()`.
-pub fn energy_children_from_model(model: &crate::model::Model) -> (EnergyStructureChild, EnergyZonesChild) {
-    let scene_id = energy_scene_id(model);
-    ENERGY_SCRATCH.with(|cache| {
-        cache.borrow_mut().insert(scene_id.clone(), EnergyWorkingScene { model: model.clone() });
-    });
+/// 🧷️ Mints stable composed-child handles. The authoritative numerical model is owned directly by
+/// the event-sourced snapshot and therefore travels through the store's generation-qualified
+/// `SnapshotRead` lease; no process-local cache participates in reads or admission.
+pub fn energy_children_from_model(_model: &crate::model::Model) -> (EnergyStructureChild, EnergyZonesChild) {
+    let scene_id = "energy-model".to_string();
     let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("energy-{subset}"), dialect: dialect_for(subset) };
     (store::ArtifactChild::new(scene_id.clone(), target_for("value")), store::ArtifactChild::new(scene_id, target_for("table")))
 }
 
-/// 🔎️ Reads the cached working scene behind a snapshot's composed children — `Model::default()`
-/// (never a panic) on a cache miss, per this region's own doc comment.
-pub fn energy_scene(snapshot: &EnergyModelSnapshot) -> EnergyWorkingScene {
-    ENERGY_SCRATCH.with(|cache| cache.borrow().get(&snapshot.structure.child_id).map(|scene| EnergyWorkingScene { model: scene.model.clone() })).unwrap_or_else(|| EnergyWorkingScene { model: crate::model::Model::default() })
-}
-
-/// 🔎️ The live `Model` behind a snapshot's composed children — the single read call site every
-/// consumer in this plugin now uses instead of the old `.model_json` field (decode-on-demand
-/// through `model_from_snapshot`, below).
+/// 🔎️ Compatibility value accessor for artifact editing and inference. Mounted simulation never
+/// calls this whole-owner clone; it captures incrementally from an exact `SnapshotRead` lease.
 pub fn energy_model(snapshot: &EnergyModelSnapshot) -> crate::model::Model {
-    energy_scene(snapshot).model
+    snapshot.model.clone()
 }
 
 /// 🏗️ Builds a full `EnergyModelSnapshot` from a literal `Model` — the standard fixture/import
@@ -228,9 +224,9 @@ pub fn energy_model(snapshot: &EnergyModelSnapshot) -> crate::model::Model {
 /// are composed child handles, not a plain field.
 pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &crate::model::Model, referenced_model: Option<store::ArtifactLink>) -> EnergyModelSnapshot {
     let (structure, zones) = energy_children_from_model(model);
-    EnergyModelSnapshot { schema: schema.into(), structure, zones, referenced_model }
+    EnergyModelSnapshot { schema: schema.into(), model: model.clone(), structure, zones, referenced_model }
 }
-//#endregion 🔖️WorkingScene
+//#endregion 🔖️RetainedArtifactState
 //#endregion 🔖️Composition
 
 //#region 🔖️ArtifactKind

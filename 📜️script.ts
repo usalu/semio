@@ -3372,6 +3372,710 @@ function toolJobActorProgressOverlayExact(actor: string, shard: string, wgpu: st
   );
 }
 
+/** 🔁️ P2c fixed replay capture, mounted publication, and recovery contract. */
+function toolJobLiveFixedReplayExact(actor: string, shard: string, executor: string, wgpu: string, actionBus: string, pluginApp: string, pluginHost: string, programBridge: string): boolean {
+  const beginCaptureStart = actor.indexOf("pub fn begin_capture(");
+  const beginCapture = beginCaptureStart < 0 ? undefined : toolJobRustBlock(actor, actor.indexOf("{", beginCaptureStart));
+  const captureStart = actor.indexOf("pub fn capture_step(");
+  const capture = captureStart < 0 ? undefined : toolJobRustBlock(actor, actor.indexOf("{", captureStart));
+  const acknowledgeStart = actor.indexOf("pub fn acknowledge_publication(");
+  const acknowledge = acknowledgeStart < 0 ? undefined : toolJobRustBlock(actor, actor.indexOf("{", acknowledgeStart));
+  const actorCloseStart = actor.indexOf("pub fn close_step(&mut self, cx: &mut job::StepContext<'_>) -> JobReplayCloseStep");
+  const actorClose = actorCloseStart < 0 ? undefined : toolJobRustBlock(actor, actor.indexOf("{", actorCloseStart));
+  const shardStepStart = shard.indexOf("let job_outcome = {");
+  const shardStep = shardStepStart < 0 ? undefined : toolJobRustBlock(shard, shard.indexOf("{", shardStepStart));
+  const replayDriveStart = shard.indexOf("async fn drive_replay_seed(");
+  const replayDrive = replayDriveStart < 0 ? undefined : toolJobRustBlock(shard, shard.indexOf("{", replayDriveStart));
+  const refusalDriveStart = shard.indexOf("async fn drive_replay_refusal(");
+  const refusalDrive = refusalDriveStart < 0 ? undefined : toolJobRustBlock(shard, shard.indexOf("{", refusalDriveStart));
+  const executeTurnStart = shard.indexOf("async fn execute_turn_for(");
+  const executeTurn = executeTurnStart < 0 ? undefined : toolJobRustBlock(shard, shard.indexOf("{", executeTurnStart));
+  const cancelStart = shard.indexOf("Effect::CancelJob { job } => {", executeTurnStart);
+  const cancelOpen = cancelStart < 0 ? -1 : shard.indexOf("=> {", cancelStart) + 3;
+  const cancel = cancelOpen < 3 ? undefined : toolJobRustBlock(shard, cancelOpen);
+  const captureCallerStart = wgpu.indexOf("fn begin_job_replay_capture(");
+  const captureCaller = captureCallerStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", captureCallerStart));
+  const replayRequestStart = wgpu.indexOf("async fn request_job_replay(");
+  const replayRequest = replayRequestStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", replayRequestStart));
+  const runTurnStart = wgpu.indexOf("async fn run_turn(&mut self");
+  const runTurn = runTurnStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", runTurnStart));
+  const maintenanceStart = wgpu.indexOf("fn job_replay_maintenance_step(");
+  const maintenance = maintenanceStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", maintenanceStart));
+  const recoveryDropStart = wgpu.indexOf("impl Drop for MountedJobReplay");
+  const recoveryDrop = recoveryDropStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", recoveryDropStart));
+  const recoveryCloseStart = wgpu.indexOf("fn close_one(&mut self) -> bool", wgpu.indexOf("impl MountedReplayRecoveryRegistry"));
+  const recoveryClose = recoveryCloseStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", recoveryCloseStart));
+  const recoveryOwnerCloseStart = wgpu.indexOf("fn mounted_replay_recovery_owner_close_one(");
+  const recoveryOwnerClose = recoveryOwnerCloseStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", recoveryOwnerCloseStart));
+  const poolNewStart = wgpu.indexOf("async fn new() -> Self", wgpu.indexOf("impl KernelPoolState"));
+  const poolNew = poolNewStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", poolNewStart));
+  const replaySequenceStart = wgpu.indexOf("fn replay_submission_sequence(&mut self)");
+  const replaySequence = replaySequenceStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", replaySequenceStart));
+  const pendingReplayStart = wgpu.indexOf("fn pending_replay_start_is_exact(&self");
+  const pendingReplay = pendingReplayStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", pendingReplayStart));
+  const replayAcceptStart = wgpu.indexOf("fn accept_replay_submission(&mut self");
+  const replayAccept = replayAcceptStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", replayAcceptStart));
+  const commandPortStart = wgpu.indexOf("fn persistent_command_completion_port_ready()");
+  const commandPort = commandPortStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", commandPortStart));
+  const actionDispatchStart = actionBus.indexOf("pub fn dispatch(&self, mut spec: ToolOperationSpec)");
+  const actionDispatch = actionDispatchStart < 0 ? undefined : toolJobRustBlock(actionBus, actionBus.indexOf("{", actionDispatchStart));
+  const completePipelineStart = pluginApp.indexOf("fn require_complete_tool_operation_pipeline(");
+  const completePipeline = completePipelineStart < 0 ? undefined : toolJobRustBlock(pluginApp, pluginApp.indexOf("{", completePipelineStart));
+  const pluginCommandStart = pluginApp.indexOf("async fn dispatch_typed_command_inner(");
+  const pluginCommand = pluginCommandStart < 0 ? undefined : toolJobRustBlock(pluginApp, pluginApp.indexOf("{", pluginCommandStart));
+  const guestStartStart = pluginHost.indexOf("async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>)", pluginHost.indexOf("impl GuestRuntime for WasmtimeRuntime"));
+  const guestStart = guestStartStart < 0 ? undefined : toolJobRustBlock(pluginHost, pluginHost.indexOf("{", guestStartStart));
+  const takeProductStart = wgpu.indexOf("pub(crate) fn take_product_replay_authority(");
+  const takeProduct = takeProductStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", takeProductStart));
+  const rawProductStart = wgpu.indexOf("impl RawSpawnJobOwner");
+  const rawProduct = rawProductStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", rawProductStart));
+  const productRequestStart = wgpu.indexOf("impl MountedProductReplayRequest");
+  const productRequest = productRequestStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRequestStart));
+  const productRecoveryOwnerStart = wgpu.indexOf("impl MountedProductReplayRecoveryOwner");
+  const productRecoveryOwner = productRecoveryOwnerStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRecoveryOwnerStart));
+  const productValidateStart = wgpu.indexOf("fn validate(self, expected: MountedProductReplayExpected", wgpu.indexOf("impl MountedProductReplayAuthority"));
+  const productValidate = productValidateStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productValidateStart));
+  const productRawRetirementStart = wgpu.indexOf("fn acknowledge_raw_retirement_boundary(&mut self)");
+  const productRawRetirement = productRawRetirementStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRawRetirementStart));
+  const productRecoveryStart = wgpu.indexOf("impl MountedProductReplayRecoveryRegistry");
+  const productRecovery = productRecoveryStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRecoveryStart));
+  const productRecoveryCloseStart = wgpu.indexOf("fn close_one(&mut self) -> bool", productRecoveryStart);
+  const productRecoveryClose = productRecoveryCloseStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRecoveryCloseStart));
+  const productRefusalStart = wgpu.indexOf("impl MountedProductReplayRefusalRegistry");
+  const productRefusal = productRefusalStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRefusalStart));
+  const productRefusalStepStart = wgpu.indexOf("fn step_one(&mut self, retry: bool)", productRefusalStart);
+  const productRefusalStep = productRefusalStepStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRefusalStepStart));
+  const productPermitDropStart = wgpu.indexOf("impl Drop for MountedProductReplayAdmissionPermit");
+  const productPermitDrop = productPermitDropStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productPermitDropStart));
+  const productRefusalDropStart = wgpu.indexOf("impl Drop for RefusedProductReplay");
+  const productRefusalDrop = productRefusalDropStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRefusalDropStart));
+  const productRequestDropStart = wgpu.indexOf("impl Drop for MountedProductReplayRequest");
+  const productRequestDrop = productRequestDropStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productRequestDropStart));
+  const productClaimDropStart = wgpu.indexOf("impl Drop for MountedProductReplayClaim");
+  const productClaimDrop = productClaimDropStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productClaimDropStart));
+  const productAuthorityDropStart = wgpu.indexOf("impl Drop for MountedProductReplayAuthority");
+  const productAuthorityDrop = productAuthorityDropStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productAuthorityDropStart));
+  const productAbortStart = wgpu.indexOf("fn abort_product_replay_one(");
+  const productAbort = productAbortStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productAbortStart));
+  const commandMaintenanceStart = wgpu.indexOf("fn command_maintenance_step(");
+  const commandMaintenance = commandMaintenanceStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", commandMaintenanceStart));
+  const destroyAppStart = wgpu.indexOf("async fn destroy_app_step(");
+  const destroyApp = destroyAppStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", destroyAppStart));
+  const closeRealmStart = wgpu.indexOf("fn close_realm_progress_step(");
+  const closeRealm = closeRealmStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", closeRealmStart));
+  const productMountStart = wgpu.indexOf("fn mount_product_replay(&mut self");
+  const productMount = productMountStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productMountStart));
+  const productAdvanceStart = wgpu.indexOf("async fn advance_product_replay(&mut self");
+  const productAdvance = productAdvanceStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productAdvanceStart));
+  const productClientMountStart = wgpu.indexOf("pub(crate) async fn mount_product_replay(&self");
+  const productClientMount = productClientMountStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productClientMountStart));
+  const productClientAdvanceStart = wgpu.indexOf("pub(crate) async fn advance_product_replay(&self");
+  const productClientAdvance = productClientAdvanceStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productClientAdvanceStart));
+  const productClientRetireStart = wgpu.indexOf("pub(crate) async fn retire_product_replay(&self");
+  const productClientRetire = productClientRetireStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productClientRetireStart));
+  const productClientRefusalRetireStart = wgpu.indexOf("pub(crate) async fn retire_product_replay_refusal(&self");
+  const productClientRefusalRetire = productClientRefusalRetireStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", productClientRefusalRetireStart));
+  const kernelPoolRunStart = wgpu.indexOf("async fn run_kernel_pool(");
+  const kernelPoolRun = kernelPoolRunStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", kernelPoolRunStart));
+  const productionActionStart = programBridge.indexOf("pub async fn handle_action(");
+  const productionAction = productionActionStart < 0 ? undefined : toolJobRustBlock(programBridge, programBridge.indexOf("{", productionActionStart));
+  const productionCommandStart = programBridge.indexOf("pub async fn handle_command(");
+  const productionCommand = productionCommandStart < 0 ? undefined : toolJobRustBlock(programBridge, programBridge.indexOf("{", productionCommandStart));
+  const consumeFuel = capture?.body.indexOf("cx.consume_fuel(1);") ?? -1;
+  const copyPage = capture?.body.indexOf("JobReplayPage::try_copy(chunk)") ?? -1;
+  const pageOpportunity = capture && copyPage >= 0 ? capture.body.slice(Math.max(0, copyPage - 420), copyPage) : "";
+  const productValidation = productAdvance?.body.indexOf("authority.validate(expected)") ?? -1;
+  const productProfileWrite = productAdvance?.body.indexOf(".worker_count =") ?? -1;
+  const productBeginWrite = productAdvance?.body.indexOf(".begin =") ?? -1;
+  const productKindPreflight = takeProduct?.body.indexOf("kind.len() > PRODUCT_REPLAY_KIND_BYTES") ?? -1;
+  const productInputPreflight = takeProduct?.body.indexOf("input.len() > PRODUCT_REPLAY_INPUT_BYTES") ?? -1;
+  const productRecoveryPreflight = takeProduct?.body.indexOf('mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").reserve()') ?? -1;
+  const productEffectMove = takeProduct?.body.indexOf("self.effects.remove(index)") ?? -1;
+  return (
+    actor.includes("pub const JOB_REPLAY_RECORD_CAPACITY: usize = 256") &&
+    actor.includes("Box<[Option<JobReplayRecord>; JOB_REPLAY_RECORD_CAPACITY]>") &&
+    actor.includes("pages: ManuallyDrop<[Option<JobReplayPage>; JOB_REPLAY_RECORD_PAGE_CAPACITY]>") &&
+    actor.includes("JOB_REPLAY_PROCESS_PAGES") &&
+    actor.includes("fetch_update(std::sync::atomic::Ordering::AcqRel") &&
+    actor.includes("pub struct JobReplayRequest") &&
+    actor.includes("pub fn from_spawn(kind: &str, input: &[u8])") &&
+    actor.includes("pub fn maintenance_step(&mut self, cx: &mut job::StepContext<'_>)") &&
+    actor.includes("pub fn acknowledge_publication(&mut self, cx: &mut job::StepContext<'_>") &&
+    !!beginCapture &&
+    beginCapture.body.includes("self.closing || cx.is_cancelled()") &&
+    beginCapture.body.includes("cx.should_yield()") &&
+    beginCapture.body.includes("cx.generation().0 != publication.turn.operation.generation") &&
+    !actor.includes("entries: Vec<JobPublication>") &&
+    !actor.includes("while !record.terminal_is_empty()") &&
+    !!capture &&
+    consumeFuel >= 0 &&
+    copyPage > consumeFuel &&
+    pageOpportunity.includes("cx.consume_fuel(1);") &&
+    pageOpportunity.includes("cx.is_cancelled() || cx.deadline_exceeded()") &&
+    !!acknowledge &&
+    acknowledge.body.indexOf("cx.consume_fuel(1);") >= 0 &&
+    acknowledge.body.indexOf("cx.consume_fuel(1);") < acknowledge.body.indexOf("self.ready_record.take()") &&
+    !!actorClose &&
+    actorClose.body.includes("cx.consume_fuel(1);") &&
+    actorClose.body.includes("record.close_step(JOB_REPLAY_PAGE_BYTES)") &&
+    actor.includes("for worker_count in [1, 2, 4, host_default]") &&
+    actor.includes("replay_record_matches(expected, record)") &&
+    actor.includes("cancellation_observed: matches!(publication.outcome, JobStepOutcome::Cancelled)") &&
+    actor.includes("u64::from(header.cancellation_observed)") &&
+    actor.includes("mounted_replay_records_and_replays_the_exact_cancelled_terminal_classification") &&
+    actor.includes("mounted_replay_cancel_deadline_and_stale_refuse_the_exact_publication_owner_unchanged") &&
+    actor.includes("mounted_replay_preserves_the_exact_fault_payload_and_prefix_across_replay") &&
+    shard.includes("request: JobReplayRequest") &&
+    shard.includes("request.pack_encode(out).await") &&
+    shard.includes("kind: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_KIND_PAGE_CAPACITY]>") &&
+    shard.includes("input: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_INPUT_PAGE_CAPACITY]>") &&
+    shard.includes("checkpoint: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY]>") &&
+    shard.includes("JOB_REPLAY_SEED_PAGES.fetch_update(Ordering::AcqRel") &&
+    shard.includes("replay_seed_refusals: [Option<ReplaySpawnRefusal>; JOB_REPLAY_REFUSAL_SLOT_CAPACITY]") &&
+    shard.includes("struct ReplaySpawnRefusal") &&
+    shard.includes("input: ManuallyDrop<Option<Vec<u8>>>") &&
+    shard.includes("kind: ManuallyDrop<Option<String>>") &&
+    !!refusalDrive &&
+    refusalDrive.body.indexOf("consume_replay_close_opportunity(actor)") >= 0 &&
+    refusalDrive.body.indexOf("consume_replay_close_opportunity(actor)") < refusalDrive.body.indexOf("refusal.input.take()") &&
+    refusalDrive.body.includes('drop(refusal.input.take().expect("rejected input closes once"));') &&
+    refusalDrive.body.includes('drop(refusal.kind.take().expect("rejected kind closes once"));') &&
+    refusalDrive.body.includes("self.replay_seed_refusals[index].take()") &&
+    !!replayDrive &&
+    replayDrive.body.indexOf("consume_replay_opportunity(actor)") >= 0 &&
+    replayDrive.body.indexOf("consume_replay_opportunity(actor)") < replayDrive.body.indexOf("match phase") &&
+    replayDrive.body.includes("self.runtime.checkpoint(instance).await") &&
+    replayDrive.body.includes("self.runtime.restore(instance, checkpoint).await") &&
+    replayDrive.body.match(/self\.runtime\.start_job\(instance, job, &kind, input\)\.await/g)?.length === 2 &&
+    replayDrive.body.includes("seed.materialize_page += 1") &&
+    replayDrive.body.includes("ReplaySeedPhase::ActivateAuthority") &&
+    replayDrive.body.includes("ReplaySeedPhase::ActivateTurn") &&
+    replayDrive.body.includes("ReplaySeedPhase::ActivateRunning") &&
+    replayDrive.body.includes("ReplaySeedPhase::ActivatePlacement") &&
+    replayDrive.body.includes("ReplaySeedPhase::RetireSeedShell") &&
+    replayDrive.body.includes("ReplaySeedPhase::RetireMountedShell") &&
+    replayDrive.body.includes('self.replay_seeds[index].as_mut().expect("stale mounted replay seed").phase = ReplaySeedPhase::Closing') &&
+    replayDrive.body.includes('self.replay_seeds[index].as_mut().expect("stale retained replay seed").phase = ReplaySeedPhase::Closing') &&
+    replayDrive.body.includes("!self.instances.contains_key(&seed.actor)") &&
+    !!executeTurn &&
+    executeTurn.body.includes("JobReplayRequest::from_spawn(&kind, &input)") &&
+    executeTurn.body.indexOf("to_actor_turn_result_in_place(&mut result") >= 0 &&
+    executeTurn.body.indexOf("to_actor_turn_result_in_place(&mut result") < executeTurn.body.indexOf("std::mem::take(&mut result.effects)") &&
+    !executeTurn.body.includes("input.clone()") &&
+    !!cancel &&
+    cancel.body.match(/seed\.phase = ReplaySeedPhase::Closing/g)?.length === 2 &&
+    shard.includes("JobStep::Done { output } => match self.runtime.checkpoint(instance).await {") &&
+    shard.includes("JobStep::Failed { error } => {") &&
+    shard.includes("JobStepOutcome::Fault { detail: error }") &&
+    !shardStep?.body.includes("unwrap_or_default") &&
+    shard.includes("turn.step_sequence == u64::MAX || turn.operation.preview_sequence == u64::MAX") &&
+    shard.includes("published_turn.operation.preview_sequence += 1") &&
+    shard.includes("step_sequence: turn.step_sequence + 1") &&
+    !shard.includes("preview_sequence.saturating_add(1)") &&
+    !shard.includes("step_sequence: turn.step_sequence.saturating_add(1)") &&
+    !shard.includes("next_job_operation.wrapping_add") &&
+    !shard.includes("running_jobs.iter().find_map") &&
+    shard.includes("replay_seed_max_plus_one_returns_the_exact_spawn_owners_unchanged") &&
+    shard.includes("mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_work_and_closes_one_owner_per_sub_eight_ms_opportunity") &&
+    shard.includes("mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before_another_job_step") &&
+    !!captureCaller &&
+    captureCaller.body.includes("mounted_replay_recovery_registry().lock().expect(\"replay recovery lock\").reserve()") &&
+    captureCaller.body.indexOf("reserve()") < captureCaller.body.indexOf("JobReplayLog::new(") &&
+    wgpu.includes("replay_routes: [Option<MountedReplayRouteSeed>; JOB_PROGRESS_ACTIVE_CAPACITY]") &&
+    wgpu.includes("job_replays: [Option<MountedJobReplay>; JOB_PROGRESS_ACTIVE_CAPACITY]") &&
+    wgpu.includes("fn publish_captured_job_progress(") &&
+    wgpu.includes("self.publish_captured_job_progress(actor, authority, publication)") &&
+    shard.includes("placement: JobPlacement") &&
+    shard.includes("request.pack_encode(out).await") &&
+    shard.includes('pack::read_u8(bytes, pos, "ShardOutcome::Job::placement")') &&
+    wgpu.includes("ShardOutcome::Job { actor: reported, authority, request, placement, publication }") &&
+    wgpu.includes("self.begin_job_replay_capture(ActorId(reported), authority, request, placement, self.worker_count, worker_slot, publication)") &&
+    wgpu.includes("if replay_capture_started {\n                    break;") &&
+    !!replayRequest &&
+    replayRequest.body.includes("!matches!(worker_count, 1 | 2 | 4) && worker_count != self.worker_count") &&
+    replayRequest.body.includes("mounted_product_replay_worker_slot(process_slot, worker_count) != Some(worker_slot)") &&
+    replayRequest.body.includes("entry.accepted_replay_sequence != restore_start_ordinal") &&
+    replayRequest.body.indexOf("if entry.replay_requested") >= 0 &&
+    replayRequest.body.indexOf("if entry.replay_requested") < replayRequest.body.indexOf("entry.log.begin_replay(entry.authority.operation.generation)") &&
+    replayRequest.body.includes("!entry.pending_replay_start_is_exact(worker_count, worker_slot)") &&
+    replayRequest.body.includes("return Ok(())") &&
+    replayRequest.body.includes("entry.log.begin_replay(entry.authority.operation.generation)") &&
+    replayRequest.body.includes("entry.replay_worker_slot = worker_slot") &&
+    !!runTurn &&
+    runTurn.body.includes("Payload::JobReplay { turn, request: entry.request, worker_count: entry.replay_worker_count, worker_slot: entry.replay_worker_slot }") &&
+    runTurn.body.includes("Payload::JobStep { turn }") &&
+    runTurn.body.includes("let mut replay_start_index = None") &&
+    runTurn.body.includes("entry.replay_submission_sequence()?") &&
+    runTurn.body.indexOf("self.runtime.submit(envelope).await") >= 0 &&
+    runTurn.body.indexOf("self.runtime.submit(envelope).await") < runTurn.body.indexOf("entry.accept_replay_submission(envelope.seq)?") &&
+    runTurn.body.includes("if replay_start_index.is_some()") &&
+    runTurn.body.includes("command_ingress: semio_framework::kernel::CommandIngressStatus::Idle") &&
+    !runTurn.body.includes("entry.replay_started = true") &&
+    !!replaySequence &&
+    replaySequence.body.includes("Some(sequence) => Ok(sequence)") &&
+    replaySequence.body.includes("self.replay_submit_sequence = Some(sequence)") &&
+    !!pendingReplay &&
+    pendingReplay.body.includes("self.replay_requested && !self.replay_started") &&
+    pendingReplay.body.includes("self.replay_worker_count == worker_count && self.replay_worker_slot == worker_slot") &&
+    !!replayAccept &&
+    replayAccept.body.includes("self.replay_submit_sequence != Some(sequence)") &&
+    replayAccept.body.includes("self.replay_started = true") &&
+    replayAccept.body.includes("self.replay_submit_sequence = None") &&
+    !!commandPort &&
+    commandPort.body.includes("KERNEL_REQUEST_QUEUE_CAPACITY != 0") &&
+    commandPort.body.includes("COMMAND_MAXIMUM_PAGES != 0") &&
+    commandPort.body.includes("COMMAND_MAXIMUM_BYTES >= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES") &&
+    !commandPort.body.includes("false") &&
+    wgpu.includes("KernelRequest::MountProductReplay { owner }") &&
+    wgpu.includes("KernelRequest::RetireProductReplay { owner }") &&
+    wgpu.includes("KernelRequest::AdvanceProductReplay { instance }") &&
+    !wgpu.includes("pub(crate) async fn replay_job_turn(&self") &&
+    wgpu.includes("rejected_production_replay_submit_retries_exact_restore_start_identity_before_job_step") &&
+    !!maintenance &&
+    maintenance.body.includes("log.take_captured_publication()") &&
+    maintenance.body.includes("log.acknowledge_publication(&mut context, policy)") &&
+    wgpu.includes("struct MountedReplayRecoveryRegistry") &&
+    !!recoveryClose &&
+    recoveryClose.body.includes("self.abandoned[index]") &&
+    !!recoveryOwnerClose &&
+    recoveryOwnerClose.body.includes("let _ = log.close_step(&mut context);") &&
+    wgpu.includes("abandoned: [Option<MountedReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY]") &&
+    !wgpu.includes("std::mem::forget(owner)") &&
+    !!recoveryDrop &&
+    recoveryDrop.body.includes("mounted_replay_recovery_registry().lock().expect(\"replay recovery lock\").publish(token, owner)") &&
+    wgpu.includes("panic_after_mounted_capture_transfers_the_exact_generation_to_incremental_recovery") &&
+    wgpu.includes("entry.log.begin_close();") &&
+    wgpu.includes("log.close_step(&mut context)") &&
+    !!poolNew &&
+    poolNew.body.includes("let pool = Arc::new(crate::renderer_worker_pool());") &&
+    !poolNew.body.includes("WorkerPool::new(") &&
+    !wgpu.includes("fn publish_job_progress(") &&
+    !!actionDispatch &&
+    actionDispatch.body.includes("factory.create_job(&mut spec)") &&
+    actionDispatch.body.includes("Ok(ToolJobDispatch { spec, job })") &&
+    !!completePipeline &&
+    completePipeline.body.includes("self.live_runtime_instance_id != Some(meta.instance_id)") &&
+    completePipeline.body.includes("admission.proof.contract()") &&
+    completePipeline.body.includes("ToolCancellationPolicy::PerOperation") &&
+    completePipeline.body.includes("ToolFreshnessPolicy::ValidateImmediatelyBeforeExposure") &&
+    completePipeline.body.includes("ToolExecutionShape::Resumable | semio_framework::ToolExecutionShape::BoundedFirstStep") &&
+    completePipeline.body.includes("Ok(())") &&
+    !completePipeline.body.includes("interactive-job.full-operation-pending") &&
+    !!pluginCommand &&
+    pluginCommand.body.indexOf("self.require_complete_tool_operation_pipeline(&admission, meta)?") >= 0 &&
+    pluginCommand.body.indexOf("self.require_complete_tool_operation_pipeline(&admission, meta)?") < pluginCommand.body.indexOf("let dispatch = self.tool_jobs.dispatch(operation_spec)") &&
+    pluginCommand.body.includes("let dispatch = self.tool_jobs.dispatch(operation_spec)") &&
+    pluginCommand.body.includes("MountedWorkerJobSession::try_new(dispatch.job, params)") &&
+    pluginApp.includes("session.pump_one(pool, semio_framework_async::Lane::Interactive)") &&
+    pluginApp.includes("$crate::reactor::jobs::start_job(input.job, &input.kind, &input.input)") &&
+    !!guestStart &&
+    guestStart.body.includes("call_start_job(accessor, job, kind, input).await") &&
+    shard.includes("self.runtime.start_job(instance, job, &kind, input).await") &&
+    !!takeProduct &&
+    takeProduct.body.includes("matches!(effect, Effect::SpawnJob { .. })") &&
+    wgpu.includes("pub(crate) fn take_product_replay_authority(&mut self, instance: u32, permit: MountedProductReplayAdmissionPermit) -> MountedProductReplayAdmission") &&
+    productKindPreflight >= 0 &&
+    productInputPreflight > productKindPreflight &&
+    productRecoveryPreflight > productInputPreflight &&
+    productEffectMove > productRecoveryPreflight &&
+    takeProduct.body.includes("let spawn = self.effects.remove(index)") &&
+    takeProduct.body.includes("MountedProductReplayRequest::from_admitted_effect(instance, index, spawn, recovery)") &&
+    !takeProduct.body.includes("drop(self.effects.remove(index))") &&
+    takeProduct.body.includes("MountedProductReplayRefusalCause::KindCapacity") &&
+    takeProduct.body.includes("MountedProductReplayRefusalCause::InputCapacity") &&
+    takeProduct.body.includes("MountedProductReplayRefusalCause::RecoveryCapacity") &&
+    takeProduct.body.includes("let remaining_effects = std::mem::take(&mut self.effects)") &&
+    takeProduct.body.includes("MountedProductReplayAdmission::Refused(permit.refuse(cause, index, spawn, remaining_effects))") &&
+    !takeProduct.body.includes("self.effects.insert(index, effect)") &&
+    !takeProduct.body.includes("Result<Option<MountedProductReplayRequest>") &&
+    wgpu.includes("const PRODUCT_REPLAY_INPUT_PAGE_CAPACITY: usize = semio_framework_actor::JOB_REPLAY_RECORD_CAPACITY") &&
+    wgpu.includes("const PRODUCT_REPLAY_INPUT_BYTES: usize = semio_framework_actor::JOB_REPLAY_PAGE_BYTES * PRODUCT_REPLAY_INPUT_PAGE_CAPACITY") &&
+    wgpu.includes("#[derive(Debug)]\n    struct RawSpawnJobOwner") &&
+    wgpu.includes("raw: Option<RawSpawnJobOwner>") &&
+    wgpu.includes("raw: RawSpawnJobOwner") &&
+    !!rawProduct &&
+    rawProduct.body.includes("let Effect::SpawnJob { job, kind, input, placement } = effect") &&
+    rawProduct.body.includes("kind: Some(kind)") &&
+    rawProduct.body.includes("input: Some(input)") &&
+    rawProduct.body.includes("self.fixed_witness_acked = true") &&
+    rawProduct.body.includes("self.mount_acked = true") &&
+    rawProduct.body.includes("self.qualification_acked = true") &&
+    rawProduct.body.includes("accepted_replay_ordinal.is_none()") &&
+    rawProduct.body.includes("self.replay_acked = true") &&
+    rawProduct.body.includes("self.disposition = RawSpawnJobDisposition::Accepted") &&
+    rawProduct.body.includes('drop(self.input.take().expect("raw admitted product input backing closes once"))') &&
+    rawProduct.body.includes('drop(self.kind.take().expect("raw admitted product kind backing closes once"))') &&
+    !!productRequest &&
+    productRequest.body.includes("RawSpawnJobOwner::from_effect(selected_index, effect)") &&
+    productRequest.body.includes("JobReplayRequest::from_spawn(raw.kind(), raw.input())") &&
+    productRequest.body.indexOf("raw.acknowledge_fixed_witness()") > productRequest.body.indexOf("copy_from_slice(raw.kind().as_bytes())") &&
+    productRequest.body.includes('self.raw.take().expect("mounted product replay raw SpawnJob transfers once")') &&
+    productRequest.body.includes("self.raw_mut().reject()") &&
+    productRequest.body.includes("MountedProductReplayRecoveryOwner::Request(retained)") &&
+    !!productRecoveryOwner &&
+    productRecoveryOwner.body.includes("request.raw.close_step()") &&
+    !!productValidate &&
+    productValidate.body.includes("request_owner.instance == expected.instance") &&
+    productValidate.body.includes("request_owner.job == expected.turn.job") &&
+    productValidate.body.includes("request_owner.raw().job == request_owner.job") &&
+    productValidate.body.includes("request_owner.raw().kind().as_bytes() == request_owner.job_kind()") &&
+    productValidate.body.includes("JobReplayRequest::from_spawn(request_owner.raw().kind(), request_owner.raw().input())") &&
+    productValidate.body.includes("request_owner.raw().placement == request_owner.placement") &&
+    productValidate.body.includes("kind.tool == expected.request.tool") &&
+    productValidate.body.includes("request_owner.request == expected.request") &&
+    productValidate.body.includes("request_owner.placement == expected.placement") &&
+    productValidate.body.includes("self.actor == expected.actor") &&
+    productValidate.body.includes("self.operation == expected.turn.operation") &&
+    productValidate.body.includes("self.generation == expected.turn.operation.generation") &&
+    productValidate.body.includes("self.seed == expected.turn.operation.seed") &&
+    productValidate.body.includes("self.route == expected.route") &&
+    productValidate.body.includes("self.checkpoint == expected.checkpoint") &&
+    productValidate.body.includes("self.terminal == expected.terminal") &&
+    productValidate.body.includes("expected.terminal.worker_count == expected.process_worker_count") &&
+    productValidate.body.includes("expected.terminal.worker_slot == expected.process_worker_slot") &&
+    productValidate.body.includes("self.worker_count == expected.logical_worker_count") &&
+    productValidate.body.includes("self.worker_slot == expected.logical_worker_slot") &&
+    productValidate.body.includes("self.begin == expected.begin") &&
+    productValidate.body.includes("self.restore_start_ordinal == expected.restore_start_ordinal") &&
+    productValidate.body.includes("Err(self)") &&
+    !!productRawRetirement &&
+    productRawRetirement.body.includes("self.profile_cursor != PRODUCT_REPLAY_PROFILE_COUNT || self.profile_started") &&
+    productRawRetirement.body.includes("self.request_owner_mut().raw_mut().acknowledge_replay_boundary(terminal, accepted_replay_ordinal)") &&
+    !!productRecovery &&
+    productRecovery.body.includes("generation.checked_add(1)") &&
+    productRecovery.body.includes("slot.generation == token.generation && slot.reserved && slot.owner.is_none()") &&
+    productRecovery.body.includes("self.abandoned.iter_mut().find") &&
+    !!productRecoveryClose &&
+    productRecoveryClose.body.indexOf(".close_step()") >= 0 &&
+    productRecoveryClose.body.indexOf(".close_step()") < productRecoveryClose.body.indexOf("self.slots[index].owner.take()") &&
+    productRecoveryClose.body.includes("self.slots[index].owner.take()") &&
+    productRecoveryClose.body.includes("self.slots[index].reserved = false") &&
+    productRecoveryClose.body.includes("self.abandoned[index].take()") &&
+    !!productRefusal &&
+    productRefusal.body.includes("generation.checked_add(1)") &&
+    productRefusal.body.includes("slot.generation == token.generation && slot.instance == Some(owner.instance) && slot.reserved && slot.owner.is_none()") &&
+    productRefusal.body.includes("self.abandoned.iter_mut().find") &&
+    productRefusal.body.includes("fn close_instance_one(&mut self, instance: u32)") &&
+    !!productRefusalStep &&
+    productRefusalStep.body.includes("owner.retry()") &&
+    productRefusalStep.body.includes("owner.close_step()") &&
+    productRefusalStep.body.includes("self.slots[index].owner.take()") &&
+    productRefusalStep.body.includes("self.slots[index].reserved = false") &&
+    wgpu.includes("struct RefusedProductReplay") &&
+    wgpu.includes("spawn: Option<Effect>") &&
+    wgpu.includes("let Some(spawn) = self.spawn.take()") &&
+    wgpu.includes("MountedProductReplayRequest::from_admitted_effect(self.instance, self.selected_index, spawn, recovery)") &&
+    wgpu.includes("remaining_effects: Option<Vec<Effect>>") &&
+    wgpu.includes("drop(self.spawn_input.take().expect(\"refused product input backing closes once\"))") &&
+    wgpu.includes("drop(self.spawn_kind.take().expect(\"refused product kind backing closes once\"))") &&
+    wgpu.includes("drop(self.remaining_effects.take().expect(\"refused product outcome backing closes once\"))") &&
+    !!productPermitDrop &&
+    productPermitDrop.body.includes("release(token)") &&
+    !!productRefusalDrop &&
+    productRefusalDrop.body.includes("mounted_product_replay_refusal_registry().lock().expect(\"product replay refusal lock\").publish(token, retained)") &&
+    !!commandMaintenance &&
+    commandMaintenance.body.includes('mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_one()') &&
+    commandMaintenance.body.includes('mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(true)') &&
+    commandMaintenance.body.includes("self.mount_product_replay(owner)") &&
+    !!productRequestDrop &&
+    productRequestDrop.body.includes("raw.reject()") &&
+    productRequestDrop.body.includes("MountedProductReplayRecoveryOwner::Request(retained)") &&
+    (wgpu.match(/request\.raw_mut\(\)\.reject\(\)/g) ?? []).length >= 4 &&
+    !!productClaimDrop &&
+    productClaimDrop.body.includes("request.raw_mut().reject()") &&
+    productClaimDrop.body.includes("MountedProductReplayRecoveryOwner::Claim") &&
+    !!productAuthorityDrop &&
+    productAuthorityDrop.body.includes("request.raw_mut().reject()") &&
+    productAuthorityDrop.body.includes("MountedProductReplayRecoveryOwner::Authority") &&
+    !!productAbort &&
+    productAbort.body.includes('take().expect("faulted product replay authority remains exact").retire()') &&
+    productAbort.body.includes('take().expect("faulted product replay claim remains exact").retire()') &&
+    !productAbort.body.includes("= None") &&
+    !!destroyApp &&
+    destroyApp.body.includes('take().expect("destroyed app product replay claim remains exact").retire()') &&
+    destroyApp.body.includes('take().expect("destroyed app product replay authority remains exact").retire()') &&
+    destroyApp.body.includes('mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").close_instance_one(instance)') &&
+    destroyApp.body.includes("close_instance_one(instance)") &&
+    !!closeRealm &&
+    closeRealm.body.includes('take().expect("realm product replay claim remains exact").retire()') &&
+    closeRealm.body.includes('take().expect("realm product replay authority remains exact").retire()') &&
+    closeRealm.body.includes('mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(false)') &&
+    closeRealm.body.includes('mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_one()') &&
+    !!productMount &&
+    productMount.body.includes("self.instances.get(&owner.instance)") &&
+    productMount.body.includes("owner.raw().job != owner.job") &&
+    productMount.body.includes("owner.raw().kind().as_bytes() != owner.job_kind()") &&
+    productMount.body.includes("owner.raw().placement != owner.placement") &&
+    productMount.body.includes("JobReplayRequest::from_spawn(owner.raw().kind(), owner.raw().input()) != owner.request") &&
+    productMount.body.includes("JobReplayRequest::from_spawn(kind, &[])") &&
+    productMount.body.includes("kind_identity.controller != owner.request.controller") &&
+    productMount.body.includes("return Err(owner)") &&
+    productMount.body.indexOf("owner.raw_mut().acknowledge_mount()") >= 0 &&
+    productMount.body.indexOf("owner.raw_mut().acknowledge_mount()") < productMount.body.indexOf("MountedProductReplayClaim { request: Some(owner)") &&
+    productMount.body.includes("MountedProductReplayClaim { request: Some(owner), actor, record_cursor: 0, checkpoint: None }") &&
+    !!productAdvance &&
+    productAdvance.body.includes("claim.record_cursor += 1") &&
+    !productAdvance.body.includes("while ") &&
+    !productAdvance.body.includes("WorkerPool::new") &&
+    productAdvance.body.includes("JobReplayPublicationKind::Checkpoint") &&
+    productAdvance.body.includes("terminal.kind, JobReplayPublicationKind::Commit | JobReplayPublicationKind::Cancelled | JobReplayPublicationKind::Fault") &&
+    productAdvance.body.match(/entry\.log\.last_checkpoint_header\(\)/g)?.length === 2 &&
+    productAdvance.body.includes("terminal.worker_count != self.worker_count || terminal.worker_slot != process_slot") &&
+    productAdvance.body.includes("MountedProductReplayAuthority {") &&
+    productAdvance.body.indexOf("request_owner.raw_mut().acknowledge_qualification(claim.checkpoint)") >= 0 &&
+    productAdvance.body.indexOf("request_owner.raw_mut().acknowledge_qualification(claim.checkpoint)") < productAdvance.body.indexOf("MountedProductReplayAuthority {") &&
+    productAdvance.body.includes("mounted_product_replay_profile(self.worker_count, profile_cursor)") &&
+    productAdvance.body.includes("self.request_job_replay(actor, job, worker_count, worker_slot, restore_start_ordinal).await?") &&
+    productAdvance.body.includes("let outcome = self.run_turn(actor, instance, Vec::new()).await?") &&
+    productAdvance.body.includes("authority.begin = !replay_started") &&
+    productAdvance.body.includes("authority.restore_start_ordinal = restore_start_ordinal") &&
+    productAdvance.body.includes("acknowledge_raw_retirement_boundary()") &&
+    productAdvance.body.indexOf("acknowledge_raw_retirement_boundary()") < productAdvance.body.indexOf('take().expect("completed product replay authority remains exact").retire()') &&
+    productAdvance.body.includes('take().expect("completed product replay authority remains exact").retire()') &&
+    productValidation >= 0 &&
+    productValidation < productProfileWrite &&
+    productValidation < productBeginWrite &&
+    !!productClientMount &&
+    productClientMount.body.includes("KernelRequest::MountProductReplay { owner }") &&
+    productClientMount.body.includes("KernelOutcome::ProductReplayMounted(result) => result") &&
+    !!productClientAdvance &&
+    productClientAdvance.body.includes("KernelRequest::AdvanceProductReplay { instance }") &&
+    !!productClientRetire &&
+    productClientRetire.body.includes("KernelRequest::RetireProductReplay { owner }") &&
+    productClientRetire.body.includes("owner.retire()") &&
+    !!productClientRefusalRetire &&
+    productClientRefusalRetire.body.includes("KernelRequest::RetireProductReplayRefusal { owner }") &&
+    wgpu.includes("KernelRequest::RetireProductReplayRefusal { owner } => {") &&
+    !!kernelPoolRun &&
+    kernelPoolRun.body.indexOf("let ready = queue.try_next()") >= 0 &&
+    kernelPoolRun.body.indexOf("let ready = queue.try_next()") < kernelPoolRun.body.indexOf("state.product_replay_pending_instance()") &&
+    (kernelPoolRun.body.match(/state\.advance_product_replay\(instance\)\.await/g) ?? []).length >= 2 &&
+    kernelPoolRun.body.includes("state.abort_product_replay_one(instance)") &&
+    kernelPoolRun.body.includes("yield_kernel_maintenance_turn().await") &&
+    wgpu.includes("[1, 2, 4, process_default]") &&
+    wgpu.includes("process_slot % worker_count") &&
+    wgpu.includes("production_action_bus_product_authority_carries_complete_identity_and_returns_exact_owner_on_wrong_field") &&
+    wgpu.includes("production_product_authority_qualifies_every_minted_field_before_replay_work") &&
+    wgpu.includes("product_authority_fault_abort_and_close_rediscover_exact_generation_once") &&
+    wgpu.includes("product_claim_fault_retains_exact_request_cursor_checkpoint_and_generation") &&
+    wgpu.includes("product_effect_after_normal_exchange_is_moved_into_fixed_authority_without_json_escape_hatch") &&
+    wgpu.includes("product_ingress_kind_and_input_max_plus_one_return_exact_spawn_and_remainder") &&
+    wgpu.includes("product_ingress_recovery_max_plus_one_retries_exact_spawn_then_closes_remainder_incrementally") &&
+    wgpu.includes("product_refusal_slot_max_plus_one_stops_before_exchange_and_drop_publishes_exact_generation") &&
+    wgpu.includes("admitted_product_mount_refusal_returns_exact_raw_allocation_then_closes_one_backing_per_grant") &&
+    wgpu.includes("admitted_product_request_claim_and_authority_drop_preserve_raw_allocation_identity") &&
+    wgpu.includes("admitted_raw_backing_retires_only_after_fixed_mount_qualification_and_all_replay_acks") &&
+    wgpu.includes("production_mounted_process_replay_supports_one_two_four_and_default_without_private_pool") &&
+    wgpu.includes("production_product_authority_opportunities_remain_sub_eight_ms") &&
+    !programBridge.includes("mountedJobReplay") &&
+    !programBridge.includes("requested_effects: outcome.effects.clone()") &&
+    !!productionAction &&
+    !productionAction.body.includes("serde_json::from_value") &&
+    productionAction.body.indexOf("client.reserve_product_replay_admission(instance_id)?") >= 0 &&
+    productionAction.body.indexOf("client.reserve_product_replay_admission(instance_id)?") < productionAction.body.indexOf("let mut outcome = exchange(client, instance_id, commands).await?") &&
+    productionAction.body.indexOf("let mut outcome = exchange(client, instance_id, commands).await?") >= 0 &&
+    productionAction.body.indexOf("let mut outcome = exchange(client, instance_id, commands).await?") < productionAction.body.indexOf("outcome.take_product_replay_authority(instance_id, admission)") &&
+    productionAction.body.indexOf("outcome.take_product_replay_authority(instance_id, admission)") < productionAction.body.indexOf("MountedProductReplayAdmission::Refused(refusal)") &&
+    productionAction.body.includes("client.retire_product_replay_refusal(refusal).await") &&
+    productionAction.body.indexOf("client.retire_product_replay_refusal(refusal).await") < productionAction.body.indexOf("invocation_from_frames(&mut outcome, seq)") &&
+    !productionAction.body.includes("take_product_replay_authority(instance_id)?") &&
+    productionAction.body.indexOf("invocation_from_frames(&mut outcome, seq)?") < productionAction.body.indexOf("client.mount_product_replay(authority).await") &&
+    productionAction.body.includes("client.retire_product_replay(authority).await") &&
+    productionAction.body.indexOf("client.mount_product_replay(authority).await") < productionAction.body.indexOf("client.advance_product_replay(instance_id).await?") &&
+    !!productionCommand &&
+    !productionCommand.body.includes("serde_json::from_value") &&
+    productionCommand.body.indexOf("client.reserve_product_replay_admission(instance_id)?") >= 0 &&
+    productionCommand.body.indexOf("client.reserve_product_replay_admission(instance_id)?") < productionCommand.body.indexOf("let mut outcome = exchange(client, instance_id") &&
+    productionCommand.body.indexOf("let mut outcome = exchange(client, instance_id") >= 0 &&
+    productionCommand.body.indexOf("let mut outcome = exchange(client, instance_id") < productionCommand.body.indexOf("outcome.take_product_replay_authority(instance_id, admission)") &&
+    productionCommand.body.indexOf("outcome.take_product_replay_authority(instance_id, admission)") < productionCommand.body.indexOf("MountedProductReplayAdmission::Refused(refusal)") &&
+    productionCommand.body.includes("client.retire_product_replay_refusal(refusal).await") &&
+    productionCommand.body.indexOf("client.retire_product_replay_refusal(refusal).await") < productionCommand.body.indexOf("invocation_from_frames(&mut outcome, seq)") &&
+    !productionCommand.body.includes("take_product_replay_authority(instance_id)?") &&
+    productionCommand.body.indexOf("invocation_from_frames(&mut outcome, seq)?") < productionCommand.body.indexOf("client.mount_product_replay(authority).await") &&
+    productionCommand.body.includes("client.retire_product_replay(authority).await") &&
+    productionCommand.body.indexOf("client.mount_product_replay(authority).await") < productionCommand.body.indexOf("client.advance_product_replay(instance_id).await?")
+  );
+}
+
+function toolJobLiveFixedReplaySelfTests(actor: string, shard: string, executor: string, wgpu: string, actionBus: string, pluginApp: string, pluginHost: string, programBridge: string): number {
+  const exact = (a = actor, s = shard, e = executor, w = wgpu, b = actionBus, p = pluginApp, h = pluginHost, g = programBridge) => toolJobLiveFixedReplayExact(a, s, e, w, b, p, h, g);
+  if (!exact()) throw new Error("[verify interactivity tool-jobs p2c] valid live fixed replay sources were rejected.");
+  const mutate = (source: string, from: string, to: string): string => {
+    if (!source.includes(from)) throw new Error("[verify interactivity tool-jobs p2c] mutation source missing: " + from);
+    return source.replace(from, to);
+  };
+  const mutateAfter = (source: string, anchor: string, from: string, to: string): string => {
+    const anchorAt = source.indexOf(anchor);
+    const at = source.indexOf(from, anchorAt);
+    if (anchorAt < 0 || at < 0) throw new Error("[verify interactivity tool-jobs p2c] anchored mutation source missing: " + anchor + " / " + from);
+    return source.slice(0, at) + to + source.slice(at + from.length);
+  };
+  const mutations: [string, boolean][] = [
+    ["dynamic-log", exact(mutate(actor, "Box<[Option<JobReplayRecord>; JOB_REPLAY_RECORD_CAPACITY]>", "Vec<Option<JobReplayRecord>>"), shard, executor, wgpu)],
+    ["dynamic-pages", exact(mutate(actor, "pages: ManuallyDrop<[Option<JobReplayPage>; JOB_REPLAY_RECORD_PAGE_CAPACITY]>", "pages: Vec<Option<JobReplayPage>>"), shard, executor, wgpu)],
+    ["post-copy-fuel", exact(mutate(actor, "cx.consume_fuel(1);\n            if cx.is_cancelled() || cx.deadline_exceeded()", "if cx.is_cancelled() || cx.deadline_exceeded()"), shard, executor, wgpu)],
+    ["whole-candidate-close", exact(mutate(actor, "pub fn maintenance_step(&mut self, cx: &mut job::StepContext<'_>)", "pub fn maintenance_step_removed(&mut self, cx: &mut job::StepContext<'_>)"), shard, executor, wgpu)],
+    ["ack-without-credit", exact(mutate(actor, "cx.consume_fuel(1);\n        let index = self.ready_record.take()", "let index = self.ready_record.take()"), shard, executor, wgpu)],
+    ["spawn-request-erasure", exact(actor, mutate(shard, "JobReplayRequest::from_spawn(&kind, &input)", "JobReplayRequest::from_spawn(\"\", &[])"), executor, wgpu)],
+    ["empty-checkpoint", exact(actor, mutate(shard, "self.runtime.checkpoint(instance).await {", "Ok::<Vec<u8>, TurnFault>(Vec::new()) {"), executor, wgpu)],
+    ["preview-wrap", exact(actor, mutate(shard, "published_turn.operation.preview_sequence += 1", "published_turn.operation.preview_sequence = published_turn.operation.preview_sequence.wrapping_add(1)"), executor, wgpu)],
+    ["capture-bypass", exact(actor, shard, executor, mutate(wgpu, "self.begin_job_replay_capture(ActorId(reported), authority, request, placement, self.worker_count, worker_slot, publication)", "self.publish_captured_job_progress(ActorId(reported), authority, publication)"))],
+    ["run-ahead", exact(actor, shard, executor, mutate(wgpu, "if replay_capture_started {\n                    break;", "if false {\n                    break;"))],
+    ["private-pool", exact(actor, shard, executor, mutate(wgpu, "let pool = Arc::new(crate::renderer_worker_pool());", "let pool = Arc::new(semio_framework_async::WorkerPool::new(1));"))],
+    ["recovery-no-reserve", exact(actor, shard, executor, mutate(wgpu, "mounted_replay_recovery_registry().lock().expect(\"replay recovery lock\").reserve()", "Some(MountedReplayRecoveryToken { index: 0, epoch: 0 })"))],
+    ["drop-no-publish", exact(actor, shard, executor, mutate(wgpu, "mounted_replay_recovery_registry().lock().expect(\"replay recovery lock\").publish(token, owner)", "Err(owner)"))],
+    ["panic-recovery-law-erased", exact(actor, shard, executor, mutate(wgpu, "panic_after_mounted_capture_transfers_the_exact_generation_to_incremental_recovery", "panic_smoke"))],
+    ["close-no-step", exact(actor, shard, executor, mutate(wgpu, "let _ = log.close_step(&mut context);", "log.begin_close();"))],
+    ["p2d-bypass", exact(actor, shard, executor, mutate(wgpu, "self.publish_captured_job_progress(actor, authority, publication)", "JobReplayPublicationPolicy::Accepted"))],
+    ["seed-dynamic-kind", exact(actor, mutate(shard, "kind: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_KIND_PAGE_CAPACITY]>", "kind: Vec<Option<FixedReplaySeedPage>>"), executor, wgpu)],
+    ["seed-dynamic-input", exact(actor, mutate(shard, "input: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_INPUT_PAGE_CAPACITY]>", "input: Vec<Option<FixedReplaySeedPage>>"), executor, wgpu)],
+    ["seed-dynamic-checkpoint", exact(actor, mutate(shard, "checkpoint: ManuallyDrop<[Option<FixedReplaySeedPage>; JOB_REPLAY_CHECKPOINT_PAGE_CAPACITY]>", "checkpoint: Vec<Option<FixedReplaySeedPage>>"), executor, wgpu)],
+    ["seed-unadmitted-page", exact(actor, mutate(shard, "JOB_REPLAY_SEED_PAGES.fetch_update(Ordering::AcqRel", "JOB_REPLAY_SEED_PAGES.fetch_update(Ordering::Relaxed"), executor, wgpu)],
+    ["refusal-lane-erased", exact(actor, mutate(shard, "replay_seed_refusals: [Option<ReplaySpawnRefusal>; JOB_REPLAY_REFUSAL_SLOT_CAPACITY]", "replay_seed_refusals: Vec<ReplaySpawnRefusal>"), executor, wgpu)],
+    ["refusal-input-lost", exact(actor, mutate(shard, "drop(refusal.input.take().expect(\"rejected input closes once\"));", "refusal.input.take();"), executor, wgpu)],
+    ["refusal-kind-lost", exact(actor, mutate(shard, "drop(refusal.kind.take().expect(\"rejected kind closes once\"));", "refusal.kind.take();"), executor, wgpu)],
+    ["refusal-no-credit", exact(actor, mutate(shard, "if !self.consume_replay_close_opportunity(actor)", "if false"), executor, wgpu)],
+    ["replay-no-credit", exact(actor, mutate(shard, "if if closing { !self.consume_replay_close_opportunity(actor) } else { !self.consume_replay_opportunity(actor) }", "if false"), executor, wgpu)],
+    ["stale-active-seed-close-erased", exact(actor, mutate(shard, 'self.replay_seeds[index].as_mut().expect("stale mounted replay seed").phase = ReplaySeedPhase::Closing;', "return Ok(false);"), executor, wgpu)],
+    ["stale-seed-close-erased", exact(actor, mutate(shard, 'self.replay_seeds[index].as_mut().expect("stale retained replay seed").phase = ReplaySeedPhase::Closing;', "return Ok(false);"), executor, wgpu)],
+    ["cancel-seed-close-erased", exact(actor, mutateAfter(shard, "match self.runtime.cancel_job(instance, job).await", "seed.phase = ReplaySeedPhase::Closing;", "let _ = seed;"), executor, wgpu)],
+    ["checkpoint-bypass", exact(actor, mutate(shard, "self.runtime.checkpoint(instance).await", "Ok(Vec::new())"), executor, wgpu)],
+    ["restore-bypass", exact(actor, mutate(shard, "self.runtime.restore(instance, checkpoint).await", "Ok(())"), executor, wgpu)],
+    ["start-bypass", exact(actor, mutate(shard, "self.runtime.start_job(instance, job, &kind, input).await", "Ok(())"), executor, wgpu)],
+    ["whole-effects-before-bridge", exact(actor, mutate(shard, "let bridged = to_actor_turn_result_in_place(&mut result, actor_id, 0, 0).await;", "let bridged = Ok(semio_framework_actor::TurnResult::default());"), executor, wgpu)],
+    ["replay-request-unmounted", exact(actor, shard, executor, mutateAfter(wgpu, "async fn advance_product_replay(&mut self", "self.request_job_replay(actor, job, worker_count, worker_slot, restore_start_ordinal).await?", "Ok(())?"))],
+    ["replay-restore-ordinal-downstream-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn request_job_replay(", "entry.accepted_replay_sequence != restore_start_ordinal", "false"))],
+    ["worker-profile-unchecked", exact(actor, shard, executor, mutate(wgpu, "!matches!(worker_count, 1 | 2 | 4) && worker_count != self.worker_count", "false"))],
+    ["replay-submit-bypass", exact(actor, shard, executor, mutate(wgpu, "self.runtime.submit(envelope).await", "Backpressure::Accept"))],
+    ["action-bus-create-bypass", exact(actor, shard, executor, wgpu, mutate(actionBus, "factory.create_job(&mut spec)", "return Err(ToolDispatchError::UnknownController { controller_id });"))],
+    ["plugin-session-bypass", exact(actor, shard, executor, wgpu, actionBus, mutateAfter(pluginApp, "async fn dispatch_typed_command_inner(", "MountedWorkerJobSession::try_new(dispatch.job, params)", "Err(dispatch.job)"))],
+    ["guest-start-bypass", exact(actor, shard, executor, wgpu, actionBus, pluginApp, mutate(pluginHost, "call_start_job(accessor, job, kind, input).await", "Ok(Ok(Ok(())))"))],
+    ["worker-law-erased", exact(mutate(actor, "for worker_count in [1, 2, 4, host_default]", "for worker_count in [host_default]"), shard, executor, wgpu)],
+    ["cancel-classification-erased", exact(mutate(actor, "cancellation_observed: matches!(publication.outcome, JobStepOutcome::Cancelled)", "cancellation_observed: false"), shard, executor, wgpu)],
+    ["cancel-prefix-erased", exact(mutate(actor, "u64::from(header.cancellation_observed)", "0"), shard, executor, wgpu)],
+    ["cancel-classification-law-erased", exact(mutate(actor, "mounted_replay_records_and_replays_the_exact_cancelled_terminal_classification", "cancel_record_smoke"), shard, executor, wgpu)],
+    ["capture-cancel-check-erased", exact(mutate(actor, "self.closing || cx.is_cancelled()", "self.closing"), shard, executor, wgpu)],
+    ["capture-deadline-check-erased", exact(mutateAfter(actor, "pub fn begin_capture(", "cx.should_yield()", "false"), shard, executor, wgpu)],
+    ["capture-stale-check-erased", exact(mutate(actor, "cx.generation().0 != publication.turn.operation.generation", "false"), shard, executor, wgpu)],
+    ["capture-hostile-law-erased", exact(mutate(actor, "mounted_replay_cancel_deadline_and_stale_refuse_the_exact_publication_owner_unchanged", "capture_refusal_smoke"), shard, executor, wgpu)],
+    ["fault-publication-erased", exact(actor, mutate(shard, "JobStepOutcome::Fault { detail: error }", "JobStepOutcome::Cancelled"), executor, wgpu)],
+    ["fault-replay-law-erased", exact(mutate(actor, "mounted_replay_preserves_the_exact_fault_payload_and_prefix_across_replay", "fault_record_smoke"), shard, executor, wgpu)],
+    ["product-worker-law-erased", exact(actor, shard, executor, mutate(wgpu, "production_mounted_process_replay_supports_one_two_four_and_default_without_private_pool", "product_worker_smoke"))],
+    ["product-worker-matrix-forced-singleton", exact(actor, shard, executor, mutate(wgpu, "[1, 2, 4, process_default]", "[process_default, process_default, process_default, process_default]"))],
+    ["product-worker-slot-erased", exact(actor, shard, executor, mutate(wgpu, "process_slot % worker_count", "0"))],
+    ["hostile-law-erased", exact(actor, mutate(shard, "mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_work_and_closes_one_owner_per_sub_eight_ms_opportunity", "replay_smoke"), executor, wgpu)],
+    ["cancel-law-erased", exact(actor, mutate(shard, "mounted_cancel_marks_the_exact_replay_seed_for_incremental_close_before_another_job_step", "cancel_smoke"), executor, wgpu)],
+    ["plugin-pipeline-unconditional-rejection", exact(actor, shard, executor, wgpu, actionBus, mutateAfter(pluginApp, "fn require_complete_tool_operation_pipeline(", "Ok(())", 'Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.full-operation-pending"), "pending"))'), pluginHost)],
+    ["command-completion-port-unconditional-rejection", exact(actor, shard, executor, mutateAfter(wgpu, "fn persistent_command_completion_port_ready()", "KERNEL_REQUEST_QUEUE_CAPACITY != 0", "false"))],
+    ["replay-start-before-submit", exact(actor, shard, executor, mutateAfter(wgpu, "async fn run_turn(&mut self", "replay_start_index = Some(index);", "entry.replay_started = true;\n                        replay_start_index = Some(index);"))],
+    ["replay-accepted-state-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn run_turn(&mut self", "entry.accept_replay_submission(envelope.seq)?;", "let _ = envelope.seq;"))],
+    ["replay-retry-sequence-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn replay_submission_sequence(&mut self)", "Some(sequence) => Ok(sequence)", "Some(_) => next_seq()"))],
+    ["replay-nonaccept-retry-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn run_turn(&mut self", "if replay_start_index.is_some()", "if false"))],
+    ["repeated-begin-identity-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn request_job_replay(", "if entry.replay_requested", "if false"))],
+    ["repeated-begin-worker-identity-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn pending_replay_start_is_exact(&self", "self.replay_worker_count == worker_count && self.replay_worker_slot == worker_slot", "true"))],
+    ["replay-submit-identity-law-erased", exact(actor, shard, executor, mutate(wgpu, "rejected_production_replay_submit_retries_exact_restore_start_identity_before_job_step", "replay_submit_smoke"))],
+    ["product-producer-erased", exact(actor, shard, executor, mutate(wgpu, "matches!(effect, Effect::SpawnJob { .. })", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-kind-preflight-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "kind.len() > PRODUCT_REPLAY_KIND_BYTES", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-input-preflight-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "input.len() > PRODUCT_REPLAY_INPUT_BYTES", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-effect-moved-before-preflight", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "let cause = if kind.len() > PRODUCT_REPLAY_KIND_BYTES", "let _premature = self.effects.remove(index); let cause = if kind.len() > PRODUCT_REPLAY_KIND_BYTES"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-admitted-raw-drop-restored", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "let request = MountedProductReplayRequest::from_admitted_effect(instance, index, spawn, recovery);", "drop(spawn); let request = admitted_product_request(instance, 1, \"tool.run\", b\"input\");"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-admitted-effect-transfer-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "MountedProductReplayRequest::from_admitted_effect(instance, index, spawn, recovery)", "admitted_product_request(instance, 1, \"tool.run\", b\"input\")"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-request-raw-slot-erased", exact(actor, shard, executor, mutate(wgpu, "raw: Option<RawSpawnJobOwner>", "raw: Option<()>"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-owner-cloned", exact(actor, shard, executor, mutate(wgpu, "#[derive(Debug)]\n    struct RawSpawnJobOwner", "#[derive(Clone, Debug)]\n    struct RawSpawnJobOwner"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-retained-raw-owner-erased", exact(actor, shard, executor, mutate(wgpu, "raw: RawSpawnJobOwner", "raw: ()"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-effect-move-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl RawSpawnJobOwner", "let Effect::SpawnJob { job, kind, input, placement } = effect", "let Effect::SpawnJob { job, kind: _, input: _, placement } = effect; let kind = String::new(); let input = Vec::new()"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-fixed-witness-raw-input-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayRequest", "JobReplayRequest::from_spawn(raw.kind(), raw.input())", "JobReplayRequest::from_spawn(raw.kind(), &[])"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-fixed-witness-ack-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayRequest", "raw.acknowledge_fixed_witness();", "let _ = &raw;"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-retained-transfer-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayRequest", "self.raw.take().expect(\"mounted product replay raw SpawnJob transfers once\")", "None.expect(\"raw projection only\")"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-recovery-full-admitted", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "let recovery = cause.is_none().then(|| mounted_product_replay_recovery_registry().lock().expect(\"product replay recovery lock\").reserve()).flatten();", "let recovery = Some(MountedProductReplayRecoveryToken { index: 0, generation: 0 });"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-remainder-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "let remaining_effects = std::mem::take(&mut self.effects);", "let remaining_effects = Vec::new();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-raw-reinsert-restored", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "MountedProductReplayAdmission::Refused(permit.refuse(cause, index, spawn, remaining_effects))", "self.effects.insert(index, spawn); MountedProductReplayAdmission::None"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-slot-generation-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayRefusalRegistry", "generation.checked_add(1)", "Some(1)"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-publication-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl Drop for RefusedProductReplay", "mounted_product_replay_refusal_registry().lock().expect(\"product replay refusal lock\").publish(token, retained)", "drop(retained)"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-retry-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn step_one(&mut self, retry: bool)", "owner.retry()", "None"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-retry-raw-move-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn retry(&mut self) -> Option<MountedProductReplayRequest>", "let Some(spawn) = self.spawn.take()", "let Some(spawn) = self.spawn.as_ref()"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-close-input-erased", exact(actor, shard, executor, mutate(wgpu, "drop(self.spawn_input.take().expect(\"refused product input backing closes once\"));", "self.spawn_input.take();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-close-kind-erased", exact(actor, shard, executor, mutate(wgpu, "drop(self.spawn_kind.take().expect(\"refused product kind backing closes once\"));", "self.spawn_kind.take();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-close-remainder-backing-erased", exact(actor, shard, executor, mutate(wgpu, "drop(self.remaining_effects.take().expect(\"refused product outcome backing closes once\"));", "self.remaining_effects.take();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-maintenance-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn command_maintenance_step(", "mounted_product_replay_refusal_registry().lock().expect(\"product replay refusal lock\").step_one(true)", "MountedProductReplayRefusalStep { request: None, progressed: false }"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-app-close-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn destroy_app_step(", "mounted_product_replay_refusal_registry().lock().expect(\"product replay refusal lock\").close_instance_one(instance)", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-realm-close-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn close_realm_progress_step(", "mounted_product_replay_refusal_registry().lock().expect(\"product replay refusal lock\").step_one(false)", "MountedProductReplayRefusalStep { request: None, progressed: false }"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-request-digest-erased", exact(actor, shard, executor, mutate(wgpu, "JobReplayRequest::from_spawn(raw.kind(), raw.input())", "JobReplayRequest::from_spawn(raw.kind(), &[])"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-kind-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "kind.tool == expected.request.tool", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-request-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "request_owner.request == expected.request", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-placement-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "request_owner.placement == expected.placement", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-route-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.route == expected.route", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-operation-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.operation == expected.turn.operation", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-generation-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.generation == expected.turn.operation.generation", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-seed-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.seed == expected.turn.operation.seed", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-checkpoint-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.checkpoint == expected.checkpoint", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-terminal-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.terminal == expected.terminal", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-physical-count-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "expected.terminal.worker_count == expected.process_worker_count", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-physical-slot-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "expected.terminal.worker_slot == expected.process_worker_slot", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-logical-count-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.worker_count == expected.logical_worker_count", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-logical-slot-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.worker_slot == expected.logical_worker_slot", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-begin-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.begin == expected.begin", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-restore-field-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "self.restore_start_ordinal == expected.restore_start_ordinal", "true"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-exact-rejection-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "Err(self)", "panic!(\"lost authority\")"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-checkpoint-scan-looped", exact(actor, shard, executor, mutateAfter(wgpu, "async fn advance_product_replay(&mut self", "claim.record_cursor += 1;", "while claim.record_cursor < entry.log.sealed_records() { claim.record_cursor += 1; }"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-checkpoint-live-read-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn advance_product_replay(&mut self", "entry.log.last_checkpoint_header()", "None::<JobReplayRecordHeader>"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-shard-placement-erased", exact(actor, shard, executor, mutate(wgpu, "self.begin_job_replay_capture(ActorId(reported), authority, request, placement, self.worker_count, worker_slot, publication)", "self.begin_job_replay_capture(ActorId(reported), authority, request, JobPlacement::Inline, self.worker_count, worker_slot, publication)"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-recovery-reserve-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) fn take_product_replay_authority(", "mounted_product_replay_recovery_registry().lock().expect(\"product replay recovery lock\").reserve()", "Some(MountedProductReplayRecoveryToken { index: 0, generation: 0 })"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-recovery-publication-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl Drop for MountedProductReplayAuthority", "MountedProductReplayRecoveryOwner::Authority", "MountedProductReplayRecoveryOwner::Request"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-recovery-close-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayRecoveryRegistry", "self.slots[index].owner.take()", "self.slots[index].owner.as_ref()"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-recovery-raw-close-step-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayRecoveryRegistry", ".owner.as_mut().expect(\"selected product replay recovery owner\").close_step()", ".owner.is_some()"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-input-whole-close-erased", exact(actor, shard, executor, mutate(wgpu, "drop(self.input.take().expect(\"raw admitted product input backing closes once\"));", "self.input.take();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-kind-whole-close-erased", exact(actor, shard, executor, mutate(wgpu, "drop(self.kind.take().expect(\"raw admitted product kind backing closes once\"));", "self.kind.take();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-request-rejection-mark-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayRequest", "self.raw_mut().reject();", "let _ = self.raw_mut();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-claim-rejection-mark-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayClaim", "request.raw_mut().reject();", "let _ = request.raw_mut();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-authority-rejection-mark-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl MountedProductReplayAuthority", "request.raw_mut().reject();", "let _ = request.raw_mut();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-recovery-maintenance-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn command_maintenance_step(", "mounted_product_replay_recovery_registry().lock().expect(\"product replay recovery lock\").close_one()", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-abort-authority-discarded", exact(actor, shard, executor, mutateAfter(wgpu, "fn abort_product_replay_one(", "self.product_replay_authorities[index].take().expect(\"faulted product replay authority remains exact\").retire();", "self.product_replay_authorities[index] = None;"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-abort-claim-discarded", exact(actor, shard, executor, mutateAfter(wgpu, "fn abort_product_replay_one(", "self.product_replay_claims[index].take().expect(\"faulted product replay claim remains exact\").retire();", "self.product_replay_claims[index] = None;"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-destroy-authority-discarded", exact(actor, shard, executor, mutateAfter(wgpu, "async fn destroy_app_step(", "self.product_replay_authorities[index].take().expect(\"destroyed app product replay authority remains exact\").retire();", "self.product_replay_authorities[index] = None;"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-realm-claim-discarded", exact(actor, shard, executor, mutateAfter(wgpu, "fn close_realm_progress_step(", "self.product_replay_claims[index].take().expect(\"realm product replay claim remains exact\").retire();", "self.product_replay_claims[index] = None;"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-profile-overwritten-before-validation", exact(actor, shard, executor, mutateAfter(wgpu, "async fn advance_product_replay(&mut self", "let authority = self.product_replay_authorities[index].take().expect(\"selected product replay authority\");", "self.product_replay_authorities[index].as_mut().expect(\"selected product replay authority\").worker_count = logical_worker_count;\n                let authority = self.product_replay_authorities[index].take().expect(\"selected product replay authority\");"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-begin-overwritten-before-validation", exact(actor, shard, executor, mutateAfter(wgpu, "async fn advance_product_replay(&mut self", "let authority = self.product_replay_authorities[index].take().expect(\"selected product replay authority\");", "self.product_replay_authorities[index].as_mut().expect(\"selected product replay authority\").begin = expected_begin;\n                let authority = self.product_replay_authorities[index].take().expect(\"selected product replay authority\");"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-mount-raw-request-check-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn mount_product_replay(&mut self", "JobReplayRequest::from_spawn(owner.raw().kind(), owner.raw().input()) != owner.request", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-mount-raw-ack-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn mount_product_replay(&mut self", "owner.raw_mut().acknowledge_mount();", "let _ = owner.raw_mut();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-qualification-raw-ack-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn advance_product_replay(&mut self", "request_owner.raw_mut().acknowledge_qualification(claim.checkpoint);", "let _ = request_owner.raw_mut();"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-authority-raw-request-check-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn validate(self, expected: MountedProductReplayExpected", "JobReplayRequest::from_spawn(request_owner.raw().kind(), request_owner.raw().input())", "request_owner.request"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-retirement-ack-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn advance_product_replay(&mut self", "acknowledge_raw_retirement_boundary().map_err(str::to_string)?;", "let _ = profile_cursor;"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-retirement-profile-guard-erased", exact(actor, shard, executor, mutateAfter(wgpu, "fn acknowledge_raw_retirement_boundary(&mut self)", "self.profile_cursor != PRODUCT_REPLAY_PROFILE_COUNT || self.profile_started", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-retirement-replay-ordinal-erased", exact(actor, shard, executor, mutateAfter(wgpu, "impl RawSpawnJobOwner", "accepted_replay_ordinal.is_none()", "false"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-mount-client-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) async fn mount_product_replay(&self", "KernelRequest::MountProductReplay { owner }", "KernelRequest::AdvanceProductReplay { instance: owner.instance }"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["production-command-product-route-erased", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_command(", "client.mount_product_replay(authority).await", "Err(authority)"))],
+    ["production-action-product-route-erased", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_action(", "client.mount_product_replay(authority).await", "Err(authority)"))],
+    ["production-action-refusal-permit-erased", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_action(", "let admission = client.reserve_product_replay_admission(instance_id)?;", "let admission = panic!(\"no fixed refusal permit\");"))],
+    ["production-command-refusal-permit-erased", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_command(", "let admission = client.reserve_product_replay_admission(instance_id)?;", "let admission = panic!(\"no fixed refusal permit\");"))],
+    ["production-action-refusal-discarded", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_action(", "client.retire_product_replay_refusal(refusal).await;", "drop(refusal);"))],
+    ["production-command-refusal-discarded", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_command(", "client.retire_product_replay_refusal(refusal).await;", "drop(refusal);"))],
+    ["production-action-raw-question-return-restored", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_action(", "match outcome.take_product_replay_authority(instance_id, admission)", "outcome.take_product_replay_authority(instance_id)?; match MountedProductReplayAdmission::None"))],
+    ["production-command-raw-question-return-restored", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_command(", "match outcome.take_product_replay_authority(instance_id, admission)", "outcome.take_product_replay_authority(instance_id)?; match MountedProductReplayAdmission::None"))],
+    ["production-action-product-rejection-discarded", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_action(", "client.retire_product_replay(authority).await;", "drop(authority);"))],
+    ["product-retirement-client-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) async fn retire_product_replay(&self", "KernelRequest::RetireProductReplay { owner }", "KernelRequest::MountProductReplay { owner }"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-retirement-client-erased", exact(actor, shard, executor, mutateAfter(wgpu, "pub(crate) async fn retire_product_replay_refusal(&self", "KernelRequest::RetireProductReplayRefusal { owner }", "KernelRequest::AdvanceProductReplay { instance: owner.instance }"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["production-product-advance-erased", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_action(", "client.advance_product_replay(instance_id).await?", "let _ = instance_id;"))],
+    ["product-authority-law-erased", exact(actor, shard, executor, mutate(wgpu, "production_action_bus_product_authority_carries_complete_identity_and_returns_exact_owner_on_wrong_field", "product_authority_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-all-fields-law-erased", exact(actor, shard, executor, mutate(wgpu, "production_product_authority_qualifies_every_minted_field_before_replay_work", "product_all_fields_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-abort-close-law-erased", exact(actor, shard, executor, mutate(wgpu, "product_authority_fault_abort_and_close_rediscover_exact_generation_once", "product_abort_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-claim-close-law-erased", exact(actor, shard, executor, mutate(wgpu, "product_claim_fault_retains_exact_request_cursor_checkpoint_and_generation", "product_claim_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-ingress-capacity-law-erased", exact(actor, shard, executor, mutate(wgpu, "product_ingress_kind_and_input_max_plus_one_return_exact_spawn_and_remainder", "product_ingress_capacity_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-ingress-retry-law-erased", exact(actor, shard, executor, mutate(wgpu, "product_ingress_recovery_max_plus_one_retries_exact_spawn_then_closes_remainder_incrementally", "product_ingress_retry_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-refusal-drop-law-erased", exact(actor, shard, executor, mutate(wgpu, "product_refusal_slot_max_plus_one_stops_before_exchange_and_drop_publishes_exact_generation", "product_refusal_drop_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-mount-refusal-law-erased", exact(actor, shard, executor, mutate(wgpu, "admitted_product_mount_refusal_returns_exact_raw_allocation_then_closes_one_backing_per_grant", "product_raw_mount_refusal_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-transfer-drop-law-erased", exact(actor, shard, executor, mutate(wgpu, "admitted_product_request_claim_and_authority_drop_preserve_raw_allocation_identity", "product_raw_transfer_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-raw-ack-boundary-law-erased", exact(actor, shard, executor, mutate(wgpu, "admitted_raw_backing_retires_only_after_fixed_mount_qualification_and_all_replay_acks", "product_raw_ack_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-idle-maintenance-erased", exact(actor, shard, executor, mutateAfter(wgpu, "async fn run_kernel_pool(", "state.advance_product_replay(instance).await", "Ok(ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle })"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-idle-maintenance-blocks-queue", exact(actor, shard, executor, mutateAfter(wgpu, "async fn run_kernel_pool(", "let ready = queue.try_next();", "let ready = None;"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-timing-law-erased", exact(actor, shard, executor, mutate(wgpu, "production_product_authority_opportunities_remain_sub_eight_ms", "product_timing_smoke"), actionBus, pluginApp, pluginHost, programBridge)],
+    ["product-json-escape-hatch-restored", exact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, mutateAfter(programBridge, "pub async fn handle_action(", "let invocation:", "let mountedJobReplay = serde_json::from_value::<serde_json::Value>(serde_json::Value::Null);\n        let invocation:"))],
+  ];
+  for (const [name, accepted] of mutations) if (accepted) throw new Error(`[verify interactivity tool-jobs p2c] mutation ${name} was falsely accepted.`);
+  return mutations.length;
+}
+
 /** 🏗️ Phase-6 mounted FEM2D job ownership and live-route contract. */
 function toolJobFem2dMountedSessionExact(session: string, editor: string, model: string, mesh: string, pluginRoot: string, glue: string, jobs: string, analyses: string, reactor: string, store: string, frameworkPlugin: string): boolean {
   const reconcileStart = session.indexOf("pub fn reconcile(");
@@ -6421,6 +7125,10 @@ export class VerifyScript extends Script {
       this.runInteractivityP5e();
       return;
     }
+    if (segments[0] === "interactivity" && segments[1] === "p3mn") {
+      this.runInteractivityP3mn();
+      return;
+    }
     if (segments[0] === "interactivity") {
       this.runInteractivityAudit();
       return;
@@ -6647,8 +7355,41 @@ export class VerifyScript extends Script {
     console.log("[verify interactivity p5e] live-source and hostile mutations clean.");
   }
 
+  /** 🖥️ Runs the isolated P3mn paired engine-surface lifetime source and hostile-mutation gate. */
+  private runInteractivityP3mn(): void {
+    interactivityMountedEngineSurfaceLifetimeSelfTests(this.root);
+    const failures = interactivityMountedEngineSurfaceLifetimeFailures(
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
+      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs"),
+      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️component.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️component.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️component.rs"),
+      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs"),
+    );
+    if (failures.length > 0) throw new Error(`[verify interactivity p3mn] ${failures.join("; ")}`);
+    console.log("[verify interactivity p3mn] live-source and hostile mutations clean.");
+  }
+
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   private runToolJobCoverage(args: string[]): void {
+    if (args.includes("--p2c-only")) {
+      const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs");
+      const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
+      const executor = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs");
+      const wgpu = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
+      const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs");
+      const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+      const pluginHost = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
+      const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs");
+      const mutations = args.includes("--self-test") ? toolJobLiveFixedReplaySelfTests(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge) : 0;
+      if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw new Error("[verify interactivity tool-jobs p2c] live fixed replay contract failed.");
+      console.log(`[verify interactivity tool-jobs p2c] live-source clean; hostile-mutations=${mutations}.`);
+      return;
+    }
     if (args.includes("--p2a1-only")) {
       const store = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
       const mutations = args.includes("--self-test") ? toolJobArtifactEnvelopeRejectionTransferSelfTests(store) : 0;
@@ -8189,7 +8930,9 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
     (reactor.match(/close_ui_turn_patch_transport_session_one\(/g) ?? []).length < 2 ||
     (reactor.match(/semio_framework::kernel::close_ui_turn_patch_transport_one\(\)/g) ?? []).length < 3 ||
     (reactor.match(/to_actor_turn_result\(result, actor\.0, wall_us, memory_bytes\)\.await\.map_err\(\|_\| KernelError::InvalidTransition\)\?/g) ?? []).length < 1 ||
-    (reactor.match(/match to_actor_turn_result\(result, actor_id, 0, 0\)\.await/g) ?? []).length < 2 ||
+    (reactor.match(/match to_actor_turn_result\(result, actor_id, 0, 0\)\.await/g) ?? []).length < 1 ||
+    !reactor.includes("let bridged = to_actor_turn_result_in_place(&mut result, actor_id, 0, 0).await") ||
+    !reactor.includes("match bridged") ||
     reactor.includes("serde_json::from_slice(&result.ui_patches)") ||
     reactor.includes("serde_json::to_vec(&result.ui_patches)")
   ) failures.push("TurnResult patch ownership escapes through a growable vector or infallible whole-turn encoder instead of the fixed exact-owner authority");
@@ -8597,6 +9340,7 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     ["missing-abandoned-session-close", schema, reactor.replaceAll("close_ui_turn_patch_transport_session_one(", "missing_turn_patch_session_close(")],
     ["missing-mounted-turn-patch-close", schema, reactor.replace("semio_framework::kernel::close_ui_turn_patch_transport_one()", "false")],
     ["infallible-raw-turn-patch-complete", schema, reactor.replaceAll(".await.map_err(|_| KernelError::InvalidTransition)?", ".await")],
+    ["missing-in-place-shard-turn-patch-bridge", schema, reactor.replace("let bridged = to_actor_turn_result_in_place(&mut result, actor_id, 0, 0).await", "let bridged = Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new(\"missing-turn-patch-bridge\"), \"missing\"))")],
     ["dynamic-grid-tracks", schema.replace("pub columns: UiGridTracks", "pub columns: Vec<GridTrack>"), reactor],
     ["missing-grid-max-fixture", schema.replace("grid_tracks_max_plus_one_returns_the_exact_track", "grid_tracks_smoke"), reactor],
     ["dynamic-table-row-owner", schema.replace("pub type TableRows = UiFixedList<TableRow, TABLE_WINDOW_ROWS>", "pub type TableRows = Vec<TableRow>"), reactor],
@@ -9511,6 +10255,238 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
 }
 //#endregion 🔄️P5aMountedFrameTransaction
 
+//#region 🖥️P3mnMountedEngineSurfaceLifetime
+export function interactivityMountedEngineSurfaceLifetimeFailures(
+  engineSource: string,
+  hostSource: string,
+  winitSource: string,
+  browserSource: string,
+  glueSource: string,
+  graphSource: string,
+  flowSource: string,
+  mapSource: string,
+  editorSource: string,
+  dagSource: string,
+): string[] {
+  const engine = interactivityProductionSource(engineSource);
+  const host = interactivityProductionSource(hostSource);
+  const winit = interactivityProductionSource(winitSource);
+  const browser = interactivityProductionSource(browserSource);
+  const glue = interactivityProductionSource(glueSource);
+  const graph = interactivityProductionSource(graphSource);
+  const flow = interactivityProductionSource(flowSource);
+  const map = interactivityProductionSource(mapSource);
+  const editor = interactivityProductionSource(editorSource);
+  const dag = interactivityProductionSource(dagSource);
+  const failures: string[] = [];
+  const requireAll = (source: string, needles: readonly string[], failure: string): void => {
+    if (needles.some((needle) => !source.includes(needle))) failures.push(failure);
+  };
+  const registry = engine.slice(engine.indexOf("pub(crate) const ENGINE_SURFACE_CAPACITY"), engine.indexOf("//#region 📦️PreparedEngineCanvas"));
+  const packetAuthority = engine.slice(engine.indexOf("const ENGINE_CANVAS_FRAME_PACKET_CAPACITY"), engine.indexOf("enum EngineGpuBuildPhase"));
+  const presenter = engine.slice(engine.indexOf("enum EngineGpuBuildPhase"), engine.indexOf("//#endregion 📦️PreparedEngineCanvas"));
+  const realize = presenter.slice(presenter.indexOf("pub(crate) fn realize_step"), presenter.indexOf("pub(crate) fn close_active_candidate_step"));
+  const cpuClose = engine.slice(engine.indexOf("struct WorkerCell"), engine.indexOf("fn create_target_texture"));
+  const mapRetirement = map.slice(map.indexOf("pub struct MapHostRetirement"), map.indexOf("enum MapInteraction"));
+  const editorRetirement = editor.slice(editor.indexOf("pub struct EditorHostRetirement"), editor.indexOf("impl Default for EditorHost"));
+  const dagRetirement = dag.slice(dag.indexOf("pub struct DagHostRetirement"), dag.indexOf("enum DagNodeEvalStatusKind"));
+  const paired = host.slice(host.indexOf("enum PairedEngineSurfaceClosePhase"), host.indexOf("impl OsHost {"));
+  const abandonment = host.slice(host.indexOf("const OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY"), host.indexOf("enum PairedEngineSurfaceClosePhase"));
+  requireAll(registry, [
+    "ENGINE_SURFACE_CAPACITY: usize = 256",
+    "ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256",
+    "bytes: [u8; ENGINE_SURFACE_ID_BYTE_CAPACITY]",
+    "generation.checked_add(1)",
+    "exhausted: bool",
+    "NodeGraphEngineRetirement::Dag",
+    "NodeGraphEngineRetirement::Flow",
+    "MapHostRetirement::new(owner)",
+    "EditorHostRetirement::new(owner)",
+    "EngineSurfaceClosePhase::NodeGraphSync",
+    "EngineSurfaceClosePhase::MapSync",
+    "EngineSurfaceClosePhase::EditorPack",
+    "EngineSurfaceClosePhase::TileRequests",
+    "close_string",
+    "close_bytes",
+  ], "P3mn CPU registry lacks fixed checked identity or exhaustive retained child/cache retirement");
+  if (registry.includes("wrapping_add") || registry.includes("HashMap<String, EngineSurface") || registry.includes("drop(pack)") || registry.includes("drop(controller)")) failures.push("P3mn CPU registry retains wrapping, dynamic, or whole-owner close work");
+  requireAll(registry, [
+    "let EngineSurface {",
+    "board_pending_events.terminal_is_empty()",
+    "node_graph_sync_terminal(&self.sync_cache)",
+    "map_sync_terminal(&self.map_sync_cache)",
+    "board_sync_terminal(&self.board_sync_cache)",
+    "self.phase == EngineSurfaceClosePhase::Released\n            && self.node_graph_source.is_none()",
+  ], "P3mn outer EngineSurface retirement lacks an exhaustive field-wise terminal witness");
+  if (registry.includes("ManuallyDrop::drop(&mut self.surface)")) failures.push("P3mn outer EngineSurface retirement still permits an ordinary whole-owner drop");
+  requireAll(packetAuthority, [
+    "rejected: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>",
+    "EngineCanvasPacketDestination::Rejected(index)",
+    "fn try_reserve_fresh_packet",
+    "} else if self.rejected_len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {",
+    "reservation_sequence == self.published_reservation_sequence",
+    "return Err(surface)",
+  ], "P3mn packet overflow lacks a fixed generation-qualified multi-slot rejection authority");
+  if (packetAuthority.includes("rejected: Option<EngineCanvasPacket>")) failures.push("P3mn packet overflow regressed to a single rejected owner slot");
+  requireAll(cpuClose, [
+    "fn try_borrow_mut(&self) -> Option<MutexGuard<'_, T>>",
+    "self.state().try_lock().ok()",
+    "pub(crate) fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfaceToken>, ()>",
+    "cell.try_borrow_mut().ok_or(())?",
+    "pub(crate) fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<bool, ()>",
+    "pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> Result<bool, ()>",
+  ], "P3mn mounted CPU close probe can block or erase registry contention");
+  requireAll(presenter, [
+    "slots: ManuallyDrop<Option<Box<[EngineGpuSlot; ENGINE_SURFACE_CAPACITY]>>>",
+    "EngineGpuBuildPhase::Reserve",
+    "EngineGpuBuildPhase::Texture",
+    "EngineGpuBuildPhase::View",
+    "EngineGpuBuildPhase::Renderer",
+    "EngineGpuBuildPhase::Render",
+    "EngineGpuBuildPhase::ReplacementTexture",
+    "EngineGpuBuildPhase::ReplacementView",
+    "EngineGpuBuildPhase::Stage",
+    "EngineGpuBuildPhase::Publish",
+    "fn publish_candidate",
+    "return slot.publish_candidate(packet, expected, primary_metrics_generation);",
+    "candidate.matches(packet, expected, primary_metrics_generation)",
+    "self.live.replace(published)",
+    "self.retirement = Some(EngineGpuRetirement::new(displaced))",
+    "if let Some(retirement) = slot.retirement.as_mut()",
+    "retirement.close_step() && retirement.terminal_is_empty()",
+    "candidate.close_step(gpu)",
+    "retirement.close_step()",
+    "engine_gpu_freshness_matches(self.surface, self.document_generation, self.scene_revision, self.metrics_generation, live)",
+  ], "P3mn GPU presenter lacks fixed staged realization, atomic publish, or retained candidate/live close");
+  requireAll(realize, [
+    "if let Some(retirement) = slot.retirement.as_mut()",
+    "retirement.close_step() && retirement.terminal_is_empty()",
+    "engine_surface_live_freshness(packet.surface.token)",
+    "if !build.matches_live(live)",
+  ], "P3mn ordinary replacement or live CPU-slot publication freshness is not mounted in the GPU grant");
+  requireAll(cpuClose, [
+    "fn engine_surface_live_freshness(token: EngineSurfaceToken)",
+    "metrics_generation: value.metrics_generation",
+    "document_generation: value.document_generation",
+    "scene_revision: value.scene_revision",
+  ], "P3mn GPU publication lacks a nonblocking live CPU-slot freshness authority");
+  for (const forbidden of ["HashMap<String, EngineGpuSurface>", "fn realize_one", "std::mem::forget(slots)"])
+    if (presenter.includes(forbidden)) failures.push(`P3mn GPU presenter retains forbidden whole/dynamic ownership ${forbidden}`);
+  requireAll(paired, [
+    "PairedEngineSurfaceClosePhase::Scan",
+    "PairedEngineSurfaceClosePhase::BeginCpu",
+    "PairedEngineSurfaceClosePhase::BeginGpu",
+    "PairedEngineSurfaceClosePhase::Cpu",
+    "PairedEngineSurfaceClosePhase::Gpu",
+    "PairedEngineSurfaceClosePhase::Witness",
+    "runtime.begin_engine_surface_close(token)",
+    "let Ok(cpu) = crate::engine_canvas::engine_surface_token_at(self.scan) else",
+    "Err(()) => return false",
+    "presenter.begin_engine_surface_close(token)",
+    "runtime.close_engine_surface_step(token, self.operation, &mut self.sequence)",
+    "presenter.close_engine_surface_step(token)",
+  ], "P3mn mounted close does not retain an exact paired CPU/GPU token cursor");
+  requireAll(abandonment, [
+    "OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY: usize = 64",
+    "AtomicPtr<OsHostRetirementState>",
+    "generation: AtomicU64,\n    exhausted: AtomicBool",
+    "exhausted: AtomicBool",
+    "current.checked_add(1)",
+    "publish_os_host_retirement_abandonment",
+  ], "P3mn interrupted host close lacks fixed nonblocking generation-qualified handback");
+  requireAll(host, [
+    "pub(crate) fn try_into_retirement(self) -> Result<OsHostRetirement, Self>",
+    "pub(crate) fn close_abandoned_step() -> bool",
+    "impl Drop for OsHostRetirement",
+    "publish_os_host_retirement_abandonment(token, state)",
+    "engine_surfaces.close_step(runtime, presenter)",
+  ], "P3mn host refusal/Drop/mounted recovery loses the exact retirement owner");
+  requireAll(winit, ["host.try_into_retirement()", "Err(mut host)", "OsHostRetirement::close_abandoned_step()"], "P3mn native close does not return refusal ownership or pump abandonment");
+  requireAll(winit, ["if self.presenter.has_pending_presentation()", "self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);"], "P3mn retained presentation faults are not rescheduled for incremental close");
+  requireAll(browser, ["host.try_into_retirement()", "Err(host)", "OsHostRetirement::close_abandoned_step()"], "P3mn browser close does not return refusal ownership or pump abandonment");
+  if ((browser.match(/OsHostRetirement::close_abandoned_step\(\)/g)?.length ?? 0) < 2) failures.push("P3mn browser tick and close must both pump abandoned host ownership");
+  requireAll(glue, [
+    "self.engine.realize_step",
+    "self.engine.observe_primary_metrics_generation(candidate.metrics_generation())",
+    "self.engine.invalidate_primary_metrics_step()",
+    "if !self.engine.invalidate_primary_metrics_step()",
+    "pub(crate) fn close_engine_surface_step",
+    "retained_fault: Option<String>",
+    "cursor.phase = AppPresentPhase::Aborted",
+    "self.retained_fault = Some(format!(\"engine canvas present: {error}\"))",
+    "return Ok(AppPresentStep::Pending);",
+  ], "P3mn AppPresenter does not mount staged realization, P5e invalidation, and paired close");
+  requireAll(graph, ["pub struct GraphHostRetirement", "dag::DagHostRetirement::new(dag)", "pub fn close_step", "terminal_nonopaque_is_empty"], "P3mn GraphHost lacks its domain-owned retained disposer");
+  requireAll(flow, ["pub struct FlowHostRetirement", "dag::DagHostRetirement::new(dag)", "NeuralCacheRetirement::new", "store.close_owned_step(1, 4_096)", "close_owned_terminal_is_empty"], "P3mn FlowHost lacks retained DAG/cache/history retirement");
+  requireAll(mapRetirement, ["let MapHost {", "self.released\n            && self.positions.is_empty()", "self.vector_tiles.is_empty()", "self.events.is_empty()"], "P3mn MapHost lacks an exhaustive field-wise retained owner witness");
+  requireAll(editorRetirement, ["let EditorHost {", "self.released\n            && self.text.is_empty()", "self.semantic_tokens.is_empty()", "self.diagnostics.is_empty()"], "P3mn EditorHost lacks an exhaustive field-wise retained owner witness");
+  requireAll(dagRetirement, ["let DagHost {", "self.released\n            && self.engine.terminal_is_empty()", "self.icon_paint_cache.terminal_is_empty()", "self.unresolved_input_ports.is_empty()"], "P3mn DagHost lacks an exhaustive field-wise retained owner witness");
+  for (const [name, source] of [["MapHost", mapRetirement], ["EditorHost", editorRetirement], ["DagHost", dagRetirement]] as const)
+    if (source.includes("ManuallyDrop::drop")) failures.push(`P3mn ${name} retirement still permits an ordinary whole-owner drop`);
+  requireAll(engineSource, [
+    "engine_surface_registry_accepts_exact_id_capacity_and_refuses_generation_exhaustion",
+    "populated_graph_map_editor_surface_closes_one_fuel_turn_at_a_time",
+    "populated_flow_surface_closes_history_and_cache_before_slot_reuse",
+    "engine_packet_capacity_plus_one_returns_the_exact_snapshot_before_scene_transfer",
+    "gpu_publish_freshness_uses_the_live_cpu_identity_metrics_document_and_scene",
+    "normal_replacement_drains_displaced_renderer_view_texture_before_next_candidate",
+    "child_and_outer_surface_retirements_require_explicit_field_witnesses",
+  ], "P3mn MAX+1, one-fuel populated owner, and Flow history hostile laws are missing");
+  requireAll(glueSource, ["realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal"], "P3mn retained realization-fault progress law is missing");
+  requireAll(hostSource, ["interrupted_host_retirement_is_rediscovered_and_fixed_registry_refuses_max_plus_one"], "P3mn interrupted Drop recovery and fixed-registry MAX+1 hostile law is missing");
+  return failures;
+}
+
+export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: string): void {
+  const files = [
+    INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
+    INTERACTIVITY_AUDIT_RENDERER_HOST_FILE,
+    INTERACTIVITY_AUDIT_WINIT_HOST_FILE,
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs",
+    INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
+    "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️component.rs",
+    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs",
+    "🧰️framework/🔨️modules/✍️editor/🦀️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs",
+  ] as const;
+  const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
+  const mutations: readonly [string, number, string, string][] = [
+    ["wrapping-cpu-generation", 0, "slot.generation.checked_add(1)", "Some(slot.generation.wrapping_add(1))"],
+    ["blocking-cpu-close-registry", 0, "self.state().try_lock().ok()", "self.state().lock().ok()"],
+    ["dynamic-gpu-registry", 0, "slots: ManuallyDrop<Option<Box<[EngineGpuSlot; ENGINE_SURFACE_CAPACITY]>>>", "slots: HashMap<String, EngineGpuSurface>"],
+    ["missing-flow-disposer", 0, "NodeGraphEngineRetirement::Flow", "NodeGraphEngineRetirement::Dag"],
+    ["non-atomic-publication", 0, "return slot.publish_candidate(packet, expected, primary_metrics_generation);", "slot.candidate = None; return Ok(true);"],
+    ["missing-generation-abandonment", 1, "generation: AtomicU64,\n    exhausted: AtomicBool", "generation: usize,\n    exhausted: AtomicBool"],
+    ["ordinary-retirement-drop", 1, "publish_os_host_retirement_abandonment(token, state)", "drop(state); Ok(())"],
+    ["unpaired-cpu-close", 1, "runtime.close_engine_surface_step(token, self.operation, &mut self.sequence)", "true"],
+    ["native-drop", 2, "host.try_into_retirement()", "drop(host); return"],
+    ["browser-unmounted-abandonment", 3, "OsHostRetirement::close_abandoned_step()", "true"],
+    ["resize-skips-engine-invalidation", 4, "if !self.engine.invalidate_primary_metrics_step()", "if false"],
+    ["graph-whole-drop", 5, "dag::DagHostRetirement::new(dag)", "drop(dag); return"],
+    ["flow-whole-store-drop", 6, "store.close_owned_step(1, 4_096)", "drop(store); Ok(SnapshotRetirementStep::Complete)"],
+    ["ordinary-replacement-retirement-unmounted", 0, "if let Some(retirement) = slot.retirement.as_mut()", "if let Some(retirement) = Option::<&mut EngineGpuRetirement>::None"],
+    ["realize-fault-returned-before-close", 4, "self.retained_fault = Some(format!(\"engine canvas present: {error}\"));", "return Err(format!(\"engine canvas present: {error}\"));"],
+    ["single-rejected-packet-slot", 0, "} else if self.rejected_len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {", "} else if self.rejected_len == 0 {"],
+    ["outer-surface-weak-terminal-witness", 0, "self.phase == EngineSurfaceClosePhase::Released\n            && self.node_graph_source.is_none()", "self.phase == EngineSurfaceClosePhase::Released\n            || self.node_graph_source.is_none()"],
+    ["packet-self-freshness", 0, "engine_surface_live_freshness(packet.surface.token)", "Ok(Some(EngineSurfaceLiveFreshness { identity: packet.surface, metrics_generation: packet.metrics_generation, document_generation: packet.document_generation, scene_revision: packet.scene_revision }))"],
+    ["map-weak-terminal-witness", 7, "self.released\n            && self.positions.is_empty()", "self.released\n            || self.positions.is_empty()"],
+    ["editor-weak-terminal-witness", 8, "self.released\n            && self.text.is_empty()", "self.released\n            || self.text.is_empty()"],
+    ["dag-weak-terminal-witness", 9, "self.released\n            && self.engine.terminal_is_empty()", "self.released\n            || self.engine.terminal_is_empty()"],
+    ["missing-populated-law", 0, "populated_graph_map_editor_surface_closes_one_fuel_turn_at_a_time", "populated_surface_smoke"],
+    ["missing-abandonment-law", 1, "interrupted_host_retirement_is_rediscovered_and_fixed_registry_refuses_max_plus_one", "host_retirement_smoke"],
+  ];
+  for (const [name, index, needle, replacement] of mutations) {
+    const mutated = [...clean];
+    mutated[index] = mutated[index]!.replace(needle, replacement);
+    if (mutated[index] === clean[index]) throw new Error(`[verify interactivity p3mn] mutation ${name} did not bind live source`);
+    if (interactivityMountedEngineSurfaceLifetimeFailures(...mutated).length === 0) throw new Error(`[verify interactivity p3mn] mutation ${name} was falsely accepted`);
+  }
+  const failures = interactivityMountedEngineSurfaceLifetimeFailures(...clean);
+  if (failures.length !== 0) throw new Error(`[verify interactivity p3mn] live source rejected before mutations: ${failures.join("; ")}`);
+}
+//#endregion 🖥️P3mnMountedEngineSurfaceLifetime
+
 //#region 🎨️P5dMountedPreparedRender
 export function interactivityMountedPreparedRenderFailures(preparedSource: string, drawSource: string, gpuSource: string, glueSource: string, frameSource: string, sceneSource: string): string[] {
   const prepared = interactivityProductionSource(preparedSource);
@@ -9802,10 +10778,11 @@ export function interactivityMountedSurfaceLaneFailures(surfaceSource: string, e
     "surface_resize.begin_close()",
     "surface_resize.close_step()",
     "surface_resize.terminal_is_empty()",
-    "drop(self.surface_resize.take())",
+    "struct OsHostRetirementState",
   ], "P5e OsHost and retirement do not preserve the exact surface-lane authority");
   requireAll(nativeClose, [
-    "self.retirement = Some(host.into_retirement())",
+    "host.try_into_retirement()",
+    "Err(mut host)",
     "retirement.close_step() && retirement.terminal_is_empty()",
     "ControlFlow::wait_duration(std::time::Duration::from_millis(1))",
   ], "P5e native close does not incrementally retire the populated host before exit");
@@ -9850,7 +10827,7 @@ export function interactivityMountedSurfaceLaneSelfTests(repoRoot: string): void
     ["missing-lane-drop", 0, "impl Drop for MountedSurfaceResizeLane", "impl MountedSurfaceResizeLane"],
     ["missing-abandonment-drain", 3, "MountedSurfaceResizeLane::close_abandoned_step()", "true"],
     ["immediate-callback-resize", 3, "self.surface_resize.enqueue(metrics.physical.width, metrics.physical.height, metrics.scale_factor)", "self.presenter.resize(width, height, metrics.scale_factor)"],
-    ["native-ordinary-host-drop", 3, "self.retirement = Some(host.into_retirement())", "drop(host)"],
+    ["native-ordinary-host-drop", 3, "host.try_into_retirement()", "drop(host); return"],
     ["cursorless-presenter", 3, "self.presenter.begin_surface_resize(candidate)", "drop(candidate)"],
     ["dynamic-lane-entry", 1, "slots: [Option<SurfaceLaneEntry>; UI_LAYOUT_SURFACE_SLOTS]", "slots: Vec<SurfaceLaneEntry>"],
     ["unqualified-lane-entry", 1, "epoch: u64", "queued: bool"],

@@ -44,6 +44,15 @@ Feature: Apply every typed semio IMAGE mutation to its committed specification f
   its expected answer is the before-snapshot itself rather than the leaf fixture it borrows its
   document from.
 
+  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
+  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
+  and both committed example files were produced by these very codecs — so re-printing the parsed
+  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
+  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
+  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
+  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
+  the same document the text does, which no single codec can arrange on its own.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance
@@ -118,7 +127,11 @@ Feature: Apply every typed semio IMAGE mutation to its committed specification f
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Rebuilding the committed document from an empty snapshot carries every field
+  Scenario: Rebuild the committed document from an empty snapshot, and reproduce the real swatch artifact byte for byte
     Given the committed before-snapshot fixture asset://🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🔀️move-frame/🧪️tests/moves-the-last-frame-to-the-front/📸️snapshot/⬅️before/🔣️component.json for the no-mutation kind
-    When the empty snapshot is replaced with it through apply_semio_image_mutation
+    And the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖼️swatch/🖼️assets/🗣️example.dsl.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖼️swatch/🖼️assets/🎒️example.pack.semio
+    When the empty snapshot is replaced with the fixture through apply_semio_image_mutation
+    And the text artifact is parsed and printed back to DSL, and the binary twin is decoded and re-encoded
     Then the rebuilt snapshot equals the committed fixture, field for field
+    And both encodings decode to the same image and each re-encoding reproduces its committed file byte for byte

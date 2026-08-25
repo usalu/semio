@@ -460,6 +460,7 @@ pub fn create_sourcing_curate_app() -> AppDefinition {
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
             .io(sourcing_curate_io())
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             .build_definition()
 }
 //#endregion 🔖️Manifest

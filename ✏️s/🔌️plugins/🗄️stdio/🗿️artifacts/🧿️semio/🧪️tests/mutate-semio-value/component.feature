@@ -48,6 +48,14 @@ Feature: Apply every typed semio VALUE mutation to its committed specification f
   `remove-list-item`'s and `remove-map-entry`'s position-restoring multi-step undo checkable rather
   than merely runnable.
 
+  This case makes NO byte claim, and that is deliberate rather than overlooked. Every sibling
+  `mutate-semio-*` case's `identity-round-trip` reads its subset's own committed
+  `📚️examples/…/🗣️example.dsl.semio` and `🎒️example.pack.semio` and asserts `law::carrier_is_exact` on
+  both. `s.stdio.semio.value` is the only one of the eighteen subsets that commits no example
+  artifact in either encoding, so there are no committed bytes here to reproduce and no input bytes a
+  codec could have copied. What `identity-round-trip` asserts instead is the typed completeness law —
+  a real assertion, but not a byte one.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

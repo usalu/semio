@@ -444,6 +444,39 @@ impl store::ArtifactPack for SemioImageSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioImageSnapshot`] — a
+/// thin wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// crate's private `store` extern-crate item (the `mutate-semio-image` test adapter, whose
+/// `identity-round-trip` scenario reads the REAL committed `📚️examples/🖼️swatch` artifact rather than
+/// a JSON transcription of it) can still drive the same codec production does. Same shape and same
+/// rationale as `✳️flow`'s own bridge.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_image_dsl(text: &str) -> Result<SemioImageSnapshot, String> {
+    <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_image_dsl`] — same rationale.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_image_dsl(snapshot: &SemioImageSnapshot) -> String {
+    <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
+
+/// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioImageSnapshot`] —
+/// the binary half of the same bridge, so a caller outside this crate can check the two codecs
+/// against each other on the two real committed artifacts instead of against itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_image_pack(bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
+    <SemioImageSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_image_pack`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_image_pack(snapshot: &SemioImageSnapshot) -> Vec<u8> {
+    <SemioImageSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio.image` document — one frame (16-byte RGBA8 pixel sweep across
 /// red/green/blue/white), a non-default colorspace/bit-depth, a set ICC profile, and one metadata

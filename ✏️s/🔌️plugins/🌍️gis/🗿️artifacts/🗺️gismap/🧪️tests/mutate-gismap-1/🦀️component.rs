@@ -330,8 +330,8 @@ mod subject {
     /// decoding is a separate binary codec, so agreeing on one snapshot cannot be reached by carrying
     /// text bytes across.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
-        let report = parse_json(&gis_map_identity_report_json(&text).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
+        let committed = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
+        let report = parse_json(&gis_map_identity_report_json(&committed).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;
         law::round_trip_preserves(member(&report, "reparsed")?, parsed)?;
         law::carrier_is_exact(text(&report, "canonicalTextAgain")?.as_bytes(), text(&report, "canonicalText")?.as_bytes())?;

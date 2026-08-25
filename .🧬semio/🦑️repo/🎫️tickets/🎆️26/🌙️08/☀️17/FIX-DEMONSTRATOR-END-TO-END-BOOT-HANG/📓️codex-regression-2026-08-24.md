@@ -97,6 +97,64 @@ The focused UI test build also exposes stale tests that still construct the form
 - Made those helpers synchronous, kept outcome transport mutation on the shard's exclusive borrow, and removed the stale child-process `block_on` around synchronous registration.
 - `cargo check -p semio-framework-plugin-host`: passed for the library and `semio-shard` binary.
 
+## Descriptor and App-Routing Restoration
+
+- Assigned every demonstrator and foreign editor/viewer an explicit shared/exclusive classification so descriptor generation no longer rejects current manifests.
+- Restored the canonical Puzzle3D editor id in demonstrator metadata and removed the obsolete procedural command expectation.
+- Made app-router loading dependency-first and let the shell use registry dependency manifests while a dependency is not itself a directly loaded pane plugin.
+- Added a dependency-order regression and retained the six branded route rows: `generator`, `koordinator`, `aggregator`, `aussuchen`, `bearbeiten`, and `verfolgen`.
+- Extended plugin-description diagnostics to report missing rendered descriptors and the producing process' stderr cause instead of timing out opaquely.
+
+## Browser Stack-Budget Repair
+
+- A live Aggregator boot first trapped while the browser initialized the reactor's large patch-tracker state.
+- Boxed the two `ComponentTreeProducer` authorities that dominated the initialization frame.
+- Added a 512 KiB state-size regression. Disassembly reduced the browser TLS initialization stack frame from approximately 11.86 MiB to 2.095 MiB; `PatchTrackerState` is 349,216 bytes.
+- The next live load advanced beyond the reactor, proving the stack trap was removed.
+
+## Jco Async Result ABI Repair
+
+- The next live load reached the generated async callback adapter but decoded a non-empty task result as direct flat parameters, producing `invalid flat variant case`; after correcting that path it exposed the adapter's separate `ctx.memory` guard defect.
+- A direct Jco 1.27 JSPI comparison reproduced both generated decisions byte-for-byte, so the materializer now post-processes only memory-backed task-return contexts: it changes them to the canonical indirect result pointer and checks the resolved `memory` value.
+- Null-memory callbacks remain direct, and the rewrite is idempotent.
+- The focused authentic-snippet regression passed: 1 passed, 43 skipped.
+- A clean demonstrator-only rematerialization succeeded and contains no temporary diagnostics, no memory-backed direct callback, and the corrected memory guard.
+- The next live Aggregator load advanced through the reactor and adapter into semantic panel rendering.
+
+## Semantic Panel and Intent Bridge
+
+- The shell panel cache now consistently carries authored `BuiltNode` trees rather than the removed recursive `UiNode` compatibility model.
+- Centralized full-body `BuiltNode` to flat retained-snapshot reconciliation in `UiDocumentStore` and reused it from both shell window and panel hosts.
+- Semantic panel bodies render through the real `UiDocumentStore` and interpreter path.
+- Semantic `UiIntent` values now bridge to the existing plugin action channel, preserving scope, version, args, and input precedence instead of being reported and dropped.
+- Focused semantic tree, intent, and history-panel regressions passed: 3 passed, 436 skipped.
+- Full renderer quick suite passed: 439/439.
+
+## Final Automated Gates
+
+- Demonstrator plugin quick suite: 45/45 passed.
+- OS development/materializer quick suite: 44/44 passed.
+- Plugin descriptor quick suite: 17/17 passed, 2 skipped by profile.
+- Demonstrator production Vite build: succeeded in 9.10 seconds through its Nx target.
+- Scoped `git diff --check`: clean.
+- Renderer typecheck remains a repository-wide red baseline with 407 current contract-migration errors across unrelated brand fixtures, Three renderer declarations, shell state, and backbone-worker types. The three touched fixture errors were corrected (410 errors before, 407 after); no diagnostic names the new snapshot or intent bridge functions. Runtime build and all renderer tests are green.
+
+## Extension and Production Runtime Routing
+
+- A six-route live-server asset audit resolved every pane through the generated catalog and found a remaining integration defect: all 13 consumed Flow/Process extension URLs returned the SPA HTML fallback instead of JavaScript.
+- Moved the demonstrator's transitive runtime-layout calculation into its permanent `📜️script.ts` router and split ordinary plugins from extensions according to their catalog roles.
+- The Vite config now mounts plugin crates at `/plugin-modules`, extensions at `/extensions`, and includes the pooled `_shard` runtime in production output.
+- Added a red/green regression for the nine-plugin, thirteen-extension closure plus `_vendor` and `_shard`; the demonstrator suite passes 4/4.
+- The corrected live server resolves all six default app ids from their staged descriptors and serves 27 required runtime assets with valid JavaScript/Wasm content types, including all 13 extensions.
+- A recursive dependency crawl then found that installed extension components retained their build-tree `../_vendor` Preview2 imports. The extension publisher now rebases bare or staged shim imports onto the public `../../plugin-modules/_vendor` root instead of requiring an 8.4 MiB duplicate vendor tree.
+- Added a red/green publisher regression and republished the demonstrator's 13 consumed extensions. The full OS-dev quick suite passes 45/45.
+- The final live dependency crawl resolves 56 JavaScript modules and 22 Wasm cores with all 13 extension components rebased and zero HTML fallbacks.
+- Forced the production build with Nx cache disabled; the final build succeeded in 8.90 seconds.
+- The production dependency crawl resolves the same 56 JavaScript modules and 22 Wasm cores. The tree contains 11 plugin/runtime directories, 13 extension directories, the shared shard worker, and every `install.json` module URL it advertises.
+
 ## Pending Runtime Evidence
 
-- The fresh full release build and six focused browser routes will be recorded here after artifact staging completes.
+- A fresh Vite server is ready on `127.0.0.1:6029` with the final rematerialized plugin.
+- The controlled in-app browser's generated connection-error tab was subsequently closed; no controlled tabs are currently open. Its security policy had rejected reloading that document and explicitly forbade alternate navigation workarounds.
+- The user must manually reload/open `http://127.0.0.1:6029/#aggregator`; after that, record console/DOM evidence for all six focused routes before closing this ticket.
+- Final blocked-state audit: the Vite session remains alive and `HEAD /` returns HTTP 200, but the in-app browser tab list is still empty on the third consecutive goal turn. No policy-compliant browser surface exists until the user opens the URL, so the repo ticket remains open and the goal is blocked solely on the six-route DOM/console pass.

@@ -1,0 +1,12 @@
+=== satisfy-version-requirements ===
+[test] level=exhaustive cases=1 executed=6 passed=6 failed=0 errored=0 parity=3/3
+=== compile-style-variants ===
+[test] level=exhaustive cases=1 executed=6 passed=6 failed=0 errored=0 parity=3/3
+=== flatten-class-name-inputs ===
+[test] level=exhaustive cases=1 executed=8 passed=8 failed=0 errored=0 parity=4/4
+=== reject-malformed-version-input ===
+[test] level=exhaustive cases=1 executed=1 passed=1 failed=0 errored=0 parity=0/0
+=== merge-conflicting-utilities ===
+[test] level=exhaustive cases=1 executed=3 passed=3 failed=0 errored=0 parity=0/0
+=== host-protocol-parity ===
+[test] level=exhaustive cases=1 executed=15 passed=15 failed=0 errored=0 parity=30/30

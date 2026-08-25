@@ -50,6 +50,15 @@ Feature: Apply every typed semio MODEL mutation to the real committed building a
   and the undone model against the committed before-snapshot with the relations a `delete-element`
   cascade removed put back.
 
+  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
+  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
+  and both committed example files were produced by these very codecs — so re-printing the parsed
+  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
+  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
+  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
+  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
+  the same document the text does, which no single codec can arrange on its own.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

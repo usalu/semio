@@ -16,21 +16,24 @@
 //! real note artifact against each other. A handler that merely returned `Ok` would report a pass
 //! having checked nothing at all.
 //!
-//! **How the fixture reaches typed values.** The generated test host links only
-//! `semio-repo-test-host` and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`,
-//! and this crate's `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`), so neither
-//! `protocol::Mutation` nor a `serde` derive is nameable from here. The subset's own production code
-//! therefore exports the bridges this adapter needs, whose signatures name only reachable types:
+//! **How the fixture reaches typed values.** The generated test host links only `semio-repo-test-host`
+//! and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`, and this crate's
+//! `protocol`/`store` extern-crate aliases are private (`📦️glue.rs`), so neither `protocol::Mutation` nor
+//! a `serde` derive is nameable from here. The subset's own production code therefore exports the bridges
+//! this adapter needs, whose signatures name only reachable types:
 //! `decode_semio_text_snapshot_json`/`encode_semio_text_snapshot_json` (`../../🏅️standards/🔖️v1/
 //! 🪆️subsets/✳️text/🧬️schema/📸️snapshot/🦀️component.rs`), `decode_semio_text_mutation_json`/
 //! `inverse_semio_text_mutation` (`…/🧬️mutations/🦀️component.rs`) and the DSL/pack pass-throughs
-//! `parse_semio_text_dsl`/`print_semio_text_dsl`/`encode_semio_text_pack`/`decode_semio_text_pack`.
-//! Both roles read the SAME committed bytes — the oracle role via `include_str!`, the subject role
-//! by decoding that same text — so no hand-transcribed Rust literal exists here to drift away from
-//! the fixture it claims to mirror. The subject half is gated behind the generated host's `sut`
-//! feature so the oracle-only run never compiles the local implementation; the Rust SUBJECT phase is
-//! blocked this wave by concurrent framework refactors (see 📓️w7-fleet-brief.md), so it is written
-//! and gated but not run.
+//! `parse_semio_text_dsl`/`print_semio_text_dsl`/`encode_semio_text_pack`/`decode_semio_text_pack`. Both
+//! roles read the SAME committed bytes — the oracle role via `include_str!`, the subject role by decoding
+//! that same text — so no hand-transcribed Rust literal exists here to drift away from the fixture it
+//! claims to mirror. The subject half is gated behind the generated host's `sut` feature so the
+//! oracle-only run never compiles the local implementation; the Rust SUBJECT phase RUNS. The os-kernel
+//! blocker earlier waves recorded here was cleared on 2026-08-24 — `cargo check -p
+//! semio-framework-os-kernel --lib` exits 0 and `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts
+//! subject exhaustive --owner 🗄️stdio --case mutate-semio-text` really executes every scenario below. The
+//! gate keeps the two BUILDS apart; it has never been a reason the subject half goes unmeasured, and for
+//! this recorded no-oracle case the subject phase is the only phase that runs at all.
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
@@ -127,6 +130,8 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::mutations::{apply_semio_text_mutation, decode_semio_text_mutation_json, inverse_semio_text_mutation, SemioTextMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{decode_semio_text_pack, decode_semio_text_snapshot_json, encode_semio_text_pack, encode_semio_text_snapshot_json, parse_semio_text_dsl, print_semio_text_dsl, SemioTextSnapshot};
 
@@ -165,8 +170,8 @@ mod subject {
             let expected = snapshot_of(after, "after", kind)?;
             let mutation = mutation_of(mutation, kind)?;
             let outcome = apply_semio_text_mutation(&mut current, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             if current != expected {
                 return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &current, &expected));
@@ -186,13 +191,13 @@ mod subject {
             let mutation = mutation_of(mutation, kind)?;
             let mut current = base.clone();
             let outcome = apply_semio_text_mutation(&mut current, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             for step in inverse_semio_text_mutation(&mutation, &base) {
                 let step_outcome = apply_semio_text_mutation(&mut current, &step);
-                if !step_outcome.messages().is_empty() {
-                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", step_outcome.messages()));
+                if !semio_mutation_refusals(&step_outcome).is_empty() {
+                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", semio_mutation_refusals(&step_outcome)));
                 }
             }
             if current != base {
@@ -207,23 +212,38 @@ mod subject {
     /// pack envelope are separate committed files produced by separate codecs, so agreeing on one
     /// snapshot cannot be achieved by smuggling bytes from either. Byte-identical re-emission IS
     /// expected here — the committed text is this codec's own output, not a foreign writer's — so
-    /// the wave's usual "output must not equal input" tripwire does not apply and the text/binary
-    /// cross-check carries that evidence instead.
+    /// the wave's usual "output must not equal input" tripwire does not apply, and its MIRROR law is
+    /// asserted below in its place: `carrier_is_exact` on both committed files, with the text/binary
+    /// cross-check keeping that from being a self-comparison.
+    /// 🔒️ **The byte half of the identity law — asserted, and asserted as `carrier_is_exact`.**
+    /// `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin; the two
+    /// committed example artifacts this scenario reads were produced by these very codecs, so
+    /// reproducing them BYTE FOR BYTE is the correct answer here and `law::reparsed_not_copied`
+    /// would be exactly backwards — the same reading `mutate-dag-1` records for `.dag.dsl.semio`
+    /// and `mutate-bmp-v3` for its own reference-authored fixture. Saying so in prose alone would
+    /// leave the claim an excuse; asserting it makes it checkable, and it fails with the offset of
+    /// the first differing byte the moment the printer or the packer drifts. Nor is it a
+    /// self-comparison: one side is a file committed to the repository, the other is computed now.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed note artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_text_dsl(&text)?;
         if parsed.runs.len() != 3 {
             return Err(format!("identity-round-trip: the committed note is the three-run fixture this case describes, but parsed {} run(s)", parsed.runs.len()));
         }
-        let reparsed = parse_semio_text_dsl(&print_semio_text_dsl(&parsed))?;
+        let printed = print_semio_text_dsl(&parsed);
+        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
+        let reparsed = parse_semio_text_dsl(&printed)?;
         if reparsed != parsed {
             return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
         }
-        let unpacked = decode_semio_text_pack(&ctx.fixture_bytes(super::PACK_ASSET)?)?;
+        let pack_bytes = ctx.fixture_bytes(super::PACK_ASSET)?;
+        let unpacked = decode_semio_text_pack(&pack_bytes)?;
         if unpacked != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different note than the committed text artifact", &unpacked, &parsed));
         }
-        let repacked = decode_semio_text_pack(&encode_semio_text_pack(&parsed))?;
+        let repacked_bytes = encode_semio_text_pack(&parsed);
+        carrier_is_exact(&repacked_bytes, &pack_bytes)?;
+        let repacked = decode_semio_text_pack(&repacked_bytes)?;
         if repacked != parsed {
             return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &parsed));
         }

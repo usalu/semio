@@ -351,7 +351,7 @@ pub(crate) fn enc_node(n: &DrawNode) -> String {
     match n {
         DrawNode::Path { segments, style } => format!("P[{},{}]", enc_list(segments, enc_path_segment), encode_option(style, |s| enc_str(s))),
         DrawNode::Text { value, at, style } => format!("T[{},{},{}]", enc_str(value), enc_point2(at), encode_option(style, |s| enc_str(s))),
-        DrawNode::Group { transform, children } => format!("G[{},{}.await]", enc_transform(transform), enc_list(children, enc_node)),
+        DrawNode::Group { transform, children } => format!("G[{},{}]", enc_transform(transform), enc_list(children, enc_node)),
         DrawNode::Image { at, width, height, mime, bytes } => format!("I[{},{},{},{},{}]", enc_point2(at), width, height, enc_str(mime), hex_encode(bytes)),
     }
 }

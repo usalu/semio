@@ -5,7 +5,6 @@ use crate::meters::MeterTable;
 use crate::metrics::{EnvironmentalMetrics, ResilienceMetrics};
 use crate::output::TimeSeriesTable;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 // #region 🔖️Summary
 /// 📋️ Annual/monthly summary table row.
@@ -20,7 +19,7 @@ pub struct SummaryRow {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct SummaryTables {
     pub annual_energy: Vec<SummaryRow>,
-    pub monthly_energy: HashMap<u8, Vec<SummaryRow>>,
+    pub monthly_energy: Vec<(u8, Vec<SummaryRow>)>,
     pub peak_loads: Vec<SummaryRow>,
     pub comfort: Vec<SummaryRow>,
 }

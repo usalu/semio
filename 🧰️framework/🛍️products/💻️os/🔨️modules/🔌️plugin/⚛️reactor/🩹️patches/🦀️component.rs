@@ -26,7 +26,7 @@ struct MountedTreeProducer {
     reconciler: Option<SurfaceReconciler>,
     reservation: Option<SurfaceReconcileReservation>,
     rejected_index: usize,
-    authority: ComponentTreeProducer,
+    authority: Box<ComponentTreeProducer>,
 }
 
 struct MountedTreeTerminal {
@@ -35,7 +35,7 @@ struct MountedTreeTerminal {
     surface: ui_contract::SurfaceId,
     reconciler: Option<SurfaceReconciler>,
     reservation: Option<SurfaceReconcileReservation>,
-    authority: Option<ComponentTreeProducer>,
+    authority: Option<Box<ComponentTreeProducer>>,
     close: bool,
 }
 
@@ -133,7 +133,7 @@ impl MountedReconcileGrant<'_> {
         slot.operation = semio_framework_job::allocate_operation_id();
         slot.preview_sequence = 0;
         slot.cancel = semio_framework_job::root_cancel_token();
-        slot.producer = Some(MountedTreeProducer { reconciler: Some(reconciler), reservation: Some(reservation), rejected_index: self.rejected_index, authority: producer });
+        slot.producer = Some(MountedTreeProducer { reconciler: Some(reconciler), reservation: Some(reservation), rejected_index: self.rejected_index, authority: Box::new(producer) });
         state.slots[self.surface_index] = Some(slot);
         self.active = false;
         Ok(())
@@ -906,6 +906,12 @@ mod tests {
             }
         }
         panic!("instance {instance} did not reach terminal empty");
+    }
+
+    #[test]
+    fn tracker_initialization_fits_the_component_stack_budget() {
+        let bytes = std::mem::size_of::<PatchTrackerState>();
+        assert!(bytes <= 512 * 1_024, "PatchTrackerState requires {bytes} bytes");
     }
 
     #[test]

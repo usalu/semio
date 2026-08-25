@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.energy.simulation-event.v1",
+  "title": "Energy Simulation Event",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["kind", "request", "locale", "checkpointToken", "zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays", "runPeriodStartMonth", "runPeriodStartDay", "runPeriodEndMonth", "runPeriodEndDay"],
+      "properties": {
+        "kind": { "const": "start" },
+        "request": { "type": "integer", "minimum": 1 },
+        "locale": { "enum": ["en", "de"] },
+        "zoneTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
+        "systemTimestepMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
+        "warmupDays": { "type": "integer", "minimum": 0, "maximum": 365 },
+        "runPeriodStartMonth": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "runPeriodStartDay": { "type": "integer", "minimum": 1, "maximum": 31 },
+        "runPeriodEndMonth": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "runPeriodEndDay": { "type": "integer", "minimum": 1, "maximum": 31 },
+        "checkpointToken": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["kind", "request", "operation", "generation", "configDigest"],
+      "properties": {
+        "kind": { "enum": ["cancel", "retry", "discard", "adopt"] },
+        "request": { "type": "integer", "minimum": 1 },
+        "operation": { "type": "integer", "minimum": 1 },
+        "generation": { "type": "integer", "minimum": 1 },
+        "configDigest": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

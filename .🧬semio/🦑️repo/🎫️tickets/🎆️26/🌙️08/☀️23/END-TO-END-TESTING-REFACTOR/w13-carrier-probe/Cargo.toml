@@ -1,0 +1,15 @@
+# 🧭️ Ticket-local probe, own workspace root so it never joins the contended repository workspace.
+[workspace]
+
+[package]
+name = "w13-carrier-probe"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "probe"
+path = "src/main.rs"
+
+[dependencies]
+semio-s-plugin-stdio = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }

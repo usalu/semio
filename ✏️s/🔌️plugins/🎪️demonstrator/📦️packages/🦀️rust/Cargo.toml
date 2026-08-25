@@ -41,21 +41,21 @@ ports = { react = 6028, wgpu = 6128 }
 
 [[package.metadata.semio.playground]]
 variant = "aggregator"
-app = "s.puzzle3d@1/*#editor"
+app = "s.puzzle.puzzle3d@1/*#editor"
 brand = "entwerfen-mit-bestand-aggregator"
 aliases = ["mit-bestand", "entwerfen-mit-bestand"]
 ports = { react = 6023, wgpu = 6123 }
 
 [[package.metadata.semio.playground]]
 variant = "aussuchen"
-app = "sourcing-curate"
+app = "s.sourcing.curate@1/*#editor"
 brand = "entwerfen-mit-bestand-aussuchen"
 aliases = ["entwerfen-mit-bestand-aussuchen"]
 ports = { react = 6030, wgpu = 6130 }
 
 [[package.metadata.semio.playground]]
 variant = "bearbeiten"
-app = "process3d-play"
+app = "s.process.process3d@1/*#editor"
 brand = "entwerfen-mit-bestand-bearbeiten"
 aliases = ["entwerfen-mit-bestand-bearbeiten"]
 ports = { react = 6031, wgpu = 6131 }
@@ -77,7 +77,7 @@ root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️sta
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"
-app = "s.puzzle3d@1/*#editor"
+app = "s.puzzle.puzzle3d@1/*#editor"
 roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
 placeholder = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb"
 filter_from_examples = true
@@ -85,7 +85,7 @@ filter_from_examples = true
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/infinite-fixture"
-app = "s.puzzle3d@1/*#editor"
+app = "s.puzzle.puzzle3d@1/*#editor"
 root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"
 
 [[package.metadata.semio.assets]]
@@ -136,3 +136,4 @@ gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "sem
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }

@@ -848,8 +848,8 @@ pub(crate) fn enc_value_diff(d: &SemioValueDiff) -> String {
         SemioValueDiff::Float { lexeme } => format!("F[{}]", enc_str(lexeme)),
         SemioValueDiff::Str { value } => format!("S[{}]", enc_str(value)),
         SemioValueDiff::Bytes { value } => format!("Y[{}]", hex_encode(value)),
-        SemioValueDiff::List { diff } => format!("L[{}.await]", enc_indexed_triple(diff, enc_value_diff, enc_semio_value)),
-        SemioValueDiff::Map { diff } => format!("M[{}.await]", enc_named_triple(diff, |k: &String| enc_str(k), enc_value_diff, enc_named_added_entry)),
+        SemioValueDiff::List { diff } => format!("L[{}]", enc_indexed_triple(diff, enc_value_diff, enc_semio_value)),
+        SemioValueDiff::Map { diff } => format!("M[{}]", enc_named_triple(diff, |k: &String| enc_str(k), enc_value_diff, enc_named_added_entry)),
         SemioValueDiff::Ref { id } => format!("R[{}]", enc_value_id(id)),
     }
 }

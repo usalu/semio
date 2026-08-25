@@ -1,0 +1,590 @@
+🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️component.rs:274:5: warning: fields `operation` and `generation` are never read
+warning: `semio-framework-job` (lib) generated 1 warning
+🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:958:14: warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:149:51: warning: unnecessary qualification
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:142:8: warning: method `push` is never used
+warning: `semio-framework-actor` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-actor` to apply 1 suggestion)
+warning: `semio-framework-replication` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-replication` to apply 1 suggestion)
+🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:178:5: warning: fields `header_len` and `stored_len` are never read
+warning: `semio-framework-pack` (lib) generated 1 warning
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️native_io.rs:284:48: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️native_io.rs:319:79: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:720:14: warning: method `acquire_job_permit` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:765:8: warning: struct `ComputeJobDriveState` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:774:4: warning: function `compute_job_budget` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:783:4: warning: function `schedule_compute_job_step` is never used
+warning: `semio-framework-os-services` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-os-services` to apply 2 suggestions)
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: method `terminal_is_empty` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️math.rs:527:8
+    |
+440 | impl Mesh3dOwner {
+    | ---------------- method in this implementation
+...
+527 |     fn terminal_is_empty(&self) -> bool {
+    |        ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-ui-scene` (lib) generated 1 warning
+🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:32:7: warning: constant `SURFACE_RECONCILE_FIXED_OPS` is never used
+🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:96:8: warning: method `take_all` is never used
+🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:162:8: warning: methods `values` and `clear` are never used
+🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:198:8: warning: methods `iter`, `remove`, and `is_empty` are never used
+🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:1139:19: warning: associated function `new` is never used
+🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:2957:4: warning: function `estimate_record_bytes` is never used
+warning: `semio-framework-ui-runtime` (lib) generated 6 warnings
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1765:13
+     |
+1765 |     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1765 -     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+1765 +     marker: PhantomData<fn() -> (P, Mutation)>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1770:119
+     |
+1770 | ...active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1770 -         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+1770 +         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5047:49
+     |
+5047 | struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5047 - struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+5047 + struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<T>);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5051:14
+     |
+5051 |         Self(std::marker::PhantomData)
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5051 -         Self(std::marker::PhantomData)
+5051 +         Self(PhantomData)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5136:14
+     |
+5136 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5136 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5136 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5137:23
+     |
+5137 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5137 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5137 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5155:18
+     |
+5155 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5155 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5155 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5156:27
+     |
+5156 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5156 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5156 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5350:14
+     |
+5350 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5350 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5350 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5351:23
+     |
+5351 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5351 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5351 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5352:25
+     |
+5352 |     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5352 -     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5352 +     retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5370:18
+     |
+5370 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5370 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5370 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5371:27
+     |
+5371 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5371 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5371 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5372:29
+     |
+5372 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5372 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5372 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5590:14
+     |
+5590 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5590 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5590 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5591:23
+     |
+5591 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5591 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5591 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5600:29
+     |
+5600 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5600 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5600 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5816:12
+     |
+5816 |     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5816 -     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+5816 +     state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5834:20
+     |
+5834 | ...   state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECO...
+     |              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5834 -             state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+5834 +             state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7206:12
+     |
+7206 |     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7206 -     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+7206 +     state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7216:32
+     |
+7216 | ...   Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_...
+     |                              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7216 -         Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+7216 +         Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11132:26
+      |
+11132 |             .checked_mul(std::mem::size_of::<String>())?
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11132 -             .checked_mul(std::mem::size_of::<String>())?
+11132 +             .checked_mul(size_of::<String>())?
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11133:68
+      |
+11133 |             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11133 -             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+11133 +             .checked_add(self.redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11134:71
+      |
+11134 |             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+      |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11134 -             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+11134 +             .checked_add(self.applied_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)?
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11135:68
+      |
+11135 |             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11135 -             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+11135 +             .checked_add(self.redo_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11690:6
+      |
+11690 | impl serde::Serialize for ArtifactEditMessageLedger {
+      |      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11690 - impl serde::Serialize for ArtifactEditMessageLedger {
+11690 + impl Serialize for ArtifactEditMessageLedger {
+      |
+
+error[E0599]: the method `attach_backbone` exists for struct `os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:889:20
+      |
+  889 |         self.store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.map_err(|error| SyncError::Vcs(error.to_s...
+      |                    ^^^^^^^^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+      |
+     ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11754:1
+      |
+11754 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `attach_backbone` not found for this struct
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: std::marker::Send`
+      `P: std::marker::Send`
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12137:62
+      |
+12135 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12136 | where
+12137 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12138 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `detach_backbone` exists for struct `os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:900:20
+      |
+  900 |         self.store.detach_backbone().await;
+      |                    ^^^^^^^^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+      |
+     ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11754:1
+      |
+11754 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `detach_backbone` not found for this struct
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: std::marker::Send`
+      `P: std::marker::Send`
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12137:62
+      |
+12135 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12136 | where
+12137 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12138 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `tick` exists for struct `os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:929:20
+      |
+  929 |         self.store.tick().await.map_err(|error| SyncError::Vcs(error.to_string()))
+      |                    ^^^^ method cannot be called on `os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+      |
+     ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11754:1
+      |
+11754 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `tick` not found for this struct
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: std::marker::Send`
+      `P: std::marker::Send`
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12137:62
+      |
+12135 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12136 | where
+12137 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12138 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+error[E0599]: the method `dispatch` exists for struct `os_store::component::ArtifactStore<P, Mutation>`, but its trait bounds were not satisfied
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:940:20
+      |
+  940 | ...ore.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }).await.map(|_| ()).map_err(|error| SyncError::Vcs(err...
+      |        ^^^^^^^^ method cannot be called on `os_store::component::ArtifactStore<P, Mutation>` due to unsatisfied trait bounds
+      |
+     ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11754:1
+      |
+11754 | pub struct ArtifactStore<P, Mutation>
+      | ------------------------------------- method `dispatch` not found for this struct
+      |
+note: the following trait bounds were not satisfied:
+      `Mutation: std::marker::Send`
+      `P: std::marker::Send`
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12137:62
+      |
+12135 | impl<P, Mutation> ArtifactStore<P, Mutation>
+      |                   --------------------------
+12136 | where
+12137 |     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
+      |                                                              ^^^^ unsatisfied trait bound introduced here
+12138 |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                                                                              ^^^^ unsatisfied trait bound introduced here
+
+warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2066:42
+     |
+2066 | ...   self.runner.external_tickets.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count|...
+     |                                    ^^^^^^^^^^^^
+     |
+     = note: `#[warn(deprecated)]` on by default
+help: replace the use of the deprecated method
+     |
+2066 -             self.runner.external_tickets.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| count.checked_add(1)).expect("artifact actor ticket capacity exhausted");
+2066 +             self.runner.external_tickets.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| count.checked_add(1)).expect("artifact actor ticket capacity exhausted");
+     |
+
+warning: unused variable: `kind`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2182:21
+     |
+2182 | ...   kind @ (semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated) i...
+     |       ^^^^ help: if this is intentional, prefix it with an underscore: `_kind`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+error: future cannot be sent between threads safely
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2241:21
+     |
+2241 | /                     Box::pin(async move {
+2242 | |                         let outcome = actor.drive_one().await;
+2243 | |                         (actor, outcome)
+2244 | |                     }) as ActorTurnFuture
+     | |______________________^ future created by async block is not `Send`
+     |
+     = help: the trait `std::marker::Send` is not implemented for `dyn Future<Output = Result<(ArtifactPackFiles, String), VcsError>>`
+note: future is not `Send` as it awaits another future which is not `Send`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1263:53
+     |
+1263 | ... (pack_files, _dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).await.map_err(|error| error.to_string())?;
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ await occurs here on type `Pin<Box<dyn futures::Future<Output = Result<(os_store::component::ArtifactPackFiles, std::string::String), os_vcs::VcsError>>>>`, which is not `Send`
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn futures::Future<Output = (ArtifactActor, ArtifactDrive)> + std::marker::Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_framework_os_kernel-e87d9b7db9adfa2a.long-type-1249198897871524381.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2241:21
+     |
+2241 | /                     Box::pin(async move {
+2242 | |                         let outcome = actor.drive_one().await;
+2243 | |                         (actor, outcome)
+2244 | |                     }) as ActorTurnFuture
+     | |______________________^ future created by async block is not `Send`
+     |
+     = help: within `ArtifactActor`, the trait `Sync` is not implemented for `Receiver<Result<Vec<FileStamp>, String>>`
+note: captured value is not `Send` because `&` references cannot be sent unless their referent is `Sync`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1894:23
+     |
+1894 |         async fn emit(&self, event: ArtifactEvent) {
+     |                       ^^^^^ has type `&ArtifactActor` which is not `Send`, because `ArtifactActor` is not `Sync`
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn futures::Future<Output = (ArtifactActor, ArtifactDrive)> + std::marker::Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_framework_os_kernel-e87d9b7db9adfa2a.long-type-3442407404913369463.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2241:21
+     |
+2241 | /                     Box::pin(async move {
+2242 | |                         let outcome = actor.drive_one().await;
+2243 | |                         (actor, outcome)
+2244 | |                     }) as ActorTurnFuture
+     | |______________________^ future created by async block is not `Send`
+     |
+     = help: the trait `Sync` is not implemented for `dyn Future<Output = Result<WebSocketStream<...>, ()>> + Send`
+note: captured value is not `Send` because `&` references cannot be sent unless their referent is `Sync`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1894:23
+     |
+1894 |         async fn emit(&self, event: ArtifactEvent) {
+     |                       ^^^^^ has type `&ArtifactActor` which is not `Send`, because `ArtifactActor` is not `Sync`
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn futures::Future<Output = (ArtifactActor, ArtifactDrive)> + std::marker::Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_framework_os_kernel-e87d9b7db9adfa2a.long-type-7766711710188001118.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2241:21
+     |
+2241 | /                     Box::pin(async move {
+2242 | |                         let outcome = actor.drive_one().await;
+2243 | |                         (actor, outcome)
+2244 | |                     }) as ActorTurnFuture
+     | |______________________^ future created by async block is not `Send`
+     |
+     = help: the trait `std::marker::Send` is not implemented for `dyn Future<Output = Result<ArtifactTextFiles, VcsError>>`
+note: future is not `Send` as it awaits another future which is not `Send`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1277:34
+     |
+1277 |                     let mirror = (codec.print_mirror)(pack, spr).await.map_err(|error| error.to_string())?;
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ await occurs here on type `Pin<Box<dyn futures::Future<Output = Result<os_store::component::ArtifactTextFiles, os_vcs::VcsError>>>>`, which is not `Send`
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn futures::Future<Output = (ArtifactActor, ArtifactDrive)> + std::marker::Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_framework_os_kernel-e87d9b7db9adfa2a.long-type-4454466204201453196.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2241:21
+     |
+2241 | /                     Box::pin(async move {
+2242 | |                         let outcome = actor.drive_one().await;
+2243 | |                         (actor, outcome)
+2244 | |                     }) as ActorTurnFuture
+     | |______________________^ future created by async block is not `Send`
+     |
+     = help: the trait `Sync` is not implemented for `dyn for<'a> Fn(&'a str) -> std::option::Option<u64>`
+note: future is not `Send` as this value is used across an await
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:891:63
+     |
+ 868 |     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+     |         --------------- has type `&dyn for<'a> Fn(&'a str) -> std::option::Option<u64>` which is not `Send`
+...
+ 891 |     write_id_field(&mut out, &edit.id, dict, &|_: &str| None).await?;
+     |                                                               ^^^^^ await occurs here, with `edit_ordinal_of` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn futures::Future<Output = (ArtifactActor, ArtifactDrive)> + std::marker::Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_framework_os_kernel-e87d9b7db9adfa2a.long-type-11836391716078159791.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2241:21
+     |
+2241 | /                     Box::pin(async move {
+2242 | |                         let outcome = actor.drive_one().await;
+2243 | |                         (actor, outcome)
+2244 | |                     }) as ActorTurnFuture
+     | |______________________^ future created by async block is not `Send`
+     |
+     = help: the trait `Sync` is not implemented for `dyn Fn(u64) -> Result<&str, protocol::ProtocolError>`
+note: future is not `Send` as this value is used across an await
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:949:86
+     |
+ 931 |     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+     |         ------------- has type `&dyn Fn(u64) -> Result<&str, protocol::ProtocolError>` which is not `Send`
+...
+ 949 |     let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+     |                                                                                      ^^^^^ await occurs here, with `ordinal_to_id` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn futures::Future<Output = (ArtifactActor, ArtifactDrive)> + std::marker::Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_framework_os_kernel-e87d9b7db9adfa2a.long-type-11836391716078159791.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+For more information about this error, try `rustc --explain E0599`.
+warning: `semio-framework-os-kernel` (lib) generated 28 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 10 previous errors; 28 warnings emitted

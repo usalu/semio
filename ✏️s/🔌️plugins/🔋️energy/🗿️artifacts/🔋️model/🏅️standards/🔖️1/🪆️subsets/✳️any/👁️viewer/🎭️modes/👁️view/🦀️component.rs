@@ -1,7 +1,7 @@
 //! 👁️ Energy model viewer — the `view` mode: the read-only twin of the editor's split layout
 //! (structure tree left, zone table right), same two composed children, no edit affordances.
 
-use crate::viewer::model::modes::view::windows::{structure, zones};
+use crate::viewer::model::modes::view::windows::{simulation, structure, zones};
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const ENERGY_MODEL_VIEW_MODE_ID: &str = "view";
@@ -25,6 +25,12 @@ fn model_window_stack(window_kind_id: &str, title: &str) -> WindowLayoutChild {
 /// 🪟️ Same split as the sibling mutation-capable surface's own layout — read-only twin, no quadrant
 /// to allocate for edit affordances.
 pub fn layout() -> WindowLayout {
-    WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![model_window_stack(structure::WINDOW_KIND_ID, "Structure"), model_window_stack(zones::WINDOW_KIND_ID, "Zones")] }) }
+    WindowLayout {
+        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+            kind: "row".into(),
+            size: None,
+            children: vec![model_window_stack(structure::WINDOW_KIND_ID, "Structure"), model_window_stack(zones::WINDOW_KIND_ID, "Zones"), model_window_stack(simulation::WINDOW_KIND_ID, "Energy results")],
+        }),
+    }
 }
 //#endregion 🔖️Definition

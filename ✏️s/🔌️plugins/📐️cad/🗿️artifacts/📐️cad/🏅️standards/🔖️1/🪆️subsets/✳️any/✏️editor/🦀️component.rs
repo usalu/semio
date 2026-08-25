@@ -1367,6 +1367,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
             .config(semio_framework_plugin::resolve_ready(CadPlayApp::config_spec()))
             .io(cad_io())
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
             // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no
             // `.example(...)`/`.workflow(...)` on this builder, so the old

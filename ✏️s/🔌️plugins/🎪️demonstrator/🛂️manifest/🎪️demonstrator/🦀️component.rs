@@ -100,7 +100,7 @@ mod surface_tests {
 mod tests {
     use super::*;
 
-    fn test_bundle() -> Plugin {
+    fn test_bundle() -> Plugin<DemonstratorApps> {
         plugin().unwrap_or_else(|error| panic!("{error}"))
     }
 
@@ -130,7 +130,7 @@ mod tests {
                 "s.demonstrator.playground@1/*#viewer",
                 "s.procedural.procedural3d@1/*#editor",
                 "s.cad.cad@1/*#editor",
-                "s.puzzle3d@1/*#editor",
+                "s.puzzle.puzzle3d@1/*#editor",
                 "s.sourcing.curate@1/*#editor",
                 "s.sourcing.curate@1/*#viewer",
                 "s.process.process3d@1/*#editor",
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn contribution_consumers_declare_the_hidden_app_command() {
         let consumers: Vec<String> = test_bundle().manifest.apps.iter().filter(|app| app.commands.iter().any(|command| command.id == "setContributions")).map(|app| app.id.clone()).collect();
-        assert_eq!(consumers, vec!["s.procedural.procedural3d@1/*#editor", "s.cad.cad@1/*#editor", "s.sourcing.curate@1/*#editor", "s.process.process3d@1/*#editor"]);
+        assert_eq!(consumers, vec!["s.cad.cad@1/*#editor", "s.sourcing.curate@1/*#editor", "s.process.process3d@1/*#editor"]);
         for app in test_bundle().manifest.apps {
             if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
                 assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);

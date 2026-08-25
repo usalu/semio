@@ -17,9 +17,13 @@
 //! of the same real artifact equals the vectors' `before` snapshot, and crosses the committed text
 //! artifact against its committed binary twin.
 //!
-//! The oracle-only build must never link the subject crate (fleet brief §5.3), so every `subject`
-//! item is gated behind the generated host's `sut` feature. The Rust SUBJECT phase is blocked this
-//! wave by a concurrent os-kernel/job refactor, so it is written and gated but not run.
+//! The oracle-only build must never link the subject crate (fleet brief §5.3), so every `subject` item is
+//! gated behind the generated host's `sut` feature. The Rust SUBJECT phase RUNS. The os-kernel blocker
+//! earlier waves recorded here was cleared on 2026-08-24 — `cargo check -p semio-framework-os-kernel
+//! --lib` exits 0 and `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts subject exhaustive --owner
+//! 🗄️stdio --case mutate-semio-flow` really executes every scenario below. The gate keeps the two BUILDS
+//! apart; it has never been a reason the subject half goes unmeasured, and for this recorded no-oracle
+//! case the subject phase is the only phase that runs at all.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
@@ -89,6 +93,8 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, decode_semio_flow_mutation_json, inverse_semio_flow_mutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
         decode_semio_flow_pack, decode_semio_flow_snapshot_json, encode_semio_flow_pack, encode_semio_flow_snapshot_json, parse_semio_flow_dsl, print_semio_flow_dsl, SemioFlowSnapshot,
@@ -130,8 +136,8 @@ mod subject {
             let expected = snapshot_of(&vector, "after")?;
             let mutation = decode_semio_flow_mutation_json(&member_text(&vector, "mutation")?)?;
             let outcome = apply_semio_flow_mutation(&mut current, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             if current != expected {
                 return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &current, &expected));
@@ -150,13 +156,13 @@ mod subject {
             let mutation = decode_semio_flow_mutation_json(&member_text(&vector, "mutation")?)?;
             let mut current = base.clone();
             let outcome = apply_semio_flow_mutation(&mut current, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             for step in inverse_semio_flow_mutation(&mutation, &base) {
                 let step_outcome = apply_semio_flow_mutation(&mut current, &step);
-                if !step_outcome.messages().is_empty() {
-                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", step_outcome.messages()));
+                if !semio_mutation_refusals(&step_outcome).is_empty() {
+                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", semio_mutation_refusals(&step_outcome)));
                 }
             }
             if current != base {
@@ -169,8 +175,18 @@ mod subject {
 
     /// 🔁️ The real artifact through both of its committed encodings. The committed text is this
     /// codec's own output, so byte-identical re-emission is the EXPECTED result here and the wave's
-    /// usual pass-through tripwire does not apply; what carries that evidence instead is the binary
-    /// twin, a separate committed file produced by a separate codec, which cannot agree by accident.
+    /// usual pass-through tripwire does not apply, and its MIRROR law is asserted below in its place:
+    /// `carrier_is_exact` on both committed files, with the binary twin — a separate committed file
+    /// produced by a separate codec, which cannot agree by accident — keeping that honest.
+    /// 🔒️ **The byte half of the identity law — asserted, and asserted as `carrier_is_exact`.**
+    /// `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin; the two
+    /// committed example artifacts this scenario reads were produced by these very codecs, so
+    /// reproducing them BYTE FOR BYTE is the correct answer here and `law::reparsed_not_copied`
+    /// would be exactly backwards — the same reading `mutate-dag-1` records for `.dag.dsl.semio`
+    /// and `mutate-bmp-v3` for its own reference-authored fixture. Saying so in prose alone would
+    /// leave the claim an excuse; asserting it makes it checkable, and it fails with the offset of
+    /// the first differing byte the moment the printer or the packer drifts. Nor is it a
+    /// self-comparison: one side is a file committed to the repository, the other is computed now.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let expected = snapshot_of(&vector(ctx, "no-mutation")?, "before")?;
         let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
@@ -178,15 +194,20 @@ mod subject {
         if parsed != expected {
             return Err(disagreement("identity-round-trip: parse_dsl of the real artifact does not match the committed before-snapshot the specification vectors start from", &parsed, &expected));
         }
-        let reparsed = parse_semio_flow_dsl(&print_semio_flow_dsl(&parsed))?;
+        let printed = print_semio_flow_dsl(&parsed);
+        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
+        let reparsed = parse_semio_flow_dsl(&printed)?;
         if reparsed != expected {
             return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &expected));
         }
-        let unpacked = decode_semio_flow_pack(&ctx.fixture_bytes(PACK_ASSET)?)?;
+        let pack_bytes = ctx.fixture_bytes(PACK_ASSET)?;
+        let unpacked = decode_semio_flow_pack(&pack_bytes)?;
         if unpacked != expected {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different snapshot than the committed text artifact", &unpacked, &expected));
         }
-        let repacked = decode_semio_flow_pack(&encode_semio_flow_pack(&parsed))?;
+        let repacked_bytes = encode_semio_flow_pack(&parsed);
+        carrier_is_exact(&repacked_bytes, &pack_bytes)?;
+        let repacked = decode_semio_flow_pack(&repacked_bytes)?;
         if repacked != expected {
             return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &expected));
         }

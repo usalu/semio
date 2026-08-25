@@ -33,6 +33,14 @@ Feature: Apply every typed semio VIDEO mutation to the decoded real clip artifac
   every vector starts from — so a mistake in the vectors surfaces as a red scenario rather than a
   quietly agreeable one.
 
+  `identity-round-trip` measures BYTES here, not only meaning. The committed `🎥️clip` artifact is a
+  172-byte `.dsl.semio` record — the shortest of the three timeline subsets, since a clip is stream
+  metadata rather than sampled content — written by this subset's own printer, so re-printing the
+  snapshot it parses to must land on those same 172 bytes, and `law::carrier_is_exact` names the
+  first byte that drifts if it does not. A must-differ tripwire would be backwards for a codec
+  reading its own output. `✳️video` exports no pack bridge, so the committed `🎒️example.pack.semio`
+  twin is NOT read here and this case makes no claim about it.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

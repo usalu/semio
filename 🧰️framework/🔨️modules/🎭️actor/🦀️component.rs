@@ -15,6 +15,7 @@
 //! See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-runtime.md` §1.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
+use std::mem::{ManuallyDrop, MaybeUninit};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -37,29 +38,71 @@ pub mod schema_metadata {
     pub const TYPES: &[SchemaMetadata] = &[
         SchemaMetadata { name: "ActivationEvent", version: 1, typescript: r#"export type ActivationEvent = { "kind": "manual" } | { "kind": "windowOpen", window: WindowId, } | { "kind": "restart" };"# },
         SchemaMetadata { name: "ActorId", version: 1, typescript: "export type ActorId = bigint;" },
-        SchemaMetadata { name: "ActorKind", version: 1, typescript: r#"export type ActorKind = { "kind": "pluginApp", plugin: PackageId, appId: string, instanceId: number, } | { "kind": "extension", plugin: PackageId, extensionId: string, } | { "kind": "job", owner: ActorId, jobId: bigint, };"# },
-        SchemaMetadata { name: "ActorMetrics", version: 1, typescript: "export type ActorMetrics = { turns: bigint, fuel_total: bigint, wall_us_total: bigint, wall_us_ring: Array<number>, wall_us_ring_len: number, wall_us_ring_pos: number, memory_bytes: bigint, mailbox_len: number, mailbox_lag_ms: number, coalesced: bigint, dropped: bigint, traps: number, restarts: number, stage: FailureStage, shard: ShardId, };" },
+        SchemaMetadata {
+            name: "ActorKind",
+            version: 1,
+            typescript: r#"export type ActorKind = { "kind": "pluginApp", plugin: PackageId, appId: string, instanceId: number, } | { "kind": "extension", plugin: PackageId, extensionId: string, } | { "kind": "job", owner: ActorId, jobId: bigint, };"#,
+        },
+        SchemaMetadata {
+            name: "ActorMetrics",
+            version: 1,
+            typescript: "export type ActorMetrics = { turns: bigint, fuel_total: bigint, wall_us_total: bigint, wall_us_ring: Array<number>, wall_us_ring_len: number, wall_us_ring_pos: number, memory_bytes: bigint, mailbox_len: number, mailbox_lag_ms: number, coalesced: bigint, dropped: bigint, traps: number, restarts: number, stage: FailureStage, shard: ShardId, };",
+        },
         SchemaMetadata { name: "ActorMetricsSample", version: 1, typescript: "export type ActorMetricsSample = { id: ActorId, package: PackageId, lane: Lane, status: ActorStatus, metrics: ActorMetrics, };" },
-        SchemaMetadata { name: "ActorRecord", version: 1, typescript: "export type ActorRecord = { id: ActorId, kind: ActorKind, package: PackageId, shard: ShardId, capabilities: Array<CapabilityGrant>, budget: Budget, mailbox: Mailbox, status: ActorStatus, failure: FailureState, metrics: ActorMetrics, };" },
-        SchemaMetadata { name: "ActorStatus", version: 1, typescript: r#"export type ActorStatus = { "kind": "cold" } | { "kind": "activating" } | { "kind": "active" } | { "kind": "suspended", checkpoint: Array<number> | null, } | { "kind": "draining" } | { "kind": "trapped" } | { "kind": "quarantined" } | { "kind": "disabled" };"# },
+        SchemaMetadata {
+            name: "ActorRecord",
+            version: 1,
+            typescript: "export type ActorRecord = { id: ActorId, kind: ActorKind, package: PackageId, shard: ShardId, capabilities: Array<CapabilityGrant>, budget: Budget, mailbox: Mailbox, status: ActorStatus, failure: FailureState, metrics: ActorMetrics, };",
+        },
+        SchemaMetadata {
+            name: "ActorStatus",
+            version: 1,
+            typescript: r#"export type ActorStatus = { "kind": "cold" } | { "kind": "activating" } | { "kind": "active" } | { "kind": "suspended", checkpoint: Array<number> | null, } | { "kind": "draining" } | { "kind": "trapped" } | { "kind": "quarantined" } | { "kind": "disabled" };"#,
+        },
         SchemaMetadata { name: "Backpressure", version: 1, typescript: r#"export type Backpressure = { "kind": "accept" } | { "kind": "coalesced" } | { "kind": "dropped", lane: Lane, } | { "kind": "rejected" };"# },
         SchemaMetadata { name: "Budget", version: 1, typescript: "export type Budget = { fuel: bigint, wall_ms: number, memory_bytes: bigint, ui_nodes: number, mailbox_len: number, max_effects: number, max_patch_bytes: number, };" },
         SchemaMetadata { name: "CapabilityGrant", version: 1, typescript: "export type CapabilityGrant = { capability: string, scope: Array<number> | null, };" },
         SchemaMetadata { name: "CoalesceKey", version: 1, typescript: "export type CoalesceKey = string;" },
         SchemaMetadata { name: "Decision", version: 1, typescript: "export type Decision = { run: Array<TurnGrant>, wake_at: bigint | null, };" },
-        SchemaMetadata { name: "Envelope", version: 1, typescript: "export type Envelope = { to: ActorId, from: Origin, lane: Lane, seq: bigint, deadline_ms: bigint | null, coalesce: CoalesceKey | null, cancel_of: bigint | null, payload: Payload, };" },
-        SchemaMetadata { name: "FailureSignal", version: 1, typescript: r#"export type FailureSignal = { "kind": "deadlineOverrun", ratio: number, } | { "kind": "fuelExhausted" } | { "kind": "memoryLimit" } | { "kind": "mailboxOverflow" } | { "kind": "uiQuota" } | { "kind": "trap", detail: string, } | { "kind": "heartbeatMissed", count: number, } | { "kind": "manualReset" };"# },
-        SchemaMetadata { name: "FailureStage", version: 1, typescript: r#"export type FailureStage = { "kind": "healthy" } | { "kind": "warned" } | { "kind": "throttled", factor: number, } | { "kind": "suspended", until: bigint, } | { "kind": "cancelled" } | { "kind": "trapped", restarts: number, } | { "kind": "quarantined", until: bigint, } | { "kind": "disabled" };"# },
+        SchemaMetadata {
+            name: "Envelope",
+            version: 1,
+            typescript: "export type Envelope = { to: ActorId, from: Origin, lane: Lane, seq: bigint, deadline_ms: bigint | null, coalesce: CoalesceKey | null, cancel_of: bigint | null, payload: Payload, };",
+        },
+        SchemaMetadata {
+            name: "FailureSignal",
+            version: 1,
+            typescript: r#"export type FailureSignal = { "kind": "deadlineOverrun", ratio: number, } | { "kind": "fuelExhausted" } | { "kind": "memoryLimit" } | { "kind": "mailboxOverflow" } | { "kind": "uiQuota" } | { "kind": "trap", detail: string, } | { "kind": "heartbeatMissed", count: number, } | { "kind": "manualReset" };"#,
+        },
+        SchemaMetadata {
+            name: "FailureStage",
+            version: 1,
+            typescript: r#"export type FailureStage = { "kind": "healthy" } | { "kind": "warned" } | { "kind": "throttled", factor: number, } | { "kind": "suspended", until: bigint, } | { "kind": "cancelled" } | { "kind": "trapped", restarts: number, } | { "kind": "quarantined", until: bigint, } | { "kind": "disabled" };"#,
+        },
         SchemaMetadata { name: "FailureState", version: 1, typescript: "export type FailureState = { stage: FailureStage, clean_turns: number, warn_count: number, restart_count: number, last_signal_ms: bigint, };" },
         SchemaMetadata { name: "JobCheckpoint", version: 1, typescript: "export type JobCheckpoint = { state: Array<number>, applied_progress: bigint, };" },
         SchemaMetadata { name: "JobCommitCandidate", version: 1, typescript: "export type JobCommitCandidate = { state: Array<number>, output: Array<number>, };" },
         SchemaMetadata { name: "JobOperation", version: 1, typescript: "export type JobOperation = { operation: bigint, base_revision: bigint, generation: bigint, preview_sequence: bigint, seed: bigint, };" },
-        SchemaMetadata { name: "JobProgressIdentity", version: 1, typescript: "export type JobProgressIdentity = { actor: ActorId, job: bigint, operation: bigint, base_revision: bigint, generation: bigint, step_sequence: bigint, preview_sequence: bigint, };" },
+        SchemaMetadata {
+            name: "JobProgressIdentity",
+            version: 1,
+            typescript: "export type JobProgressIdentity = { actor: ActorId, job: bigint, operation: bigint, base_revision: bigint, generation: bigint, step_sequence: bigint, preview_sequence: bigint, };",
+        },
         SchemaMetadata { name: "JobProgressKind", version: 1, typescript: r#"export type JobProgressKind = "yield" | "preview" | "checkpoint" | "commitValidated" | "cancelled" | "fault";"# },
         SchemaMetadata { name: "JobProgressReceipt", version: 1, typescript: "export type JobProgressReceipt = { identity: JobProgressIdentity, kind: JobProgressKind, applied_progress: bigint, owner_bytes: number, };" },
         SchemaMetadata { name: "JobPublication", version: 1, typescript: "export type JobPublication = { turn: JobTurn, outcome: JobStepOutcome, };" },
-        SchemaMetadata { name: "JobReplayLog", version: 1, typescript: "export type JobReplayLog = { entries: Array<JobPublication>, };" },
-        SchemaMetadata { name: "JobStepOutcome", version: 1, typescript: r#"export type JobStepOutcome = { "kind": "yield" } | { "kind": "previewReady", preview: Array<number>, } | { "kind": "checkpointReady", checkpoint: JobCheckpoint, } | { "kind": "complete", candidate: JobCommitCandidate, } | { "kind": "cancelled" } | { "kind": "fault", detail: Array<number>, };"# },
+        SchemaMetadata { name: "JobReplayLog", version: 2, typescript: "export type JobReplayLog = { route: JobReplayRoute, sealedRecords: number, };" },
+        SchemaMetadata { name: "JobReplayRequest", version: 1, typescript: "export type JobReplayRequest = { controller: number[], tool: number[], schema: number[], version: number, digest: number[], };" },
+        SchemaMetadata {
+            name: "JobReplayRoute",
+            version: 1,
+            typescript: "export type JobReplayRoute = { plugin: number[], package: number[], controller: number[], tool: number[], window: bigint, document: number[], requestSchema: number[], requestVersion: number, requestDigest: number[], };",
+        },
+        SchemaMetadata {
+            name: "JobStepOutcome",
+            version: 1,
+            typescript: r#"export type JobStepOutcome = { "kind": "yield" } | { "kind": "previewReady", preview: Array<number>, } | { "kind": "checkpointReady", checkpoint: JobCheckpoint, } | { "kind": "complete", candidate: JobCommitCandidate, } | { "kind": "cancelled" } | { "kind": "fault", detail: Array<number>, };"#,
+        },
         SchemaMetadata { name: "JobTurn", version: 1, typescript: "export type JobTurn = { job: bigint, operation: JobOperation, step_sequence: bigint, };" },
         SchemaMetadata { name: "KernelMetrics", version: 1, typescript: "export type KernelMetrics = { actors: number, shards: number, packages: number, };" },
         SchemaMetadata { name: "Lane", version: 1, typescript: r#"export type Lane = "Interactive" | "UserVisible" | "Background" | "Maintenance";"# },
@@ -67,7 +110,11 @@ pub mod schema_metadata {
         SchemaMetadata { name: "Origin", version: 1, typescript: r#"export type Origin = { "kind": "ui", window: WindowId, } | { "kind": "actor", id: ActorId, } | { "kind": "kernel" } | { "kind": "bus", topic: string, };"# },
         SchemaMetadata { name: "PackageHash", version: 1, typescript: "export type PackageHash = number[];" },
         SchemaMetadata { name: "PackageId", version: 1, typescript: "export type PackageId = string;" },
-        SchemaMetadata { name: "Payload", version: 1, typescript: r#"export type Payload = { "kind": "event", bytes: Array<number>, } | { "kind": "suspend", operation: JobOperation, appliedProgress: bigint, } | { "kind": "resume", operation: JobOperation, checkpoint: JobCheckpoint, } | { "kind": "cancel", seq: bigint, } | { "kind": "jobStep", turn: JobTurn, };"# },
+        SchemaMetadata {
+            name: "Payload",
+            version: 1,
+            typescript: r#"export type Payload = { "kind": "event", bytes: Array<number>, } | { "kind": "suspend", operation: JobOperation, appliedProgress: bigint, } | { "kind": "resume", operation: JobOperation, checkpoint: JobCheckpoint, } | { "kind": "cancel", seq: bigint, } | { "kind": "jobStep", turn: JobTurn, };"#,
+        },
         SchemaMetadata { name: "RuntimeMetricsSnapshot", version: 1, typescript: "export type RuntimeMetricsSnapshot = { kernel: KernelMetrics, actors: Array<ActorMetricsSample>, shards: Array<ShardMetricsSample>, sampled_at_ms: bigint, };" },
         SchemaMetadata { name: "SceneSnapshot", version: 1, typescript: "export type SceneSnapshot = { revision: bigint, committed_ms: bigint, patches: Array<number>, node_count: number, };" },
         SchemaMetadata { name: "ShardId", version: 1, typescript: "export type ShardId = number;" },
@@ -77,7 +124,11 @@ pub mod schema_metadata {
         SchemaMetadata { name: "ShardTable", version: 1, typescript: "export type ShardTable = { kind: ShardKind, shard_count: number, exclusive_reserve: number, assignment: Record<string, ShardId>, exclusive_leases: Record<string, ActorId>, };" },
         SchemaMetadata { name: "TurnGrant", version: 1, typescript: "export type TurnGrant = { actor: ActorId, shard: ShardId, budget: Budget, envelopes: Array<Envelope>, };" },
         SchemaMetadata { name: "TurnResult", version: 1, typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, next_wake: bigint | null, status: TurnStatus, usage: Usage, };" },
-        SchemaMetadata { name: "TurnStatus", version: 1, typescript: r#"export type TurnStatus = { "kind": "idle" } | { "kind": "moreWork" } | { "kind": "checkpointReady", checkpoint: JobCheckpoint, } | { "kind": "faulted", detail: Array<number>, } | { "kind": "previewReady", preview: Array<number>, sequence: bigint, } | { "kind": "commitReady", candidate: JobCommitCandidate, } | { "kind": "cancelled" };"# },
+        SchemaMetadata {
+            name: "TurnStatus",
+            version: 1,
+            typescript: r#"export type TurnStatus = { "kind": "idle" } | { "kind": "moreWork" } | { "kind": "checkpointReady", checkpoint: JobCheckpoint, } | { "kind": "faulted", detail: Array<number>, } | { "kind": "previewReady", preview: Array<number>, sequence: bigint, } | { "kind": "commitReady", candidate: JobCommitCandidate, } | { "kind": "cancelled" };"#,
+        },
         SchemaMetadata { name: "Usage", version: 1, typescript: "export type Usage = { fuel: bigint, wall_us: bigint, memory_bytes: bigint, };" },
         SchemaMetadata { name: "WindowId", version: 1, typescript: "export type WindowId = number;" },
     ];
@@ -269,11 +320,7 @@ pub mod pack {
         }
     }
     pub async fn read_opt_bytes(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<Vec<u8>>, PackError> {
-        if read_bool(bytes, pos, what).await? {
-            Ok(Some(read_bytes(bytes, pos, what).await?))
-        } else {
-            Ok(None)
-        }
+        if read_bool(bytes, pos, what).await? { Ok(Some(read_bytes(bytes, pos, what).await?)) } else { Ok(None) }
     }
 
     /// 🪡 Same rationale as `write_opt_bytes`/`read_opt_bytes`, for `Option<u64>` (deadlines/wake times).
@@ -284,11 +331,7 @@ pub mod pack {
         }
     }
     pub async fn read_opt_u64(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<u64>, PackError> {
-        if read_bool(bytes, pos, what).await? {
-            Ok(Some(read_u64(bytes, pos, what).await?))
-        } else {
-            Ok(None)
-        }
+        if read_bool(bytes, pos, what).await? { Ok(Some(read_u64(bytes, pos, what).await?)) } else { Ok(None) }
     }
 
     /// 🪡 `f` is a bare async fn item (`Type::pack_encode`), never a closure — fn items are
@@ -772,25 +815,805 @@ impl JobPublication {
     }
 }
 
-/// 📜️ Ordered actor job publications forming the deterministic replay wire log.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct JobReplayLog {
-    pub entries: Vec<JobPublication>,
+//#region 📜️FixedReplay
+pub const JOB_REPLAY_RECORD_CAPACITY: usize = 256;
+pub const JOB_REPLAY_RECORD_PAGE_CAPACITY: usize = 32;
+pub const JOB_REPLAY_PROCESS_PAGE_CAPACITY: usize = 4_096;
+pub const JOB_REPLAY_PAGE_BYTES: usize = job::JOB_PAYLOAD_PAGE_BYTES;
+const JOB_REPLAY_SCALAR_TRANSFERS: u8 = 12;
+
+static JOB_REPLAY_PROCESS_PAGES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 🧭️ Versioned mounted route identity shared by capture and replay.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct JobReplayRoute {
+    pub plugin: [u8; 32],
+    pub package: [u8; 32],
+    pub controller: [u8; 32],
+    pub tool: [u8; 32],
+    pub window: u64,
+    pub document: [u8; 32],
+    pub request_schema: [u8; 32],
+    pub request_version: u16,
+    pub request_digest: [u8; 32],
 }
 
-impl JobReplayLog {
-    pub fn push(&mut self, publication: JobPublication) {
-        self.entries.push(publication);
+/// 🪪️ Exact fixed request identity retained from `Effect::SpawnJob` through publication.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct JobReplayRequest {
+    pub controller: [u8; 32],
+    pub tool: [u8; 32],
+    pub schema: [u8; 32],
+    pub version: u16,
+    pub digest: [u8; 32],
+}
+
+impl JobReplayRequest {
+    pub fn from_spawn(kind: &str, input: &[u8]) -> Self {
+        let controller = kind.split_once('.').map_or(kind, |(controller, _)| controller);
+        Self { controller: replay_digest32(controller.as_bytes()), tool: replay_digest32(kind.as_bytes()), schema: replay_digest32(b"semio.kernel.Effect.SpawnJob.v1"), version: 1, digest: replay_digest32_parts(kind.as_bytes(), input) }
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_vec(out, &self.entries, JobPublication::pack_encode).await;
+        pack::write_hash32(out, &self.controller).await;
+        pack::write_hash32(out, &self.tool).await;
+        pack::write_hash32(out, &self.schema).await;
+        pack::write_u16(out, self.version).await;
+        pack::write_hash32(out, &self.digest).await;
     }
 
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { entries: pack::read_vec(bytes, pos, "JobReplayLog::entries", JobPublication::pack_decode).await? })
+        Ok(Self {
+            controller: pack::read_hash32(bytes, pos, "JobReplayRequest::controller").await?,
+            tool: pack::read_hash32(bytes, pos, "JobReplayRequest::tool").await?,
+            schema: pack::read_hash32(bytes, pos, "JobReplayRequest::schema").await?,
+            version: pack::read_u16(bytes, pos, "JobReplayRequest::version").await?,
+            digest: pack::read_hash32(bytes, pos, "JobReplayRequest::digest").await?,
+        })
     }
 }
+
+impl JobReplayRoute {
+    pub const fn zeroed() -> Self {
+        Self { plugin: [0; 32], package: [0; 32], controller: [0; 32], tool: [0; 32], window: 0, document: [0; 32], request_schema: [0; 32], request_version: 0, request_digest: [0; 32] }
+    }
+}
+
+/// 🎯️ Observable P2d disposition recorded after the exact owner crosses the overlay boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum JobReplayPublicationPolicy {
+    Pending,
+    Accepted,
+    Displaced,
+    Rejected,
+}
+
+/// 📡️ Typed publication classification retained without cloning its payload.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum JobReplayPublicationKind {
+    Yield,
+    Preview,
+    Checkpoint,
+    Commit,
+    Cancelled,
+    Fault,
+}
+
+impl JobReplayPublicationKind {
+    fn from_outcome(outcome: &JobStepOutcome) -> Self {
+        match outcome {
+            JobStepOutcome::Yield => Self::Yield,
+            JobStepOutcome::PreviewReady { .. } => Self::Preview,
+            JobStepOutcome::CheckpointReady { .. } => Self::Checkpoint,
+            JobStepOutcome::Complete { .. } => Self::Commit,
+            JobStepOutcome::Cancelled => Self::Cancelled,
+            JobStepOutcome::Fault { .. } => Self::Fault,
+        }
+    }
+}
+
+/// 🚫️ Non-consuming mounted replay refusal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JobReplayFault {
+    Busy,
+    Cancelled,
+    Deadline,
+    Capacity,
+    PageBytes,
+    ProcessPages,
+    Stale,
+    Sequence,
+    Mismatch,
+    Exhausted,
+}
+
+/// 🔁️ One bounded capture/replay opportunity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JobReplayStep {
+    MoreWork,
+    PublicationReady,
+    Refused(JobReplayFault),
+    Complete,
+}
+
+/// 🧹️ One exact replay close opportunity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JobReplayCloseStep {
+    Pending { released_items: usize, released_bytes: usize },
+    Complete,
+}
+
+/// 🧩️ One admitted immutable replay payload page.
+struct JobReplayPage {
+    storage: ManuallyDrop<Option<Box<[MaybeUninit<u8>; JOB_REPLAY_PAGE_BYTES]>>>,
+    length: usize,
+}
+
+impl JobReplayPage {
+    fn try_copy(bytes: &[u8]) -> Result<Self, JobReplayFault> {
+        if bytes.len() > JOB_REPLAY_PAGE_BYTES {
+            return Err(JobReplayFault::PageBytes);
+        }
+        JOB_REPLAY_PROCESS_PAGES
+            .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+            .map_err(|_| JobReplayFault::ProcessPages)?;
+        let mut storage = Box::new([MaybeUninit::uninit(); JOB_REPLAY_PAGE_BYTES]);
+        for (target, byte) in storage[..bytes.len()].iter_mut().zip(bytes.iter().copied()) {
+            target.write(byte);
+        }
+        Ok(Self { storage: ManuallyDrop::new(Some(storage)), length: bytes.len() })
+    }
+
+    fn bytes(&self) -> &[u8] {
+        let storage = self.storage.as_ref().expect("sealed replay page owns backing");
+        unsafe { std::slice::from_raw_parts(storage.as_ptr().cast::<u8>(), self.length) }
+    }
+
+    fn close(&mut self) -> usize {
+        let storage = self.storage.take().expect("replay page closes once");
+        drop(storage);
+        JOB_REPLAY_PROCESS_PAGES.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        self.length
+    }
+}
+
+impl Drop for JobReplayPage {
+    fn drop(&mut self) {
+        if self.storage.is_none() {
+            unsafe { ManuallyDrop::drop(&mut self.storage) };
+        } else {
+            debug_assert!(false, "replay page requires one-page admitted close");
+        }
+    }
+}
+
+/// 📇️ Scalar identity and digest fields for one deterministic replay turn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct JobReplayRecordHeader {
+    pub actor: ActorId,
+    pub turn: JobTurn,
+    pub ordinal: u64,
+    pub granted_fuel: u64,
+    pub deadline_class_ms: u32,
+    pub worker_count: u16,
+    pub worker_slot: u16,
+    pub cancellation_observed: bool,
+    pub kind: JobReplayPublicationKind,
+    pub policy: JobReplayPublicationPolicy,
+    pub applied_progress: u64,
+    pub payload_items: u8,
+    pub payload_bytes: usize,
+    pub payload_digest: u64,
+    pub prefix_digest: u64,
+}
+
+struct JobReplayRecord {
+    header: JobReplayRecordHeader,
+    pages: ManuallyDrop<[Option<JobReplayPage>; JOB_REPLAY_RECORD_PAGE_CAPACITY]>,
+    page_count: usize,
+    close_cursor: usize,
+}
+
+impl JobReplayRecord {
+    fn new(header: JobReplayRecordHeader) -> Self {
+        Self { header, pages: ManuallyDrop::new(std::array::from_fn(|_| None)), page_count: 0, close_cursor: 0 }
+    }
+
+    fn push_page(&mut self, page: JobReplayPage) -> Result<(), JobReplayPage> {
+        let Some(slot) = self.pages.iter_mut().find(|slot| slot.is_none()) else { return Err(page) };
+        *slot = Some(page);
+        self.page_count += 1;
+        Ok(())
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> JobReplayCloseStep {
+        if self.page_count == 0 {
+            return JobReplayCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let index = self.close_cursor % JOB_REPLAY_RECORD_PAGE_CAPACITY;
+        self.close_cursor = (self.close_cursor + 1) % JOB_REPLAY_RECORD_PAGE_CAPACITY;
+        let Some(page) = self.pages[index].as_mut() else { return JobReplayCloseStep::Pending { released_items: 0, released_bytes: 0 } };
+        if page.length > maximum_bytes {
+            return JobReplayCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let released_bytes = page.close();
+        self.pages[index] = None;
+        self.page_count -= 1;
+        JobReplayCloseStep::Pending { released_items: 1, released_bytes }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.page_count == 0 && self.pages.iter().all(Option::is_none)
+    }
+}
+
+impl Drop for JobReplayRecord {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() {
+            unsafe { ManuallyDrop::drop(&mut self.pages) };
+        } else {
+            debug_assert!(false, "replay record requires one-page admitted close");
+        }
+    }
+}
+
+struct JobReplayCapture {
+    publication: ManuallyDrop<Option<JobPublication>>,
+    retirement: ManuallyDrop<Option<JobPublicationOwner>>,
+    record: ManuallyDrop<Option<JobReplayRecord>>,
+    scalar_cursor: u8,
+    payload_item: u8,
+    payload_offset: usize,
+    payload_digest: u64,
+    expected_pages: usize,
+    sealed: bool,
+    acknowledged: bool,
+}
+
+impl JobReplayCapture {
+    fn new(publication: JobPublication, header: JobReplayRecordHeader, expected_pages: usize) -> Self {
+        Self {
+            publication: ManuallyDrop::new(Some(publication)),
+            retirement: ManuallyDrop::new(None),
+            record: ManuallyDrop::new(Some(JobReplayRecord::new(header))),
+            scalar_cursor: 0,
+            payload_item: 0,
+            payload_offset: 0,
+            payload_digest: 0xcbf2_9ce4_8422_2325,
+            expected_pages,
+            sealed: false,
+            acknowledged: false,
+        }
+    }
+
+    fn payload(&self) -> Option<&[u8]> {
+        let publication = self.publication.as_ref().expect("pending replay capture owns publication");
+        match (&publication.outcome, self.payload_item) {
+            (JobStepOutcome::PreviewReady { preview }, 0) => Some(preview),
+            (JobStepOutcome::CheckpointReady { checkpoint }, 0) => Some(&checkpoint.state),
+            (JobStepOutcome::Complete { candidate }, 0) => Some(&candidate.state),
+            (JobStepOutcome::Complete { candidate }, 1) => Some(&candidate.output),
+            (JobStepOutcome::Fault { detail }, 0) => Some(detail),
+            _ => None,
+        }
+    }
+
+    fn payload_items(&self) -> u8 {
+        replay_payload_items(self.publication.as_ref().expect("pending replay capture owns publication")) as u8
+    }
+}
+
+impl Drop for JobReplayCapture {
+    fn drop(&mut self) {
+        if self.publication.is_none() && self.retirement.is_none() && self.record.is_none() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.publication);
+                ManuallyDrop::drop(&mut self.retirement);
+                ManuallyDrop::drop(&mut self.record);
+            }
+        } else {
+            debug_assert!(false, "replay capture requires exact publication handback and record transfer");
+        }
+    }
+}
+
+/// 📮️ Exact live publication retained when replay capture admission refuses.
+#[must_use = "rejected replay capture retains the exact live publication"]
+#[derive(Debug)]
+pub struct JobReplayRejected {
+    pub fault: JobReplayFault,
+    publication: ManuallyDrop<Option<JobPublication>>,
+}
+
+impl JobReplayRejected {
+    pub fn into_publication(mut self) -> JobPublication {
+        self.publication.take().expect("rejected replay publication returned once")
+    }
+}
+
+impl Drop for JobReplayRejected {
+    fn drop(&mut self) {
+        if self.publication.is_none() {
+            unsafe { ManuallyDrop::drop(&mut self.publication) };
+        } else {
+            debug_assert!(false, "rejected replay capture requires exact live-owner handback");
+        }
+    }
+}
+
+/// 📜️ Fixed generation-qualified capture authority for the mounted shard/P2d stream.
+pub struct JobReplayLog {
+    route: JobReplayRoute,
+    generation: u64,
+    records: ManuallyDrop<Box<[Option<JobReplayRecord>; JOB_REPLAY_RECORD_CAPACITY]>>,
+    record_count: usize,
+    reserved_records: usize,
+    reserved_pages: usize,
+    prefix_digest: u64,
+    next_ordinal: u64,
+    last_checkpoint_index: Option<usize>,
+    pending: ManuallyDrop<Option<JobReplayCapture>>,
+    ready_record: Option<usize>,
+    replay_cursor: usize,
+    replaying: bool,
+    closing: bool,
+    close_cursor: usize,
+}
+
+impl JobReplayLog {
+    pub fn new(route: JobReplayRoute, generation: u64) -> Result<Self, JobReplayFault> {
+        if generation == 0 {
+            return Err(JobReplayFault::Stale);
+        }
+        Ok(Self {
+            route,
+            generation,
+            records: ManuallyDrop::new(Box::new(std::array::from_fn(|_| None))),
+            record_count: 0,
+            reserved_records: 0,
+            reserved_pages: 0,
+            prefix_digest: 0xcbf2_9ce4_8422_2325,
+            next_ordinal: 0,
+            last_checkpoint_index: None,
+            pending: ManuallyDrop::new(None),
+            ready_record: None,
+            replay_cursor: 0,
+            replaying: false,
+            closing: false,
+            close_cursor: 0,
+        })
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    pub fn sealed_records(&self) -> usize {
+        self.record_count
+    }
+
+    pub fn route(&self) -> JobReplayRoute {
+        self.route
+    }
+
+    pub fn prefix_digest(&self) -> u64 {
+        self.prefix_digest
+    }
+
+    pub fn record_header(&self, index: usize) -> Option<JobReplayRecordHeader> {
+        self.records.get(index).and_then(Option::as_ref).map(|record| record.header)
+    }
+
+    pub fn last_checkpoint_header(&self) -> Option<JobReplayRecordHeader> {
+        self.last_checkpoint_index.and_then(|index| self.record_header(index))
+    }
+
+    pub fn begin_capture(&mut self, cx: &mut job::StepContext<'_>, actor: ActorId, worker_count: u16, worker_slot: u16, granted_fuel: u64, deadline_class_ms: u32, publication: JobPublication) -> Result<(), JobReplayRejected> {
+        if self.closing || cx.is_cancelled() {
+            return Err(replay_rejected(JobReplayFault::Cancelled, publication));
+        }
+        if cx.should_yield() {
+            return Err(replay_rejected(JobReplayFault::Deadline, publication));
+        }
+        if self.pending.is_some() || self.ready_record.is_some() {
+            return Err(replay_rejected(JobReplayFault::Busy, publication));
+        }
+        if cx.generation().0 != publication.turn.operation.generation || cx.operation().0 != publication.turn.operation.operation || publication.turn.operation.generation != self.generation {
+            return Err(replay_rejected(JobReplayFault::Stale, publication));
+        }
+        if self.next_ordinal == u64::MAX {
+            return Err(replay_rejected(JobReplayFault::Exhausted, publication));
+        }
+        let Some(payload_bytes) = replay_payload_bytes(&publication) else { return Err(replay_rejected(JobReplayFault::Capacity, publication)) };
+        let payload_items = replay_payload_items(&publication);
+        let expected_pages = replay_payload_pages(&publication);
+        if expected_pages > JOB_REPLAY_RECORD_PAGE_CAPACITY || self.record_count + self.reserved_records >= JOB_REPLAY_RECORD_CAPACITY {
+            return Err(replay_rejected(JobReplayFault::Capacity, publication));
+        }
+        cx.consume_fuel(1);
+        let header = JobReplayRecordHeader {
+            actor,
+            turn: publication.turn,
+            ordinal: self.next_ordinal,
+            granted_fuel,
+            deadline_class_ms,
+            worker_count,
+            worker_slot,
+            cancellation_observed: matches!(publication.outcome, JobStepOutcome::Cancelled),
+            kind: JobReplayPublicationKind::from_outcome(&publication.outcome),
+            policy: JobReplayPublicationPolicy::Pending,
+            applied_progress: match &publication.outcome {
+                JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.applied_progress,
+                _ => publication.turn.step_sequence,
+            },
+            payload_items: payload_items as u8,
+            payload_bytes,
+            payload_digest: 0,
+            prefix_digest: 0,
+        };
+        self.reserved_records += 1;
+        self.reserved_pages += expected_pages;
+        *self.pending = Some(JobReplayCapture::new(publication, header, expected_pages));
+        Ok(())
+    }
+
+    pub fn capture_step(&mut self, cx: &mut job::StepContext<'_>) -> JobReplayStep {
+        if self.pending.is_none() {
+            return if self.ready_record.is_some() { JobReplayStep::PublicationReady } else { JobReplayStep::Complete };
+        }
+        if cx.is_cancelled() {
+            return JobReplayStep::Refused(JobReplayFault::Cancelled);
+        }
+        if cx.should_yield() {
+            return JobReplayStep::MoreWork;
+        }
+        let pending = self.pending.as_mut().expect("capture pending");
+        if pending.acknowledged {
+            return JobReplayStep::MoreWork;
+        }
+        if pending.scalar_cursor < JOB_REPLAY_SCALAR_TRANSFERS {
+            cx.consume_fuel(1);
+            pending.scalar_cursor += 1;
+            return JobReplayStep::MoreWork;
+        }
+        if pending.payload_item < pending.payload_items() {
+            let Some(payload) = pending.payload() else { return JobReplayStep::Refused(JobReplayFault::Mismatch) };
+            if pending.payload_offset == payload.len() {
+                cx.consume_fuel(1);
+                pending.payload_item += 1;
+                pending.payload_offset = 0;
+                return JobReplayStep::MoreWork;
+            }
+            let end = pending.payload_offset.saturating_add(JOB_REPLAY_PAGE_BYTES).min(payload.len());
+            cx.consume_fuel(1);
+            if cx.is_cancelled() || cx.deadline_exceeded() {
+                return JobReplayStep::Refused(if cx.is_cancelled() { JobReplayFault::Cancelled } else { JobReplayFault::Deadline });
+            }
+            let (page, payload_digest) = {
+                let chunk = &payload[pending.payload_offset..end];
+                let page = match JobReplayPage::try_copy(chunk) {
+                    Ok(page) => page,
+                    Err(fault) => return JobReplayStep::Refused(fault),
+                };
+                let payload_digest = chunk.iter().fold(pending.payload_digest, |digest, byte| replay_mix(digest, u64::from(*byte)));
+                (page, payload_digest)
+            };
+            pending.payload_digest = payload_digest;
+            pending.payload_offset = end;
+            if let Err(mut page) = pending.record.as_mut().expect("capture owns record").push_page(page) {
+                let _ = page.close();
+                return JobReplayStep::Refused(JobReplayFault::Capacity);
+            }
+            return JobReplayStep::MoreWork;
+        }
+        cx.consume_fuel(1);
+        if pending.sealed {
+            return JobReplayStep::PublicationReady;
+        }
+        let record = pending.record.as_mut().expect("capture owns record");
+        if record.page_count != pending.expected_pages {
+            return JobReplayStep::Refused(JobReplayFault::Mismatch);
+        }
+        record.header.payload_digest = pending.payload_digest;
+        record.header.prefix_digest = replay_header_digest(self.prefix_digest, &self.route, &record.header);
+        if self.replaying {
+            let Some(expected) = self.records.get(self.replay_cursor).and_then(Option::as_ref) else { return JobReplayStep::Refused(JobReplayFault::Sequence) };
+            if !replay_record_matches(expected, record) {
+                return JobReplayStep::Refused(JobReplayFault::Mismatch);
+            }
+            let Some(next_ordinal) = self.next_ordinal.checked_add(1) else { return JobReplayStep::Refused(JobReplayFault::Exhausted) };
+            self.ready_record = Some(self.replay_cursor);
+            self.prefix_digest = expected.header.prefix_digest;
+            self.next_ordinal = next_ordinal;
+            self.replay_cursor += 1;
+        } else {
+            let index = self.record_count;
+            self.records[index] = pending.record.take();
+            self.record_count += 1;
+            if self.records[index].as_ref().is_some_and(|record| record.header.kind == JobReplayPublicationKind::Checkpoint) {
+                self.last_checkpoint_index = Some(index);
+            }
+            self.next_ordinal = self.next_ordinal.checked_add(1).expect("ordinal exhaustion preflighted");
+            self.prefix_digest = self.records[index].as_ref().expect("sealed replay record").header.prefix_digest;
+            self.reserved_records -= 1;
+            self.reserved_pages -= pending.expected_pages;
+            self.ready_record = Some(index);
+        }
+        pending.sealed = true;
+        JobReplayStep::PublicationReady
+    }
+
+    pub fn take_captured_publication(&mut self) -> Option<JobPublication> {
+        self.ready_record?;
+        self.pending.as_mut()?.publication.take()
+    }
+
+    pub fn publication_is_ready(&self) -> bool {
+        self.ready_record.is_some() && self.pending.as_ref().is_some_and(|pending| pending.publication.is_some())
+    }
+
+    pub fn acknowledge_publication(&mut self, cx: &mut job::StepContext<'_>, policy: JobReplayPublicationPolicy) -> Result<(), JobReplayFault> {
+        if cx.is_cancelled() || cx.should_yield() {
+            return Err(if cx.is_cancelled() { JobReplayFault::Cancelled } else { JobReplayFault::Deadline });
+        }
+        cx.consume_fuel(1);
+        let index = self.ready_record.take().ok_or(JobReplayFault::Sequence)?;
+        if policy == JobReplayPublicationPolicy::Pending {
+            self.ready_record = Some(index);
+            return Err(JobReplayFault::Mismatch);
+        }
+        if self.replaying {
+            if self.records[index].as_ref().ok_or(JobReplayFault::Sequence)?.header.policy != policy {
+                self.ready_record = Some(index);
+                return Err(JobReplayFault::Mismatch);
+            }
+        } else {
+            self.records[index].as_mut().ok_or(JobReplayFault::Sequence)?.header.policy = policy;
+        }
+        let pending = self.pending.as_mut().ok_or(JobReplayFault::Sequence)?;
+        if self.replaying {
+            pending.acknowledged = true;
+            return Ok(());
+        }
+        let pending = self.pending.take().ok_or(JobReplayFault::Sequence)?;
+        drop(pending);
+        Ok(())
+    }
+
+    pub fn maintenance_step(&mut self, cx: &mut job::StepContext<'_>) -> JobReplayStep {
+        let Some(pending) = self.pending.as_mut() else { return JobReplayStep::Complete };
+        if !pending.acknowledged {
+            return self.capture_step(cx);
+        }
+        if cx.should_yield() {
+            return JobReplayStep::MoreWork;
+        }
+        cx.consume_fuel(1);
+        if let Some(record) = pending.record.as_mut() {
+            if !record.terminal_is_empty() {
+                let before = record.page_count;
+                let _ = record.close_step(JOB_REPLAY_PAGE_BYTES);
+                self.reserved_pages -= before.saturating_sub(record.page_count);
+                return JobReplayStep::MoreWork;
+            }
+            drop(pending.record.take());
+            self.reserved_records -= 1;
+            return JobReplayStep::MoreWork;
+        }
+        let pending = self.pending.take().expect("acknowledged replay candidate");
+        drop(pending);
+        JobReplayStep::Complete
+    }
+
+    pub fn has_pending_work(&self) -> bool {
+        self.pending.is_some() || self.ready_record.is_some() || (self.closing && !self.terminal_is_empty())
+    }
+
+    pub fn close_started(&self) -> bool {
+        self.closing
+    }
+
+    pub fn begin_replay(&mut self, generation: u64) -> Result<(), JobReplayFault> {
+        if generation != self.generation || self.pending.is_some() || self.ready_record.is_some() || self.closing {
+            return Err(JobReplayFault::Stale);
+        }
+        self.replaying = true;
+        self.replay_cursor = 0;
+        self.prefix_digest = 0xcbf2_9ce4_8422_2325;
+        self.next_ordinal = 0;
+        Ok(())
+    }
+
+    pub fn expected_turn(&self) -> Option<JobTurn> {
+        self.replaying.then(|| self.records.get(self.replay_cursor).and_then(Option::as_ref).map(|record| record.header.turn)).flatten()
+    }
+
+    pub fn replay_is_complete(&self) -> bool {
+        self.replaying && self.replay_cursor == self.record_count && self.pending.is_none() && self.ready_record.is_none()
+    }
+
+    pub fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    pub fn close_step(&mut self, cx: &mut job::StepContext<'_>) -> JobReplayCloseStep {
+        self.closing = true;
+        if cx.is_cancelled() || cx.should_yield() {
+            return JobReplayCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        cx.consume_fuel(1);
+        if let Some(pending) = self.pending.as_mut() {
+            if let Some(record) = pending.record.as_mut() {
+                if !record.terminal_is_empty() {
+                    return record.close_step(JOB_REPLAY_PAGE_BYTES);
+                }
+                drop(pending.record.take());
+                return JobReplayCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if pending.retirement.is_none() {
+                if let Some(publication) = pending.publication.take() {
+                    let total_phases = replay_payload_items(&publication) as u8 + 1;
+                    *pending.retirement = Some(JobPublicationOwner { publication, phase: 0, total_phases, owner_bytes: 0 });
+                    return JobReplayCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+            }
+            if let Some(owner) = pending.retirement.as_mut() {
+                if !owner.terminal_is_empty() {
+                    let (complete, released_items, released_bytes) = owner.close_one();
+                    if !complete {
+                        return JobReplayCloseStep::Pending { released_items, released_bytes };
+                    }
+                }
+                *pending.retirement = None;
+                return JobReplayCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            let pending = self.pending.take().expect("terminal replay capture");
+            drop(pending);
+            self.reserved_records = 0;
+            self.reserved_pages = 0;
+            return JobReplayCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let index = self.close_cursor % JOB_REPLAY_RECORD_CAPACITY;
+        self.close_cursor = (self.close_cursor + 1) % JOB_REPLAY_RECORD_CAPACITY;
+        let Some(record) = self.records[index].as_mut() else {
+            return if self.terminal_is_empty() { JobReplayCloseStep::Complete } else { JobReplayCloseStep::Pending { released_items: 0, released_bytes: 0 } };
+        };
+        if !record.terminal_is_empty() {
+            return record.close_step(JOB_REPLAY_PAGE_BYTES);
+        }
+        self.records[index] = None;
+        self.record_count -= 1;
+        JobReplayCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closing && self.record_count == 0 && self.reserved_records == 0 && self.reserved_pages == 0 && self.pending.is_none() && self.ready_record.is_none() && self.records.iter().all(Option::is_none)
+    }
+}
+
+impl Drop for JobReplayLog {
+    fn drop(&mut self) {
+        if self.terminal_is_empty() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.records);
+                ManuallyDrop::drop(&mut self.pending);
+            }
+        } else {
+            debug_assert!(false, "mounted replay log requires generation-qualified recovery and incremental close");
+        }
+    }
+}
+
+fn replay_rejected(fault: JobReplayFault, publication: JobPublication) -> JobReplayRejected {
+    JobReplayRejected { fault, publication: ManuallyDrop::new(Some(publication)) }
+}
+
+fn replay_payload_items(publication: &JobPublication) -> usize {
+    match &publication.outcome {
+        JobStepOutcome::PreviewReady { .. } | JobStepOutcome::CheckpointReady { .. } | JobStepOutcome::Fault { .. } => 1,
+        JobStepOutcome::Complete { .. } => 2,
+        JobStepOutcome::Yield | JobStepOutcome::Cancelled => 0,
+    }
+}
+
+fn replay_payload_bytes(publication: &JobPublication) -> Option<usize> {
+    match &publication.outcome {
+        JobStepOutcome::PreviewReady { preview } => Some(preview.len()),
+        JobStepOutcome::CheckpointReady { checkpoint } => Some(checkpoint.state.len()),
+        JobStepOutcome::Complete { candidate } => candidate.state.len().checked_add(candidate.output.len()),
+        JobStepOutcome::Fault { detail } => Some(detail.len()),
+        JobStepOutcome::Yield | JobStepOutcome::Cancelled => Some(0),
+    }
+}
+
+fn replay_payload_pages(publication: &JobPublication) -> usize {
+    match &publication.outcome {
+        JobStepOutcome::PreviewReady { preview } => preview.len().div_ceil(JOB_REPLAY_PAGE_BYTES),
+        JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.state.len().div_ceil(JOB_REPLAY_PAGE_BYTES),
+        JobStepOutcome::Complete { candidate } => candidate.state.len().div_ceil(JOB_REPLAY_PAGE_BYTES) + candidate.output.len().div_ceil(JOB_REPLAY_PAGE_BYTES),
+        JobStepOutcome::Fault { detail } => detail.len().div_ceil(JOB_REPLAY_PAGE_BYTES),
+        JobStepOutcome::Yield | JobStepOutcome::Cancelled => 0,
+    }
+}
+
+fn replay_mix(mut digest: u64, value: u64) -> u64 {
+    digest ^= value;
+    digest.wrapping_mul(0x0000_0100_0000_01b3)
+}
+
+fn replay_digest32(bytes: &[u8]) -> [u8; 32] {
+    replay_digest32_parts(bytes, &[])
+}
+
+fn replay_digest32_parts(left: &[u8], right: &[u8]) -> [u8; 32] {
+    let mut digest = [0u8; 32];
+    for lane in 0..4 {
+        let mut value = 0xcbf2_9ce4_8422_2325 ^ lane as u64;
+        for byte in left.iter().copied().chain([0xff]).chain(right.iter().copied()) {
+            value = replay_mix(value, u64::from(byte));
+        }
+        digest[lane * 8..lane * 8 + 8].copy_from_slice(&value.to_le_bytes());
+    }
+    digest
+}
+
+fn replay_header_digest(mut digest: u64, route: &JobReplayRoute, header: &JobReplayRecordHeader) -> u64 {
+    for byte in route.plugin.iter().chain(route.package.iter()).chain(route.controller.iter()).chain(route.tool.iter()).chain(route.document.iter()).chain(route.request_schema.iter()).chain(route.request_digest.iter()) {
+        digest = replay_mix(digest, u64::from(*byte));
+    }
+    for value in [
+        route.window,
+        u64::from(route.request_version),
+        header.actor.0,
+        header.turn.job,
+        header.turn.operation.operation,
+        header.turn.operation.base_revision,
+        header.turn.operation.generation,
+        header.turn.operation.seed,
+        header.turn.step_sequence,
+        header.ordinal,
+        header.granted_fuel,
+        u64::from(header.deadline_class_ms),
+        u64::from(header.worker_count),
+        u64::from(header.worker_slot),
+        u64::from(header.cancellation_observed),
+        match header.kind {
+            JobReplayPublicationKind::Yield => 0,
+            JobReplayPublicationKind::Preview => 1,
+            JobReplayPublicationKind::Checkpoint => 2,
+            JobReplayPublicationKind::Commit => 3,
+            JobReplayPublicationKind::Cancelled => 4,
+            JobReplayPublicationKind::Fault => 5,
+        },
+        header.applied_progress,
+        u64::from(header.payload_items),
+        header.payload_bytes as u64,
+        header.payload_digest,
+    ] {
+        digest = replay_mix(digest, value);
+    }
+    digest
+}
+
+fn replay_record_matches(expected: &JobReplayRecord, actual: &JobReplayRecord) -> bool {
+    expected.header.actor == actual.header.actor
+        && expected.header.turn == actual.header.turn
+        && expected.header.ordinal == actual.header.ordinal
+        && expected.header.granted_fuel == actual.header.granted_fuel
+        && expected.header.deadline_class_ms == actual.header.deadline_class_ms
+        && expected.header.worker_count == actual.header.worker_count
+        && expected.header.worker_slot == actual.header.worker_slot
+        && expected.header.cancellation_observed == actual.header.cancellation_observed
+        && expected.header.kind == actual.header.kind
+        && expected.header.applied_progress == actual.header.applied_progress
+        && expected.header.payload_items == actual.header.payload_items
+        && expected.header.payload_bytes == actual.header.payload_bytes
+        && expected.header.payload_digest == actual.header.payload_digest
+        && expected.header.prefix_digest == actual.header.prefix_digest
+        && expected.page_count == actual.page_count
+        && expected.pages.iter().flatten().zip(actual.pages.iter().flatten()).all(|(left, right)| left.bytes() == right.bytes())
+}
+//#endregion 📜️FixedReplay
 
 /// 🚫️ Publication validation failure detected before actor-visible state can change.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -868,14 +1691,8 @@ impl JobOutcomeProjection {
         match outcome {
             job::StepOutcome::Yield => Ok(JobStepOutcome::Yield),
             job::StepOutcome::PreviewReady(preview) => Err(Self::Preview { payload: JobPayloadProjection::new(preview) }),
-            job::StepOutcome::CheckpointReady(checkpoint) => {
-                Err(Self::Checkpoint { state: JobPayloadProjection::new(checkpoint.state), applied_progress: checkpoint.applied_progress })
-            }
-            job::StepOutcome::Complete(candidate) => Err(Self::Complete {
-                state: JobPayloadProjection::new(candidate.state),
-                output: JobPayloadProjection::new(candidate.output),
-                state_bytes: None,
-            }),
+            job::StepOutcome::CheckpointReady(checkpoint) => Err(Self::Checkpoint { state: JobPayloadProjection::new(checkpoint.state), applied_progress: checkpoint.applied_progress }),
+            job::StepOutcome::Complete(candidate) => Err(Self::Complete { state: JobPayloadProjection::new(candidate.state), output: JobPayloadProjection::new(candidate.output), state_bytes: None }),
             job::StepOutcome::Cancelled => Ok(JobStepOutcome::Cancelled),
             job::StepOutcome::Fault(fault) => Err(Self::Fault { detail: JobPayloadProjection::new(fault.detail) }),
         }
@@ -889,9 +1706,7 @@ impl JobOutcomeProjection {
             }
             Self::Checkpoint { state, applied_progress } => {
                 let (complete, _) = state.step();
-                complete.then(|| JobStepOutcome::CheckpointReady {
-                    checkpoint: JobCheckpoint { state: state.take_bytes(), applied_progress: *applied_progress },
-                })
+                complete.then(|| JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: state.take_bytes(), applied_progress: *applied_progress } })
             }
             Self::Complete { state, output, state_bytes } => {
                 if state_bytes.is_none() {
@@ -905,9 +1720,7 @@ impl JobOutcomeProjection {
                     }
                 }
                 let (complete, _) = output.step();
-                complete.then(|| JobStepOutcome::Complete {
-                    candidate: JobCommitCandidate { state: state_bytes.take().expect("projected state"), output: output.take_bytes() },
-                })
+                complete.then(|| JobStepOutcome::Complete { candidate: JobCommitCandidate { state: state_bytes.take().expect("projected state"), output: output.take_bytes() } })
             }
             Self::Fault { detail } => {
                 let (complete, _) = detail.step();
@@ -1345,6 +2158,10 @@ impl JobProgressOverlayStore {
 
     pub fn live_authority(&self, actor: ActorId, job: u64) -> Option<JobProgressLiveAuthority> {
         self.active.iter().find(|slot| slot.occupied && slot.identity.actor == actor && slot.identity.job == job).map(|slot| JobProgressLiveAuthority::new(slot.identity.operation, slot.identity.base_revision, slot.identity.generation))
+    }
+
+    pub fn has_visible_preview(&self, actor: ActorId, job: u64) -> bool {
+        self.active.iter().any(|slot| slot.occupied && slot.identity.actor == actor && slot.identity.job == job && slot.preview.is_some())
     }
 
     pub fn owned_items(&self) -> usize {
@@ -1874,6 +2691,12 @@ pub enum Payload {
     JobStep {
         turn: JobTurn,
     },
+    JobReplay {
+        turn: JobTurn,
+        request: JobReplayRequest,
+        worker_count: u16,
+        worker_slot: u16,
+    },
 }
 
 impl Payload {
@@ -1901,6 +2724,13 @@ impl Payload {
                 pack::write_u8(out, 4).await;
                 turn.pack_encode(out).await;
             }
+            Payload::JobReplay { turn, request, worker_count, worker_slot } => {
+                pack::write_u8(out, 5).await;
+                turn.pack_encode(out).await;
+                request.pack_encode(out).await;
+                pack::write_u16(out, *worker_count).await;
+                pack::write_u16(out, *worker_slot).await;
+            }
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
@@ -1911,6 +2741,12 @@ impl Payload {
             2 => Ok(Payload::Resume { operation: JobOperation::pack_decode(bytes, pos).await?, checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
             3 => Ok(Payload::Cancel { seq: pack::read_u64(bytes, pos, "Payload::Cancel").await? }),
             4 => Ok(Payload::JobStep { turn: JobTurn::pack_decode(bytes, pos).await? }),
+            5 => Ok(Payload::JobReplay {
+                turn: JobTurn::pack_decode(bytes, pos).await?,
+                request: JobReplayRequest::pack_decode(bytes, pos).await?,
+                worker_count: pack::read_u16(bytes, pos, "Payload::JobReplay::worker_count").await?,
+                worker_slot: pack::read_u16(bytes, pos, "Payload::JobReplay::worker_slot").await?,
+            }),
             other => Err(pack::PackError::InvalidTag { what: "Payload", tag: other, offset: *pos }),
         }
     }
@@ -4437,9 +5273,9 @@ mod tests {
             ));
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn job_replay_log_is_byte_identical_for_the_same_identity_and_outcomes() {
-            async fn run() -> Vec<u8> {
+        #[test]
+        fn mounted_fixed_replay_capture_is_deterministic_and_returns_the_exact_live_owner() {
+            fn run(worker_count: u16, worker_slot: u16) -> [u64; 4] {
                 let operation = bridge_operation();
                 let mut bridge = JobTurnBridge::new(operation);
                 let mut job = ScriptJob {
@@ -4452,25 +5288,235 @@ mod tests {
                     calls: 0,
                     ..Default::default()
                 };
-                let mut log = JobReplayLog::default();
+                let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
+                let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
                 let mut turn = bridge_turn(0, 0);
                 loop {
                     let publication = bridge
                         .step(&mut job, turn, operation.operation, operation.base_revision, operation.generation, "actor.job.replay", job::InteractiveStage::InteractiveStep, job::StepBudget::new(100, 20), job::root_cancel_token(), bridge_now_ms)
                         .expect("replay publication");
-                    let terminal = matches!(publication.outcome, JobStepOutcome::Complete { .. });
+                    let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
                     turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
-                    log.push(publication);
+                    let payload_identity = match &publication.outcome {
+                        JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                        JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.state.as_ptr(),
+                        JobStepOutcome::Complete { candidate } => candidate.output.as_ptr(),
+                        _ => std::ptr::null(),
+                    };
+                    let mut preview_sequence = publication.turn.operation.preview_sequence;
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    log.begin_capture(&mut context, ActorId(9), worker_count, worker_slot, 1, 4, publication).expect("capture admission");
+                    loop {
+                        let mut preview_sequence = turn.operation.preview_sequence;
+                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                        if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
+                            break;
+                        }
+                    }
+                    let publication = log.take_captured_publication().expect("same live publication");
+                    let returned_identity = match &publication.outcome {
+                        JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                        JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.state.as_ptr(),
+                        JobStepOutcome::Complete { candidate } => candidate.output.as_ptr(),
+                        _ => std::ptr::null(),
+                    };
+                    assert_eq!(returned_identity, payload_identity);
+                    drop(publication);
+                    let now = job::default_now_ms();
+                    let mut sequence = 0;
+                    let mut context = job::StepContext::new(job::OperationId(operation.operation.0), job::Generation(operation.generation.0), job::StepBudget::new(1, now + 4), job::root_cancel_token(), job::default_now_ms, &mut sequence);
+                    log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("P2d ACK");
                     if terminal {
                         break;
                     }
                 }
-                let mut bytes = Vec::new();
-                log.pack_encode(&mut bytes).await;
-                bytes
+                log.begin_replay(operation.generation.0).expect("sealed generation replay");
+                let mut replay_bridge = JobTurnBridge::new(operation);
+                let mut replay_job = ScriptJob {
+                    outcomes: VecDeque::from([
+                        JobStepOutcome::Yield,
+                        JobStepOutcome::PreviewReady { preview: vec![9, 8] },
+                        JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: vec![7, 6], applied_progress: 5 } },
+                        JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![3], output: vec![2, 1] } },
+                    ]),
+                    calls: 0,
+                    ..Default::default()
+                };
+                let mut replay_turn = bridge_turn(0, 0);
+                loop {
+                    let publication = replay_bridge
+                        .step(
+                            &mut replay_job,
+                            replay_turn,
+                            operation.operation,
+                            operation.base_revision,
+                            operation.generation,
+                            "actor.job.replay-live",
+                            job::InteractiveStage::InteractiveStep,
+                            job::StepBudget::new(100, 20),
+                            job::root_cancel_token(),
+                            bridge_now_ms,
+                        )
+                        .expect("replayed live publication");
+                    assert_eq!(log.expected_turn(), Some(publication.turn));
+                    let terminal = matches!(&publication.outcome, JobStepOutcome::Complete { .. });
+                    replay_turn = JobTurn { step_sequence: publication.turn.step_sequence + 1, ..publication.turn };
+                    let mut preview_sequence = publication.turn.operation.preview_sequence;
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    log.begin_capture(&mut context, ActorId(9), worker_count, worker_slot, 1, 4, publication).expect("replay capture admission");
+                    loop {
+                        let mut preview_sequence = replay_turn.operation.preview_sequence;
+                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                        if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
+                            break;
+                        }
+                    }
+                    drop(log.take_captured_publication().expect("matched replay publication"));
+                    let mut preview_sequence = replay_turn.operation.preview_sequence;
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("matched replay policy");
+                    while log.has_pending_work() {
+                        let mut preview_sequence = replay_turn.operation.preview_sequence;
+                        let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                        let _ = log.maintenance_step(&mut context);
+                    }
+                    if terminal {
+                        break;
+                    }
+                }
+                assert!(log.expected_turn().is_none());
+                let digests = std::array::from_fn(|index| log.record_header(index).expect("sealed record").prefix_digest);
+                log.begin_close();
+                while !log.terminal_is_empty() {
+                    let mut preview_sequence = 0;
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut preview_sequence);
+                    let _ = log.close_step(&mut context);
+                }
+                digests
             }
 
-            assert_eq!(run().await, run().await);
+            let host_default = u16::try_from(std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)).unwrap_or(u16::MAX);
+            for worker_count in [1, 2, 4, host_default] {
+                assert_eq!(run(worker_count, 0), run(worker_count, 0), "1/2/4/default worker replay preserves the exact ordered publication identity");
+            }
+        }
+
+        #[test]
+        fn mounted_replay_records_and_replays_the_exact_cancelled_terminal_classification() {
+            let operation = bridge_operation();
+            let route = JobReplayRoute { plugin: [11; 32], package: [13; 32], controller: [17; 32], tool: [19; 32], window: 23, document: [29; 32], request_schema: [31; 32], request_version: 1, request_digest: [37; 32] };
+            let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
+            let turn = bridge_turn(0, 0);
+            for replaying in [false, true] {
+                let publication = JobPublication { turn, outcome: JobStepOutcome::Cancelled };
+                let mut sequence = 0;
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, publication).expect("cancel capture admission");
+                loop {
+                    let mut sequence = 0;
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                    if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
+                        break;
+                    }
+                }
+                assert_eq!(log.record_header(0).expect("cancel record").cancellation_observed, true);
+                assert!(matches!(log.take_captured_publication().expect("exact cancelled owner").outcome, JobStepOutcome::Cancelled));
+                let mut sequence = 0;
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("cancel ACK");
+                if !replaying {
+                    log.begin_replay(operation.generation.0).expect("cancel replay generation");
+                }
+            }
+            assert!(log.expected_turn().is_none());
+            log.begin_close();
+            while !log.terminal_is_empty() {
+                let mut sequence = 0;
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let _ = log.close_step(&mut context);
+            }
+        }
+
+        #[test]
+        fn mounted_replay_cancel_deadline_and_stale_refuse_the_exact_publication_owner_unchanged() {
+            let operation = bridge_operation();
+            let route = JobReplayRoute { plugin: [41; 32], package: [43; 32], controller: [47; 32], tool: [53; 32], window: 59, document: [61; 32], request_schema: [67; 32], request_version: 1, request_digest: [71; 32] };
+            let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
+            let publication = |generation: u64| JobPublication { turn: JobTurn { operation: JobOperation { generation, ..bridge_turn(0, 0).operation }, ..bridge_turn(0, 0) }, outcome: JobStepOutcome::PreviewReady { preview: vec![73, 79] } };
+
+            let cancelled = publication(operation.generation.0);
+            let cancelled_identity = match &cancelled.outcome {
+                JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                _ => unreachable!(),
+            };
+            let cancel = job::root_cancel_token();
+            cancel.cancel_now();
+            let mut sequence = 0;
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), cancel, bridge_now_ms, &mut sequence);
+            let cancelled = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, cancelled).expect_err("cancelled capture refuses before transfer").into_publication();
+            assert!(matches!(&cancelled.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == cancelled_identity));
+
+            let expired = publication(operation.generation.0);
+            let expired_identity = match &expired.outcome {
+                JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                _ => unreachable!(),
+            };
+            let mut sequence = 0;
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 10), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+            let expired = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, expired).expect_err("expired capture refuses before transfer").into_publication();
+            assert!(matches!(&expired.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == expired_identity));
+
+            let stale = publication(operation.generation.0 + 1);
+            let stale_identity = match &stale.outcome {
+                JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                _ => unreachable!(),
+            };
+            let mut sequence = 0;
+            let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+            let stale = log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, stale).expect_err("stale capture refuses before transfer").into_publication();
+            assert!(matches!(&stale.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == stale_identity));
+            assert_eq!(log.sealed_records(), 0);
+            assert!(!log.has_pending_work());
+        }
+
+        #[test]
+        fn mounted_replay_preserves_the_exact_fault_payload_and_prefix_across_replay() {
+            let operation = bridge_operation();
+            let route = JobReplayRoute { plugin: [73; 32], package: [79; 32], controller: [83; 32], tool: [89; 32], window: 97, document: [101; 32], request_schema: [103; 32], request_version: 1, request_digest: [107; 32] };
+            let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
+            let turn = bridge_turn(0, 0);
+            for replaying in [false, true] {
+                let publication = JobPublication { turn, outcome: JobStepOutcome::Fault { detail: vec![109, 113, 127] } };
+                let payload_identity = match &publication.outcome {
+                    JobStepOutcome::Fault { detail } => detail.as_ptr(),
+                    _ => unreachable!(),
+                };
+                let mut sequence = 0;
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                log.begin_capture(&mut context, ActorId(9), 1, 0, 1, 4, publication).expect("fault capture admission");
+                loop {
+                    let mut sequence = 0;
+                    let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                    if log.capture_step(&mut context) == JobReplayStep::PublicationReady {
+                        break;
+                    }
+                }
+                let publication = log.take_captured_publication().expect("exact fault owner");
+                assert!(matches!(&publication.outcome, JobStepOutcome::Fault { detail } if detail.as_ptr() == payload_identity && detail == [109, 113, 127]));
+                let mut sequence = 0;
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                log.acknowledge_publication(&mut context, JobReplayPublicationPolicy::Accepted).expect("fault ACK");
+                if !replaying {
+                    log.begin_replay(operation.generation.0).expect("fault replay generation");
+                }
+            }
+            assert!(log.expected_turn().is_none());
+            log.begin_close();
+            while !log.terminal_is_empty() {
+                let mut sequence = 0;
+                let mut context = job::StepContext::new(operation.operation, operation.generation, job::StepBudget::new(1, 20), job::root_cancel_token(), bridge_now_ms, &mut sequence);
+                let _ = log.close_step(&mut context);
+            }
         }
         //#endregion 🪪️JobBridge
 
@@ -4508,11 +5554,6 @@ mod tests {
                 turn: JobTurn { job: 44, operation: JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 1, seed: 99 }, step_sequence: 5 },
                 outcome: JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: vec![2, 1], applied_progress: 73 } },
             }
-        );
-        round_trip!(
-            pack_round_trip_job_replay_log,
-            JobReplayLog,
-            JobReplayLog { entries: vec![JobPublication { turn: JobTurn { job: 44, operation: JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 0, seed: 99 }, step_sequence: 0 }, outcome: JobStepOutcome::Yield }] }
         );
         round_trip!(
             pack_round_trip_payload,

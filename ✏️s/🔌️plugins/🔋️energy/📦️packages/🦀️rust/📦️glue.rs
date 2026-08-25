@@ -503,6 +503,9 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
+#[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️component.rs"]
+pub mod energy_simulation_session;
+
 //#region ✏️👁️Surfaces
 // 🎭️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: energy's FIRST authored editor+viewer
 // surfaces for `s.energy.model@1/*` — energy had zero document apps, so there was no app tree to
@@ -531,6 +534,8 @@ pub mod editor {
 
                 #[path = "."]
                 pub mod windows {
+                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation/🦀️component.rs"]
+                    pub mod simulation;
                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌳️structure/🦀️component.rs"]
                     pub mod structure;
                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️zones/🦀️component.rs"]
@@ -559,6 +564,8 @@ pub mod viewer {
 
                 #[path = "."]
                 pub mod windows {
+                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/⚡️simulation/🦀️component.rs"]
+                    pub mod simulation;
                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌳️structure/🦀️component.rs"]
                     pub mod structure;
                     #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️zones/🦀️component.rs"]

@@ -1,7 +1,7 @@
 //! ⚡️ Energy and resource meters with end-use categories.
 
+use crate::model::FixedTable;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 // #region 🔖️Fuel
 /// ⛽️ Fuel/resource type for meters.
@@ -68,24 +68,39 @@ impl Meter {
 /// 📦️ All meters in a simulation run.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct MeterTable {
-    pub meters: HashMap<String, Meter>,
+    pub(crate) meters: FixedTable<String, Meter>,
 }
 
 impl MeterTable {
-    pub fn get_or_create(&mut self, name: &str, fuel: FuelType, end_use: EndUse) -> &mut Meter {
-        self.meters.entry(name.to_string()).or_insert_with(|| Meter { name: name.to_string(), fuel, end_use, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 })
+    #[cfg(test)]
+    pub(crate) fn get_or_create(&mut self, name: &str, fuel: FuelType, end_use: EndUse) -> &mut Meter {
+        if self.meters.capacity() == 0 {
+            self.meters.admit(64).expect("test meter backing");
+        }
+        if let Some(index) = self.meters.test_index_of(|candidate| candidate == name) {
+            return self.meters.get_index_mut(index).expect("test fixed meter slot");
+        }
+        let name = name.to_string();
+        self.meters.insert_stable(name.clone(), Meter { name, fuel, end_use, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 }).expect("test fixed meter slot");
+        self.meters.last_mut().expect("test fixed meter slot").1
     }
 
-    pub fn facility_total_kwh(&self, fuel: FuelType) -> f64 {
+    #[cfg(test)]
+    pub(crate) fn facility_total_kwh(&self, fuel: FuelType) -> f64 {
         self.meters.values().filter(|m| m.fuel == fuel).map(|m| m.energy_kwh()).sum()
     }
 
-    pub fn end_use_breakdown(&self) -> HashMap<EndUse, f64> {
-        let mut map = HashMap::new();
+    #[cfg(test)]
+    pub(crate) fn end_use_breakdown(&self) -> Vec<(EndUse, f64)> {
+        let mut values = Vec::new();
         for m in self.meters.values() {
-            *map.entry(m.end_use).or_insert(0.0) += m.energy_kwh();
+            if let Some((_, value)) = values.iter_mut().find(|(end_use, _)| *end_use == m.end_use) {
+                *value += m.energy_kwh();
+            } else {
+                values.push((m.end_use, m.energy_kwh()));
+            }
         }
-        map
+        values
     }
 }
 // #endregion 🔖️Meter
@@ -130,7 +145,9 @@ mod tests {
         store.get_or_create("Zone2 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
         store.get_or_create("Fans", FuelType::Electricity, EndUse::Fans).accumulate(500.0, 3600.0, 0.0);
         let breakdown = store.end_use_breakdown();
-        assert!((breakdown[&EndUse::Heating] - 2.0 * 1000.0 * 3600.0 / 3_600_000.0).abs() < 1e-6);
-        assert!((breakdown[&EndUse::Fans] - 500.0 * 3600.0 / 3_600_000.0).abs() < 1e-6);
+        let heating = breakdown.iter().find(|(end_use, _)| *end_use == EndUse::Heating).map(|(_, value)| *value).unwrap();
+        let fans = breakdown.iter().find(|(end_use, _)| *end_use == EndUse::Fans).map(|(_, value)| *value).unwrap();
+        assert!((heating - 2.0 * 1000.0 * 3600.0 / 3_600_000.0).abs() < 1e-6);
+        assert!((fans - 500.0 * 3600.0 / 3_600_000.0).abs() < 1e-6);
     }
 }

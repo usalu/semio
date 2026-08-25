@@ -641,6 +641,7 @@ pub fn create_process3d_app() -> AppDefinition {
             // this packet's migration notes. The subset's own `📚️examples/🎬️demo` facet
             // (`crate::artifacts::process3d::examples::...`, real content, pre-existing) is the
             // modern, role-agnostic replacement surface for this.
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             .build_definition()
 }
 //#endregion 🔖️Manifest

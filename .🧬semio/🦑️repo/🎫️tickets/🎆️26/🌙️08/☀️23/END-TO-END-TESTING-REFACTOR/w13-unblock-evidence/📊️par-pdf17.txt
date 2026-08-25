@@ -1,0 +1,4 @@
+[test] level=exhaustive cases=1 executed=74 passed=74 failed=0 errored=0 parity=34/37
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf::mutate-pdf-1-7::inverse-remove-page::rust::subject (295 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf::mutate-pdf-1-7::inverse-append-page-content::rust::subject (149 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf::mutate-pdf-1-7::inverse-set-page-content::rust::subject (290 differences)

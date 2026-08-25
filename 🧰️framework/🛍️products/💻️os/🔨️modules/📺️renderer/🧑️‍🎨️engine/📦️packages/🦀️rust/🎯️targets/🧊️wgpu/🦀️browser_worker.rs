@@ -1,10 +1,10 @@
 //! 🧵️ Dedicated browser Worker owner for the complete frame transaction and OffscreenCanvas surface.
 
 use crate::kernel_seam::{HostWaker, KernelSeam};
-use crate::program_bridge::{ProgramBridgeEntry, filter_plugins, parse_plugin_entries};
+use crate::program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
 use crate::shell::ShellState;
 use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
-use infinite_world::world::{WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WorldAssetResponsePage};
+use infinite_world::world::{WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -276,6 +276,7 @@ impl BrowserRendererWorker {
     }
 
     pub fn tick(&mut self, _timestamp_ms: f64, _sequence: u64, generation: u64) -> Result<String, JsValue> {
+        let _ = crate::os_host::OsHostRetirement::close_abandoned_step();
         self.ensure_live()?;
         if generation != self.latest_generation {
             return Err(js_error("generation-mismatch", "frame tick generation does not match admitted input"));
@@ -313,6 +314,9 @@ impl BrowserRendererWorker {
 impl BrowserRendererWorker {
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&mut self) -> Result<bool, JsValue> {
+        if !crate::os_host::OsHostRetirement::close_abandoned_step() {
+            return Ok(false);
+        }
         if self.asset_blocked_page.take().is_some() {
             return Ok(false);
         }
@@ -368,20 +372,19 @@ impl BrowserRendererWorker {
             return Ok(false);
         }
         if self.close_phase == 4 {
-            let Some(host) = self.host.as_ref() else { return Err(js_error("host-close", "renderer host disappeared before input retirement")) };
-            let Ok(mut runtime) = host.runtime.try_lock() else { return Ok(false) };
-            let closed = match runtime.interaction.as_mut() {
-                Some(interaction) => interaction.input.close_step().map_err(|fault| js_error("text-close", &format!("{fault:?}")))? && interaction.input.terminal_is_empty(),
-                None => true,
-            };
-            if !closed {
-                return Ok(false);
-            }
             self.close_phase = 5;
             return Ok(false);
         }
         if self.close_phase == 5 {
-            self.retired_host = self.host.take().map(crate::os_host::OsHost::into_retirement);
+            if let Some(host) = self.host.take() {
+                match host.try_into_retirement() {
+                    Ok(retirement) => self.retired_host = Some(retirement),
+                    Err(host) => {
+                        self.host = Some(host);
+                        return Err(js_error("host-close", "host retirement abandonment registry refused admission"));
+                    }
+                }
+            }
             self.close_phase = 6;
             return Ok(false);
         }
@@ -677,6 +680,7 @@ impl BrowserRendererBootstrap {
             last_cursor: None,
             pending: None,
             retirement: None,
+            surface_resize: None,
         };
         let mut host = crate::os_host::OsHost::new(runtime, presenter);
         let runtime_wake = self.wake.clone();

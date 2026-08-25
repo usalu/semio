@@ -2,9 +2,9 @@
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). Energy had zero document apps, so there
 //! is no app tree to migrate — this is authored fresh straight against `EnergyModelSnapshot`'s own
 //! composed shape (`structure`: the whole `crate::model::Model` folded into one `s.stdio.semio.value`
-//! tree; `zones`: a derived per-zone table, see the artifact root's `🔖️Composition` region). Two real
-//! windows, one per composed child: `🌳️structure` (`TreeWindowKit`) renders a read/edit overview of
-//! the model; `📊️zones` (`TableWindowKit`) renders/edits the zone table directly. Both windows'
+//! tree; `zones`: a derived per-zone table, see the artifact root's `🔖️Composition` region). The
+//! structure and zone windows edit composed children; the mounted simulation window projects the
+//! retained worker session without materializing numerical state on the UI thread. Edit windows'
 //! commands funnel through the single mutation this artifact declares, `EnergyModelMutation::
 //! ReplaceModel` (decode the working `Model`, apply the edit, re-encode — the same "swap `structure`+
 //! `zones` together" shape every other `ReplaceModel` caller uses).
@@ -12,7 +12,8 @@
 use crate::artifacts::model::mutations::replace_model::mutation::ReplaceModel;
 use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::editor::model::modes::edit;
-use crate::editor::model::modes::edit::windows::{structure, zones};
+use crate::editor::model::modes::edit::windows::{simulation, structure, zones};
+use crate::energy_simulation_session::{self as simulation_session, EnergySimulationConfigProjection, EnergySimulationEventKind, EnergySimulationRequestIdentity};
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
 };
@@ -20,8 +21,8 @@ use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Command
-/// ✏️ The editor's typed command channel — exactly the two edits `🌳️structure`'s/`📊️zones`'s
-/// `editable_window_kind()` actions (`set-node`/`set-cell`, contract §2.6) can trigger. First pass:
+/// ✏️ The editor's typed command channel for structure/zone edits and event-sourced mounted
+/// Energy simulation start/cancel/retry/discard/adopt actions. The structure first pass
 /// `SetStructureField` only reaches the two top-level scalars the tree renders as addressable nodes
 /// (`name`/`version`) — the tree's other nodes are a read overview of the model's collection sizes,
 /// not yet individually addressable edit targets; documented honestly, not silently incomplete.
@@ -31,6 +32,27 @@ pub enum EnergyModelEditorCommand {
     SetStructureField { field: String, value: String },
     #[dsl(key = "set-zone-cell")]
     SetZoneCell { row: u32, column: String, value: String },
+    #[dsl(key = "start-energy-simulation")]
+    StartSimulation {
+        request: u64,
+        locale: String,
+        checkpoint_token: u64,
+        zone_timestep_minutes: u32,
+        system_timestep_minutes: u32,
+        warmup_days: u32,
+        run_period_start_month: u8,
+        run_period_start_day: u8,
+        run_period_end_month: u8,
+        run_period_end_day: u8,
+    },
+    #[dsl(key = "cancel-energy-simulation")]
+    CancelSimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
+    #[dsl(key = "retry-energy-simulation")]
+    RetrySimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
+    #[dsl(key = "discard-energy-simulation")]
+    DiscardSimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
+    #[dsl(key = "adopt-energy-simulation")]
+    AdoptSimulation { request: u64, operation: u64, generation: u64, config_digest: u64 },
 }
 
 //#region 🔖️OpCodec
@@ -114,6 +136,34 @@ impl ArtifactEditor for EnergyModelEditor {
         EnergyModelSnapshot::default()
     }
 
+    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(simulation_session::maintenance_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(simulation_session::close_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+        simulation_session::terminal_is_empty(instance_id)
+    }
+
+    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
+        simulation_session::prepare_snapshot_read(operation, snapshot)
+    }
+
+    async fn command_id(command: &EnergyModelEditorCommand) -> &'static str {
+        match command {
+            EnergyModelEditorCommand::SetStructureField { .. } => "set-structure-field",
+            EnergyModelEditorCommand::SetZoneCell { .. } => "set-zone-cell",
+            EnergyModelEditorCommand::StartSimulation { .. } => simulation::START_ACTION_ID,
+            EnergyModelEditorCommand::CancelSimulation { .. } => simulation::CANCEL_ACTION_ID,
+            EnergyModelEditorCommand::RetrySimulation { .. } => simulation::RETRY_ACTION_ID,
+            EnergyModelEditorCommand::DiscardSimulation { .. } => simulation::DISCARD_ACTION_ID,
+            EnergyModelEditorCommand::AdoptSimulation { .. } => simulation::ADOPT_ACTION_ID,
+        }
+    }
+
     /// ✏️ Decodes the working `crate::model::Model` behind the snapshot's composed children, applies
     /// the one addressed field/cell, then re-encodes the WHOLE model as `ReplaceModel::new_model_json`
     /// — `structure`/`zones` are always regenerated together (rule 6, `🧬️mutations/🦀️component.rs`'s
@@ -127,6 +177,45 @@ impl ArtifactEditor for EnergyModelEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
+        let event = match command {
+            EnergyModelEditorCommand::StartSimulation { request, locale, checkpoint_token, zone_timestep_minutes, system_timestep_minutes, warmup_days, run_period_start_month, run_period_start_day, run_period_end_month, run_period_end_day } => {
+                if locale != "en" && locale != "de" {
+                    return Err(Fault::from("energy simulation requires explicit locale en or de"));
+                }
+                Some(EnergySimulationEventKind::Start {
+                    request: *request,
+                    config: EnergySimulationConfigProjection {
+                        locale_de: locale == "de",
+                        checkpoint_token: *checkpoint_token,
+                        zone_timestep_minutes: *zone_timestep_minutes,
+                        system_timestep_minutes: *system_timestep_minutes,
+                        warmup_days: *warmup_days,
+                        run_period_start_month: *run_period_start_month,
+                        run_period_start_day: *run_period_start_day,
+                        run_period_end_month: *run_period_end_month,
+                        run_period_end_day: *run_period_end_day,
+                    },
+                })
+            }
+            EnergyModelEditorCommand::CancelSimulation { request, operation, generation, config_digest } => {
+                Some(EnergySimulationEventKind::Cancel(EnergySimulationRequestIdentity { request: *request, operation: *operation, generation: *generation, config_digest: *config_digest }))
+            }
+            EnergyModelEditorCommand::RetrySimulation { request, operation, generation, config_digest } => {
+                Some(EnergySimulationEventKind::Retry(EnergySimulationRequestIdentity { request: *request, operation: *operation, generation: *generation, config_digest: *config_digest }))
+            }
+            EnergyModelEditorCommand::DiscardSimulation { request, operation, generation, config_digest } => {
+                Some(EnergySimulationEventKind::Discard(EnergySimulationRequestIdentity { request: *request, operation: *operation, generation: *generation, config_digest: *config_digest }))
+            }
+            EnergyModelEditorCommand::AdoptSimulation { request, operation, generation, config_digest } => {
+                Some(EnergySimulationEventKind::Adopt(EnergySimulationRequestIdentity { request: *request, operation: *operation, generation: *generation, config_digest: *config_digest }))
+            }
+            _ => None,
+        };
+        if let Some(event) = event {
+            let render = doc.render_operation().ok_or_else(|| Fault::from("energy simulation command lacks document operation context"))?;
+            simulation_session::record_event(render, event).map_err(Fault::from)?;
+            return Ok(Emit { description: Some(Self::command_id(command).await.into()), ..Default::default() });
+        }
         let mut model = crate::artifacts::model::energy_model(doc.snapshot);
         let description = match command {
             EnergyModelEditorCommand::SetStructureField { field, value } => {
@@ -161,15 +250,21 @@ impl ArtifactEditor for EnergyModelEditor {
                 }
                 format!("Set zone {row} {column}")
             }
+            _ => unreachable!("simulation events returned before document mutation dispatch"),
         };
         let new_model_json = serde_json::to_string(&model).unwrap_or_default();
         Ok(Emit { artifact_mutations: vec![EnergyModelMutation::ReplaceModel(ReplaceModel { new_model_json })], description: Some(description), ..Default::default() })
+    }
+
+    async fn pending_effects(doc: &ArtifactView<'_, EnergyModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Vec<semio_framework::kernel::Effect> {
+        simulation_session::reconcile(doc)
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
         semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             zones::BODY_KEY => zones::render(doc.snapshot),
+            simulation::BODY_KEY => simulation_session::with_projection(doc.render_operation(), |projection| simulation::render(projection, projection.is_some_and(|projection| projection.locale_de))),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
         })
     }
@@ -185,6 +280,7 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(edit::ENERGY_MODEL_EDIT_MODE_ID)
         .window_kind_def(structure::definition())
         .window_kind_def(zones::definition())
+        .window_kind_def(simulation::definition())
         .default_layout(edit::layout())
         .build_definition()
 }

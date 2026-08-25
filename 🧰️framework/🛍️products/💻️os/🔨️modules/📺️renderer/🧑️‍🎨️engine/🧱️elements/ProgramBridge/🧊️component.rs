@@ -10,7 +10,7 @@
 use semio_framework::kernel::Effect;
 use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
-use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS, UiDocumentLease};
+use ui_contract::{SurfaceId, UiDocumentLease, UI_DOCUMENT_LEASE_SLOTS, UI_DOCUMENT_NODES, UI_DOCUMENT_PATCH_OPS};
 use ui_wgpu::wgpu::{WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
@@ -18,28 +18,27 @@ use js_sys::{Array, Function, Reflect};
 #[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
-use wasm_bindgen::JsCast;
-#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::JsCast;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_futures::JsFuture;
 
 #[cfg(not(target_arch = "wasm32"))]
-use crate::kernel_runtime::KernelClient;
+use crate::kernel_runtime::{KernelClient, MountedProductReplayAdmission};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod wasm_program_exchange {
     use super::*;
-    use dsl::{DslValue, from_dsl_value, to_dsl_value};
+    use dsl::{from_dsl_value, to_dsl_value, DslValue};
     use protocol::{AppCommand, AppFrame};
     use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UndoGroup};
-    use serde::Serialize;
     use serde::de::DeserializeOwned;
+    use serde::Serialize;
     use std::sync::atomic::{AtomicU64, Ordering};
     use store::pack_rt;
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
-
     fn next_seq() -> u64 {
         SEQ.fetch_add(1, Ordering::Relaxed)
     }
@@ -121,7 +120,7 @@ mod wasm_program_exchange {
     /// also emit — no `kernel::Event` variant carries it back to this exchange today, so
     /// `invocation_from_frames` reports an empty list, a real but honestly-flagged gap rather than a
     /// silent guess).
-    fn invocation_from_frames(outcome: &crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, String> {
+    fn invocation_from_frames(outcome: &mut crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, String> {
         let mut output = DslValue::Null;
         let mut diagnostics = Vec::new();
         let events: Vec<AppEvent> = Vec::new();
@@ -156,7 +155,7 @@ mod wasm_program_exchange {
             mutations: Vec::new(),
             inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
             diagnostics,
-            requested_effects: outcome.effects.clone(),
+            requested_effects: std::mem::take(&mut outcome.effects),
             events,
             ui_scope: semio_framework::kernel::UiDirtyScope::default(),
             history_patch,
@@ -185,15 +184,55 @@ mod wasm_program_exchange {
         let invocation: semio_framework::manifest::ActionInvocation = serde_json::from_str(action_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let commands = vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }];
-        let outcome = exchange(client, instance_id, commands).await?;
-        invocation_from_frames(&outcome, seq)
+        let admission = client.reserve_product_replay_admission(instance_id)?;
+        let mut outcome = exchange(client, instance_id, commands).await?;
+        let replay = match outcome.take_product_replay_authority(instance_id, admission) {
+            MountedProductReplayAdmission::None => None,
+            MountedProductReplayAdmission::Admitted(authority) => Some(authority),
+            MountedProductReplayAdmission::Refused(refusal) => {
+                let error = refusal.rejection_reason().to_string();
+                client.retire_product_replay_refusal(refusal).await;
+                let _ = invocation_from_frames(&mut outcome, seq);
+                return Err(error);
+            }
+        };
+        let result = invocation_from_frames(&mut outcome, seq)?;
+        if let Some(authority) = replay {
+            if let Err(authority) = client.mount_product_replay(authority).await {
+                let error = authority.rejection_reason();
+                client.retire_product_replay(authority).await;
+                return Err(error);
+            }
+        }
+        client.advance_product_replay(instance_id).await?;
+        Ok(result)
     }
 
     pub async fn handle_command(client: &KernelClient, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
         let invocation: semio_framework::manifest::CommandInvocation = serde_json::from_str(command_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
-        let outcome = exchange(client, instance_id, vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }]).await?;
-        invocation_from_frames(&outcome, seq)
+        let admission = client.reserve_product_replay_admission(instance_id)?;
+        let mut outcome = exchange(client, instance_id, vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }]).await?;
+        let replay = match outcome.take_product_replay_authority(instance_id, admission) {
+            MountedProductReplayAdmission::None => None,
+            MountedProductReplayAdmission::Admitted(authority) => Some(authority),
+            MountedProductReplayAdmission::Refused(refusal) => {
+                let error = refusal.rejection_reason().to_string();
+                client.retire_product_replay_refusal(refusal).await;
+                let _ = invocation_from_frames(&mut outcome, seq);
+                return Err(error);
+            }
+        };
+        let result = invocation_from_frames(&mut outcome, seq)?;
+        if let Some(authority) = replay {
+            if let Err(authority) = client.mount_product_replay(authority).await {
+                let error = authority.rejection_reason();
+                client.retire_product_replay(authority).await;
+                return Err(error);
+            }
+        }
+        client.advance_product_replay(instance_id).await?;
+        Ok(result)
     }
 
     pub async fn load_app_document_pack(client: &KernelClient, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
@@ -664,7 +703,7 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<ProgramBridgeEntry>,
 // lexically cancelled out) to actually exist; no number of `..`s fixes that. Declaring it at the crate
 // root instead (where `program_bridge/`'s directory is real) and re-exporting preserves the
 // `crate::program_bridge::{PluginHostConfig, ...}` path every call site already depends on.
-pub use crate::generated_plugin_hosts::{PluginHostConfig, is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id};
+pub use crate::generated_plugin_hosts::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
 //#endregion 🏠️🧳️PluginHostConfig
 
 pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) -> Vec<ProgramBridgeEntry> {

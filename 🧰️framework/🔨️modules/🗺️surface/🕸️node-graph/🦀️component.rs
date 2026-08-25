@@ -609,6 +609,74 @@ impl GraphHost {
         self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark { &ui_styling::BOARD_DARK } else { &ui_styling::BOARD_LIGHT });
     }
 }
+
+/// 🧹 Incremental exact-owner retirement for one retained graph host.
+pub struct GraphHostRetirement {
+    dag: Option<dag::DagHostRetirement>,
+    catalogue_json: String,
+    controls_json: String,
+    capabilities_json: String,
+    pending_gather: Option<SelectionGather>,
+    interaction_projection: Option<dag::DagInteractionProjection>,
+    terminal: bool,
+}
+
+impl GraphHostRetirement {
+    pub fn new(host: GraphHost) -> Self {
+        let GraphHost { dag, catalogue_json, controls_json, capabilities_json, last_payload_signature: _, pending_gather, interaction_revision: _, interaction_projection } = host;
+        Self { dag: Some(dag::DagHostRetirement::new(dag)), catalogue_json, controls_json, capabilities_json, pending_gather, interaction_projection, terminal: false }
+    }
+
+    pub fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+        if context.should_yield() {
+            return false;
+        }
+        if let Some(dag) = self.dag.as_mut() {
+            if dag.close_step() {
+                if !dag.terminal_is_empty() {
+                    return false;
+                }
+                self.dag = None;
+            }
+            context.consume_fuel(1);
+            return false;
+        }
+        if self.catalogue_json.pop().is_some() || self.controls_json.pop().is_some() || self.capabilities_json.pop().is_some() {
+            context.consume_fuel(1);
+            return false;
+        }
+        if let Some(gather) = self.pending_gather.as_mut() {
+            if gather.target_ids.last_mut().is_some_and(|id| id.pop().is_some()) {
+                context.consume_fuel(1);
+                return false;
+            }
+            if gather.target_ids.pop().is_some() {
+                context.consume_fuel(1);
+                return false;
+            }
+            self.pending_gather = None;
+            context.consume_fuel(1);
+            return false;
+        }
+        if self.interaction_projection.take().is_some() {
+            context.consume_fuel(1);
+            return false;
+        }
+        self.terminal = true;
+        context.consume_fuel(1);
+        true
+    }
+
+    pub fn terminal_nonopaque_is_empty(&self) -> bool {
+        self.terminal && self.dag.is_none() && self.catalogue_json.is_empty() && self.controls_json.is_empty() && self.capabilities_json.is_empty() && self.pending_gather.is_none() && self.interaction_projection.is_none()
+    }
+}
+
+impl Drop for GraphHostRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_nonopaque_is_empty(), "GraphHostRetirement must reach terminal-empty before release");
+    }
+}
 //#endregion 🔖️GraphHost
 
 //#region 🔖️Wasm

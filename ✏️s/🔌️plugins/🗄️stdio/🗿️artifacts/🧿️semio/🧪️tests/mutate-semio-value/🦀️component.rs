@@ -11,15 +11,18 @@
 //! compares them.
 //!
 //! The oracle-only build must never link the subject crate (fleet brief §5.3), so the subject module
-//! below carries its own small, forward-only, hand-written JSON decoder turning the SAME fixture
-//! bytes into real `SemioValueSnapshot`/`SemioValueMutation` values — a mechanical structural
-//! decode, recursive because `SemioValue` is, but never a reimplementation of mutation semantics and
-//! never a hand-transcribed Rust-literal COPY that could silently drift from the committed file. The
-//! generated test-host crate carries no `serde_json` dependency, so the decoder is built on the
-//! framework's own dependency-free `protocol::Json`. The subject half is gated behind the generated
-//! host's `sut` feature so the oracle-only run never compiles the local implementation; the Rust
-//! SUBJECT phase is blocked this wave by a concurrent os-kernel refactor, so it is written and gated
-//! but not run.
+//! below carries its own small, forward-only, hand-written JSON decoder turning the SAME fixture bytes
+//! into real `SemioValueSnapshot`/`SemioValueMutation` values — a mechanical structural decode, recursive
+//! because `SemioValue` is, but never a reimplementation of mutation semantics and never a
+//! hand-transcribed Rust-literal COPY that could silently drift from the committed file. The generated
+//! test-host crate carries no `serde_json` dependency, so the decoder is built on the framework's own
+//! dependency-free `protocol::Json`. The subject half is gated behind the generated host's `sut` feature
+//! so the oracle-only run never compiles the local implementation; the Rust SUBJECT phase RUNS. The
+//! os-kernel blocker earlier waves recorded here was cleared on 2026-08-24 — `cargo check -p
+//! semio-framework-os-kernel --lib` exits 0 and `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts
+//! subject exhaustive --owner 🗄️stdio --case mutate-semio-value` really executes every scenario below.
+//! The gate keeps the two BUILDS apart; it has never been a reason the subject half goes unmeasured, and
+//! for this recorded no-oracle case the subject phase is the only phase that runs at all.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
@@ -105,6 +108,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{after_uri, before_uri, mutation_uri};
     use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::{apply_semio_value_mutation, inverse_semio_value_mutation, SemioValueMutation, SemioValuePath, SemioValuePathSegment};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
 
@@ -263,8 +267,8 @@ mod subject {
         move |ctx: &Context| {
             let (mut base, mutation, expected) = fixture_for(kind, ctx)?;
             let outcome = apply_semio_value_mutation(&mut base, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("mutate-{kind}: mutation rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             if base != expected {
                 return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &base, &expected));
@@ -282,13 +286,13 @@ mod subject {
             let (base, mutation, _expected) = fixture_for(kind, ctx)?;
             let mut current = base.clone();
             let outcome = apply_semio_value_mutation(&mut current, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             for step in &inverse_semio_value_mutation(&mutation, &base) {
                 let step_outcome = apply_semio_value_mutation(&mut current, step);
-                if !step_outcome.messages().is_empty() {
-                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
+                if !semio_mutation_refusals(&step_outcome).is_empty() {
+                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", semio_mutation_refusals(&step_outcome)));
                 }
             }
             if current != base {
@@ -301,12 +305,27 @@ mod subject {
     /// 🔁️ The completeness law: the subset's own full-replace `set-snapshot` diff must carry an
     /// empty snapshot all the way to the committed document, with no node of the recursive typed
     /// model silently dropped on the way through.
+    /// 🔒️ **The byte half of the identity law is DELIBERATELY absent here, and this is the
+    /// statement of that.** Every other `mutate-semio-*` case's `identity-round-trip` reads its
+    /// subset's own committed real artifact — `📚️examples/<name>/🖼️assets/🗣️example.dsl.semio` and its
+    /// `🎒️example.pack.semio` twin — and asserts `law::carrier_is_exact` on both, because those files
+    /// are the codecs' own output and reproducing them byte for byte is the correct answer.
+    /// `s.stdio.semio.value` commits NO example artifact in either encoding (it is the only one of
+    /// the eighteen subsets that does not), so this scenario has no committed bytes to measure
+    /// against and makes no byte claim in either direction: not `carrier_is_exact`, which needs a
+    /// committed file to reproduce, and not `reparsed_not_copied`, which needs an input the codec
+    /// could have copied. What it asserts instead is the TYPED completeness law — that the
+    /// envelope's own full-replace verb carries every slot of the committed model across from an
+    /// empty snapshot — which is a real assertion but not a byte one. Closing the gap means
+    /// committing a `📚️examples/` artifact pair for this subset and exporting the four
+    /// `parse`/`print`/`decode`/`encode` bridges `✳️image` and `✳️brep` gained for exactly this
+    /// purpose; until then the absence is stated rather than implied.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let committed = decode_snapshot(&ctx.fixture_json(&before_uri("no-mutation"))?);
         let mut rebuilt = SemioValueSnapshot::default();
         let outcome = apply_semio_value_mutation(&mut rebuilt, &SemioValueMutation::SetSnapshot { snapshot: committed.clone() });
-        if !outcome.messages().is_empty() {
-            return Err(format!("identity-round-trip: full-replace rejected: {:?}", outcome.messages()));
+        if !semio_mutation_refusals(&outcome).is_empty() {
+            return Err(format!("identity-round-trip: full-replace rejected: {:?}", semio_mutation_refusals(&outcome)));
         }
         if rebuilt != committed {
             return Err(disagreement("identity-round-trip: rebuilding the committed value document from an empty snapshot did not land on it — a slot of the typed model was dropped on the way through the full-replace diff", &rebuilt, &committed));

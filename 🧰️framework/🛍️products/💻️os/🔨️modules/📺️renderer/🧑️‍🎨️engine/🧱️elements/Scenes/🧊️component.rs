@@ -7,19 +7,19 @@
 //! 🎬️ Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
 use crate::engine_canvas;
-use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
-use crate::shell::{try_push_find_item, ShellFindItem};
+use crate::interpreter::{FrameworkWidgetContext, RENDER_PLAN_LIMITS, validate_component_scene};
+use crate::shell::{ShellFindItem, try_push_find_item};
 use base64::Engine;
-use infinite_world::world::{render_world_3d, World3dBuildContext, World3dState};
+use infinite_world::world::{World3dBuildContext, World3dState, render_world_3d};
 use semio_framework::IconName;
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::io::Write as _;
 use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
-use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
 use ui_wgpu::wgpu::{ActionDescriptor, PreparedRasterProducer, PreparedRasterRejected, PreparedRasterReservation, SurfaceKind, UiComponentSceneNode, UiPresence};
+use ui_wgpu::wgpu::{HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode, draw_text, draw_text_wrapped, render_widget};
 
 //#region SceneRuntime
 pub const SCENE_SURFACE_CAPACITY: usize = 256;
@@ -3550,11 +3550,7 @@ fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> 
 /// first character of the whole string (e.g. "Jane Doe" → "J").
 fn graph_timeline_avatar_initials(name: &str) -> String {
     let letters: String = name.split_whitespace().filter_map(|word| word.chars().next()).take(2).flat_map(char::to_uppercase).collect();
-    if letters.is_empty() {
-        "?".to_string()
-    } else {
-        letters
-    }
+    if letters.is_empty() { "?".to_string() } else { letters }
 }
 
 fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
@@ -4287,11 +4283,7 @@ fn canvas_blend_channel(mode: &str, cb: f32, cs: f32) -> f32 {
         }
         "softLight" => {
             let d = if cb <= 0.25 { ((16.0 * cb - 12.0) * cb + 4.0) * cb } else { cb.sqrt() };
-            if cs <= 0.5 {
-                cb - (1.0 - 2.0 * cs) * cb * (1.0 - cb)
-            } else {
-                cb + (2.0 * cs - 1.0) * (d - cb)
-            }
+            if cs <= 0.5 { cb - (1.0 - 2.0 * cs) * cb * (1.0 - cb) } else { cb + (2.0 * cs - 1.0) * (d - cb) }
         }
         "difference" => (cb - cs).abs(),
         "exclusion" => cb + cs - 2.0 * cb * cs,
@@ -5069,11 +5061,7 @@ fn ink_resize_bounds(from: InkBoundsF, handle: &str, dx: f64, dy: f64, min_size:
 }
 
 fn ink_snap_coordinate(v: f64, spacing: f64) -> f64 {
-    if spacing <= 0.0 {
-        v
-    } else {
-        (v / spacing).round() * spacing
-    }
+    if spacing <= 0.0 { v } else { (v / spacing).round() * spacing }
 }
 
 fn ink_snap_point(x: f64, y: f64, spacing: f64) -> (f64, f64) {
@@ -5085,11 +5073,7 @@ fn ink_maybe_snap(doc: &InkDocumentJson, x: f64, y: f64) -> (f64, f64) {
 }
 
 fn ink_maybe_snap_fields(snap_enabled: Option<bool>, snap_grid_spacing: Option<f64>, x: f64, y: f64) -> (f64, f64) {
-    if snap_enabled.unwrap_or(false) {
-        ink_snap_point(x, y, snap_grid_spacing.unwrap_or(8.0))
-    } else {
-        (x, y)
-    }
+    if snap_enabled.unwrap_or(false) { ink_snap_point(x, y, snap_grid_spacing.unwrap_or(8.0)) } else { (x, y) }
 }
 
 fn ink_item_with_position(block: &Value, x: f64, y: f64) -> Value {
@@ -5268,11 +5252,7 @@ fn ink_world_to_screen(camera: InkCameraF, inner: Rect, wx: f64, wy: f64) -> (f3
 }
 
 fn positive_mod_f32(v: f32, m: f32) -> f32 {
-    if m <= 0.0 {
-        0.0
-    } else {
-        ((v % m) + m) % m
-    }
+    if m <= 0.0 { 0.0 } else { ((v % m) + m) % m }
 }
 //#endregion InkCanvasModel
 
@@ -6367,11 +6347,7 @@ impl InkInteractionJob {
             Some(_) => Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
             None => {
                 let hovered = scene.ink_canvas.as_ref().and_then(|ink| ink.hovered_id.as_deref());
-                if hovered == self.hit_id.as_deref() {
-                    Ok(())
-                } else {
-                    write_ink_hover_action(input, scene, self.hit_id.as_deref())
-                }
+                if hovered == self.hit_id.as_deref() { Ok(()) } else { write_ink_hover_action(input, scene, self.hit_id.as_deref()) }
             }
         }
     }

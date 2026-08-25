@@ -362,6 +362,38 @@ impl store::ArtifactPack for SemioSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Parses the ENVELOPE's own committed `.dsl.semio` text into a real [`SemioSnapshot`] — a thin
+/// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// crate's private `store` extern-crate item (the `mutate-semio-any` test adapter, whose
+/// `identity-round-trip` scenario reads the REAL committed `📚️examples/🌐️envelope` artifact) can still
+/// drive the same codec production does. Same shape and same rationale as `✳️flow`'s own bridge.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_envelope_dsl(text: &str) -> Result<SemioSnapshot, String> {
+    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_envelope_dsl`] — same rationale.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_envelope_dsl(snapshot: &SemioSnapshot) -> String {
+    <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
+
+/// 📥️ Decodes the envelope's own committed `.pack.semio` bytes into a real [`SemioSnapshot`] — the
+/// binary half of the same bridge, so a caller outside this crate can check the two codecs against
+/// each other on the two real committed artifacts instead of against itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_envelope_pack(bytes: &[u8]) -> Result<SemioSnapshot, String> {
+    <SemioSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_envelope_pack`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_envelope_pack(snapshot: &SemioSnapshot) -> Vec<u8> {
+    <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 //#region 🔖️Demo
 /// 🌱 The demo `s.stdio.semio` document — wraps `flow`'s own real demo snapshot (2 nodes, 1
 /// edge, incl. a negative coordinate) so this facet's fixtures/conformance tests exercise a real,

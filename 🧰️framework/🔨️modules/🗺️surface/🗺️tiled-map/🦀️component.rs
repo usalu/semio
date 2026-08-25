@@ -1794,6 +1794,99 @@ pub struct MapHost {
     interaction_revision: u64,
 }
 
+/// 🧹️ Retained tiled-map owner that releases one admitted feature, tile, event, or text scalar per grant.
+pub struct MapHostRetirement {
+    positions: std::collections::BTreeMap<String, PositionData>,
+    routes: std::collections::BTreeMap<String, RouteData>,
+    regions: std::collections::BTreeMap<String, RegionData>,
+    tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+    last_raster_visible: std::collections::BTreeSet<String>,
+    vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
+    last_vector_visible: std::collections::BTreeSet<String>,
+    forced_lod_id: Option<String>,
+    events: Vec<serde_json::Value>,
+    selected_positions: std::collections::BTreeSet<String>,
+    selected_routes: std::collections::BTreeSet<String>,
+    hovered_kind: Option<String>,
+    hovered_id: Option<String>,
+    released: bool,
+}
+
+impl MapHostRetirement {
+    pub fn new(host: MapHost) -> Self {
+        let MapHost {
+            camera: _,
+            viewport: _,
+            features: MapFeatureTables { positions, routes, regions },
+            tiles: MapTileLedger { tile_images, last_raster_visible, vector_tiles, last_vector_visible },
+            render_mode: _,
+            vector_style: _,
+            forced_lod_id,
+            layer_visibility: _,
+            layer_stroke_scale: _,
+            events,
+            interaction: _,
+            theme: _,
+            selected_positions,
+            selected_routes,
+            hovered_kind,
+            hovered_id,
+            interaction_revision: _,
+        } = host;
+        Self { positions, routes, regions, tile_images, last_raster_visible, vector_tiles, last_vector_visible, forced_lod_id, events, selected_positions, selected_routes, hovered_kind, hovered_id, released: false }
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.released {
+            return true;
+        }
+        if self.positions.pop_first().is_some()
+            || self.routes.pop_first().is_some()
+            || self.regions.pop_first().is_some()
+            || self.tile_images.pop_first().is_some()
+            || self.last_raster_visible.pop_first().is_some()
+            || self.vector_tiles.pop_first().is_some()
+            || self.last_vector_visible.pop_first().is_some()
+            || self.events.pop().is_some()
+            || self.selected_positions.pop_first().is_some()
+            || self.selected_routes.pop_first().is_some()
+        {
+            return false;
+        }
+        if self.forced_lod_id.as_mut().is_some_and(|value| value.pop().is_some()) || self.hovered_kind.as_mut().is_some_and(|value| value.pop().is_some()) || self.hovered_id.as_mut().is_some_and(|value| value.pop().is_some()) {
+            return false;
+        }
+        self.forced_lod_id = None;
+        self.hovered_kind = None;
+        self.hovered_id = None;
+        self.released = true;
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.released
+            && self.positions.is_empty()
+            && self.routes.is_empty()
+            && self.regions.is_empty()
+            && self.tile_images.is_empty()
+            && self.last_raster_visible.is_empty()
+            && self.vector_tiles.is_empty()
+            && self.last_vector_visible.is_empty()
+            && self.forced_lod_id.is_none()
+            && self.events.is_empty()
+            && self.selected_positions.is_empty()
+            && self.selected_routes.is_empty()
+            && self.hovered_kind.is_none()
+            && self.hovered_id.is_none()
+    }
+}
+
+impl Drop for MapHostRetirement {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_is_empty(), "MapHostRetirement must reach terminal-empty before release");
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 enum MapInteraction {
     #[default]

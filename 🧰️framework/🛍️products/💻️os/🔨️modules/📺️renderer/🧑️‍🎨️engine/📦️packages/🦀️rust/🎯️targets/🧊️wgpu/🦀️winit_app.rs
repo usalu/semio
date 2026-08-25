@@ -212,7 +212,12 @@ impl OsHost {
             }
             Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
             Ok(crate::AppPresentStep::Idle) => {}
-            Err(error) => self.present_fault = Some(error),
+            Err(error) => {
+                self.present_fault = Some(error);
+                if self.presenter.has_pending_presentation() {
+                    self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                }
+            }
         }
     }
 
@@ -752,7 +757,13 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
                 let requested = self.host.as_mut().is_some_and(|host| host.close_requested());
                 if requested {
                     if let Some(host) = self.host.take() {
-                        self.retirement = Some(host.into_retirement());
+                        match host.try_into_retirement() {
+                            Ok(retirement) => self.retirement = Some(retirement),
+                            Err(mut host) => {
+                                host.present_fault = Some("host retirement abandonment registry refused admission".to_string());
+                                self.host = Some(host);
+                            }
+                        }
                     }
                     event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 }
@@ -794,6 +805,10 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
     /// Native futures run exclusively on the process worker pool; this callback never polls them.
     // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        if !crate::os_host::OsHostRetirement::close_abandoned_step() {
+            event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
+            return;
+        }
         if let Some(retirement) = self.retirement.as_mut() {
             if retirement.close_step() && retirement.terminal_is_empty() {
                 self.retirement = None;

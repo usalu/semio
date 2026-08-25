@@ -6,7 +6,7 @@
 
 use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::viewer::model::modes::view;
-use crate::viewer::model::modes::view::windows::{structure, zones};
+use crate::viewer::model::modes::view::windows::{simulation, structure, zones};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 
 //#region 🔖️Command
@@ -69,6 +69,7 @@ impl ArtifactViewer for EnergyModelViewer {
         semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             zones::BODY_KEY => zones::render(doc.snapshot),
+            simulation::BODY_KEY => crate::energy_simulation_session::with_adopted_projection(doc.render_operation(), simulation::render),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
         })
     }
@@ -84,6 +85,7 @@ pub fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(view::ENERGY_MODEL_VIEW_MODE_ID)
         .window_kind_def(structure::definition())
         .window_kind_def(zones::definition())
+        .window_kind_def(simulation::definition())
         .default_layout(view::layout())
         .build_definition()
 }

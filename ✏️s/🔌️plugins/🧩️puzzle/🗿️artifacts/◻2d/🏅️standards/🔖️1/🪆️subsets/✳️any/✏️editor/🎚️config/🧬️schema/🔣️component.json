@@ -16,7 +16,12 @@
     "fillJobOperation",
     "fillJobGeneration",
     "fillJobSeed",
-    "fillJobAppliedCount",
+    "fillJobBaseRevision",
+    "fillJobCheckpointSequence",
+    "fillJobAcceptedCount",
+    "fillJobSearchCount",
+    "fillJobStage",
+    "fillJobLifecycle",
     "gridSnapEnabled",
     "gridFactor",
     "suggestionOffset",
@@ -77,15 +82,6 @@
       "minimum": 0,
       "x-semio-state": "config"
     },
-    "fillJobCheckpoint": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0,
-        "maximum": 255
-      },
-      "x-semio-state": "config"
-    },
     "fillJobOperation": {
       "type": "integer",
       "minimum": 0,
@@ -101,14 +97,37 @@
       "minimum": 0,
       "x-semio-state": "config"
     },
-    "fillJobAppliedCount": {
+    "fillJobBaseRevision": {
       "type": "integer",
       "minimum": 0,
       "x-semio-state": "config"
     },
-    "fillJobPreview": {
-      "title": "Value",
-      "type": "object",
+    "fillJobCheckpointSequence": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillJobAcceptedCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillJobSearchCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillJobStage": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "fillJobLifecycle": {
+      "type": "string",
+      "enum": ["idle", "capturing", "queued", "running", "checkpointReady", "applying", "awaitingAdoption", "closing", "completed", "cancelled", "faulted", "discarded"],
+      "x-semio-state": "config"
+    },
+    "fillJobFaultCode": {
+      "type": "string",
       "x-semio-state": "config"
     },
     "gridSnapEnabled": {

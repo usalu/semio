@@ -1,7 +1,7 @@
 //! 🎛️ Puzzle 2d play app — its `ArtifactApp::Config`: every piece of view state the app owns but the
 //! document must never carry (camera, selection, per-pane LOD/engagement input, brush scratch, grid
-//! settings, active utility, locale/terminology), plus the whole-snapshot `ConfigMutation` that
-//! patches it.
+//! settings, active utility, locale/terminology), plus typed `ConfigMutation` authorities that
+//! patch it.
 //!
 //! 🎥️ The camera lives here, not on the document: moving it is an `ActionKind::View` action and must
 //! never create a VCS edit (see `setCamera`'s arm in `🎮️commands/🎥️set-camera`).
@@ -45,6 +45,159 @@ fn default_terminology() -> String {
 }
 //#endregion 🔖️Defaults
 
+//#region 🧵️FillLifecycle
+/// 🧵️ Event-sourced public lifecycle for the transient mounted fill owner.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Puzzle2dFillLifecycle {
+    #[default]
+    Idle,
+    Capturing,
+    Queued,
+    Running,
+    CheckpointReady,
+    Applying,
+    AwaitingAdoption,
+    Closing,
+    Completed,
+    Cancelled,
+    Faulted,
+    Discarded,
+}
+
+pub const PUZZLE2D_FILL_TEXT_CAPACITY: usize = 64;
+
+/// 🏷️ Fixed backing for bounded fill progress and fault identifiers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Puzzle2dFillText {
+    bytes: [u8; PUZZLE2D_FILL_TEXT_CAPACITY],
+    len: u8,
+}
+
+impl Puzzle2dFillText {
+    pub fn try_from_str(value: &str) -> Option<Self> {
+        if value.len() > PUZZLE2D_FILL_TEXT_CAPACITY {
+            return None;
+        }
+        let mut text = Self::default();
+        text.bytes[..value.len()].copy_from_slice(value.as_bytes());
+        text.len = u8::try_from(value.len()).ok()?;
+        Some(text)
+    }
+
+    pub fn as_str(&self) -> &str {
+        unsafe { std::str::from_utf8_unchecked(&self.bytes[..usize::from(self.len)]) }
+    }
+
+    pub fn clear(&mut self) {
+        self.bytes = [0; PUZZLE2D_FILL_TEXT_CAPACITY];
+        self.len = 0;
+    }
+}
+
+impl Default for Puzzle2dFillText {
+    fn default() -> Self {
+        Self { bytes: [0; PUZZLE2D_FILL_TEXT_CAPACITY], len: 0 }
+    }
+}
+
+impl std::ops::Deref for Puzzle2dFillText {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
+}
+
+impl Serialize for Puzzle2dFillText {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for Puzzle2dFillText {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct FillTextVisitor;
+
+        impl serde::de::Visitor<'_> for FillTextVisitor {
+            type Value = Puzzle2dFillText;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a fill identifier of at most 64 UTF-8 bytes")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                Puzzle2dFillText::try_from_str(value).ok_or_else(|| E::custom("fill identifier capacity exceeded"))
+            }
+        }
+
+        deserializer.deserialize_str(FillTextVisitor)
+    }
+}
+
+/// 🧵️ Fixed scalar projection carried by fill-only event mutations.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dFillRuntime {
+    pub fill_count: u32,
+    pub fill_job_operation: u64,
+    pub fill_job_generation: u64,
+    pub fill_job_seed: u64,
+    pub fill_job_base_revision: u64,
+    pub fill_job_checkpoint_sequence: u64,
+    pub fill_job_accepted_count: u64,
+    pub fill_job_search_count: u64,
+    pub fill_job_stage: Puzzle2dFillText,
+    pub fill_job_lifecycle: Puzzle2dFillLifecycle,
+    pub fill_job_fault_code: Option<Puzzle2dFillText>,
+}
+
+impl Puzzle2dFillRuntime {
+    pub fn from_config(config: &Puzzle2dConfig) -> Self {
+        Self {
+            fill_count: config.fill_count,
+            fill_job_operation: config.fill_job_operation,
+            fill_job_generation: config.fill_job_generation,
+            fill_job_seed: config.fill_job_seed,
+            fill_job_base_revision: config.fill_job_base_revision,
+            fill_job_checkpoint_sequence: config.fill_job_checkpoint_sequence,
+            fill_job_accepted_count: config.fill_job_accepted_count,
+            fill_job_search_count: config.fill_job_search_count,
+            fill_job_stage: config.fill_job_stage,
+            fill_job_lifecycle: config.fill_job_lifecycle,
+            fill_job_fault_code: config.fill_job_fault_code,
+        }
+    }
+
+    pub fn apply_to(self, config: &mut Puzzle2dConfig) {
+        config.fill_count = self.fill_count;
+        config.fill_job_operation = self.fill_job_operation;
+        config.fill_job_generation = self.fill_job_generation;
+        config.fill_job_seed = self.fill_job_seed;
+        config.fill_job_base_revision = self.fill_job_base_revision;
+        config.fill_job_checkpoint_sequence = self.fill_job_checkpoint_sequence;
+        config.fill_job_accepted_count = self.fill_job_accepted_count;
+        config.fill_job_search_count = self.fill_job_search_count;
+        config.fill_job_stage = self.fill_job_stage;
+        config.fill_job_lifecycle = self.fill_job_lifecycle;
+        config.fill_job_fault_code = self.fill_job_fault_code;
+    }
+
+    pub fn differs_from(&self, config: &Puzzle2dConfig) -> bool {
+        self != &Self::from_config(config)
+    }
+}
+//#endregion 🧵️FillLifecycle
+
 //#region 🔖️Config
 /// 🧮️ B1: puzzle2d's real `ArtifactApp::Config`. `Puzzle2dConfig` is an alias for it (not a new
 /// type), mirroring `Puzzle3dConfig = Puzzle3dRuntime`, so every helper taking a
@@ -73,9 +226,6 @@ pub struct Puzzle2dConfig {
     pub brush_candidate_source_handle_id: String,
     #[serde(default)]
     pub fill_count: u32,
-    /// 🧵️ Persistent Puzzle 2D fill job checkpoint, local to this app session.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub fill_job_checkpoint: Option<Vec<u8>>,
     #[serde(default)]
     pub fill_job_operation: u64,
     #[serde(default)]
@@ -83,9 +233,19 @@ pub struct Puzzle2dConfig {
     #[serde(default)]
     pub fill_job_seed: u64,
     #[serde(default)]
-    pub fill_job_applied_count: usize,
+    pub fill_job_base_revision: u64,
+    #[serde(default)]
+    pub fill_job_checkpoint_sequence: u64,
+    #[serde(default)]
+    pub fill_job_accepted_count: u64,
+    #[serde(default)]
+    pub fill_job_search_count: u64,
+    #[serde(default)]
+    pub fill_job_stage: Puzzle2dFillText,
+    #[serde(default)]
+    pub fill_job_lifecycle: Puzzle2dFillLifecycle,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub fill_job_preview: Option<Value>,
+    pub fill_job_fault_code: Option<Puzzle2dFillText>,
     #[serde(default)]
     pub grid_snap_enabled: bool,
     #[serde(default = "default_grid_factor")]
@@ -126,12 +286,16 @@ impl Default for Puzzle2dConfig {
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
             fill_count: 0,
-            fill_job_checkpoint: None,
             fill_job_operation: 0,
             fill_job_generation: 0,
             fill_job_seed: 1,
-            fill_job_applied_count: 0,
-            fill_job_preview: None,
+            fill_job_base_revision: 0,
+            fill_job_checkpoint_sequence: 0,
+            fill_job_accepted_count: 0,
+            fill_job_search_count: 0,
+            fill_job_stage: Puzzle2dFillText::default(),
+            fill_job_lifecycle: Puzzle2dFillLifecycle::Idle,
+            fill_job_fault_code: None,
             grid_snap_enabled: false,
             grid_factor: default_grid_factor(),
             suggestion_offset: default_suggestion_offset(),
@@ -176,26 +340,32 @@ store::impl_whole_record_config!(Puzzle2dConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
-/// 🧮️ B1: `Puzzle2dConfig`'s operation enum. Mirrors `Puzzle3dConfigMutation`'s single-generic-
-/// `Snapshot`-variant pattern exactly: every real config edit is captured as "the whole config after
-/// this edit"; `backwards()` restores the whole-config snapshot from just before, regardless of what
-/// changed.
+/// 🧮️ Carries ordinary config snapshots or the fixed fill-only runtime projection.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Puzzle2dConfigMutation {
     Snapshot { config: Puzzle2dConfig },
+    Fill { runtime: Puzzle2dFillRuntime },
 }
 
 impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     type Diff = Puzzle2dConfig;
 
-    fn diff(&self, _base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
+    fn diff(&self, base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
         protocol::MutationOutcome::new(match self {
             Puzzle2dConfigMutation::Snapshot { config } => config.clone(),
+            Puzzle2dConfigMutation::Fill { runtime } => {
+                let mut config = base.clone();
+                runtime.apply_to(&mut config);
+                config
+            }
         })
     }
 
     fn inverse(&self, base: &Puzzle2dConfig) -> Vec<Self> {
-        vec![Puzzle2dConfigMutation::Snapshot { config: base.clone() }]
+        match self {
+            Puzzle2dConfigMutation::Snapshot { .. } => vec![Puzzle2dConfigMutation::Snapshot { config: base.clone() }],
+            Puzzle2dConfigMutation::Fill { .. } => vec![Puzzle2dConfigMutation::Fill { runtime: Puzzle2dFillRuntime::from_config(base) }],
+        }
     }
 }
 
@@ -217,3 +387,49 @@ impl protocol::OpText for Puzzle2dConfigMutation {
     }
 }
 //#endregion 🔖️ConfigMutation
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fixed_fill_runtime_contract(source: &str) -> bool {
+        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
+        let Some(start) = production.find("pub struct Puzzle2dFillText") else { return false };
+        let Some(end_relative) = production[start..].find("//#endregion 🧵️FillLifecycle") else { return false };
+        let runtime = &production[start..start + end_relative];
+        let Some(mutation_start) = production.find("pub enum Puzzle2dConfigMutation") else { return false };
+        let mutation = &production[mutation_start..];
+        runtime.contains("bytes: [u8; PUZZLE2D_FILL_TEXT_CAPACITY]")
+            && runtime.contains("pub struct Puzzle2dFillRuntime")
+            && runtime.contains("pub fill_job_stage: Puzzle2dFillText")
+            && runtime.contains("pub fill_job_fault_code: Option<Puzzle2dFillText>")
+            && !runtime.contains("Vec<")
+            && !runtime.contains("BTreeMap")
+            && !runtime.contains("String")
+            && mutation.contains("Fill { runtime: Puzzle2dFillRuntime }")
+            && mutation.contains("Puzzle2dConfigMutation::Fill { runtime: Puzzle2dFillRuntime::from_config(base) }")
+    }
+
+    /// 🧱️ Fill text owns exactly its fixed admitted backing at MAX and rejects MAX+1.
+    #[test]
+    fn fill_text_capacity_is_exact() {
+        let maximum = "x".repeat(PUZZLE2D_FILL_TEXT_CAPACITY);
+        let over = "x".repeat(PUZZLE2D_FILL_TEXT_CAPACITY + 1);
+        let Some(text) = Puzzle2dFillText::try_from_str(&maximum) else { panic!("MAX fill text must fit") };
+        assert_eq!(text.as_str(), maximum);
+        assert!(Puzzle2dFillText::try_from_str(&over).is_none());
+    }
+
+    /// 🧬️ Dynamic fill runtime backing or whole-snapshot fill inverse mutations fail the source law.
+    #[test]
+    fn dynamic_fill_runtime_mutations_are_rejected() {
+        let source = include_str!("🦀️component.rs");
+        assert!(fixed_fill_runtime_contract(source));
+        let dynamic = source.replacen("pub fill_job_stage: Puzzle2dFillText,", "pub brush_candidates: Vec<Value>, pub fill_job_stage: String,", 1);
+        assert!(!fixed_fill_runtime_contract(&dynamic));
+        let snapshot = source.replacen("Puzzle2dConfigMutation::Fill { runtime: Puzzle2dFillRuntime::from_config(base) }", "Puzzle2dConfigMutation::Snapshot { config: base.clone() }", 1);
+        assert!(!fixed_fill_runtime_contract(&snapshot));
+    }
+}
+//#endregion 🧪️Tests

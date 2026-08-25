@@ -22,6 +22,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import {
   type AccessibilitySpec,
   type ActionBinding,
+  type BuiltNode,
   type Component,
   type MenuRef,
   type PatchRejection,
@@ -377,6 +378,35 @@ export function applyUiPatch(state: UiDocumentState, patch: UiPatch, limits: UiD
   return { ok: true, state: { surface: state.surface, revision: patch.revision, root: draft.root, nodes: draft.nodes } };
 }
 //#endregion 🔖️Apply
+
+//#region 🔖️Reconcile
+/** @emoji 🧬️ Mints one flat retained snapshot from an authored {@link BuiltNode} tree. Node ids are DFS-local to this full-body reconciliation; patch-time transition hints intentionally start empty. */
+export function builtNodeToSnapshot(surface: SurfaceId, root: BuiltNode, revision: UiRevision = 0, layoutEpoch: bigint = 0n): UiSnapshot {
+  const nodes: UiNodeRecord[] = [];
+  let nextId = 1;
+  const mint = (node: BuiltNode): UiNodeId => {
+    const id = nextId++;
+    const children = node.children.map(mint);
+    nodes.push({
+      id,
+      key: node.key,
+      component: node.component,
+      layout: node.layout,
+      style: node.style,
+      activity: node.activity,
+      disabled: node.disabled,
+      transition: null,
+      accessibility: node.accessibility,
+      bindings: node.bindings,
+      menu: node.menu,
+      children,
+    });
+    return id;
+  };
+  const rootId = mint(root);
+  return { surface, revision, root: rootId, nodes, layoutEpoch };
+}
+//#endregion 🔖️Reconcile
 
 //#region 🔖️Store
 type Listener = () => void;

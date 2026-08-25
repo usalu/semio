@@ -11,15 +11,18 @@
 //! `ordered-json-v1` compares them.
 //!
 //! The oracle-only build must never link the subject crate (fleet brief §5.3), so the subject module
-//! below carries its own small, forward-only, hand-written JSON decoder turning the SAME fixture
-//! bytes into real `SemioImageSnapshot`/`SemioImageMutation` values — a mechanical structural
-//! decode, never a reimplementation of mutation semantics, and never a hand-transcribed Rust-literal
-//! COPY that could silently drift from the committed file. The generated test-host crate carries no
-//! `serde_json` dependency (only `semio-repo-test-host` and, behind `sut`, this subset's own crate),
-//! so the decoder is built on the framework's own dependency-free `protocol::Json`. The subject half
-//! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
-//! local implementation; the Rust SUBJECT phase is blocked this wave by a concurrent os-kernel
-//! refactor, so it is written and gated but not run.
+//! below carries its own small, forward-only, hand-written JSON decoder turning the SAME fixture bytes
+//! into real `SemioImageSnapshot`/`SemioImageMutation` values — a mechanical structural decode, never a
+//! reimplementation of mutation semantics, and never a hand-transcribed Rust-literal COPY that could
+//! silently drift from the committed file. The generated test-host crate carries no `serde_json`
+//! dependency (only `semio-repo-test-host` and, behind `sut`, this subset's own crate), so the decoder is
+//! built on the framework's own dependency-free `protocol::Json`. The subject half is gated behind the
+//! generated host's `sut` feature so the oracle-only run never compiles the local implementation; the
+//! Rust SUBJECT phase RUNS. The os-kernel blocker earlier waves recorded here was cleared on 2026-08-24 —
+//! `cargo check -p semio-framework-os-kernel --lib` exits 0 and `semio-s-plugin-stdio` builds — so `bun
+//! ./📜️script.ts subject exhaustive --owner 🗄️stdio --case mutate-semio-image` really executes every
+//! scenario below. The gate keeps the two BUILDS apart; it has never been a reason the subject half goes
+//! unmeasured, and for this recorded no-oracle case the subject phase is the only phase that runs at all.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
@@ -43,6 +46,11 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-dimensions", "set-c
 /// scenarios are declared individually in the feature and read the `move-frame` leaf's committed
 /// before-snapshot as the document the identity law is asserted over.
 const NULLARY_KIND: &str = "no-mutation";
+
+/// 🖼️ The subset's own committed real artifact, in both of its committed encodings — the byte
+/// carriers `identity-round-trip` measures alongside the typed full-replace law.
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖼️swatch/🖼️assets/🗣️example.dsl.semio";
+const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖼️swatch/🖼️assets/🎒️example.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️OracleFixtures
@@ -118,8 +126,12 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{after_uri, before_uri, mutation_uri, NULLARY_KIND};
     use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, inverse_semio_image_mutation, SemioImageMutation};
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{
+        decode_semio_image_pack, encode_semio_image_pack, parse_semio_image_dsl, print_semio_image_dsl, SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
+    };
 
     //#region 🔖️Decode
     /// 🧫️ A small, forward-only, hand-written structural decoder — turns the fixture bytes
@@ -180,20 +192,26 @@ mod subject {
         }
     }
     /// 🧫️ The committed mutation fixture is serde's internally-tagged shape (`{"mutation": "…", …}`)
-    /// with camelCase variant names — exactly `SemioImageMutation`'s own
-    /// `#[serde(tag = "mutation", rename_all = "camelCase")]` declaration.
+    /// with camelCase VARIANT names — exactly `SemioImageMutation`'s own
+    /// `#[serde(tag = "mutation", rename_all = "camelCase")]` declaration. That attribute renames
+    /// variants and NOT their fields (serde spells the field form `rename_all_fields`, which this
+    /// enum does not carry), so a struct-variant's own keys stay snake_case — `bit_depth`,
+    /// `delay_ms` — while a NESTED payload type carries whatever its own struct-level attribute
+    /// says, which for `SemioImageSnapshot`/`SemioImageFrame` is camelCase (`bitDepth`, `delayMs`).
+    /// The committed vectors are written in exactly that mixed shape; reading them as uniformly
+    /// camelCase panicked on the two kinds where the distinction bites.
     fn decode_mutation(json: &Json) -> SemioImageMutation {
         match json.str("mutation").as_str() {
             "noMutation" => SemioImageMutation::NoMutation,
             "setSnapshot" => SemioImageMutation::SetSnapshot { snapshot: decode_snapshot(json.get("snapshot").expect("mutate-semio-image: setSnapshot fixture must carry a snapshot")) },
             "setDimensions" => SemioImageMutation::SetDimensions { width: u32_field(json, "width"), height: u32_field(json, "height") },
             "setColorspace" => SemioImageMutation::SetColorspace { colorspace: decode_colorspace(&json.str("colorspace")) },
-            "setBitDepth" => SemioImageMutation::SetBitDepth { bit_depth: u32_field(json, "bitDepth") as u8 },
+            "setBitDepth" => SemioImageMutation::SetBitDepth { bit_depth: u32_field(json, "bit_depth") as u8 },
             "setIcc" => SemioImageMutation::SetIcc { icc: optional_bytes_field(json, "icc") },
             "insertFrame" => SemioImageMutation::InsertFrame { index: usize_field(json, "index"), frame: decode_frame(json.get("frame").expect("mutate-semio-image: insertFrame fixture must carry a frame")) },
             "removeFrame" => SemioImageMutation::RemoveFrame { index: usize_field(json, "index") },
             "moveFrame" => SemioImageMutation::MoveFrame { from: usize_field(json, "from"), to: usize_field(json, "to") },
-            "setFrameDelay" => SemioImageMutation::SetFrameDelay { index: usize_field(json, "index"), delay_ms: u32_field(json, "delayMs") },
+            "setFrameDelay" => SemioImageMutation::SetFrameDelay { index: usize_field(json, "index"), delay_ms: u32_field(json, "delay_ms") },
             "setFramePixels" => SemioImageMutation::SetFramePixels { index: usize_field(json, "index"), rgba8: bytes_field(json, "rgba8") },
             "setMetadataEntry" => SemioImageMutation::SetMetadataEntry { key: json.str("key"), value: json.str("value") },
             "removeMetadataEntry" => SemioImageMutation::RemoveMetadataEntry { key: json.str("key") },
@@ -271,8 +289,8 @@ mod subject {
         move |ctx: &Context| {
             let (mut base, mutation, expected) = fixture_for(kind, ctx)?;
             let outcome = apply_semio_image_mutation(&mut base, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("mutate-{kind}: mutation rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("mutate-{kind}: mutation rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             if base != expected {
                 return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &base, &expected));
@@ -289,13 +307,13 @@ mod subject {
             let (base, mutation, _expected) = fixture_for(kind, ctx)?;
             let mut current = base.clone();
             let outcome = apply_semio_image_mutation(&mut current, &mutation);
-            if !outcome.messages().is_empty() {
-                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", outcome.messages()));
+            if !semio_mutation_refusals(&outcome).is_empty() {
+                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", semio_mutation_refusals(&outcome)));
             }
             for step in &inverse_semio_image_mutation(&mutation, &base) {
                 let step_outcome = apply_semio_image_mutation(&mut current, step);
-                if !step_outcome.messages().is_empty() {
-                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", step_outcome.messages()));
+                if !semio_mutation_refusals(&step_outcome).is_empty() {
+                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", semio_mutation_refusals(&step_outcome)));
                 }
             }
             if current != base {
@@ -308,16 +326,36 @@ mod subject {
     /// 🔁️ The completeness law: the subset's own full-replace `set-snapshot` diff must carry an
     /// empty snapshot all the way to the committed document, with no slot of the typed model
     /// silently dropped on the way through.
+    /// 🔒️ **The byte half of the identity law, and where it lives for this subset.** The typed
+    /// full-replace check above proves no slot of the model is dropped, but it moves no bytes at
+    /// all — so this handler also reads the subset's own committed real artifact in BOTH of its
+    /// committed encodings and asserts `carrier_is_exact` on each. `.dsl.semio` is a fixed-layout
+    /// record grammar and `.pack.semio` its binary twin, and both committed files were produced by
+    /// these very codecs, so reproducing them byte for byte is the CORRECT answer and
+    /// `law::reparsed_not_copied` would be exactly backwards — the same reading `mutate-dag-1`
+    /// records for `.dag.dsl.semio`. The two carriers also cross-check each other: the pack must
+    /// decode to the same image the text does, which no single codec can arrange on its own.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let committed = decode_snapshot(&ctx.fixture_json(&before_uri(NULLARY_KIND))?);
         let mut rebuilt = SemioImageSnapshot::default();
         let outcome = apply_semio_image_mutation(&mut rebuilt, &SemioImageMutation::SetSnapshot { snapshot: committed.clone() });
-        if !outcome.messages().is_empty() {
-            return Err(format!("identity-round-trip: full-replace rejected: {:?}", outcome.messages()));
+        if !semio_mutation_refusals(&outcome).is_empty() {
+            return Err(format!("identity-round-trip: full-replace rejected: {:?}", semio_mutation_refusals(&outcome)));
         }
         if rebuilt != committed {
             return Err(disagreement("identity-round-trip: rebuilding the committed image from an empty snapshot did not land on it — a slot of the typed model was dropped on the way through the full-replace diff", &rebuilt, &committed));
         }
+        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed swatch artifact is not UTF-8: {error}"))?;
+        let parsed = parse_semio_image_dsl(&text)?;
+        let printed = print_semio_image_dsl(&parsed);
+        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
+        let pack_bytes = ctx.fixture_bytes(super::PACK_ASSET)?;
+        let unpacked = decode_semio_image_pack(&pack_bytes)?;
+        if unpacked != parsed {
+            return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different image than the committed text artifact", &unpacked, &parsed));
+        }
+        let repacked_bytes = encode_semio_image_pack(&parsed);
+        carrier_is_exact(&repacked_bytes, &pack_bytes)?;
         Ok(outcome_of(&rebuilt))
     }
     //#endregion 🔖️Handlers

@@ -6,13 +6,19 @@ export interface EnergyModelDiff {
   /** @state artifact */
   schema?: string;
   /** @state artifact */
-  modelJson?: string;
+  model?: unknown;
+  structure?: unknown;
+  zones?: unknown;
+  referencedModel?: unknown | null;
   /** @state artifact */
   resultsJson?: string;
 }
 
 export interface EnergyModelArtifact {
   schema: string;
-  modelJson: string;
+  model: unknown;
+  structure: unknown;
+  zones: unknown;
+  referencedModel?: unknown;
   resultsJson: string;
 }

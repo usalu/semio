@@ -31,16 +31,16 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     #[test]
-    fn playground_mutation_round_trips_store() {
-        let mut store = store::ArtifactStore::<PlaygroundSnapshot, PlaygroundMutation>::new(store::create_document_envelope(
-            "playground.document",
-            "playground",
-            crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot(),
-            None,
-        ))
-        .expect("valid artifact store fixture");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() })], description: None }).expect("apply");
-        assert_eq!(store.snapshot().expect("snapshot").schema, "playground.custom");
+    fn playground_mutation_round_trips_committed_json_bridge() {
+        let before = include_str!("✒️change-schema/🧪️tests/retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️component.json");
+        let mutation = include_str!("✒️change-schema/🧪️tests/retags-the-playground-document-schema/🦠️mutation/🔣️component.json");
+        let after = include_str!("✒️change-schema/🧪️tests/retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️component.json");
+        let applied: serde_json::Value = serde_json::from_str(&apply_playground_mutation_json(before, mutation).expect("apply committed mutation")).expect("decode bridge answer");
+        let expected: serde_json::Value = serde_json::from_str(after).expect("decode committed after snapshot");
+        assert_eq!(applied["snapshot"], expected);
+        let undone: serde_json::Value = serde_json::from_str(&undo_playground_mutation_json(before, mutation).expect("undo committed mutation")).expect("decode undo bridge answer");
+        let expected: serde_json::Value = serde_json::from_str(before).expect("decode committed before snapshot");
+        assert_eq!(undone["snapshot"], expected);
     }
 
     #[test]
@@ -54,7 +54,7 @@ mod tests {
         assert_eq!(undo, vec![PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: base.schema.clone() })]);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(state, base);
     }

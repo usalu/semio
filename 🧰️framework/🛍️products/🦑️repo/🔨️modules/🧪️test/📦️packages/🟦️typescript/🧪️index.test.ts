@@ -225,9 +225,19 @@ describe("🔍️ discovery and contract", () => {
     expect(cases.some((entry) => entry.case === "host-protocol-parity")).toBe(true);
   });
 
-  test("discovery is idempotent", () => {
-    expect(JSON.stringify(discoverTestCases(repoRoot))).toBe(JSON.stringify(discoverTestCases(repoRoot)));
-  });
+  // ⏱️ Two FULL repository discoveries back to back, and discovery now walks 164 cases and 157
+  // vocabulary directories where it walked ~99 and ~88 a wave ago. At that size the pair lands around
+  // 5.1 s and was observed timing out at 5130.40 ms against bun's 5 s default under concurrent load,
+  // so this test gets the same explicit repo-walking budget as its siblings below rather than a 2.6%
+  // margin left to chance. Raising the budget does not hide a regression: cost here is proportional
+  // to the committed case count, and the contract phase is what fails if that count is wrong.
+  test(
+    "discovery is idempotent",
+    () => {
+      expect(JSON.stringify(discoverTestCases(repoRoot))).toBe(JSON.stringify(discoverTestCases(repoRoot)));
+    },
+    30_000,
+  );
 
   // ⏱️ Repo-wide: also runs the legacy-test survey and the oracle-purity scan over every
   // non-excluded path, so it needs the quick-level budget rather than bun's 5 s default.

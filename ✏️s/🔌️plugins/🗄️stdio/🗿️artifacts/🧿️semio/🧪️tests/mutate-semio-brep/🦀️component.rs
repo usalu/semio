@@ -18,13 +18,17 @@
 //! (camelCase snapshot fields, `"kind"`-tagged `BrepCurve`/`BrepSurface`, externally tagged
 //! mutation variants with snake_case payload fields).
 //!
-//! `oracle` returns the committed snapshot literally — no recomputation, no reimplementation of
-//! mutation semantics. `subject` drives this repository's own `apply_semio_brep_mutation`, the
-//! entry point this ticket added, over the full 13-kind `SemioBrepMutation` vocabulary, then
-//! projects the result back to structural JSON for `ordered-json-v1` to compare. The subject half
-//! is gated behind the generated host's `sut` feature so the oracle-only run never compiles the
-//! local implementation (fleet brief §5.3); the Rust SUBJECT phase is blocked this wave by a
-//! concurrent os-kernel refactor (see the fleet brief), so it is written and gated but not run.
+//! `oracle` returns the committed snapshot literally — no recomputation, no reimplementation of mutation
+//! semantics. `subject` drives this repository's own `apply_semio_brep_mutation`, the entry point this
+//! ticket added, over the full 13-kind `SemioBrepMutation` vocabulary, then projects the result back to
+//! structural JSON for `ordered-json-v1` to compare. The subject half is gated behind the generated
+//! host's `sut` feature so the oracle-only run never compiles the local implementation (fleet brief
+//! §5.3); the Rust SUBJECT phase RUNS. The os-kernel blocker earlier waves recorded here was cleared on
+//! 2026-08-24 — `cargo check -p semio-framework-os-kernel --lib` exits 0 and `semio-s-plugin-stdio`
+//! builds — so `bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case mutate-semio-brep` really
+//! executes every scenario below. The gate keeps the two BUILDS apart; it has never been a reason the
+//! subject half goes unmeasured, and for this recorded no-oracle case the subject phase is the only phase
+//! that runs at all.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
 //! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
@@ -34,7 +38,7 @@
 //! printed. A handler that merely ran the mutation and returned would report a pass having checked
 //! nothing.
 
-use semio_repo_test_host::{Adapter, Context, Outcome};
+use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioBrepMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/
@@ -76,6 +80,20 @@ fn snapshot_oracle_for(role: &'static str) -> impl Fn(&Context) -> Result<Outcom
         Ok(Outcome::with_raw(raw, projection))
     }
 }
+
+/// 🧊️ This subset's own committed real artifact, in both of its committed encodings — the byte
+/// carriers `identity-round-trip` measures.
+const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio";
+const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio";
+
+/// 🔮️ The round-trip reference answer, stated the only way a role that must not link the subject
+/// crate can state it: the committed text artifact, verbatim. A recorded no-oracle case dispatches
+/// no oracle role, so this is the written statement of the expected answer rather than a second
+/// running party — the assertion itself lives in `subject::round_trip`.
+fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let raw = ctx.fixture_bytes(DSL_ASSET)?;
+    Ok(Outcome::with_raw(raw.clone(), Json::String(String::from_utf8_lossy(&raw).into_owned())))
+}
 //#endregion 🔖️Oracle
 
 //#region 🔖️Subject
@@ -83,13 +101,16 @@ fn snapshot_oracle_for(role: &'static str) -> impl Fn(&Context) -> Result<Outcom
 mod subject {
     use super::fixture_uri;
     use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{
         apply_semio_brep_mutation, inverse_semio_brep_mutation, create_edge, create_face, create_shell, create_solid, create_vertex, delete_edge, delete_face, delete_shell, delete_solid, delete_vertex, move_vertex, replace_curve, replace_surface, SemioBrepMutation,
     };
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-        BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot,
+        decode_semio_brep_pack, encode_semio_brep_pack, parse_semio_brep_dsl, print_semio_brep_dsl, BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid,
+        BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot,
     };
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
 
     //#region 🔖️Decode
     /// 🔎️ Strict accessors over the framework's own dependency-free `Json`. Every one of them
@@ -421,8 +442,9 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let (mut current, mutation, expected) = fixture_for(ctx)?;
         let outcome = apply_semio_brep_mutation(&mut current, &mutation);
-        if !outcome.messages().is_empty() {
-            return Err(format!("{}: mutation rejected: {:?}", ctx.scenario.id, outcome.messages()));
+        let refusals = semio_mutation_refusals(&outcome);
+        if !refusals.is_empty() {
+            return Err(format!("{}: mutation rejected: {refusals:?}", ctx.scenario.id));
         }
         if current != expected {
             return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
@@ -442,13 +464,15 @@ mod subject {
         let (base, mutation, _expected) = fixture_for(ctx)?;
         let mut current = base.clone();
         let outcome = apply_semio_brep_mutation(&mut current, &mutation);
-        if !outcome.messages().is_empty() {
-            return Err(format!("{}: forward mutation rejected: {:?}", ctx.scenario.id, outcome.messages()));
+        let refusals = semio_mutation_refusals(&outcome);
+        if !refusals.is_empty() {
+            return Err(format!("{}: forward mutation rejected: {refusals:?}", ctx.scenario.id));
         }
         for step in &inverse_semio_brep_mutation(&mutation, &base) {
             let step_outcome = apply_semio_brep_mutation(&mut current, step);
-            if !step_outcome.messages().is_empty() {
-                return Err(format!("{}: inverse step rejected: {:?}", ctx.scenario.id, step_outcome.messages()));
+            let step_refusals = semio_mutation_refusals(&step_outcome);
+            if !step_refusals.is_empty() {
+                return Err(format!("{}: inverse step rejected: {step_refusals:?}", ctx.scenario.id));
             }
         }
         if current != base {
@@ -457,6 +481,47 @@ mod subject {
         let projection = snapshot_json(&current);
         let bytes = projection.to_string().into_bytes();
         Ok(Outcome::with_raw(bytes, projection))
+    }
+
+    /// 🔁️ The real committed solid through both of its committed encodings, with the BYTE half of
+    /// the identity law asserted as `carrier_is_exact`. `.dsl.semio` is a fixed-layout record
+    /// grammar and `.pack.semio` its binary twin, and both committed files were produced by these
+    /// very codecs, so reproducing them byte for byte is the CORRECT answer here and
+    /// `law::reparsed_not_copied` would be exactly backwards — the same reading `mutate-dag-1`
+    /// records for `.dag.dsl.semio`. Until this scenario existed the case asserted the mutation
+    /// algebra over committed JSON vectors and never moved a single artifact byte in either
+    /// direction; the two carriers also cross-check each other, since the pack must decode to the
+    /// same solid the text does and no single codec can arrange that on its own.
+    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed solid artifact is not UTF-8: {error}"))?;
+        let parsed = parse_semio_brep_dsl(&text)?;
+        if parsed.solids.len() != 1 || parsed.shells.is_empty() || parsed.faces.is_empty() {
+            return Err(format!(
+                "identity-round-trip: the committed solid is the one-solid fixture this case describes, but parsed {} solid(s), {} shell(s) and {} face(s)",
+                parsed.solids.len(),
+                parsed.shells.len(),
+                parsed.faces.len()
+            ));
+        }
+        let printed = print_semio_brep_dsl(&parsed);
+        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
+        let reparsed = parse_semio_brep_dsl(&printed)?;
+        if reparsed != parsed {
+            return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
+        }
+        let pack_bytes = ctx.fixture_bytes(super::PACK_ASSET)?;
+        let unpacked = decode_semio_brep_pack(&pack_bytes)?;
+        if unpacked != parsed {
+            return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different solid than the committed text artifact", &unpacked, &parsed));
+        }
+        let repacked_bytes = encode_semio_brep_pack(&parsed);
+        carrier_is_exact(&repacked_bytes, &pack_bytes)?;
+        let repacked = decode_semio_brep_pack(&repacked_bytes)?;
+        if repacked != parsed {
+            return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &parsed));
+        }
+        let projection = snapshot_json(&parsed);
+        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
     }
     //#endregion 🔖️Handlers
 }
@@ -472,6 +537,11 @@ pub fn adapter() -> Adapter {
         {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
         }
+    }
+    built = built.oracle("identity-round-trip", round_trip_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("identity-round-trip", subject::round_trip);
     }
     built
 }

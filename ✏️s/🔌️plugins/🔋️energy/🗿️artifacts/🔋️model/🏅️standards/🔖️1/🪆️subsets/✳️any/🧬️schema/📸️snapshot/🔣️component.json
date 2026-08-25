@@ -5,16 +5,21 @@
   "additionalProperties": false,
   "required": [
     "schema",
-    "modelJson"
+    "model",
+    "structure",
+    "zones"
   ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "modelJson": {
-      "type": "string",
+    "model": {
+      "type": "object",
       "x-semio-state": "artifact"
-    }
+    },
+    "structure": { "type": "object", "x-semio-state": "artifact", "x-semio-child-kind": "s.stdio.semio.value" },
+    "zones": { "type": "object", "x-semio-state": "artifact", "x-semio-child-kind": "s.stdio.semio.table" },
+    "referencedModel": { "x-semio-state": "artifact", "x-semio-link-roles": ["model"] }
   }
 }

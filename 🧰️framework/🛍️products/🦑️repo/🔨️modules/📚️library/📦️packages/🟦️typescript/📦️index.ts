@@ -1288,6 +1288,25 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
 }
 
 /** 📦️Runs a build-budgeted command while capturing metadata and replaying diagnostics only on failure. */
+export function capturedTestFailureDiagnostics(stdout: string, stderr: string): string {
+  const rendered: string[] = [];
+  for (const line of stdout.split(/\r?\n/)) {
+    try {
+      const message = JSON.parse(line) as { reason?: string; message?: { level?: string; message?: string; rendered?: string; spans?: { file_name?: string; line_start?: number; column_start?: number; is_primary?: boolean }[] } };
+      if (message.reason === "compiler-message" && message.message?.level === "error") {
+        const span = message.message.spans?.find((candidate) => candidate.is_primary) ?? message.message.spans?.[0];
+        const location = span?.file_name ? `\n  --> ${span.file_name}:${span.line_start ?? 0}:${span.column_start ?? 0}` : "";
+        rendered.push(message.message.rendered ?? `${message.message.message ?? "Cargo compiler error"}${location}`);
+      }
+    } catch {}
+  }
+  const stderrErrors = stderr
+    .split(/\r?\n/)
+    .filter((line) => /^(?:error(?:\[[A-Z]\d+\])?:|Caused by:)/.test(line));
+  const diagnostics = [...rendered, ...stderrErrors];
+  return diagnostics.length > 0 ? diagnostics.join("\n") : `${stdout.slice(-16 * 1024)}${stderr.slice(-16 * 1024)}`;
+}
+
 async function runTestCapturedBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs: number; onTimeoutHint?: string }): Promise<string> {
   const child = spawn(cmd, args, { stdio: ["inherit", "pipe", "pipe"], cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
   let stdout = "";
@@ -1310,12 +1329,14 @@ async function runTestCapturedBudgeted(cmd: string, args: string[], opts: { cwd?
     child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
   }).finally(() => clearTimeout(timer));
   if (timedOut) {
-    if (stderr) process.stderr.write(stderr);
+    const diagnostics = capturedTestFailureDiagnostics(stdout, stderr);
+    if (diagnostics) process.stderr.write(diagnostics);
     console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${opts.budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
     process.exit(1);
   }
   if (signal || code !== 0) {
-    if (stderr) process.stderr.write(stderr);
+    const diagnostics = capturedTestFailureDiagnostics(stdout, stderr);
+    if (diagnostics) process.stderr.write(diagnostics);
     process.exit(code ?? 1);
   }
   return stdout;

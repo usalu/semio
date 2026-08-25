@@ -1,4 +1,18 @@
 /** 🧬️ Puzzle2dConfig */
+export type Puzzle2dFillLifecycle =
+  | "idle"
+  | "capturing"
+  | "queued"
+  | "running"
+  | "checkpointReady"
+  | "applying"
+  | "awaitingAdoption"
+  | "closing"
+  | "completed"
+  | "cancelled"
+  | "faulted"
+  | "discarded";
+
 export interface Puzzle2dConfig {
   /** @state config */
   cameraX: number;
@@ -19,17 +33,25 @@ export interface Puzzle2dConfig {
   /** @state config */
   fillCount: number;
   /** @state config */
-  fillJobCheckpoint?: number[];
-  /** @state config */
   fillJobOperation: number;
   /** @state config */
   fillJobGeneration: number;
   /** @state config */
   fillJobSeed: number;
   /** @state config */
-  fillJobAppliedCount: number;
+  fillJobBaseRevision: number;
   /** @state config */
-  fillJobPreview?: unknown;
+  fillJobCheckpointSequence: number;
+  /** @state config */
+  fillJobAcceptedCount: number;
+  /** @state config */
+  fillJobSearchCount: number;
+  /** @state config */
+  fillJobStage: string;
+  /** @state config */
+  fillJobLifecycle: Puzzle2dFillLifecycle;
+  /** @state config */
+  fillJobFaultCode?: string;
   /** @state config */
   gridSnapEnabled: boolean;
   /** @state config */

@@ -91,10 +91,10 @@ mod winit_app;
 pub mod parallel_runtime;
 
 use infinite_world::world::{
-    begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
-    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested,
-    world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
-    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
+    WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind,
+    WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset,
+    publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction,
+    step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation,
 };
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
@@ -106,16 +106,16 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
+use ui_wgpu::wgpu::ActionDescriptor;
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
-use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
 use ui_wgpu::wgpu::{
-    apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
-    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
-    SemioCursor, Theme,
+    CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor, Theme, apply_window_cursor, fetch_font_bytes,
+    mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3,
+    resolve_semio_cursor,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -476,11 +476,7 @@ impl GlbStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) {
-            Ok(())
-        } else {
-            Err("GLB structure ended before JSON and BIN reached terminal")
-        }
+        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) { Ok(()) } else { Err("GLB structure ended before JSON and BIN reached terminal") }
     }
 }
 
@@ -573,11 +569,7 @@ impl PngStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) {
-            Ok(())
-        } else {
-            Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal")
-        }
+        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) { Ok(()) } else { Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal") }
     }
 }
 
@@ -684,11 +676,7 @@ impl JpegStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) {
-            Ok(())
-        } else {
-            Err("JPEG structure ended before a bounded frame and EOI reached terminal")
-        }
+        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) { Ok(()) } else { Err("JPEG structure ended before a bounded frame and EOI reached terminal") }
     }
 }
 
@@ -739,11 +727,7 @@ impl TextAssetStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) {
-            Ok(())
-        } else {
-            Err("text asset structure did not reach its bounded terminal witness")
-        }
+        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) { Ok(()) } else { Err("text asset structure did not reach its bounded terminal witness") }
     }
 }
 
@@ -826,11 +810,7 @@ impl ProtobufStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) {
-            Ok(())
-        } else {
-            Err("protobuf structure did not reach a field boundary")
-        }
+        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) { Ok(()) } else { Err("protobuf structure did not reach a field boundary") }
     }
 }
 
@@ -2036,11 +2016,7 @@ fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
 
 fn glb_normalize(value: [f32; 3]) -> [f32; 3] {
     let length = value.iter().map(|value| value * value).sum::<f32>().sqrt();
-    if length <= f32::EPSILON {
-        value
-    } else {
-        value.map(|value| value / length)
-    }
+    if length <= f32::EPSILON { value } else { value.map(|value| value / length) }
 }
 
 #[derive(Clone, Copy)]
@@ -2448,43 +2424,23 @@ fn glb_read_component(owner: &RendererAssetFetchOwner, pages: &RendererAssetPage
     let value = match component {
         5120 => {
             let value = i8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized {
-                (f32::from(value) / 127.0).max(-1.0)
-            } else {
-                f32::from(value)
-            }
+            if normalized { (f32::from(value) / 127.0).max(-1.0) } else { f32::from(value) }
         }
         5121 => {
             let value = u8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized {
-                f32::from(value) / 255.0
-            } else {
-                f32::from(value)
-            }
+            if normalized { f32::from(value) / 255.0 } else { f32::from(value) }
         }
         5122 => {
             let value = i16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized {
-                (f32::from(value) / 32767.0).max(-1.0)
-            } else {
-                f32::from(value)
-            }
+            if normalized { (f32::from(value) / 32767.0).max(-1.0) } else { f32::from(value) }
         }
         5123 => {
             let value = u16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized {
-                f32::from(value) / 65535.0
-            } else {
-                f32::from(value)
-            }
+            if normalized { f32::from(value) / 65535.0 } else { f32::from(value) }
         }
         5125 => {
             let value = u32::from_le_bytes(pages.read::<4>(owner, absolute)?);
-            if normalized {
-                value as f32 / u32::MAX as f32
-            } else {
-                value as f32
-            }
+            if normalized { value as f32 / u32::MAX as f32 } else { value as f32 }
         }
         5126 if !normalized => f32::from_le_bytes(pages.read::<4>(owner, absolute)?),
         5126 => return Err("GLB FLOAT accessor could not be normalized"),
@@ -3048,7 +3004,7 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
-    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
         if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return None;
@@ -3150,15 +3106,17 @@ mod renderer_io_retained_tests {
 /// in-process on the winit thread.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
-    use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
+    use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, JobPlacement, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
     use semio_framework_actor::{
-        intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt, JobProgressRejected,
-        JobPublication, JobTurn, Lane, Origin, PackageHash, PackageId, Payload,
+        intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobOperation, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt,
+        JobProgressRejected, JobPublication, JobReplayFault, JobReplayLog, JobReplayPublicationKind, JobReplayPublicationPolicy, JobReplayRecordHeader, JobReplayRequest, JobReplayRoute, JobReplayStep, JobTurn, Lane, Origin, PackageHash, PackageId,
+        Payload,
     };
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
     use std::collections::HashMap;
     use std::future::Future;
+    use std::mem::ManuallyDrop;
     use std::path::PathBuf;
     use std::pin::Pin;
     use std::sync::{Arc, Mutex, OnceLock};
@@ -3662,6 +3620,18 @@ pub(crate) mod kernel_runtime {
             instance: u32,
             surface: SurfaceId,
         },
+        MountProductReplay {
+            owner: MountedProductReplayRequest,
+        },
+        RetireProductReplay {
+            owner: MountedProductReplayRequest,
+        },
+        RetireProductReplayRefusal {
+            owner: RefusedProductReplay,
+        },
+        AdvanceProductReplay {
+            instance: u32,
+        },
         ExchangeCommands {
             instance: u32,
             driver: semio_framework::kernel::CommandBatchDriver,
@@ -3688,7 +3658,15 @@ pub(crate) mod kernel_runtime {
                 Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
                 Self::CreateApp { owner } => (0, owner.remaining_bytes()),
                 Self::Exchange { event, .. } => (0, event.remaining_bytes()),
-                Self::AdvanceRetained { .. } | Self::DestroyApp { .. } | Self::CloseRealm { .. } | Self::CloseRejectedEvents { .. } | Self::AcknowledgeJobProgress { .. } => (0, 0),
+                Self::AdvanceRetained { .. }
+                | Self::MountProductReplay { .. }
+                | Self::RetireProductReplay { .. }
+                | Self::RetireProductReplayRefusal { .. }
+                | Self::AdvanceProductReplay { .. }
+                | Self::DestroyApp { .. }
+                | Self::CloseRealm { .. }
+                | Self::CloseRejectedEvents { .. }
+                | Self::AcknowledgeJobProgress { .. } => (0, 0),
             }
         }
     }
@@ -3888,6 +3866,939 @@ pub(crate) mod kernel_runtime {
         }
     }
 
+    const PRODUCT_REPLAY_KIND_BYTES: usize = 256;
+    const PRODUCT_REPLAY_INPUT_PAGE_CAPACITY: usize = semio_framework_actor::JOB_REPLAY_RECORD_CAPACITY;
+    const PRODUCT_REPLAY_INPUT_BYTES: usize = semio_framework_actor::JOB_REPLAY_PAGE_BYTES * PRODUCT_REPLAY_INPUT_PAGE_CAPACITY;
+    const PRODUCT_REPLAY_PROFILE_COUNT: usize = 4;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum RawSpawnJobDisposition {
+        Pending,
+        Accepted,
+        Rejected,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum RawSpawnJobClosePhase {
+        Input,
+        Kind,
+        Terminal,
+    }
+
+    #[derive(Debug)]
+    struct RawSpawnJobOwner {
+        job: u64,
+        kind: Option<String>,
+        input: Option<Vec<u8>>,
+        placement: JobPlacement,
+        selected_index: usize,
+        fixed_witness_acked: bool,
+        mount_acked: bool,
+        qualification_acked: bool,
+        replay_acked: bool,
+        checkpoint_ordinal: Option<u64>,
+        checkpoint_digest: Option<u64>,
+        terminal_ordinal: Option<u64>,
+        terminal_prefix: Option<u64>,
+        accepted_replay_ordinal: Option<u64>,
+        disposition: RawSpawnJobDisposition,
+        close_phase: RawSpawnJobClosePhase,
+    }
+
+    impl RawSpawnJobOwner {
+        fn from_effect(selected_index: usize, effect: Effect) -> Self {
+            let Effect::SpawnJob { job, kind, input, placement } = effect else { unreachable!("admitted product source remains SpawnJob") };
+            Self {
+                job,
+                kind: Some(kind),
+                input: Some(input),
+                placement,
+                selected_index,
+                fixed_witness_acked: false,
+                mount_acked: false,
+                qualification_acked: false,
+                replay_acked: false,
+                checkpoint_ordinal: None,
+                checkpoint_digest: None,
+                terminal_ordinal: None,
+                terminal_prefix: None,
+                accepted_replay_ordinal: None,
+                disposition: RawSpawnJobDisposition::Pending,
+                close_phase: RawSpawnJobClosePhase::Input,
+            }
+        }
+
+        fn kind(&self) -> &str {
+            self.kind.as_deref().expect("raw product kind remains owned before retirement")
+        }
+
+        fn input(&self) -> &[u8] {
+            self.input.as_deref().expect("raw product input remains owned before retirement")
+        }
+
+        fn acknowledge_fixed_witness(&mut self) {
+            self.fixed_witness_acked = true;
+        }
+
+        fn acknowledge_mount(&mut self) {
+            assert!(self.fixed_witness_acked && self.disposition == RawSpawnJobDisposition::Pending, "raw product mount follows exact fixed witness construction");
+            self.mount_acked = true;
+        }
+
+        fn acknowledge_qualification(&mut self, checkpoint: Option<MountedProductReplayCheckpoint>) {
+            assert!(self.mount_acked && self.disposition == RawSpawnJobDisposition::Pending, "raw product qualification follows accepted mount");
+            self.qualification_acked = true;
+            self.checkpoint_ordinal = checkpoint.map(|checkpoint| checkpoint.ordinal);
+            self.checkpoint_digest = checkpoint.map(|checkpoint| checkpoint.digest);
+        }
+
+        fn acknowledge_replay_boundary(&mut self, terminal: JobReplayRecordHeader, accepted_replay_ordinal: Option<u64>) -> Result<(), &'static str> {
+            if !self.fixed_witness_acked || !self.mount_acked || !self.qualification_acked || self.disposition != RawSpawnJobDisposition::Pending || accepted_replay_ordinal.is_none() {
+                return Err("raw product backing cannot retire before fixed, mount, qualification, and replay acknowledgements");
+            }
+            self.replay_acked = true;
+            self.terminal_ordinal = Some(terminal.ordinal);
+            self.terminal_prefix = Some(terminal.prefix_digest);
+            self.accepted_replay_ordinal = accepted_replay_ordinal;
+            self.disposition = RawSpawnJobDisposition::Accepted;
+            Ok(())
+        }
+
+        fn reject(&mut self) {
+            if self.disposition == RawSpawnJobDisposition::Pending {
+                self.disposition = RawSpawnJobDisposition::Rejected;
+            }
+        }
+
+        fn observe_identity(&self) {
+            let _ = (
+                self.job,
+                self.kind.as_deref(),
+                self.input.as_deref(),
+                self.placement,
+                self.selected_index,
+                self.fixed_witness_acked,
+                self.mount_acked,
+                self.qualification_acked,
+                self.replay_acked,
+                self.checkpoint_ordinal,
+                self.checkpoint_digest,
+                self.terminal_ordinal,
+                self.terminal_prefix,
+                self.accepted_replay_ordinal,
+                self.disposition,
+            );
+        }
+
+        fn close_step(&mut self) -> bool {
+            self.observe_identity();
+            assert!(self.disposition != RawSpawnJobDisposition::Pending, "raw product backing closes only after accepted ACK boundary or exact rejection");
+            match self.close_phase {
+                RawSpawnJobClosePhase::Input => {
+                    drop(self.input.take().expect("raw admitted product input backing closes once"));
+                    self.close_phase = RawSpawnJobClosePhase::Kind;
+                }
+                RawSpawnJobClosePhase::Kind => {
+                    drop(self.kind.take().expect("raw admitted product kind backing closes once"));
+                    self.close_phase = RawSpawnJobClosePhase::Terminal;
+                }
+                RawSpawnJobClosePhase::Terminal => {}
+            }
+            self.close_phase == RawSpawnJobClosePhase::Terminal
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct MountedProductReplayRecoveryToken {
+        index: usize,
+        generation: u64,
+    }
+
+    struct RetainedMountedProductReplayRequest {
+        instance: u32,
+        job: u64,
+        job_kind: [u8; PRODUCT_REPLAY_KIND_BYTES],
+        job_kind_length: u16,
+        request: JobReplayRequest,
+        placement: JobPlacement,
+        raw: RawSpawnJobOwner,
+    }
+
+    enum MountedProductReplayRecoveryOwner {
+        Request(RetainedMountedProductReplayRequest),
+        Claim {
+            request: RetainedMountedProductReplayRequest,
+            actor: ActorId,
+            record_cursor: usize,
+            checkpoint: Option<MountedProductReplayCheckpoint>,
+        },
+        Authority {
+            request: RetainedMountedProductReplayRequest,
+            actor: ActorId,
+            route: JobReplayRoute,
+            operation: JobOperation,
+            generation: u64,
+            seed: u64,
+            checkpoint: Option<MountedProductReplayCheckpoint>,
+            terminal: JobReplayRecordHeader,
+            worker_count: u16,
+            worker_slot: u16,
+            begin: bool,
+            restore_start_ordinal: Option<u64>,
+            profile_cursor: usize,
+            profile_started: bool,
+        },
+    }
+
+    impl MountedProductReplayRecoveryOwner {
+        fn instance(&self) -> u32 {
+            match self {
+                Self::Request(request) | Self::Claim { request, .. } | Self::Authority { request, .. } => request.instance,
+            }
+        }
+
+        fn job(&self) -> u64 {
+            match self {
+                Self::Request(request) | Self::Claim { request, .. } | Self::Authority { request, .. } => request.job,
+            }
+        }
+
+        fn observe_close_identity(&self) {
+            match self {
+                Self::Request(request) => {
+                    let _ = (&request.job_kind, request.job_kind_length, request.request, request.placement);
+                    request.raw.observe_identity();
+                }
+                Self::Claim { request, actor, record_cursor, checkpoint } => {
+                    let _ = (&request.job_kind, request.job_kind_length, request.request, request.placement, actor, record_cursor, checkpoint);
+                    request.raw.observe_identity();
+                }
+                Self::Authority { request, actor, route, operation, generation, seed, checkpoint, terminal, worker_count, worker_slot, begin, restore_start_ordinal, profile_cursor, profile_started } => {
+                    let _ = (
+                        &request.job_kind,
+                        request.job_kind_length,
+                        request.request,
+                        request.placement,
+                        actor,
+                        route,
+                        operation,
+                        generation,
+                        seed,
+                        checkpoint,
+                        terminal,
+                        worker_count,
+                        worker_slot,
+                        begin,
+                        restore_start_ordinal,
+                        profile_cursor,
+                        profile_started,
+                    );
+                    request.raw.observe_identity();
+                }
+            }
+        }
+
+        fn close_step(&mut self) -> bool {
+            self.observe_close_identity();
+            match self {
+                Self::Request(request) | Self::Claim { request, .. } | Self::Authority { request, .. } => request.raw.close_step(),
+            }
+        }
+    }
+
+    struct MountedProductReplayRecoverySlot {
+        generation: u64,
+        reserved: bool,
+        owner: Option<MountedProductReplayRecoveryOwner>,
+    }
+
+    struct MountedProductReplayRecoveryRegistry {
+        slots: [MountedProductReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY],
+        abandoned: [Option<MountedProductReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        cursor: usize,
+        abandoned_cursor: usize,
+    }
+
+    impl MountedProductReplayRecoveryRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| MountedProductReplayRecoverySlot { generation: 0, reserved: false, owner: None }), abandoned: std::array::from_fn(|_| None), cursor: 0, abandoned_cursor: 0 }
+        }
+
+        fn reserve(&mut self) -> Option<MountedProductReplayRecoveryToken> {
+            let index = self.slots.iter().position(|slot| !slot.reserved && slot.owner.is_none())?;
+            let generation = self.slots[index].generation.checked_add(1).filter(|generation| *generation != 0)?;
+            self.slots[index].generation = generation;
+            self.slots[index].reserved = true;
+            Some(MountedProductReplayRecoveryToken { index, generation })
+        }
+
+        fn release(&mut self, token: MountedProductReplayRecoveryToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.generation != token.generation || !slot.reserved || slot.owner.is_some() {
+                return false;
+            }
+            slot.reserved = false;
+            true
+        }
+
+        fn publish(&mut self, token: MountedProductReplayRecoveryToken, owner: MountedProductReplayRecoveryOwner) {
+            if let Some(slot) = self.slots.get_mut(token.index) {
+                if slot.generation == token.generation && slot.reserved && slot.owner.is_none() {
+                    slot.owner = Some(owner);
+                    return;
+                }
+            }
+            let slot = self.abandoned.iter_mut().find(|slot| slot.is_none()).expect("pre-reserved product replay recovery keeps one discoverable exact owner per shell");
+            *slot = Some(owner);
+        }
+
+        fn close_one(&mut self) -> bool {
+            if let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.slots[*index].owner.is_some()) {
+                self.cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+                if self.slots[index].owner.as_mut().expect("selected product replay recovery owner").close_step() {
+                    let terminal = self.slots[index].owner.take().expect("terminal product replay recovery owner");
+                    terminal.observe_close_identity();
+                    drop(terminal);
+                    self.slots[index].reserved = false;
+                }
+                return true;
+            }
+            let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.abandoned_cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.abandoned[*index].is_some()) else {
+                return false;
+            };
+            self.abandoned_cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+            if self.abandoned[index].as_mut().expect("selected abandoned product replay owner").close_step() {
+                let terminal = self.abandoned[index].take().expect("terminal abandoned product replay owner");
+                terminal.observe_close_identity();
+                drop(terminal);
+            }
+            true
+        }
+
+        fn has_close_work(&self) -> bool {
+            self.slots.iter().any(|slot| slot.owner.is_some()) || self.abandoned.iter().any(Option::is_some)
+        }
+
+        fn has_instance(&self, instance: u32) -> bool {
+            self.slots.iter().filter_map(|slot| slot.owner.as_ref()).chain(self.abandoned.iter().flatten()).any(|owner| owner.instance() == instance)
+        }
+
+        fn close_instance_one(&mut self, instance: u32) -> bool {
+            if let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.slots[*index].owner.as_ref().is_some_and(|owner| owner.instance() == instance)) {
+                self.cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+                if self.slots[index].owner.as_mut().expect("selected instance product replay recovery owner").close_step() {
+                    let terminal = self.slots[index].owner.take().expect("terminal instance product replay recovery owner");
+                    terminal.observe_close_identity();
+                    drop(terminal);
+                    self.slots[index].reserved = false;
+                }
+                return true;
+            }
+            let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.abandoned_cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.abandoned[*index].as_ref().is_some_and(|owner| owner.instance() == instance)) else {
+                return false;
+            };
+            self.abandoned_cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+            if self.abandoned[index].as_mut().expect("selected abandoned instance product replay owner").close_step() {
+                let terminal = self.abandoned[index].take().expect("terminal abandoned instance product replay owner");
+                terminal.observe_close_identity();
+                drop(terminal);
+            }
+            true
+        }
+    }
+
+    fn mounted_product_replay_recovery_registry() -> &'static Mutex<MountedProductReplayRecoveryRegistry> {
+        static REGISTRY: OnceLock<Mutex<MountedProductReplayRecoveryRegistry>> = OnceLock::new();
+        REGISTRY.get_or_init(|| Mutex::new(MountedProductReplayRecoveryRegistry::new()))
+    }
+
+    /// 🎫️ Exact typed product owner moved from one successful mounted-session exchange.
+    #[derive(Debug)]
+    pub(crate) struct MountedProductReplayRequest {
+        instance: u32,
+        job: u64,
+        job_kind: [u8; PRODUCT_REPLAY_KIND_BYTES],
+        job_kind_length: u16,
+        request: JobReplayRequest,
+        placement: JobPlacement,
+        raw: Option<RawSpawnJobOwner>,
+        recovery: Option<MountedProductReplayRecoveryToken>,
+    }
+
+    impl MountedProductReplayRequest {
+        fn from_admitted_effect(instance: u32, selected_index: usize, effect: Effect, recovery: MountedProductReplayRecoveryToken) -> Self {
+            let mut raw = RawSpawnJobOwner::from_effect(selected_index, effect);
+            let request = JobReplayRequest::from_spawn(raw.kind(), raw.input());
+            let mut job_kind = [0; PRODUCT_REPLAY_KIND_BYTES];
+            job_kind[..raw.kind().len()].copy_from_slice(raw.kind().as_bytes());
+            raw.acknowledge_fixed_witness();
+            Self { instance, job: raw.job, job_kind, job_kind_length: raw.kind().len() as u16, request, placement: raw.placement, raw: Some(raw), recovery: Some(recovery) }
+        }
+
+        fn job_kind(&self) -> &[u8] {
+            &self.job_kind[..usize::from(self.job_kind_length)]
+        }
+
+        pub(crate) fn rejection_reason(&self) -> String {
+            format!("mounted product replay authority rejected for instance {}, job {}", self.instance, self.job)
+        }
+
+        fn raw(&self) -> &RawSpawnJobOwner {
+            self.raw.as_ref().expect("mounted product replay request retains exact raw SpawnJob")
+        }
+
+        fn raw_mut(&mut self) -> &mut RawSpawnJobOwner {
+            self.raw.as_mut().expect("mounted product replay request retains exact mutable raw SpawnJob")
+        }
+
+        fn into_retained(mut self) -> (MountedProductReplayRecoveryToken, RetainedMountedProductReplayRequest) {
+            let recovery = self.recovery.take().expect("mounted product replay recovery authority transfers once");
+            let raw = self.raw.take().expect("mounted product replay raw SpawnJob transfers once");
+            let retained = RetainedMountedProductReplayRequest { instance: self.instance, job: self.job, job_kind: self.job_kind, job_kind_length: self.job_kind_length, request: self.request, placement: self.placement, raw };
+            (recovery, retained)
+        }
+
+        pub(crate) fn retire(mut self) {
+            self.raw_mut().reject();
+            let (recovery, retained) = self.into_retained();
+            mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").publish(recovery, MountedProductReplayRecoveryOwner::Request(retained));
+        }
+    }
+
+    impl Drop for MountedProductReplayRequest {
+        fn drop(&mut self) {
+            let Some(recovery) = self.recovery.take() else { return };
+            let Some(mut raw) = self.raw.take() else { return };
+            raw.reject();
+            let retained = RetainedMountedProductReplayRequest { instance: self.instance, job: self.job, job_kind: self.job_kind, job_kind_length: self.job_kind_length, request: self.request, placement: self.placement, raw };
+            mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").publish(recovery, MountedProductReplayRecoveryOwner::Request(retained));
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct MountedProductReplayRefusalToken {
+        index: usize,
+        generation: u64,
+        instance: u32,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub(crate) enum MountedProductReplayRefusalCause {
+        KindCapacity,
+        InputCapacity,
+        RecoveryCapacity,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum MountedProductReplayRefusalPhase {
+        Retry,
+        SplitSpawn,
+        Input,
+        Kind,
+        RemainingEffects,
+        RemainingBacking,
+        Terminal,
+    }
+
+    struct RetainedRefusedProductReplay {
+        instance: u32,
+        cause: MountedProductReplayRefusalCause,
+        selected_index: usize,
+        spawn: Option<Effect>,
+        spawn_job: Option<u64>,
+        spawn_placement: Option<JobPlacement>,
+        spawn_kind: Option<String>,
+        spawn_input: Option<Vec<u8>>,
+        remaining_effects: Option<Vec<Effect>>,
+        phase: MountedProductReplayRefusalPhase,
+    }
+
+    impl RetainedRefusedProductReplay {
+        fn observe_identity(&self) {
+            let _ = (self.instance, self.cause, self.selected_index, self.spawn_job, self.spawn_placement);
+            if let Some(Effect::SpawnJob { job, kind, input, placement }) = self.spawn.as_ref() {
+                let _ = (job, kind.as_bytes(), input.as_slice(), placement);
+            }
+        }
+
+        fn retry(&mut self) -> Option<MountedProductReplayRequest> {
+            if self.phase != MountedProductReplayRefusalPhase::Retry {
+                return None;
+            }
+            let recovery = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").reserve()?;
+            let Some(spawn) = self.spawn.take() else {
+                self.phase = MountedProductReplayRefusalPhase::SplitSpawn;
+                let _ = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").release(recovery);
+                return None;
+            };
+            let request = MountedProductReplayRequest::from_admitted_effect(self.instance, self.selected_index, spawn, recovery);
+            self.phase = MountedProductReplayRefusalPhase::RemainingEffects;
+            Some(request)
+        }
+
+        fn close_step(&mut self) -> bool {
+            self.observe_identity();
+            match self.phase {
+                MountedProductReplayRefusalPhase::Retry => {
+                    self.phase = MountedProductReplayRefusalPhase::SplitSpawn;
+                }
+                MountedProductReplayRefusalPhase::SplitSpawn => {
+                    let Some(effect) = self.spawn.take() else {
+                        self.phase = MountedProductReplayRefusalPhase::RemainingEffects;
+                        return false;
+                    };
+                    let Effect::SpawnJob { job, kind, input, placement } = effect else { unreachable!("product replay refusal retains the selected SpawnJob") };
+                    self.spawn_job = Some(job);
+                    self.spawn_placement = Some(placement);
+                    self.spawn_kind = Some(kind);
+                    self.spawn_input = Some(input);
+                    self.phase = MountedProductReplayRefusalPhase::Input;
+                }
+                MountedProductReplayRefusalPhase::Input => {
+                    drop(self.spawn_input.take().expect("refused product input backing closes once"));
+                    self.phase = MountedProductReplayRefusalPhase::Kind;
+                }
+                MountedProductReplayRefusalPhase::Kind => {
+                    drop(self.spawn_kind.take().expect("refused product kind backing closes once"));
+                    self.phase = MountedProductReplayRefusalPhase::RemainingEffects;
+                }
+                MountedProductReplayRefusalPhase::RemainingEffects => {
+                    let remaining = self.remaining_effects.as_mut().expect("refused product outcome remainder is retained");
+                    if let Some(effect) = remaining.pop() {
+                        drop(effect);
+                    } else {
+                        self.phase = MountedProductReplayRefusalPhase::RemainingBacking;
+                    }
+                }
+                MountedProductReplayRefusalPhase::RemainingBacking => {
+                    drop(self.remaining_effects.take().expect("refused product outcome backing closes once"));
+                    self.phase = MountedProductReplayRefusalPhase::Terminal;
+                }
+                MountedProductReplayRefusalPhase::Terminal => {}
+            }
+            self.phase == MountedProductReplayRefusalPhase::Terminal
+        }
+    }
+
+    struct MountedProductReplayRefusalSlot {
+        generation: u64,
+        instance: Option<u32>,
+        reserved: bool,
+        owner: Option<RetainedRefusedProductReplay>,
+    }
+
+    struct MountedProductReplayRefusalRegistry {
+        slots: [MountedProductReplayRefusalSlot; JOB_PROGRESS_ACTIVE_CAPACITY],
+        abandoned: [Option<RetainedRefusedProductReplay>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        cursor: usize,
+        abandoned_cursor: usize,
+    }
+
+    struct MountedProductReplayRefusalStep {
+        request: Option<MountedProductReplayRequest>,
+        progressed: bool,
+    }
+
+    impl MountedProductReplayRefusalRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| MountedProductReplayRefusalSlot { generation: 0, instance: None, reserved: false, owner: None }), abandoned: std::array::from_fn(|_| None), cursor: 0, abandoned_cursor: 0 }
+        }
+
+        fn reserve(&mut self, instance: u32) -> Option<MountedProductReplayRefusalToken> {
+            let index = self.slots.iter().position(|slot| !slot.reserved && slot.owner.is_none())?;
+            let generation = self.slots[index].generation.checked_add(1).filter(|generation| *generation != 0)?;
+            self.slots[index].generation = generation;
+            self.slots[index].instance = Some(instance);
+            self.slots[index].reserved = true;
+            Some(MountedProductReplayRefusalToken { index, generation, instance })
+        }
+
+        fn release(&mut self, token: MountedProductReplayRefusalToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.generation != token.generation || slot.instance != Some(token.instance) || !slot.reserved || slot.owner.is_some() {
+                return false;
+            }
+            slot.instance = None;
+            slot.reserved = false;
+            true
+        }
+
+        fn publish(&mut self, token: MountedProductReplayRefusalToken, owner: RetainedRefusedProductReplay) {
+            if let Some(slot) = self.slots.get_mut(token.index) {
+                if slot.generation == token.generation && slot.instance == Some(owner.instance) && slot.reserved && slot.owner.is_none() {
+                    slot.owner = Some(owner);
+                    return;
+                }
+            }
+            let slot = self.abandoned.iter_mut().find(|slot| slot.is_none()).expect("pre-reserved refusal authority keeps one discoverable product owner per bridge call");
+            *slot = Some(owner);
+        }
+
+        fn step_one(&mut self, retry: bool) -> MountedProductReplayRefusalStep {
+            if let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.slots[*index].owner.is_some()) {
+                self.cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+                let owner = self.slots[index].owner.as_mut().expect("selected product refusal owner");
+                if retry {
+                    if let Some(request) = owner.retry() {
+                        return MountedProductReplayRefusalStep { request: Some(request), progressed: true };
+                    }
+                    if owner.phase == MountedProductReplayRefusalPhase::Retry {
+                        return MountedProductReplayRefusalStep { request: None, progressed: true };
+                    }
+                }
+                let terminal = owner.close_step();
+                if terminal {
+                    let terminal = self.slots[index].owner.take().expect("terminal product refusal owner");
+                    assert_eq!(terminal.phase, MountedProductReplayRefusalPhase::Terminal, "product refusal terminal identity changed before release");
+                    self.slots[index].instance = None;
+                    self.slots[index].reserved = false;
+                    drop(terminal);
+                }
+                return MountedProductReplayRefusalStep { request: None, progressed: true };
+            }
+            let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.abandoned_cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.abandoned[*index].is_some()) else {
+                return MountedProductReplayRefusalStep { request: None, progressed: false };
+            };
+            self.abandoned_cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+            let owner = self.abandoned[index].as_mut().expect("selected abandoned product refusal owner");
+            let terminal = owner.close_step();
+            if terminal {
+                drop(self.abandoned[index].take().expect("terminal abandoned product refusal owner"));
+            }
+            MountedProductReplayRefusalStep { request: None, progressed: true }
+        }
+
+        fn has_work(&self) -> bool {
+            self.slots.iter().any(|slot| slot.owner.is_some()) || self.abandoned.iter().any(Option::is_some)
+        }
+
+        fn has_any(&self) -> bool {
+            self.slots.iter().any(|slot| slot.reserved || slot.owner.is_some()) || self.abandoned.iter().any(Option::is_some)
+        }
+
+        fn has_instance(&self, instance: u32) -> bool {
+            self.slots.iter().any(|slot| slot.instance == Some(instance)) || self.abandoned.iter().flatten().any(|owner| owner.instance == instance)
+        }
+
+        fn close_instance_one(&mut self, instance: u32) -> bool {
+            if let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.slots[*index].owner.as_ref().is_some_and(|owner| owner.instance == instance)) {
+                self.cursor = index;
+                let _ = self.step_one(false);
+                return true;
+            }
+            if let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.abandoned_cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.abandoned[*index].as_ref().is_some_and(|owner| owner.instance == instance)) {
+                self.abandoned_cursor = index;
+                let _ = self.step_one(false);
+                return true;
+            }
+            false
+        }
+    }
+
+    fn mounted_product_replay_refusal_registry() -> &'static Mutex<MountedProductReplayRefusalRegistry> {
+        static REGISTRY: OnceLock<Mutex<MountedProductReplayRefusalRegistry>> = OnceLock::new();
+        REGISTRY.get_or_init(|| Mutex::new(MountedProductReplayRefusalRegistry::new()))
+    }
+
+    pub(crate) struct MountedProductReplayAdmissionPermit {
+        token: Option<MountedProductReplayRefusalToken>,
+    }
+
+    impl MountedProductReplayAdmissionPermit {
+        fn release(mut self) {
+            let token = self.token.take().expect("product admission permit releases once");
+            assert!(mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").release(token), "product admission permit release keeps exact generation");
+        }
+
+        fn refuse(mut self, cause: MountedProductReplayRefusalCause, selected_index: usize, spawn: Effect, remaining_effects: Vec<Effect>) -> RefusedProductReplay {
+            let token = self.token.take().expect("product admission permit transfers once");
+            RefusedProductReplay { token: Some(token), instance: token.instance, cause, selected_index, spawn: Some(spawn), remaining_effects: Some(remaining_effects) }
+        }
+    }
+
+    impl Drop for MountedProductReplayAdmissionPermit {
+        fn drop(&mut self) {
+            let Some(token) = self.token.take() else { return };
+            let _ = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").release(token);
+        }
+    }
+
+    pub(crate) struct RefusedProductReplay {
+        token: Option<MountedProductReplayRefusalToken>,
+        instance: u32,
+        cause: MountedProductReplayRefusalCause,
+        selected_index: usize,
+        spawn: Option<Effect>,
+        remaining_effects: Option<Vec<Effect>>,
+    }
+
+    impl RefusedProductReplay {
+        pub(crate) fn rejection_reason(&self) -> &'static str {
+            match self.cause {
+                MountedProductReplayRefusalCause::KindCapacity => "mounted product replay job kind exceeds its fixed authority",
+                MountedProductReplayRefusalCause::InputCapacity => "mounted product replay input exceeds its fixed page authority",
+                MountedProductReplayRefusalCause::RecoveryCapacity => "mounted product replay recovery capacity is full",
+            }
+        }
+
+        fn into_retained(mut self) -> (MountedProductReplayRefusalToken, RetainedRefusedProductReplay) {
+            let token = self.token.take().expect("product refusal recovery authority transfers once");
+            let phase = if self.cause == MountedProductReplayRefusalCause::RecoveryCapacity { MountedProductReplayRefusalPhase::Retry } else { MountedProductReplayRefusalPhase::SplitSpawn };
+            let retained = RetainedRefusedProductReplay {
+                instance: self.instance,
+                cause: self.cause,
+                selected_index: self.selected_index,
+                spawn: self.spawn.take(),
+                spawn_job: None,
+                spawn_placement: None,
+                spawn_kind: None,
+                spawn_input: None,
+                remaining_effects: self.remaining_effects.take(),
+                phase,
+            };
+            (token, retained)
+        }
+
+        pub(crate) fn retire(self) {
+            let (token, retained) = self.into_retained();
+            mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").publish(token, retained);
+        }
+    }
+
+    impl Drop for RefusedProductReplay {
+        fn drop(&mut self) {
+            let Some(token) = self.token.take() else { return };
+            let retained = RetainedRefusedProductReplay {
+                instance: self.instance,
+                cause: self.cause,
+                selected_index: self.selected_index,
+                spawn: self.spawn.take(),
+                spawn_job: None,
+                spawn_placement: None,
+                spawn_kind: None,
+                spawn_input: None,
+                remaining_effects: self.remaining_effects.take(),
+                phase: if self.cause == MountedProductReplayRefusalCause::RecoveryCapacity { MountedProductReplayRefusalPhase::Retry } else { MountedProductReplayRefusalPhase::SplitSpawn },
+            };
+            mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").publish(token, retained);
+        }
+    }
+
+    pub(crate) enum MountedProductReplayAdmission {
+        None,
+        Admitted(MountedProductReplayRequest),
+        Refused(RefusedProductReplay),
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct MountedProductReplayCheckpoint {
+        ordinal: u64,
+        digest: u64,
+        pages: u8,
+        applied_progress: u64,
+    }
+
+    struct MountedProductReplayClaim {
+        request: Option<MountedProductReplayRequest>,
+        actor: ActorId,
+        record_cursor: usize,
+        checkpoint: Option<MountedProductReplayCheckpoint>,
+    }
+
+    impl MountedProductReplayClaim {
+        fn request(&self) -> &MountedProductReplayRequest {
+            self.request.as_ref().expect("mounted product replay claim retains request")
+        }
+
+        fn instance(&self) -> u32 {
+            self.request().instance
+        }
+
+        fn job(&self) -> u64 {
+            self.request().job
+        }
+
+        fn retire(mut self) {
+            let mut request = self.request.take().expect("mounted product replay claim retires once");
+            request.raw_mut().reject();
+            let (recovery, request) = request.into_retained();
+            mounted_product_replay_recovery_registry()
+                .lock()
+                .expect("product replay recovery lock")
+                .publish(recovery, MountedProductReplayRecoveryOwner::Claim { request, actor: self.actor, record_cursor: self.record_cursor, checkpoint: self.checkpoint });
+        }
+    }
+
+    impl Drop for MountedProductReplayClaim {
+        fn drop(&mut self) {
+            let Some(mut request) = self.request.take() else { return };
+            request.raw_mut().reject();
+            let (recovery, request) = request.into_retained();
+            mounted_product_replay_recovery_registry()
+                .lock()
+                .expect("product replay recovery lock")
+                .publish(recovery, MountedProductReplayRecoveryOwner::Claim { request, actor: self.actor, record_cursor: self.record_cursor, checkpoint: self.checkpoint });
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    struct MountedProductReplayExpected {
+        instance: u32,
+        actor: ActorId,
+        turn: JobTurn,
+        request: JobReplayRequest,
+        placement: JobPlacement,
+        route: JobReplayRoute,
+        checkpoint: Option<MountedProductReplayCheckpoint>,
+        terminal: JobReplayRecordHeader,
+        process_worker_count: u16,
+        process_worker_slot: u16,
+        logical_worker_count: u16,
+        logical_worker_slot: u16,
+        begin: bool,
+        restore_start_ordinal: Option<u64>,
+    }
+
+    /// 🪪️ Full mounted identity qualified against the retained shard log before replay.
+    #[derive(Debug)]
+    struct MountedProductReplayAuthority {
+        request_owner: Option<MountedProductReplayRequest>,
+        actor: ActorId,
+        route: JobReplayRoute,
+        operation: JobOperation,
+        generation: u64,
+        seed: u64,
+        checkpoint: Option<MountedProductReplayCheckpoint>,
+        terminal: JobReplayRecordHeader,
+        worker_count: u16,
+        worker_slot: u16,
+        begin: bool,
+        restore_start_ordinal: Option<u64>,
+        profile_cursor: usize,
+        profile_started: bool,
+    }
+
+    impl MountedProductReplayAuthority {
+        fn request_owner(&self) -> &MountedProductReplayRequest {
+            self.request_owner.as_ref().expect("mounted product replay authority retains request")
+        }
+
+        fn request_owner_mut(&mut self) -> &mut MountedProductReplayRequest {
+            self.request_owner.as_mut().expect("mounted product replay authority retains mutable request")
+        }
+
+        fn instance(&self) -> u32 {
+            self.request_owner().instance
+        }
+
+        fn job(&self) -> u64 {
+            self.request_owner().job
+        }
+
+        fn validate(self, expected: MountedProductReplayExpected) -> Result<Self, Self> {
+            let request_owner = self.request_owner();
+            let kind = std::str::from_utf8(request_owner.job_kind()).ok();
+            let kind_identity = kind.map(|kind| JobReplayRequest::from_spawn(kind, &[]));
+            let raw_request = JobReplayRequest::from_spawn(request_owner.raw().kind(), request_owner.raw().input());
+            let valid = request_owner.instance == expected.instance
+                && request_owner.job == expected.turn.job
+                && request_owner.raw().job == request_owner.job
+                && request_owner.raw().kind().as_bytes() == request_owner.job_kind()
+                && raw_request == request_owner.request
+                && request_owner.raw().placement == request_owner.placement
+                && kind_identity.is_some_and(|kind| kind.controller == expected.request.controller && kind.tool == expected.request.tool && kind.schema == expected.request.schema && kind.version == expected.request.version)
+                && request_owner.request == expected.request
+                && request_owner.placement == expected.placement
+                && self.actor == expected.actor
+                && self.operation == expected.turn.operation
+                && self.generation == expected.turn.operation.generation
+                && self.seed == expected.turn.operation.seed
+                && self.route == expected.route
+                && self.checkpoint == expected.checkpoint
+                && self.terminal == expected.terminal
+                && expected.terminal.worker_count == expected.process_worker_count
+                && expected.terminal.worker_slot == expected.process_worker_slot
+                && self.worker_count == expected.logical_worker_count
+                && self.worker_slot == expected.logical_worker_slot
+                && self.begin == expected.begin
+                && self.restore_start_ordinal == expected.restore_start_ordinal;
+            if valid {
+                Ok(self)
+            } else {
+                Err(self)
+            }
+        }
+
+        fn acknowledge_raw_retirement_boundary(&mut self) -> Result<(), &'static str> {
+            if self.profile_cursor != PRODUCT_REPLAY_PROFILE_COUNT || self.profile_started {
+                return Err("raw product retirement requires every logical replay profile to reach terminal ACK");
+            }
+            let terminal = self.terminal;
+            let accepted_replay_ordinal = self.restore_start_ordinal;
+            self.request_owner_mut().raw_mut().acknowledge_replay_boundary(terminal, accepted_replay_ordinal)
+        }
+
+        fn retire(mut self) {
+            let mut request = self.request_owner.take().expect("mounted product replay authority retires once");
+            request.raw_mut().reject();
+            let (recovery, request) = request.into_retained();
+            mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").publish(
+                recovery,
+                MountedProductReplayRecoveryOwner::Authority {
+                    request,
+                    actor: self.actor,
+                    route: self.route,
+                    operation: self.operation,
+                    generation: self.generation,
+                    seed: self.seed,
+                    checkpoint: self.checkpoint,
+                    terminal: self.terminal,
+                    worker_count: self.worker_count,
+                    worker_slot: self.worker_slot,
+                    begin: self.begin,
+                    restore_start_ordinal: self.restore_start_ordinal,
+                    profile_cursor: self.profile_cursor,
+                    profile_started: self.profile_started,
+                },
+            );
+        }
+    }
+
+    impl Drop for MountedProductReplayAuthority {
+        fn drop(&mut self) {
+            let Some(mut request) = self.request_owner.take() else { return };
+            request.raw_mut().reject();
+            let (recovery, request) = request.into_retained();
+            mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").publish(
+                recovery,
+                MountedProductReplayRecoveryOwner::Authority {
+                    request,
+                    actor: self.actor,
+                    route: self.route,
+                    operation: self.operation,
+                    generation: self.generation,
+                    seed: self.seed,
+                    checkpoint: self.checkpoint,
+                    terminal: self.terminal,
+                    worker_count: self.worker_count,
+                    worker_slot: self.worker_slot,
+                    begin: self.begin,
+                    restore_start_ordinal: self.restore_start_ordinal,
+                    profile_cursor: self.profile_cursor,
+                    profile_started: self.profile_started,
+                },
+            );
+        }
+    }
+
+    fn mounted_product_replay_profile(process_default: u16, cursor: usize) -> Option<u16> {
+        [1, 2, 4, process_default].get(cursor).copied().filter(|worker_count| *worker_count != 0)
+    }
+
+    fn mounted_product_replay_worker_slot(process_slot: u16, worker_count: u16) -> Option<u16> {
+        (worker_count != 0 && process_slot != u16::MAX).then_some(process_slot % worker_count)
+    }
+
     pub(crate) struct ExchangeSurfaceDocument {
         pub surface: SurfaceId,
         pub document: UiDocumentLease,
@@ -3912,11 +4823,41 @@ pub(crate) mod kernel_runtime {
             let index = self.surfaces.iter().position(|entry| entry.surface.as_ref() == surface)?;
             self.surfaces.swap_remove(index).map(|entry| entry.document)
         }
+
+        pub(crate) fn take_product_replay_authority(&mut self, instance: u32, permit: MountedProductReplayAdmissionPermit) -> MountedProductReplayAdmission {
+            let Some(index) = self.effects.iter().position(|effect| matches!(effect, Effect::SpawnJob { .. })) else {
+                permit.release();
+                return MountedProductReplayAdmission::None;
+            };
+            let (kind, input) = match &self.effects[index] {
+                Effect::SpawnJob { kind, input, .. } => (kind.as_str(), input.as_slice()),
+                _ => unreachable!("selected product replay effect remains SpawnJob"),
+            };
+            let cause = if kind.len() > PRODUCT_REPLAY_KIND_BYTES {
+                Some(MountedProductReplayRefusalCause::KindCapacity)
+            } else if input.len() > PRODUCT_REPLAY_INPUT_BYTES {
+                Some(MountedProductReplayRefusalCause::InputCapacity)
+            } else {
+                None
+            };
+            let recovery = cause.is_none().then(|| mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").reserve()).flatten();
+            if let Some(recovery) = recovery {
+                let spawn = self.effects.remove(index);
+                let request = MountedProductReplayRequest::from_admitted_effect(instance, index, spawn, recovery);
+                permit.release();
+                return MountedProductReplayAdmission::Admitted(request);
+            }
+            let cause = cause.unwrap_or(MountedProductReplayRefusalCause::RecoveryCapacity);
+            let spawn = self.effects.remove(index);
+            let remaining_effects = std::mem::take(&mut self.effects);
+            MountedProductReplayAdmission::Refused(permit.refuse(cause, index, spawn, remaining_effects))
+        }
     }
 
     pub(crate) enum KernelOutcome {
         Created(Result<u32, String>),
         Exchanged(Result<ExchangeOutcome, String>),
+        ProductReplayMounted(Result<(), MountedProductReplayRequest>),
     }
     //#endregion
 
@@ -3967,7 +4908,7 @@ pub(crate) mod kernel_runtime {
     }
 
     fn persistent_command_completion_port_ready() -> bool {
-        false
+        KERNEL_REQUEST_QUEUE_CAPACITY != 0 && semio_framework::kernel::COMMAND_MAXIMUM_PAGES != 0 && semio_framework::kernel::COMMAND_MAXIMUM_BYTES >= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES
     }
     //#endregion
 
@@ -4008,6 +4949,7 @@ pub(crate) mod kernel_runtime {
             match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id) }).await {
                 KernelOutcome::Created(result) => result,
                 KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for create_app".into()),
+                KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for create_app".into()),
             }
         }
 
@@ -4084,6 +5026,7 @@ pub(crate) mod kernel_runtime {
             match self.submit(KernelRequest::ExchangeCommands { instance, driver }).await {
                 KernelOutcome::Exchanged(result) => result,
                 KernelOutcome::Created(_) => Err("kernel: unexpected Created response for command exchange".into()),
+                KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for command exchange".into()),
             }
         }
 
@@ -4098,6 +5041,7 @@ pub(crate) mod kernel_runtime {
             match self.submit(KernelRequest::Exchange { instance, event }).await {
                 KernelOutcome::Exchanged(result) => result,
                 KernelOutcome::Created(_) => Err("kernel: unexpected Created response for exchange".into()),
+                KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for exchange".into()),
             }
         }
 
@@ -4105,6 +5049,43 @@ pub(crate) mod kernel_runtime {
             match self.submit(KernelRequest::AdvanceRetained { instance, surface }).await {
                 KernelOutcome::Exchanged(result) => result,
                 KernelOutcome::Created(_) => Err("kernel: unexpected Created response for retained advance".into()),
+                KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected product replay response for retained advance".into()),
+            }
+        }
+
+        pub(crate) async fn mount_product_replay(&self, owner: MountedProductReplayRequest) -> Result<(), MountedProductReplayRequest> {
+            match self.submit(KernelRequest::MountProductReplay { owner }).await {
+                KernelOutcome::ProductReplayMounted(result) => result,
+                KernelOutcome::Created(_) | KernelOutcome::Exchanged(_) => unreachable!("mounted product replay request has one response class"),
+            }
+        }
+
+        pub(crate) fn reserve_product_replay_admission(&self, instance: u32) -> Result<MountedProductReplayAdmissionPermit, String> {
+            let token = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").reserve(instance).ok_or_else(|| "mounted product replay refusal capacity is full before exchange".to_string())?;
+            Ok(MountedProductReplayAdmissionPermit { token: Some(token) })
+        }
+
+        pub(crate) async fn retire_product_replay(&self, owner: MountedProductReplayRequest) {
+            match self.submit(KernelRequest::RetireProductReplay { owner }).await {
+                KernelOutcome::ProductReplayMounted(Ok(())) => {}
+                KernelOutcome::ProductReplayMounted(Err(owner)) => owner.retire(),
+                KernelOutcome::Created(_) | KernelOutcome::Exchanged(_) => unreachable!("product replay retirement has one response class"),
+            }
+        }
+
+        pub(crate) async fn retire_product_replay_refusal(&self, owner: RefusedProductReplay) {
+            match self.submit(KernelRequest::RetireProductReplayRefusal { owner }).await {
+                KernelOutcome::ProductReplayMounted(Ok(())) => {}
+                KernelOutcome::ProductReplayMounted(Err(_)) => unreachable!("typed product refusal has no raw request response"),
+                KernelOutcome::Created(_) | KernelOutcome::Exchanged(_) => unreachable!("product replay refusal retirement has one response class"),
+            }
+        }
+
+        pub(crate) async fn advance_product_replay(&self, instance: u32) -> Result<(), String> {
+            match self.submit(KernelRequest::AdvanceProductReplay { instance }).await {
+                KernelOutcome::Exchanged(result) => result.map(|_| ()),
+                KernelOutcome::Created(_) => Err("kernel: unexpected Created response for product replay advance".into()),
+                KernelOutcome::ProductReplayMounted(_) => Err("kernel: unexpected mount response for product replay advance".into()),
             }
         }
     }
@@ -4590,12 +5571,233 @@ pub(crate) mod kernel_runtime {
         receipt: JobProgressReceipt,
     }
 
+    #[derive(Clone, Copy)]
+    struct MountedReplayRouteSeed {
+        actor: ActorId,
+        plugin: [u8; 32],
+        package: [u8; 32],
+        window: u64,
+        document: [u8; 32],
+    }
+
+    impl MountedReplayRouteSeed {
+        fn compose(self, request: JobReplayRequest) -> JobReplayRoute {
+            JobReplayRoute {
+                plugin: self.plugin,
+                package: self.package,
+                controller: request.controller,
+                tool: request.tool,
+                window: self.window,
+                document: self.document,
+                request_schema: request.schema,
+                request_version: request.version,
+                request_digest: request.digest,
+            }
+        }
+    }
+
+    struct MountedJobReplay {
+        actor: ActorId,
+        authority: JobTurn,
+        request: JobReplayRequest,
+        placement: JobPlacement,
+        log: ManuallyDrop<JobReplayLog>,
+        captured: Option<JobPublication>,
+        policy: Option<JobReplayPublicationPolicy>,
+        terminal_seen: bool,
+        replay_requested: bool,
+        replay_started: bool,
+        replay_submit_sequence: Option<u64>,
+        accepted_replay_sequence: Option<u64>,
+        replay_worker_count: u16,
+        replay_worker_slot: u16,
+        recovery: Option<MountedReplayRecoveryToken>,
+    }
+
+    impl MountedJobReplay {
+        fn pending_replay_start_is_exact(&self, worker_count: u16, worker_slot: u16) -> bool {
+            self.replay_requested && !self.replay_started && self.replay_worker_count == worker_count && self.replay_worker_slot == worker_slot
+        }
+
+        fn replay_submission_sequence(&mut self) -> Result<u64, String> {
+            match self.replay_submit_sequence {
+                Some(sequence) => Ok(sequence),
+                None => {
+                    let sequence = next_seq()?;
+                    self.replay_submit_sequence = Some(sequence);
+                    Ok(sequence)
+                }
+            }
+        }
+
+        fn accept_replay_submission(&mut self, sequence: u64) -> Result<(), String> {
+            if self.replay_started || self.replay_submit_sequence != Some(sequence) {
+                return Err("kernel: accepted replay start does not match the retained submission identity".to_string());
+            }
+            self.replay_started = true;
+            self.replay_submit_sequence = None;
+            self.accepted_replay_sequence = Some(sequence);
+            Ok(())
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    struct MountedReplayRecoveryToken {
+        index: usize,
+        epoch: u64,
+    }
+
+    struct MountedReplayRecoveryOwner {
+        generation: u64,
+        actor: ActorId,
+        job: u64,
+        log: Option<JobReplayLog>,
+        captured: Option<JobPublication>,
+        publication_phase: u8,
+    }
+
+    struct MountedReplayRecoverySlot {
+        epoch: u64,
+        reserved: bool,
+        owner: Option<MountedReplayRecoveryOwner>,
+    }
+
+    struct MountedReplayRecoveryRegistry {
+        slots: [MountedReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY],
+        abandoned: [Option<MountedReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        cursor: usize,
+        abandoned_cursor: usize,
+    }
+
+    impl MountedReplayRecoveryRegistry {
+        fn new() -> Self {
+            Self { slots: std::array::from_fn(|_| MountedReplayRecoverySlot { epoch: 0, reserved: false, owner: None }), abandoned: std::array::from_fn(|_| None), cursor: 0, abandoned_cursor: 0 }
+        }
+
+        fn reserve(&mut self) -> Option<MountedReplayRecoveryToken> {
+            let index = self.slots.iter().position(|slot| !slot.reserved && slot.owner.is_none())?;
+            let epoch = self.slots[index].epoch.checked_add(1)?;
+            self.slots[index].epoch = epoch;
+            self.slots[index].reserved = true;
+            Some(MountedReplayRecoveryToken { index, epoch })
+        }
+
+        fn release(&mut self, token: MountedReplayRecoveryToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.epoch != token.epoch || !slot.reserved || slot.owner.is_some() {
+                return false;
+            }
+            slot.reserved = false;
+            true
+        }
+
+        fn publish(&mut self, token: MountedReplayRecoveryToken, owner: MountedReplayRecoveryOwner) {
+            if let Some(slot) = self.slots.get_mut(token.index) {
+                if slot.epoch == token.epoch && slot.reserved && slot.owner.is_none() {
+                    slot.owner = Some(owner);
+                    return;
+                }
+            }
+            let slot = self.abandoned.iter_mut().find(|slot| slot.is_none()).expect("pre-reserved recovery makes at most one discoverable owner reachable per mounted shell");
+            *slot = Some(owner);
+        }
+
+        fn close_one(&mut self) -> bool {
+            if let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.slots[*index].owner.is_some()) {
+                self.cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+                if mounted_replay_recovery_owner_close_one(self.slots[index].owner.as_mut().expect("published replay recovery owner")) {
+                    let terminal = self.slots[index].owner.take().expect("terminal replay recovery owner");
+                    debug_assert!(terminal.log.is_none() && terminal.captured.is_none());
+                    self.slots[index].reserved = false;
+                }
+                return true;
+            }
+            let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.abandoned_cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.abandoned[*index].is_some()) else {
+                return false;
+            };
+            self.abandoned_cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
+            if mounted_replay_recovery_owner_close_one(self.abandoned[index].as_mut().expect("discoverable abandoned replay owner")) {
+                let terminal = self.abandoned[index].take().expect("terminal abandoned replay owner");
+                debug_assert!(terminal.log.is_none() && terminal.captured.is_none());
+            }
+            true
+        }
+
+        fn has_close_work(&self) -> bool {
+            self.slots.iter().any(|slot| slot.owner.is_some()) || self.abandoned.iter().any(Option::is_some)
+        }
+    }
+
+    fn mounted_replay_recovery_owner_close_one(owner: &mut MountedReplayRecoveryOwner) -> bool {
+        if let Some(publication) = owner.captured.as_mut() {
+            let released = match (&mut publication.outcome, owner.publication_phase) {
+                (semio_framework_actor::JobStepOutcome::PreviewReady { preview }, 0) => std::mem::take(preview).capacity(),
+                (semio_framework_actor::JobStepOutcome::CheckpointReady { checkpoint }, 0) => std::mem::take(&mut checkpoint.state).capacity(),
+                (semio_framework_actor::JobStepOutcome::Complete { candidate }, 0) => std::mem::take(&mut candidate.state).capacity(),
+                (semio_framework_actor::JobStepOutcome::Complete { candidate }, 1) => std::mem::take(&mut candidate.output).capacity(),
+                (semio_framework_actor::JobStepOutcome::Fault { detail }, 0) => std::mem::take(detail).capacity(),
+                _ => 0,
+            };
+            let phases = match &publication.outcome {
+                semio_framework_actor::JobStepOutcome::Complete { .. } => 2,
+                semio_framework_actor::JobStepOutcome::PreviewReady { .. } | semio_framework_actor::JobStepOutcome::CheckpointReady { .. } | semio_framework_actor::JobStepOutcome::Fault { .. } => 1,
+                semio_framework_actor::JobStepOutcome::Yield | semio_framework_actor::JobStepOutcome::Cancelled => 0,
+            };
+            owner.publication_phase += 1;
+            if owner.publication_phase >= phases {
+                owner.captured = None;
+            }
+            let _ = released;
+            return false;
+        }
+        if let Some(log) = owner.log.as_mut() {
+            log.begin_close();
+            let now = semio_framework_job::default_now_ms();
+            let mut preview_sequence = owner.job;
+            let mut context = semio_framework_job::StepContext::new(
+                semio_framework_job::OperationId(owner.actor.0),
+                semio_framework_job::Generation(owner.generation),
+                semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::MAINTENANCE_LANE_WALL_MS)),
+                semio_framework_job::root_cancel_token(),
+                semio_framework_job::default_now_ms,
+                &mut preview_sequence,
+            );
+            let _ = log.close_step(&mut context);
+            if log.terminal_is_empty() {
+                owner.log = None;
+            }
+            return false;
+        }
+        true
+    }
+
+    fn mounted_replay_recovery_registry() -> &'static Mutex<MountedReplayRecoveryRegistry> {
+        static REGISTRY: OnceLock<Mutex<MountedReplayRecoveryRegistry>> = OnceLock::new();
+        REGISTRY.get_or_init(|| Mutex::new(MountedReplayRecoveryRegistry::new()))
+    }
+
+    impl Drop for MountedJobReplay {
+        fn drop(&mut self) {
+            let Some(token) = self.recovery.take() else { return };
+            if self.log.terminal_is_empty() && self.captured.is_none() && self.policy.is_none() {
+                unsafe { ManuallyDrop::drop(&mut self.log) };
+                assert!(mounted_replay_recovery_registry().lock().expect("replay recovery lock").release(token));
+                return;
+            }
+            let owner =
+                MountedReplayRecoveryOwner { generation: self.authority.operation.generation, actor: self.actor, job: self.authority.job, log: Some(unsafe { ManuallyDrop::take(&mut self.log) }), captured: self.captured.take(), publication_phase: 0 };
+            mounted_replay_recovery_registry().lock().expect("replay recovery lock").publish(token, owner);
+        }
+    }
+
     struct ClosingKernelApp {
         instance: u32,
         actors: [ActorId; JOB_PROGRESS_ACTIVE_CAPACITY],
         actor_count: usize,
+        replay_begin_cursor: usize,
         begin_cursor: usize,
         unregister_cursor: usize,
+        route_cursor: usize,
     }
 
     impl ClosingKernelApp {
@@ -4757,6 +5959,7 @@ pub(crate) mod kernel_runtime {
         /// pool-scheduled job on `crate::renderer_worker_pool()` — no `ShardExecutor`/forwarder OS
         /// threads — see `🎠️runtime.rs`'s own module doc.
         runtime: crate::parallel_runtime::ParallelRuntime,
+        worker_count: u16,
         /// ⏱️ Monotonic milliseconds this host's own `Kernel::tick` calls are stamped with — this
         /// crate's purity-respecting clock source (`Kernel` itself takes no clock, per `🎭️actor`'s
         /// own rule), incremented once per `run_turn`-internal tick, never wall-clock-read.
@@ -4780,6 +5983,10 @@ pub(crate) mod kernel_runtime {
         rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
         rejected_events: Option<RejectedKernelEvents>,
         job_progress: JobProgressOverlayStore,
+        replay_routes: [Option<MountedReplayRouteSeed>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        job_replays: [Option<MountedJobReplay>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        product_replay_claims: [Option<MountedProductReplayClaim>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        product_replay_authorities: [Option<MountedProductReplayAuthority>; JOB_PROGRESS_ACTIVE_CAPACITY],
         rejected_job_progress: [Option<JobProgressRejected>; 64],
         pending_job_progress_presentations: [Option<PendingJobProgressPresentation>; JOB_PROGRESS_PRESENTATION_CAPACITY],
         closing_apps: [Option<ClosingKernelApp>; JOB_PROGRESS_ACTIVE_CAPACITY],
@@ -4798,10 +6005,12 @@ pub(crate) mod kernel_runtime {
             // 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
             // type mints for itself — see `ParallelRuntime::new`'s own doc.
             let pool = Arc::new(crate::renderer_worker_pool());
+            let worker_count = u16::try_from(pool.worker_count()).unwrap_or(u16::MAX);
             let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64).await;
             Self {
                 guest_runtime,
                 runtime,
+                worker_count,
                 now_ms: 0,
                 plugin_ordinals: HashMap::new(),
                 instances: HashMap::new(),
@@ -4814,6 +6023,10 @@ pub(crate) mod kernel_runtime {
                 rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
                 rejected_events: None,
                 job_progress: JobProgressOverlayStore::new(),
+                replay_routes: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
+                job_replays: std::array::from_fn(|_| None),
+                product_replay_claims: std::array::from_fn(|_| None),
+                product_replay_authorities: std::array::from_fn(|_| None),
                 rejected_job_progress: std::array::from_fn(|_| None),
                 pending_job_progress_presentations: std::array::from_fn(|_| None),
                 closing_apps: std::array::from_fn(|_| None),
@@ -4823,7 +6036,414 @@ pub(crate) mod kernel_runtime {
             }
         }
 
+        fn mount_product_replay(&mut self, mut owner: MountedProductReplayRequest) -> Result<(), MountedProductReplayRequest> {
+            let Some(&actor) = self.instances.get(&owner.instance) else { return Err(owner) };
+            if owner.job == 0
+                || owner.job_kind().is_empty()
+                || owner.raw().job != owner.job
+                || owner.raw().kind().as_bytes() != owner.job_kind()
+                || owner.raw().placement != owner.placement
+                || JobReplayRequest::from_spawn(owner.raw().kind(), owner.raw().input()) != owner.request
+                || self.product_replay_claims.iter().flatten().any(|claim| claim.actor == actor && claim.job() == owner.job)
+                || self.product_replay_authorities.iter().flatten().any(|authority| authority.actor == actor && authority.job() == owner.job)
+            {
+                return Err(owner);
+            }
+            let kind = std::str::from_utf8(owner.job_kind()).ok();
+            let Some(kind) = kind else { return Err(owner) };
+            let kind_identity = JobReplayRequest::from_spawn(kind, &[]);
+            if kind_identity.controller != owner.request.controller || kind_identity.tool != owner.request.tool || kind_identity.schema != owner.request.schema || kind_identity.version != owner.request.version {
+                return Err(owner);
+            }
+            let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.product_replay_claims[*index].is_none() && self.product_replay_authorities[*index].is_none()) else { return Err(owner) };
+            owner.raw_mut().acknowledge_mount();
+            self.product_replay_claims[index] = Some(MountedProductReplayClaim { request: Some(owner), actor, record_cursor: 0, checkpoint: None });
+            Ok(())
+        }
+
+        fn product_replay_pending_instance(&self) -> Option<u32> {
+            self.product_replay_authorities.iter().flatten().next().map(MountedProductReplayAuthority::instance).or_else(|| self.product_replay_claims.iter().flatten().next().map(MountedProductReplayClaim::instance))
+        }
+
+        fn abort_product_replay_one(&mut self, instance: u32) {
+            if let Some(index) = self.product_replay_authorities.iter().position(|authority| authority.as_ref().is_some_and(|authority| authority.instance() == instance)) {
+                self.product_replay_authorities[index].take().expect("faulted product replay authority remains exact").retire();
+            } else if let Some(index) = self.product_replay_claims.iter().position(|claim| claim.as_ref().is_some_and(|claim| claim.instance() == instance)) {
+                self.product_replay_claims[index].take().expect("faulted product replay claim remains exact").retire();
+            }
+        }
+
+        async fn advance_product_replay(&mut self, instance: u32) -> Result<ExchangeOutcome, String> {
+            let idle = || ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+            if let Some(index) = self.product_replay_authorities.iter().position(|authority| authority.as_ref().is_some_and(|authority| authority.instance() == instance)) {
+                let (actor, job, profile_cursor, profile_started) = {
+                    let authority = self.product_replay_authorities[index].as_ref().expect("selected product replay authority");
+                    (authority.actor, authority.job(), authority.profile_cursor, authority.profile_started)
+                };
+                if profile_cursor == PRODUCT_REPLAY_PROFILE_COUNT {
+                    self.product_replay_authorities[index].as_mut().expect("completed product replay authority remains exact").acknowledge_raw_retirement_boundary().map_err(str::to_string)?;
+                    self.product_replay_authorities[index].take().expect("completed product replay authority remains exact").retire();
+                    return Ok(idle());
+                }
+                let entry_index = self.job_replays.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor && entry.authority.job == job)).ok_or_else(|| "kernel: product replay lost its mounted log".to_string())?;
+                let process_slot = self.runtime.kernel().actor_record(actor).await.map_or(u16::MAX, |record| record.shard.0);
+                let (turn, request, placement, route, checkpoint, terminal, expected_begin, expected_restore_start_ordinal) = {
+                    let entry = self.job_replays[entry_index].as_ref().expect("qualified product replay log");
+                    let terminal =
+                        entry.log.record_header(entry.log.sealed_records().checked_sub(1).ok_or_else(|| "kernel: product replay has no terminal record".to_string())?).ok_or_else(|| "kernel: product replay terminal record is missing".to_string())?;
+                    let checkpoint = entry.log.last_checkpoint_header().map(|header| MountedProductReplayCheckpoint {
+                        ordinal: header.ordinal,
+                        digest: header.payload_digest,
+                        pages: u8::try_from(header.payload_bytes.saturating_add(semio_framework_actor::JOB_REPLAY_PAGE_BYTES - 1) / semio_framework_actor::JOB_REPLAY_PAGE_BYTES).unwrap_or(u8::MAX),
+                        applied_progress: header.applied_progress,
+                    });
+                    let (expected_begin, expected_restore_start_ordinal) = if profile_started {
+                        if entry.replay_started {
+                            (false, entry.accepted_replay_sequence)
+                        } else {
+                            (true, entry.replay_submit_sequence)
+                        }
+                    } else {
+                        (true, entry.accepted_replay_sequence)
+                    };
+                    (entry.authority, entry.request, entry.placement, entry.log.route(), checkpoint, terminal, expected_begin, expected_restore_start_ordinal)
+                };
+                let logical_worker_count = mounted_product_replay_profile(self.worker_count, profile_cursor).ok_or_else(|| "kernel: product replay profile is invalid".to_string())?;
+                let logical_worker_slot = mounted_product_replay_worker_slot(process_slot, logical_worker_count).ok_or_else(|| "kernel: product replay slot is invalid".to_string())?;
+                let expected = MountedProductReplayExpected {
+                    instance,
+                    actor,
+                    turn,
+                    request,
+                    placement,
+                    route,
+                    checkpoint,
+                    terminal,
+                    process_worker_count: self.worker_count,
+                    process_worker_slot: process_slot,
+                    logical_worker_count,
+                    logical_worker_slot,
+                    begin: expected_begin,
+                    restore_start_ordinal: expected_restore_start_ordinal,
+                };
+                let authority = self.product_replay_authorities[index].take().expect("selected product replay authority");
+                match authority.validate(expected) {
+                    Ok(authority) => self.product_replay_authorities[index] = Some(authority),
+                    Err(authority) => {
+                        self.product_replay_authorities[index] = Some(authority);
+                        return Err("kernel: mounted product replay authority became stale; exact owner remains mounted".to_string());
+                    }
+                }
+                if profile_started {
+                    let (requested, complete, accepted_sequence) = {
+                        let entry = self.job_replays[entry_index].as_ref().expect("qualified product replay log");
+                        (entry.replay_requested, entry.log.replay_is_complete(), entry.accepted_replay_sequence)
+                    };
+                    if !requested && complete {
+                        let authority = self.product_replay_authorities[index].as_mut().expect("completed product replay authority");
+                        authority.profile_cursor += 1;
+                        authority.profile_started = false;
+                        authority.restore_start_ordinal = accepted_sequence;
+                        if let Some(worker_count) = mounted_product_replay_profile(self.worker_count, authority.profile_cursor) {
+                            authority.worker_count = worker_count;
+                            authority.worker_slot = mounted_product_replay_worker_slot(process_slot, worker_count).ok_or_else(|| "kernel: next product replay slot is invalid".to_string())?;
+                            authority.begin = true;
+                        }
+                        return Ok(idle());
+                    }
+                    let outcome = self.run_turn(actor, instance, Vec::new()).await?;
+                    let (replay_started, restore_start_ordinal) = {
+                        let entry = self.job_replays[entry_index].as_ref().expect("advanced product replay remains mounted");
+                        (entry.replay_started, if entry.replay_started { entry.accepted_replay_sequence } else { entry.replay_submit_sequence })
+                    };
+                    let authority = self.product_replay_authorities[index].as_mut().expect("advanced product replay authority");
+                    authority.begin = !replay_started;
+                    authority.restore_start_ordinal = restore_start_ordinal;
+                    return Ok(outcome);
+                }
+                let (worker_count, worker_slot, begin, restore_start_ordinal) = {
+                    let authority = self.product_replay_authorities[index].as_ref().expect("starting product replay authority");
+                    (authority.worker_count, authority.worker_slot, authority.begin, authority.restore_start_ordinal)
+                };
+                if !begin {
+                    return Err("kernel: product replay start lost its qualified begin authority".to_string());
+                }
+                self.request_job_replay(actor, job, worker_count, worker_slot, restore_start_ordinal).await?;
+                let authority = self.product_replay_authorities[index].as_mut().expect("starting product replay authority");
+                authority.profile_started = true;
+                authority.restore_start_ordinal = None;
+                let outcome = self.run_turn(actor, instance, Vec::new()).await?;
+                let (replay_started, restore_start_ordinal) = {
+                    let entry = self.job_replays[entry_index].as_ref().expect("started product replay remains mounted");
+                    (entry.replay_started, if entry.replay_started { entry.accepted_replay_sequence } else { entry.replay_submit_sequence })
+                };
+                let authority = self.product_replay_authorities[index].as_mut().expect("started product replay authority");
+                authority.begin = !replay_started;
+                authority.restore_start_ordinal = restore_start_ordinal;
+                return Ok(outcome);
+            }
+
+            let Some(index) = self.product_replay_claims.iter().position(|claim| claim.as_ref().is_some_and(|claim| claim.instance() == instance)) else { return Ok(idle()) };
+            let (actor, job, request) = {
+                let claim = self.product_replay_claims[index].as_ref().expect("selected product replay claim");
+                (claim.actor, claim.job(), claim.request().request)
+            };
+            let Some(entry_index) = self.job_replays.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor && entry.authority.job == job)) else {
+                return self.run_turn(actor, instance, Vec::new()).await;
+            };
+            let entry = self.job_replays[entry_index].as_ref().expect("selected mounted replay log");
+            if entry.request != request {
+                return Err("kernel: product replay request digest does not match the mounted session".to_string());
+            }
+            if entry.log.has_pending_work() || entry.captured.is_some() || entry.policy.is_some() {
+                return Ok(idle());
+            }
+            if !entry.terminal_seen {
+                return self.run_turn(actor, instance, Vec::new()).await;
+            }
+            let record_cursor = self.product_replay_claims[index].as_ref().expect("selected product replay claim").record_cursor;
+            if record_cursor < entry.log.sealed_records() {
+                let header = entry.log.record_header(record_cursor).ok_or_else(|| "kernel: product replay record cursor is stale".to_string())?;
+                let claim = self.product_replay_claims[index].as_mut().expect("selected product replay claim");
+                if header.kind == JobReplayPublicationKind::Checkpoint {
+                    let pages = header.payload_bytes.saturating_add(semio_framework_actor::JOB_REPLAY_PAGE_BYTES - 1) / semio_framework_actor::JOB_REPLAY_PAGE_BYTES;
+                    claim.checkpoint = Some(MountedProductReplayCheckpoint { ordinal: header.ordinal, digest: header.payload_digest, pages: u8::try_from(pages).unwrap_or(u8::MAX), applied_progress: header.applied_progress });
+                }
+                claim.record_cursor += 1;
+                return Ok(idle());
+            }
+            let terminal = entry.log.record_header(entry.log.sealed_records().checked_sub(1).ok_or_else(|| "kernel: product replay log is empty".to_string())?).ok_or_else(|| "kernel: product replay terminal record is missing".to_string())?;
+            if !matches!(terminal.kind, JobReplayPublicationKind::Commit | JobReplayPublicationKind::Cancelled | JobReplayPublicationKind::Fault) {
+                return Err("kernel: product replay log has no typed terminal publication".to_string());
+            }
+            if terminal.prefix_digest != entry.log.prefix_digest() {
+                return Err("kernel: product replay terminal prefix does not cover the retained log".to_string());
+            }
+            let expected_checkpoint = entry.log.last_checkpoint_header().map(|header| MountedProductReplayCheckpoint {
+                ordinal: header.ordinal,
+                digest: header.payload_digest,
+                pages: u8::try_from(header.payload_bytes.saturating_add(semio_framework_actor::JOB_REPLAY_PAGE_BYTES - 1) / semio_framework_actor::JOB_REPLAY_PAGE_BYTES).unwrap_or(u8::MAX),
+                applied_progress: header.applied_progress,
+            });
+            if self.product_replay_claims[index].as_ref().expect("qualified product replay claim").checkpoint != expected_checkpoint {
+                return Err("kernel: product replay checkpoint witness does not match the retained log".to_string());
+            }
+            let route = entry.log.route();
+            let operation = entry.authority.operation;
+            let process_slot = self.runtime.kernel().actor_record(actor).await.map_or(u16::MAX, |record| record.shard.0);
+            if terminal.worker_count != self.worker_count || terminal.worker_slot != process_slot {
+                return Err("kernel: product replay physical process identity changed before qualification".to_string());
+            }
+            let worker_count = mounted_product_replay_profile(self.worker_count, 0).ok_or_else(|| "kernel: first product replay profile is invalid".to_string())?;
+            let worker_slot = mounted_product_replay_worker_slot(process_slot, worker_count).ok_or_else(|| "kernel: first product replay slot is invalid".to_string())?;
+            let mut claim = self.product_replay_claims[index].take().expect("qualified product replay claim");
+            let mut request_owner = claim.request.take().expect("qualified product replay request transfers once");
+            request_owner.raw_mut().acknowledge_qualification(claim.checkpoint);
+            self.product_replay_authorities[index] = Some(MountedProductReplayAuthority {
+                request_owner: Some(request_owner),
+                actor,
+                route,
+                operation,
+                generation: operation.generation,
+                seed: operation.seed,
+                checkpoint: claim.checkpoint,
+                terminal,
+                worker_count,
+                worker_slot,
+                begin: true,
+                restore_start_ordinal: None,
+                profile_cursor: 0,
+                profile_started: false,
+            });
+            Ok(idle())
+        }
+
+        async fn request_job_replay(&mut self, actor: ActorId, job: u64, worker_count: u16, worker_slot: u16, restore_start_ordinal: Option<u64>) -> Result<(), String> {
+            if !matches!(worker_count, 1 | 2 | 4) && worker_count != self.worker_count {
+                return Err("kernel: replay worker profile is not admitted by the mounted shared process route".to_string());
+            }
+            let process_slot = self.runtime.kernel().actor_record(actor).await.map_or(u16::MAX, |record| record.shard.0);
+            if mounted_product_replay_worker_slot(process_slot, worker_count) != Some(worker_slot) {
+                return Err("kernel: replay worker slot does not match the qualified mounted process profile".to_string());
+            }
+            let entry = self.job_replays.iter_mut().flatten().find(|entry| entry.actor == actor && entry.authority.job == job).ok_or_else(|| "kernel: replay log is not mounted".to_string())?;
+            if entry.accepted_replay_sequence != restore_start_ordinal {
+                return Err("kernel: replay restore/start ordinal does not match the qualified previous profile".to_string());
+            }
+            if entry.replay_requested {
+                if !entry.pending_replay_start_is_exact(worker_count, worker_slot) {
+                    return Err("kernel: replay begin does not match the retained pending restore/start identity".to_string());
+                }
+                return Ok(());
+            }
+            if !entry.terminal_seen || entry.log.has_pending_work() || entry.captured.is_some() || entry.policy.is_some() {
+                return Err("kernel: replay log is not sealed and quiescent".to_string());
+            }
+            entry.log.begin_replay(entry.authority.operation.generation).map_err(|fault| format!("kernel: replay begin rejected: {fault:?}"))?;
+            entry.replay_requested = true;
+            entry.replay_started = false;
+            entry.replay_submit_sequence = None;
+            entry.accepted_replay_sequence = None;
+            entry.replay_worker_count = worker_count;
+            entry.replay_worker_slot = worker_slot;
+            Ok(())
+        }
+
+        fn begin_job_replay_capture(&mut self, actor: ActorId, authority: JobTurn, request: JobReplayRequest, placement: JobPlacement, worker_count: u16, worker_slot: u16, publication: JobPublication) {
+            let replay_index = self.job_replays.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor && entry.authority.job == authority.job)).or_else(|| self.job_replays.iter().position(Option::is_none));
+            let Some(replay_index) = replay_index else {
+                self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Capacity, publication));
+                return;
+            };
+            if self.job_replays[replay_index].is_none() {
+                let Some(seed) = self.replay_routes.iter().flatten().find(|seed| seed.actor == actor).copied() else {
+                    self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Missing, publication));
+                    return;
+                };
+                let Some(recovery) = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve() else {
+                    self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Capacity, publication));
+                    return;
+                };
+                let Ok(log) = JobReplayLog::new(seed.compose(request), authority.operation.generation) else {
+                    assert!(mounted_replay_recovery_registry().lock().expect("replay recovery lock").release(recovery));
+                    self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Stale, publication));
+                    return;
+                };
+                self.job_replays[replay_index] = Some(MountedJobReplay {
+                    actor,
+                    authority,
+                    request,
+                    placement,
+                    log: ManuallyDrop::new(log),
+                    captured: None,
+                    policy: None,
+                    terminal_seen: false,
+                    replay_requested: false,
+                    replay_started: false,
+                    replay_submit_sequence: None,
+                    accepted_replay_sequence: None,
+                    replay_worker_count: 0,
+                    replay_worker_slot: u16::MAX,
+                    recovery: Some(recovery),
+                });
+            }
+            let entry = self.job_replays[replay_index].as_mut().expect("mounted replay slot");
+            if entry.authority.operation.operation != authority.operation.operation
+                || entry.authority.operation.base_revision != authority.operation.base_revision
+                || entry.authority.operation.generation != authority.operation.generation
+                || entry.authority.operation.seed != authority.operation.seed
+                || entry.placement != placement
+            {
+                self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Stale, publication));
+                return;
+            }
+            let terminal = matches!(&publication.outcome, semio_framework_actor::JobStepOutcome::Complete { .. } | semio_framework_actor::JobStepOutcome::Cancelled | semio_framework_actor::JobStepOutcome::Fault { .. });
+            let now = semio_framework_job::default_now_ms();
+            let mut preview_sequence = publication.turn.operation.preview_sequence;
+            let mut context = semio_framework_job::StepContext::new(
+                semio_framework_job::OperationId(publication.turn.operation.operation),
+                semio_framework_job::Generation(publication.turn.operation.generation),
+                semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::INTERACTIVE_LANE_WALL_MS)),
+                semio_framework_job::root_cancel_token(),
+                semio_framework_job::default_now_ms,
+                &mut preview_sequence,
+            );
+            match entry.log.begin_capture(&mut context, actor, worker_count, worker_slot, TURN_BUDGET.fuel, TURN_BUDGET.deadline_ms, publication) {
+                Ok(()) => entry.terminal_seen |= terminal,
+                Err(rejected) => {
+                    let fault = match rejected.fault {
+                        JobReplayFault::Stale | JobReplayFault::Sequence | JobReplayFault::Mismatch | JobReplayFault::Exhausted => semio_framework_actor::JobProgressFault::Stale,
+                        JobReplayFault::Cancelled => semio_framework_actor::JobProgressFault::Cancelled,
+                        JobReplayFault::Deadline => semio_framework_actor::JobProgressFault::Budget,
+                        JobReplayFault::Busy => semio_framework_actor::JobProgressFault::Busy,
+                        JobReplayFault::Capacity | JobReplayFault::PageBytes | JobReplayFault::ProcessPages => semio_framework_actor::JobProgressFault::Capacity,
+                    };
+                    self.retain_job_progress_rejection(JobProgressRejected::new(fault, rejected.into_publication()));
+                }
+            }
+        }
+
+        fn job_replay_maintenance_step(&mut self) -> bool {
+            let Some(index) = self.job_replays.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.log.has_pending_work() || entry.captured.is_some() || entry.policy.is_some())) else {
+                return false;
+            };
+            if let Some(policy) = self.job_replays[index].as_mut().expect("mounted replay").policy.take() {
+                let entry = self.job_replays[index].as_mut().expect("mounted replay");
+                let operation = entry.authority.operation;
+                let now = semio_framework_job::default_now_ms();
+                let mut preview_sequence = operation.preview_sequence;
+                let mut context = semio_framework_job::StepContext::new(
+                    semio_framework_job::OperationId(operation.operation),
+                    semio_framework_job::Generation(operation.generation),
+                    semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::MAINTENANCE_LANE_WALL_MS)),
+                    semio_framework_job::root_cancel_token(),
+                    semio_framework_job::default_now_ms,
+                    &mut preview_sequence,
+                );
+                if entry.log.acknowledge_publication(&mut context, policy).is_err() {
+                    entry.log.begin_close();
+                }
+                return true;
+            }
+            if let Some(publication) = self.job_replays[index].as_mut().expect("mounted replay").captured.take() {
+                let entry = self.job_replays[index].as_ref().expect("mounted replay");
+                let (actor, authority) = (entry.actor, entry.authority);
+                let policy = self.publish_captured_job_progress(actor, authority, publication);
+                self.job_replays[index].as_mut().expect("mounted replay").policy = Some(policy);
+                return true;
+            }
+            if self.job_replays[index].as_ref().expect("mounted replay").log.publication_is_ready() {
+                let publication = self.job_replays[index].as_mut().expect("mounted replay").log.take_captured_publication();
+                self.job_replays[index].as_mut().expect("mounted replay").captured = publication;
+                return true;
+            }
+            let operation = self.job_replays[index].as_ref().expect("mounted replay").authority.operation;
+            let now = semio_framework_job::default_now_ms();
+            let mut preview_sequence = operation.preview_sequence;
+            let mut context = semio_framework_job::StepContext::new(
+                semio_framework_job::OperationId(operation.operation),
+                semio_framework_job::Generation(operation.generation),
+                semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::INTERACTIVE_LANE_WALL_MS)),
+                semio_framework_job::root_cancel_token(),
+                semio_framework_job::default_now_ms,
+                &mut preview_sequence,
+            );
+            if self.job_replays[index].as_ref().expect("mounted replay").log.close_started() {
+                let _ = self.job_replays[index].as_mut().expect("mounted replay").log.close_step(&mut context);
+                if self.job_replays[index].as_ref().expect("mounted replay").log.terminal_is_empty() {
+                    let terminal = self.job_replays[index].take().expect("terminal mounted replay");
+                    drop(terminal);
+                }
+                return true;
+            }
+            if matches!(self.job_replays[index].as_mut().expect("mounted replay").log.maintenance_step(&mut context), JobReplayStep::Refused(_)) {
+                self.job_replays[index].as_mut().expect("mounted replay").log.begin_close();
+            }
+            true
+        }
+
         fn command_maintenance_step(&mut self) -> bool {
+            if mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").has_close_work() {
+                let _ = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_one();
+                return !self.command_maintenance_pending();
+            }
+            if mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_work() {
+                let step = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(true);
+                if let Some(owner) = step.request {
+                    if let Err(owner) = self.mount_product_replay(owner) {
+                        owner.retire();
+                    }
+                }
+                let _ = step.progressed;
+                return !self.command_maintenance_pending();
+            }
+            if mounted_replay_recovery_registry().lock().expect("replay recovery lock").has_close_work() {
+                let _ = mounted_replay_recovery_registry().lock().expect("replay recovery lock").close_one();
+                return !self.command_maintenance_pending();
+            }
+            if self.job_replay_maintenance_step() {
+                return !self.command_maintenance_pending();
+            }
             if let Some(close_index) = self.fault_closing_actors.iter().position(Option::is_some) {
                 let actor = self.fault_closing_actors[close_index].expect("fault close actor");
                 if let Some(pending_index) = self.pending_job_progress_presentations.iter().position(|pending| pending.as_ref().is_some_and(|pending| pending.receipt.identity().actor == actor)) {
@@ -4890,12 +6510,17 @@ pub(crate) mod kernel_runtime {
         }
 
         fn command_maintenance_pending(&self) -> bool {
-            self.fault_closing_actors.iter().flatten().any(|actor| {
-                self.pending_job_progress_presentations
-                    .iter()
-                    .find(|pending| pending.as_ref().is_some_and(|pending| pending.receipt.identity().actor == *actor))
-                    .is_none_or(|pending| job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").can_cancel(pending.as_ref().expect("matching pending presentation").token))
-            }) || self.job_progress.has_close_work()
+            mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").has_close_work()
+                || mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_work()
+                || mounted_replay_recovery_registry().lock().expect("replay recovery lock").has_close_work()
+                || self.fault_closing_actors.iter().flatten().any(|actor| {
+                    self.pending_job_progress_presentations
+                        .iter()
+                        .find(|pending| pending.as_ref().is_some_and(|pending| pending.receipt.identity().actor == *actor))
+                        .is_none_or(|pending| job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").can_cancel(pending.as_ref().expect("matching pending presentation").token))
+                })
+                || self.job_progress.has_close_work()
+                || self.job_replays.iter().flatten().any(|entry| entry.log.has_pending_work() || entry.captured.is_some() || entry.policy.is_some())
                 || self.rejected_job_progress.iter().any(Option::is_some)
                 || self.retained_command_closes.has_close_work()
                 || self.queued_command_closes.has_close_work()
@@ -4956,7 +6581,7 @@ pub(crate) mod kernel_runtime {
             *slot = Some(rejected);
         }
 
-        fn publish_job_progress(&mut self, actor: ActorId, authority: JobTurn, publication: JobPublication) {
+        fn publish_captured_job_progress(&mut self, actor: ActorId, authority: JobTurn, publication: JobPublication) -> JobReplayPublicationPolicy {
             let live = JobProgressLiveAuthority::new(authority.operation.operation, authority.operation.base_revision, authority.operation.generation);
             let stable_identity_matches = authority.step_sequence == 0
                 && authority.operation.preview_sequence == 0
@@ -4966,19 +6591,19 @@ pub(crate) mod kernel_runtime {
                 && authority.operation.generation == publication.turn.operation.generation;
             if !stable_identity_matches {
                 self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Stale, publication));
-                return;
+                return JobReplayPublicationPolicy::Rejected;
             }
             match self.job_progress.live_authority(actor, authority.job) {
                 Some(expected) if expected == live => {}
                 None => {
                     if let Err(fault) = self.job_progress.begin_operation(actor, authority.job, live) {
                         self.retain_job_progress_rejection(JobProgressRejected::new(fault, publication));
-                        return;
+                        return JobReplayPublicationPolicy::Rejected;
                     }
                 }
                 Some(_) => {
                     self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Stale, publication));
-                    return;
+                    return JobReplayPublicationPolicy::Rejected;
                 }
             }
             let now = semio_framework_job::default_now_ms();
@@ -4995,7 +6620,7 @@ pub(crate) mod kernel_runtime {
                 Ok(admission) => admission,
                 Err(fault) => {
                     self.retain_job_progress_rejection(JobProgressRejected::new(fault, publication));
-                    return;
+                    return JobReplayPublicationPolicy::Rejected;
                 }
             };
             let identity = JobProgressIdentity::from_publication(actor, &publication);
@@ -5007,20 +6632,21 @@ pub(crate) mod kernel_runtime {
                 semio_framework_actor::JobStepOutcome::Cancelled => JobProgressKind::Cancelled,
                 semio_framework_actor::JobStepOutcome::Fault { .. } => JobProgressKind::Fault,
             };
+            let displaced = kind == JobProgressKind::Preview && self.job_progress.has_visible_preview(actor, authority.job);
             let applied_progress = match &publication.outcome {
                 semio_framework_actor::JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.applied_progress,
                 _ => publication.turn.step_sequence,
             };
             let Some(presentation_token) = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").reserve(identity, kind, applied_progress) else {
                 self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Busy, publication));
-                return;
+                return JobReplayPublicationPolicy::Rejected;
             };
             let receipt = match self.job_progress.publish_reserved(&mut context, admission, publication, live) {
                 Ok(receipt) => receipt,
                 Err(rejected) => {
                     let _ = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").cancel(presentation_token);
                     self.retain_job_progress_rejection(rejected);
-                    return;
+                    return JobReplayPublicationPolicy::Rejected;
                 }
             };
             if self.pending_job_progress_presentations[presentation_token.index].is_some() || !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").publish(presentation_token) {
@@ -5029,9 +6655,14 @@ pub(crate) mod kernel_runtime {
                 if self.job_progress.abort(receipt).is_err() {
                     let _ = self.job_progress.begin_close_actor(actor);
                 }
-                return;
+                return JobReplayPublicationPolicy::Rejected;
             }
             self.pending_job_progress_presentations[presentation_token.index] = Some(PendingJobProgressPresentation { token: presentation_token, receipt });
+            if displaced {
+                JobReplayPublicationPolicy::Displaced
+            } else {
+                JobReplayPublicationPolicy::Accepted
+            }
         }
 
         fn plugin_ordinal(&mut self, plugin_id: &str) -> u16 {
@@ -5040,12 +6671,15 @@ pub(crate) mod kernel_runtime {
         }
 
         async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
+            let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
             let mut bytes_owner = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await? {
                 semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
                 _ => return Err("kernel: native I/O returned the wrong value for wasm read".into()),
             };
             let bytes = bytes_owner.single_page().ok_or_else(|| "kernel: populated Wasm exceeds the mounted single-page retained compiler authority".to_string())?;
             let hash = PackageHash(*blake3::hash(bytes).as_bytes());
+            let plugin_digest = JobReplayRequest::from_spawn(&plugin_id, &[]).tool;
+            let document_digest = JobReplayRequest::from_spawn(&app_id, &[]).tool;
             let package_id = PackageId(plugin_id.clone());
             let package_ref = PackageRef { package: package_id.clone(), hash };
             // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
@@ -5070,6 +6704,7 @@ pub(crate) mod kernel_runtime {
                     &TURN_BUDGET,
                 )
                 .await?;
+            self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: plugin_digest, package: hash.0, window: u64::from(instance_id), document: document_digest });
             self.instances.insert(instance_id, actor);
             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
@@ -5124,6 +6759,14 @@ pub(crate) mod kernel_runtime {
             }
             let parent_grants = self.runtime.kernel().actor_record(parent).await.map(|record| record.capabilities).unwrap_or_default();
             for extension in extensions.to_vec() {
+                let Some(replay_route_index) = self.replay_routes.iter().position(Option::is_none) else {
+                    crate::log_debug("kernel: fixed replay route registry is full; extension activation refused");
+                    break;
+                };
+                let Some(parent_route) = self.replay_routes.iter().flatten().find(|route| route.actor == parent).copied() else {
+                    crate::log_debug("kernel: parent replay route disappeared before extension activation");
+                    break;
+                };
                 let extension_dir = modules_root.join(&extension.extension_id);
                 let Some(extension_wasm_path) = find_wasm_artifact(&extension_dir).await else {
                     crate::log_debug(&format!("kernel: extension {} of {plugin_id} has no compiled wasm under {}, skipping", extension.extension_id, extension_dir.display()));
@@ -5166,6 +6809,8 @@ pub(crate) mod kernel_runtime {
                 // ready the moment a broker starts populating `parent_grants` for real.
                 match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).await {
                     Ok(extension_actor) => {
+                        self.replay_routes[replay_route_index] =
+                            Some(MountedReplayRouteSeed { actor: extension_actor, plugin: JobReplayRequest::from_spawn(&extension.extension_id, &[]).tool, package: extension_hash.0, window: parent_route.window, document: parent_route.document });
                         let scoped_grants = intersect_capabilities(&parent_grants, &extension.capability_requests).await;
                         if let Err(error) = self.runtime.kernel_mut().set_capabilities(extension_actor, scoped_grants).await {
                             crate::log_debug(&format!("kernel: set_capabilities({extension_actor:?}) failed: {error}"));
@@ -5180,6 +6825,22 @@ pub(crate) mod kernel_runtime {
         }
 
         async fn destroy_app_step(&mut self, instance: u32) -> bool {
+            if let Some(index) = self.product_replay_claims.iter().position(|claim| claim.as_ref().is_some_and(|claim| claim.instance() == instance)) {
+                self.product_replay_claims[index].take().expect("destroyed app product replay claim remains exact").retire();
+                return false;
+            }
+            if let Some(index) = self.product_replay_authorities.iter().position(|authority| authority.as_ref().is_some_and(|authority| authority.instance() == instance)) {
+                self.product_replay_authorities[index].take().expect("destroyed app product replay authority remains exact").retire();
+                return false;
+            }
+            if mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_instance(instance) {
+                let _ = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").close_instance_one(instance);
+                return false;
+            }
+            if mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").has_instance(instance) {
+                let _ = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_instance_one(instance);
+                return false;
+            }
             let _ = self.retained_command_closes.begin_close_key(u64::from(instance));
             let _ = self.queued_command_closes.begin_close_key(u64::from(instance));
             self.command_document_closes.begin_close_instance(u64::from(instance));
@@ -5200,7 +6861,7 @@ pub(crate) mod kernel_runtime {
                     let mut actors = [ActorId(0); JOB_PROGRESS_ACTIVE_CAPACITY];
                     let actor_count = removed.len();
                     actors[..actor_count].copy_from_slice(&removed);
-                    self.closing_apps[index] = Some(ClosingKernelApp { instance, actors, actor_count, begin_cursor: 0, unregister_cursor: 0 });
+                    self.closing_apps[index] = Some(ClosingKernelApp { instance, actors, actor_count, replay_begin_cursor: 0, begin_cursor: 0, unregister_cursor: 0, route_cursor: 0 });
                     return false;
                 }
             };
@@ -5215,6 +6876,16 @@ pub(crate) mod kernel_runtime {
                 let actor = pending.receipt.identity().actor;
                 if self.job_progress.abort(pending.receipt).is_err() {
                     let _ = self.job_progress.begin_close_actor(actor);
+                }
+                self.closing_apps[close_index] = Some(closing);
+                return false;
+            }
+            if closing.replay_begin_cursor < closing.actor_count {
+                let actor = closing.actors[closing.replay_begin_cursor];
+                if let Some(entry) = self.job_replays.iter_mut().flatten().find(|entry| entry.actor == actor && !entry.log.close_started()) {
+                    entry.log.begin_close();
+                } else {
+                    closing.replay_begin_cursor += 1;
                 }
                 self.closing_apps[close_index] = Some(closing);
                 return false;
@@ -5238,21 +6909,53 @@ pub(crate) mod kernel_runtime {
                 self.closing_apps[close_index] = Some(closing);
                 return false;
             }
+            if closing.actors[..closing.actor_count].iter().any(|actor| self.job_replays.iter().flatten().any(|entry| entry.actor == *actor)) {
+                let _ = self.command_maintenance_step();
+                self.closing_apps[close_index] = Some(closing);
+                return false;
+            }
             if !self.command_document_closes.instance_is_empty(u64::from(instance)) {
                 let _ = self.command_maintenance_step();
                 self.closing_apps[close_index] = Some(closing);
                 return false;
             }
             if !self.retained.advance_instance_close_one(instance) {
+                self.closing_apps[close_index] = Some(closing);
                 return false;
             }
             if self.pending_rejections.take_instance_one(instance).is_some() {
+                self.closing_apps[close_index] = Some(closing);
+                return false;
+            }
+            if closing.route_cursor < closing.actor_count {
+                let actor = closing.actors[closing.route_cursor];
+                if let Some(index) = self.replay_routes.iter().position(|seed| seed.is_some_and(|seed| seed.actor == actor)) {
+                    self.replay_routes[index] = None;
+                }
+                closing.route_cursor += 1;
+                self.closing_apps[close_index] = Some(closing);
                 return false;
             }
             self.pending_rejections.instance_is_empty(instance)
         }
 
         fn close_realm_progress_step(&mut self) -> bool {
+            if let Some(index) = self.product_replay_claims.iter().position(Option::is_some) {
+                self.product_replay_claims[index].take().expect("realm product replay claim remains exact").retire();
+                return false;
+            }
+            if let Some(index) = self.product_replay_authorities.iter().position(Option::is_some) {
+                self.product_replay_authorities[index].take().expect("realm product replay authority remains exact").retire();
+                return false;
+            }
+            if mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_any() {
+                let _ = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(false);
+                return false;
+            }
+            if mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").has_close_work() {
+                let _ = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_one();
+                return false;
+            }
             if let Some(index) = self.pending_job_progress_presentations.iter().position(Option::is_some) {
                 let token = self.pending_job_progress_presentations[index].as_ref().expect("realm pending presentation").token;
                 if !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").cancel(token) {
@@ -5263,6 +6966,18 @@ pub(crate) mod kernel_runtime {
                 if self.job_progress.abort(pending.receipt).is_err() {
                     let _ = self.job_progress.begin_close_actor(actor);
                 }
+                return false;
+            }
+            if let Some(entry) = self.job_replays.iter_mut().flatten().find(|entry| !entry.log.close_started()) {
+                entry.log.begin_close();
+                return false;
+            }
+            if self.job_replays.iter().any(Option::is_some) {
+                let _ = self.command_maintenance_step();
+                return false;
+            }
+            if let Some(index) = self.replay_routes.iter().position(Option::is_some) {
+                self.replay_routes[index] = None;
                 return false;
             }
             if !self.realm_progress_close_started {
@@ -5442,17 +7157,27 @@ pub(crate) mod kernel_runtime {
         /// scope (see `📓️terra-kernel-loop-report.md`'s own gaps section).
         async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
             let mut envelopes = Vec::with_capacity(events.len().max(1));
+            let mut replay_start_index = None;
             if events.is_empty() {
-                envelopes.push(Envelope {
-                    to: actor,
-                    from: Origin::Kernel,
-                    lane: Lane::Interactive,
-                    seq: next_seq()?,
-                    deadline_ms: None,
-                    coalesce: None,
-                    cancel_of: None,
-                    payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? },
-                });
+                let replay_index = self.job_replays.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor && entry.replay_requested));
+                let (sequence, payload) = if let Some(index) = replay_index {
+                    let entry = self.job_replays[index].as_mut().expect("requested replay remains mounted");
+                    let Some(turn) = entry.log.expected_turn() else {
+                        entry.replay_requested = false;
+                        entry.replay_submit_sequence = None;
+                        return Ok(ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle });
+                    };
+                    if entry.replay_started {
+                        (next_seq()?, Payload::JobStep { turn })
+                    } else {
+                        let sequence = entry.replay_submission_sequence()?;
+                        replay_start_index = Some(index);
+                        (sequence, Payload::JobReplay { turn, request: entry.request, worker_count: entry.replay_worker_count, worker_slot: entry.replay_worker_slot })
+                    }
+                } else {
+                    (next_seq()?, Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? })
+                };
+                envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: sequence, deadline_ms: None, coalesce: None, cancel_of: None, payload });
             } else {
                 for event in &events {
                     envelopes.push(Envelope {
@@ -5476,15 +7201,24 @@ pub(crate) mod kernel_runtime {
                     }
                     _ => false,
                 };
-                if !matches!(self.runtime.submit(envelope).await, Backpressure::Accept) {
+                if matches!(self.runtime.submit(envelope).await, Backpressure::Accept) {
+                    if let Some(index) = replay_start_index {
+                        let entry = self.job_replays[index].as_mut().expect("accepted replay start remains mounted");
+                        entry.accept_replay_submission(envelope.seq)?;
+                    }
+                } else {
                     if began_job {
                         let _ = self.job_progress.begin_close_actor(actor);
                     }
                     crate::log_debug(&format!("kernel: run_turn submit for actor {} was not Accept-ed (mailbox pressure)", actor.0));
+                    if replay_start_index.is_some() {
+                        return Ok(ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle });
+                    }
                 }
             }
             let mut turn_result: Option<TurnResult> = None;
             let mut fault: Option<String> = None;
+            let mut replay_capture_started = false;
             loop {
                 self.now_ms += 1;
                 let decision = self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive)).await;
@@ -5506,7 +7240,25 @@ pub(crate) mod kernel_runtime {
                                 let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
                             }
                         }
-                        ShardOutcome::Job { actor: reported, authority, publication } => self.publish_job_progress(ActorId(reported), authority, publication),
+                        ShardOutcome::Job { actor: reported, authority, request, placement, publication } => {
+                            let worker_slot = self.runtime.kernel().actor_record(ActorId(reported)).await.map_or(u16::MAX, |record| record.shard.0);
+                            self.begin_job_replay_capture(ActorId(reported), authority, request, placement, self.worker_count, worker_slot, publication);
+                            replay_capture_started = true;
+                        }
+                        ShardOutcome::Resumed { actor: reported, operation } if reported == actor.0 => {
+                            let valid = self.job_replays.iter().flatten().any(|entry| {
+                                entry.actor == actor
+                                    && entry.replay_started
+                                    && entry.authority.operation.operation == operation.operation
+                                    && entry.authority.operation.base_revision == operation.base_revision
+                                    && entry.authority.operation.generation == operation.generation
+                                    && entry.authority.operation.seed == operation.seed
+                            });
+                            if !valid {
+                                return Err("kernel: replay restart returned stale operation identity".to_string());
+                            }
+                            replay_capture_started = true;
+                        }
                         // 🎠️ terra-kernel-loop: a trap must ALSO reach `Kernel::complete` — otherwise
                         // the failure ladder (`FailureState::on_signal`) never sees it, staying just as
                         // inert for the trap path as `Kernel::complete` being uncalled at all used to
@@ -5541,12 +7293,16 @@ pub(crate) mod kernel_runtime {
                         _ => {}
                     }
                 }
+                if replay_capture_started {
+                    break;
+                }
             }
             if let Some(message) = fault {
                 return Err(message);
             }
             match turn_result {
                 Some(result) => self.apply_turn_result(actor, instance, result).await,
+                None if replay_capture_started => Ok(ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }),
                 None => Err("kernel: shard produced no outcome for this turn".to_string()),
             }
         }
@@ -5777,6 +7533,26 @@ pub(crate) mod kernel_runtime {
             Poll::Ready(request)
         }
 
+        fn try_next(&self) -> Option<(KernelRequest, Arc<ResponseSlot>)> {
+            let mut state = self.state.try_lock().ok()?;
+            if state.len == 0 {
+                return None;
+            }
+            let index = state.read;
+            let request = state.slots[index].take().expect("fixed kernel request read slot is occupied");
+            let (pages, bytes) = request.0.command_credits();
+            state.read = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
+            state.len -= 1;
+            state.command_pages -= pages;
+            state.command_bytes -= bytes;
+            let producer = state.producer_waker.take();
+            drop(state);
+            if let Some(waker) = producer {
+                waker.wake();
+            }
+            Some(request)
+        }
+
         async fn next(&self) -> (KernelRequest, Arc<ResponseSlot>) {
             std::future::poll_fn(|cx| self.poll(cx)).await
         }
@@ -5841,7 +7617,9 @@ pub(crate) mod kernel_runtime {
                     let (terminal, processed, released) = event.close_step(maximum_bytes);
                     (terminal, processed, released, 0)
                 }
-                KernelRequest::AdvanceRetained { .. } => (true, 1, 0, 0),
+                KernelRequest::AdvanceRetained { .. } | KernelRequest::MountProductReplay { .. } | KernelRequest::RetireProductReplay { .. } | KernelRequest::RetireProductReplayRefusal { .. } | KernelRequest::AdvanceProductReplay { .. } => {
+                    (true, 1, 0, 0)
+                }
                 KernelRequest::CloseRejectedEvents { owner } => {
                     let (terminal, processed) = owner.close_step();
                     (terminal, processed, 0, 0)
@@ -5937,7 +7715,21 @@ pub(crate) mod kernel_runtime {
                 yield_kernel_maintenance_turn().await;
                 continue;
             }
-            let (request, slot) = queue.next().await;
+            let ready = queue.try_next();
+            if ready.is_none() {
+                if let Some(instance) = state.product_replay_pending_instance() {
+                    if let Err(error) = state.advance_product_replay(instance).await {
+                        crate::log_debug(&format!("kernel: mounted product replay fault: {error}"));
+                        state.abort_product_replay_one(instance);
+                    }
+                    yield_kernel_maintenance_turn().await;
+                    continue;
+                }
+            }
+            let (request, slot) = match ready {
+                Some(ready) => ready,
+                None => queue.next().await,
+            };
             let outcome = match request {
                 KernelRequest::CreateApp { owner } => {
                     let (wasm_path, plugin_id, app_id) = owner.into_parts();
@@ -5967,6 +7759,16 @@ pub(crate) mod kernel_runtime {
                 }
                 KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(state.exchange(instance, vec![event.into_event()]).await),
                 KernelRequest::AdvanceRetained { instance, surface } => KernelOutcome::Exchanged(state.advance_retained_surface_one(instance, surface)),
+                KernelRequest::MountProductReplay { owner } => KernelOutcome::ProductReplayMounted(state.mount_product_replay(owner)),
+                KernelRequest::RetireProductReplay { owner } => {
+                    owner.retire();
+                    KernelOutcome::ProductReplayMounted(Ok(()))
+                }
+                KernelRequest::RetireProductReplayRefusal { owner } => {
+                    owner.retire();
+                    KernelOutcome::ProductReplayMounted(Ok(()))
+                }
+                KernelRequest::AdvanceProductReplay { instance } => KernelOutcome::Exchanged(state.advance_product_replay(instance).await),
                 KernelRequest::ExchangeCommands { instance, driver } => KernelOutcome::Exchanged(state.exchange_commands(instance, driver).await),
                 KernelRequest::CloseRejectedCommandBuild { key, owner } => {
                     assert!(state.rejected_command_builds.can_insert(key), "worker drains the prior rejected command build before dequeuing another request");
@@ -6246,6 +8048,622 @@ pub(crate) mod kernel_runtime {
             tail_lease.terminal = true;
             assert!(bridge.release_presented(tail));
             assert!(bridge.terminal_is_empty());
+        }
+
+        #[test]
+        fn mounted_replay_recovery_capacity_plus_one_refuses_without_touching_reserved_identity() {
+            let mut registry = MountedReplayRecoveryRegistry::new();
+            let tokens: [_; JOB_PROGRESS_ACTIVE_CAPACITY] = std::array::from_fn(|_| registry.reserve().expect("fixed recovery reservation"));
+            assert!(registry.reserve().is_none());
+            for token in tokens {
+                assert!(registry.release(token));
+                assert!(!registry.release(token));
+            }
+            assert!(!registry.has_close_work());
+        }
+
+        #[test]
+        fn rejected_production_replay_submit_retries_exact_restore_start_identity_before_job_step() {
+            let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved submit recovery");
+            let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
+            let authority = JobTurn { job: 19, operation: semio_framework_actor::JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
+            let request = JobReplayRequest::from_spawn("fixture.production-retry", b"retained-input");
+            let mut mounted = MountedJobReplay {
+                actor: ActorId(41),
+                authority,
+                request,
+                placement: JobPlacement::Isolated,
+                log: ManuallyDrop::new(JobReplayLog::new(route, 31).expect("generation-qualified replay")),
+                captured: None,
+                policy: None,
+                terminal_seen: true,
+                replay_requested: true,
+                replay_started: false,
+                replay_submit_sequence: None,
+                accepted_replay_sequence: None,
+                replay_worker_count: 4,
+                replay_worker_slot: 3,
+                recovery: Some(recovery),
+            };
+            let first = mounted.replay_submission_sequence().expect("first retained restore/start packet");
+            let rejected_identity = (mounted.actor, mounted.authority, mounted.request, mounted.replay_worker_count, mounted.replay_worker_slot, first);
+            assert!(!mounted.replay_started);
+            assert!(mounted.pending_replay_start_is_exact(4, 3));
+            assert!(!mounted.pending_replay_start_is_exact(2, 3));
+            assert!(!mounted.pending_replay_start_is_exact(4, 2));
+            let retry = mounted.replay_submission_sequence().expect("backpressure retries retained restore/start packet");
+            assert_eq!((mounted.actor, mounted.authority, mounted.request, mounted.replay_worker_count, mounted.replay_worker_slot, retry), rejected_identity);
+            assert!(!mounted.replay_started, "a rejected runtime submit cannot make the next opportunity a JobStep");
+            mounted.accept_replay_submission(retry).expect("accepted exact restore/start packet");
+            assert!(mounted.replay_started);
+            assert_eq!(mounted.replay_submit_sequence, None);
+            drop(mounted);
+            while mounted_replay_recovery_registry().lock().expect("replay recovery lock").has_close_work() {
+                assert!(mounted_replay_recovery_registry().lock().expect("replay recovery lock").close_one());
+            }
+        }
+
+        fn admitted_product_request(instance: u32, job: u64, kind: &str, input: &[u8], placement: JobPlacement) -> MountedProductReplayRequest {
+            let recovery = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").reserve().expect("fixed product replay request recovery");
+            MountedProductReplayRequest::from_admitted_effect(instance, 0, Effect::SpawnJob { job, kind: kind.to_string(), input: input.to_vec(), placement }, recovery)
+        }
+
+        fn product_admission_permit(instance: u32) -> MountedProductReplayAdmissionPermit {
+            let token = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").reserve(instance).expect("fixed product refusal permit");
+            MountedProductReplayAdmissionPermit { token: Some(token) }
+        }
+
+        fn drain_product_recovery() -> usize {
+            let mut opportunities = 0;
+            while mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").has_close_work() {
+                assert!(mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_one());
+                opportunities += 1;
+            }
+            opportunities
+        }
+
+        fn product_authority_fixture() -> (MountedProductReplayAuthority, MountedProductReplayExpected) {
+            let kind = "action-bus.production";
+            let mut request_owner = admitted_product_request(59, 7, kind, b"fixed-input", JobPlacement::Isolated);
+            let request = request_owner.request;
+            let route =
+                JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: request.controller, tool: request.tool, window: 5, document: [6; 32], request_schema: request.schema, request_version: request.version, request_digest: request.digest };
+            let operation = JobOperation { operation: 11, base_revision: 13, generation: 17, preview_sequence: 0, seed: 19 };
+            let turn = JobTurn { job: 7, operation, step_sequence: 23 };
+            let terminal = JobReplayRecordHeader {
+                actor: ActorId(29),
+                turn,
+                ordinal: 31,
+                granted_fuel: 37,
+                deadline_class_ms: 4,
+                worker_count: 7,
+                worker_slot: 3,
+                cancellation_observed: false,
+                kind: JobReplayPublicationKind::Commit,
+                policy: JobReplayPublicationPolicy::Accepted,
+                applied_progress: 41,
+                payload_items: 2,
+                payload_bytes: 43,
+                payload_digest: 47,
+                prefix_digest: 53,
+            };
+            let checkpoint = Some(MountedProductReplayCheckpoint { ordinal: 61, digest: 67, pages: 2, applied_progress: 69 });
+            request_owner.raw_mut().acknowledge_mount();
+            request_owner.raw_mut().acknowledge_qualification(checkpoint);
+            let expected = MountedProductReplayExpected {
+                instance: 59,
+                actor: terminal.actor,
+                turn,
+                request,
+                placement: JobPlacement::Isolated,
+                route,
+                checkpoint,
+                terminal,
+                process_worker_count: 7,
+                process_worker_slot: 3,
+                logical_worker_count: 7,
+                logical_worker_slot: 3,
+                begin: true,
+                restore_start_ordinal: Some(71),
+            };
+            (
+                MountedProductReplayAuthority {
+                    request_owner: Some(request_owner),
+                    actor: terminal.actor,
+                    route,
+                    operation,
+                    generation: operation.generation,
+                    seed: operation.seed,
+                    checkpoint,
+                    terminal,
+                    worker_count: 7,
+                    worker_slot: 3,
+                    begin: true,
+                    restore_start_ordinal: Some(71),
+                    profile_cursor: 0,
+                    profile_started: false,
+                },
+                expected,
+            )
+        }
+
+        #[test]
+        fn production_action_bus_product_authority_carries_complete_identity_and_returns_exact_owner_on_wrong_field() {
+            let (authority, expected) = product_authority_fixture();
+            let authority = authority.validate(expected).expect("complete typed authority");
+            assert_eq!(authority.request_owner().job_kind(), b"action-bus.production");
+            assert_eq!((authority.instance(), authority.job(), authority.operation, authority.generation, authority.seed), (59, 7, expected.turn.operation, 17, 19));
+            assert_eq!(authority.request_owner().placement, JobPlacement::Isolated);
+            assert_eq!(authority.checkpoint, Some(MountedProductReplayCheckpoint { ordinal: 61, digest: 67, pages: 2, applied_progress: 69 }));
+            assert_eq!((authority.worker_count, authority.worker_slot, authority.begin, authority.restore_start_ordinal), (7, 3, true, Some(71)));
+            authority.retire();
+
+            let (authority, mut wrong) = product_authority_fixture();
+            wrong.checkpoint.as_mut().expect("checkpoint witness").digest ^= 1;
+            let token = authority.request_owner().recovery.expect("pre-reserved exact handback");
+            let rejected = authority.validate(wrong).expect_err("wrong checkpoint returns exact authority");
+            assert_eq!((rejected.instance(), rejected.job(), rejected.generation, rejected.seed, rejected.terminal.prefix_digest), (59, 7, 17, 19, 53));
+            rejected.retire();
+            {
+                let registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+                assert_eq!(registry.slots[token.index].generation, token.generation);
+                assert_eq!(registry.slots[token.index].owner.as_ref().map(MountedProductReplayRecoveryOwner::job), Some(7));
+            }
+            while mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").has_close_work() {
+                assert!(mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").close_one());
+            }
+        }
+
+        fn assert_product_authority_field_rejected(mutate: fn(&mut MountedProductReplayAuthority, &mut MountedProductReplayExpected)) {
+            let (mut authority, mut expected) = product_authority_fixture();
+            let token = authority.request_owner().recovery.expect("pre-reserved field rejection");
+            mutate(&mut authority, &mut expected);
+            let rejected = authority.validate(expected).expect_err("wrong product authority field must return the exact shell");
+            assert_eq!((rejected.instance(), rejected.job()), (59, 7));
+            rejected.retire();
+            let mut registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+            assert_eq!((registry.slots[token.index].generation, registry.slots[token.index].owner.as_ref().map(MountedProductReplayRecoveryOwner::job)), (token.generation, Some(7)));
+            while registry.has_close_work() {
+                assert!(registry.close_one());
+            }
+        }
+
+        #[test]
+        fn production_product_authority_qualifies_every_minted_field_before_replay_work() {
+            assert_product_authority_field_rejected(|authority, _| authority.request_owner.as_mut().expect("request").job_kind[0] ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.request.digest[0] ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.placement = JobPlacement::Exclusive);
+            assert_product_authority_field_rejected(|_, expected| expected.route.request_digest[0] ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.turn.operation.operation ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.turn.operation.generation ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.turn.operation.seed ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.checkpoint.as_mut().expect("checkpoint").ordinal ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.checkpoint.as_mut().expect("checkpoint").digest ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.checkpoint.as_mut().expect("checkpoint").pages ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.checkpoint.as_mut().expect("checkpoint").applied_progress ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.terminal.ordinal ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.terminal.payload_digest ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.terminal.prefix_digest ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.process_worker_count ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.process_worker_slot ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.logical_worker_count ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.logical_worker_slot ^= 1);
+            assert_product_authority_field_rejected(|_, expected| expected.begin = false);
+            assert_product_authority_field_rejected(|_, expected| expected.restore_start_ordinal = Some(72));
+        }
+
+        #[test]
+        fn product_authority_fault_abort_and_close_rediscover_exact_generation_once() {
+            let (authority, _) = product_authority_fixture();
+            let token = authority.request_owner().recovery.expect("pre-reserved abort handback");
+            let mut authorities: [Option<MountedProductReplayAuthority>; JOB_PROGRESS_ACTIVE_CAPACITY] = std::array::from_fn(|_| None);
+            authorities[0] = Some(authority);
+            authorities[0].take().expect("fault retains exact authority").retire();
+            let mut registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+            assert_eq!((registry.slots[token.index].generation, registry.slots[token.index].owner.as_ref().map(MountedProductReplayRecoveryOwner::job)), (token.generation, Some(7)));
+            while registry.has_close_work() {
+                assert!(registry.close_one());
+            }
+            assert!(!registry.has_close_work());
+        }
+
+        #[test]
+        fn product_claim_fault_retains_exact_request_cursor_checkpoint_and_generation() {
+            let request = admitted_product_request(83, 89, "action-bus.claim", b"claim-input", JobPlacement::Exclusive);
+            let token = request.recovery.expect("pre-reserved claim handback");
+            MountedProductReplayClaim { request: Some(request), actor: ActorId(97), record_cursor: 101, checkpoint: Some(MountedProductReplayCheckpoint { ordinal: 103, digest: 107, pages: 2, applied_progress: 109 }) }.retire();
+            let mut registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+            assert_eq!(registry.slots[token.index].generation, token.generation);
+            assert!(matches!(
+                registry.slots[token.index].owner.as_ref(),
+                Some(MountedProductReplayRecoveryOwner::Claim {
+                    request,
+                    actor: ActorId(97),
+                    record_cursor: 101,
+                    checkpoint: Some(MountedProductReplayCheckpoint { ordinal: 103, digest: 107, pages: 2, applied_progress: 109 }),
+                }) if request.instance == 83 && request.job == 89 && request.placement == JobPlacement::Exclusive
+            ));
+            while registry.has_close_work() {
+                assert!(registry.close_one());
+            }
+            assert!(!registry.has_close_work());
+        }
+
+        #[test]
+        fn product_effect_after_normal_exchange_is_moved_into_fixed_authority_without_json_escape_hatch() {
+            let mut outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![
+                    Effect::Notify { message: "before".to_string() },
+                    Effect::SpawnJob { job: 73, kind: "action-bus.production".to_string(), input: vec![79, 83], placement: JobPlacement::Inline },
+                    Effect::Notify { message: "after".to_string() },
+                ],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let (kind_pointer, input_pointer) = match &outcome.effects[1] {
+                Effect::SpawnJob { kind, input, .. } => (kind.as_ptr(), input.as_ptr()),
+                _ => panic!("selected product source remains SpawnJob"),
+            };
+            let authority = match outcome.take_product_replay_authority(89, product_admission_permit(89)) {
+                MountedProductReplayAdmission::Admitted(authority) => authority,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Refused(_) => panic!("fixed product exchange must admit"),
+            };
+            assert_eq!((authority.instance, authority.job, authority.job_kind(), authority.placement), (89, 73, b"action-bus.production".as_slice(), JobPlacement::Inline));
+            assert_eq!(authority.request, JobReplayRequest::from_spawn("action-bus.production", &[79, 83]));
+            assert_eq!((authority.raw().kind().as_ptr(), authority.raw().input().as_ptr(), authority.raw().selected_index), (kind_pointer, input_pointer, 1));
+            assert!(matches!(&outcome.effects[..], [Effect::Notify { message: before }, Effect::Notify { message: after }] if before == "before" && after == "after"));
+            authority.retire();
+            assert_eq!(drain_product_recovery(), 2);
+        }
+
+        #[test]
+        fn admitted_product_mount_refusal_returns_exact_raw_allocation_then_closes_one_backing_per_grant() {
+            let mut outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![Effect::SpawnJob { job: 91, kind: "raw.mount-refusal".to_string(), input: vec![2, 3, 5, 7], placement: JobPlacement::Exclusive }],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let (kind_pointer, input_pointer) = match &outcome.effects[0] {
+                Effect::SpawnJob { kind, input, .. } => (kind.as_ptr(), input.as_ptr()),
+                _ => panic!("mount-refusal source remains SpawnJob"),
+            };
+            let request = match outcome.take_product_replay_authority(93, product_admission_permit(93)) {
+                MountedProductReplayAdmission::Admitted(owner) => owner,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Refused(_) => panic!("bounded raw request must admit"),
+            };
+            let token = request.recovery.expect("admitted request keeps exact recovery");
+            let rejected: Result<(), MountedProductReplayRequest> = Err(request);
+            let request = rejected.expect_err("unregistered mount returns the same request owner");
+            assert_eq!((request.raw().kind().as_ptr(), request.raw().input().as_ptr(), request.raw().selected_index), (kind_pointer, input_pointer, 0));
+            request.retire();
+            {
+                let registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+                assert!(
+                    matches!(registry.slots[token.index].owner.as_ref(), Some(MountedProductReplayRecoveryOwner::Request(request)) if request.raw.kind().as_ptr() == kind_pointer && request.raw.input().as_ptr() == input_pointer && request.raw.disposition == RawSpawnJobDisposition::Rejected)
+                );
+            }
+            assert_eq!(drain_product_recovery(), 2, "raw input and kind backing close on separate grants");
+        }
+
+        #[test]
+        fn admitted_product_request_claim_and_authority_drop_preserve_raw_allocation_identity() {
+            let request = admitted_product_request(95, 97, "raw.request-drop", b"request", JobPlacement::Inline);
+            let request_token = request.recovery.expect("request drop recovery");
+            let request_identity = (request.raw().kind().as_ptr(), request.raw().input().as_ptr());
+            drop(request);
+            {
+                let registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+                assert!(matches!(registry.slots[request_token.index].owner.as_ref(), Some(MountedProductReplayRecoveryOwner::Request(request)) if (request.raw.kind().as_ptr(), request.raw.input().as_ptr()) == request_identity));
+            }
+            assert_eq!(drain_product_recovery(), 2);
+
+            let mut request = admitted_product_request(101, 103, "raw.claim-drop", b"claim", JobPlacement::Isolated);
+            request.raw_mut().acknowledge_mount();
+            let claim_token = request.recovery.expect("claim drop recovery");
+            let claim_identity = (request.raw().kind().as_ptr(), request.raw().input().as_ptr());
+            drop(MountedProductReplayClaim { request: Some(request), actor: ActorId(107), record_cursor: 0, checkpoint: None });
+            {
+                let registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+                assert!(matches!(registry.slots[claim_token.index].owner.as_ref(), Some(MountedProductReplayRecoveryOwner::Claim { request, .. }) if (request.raw.kind().as_ptr(), request.raw.input().as_ptr()) == claim_identity));
+            }
+            assert_eq!(drain_product_recovery(), 2);
+
+            let (authority, _) = product_authority_fixture();
+            let authority_token = authority.request_owner().recovery.expect("authority drop recovery");
+            let authority_identity = (authority.request_owner().raw().kind().as_ptr(), authority.request_owner().raw().input().as_ptr());
+            drop(authority);
+            {
+                let registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+                assert!(matches!(registry.slots[authority_token.index].owner.as_ref(), Some(MountedProductReplayRecoveryOwner::Authority { request, .. }) if (request.raw.kind().as_ptr(), request.raw.input().as_ptr()) == authority_identity));
+            }
+            assert_eq!(drain_product_recovery(), 2);
+        }
+
+        #[test]
+        fn admitted_raw_backing_retires_only_after_fixed_mount_qualification_and_all_replay_acks() {
+            let (mut authority, _) = product_authority_fixture();
+            assert!(authority.acknowledge_raw_retirement_boundary().is_err(), "raw backing cannot retire before every replay profile ACK");
+            authority.profile_cursor = PRODUCT_REPLAY_PROFILE_COUNT;
+            authority.profile_started = false;
+            authority.restore_start_ordinal = Some(113);
+            authority.acknowledge_raw_retirement_boundary().expect("all fixed, mount, qualification, terminal, and replay ACKs admit retirement");
+            let raw = authority.request_owner().raw();
+            assert_eq!(
+                (raw.fixed_witness_acked, raw.mount_acked, raw.qualification_acked, raw.replay_acked, raw.terminal_ordinal, raw.terminal_prefix, raw.accepted_replay_ordinal, raw.disposition),
+                (true, true, true, true, Some(authority.terminal.ordinal), Some(authority.terminal.prefix_digest), Some(113), RawSpawnJobDisposition::Accepted)
+            );
+            authority.retire();
+            assert_eq!(drain_product_recovery(), 2);
+        }
+
+        #[test]
+        fn product_ingress_kind_and_input_max_plus_one_return_exact_spawn_and_remainder() {
+            let kind_max = "k".repeat(PRODUCT_REPLAY_KIND_BYTES);
+            let mut kind_max_outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![Effect::SpawnJob { job: 101, kind: kind_max, input: vec![1], placement: JobPlacement::Inline }],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let admitted = match kind_max_outcome.take_product_replay_authority(103, product_admission_permit(103)) {
+                MountedProductReplayAdmission::Admitted(owner) => owner,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Refused(_) => panic!("kind MAX must admit"),
+            };
+            admitted.retire();
+            assert_eq!(drain_product_recovery(), 2);
+
+            let input_max = vec![2; PRODUCT_REPLAY_INPUT_BYTES];
+            let mut input_max_outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![Effect::SpawnJob { job: 107, kind: "input.max".to_string(), input: input_max, placement: JobPlacement::Isolated }],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let admitted = match input_max_outcome.take_product_replay_authority(109, product_admission_permit(109)) {
+                MountedProductReplayAdmission::Admitted(owner) => owner,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Refused(_) => panic!("input MAX must admit"),
+            };
+            admitted.retire();
+            assert_eq!(drain_product_recovery(), 2);
+
+            let kind_max_plus_one = "z".repeat(PRODUCT_REPLAY_KIND_BYTES + 1);
+            let mut kind_refusal_outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![
+                    Effect::Notify { message: "before-kind".to_string() },
+                    Effect::SpawnJob { job: 113, kind: kind_max_plus_one.clone(), input: vec![3, 5], placement: JobPlacement::Exclusive },
+                    Effect::Notify { message: "after-kind".to_string() },
+                ],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let refusal = match kind_refusal_outcome.take_product_replay_authority(127, product_admission_permit(127)) {
+                MountedProductReplayAdmission::Refused(owner) => owner,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Admitted(_) => panic!("kind MAX+1 must return typed refusal"),
+            };
+            assert_eq!((refusal.instance, refusal.cause, refusal.selected_index), (127, MountedProductReplayRefusalCause::KindCapacity, 1));
+            assert!(matches!(refusal.spawn.as_ref(), Some(Effect::SpawnJob { job: 113, kind, input, placement: JobPlacement::Exclusive }) if kind == &kind_max_plus_one && input == &[3, 5]));
+            assert!(matches!(refusal.remaining_effects.as_deref(), Some([Effect::Notify { message: before }, Effect::Notify { message: after }]) if before == "before-kind" && after == "after-kind"));
+            assert!(kind_refusal_outcome.effects.is_empty());
+            refusal.retire();
+            let mut kind_close_opportunities = 0;
+            while mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_work() {
+                assert!(mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(false).progressed);
+                kind_close_opportunities += 1;
+                assert!(kind_close_opportunities <= 8);
+            }
+            assert!(kind_close_opportunities >= 6);
+
+            let input_max_plus_one = vec![11; PRODUCT_REPLAY_INPUT_BYTES + 1];
+            let mut input_refusal_outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![Effect::SpawnJob { job: 131, kind: "input.max-plus-one".to_string(), input: input_max_plus_one, placement: JobPlacement::Inline }],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let refusal = match input_refusal_outcome.take_product_replay_authority(137, product_admission_permit(137)) {
+                MountedProductReplayAdmission::Refused(owner) => owner,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Admitted(_) => panic!("input MAX+1 must return typed refusal"),
+            };
+            assert_eq!(refusal.cause, MountedProductReplayRefusalCause::InputCapacity);
+            assert!(matches!(refusal.spawn.as_ref(), Some(Effect::SpawnJob { job: 131, input, .. }) if input.len() == PRODUCT_REPLAY_INPUT_BYTES + 1));
+            refusal.retire();
+            while mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_work() {
+                assert!(mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(false).progressed);
+            }
+        }
+
+        #[test]
+        fn product_ingress_recovery_max_plus_one_retries_exact_spawn_then_closes_remainder_incrementally() {
+            let reservations: [MountedProductReplayRecoveryToken; JOB_PROGRESS_ACTIVE_CAPACITY] = {
+                let mut registry = mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock");
+                std::array::from_fn(|_| registry.reserve().expect("fill every product recovery slot"))
+            };
+            let mut outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![
+                    Effect::Notify { message: "before-recovery".to_string() },
+                    Effect::SpawnJob { job: 139, kind: "recovery.max-plus-one".to_string(), input: vec![13, 17, 19], placement: JobPlacement::Isolated },
+                    Effect::Notify { message: "after-recovery".to_string() },
+                ],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let refusal = match outcome.take_product_replay_authority(149, product_admission_permit(149)) {
+                MountedProductReplayAdmission::Refused(owner) => owner,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Admitted(_) => panic!("recovery MAX+1 must return typed refusal"),
+            };
+            assert_eq!((refusal.cause, refusal.selected_index), (MountedProductReplayRefusalCause::RecoveryCapacity, 1));
+            assert!(matches!(refusal.spawn.as_ref(), Some(Effect::SpawnJob { job: 139, kind, input, placement: JobPlacement::Isolated }) if kind == "recovery.max-plus-one" && input == &[13, 17, 19]));
+            assert_eq!(refusal.remaining_effects.as_ref().map(Vec::len), Some(2));
+            refusal.retire();
+            assert!(mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").release(reservations[0]));
+            let step = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(true);
+            let request = step.request.expect("one recovery opportunity retries the exact fixed request");
+            assert_eq!(
+                (request.instance, request.job, request.job_kind(), request.request, request.placement),
+                (149, 139, b"recovery.max-plus-one".as_slice(), JobReplayRequest::from_spawn("recovery.max-plus-one", &[13, 17, 19]), JobPlacement::Isolated)
+            );
+            request.retire();
+            for token in reservations.into_iter().skip(1) {
+                assert!(mounted_product_replay_recovery_registry().lock().expect("product replay recovery lock").release(token));
+            }
+            let raw_close_opportunities = drain_product_recovery();
+            assert_eq!(raw_close_opportunities, 2);
+            let mut close_opportunities = 0;
+            while mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_work() {
+                assert!(mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(false).progressed);
+                close_opportunities += 1;
+                assert!(close_opportunities <= 8);
+            }
+            assert!(raw_close_opportunities + close_opportunities >= 6, "raw input, kind, two effects, and remainder backing close remain distinct opportunities");
+        }
+
+        #[test]
+        fn product_refusal_slot_max_plus_one_stops_before_exchange_and_drop_publishes_exact_generation() {
+            let permits: [MountedProductReplayRefusalToken; JOB_PROGRESS_ACTIVE_CAPACITY] = {
+                let mut registry = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock");
+                std::array::from_fn(|index| registry.reserve(index as u32 + 1).expect("fill fixed refusal permits"))
+            };
+            assert!(mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").reserve(u32::MAX).is_none(), "refusal MAX+1 is denied before ActionBus exchange owns a SpawnJob");
+            for token in permits {
+                assert!(mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").release(token));
+            }
+
+            let mut outcome = ExchangeOutcome {
+                frames: Vec::new(),
+                surfaces: UiFixedList::default(),
+                effects: vec![
+                    Effect::Notify { message: "drop-before".to_string() },
+                    Effect::SpawnJob { job: 151, kind: "d".repeat(PRODUCT_REPLAY_KIND_BYTES + 1), input: vec![23, 29], placement: JobPlacement::Exclusive },
+                    Effect::Notify { message: "drop-after".to_string() },
+                ],
+                command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            };
+            let refusal = match outcome.take_product_replay_authority(157, product_admission_permit(157)) {
+                MountedProductReplayAdmission::Refused(owner) => owner,
+                MountedProductReplayAdmission::None | MountedProductReplayAdmission::Admitted(_) => panic!("oversized kind must refuse"),
+            };
+            let token = refusal.token.expect("typed refusal retains its pre-reserved generation");
+            drop(refusal);
+            {
+                let registry = mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock");
+                let owner = registry.slots[token.index].owner.as_ref().expect("ordinary refusal Drop publishes exact owner");
+                assert_eq!((registry.slots[token.index].generation, owner.instance, owner.cause, owner.selected_index), (token.generation, 157, MountedProductReplayRefusalCause::KindCapacity, 1));
+                assert!(matches!(owner.spawn.as_ref(), Some(Effect::SpawnJob { job: 151, input, placement: JobPlacement::Exclusive, .. }) if input == &[23, 29]));
+                assert_eq!(owner.remaining_effects.as_ref().map(Vec::len), Some(2));
+            }
+            let mut opportunities = 0;
+            while mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").has_work() {
+                assert!(mounted_product_replay_refusal_registry().lock().expect("product replay refusal lock").step_one(false).progressed);
+                opportunities += 1;
+                assert!(opportunities <= 8);
+            }
+            assert!(opportunities >= 6);
+        }
+
+        #[test]
+        fn production_mounted_process_replay_supports_one_two_four_and_default_without_private_pool() {
+            let profiles: [_; PRODUCT_REPLAY_PROFILE_COUNT] = std::array::from_fn(|cursor| mounted_product_replay_profile(7, cursor).expect("same-process logical replay profile"));
+            assert_eq!(profiles, [1, 2, 4, 7]);
+            assert_eq!(profiles.map(|worker_count| mounted_product_replay_worker_slot(11, worker_count).expect("deterministic logical slot")), [0, 1, 3, 4]);
+            assert_eq!(mounted_product_replay_profile(7, PRODUCT_REPLAY_PROFILE_COUNT), None);
+            assert_eq!(mounted_product_replay_profile(0, 3), None);
+            assert_eq!(mounted_product_replay_worker_slot(u16::MAX, 4), None);
+        }
+
+        #[test]
+        fn production_product_authority_opportunities_remain_sub_eight_ms() {
+            for cursor in 0..PRODUCT_REPLAY_PROFILE_COUNT {
+                let started = std::time::Instant::now();
+                let worker_count = mounted_product_replay_profile(7, cursor).expect("fixed production profile");
+                let _worker_slot = mounted_product_replay_worker_slot(11, worker_count).expect("fixed production slot");
+                assert!(started.elapsed() < Duration::from_millis(8), "one product authority control opportunity exceeded 8ms");
+            }
+            let started = std::time::Instant::now();
+            let (authority, expected) = product_authority_fixture();
+            let authority = authority.validate(expected).expect("one fixed identity opportunity");
+            assert!(started.elapsed() < Duration::from_millis(8), "one product authority validation opportunity exceeded 8ms");
+            authority.retire();
+            assert_eq!(drain_product_recovery(), 2);
+        }
+
+        #[test]
+        fn populated_mounted_replay_drop_publishes_exact_generation_and_drains_incrementally() {
+            let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved recovery");
+            let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
+            let authority = JobTurn { job: 19, operation: semio_framework_actor::JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
+            drop(MountedJobReplay {
+                actor: ActorId(41),
+                authority,
+                request: JobReplayRequest::from_spawn("fixture.replay", b"seed"),
+                placement: JobPlacement::Inline,
+                log: ManuallyDrop::new(JobReplayLog::new(route, 31).expect("generation-qualified replay")),
+                captured: None,
+                policy: None,
+                terminal_seen: false,
+                replay_requested: false,
+                replay_started: false,
+                replay_submit_sequence: None,
+                accepted_replay_sequence: None,
+                replay_worker_count: 0,
+                replay_worker_slot: u16::MAX,
+                recovery: Some(recovery),
+            });
+            {
+                let registry = mounted_replay_recovery_registry().lock().expect("replay recovery lock");
+                let owner = registry.slots[recovery.index].owner.as_ref().expect("drop published recovery owner");
+                assert_eq!((owner.generation, owner.actor, owner.job), (31, ActorId(41), 19));
+            }
+            let mut opportunities = 0;
+            while mounted_replay_recovery_registry().lock().expect("replay recovery lock").has_close_work() {
+                assert!(mounted_replay_recovery_registry().lock().expect("replay recovery lock").close_one());
+                opportunities += 1;
+                assert!(opportunities <= 4);
+            }
+            assert!(opportunities >= 2, "owner transfer and terminal slot release are distinct grants");
+        }
+
+        #[test]
+        fn panic_after_mounted_capture_transfers_the_exact_generation_to_incremental_recovery() {
+            let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved panic recovery");
+            let route = JobReplayRoute { plugin: [9; 32], package: [8; 32], controller: [7; 32], tool: [6; 32], window: 5, document: [4; 32], request_schema: [3; 32], request_version: 1, request_digest: [2; 32] };
+            let authority = JobTurn { job: 43, operation: semio_framework_actor::JobOperation { operation: 47, base_revision: 53, generation: 59, preview_sequence: 0, seed: 61 }, step_sequence: 0 };
+            let caught = std::panic::catch_unwind(|| {
+                let _mounted = MountedJobReplay {
+                    actor: ActorId(67),
+                    authority,
+                    request: JobReplayRequest::from_spawn("fixture.panic", b"owner"),
+                    placement: JobPlacement::Exclusive,
+                    log: ManuallyDrop::new(JobReplayLog::new(route, 59).expect("generation-qualified panic replay")),
+                    captured: None,
+                    policy: None,
+                    terminal_seen: false,
+                    replay_requested: false,
+                    replay_started: false,
+                    replay_submit_sequence: None,
+                    accepted_replay_sequence: None,
+                    replay_worker_count: 0,
+                    replay_worker_slot: u16::MAX,
+                    recovery: Some(recovery),
+                };
+                panic!("mounted replay panic fixture");
+            });
+            assert!(caught.is_err());
+            {
+                let registry = mounted_replay_recovery_registry().lock().expect("replay recovery lock");
+                let owner = registry.slots[recovery.index].owner.as_ref().expect("panic published exact owner");
+                assert_eq!((owner.generation, owner.actor, owner.job), (59, ActorId(67), 43));
+            }
+            let mut opportunities = 0;
+            while mounted_replay_recovery_registry().lock().expect("replay recovery lock").slots[recovery.index].reserved {
+                assert!(mounted_replay_recovery_registry().lock().expect("replay recovery lock").close_one());
+                opportunities += 1;
+                assert!(opportunities <= JOB_PROGRESS_ACTIVE_CAPACITY * 4);
+            }
+            assert!(opportunities >= 2);
         }
 
         fn destroy_request(instance: u32) -> KernelRequest {
@@ -9338,6 +11756,45 @@ impl RuntimeMailbox {
         false
     }
 
+    pub(crate) fn begin_engine_surface_close(&self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, ()> {
+        engine_canvas::begin_engine_surface_close_token(token)
+    }
+
+    pub(crate) fn close_engine_surface_step(&self, token: engine_canvas::EngineSurfaceToken, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> bool {
+        let Ok(mut runtime) = self.try_lock() else {
+            return false;
+        };
+        let Some(interaction) = runtime.interaction.as_mut() else {
+            return false;
+        };
+        let now = semio_framework_job::default_now_ms();
+        let deadline = match now.checked_add(1) {
+            Some(deadline) => deadline,
+            None => return false,
+        };
+        let mut context = semio_framework_job::StepContext::new(
+            operation,
+            semio_framework_trace::Generation(token.generation),
+            semio_framework_job::StepBudget::new(1, deadline),
+            semio_framework_job::root_cancel_token(),
+            semio_framework_job::default_now_ms,
+            sequence,
+        );
+        engine_canvas::close_engine_surface_step(token, &mut context, &mut interaction.input)
+    }
+
+    pub(crate) fn engine_surface_terminal_is_empty(&self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, ()> {
+        engine_canvas::engine_surface_terminal_nonopaque_is_empty(token)
+    }
+
+    pub(crate) fn close_input_step(&self) -> bool {
+        let Ok(mut runtime) = self.try_lock() else {
+            return false;
+        };
+        let Some(interaction) = runtime.interaction.as_mut() else { return true };
+        interaction.input.close_step().is_ok_and(|complete| complete) && interaction.input.terminal_is_empty()
+    }
+
     pub(crate) fn take_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
         if let Some(owner) = take_next_renderer_asset() {
             return Some(RendererAssetFetchOwner::Shared(owner));
@@ -11349,12 +13806,15 @@ pub(crate) struct AppPresenter {
     last_cursor: Option<(SemioCursor, bool)>,
     pending: Option<AppPresentCursor>,
     retirement: Option<AppPresentedRetirement>,
+    retained_fault: Option<String>,
     surface_resize: Option<AppSurfaceResizeCursor>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum AppSurfaceResizePhase {
     Apply,
+    InvalidateEngine,
+    ApplyGpu,
     Retire,
     Complete,
 }
@@ -11582,6 +14042,24 @@ impl AppPresenter {
                     cursor.phase = AppSurfaceResizePhase::Complete;
                     return false;
                 };
+                if !self.engine.observe_primary_metrics_generation(candidate.metrics_generation()) {
+                    return false;
+                }
+                cursor.phase = AppSurfaceResizePhase::InvalidateEngine;
+                false
+            }
+            AppSurfaceResizePhase::InvalidateEngine => {
+                if !self.engine.invalidate_primary_metrics_step() {
+                    return false;
+                }
+                cursor.phase = AppSurfaceResizePhase::ApplyGpu;
+                false
+            }
+            AppSurfaceResizePhase::ApplyGpu => {
+                let Some(candidate) = cursor.candidate else {
+                    cursor.phase = AppSurfaceResizePhase::Complete;
+                    return false;
+                };
                 if !candidate.suspended() {
                     self.gpu.resize(candidate.logical_width(), candidate.logical_height(), candidate.scale_factor());
                 }
@@ -11601,18 +14079,20 @@ impl AppPresenter {
     }
 
     pub(crate) fn close_surface_resize_step(&mut self) -> bool {
-        let Some(cursor) = self.surface_resize.as_mut() else { return true };
-        if cursor.candidate.take().is_some() {
-            cursor.phase = AppSurfaceResizePhase::Retire;
+        if let Some(cursor) = self.surface_resize.as_mut() {
+            if cursor.candidate.take().is_some() {
+                cursor.phase = AppSurfaceResizePhase::Retire;
+                return false;
+            }
+            cursor.phase = AppSurfaceResizePhase::Complete;
+            self.surface_resize = None;
             return false;
         }
-        cursor.phase = AppSurfaceResizePhase::Complete;
-        self.surface_resize = None;
-        false
+        self.engine.invalidate_primary_metrics_step()
     }
 
     pub(crate) fn has_pending_presentation(&self) -> bool {
-        self.pending.is_some() || self.retirement.is_some() || self.gate.has_pending_acknowledgement()
+        self.pending.is_some() || self.retirement.is_some() || self.retained_fault.is_some() || self.gate.has_pending_acknowledgement()
     }
 
     pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
@@ -11623,7 +14103,10 @@ impl AppPresenter {
         true
     }
 
-    pub(crate) fn close_world_owners_step(&mut self) -> Result<bool, String> {
+    pub(crate) fn close_frame_owners_step(&mut self) -> Result<bool, String> {
+        if !self.engine.close_active_candidate_step(&mut self.gpu)? {
+            return Ok(false);
+        }
         if let Some(mut cursor) = self.pending.take() {
             if let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() {
                 gpu_cursor.begin_close();
@@ -11670,11 +14153,29 @@ impl AppPresenter {
             self.retirement = None;
             return Ok(false);
         }
+        if let Some(fault) = self.retained_fault.as_mut() {
+            if fault.pop().is_some() {
+                return Ok(false);
+            }
+            self.retained_fault = None;
+            return Ok(false);
+        }
         if let Some(packet) = self.gate.take_last_valid() {
             self.retirement = Some(AppPresentedRetirement::new(Some(packet)));
             return Ok(false);
         }
         if !self.gate.close_step() {
+            return Ok(false);
+        }
+        Ok(self.pending.is_none()
+            && self.retirement.as_ref().is_none_or(AppPresentedRetirement::terminal_is_empty)
+            && self.retained_fault.is_none()
+            && self.gate.terminal_is_empty()
+            && self.raster_operation_authority.current().is_none())
+    }
+
+    pub(crate) fn close_world_owners_step(&mut self) -> Result<bool, String> {
+        if !self.close_frame_owners_step()? || !self.engine.terminal_is_empty() {
             return Ok(false);
         }
         if !self.gpu.close_mesh_upload_step() {
@@ -11697,6 +14198,8 @@ impl AppPresenter {
             && self.gpu.mesh_table_terminal_is_empty()
             && self.gpu.raster_table_terminal_is_empty()
             && self.raster_operation_authority.current().is_none()
+            && self.engine.terminal_is_empty()
+            && self.retained_fault.is_none()
     }
 
     pub(crate) fn admit_next_frame(&mut self, produce: impl FnOnce() -> Option<AppFramePresentation>) -> Option<SemioCursor> {
@@ -11717,15 +14220,23 @@ impl AppPresenter {
         }
         let _ = semio_framework_job::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         if self.pending.is_none() {
-            let Some(retirement) = self.retirement.as_mut() else { return Ok(AppPresentStep::Idle) };
-            if retirement.step(&mut self.gpu, &self.gate)? {
-                self.retirement = None;
+            if let Some(retirement) = self.retirement.as_mut() {
+                if retirement.step(&mut self.gpu, &self.gate)? {
+                    self.retirement = None;
+                }
+                return Ok(AppPresentStep::Pending);
             }
-            return Ok(AppPresentStep::Pending);
+            if let Some(fault) = self.retained_fault.take() {
+                return Err(fault);
+            }
+            return Ok(AppPresentStep::Idle);
         }
         let Some(cursor) = self.pending.as_mut() else { return Ok(AppPresentStep::Idle) };
         match cursor.phase {
             AppPresentPhase::Aborted => {
+                if !self.engine.close_active_candidate_step(&mut self.gpu)? {
+                    return Ok(AppPresentStep::Pending);
+                }
                 if let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() {
                     gpu_cursor.begin_close();
                     if !gpu_cursor.close_step() {
@@ -11781,11 +14292,17 @@ impl AppPresenter {
                 if let Some(packet) = cursor.frame.engine_packets.get(cursor.engine) {
                     let candidate = cursor.raster_witness.ok_or_else(|| "engine raster operation witness was missing".to_string())?;
                     let expected = self.raster_operation_authority.current().ok_or_else(|| "engine raster operation authority was empty".to_string())?;
-                    if let Err(error) = self.engine.realize_one(&mut self.gpu, packet, candidate, expected) {
-                        cursor.phase = AppPresentPhase::Aborted;
-                        return Err(format!("engine canvas present: {error}"));
+                    match self.engine.realize_step(&mut self.gpu, packet, candidate, expected) {
+                        Ok(true) => cursor.engine += 1,
+                        Ok(false) => return Ok(AppPresentStep::Pending),
+                        Err(error) => {
+                            cursor.phase = AppPresentPhase::Aborted;
+                            if self.retained_fault.is_none() {
+                                self.retained_fault = Some(format!("engine canvas present: {error}"));
+                            }
+                            return Ok(AppPresentStep::Pending);
+                        }
                     }
-                    cursor.engine += 1;
                     return Ok(AppPresentStep::Pending);
                 }
                 cursor.phase = AppPresentPhase::Uploads;
@@ -11979,6 +14496,37 @@ impl AppPresenter {
             }
         }
     }
+
+    pub(crate) fn engine_surface_token_at(&self, index: usize) -> Option<engine_canvas::EngineSurfaceToken> {
+        self.engine.surface_token_at(index)
+    }
+
+    pub(crate) fn begin_engine_surface_close(&mut self, token: engine_canvas::EngineSurfaceToken) -> bool {
+        self.engine.begin_surface_close(token)
+    }
+
+    pub(crate) fn close_engine_surface_step(&mut self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, String> {
+        self.engine.close_surface_step(&mut self.gpu, token)
+    }
+
+    pub(crate) fn engine_surface_terminal_is_empty(&self, token: engine_canvas::EngineSurfaceToken) -> bool {
+        self.engine.surface_terminal_is_empty(token)
+    }
+
+    pub(crate) fn engine_surfaces_terminal_is_empty(&self) -> bool {
+        self.engine.terminal_is_empty()
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
+    let glue = include_str!("📦️glue.rs");
+    let native = include_str!("🦀️winit_app.rs");
+    assert!(glue.contains("cursor.phase = AppPresentPhase::Aborted;\n                            if self.retained_fault.is_none()"));
+    assert!(glue.contains("return Ok(AppPresentStep::Pending);"));
+    assert!(native.contains("if self.presenter.has_pending_presentation()"));
+    assert!(native.contains("self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);"));
 }
 
 /// 🧪️ P3c: `self_weak` was the only field that made `AppRuntime` definitionally `Rc<RefCell<_>>`-owned
@@ -12058,11 +14606,7 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
 fn push_renderer_asset_page(_fetch: &mut RendererAssetFetchOwner, mut bytes: semio_framework_job::RetainedJobPayload) -> Result<(), String> {
     let populated = !bytes.is_empty();
     let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    if populated {
-        Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into())
-    } else {
-        Ok(())
-    }
+    if populated { Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into()) } else { Ok(()) }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -12331,7 +14875,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::EngineResources;
             }
             FrameBuildPhase::EngineResources => {
-                cursor.engine_resources = Some(engine_canvas::EngineCanvasBuildContext::new(dpr as f64));
+                cursor.engine_resources = Some(engine_canvas::EngineCanvasBuildContext::new(dpr as f64, cursor.presentation_witness.input_generation, cursor.presentation_witness.scene_revision));
                 cursor.phase = FrameBuildPhase::WorldResources;
             }
             FrameBuildPhase::WorldResources => {
@@ -12968,6 +15512,7 @@ async fn boot_runtime(
         last_cursor: None,
         pending: None,
         retirement: None,
+        retained_fault: None,
         surface_resize: None,
     };
 

@@ -1034,6 +1034,36 @@ pub fn encode_semio_brep_snapshot_json(snapshot: &SemioBrepSnapshot) -> String {
 pub fn decode_semio_brep_snapshot_json(text: &str) -> Result<SemioBrepSnapshot, String> {
     serde_json::from_str(text).map_err(|error| error.to_string())
 }
+
+/// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioBrepSnapshot`] — a
+/// thin wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// crate's private `store` extern-crate item (the `mutate-semio-brep` test adapter, whose
+/// `identity-round-trip` scenario reads the REAL committed `📚️examples/🧊️solid` artifact) can still
+/// drive the same codec production does. Same shape and same rationale as `✳️flow`'s own bridge.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_brep_dsl(text: &str) -> Result<SemioBrepSnapshot, String> {
+    <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_brep_dsl`] — same rationale.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_brep_dsl(snapshot: &SemioBrepSnapshot) -> String {
+    <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+}
+
+/// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioBrepSnapshot`] —
+/// the binary half of the same bridge, so a caller outside this crate can check the two codecs
+/// against each other on the two real committed artifacts instead of against itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_brep_pack(bytes: &[u8]) -> Result<SemioBrepSnapshot, String> {
+    <SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+
+/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_brep_pack`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_brep_pack(snapshot: &SemioBrepSnapshot) -> Vec<u8> {
+    <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+}
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Demo

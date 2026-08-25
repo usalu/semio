@@ -34,6 +34,14 @@ Feature: Apply every typed semio ANIMATION mutation to the decoded real walk art
   every vector starts from — so a mistake in the vectors surfaces as a red scenario rather than a
   quietly agreeable one.
 
+  `identity-round-trip` measures BYTES here, not only meaning. The committed `🚶️walk` artifact is a
+  278-byte `.dsl.semio` record — the longest of the three timeline subsets, because a walk cycle
+  carries real keyframes — written by this subset's own printer, so re-printing the snapshot it
+  parses to must land on those same 278 bytes. `law::carrier_is_exact` says so and names the first
+  byte that drifts. A must-differ tripwire would be backwards for a codec reading its own output.
+  `✳️animation` exports no pack bridge, so the committed `🎒️example.pack.semio` twin is NOT read here
+  and this case makes no claim about it.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance

@@ -16,7 +16,8 @@ use crate::editor::playground::modes::edit;
 use crate::editor::playground::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
+    ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, InteractiveJobClassification, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
+    UiAssemblyResult,
 };
 use serde_json::Value;
 use store::EngineHandles;
@@ -104,6 +105,7 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(main::definition())
         .default_layout(edit::layout())
         .mutation("changeSchema", LocalizedLabel::native("Change Schema", "Schema ändern"))
+        .action_interactive_job("changeSchema", InteractiveJobClassification::Migrated)
         .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -141,11 +143,11 @@ mod tests {
         assert_eq!(<PlaygroundEditor as ArtifactEditor>::DIALECT, PLAYGROUND_DIALECT);
     }
 
-    #[test]
-    fn change_schema_command_mutates_the_schema_field() {
+    #[semio_framework_async_macros::async_test]
+    async fn change_schema_command_mutates_the_schema_field() {
         let document = empty_playground_snapshot();
-        let history = HistoryView::empty();
-        let doc = ArtifactView::new(&document, &history);
+        let history = HistoryView::empty().await;
+        let doc = ArtifactView::new(&document, &history).await;
         let config = NoConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let command = PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: "playground.custom".into() });

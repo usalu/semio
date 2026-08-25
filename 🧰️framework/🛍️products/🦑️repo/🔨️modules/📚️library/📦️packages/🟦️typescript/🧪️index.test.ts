@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
-import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { getWorkspaceRoot, layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -1242,6 +1242,26 @@ describe("command budgets", () => {
     const script = `const { runCmd } = await import(${JSON.stringify(indexPath)}); runCmd(${JSON.stringify(process.execPath)}, ["-e", "await Bun.sleep(10000)"], ${budgetMs === -1 ? "{}" : `{ budgetMs: ${budgetMs} }`});`;
     return spawnSync(process.execPath, ["-e", script], { encoding: "utf8", env: { ...process.env, ...envOverride } });
   }
+
+  test("captured Cargo failures replay structured compiler errors without warning floods", () => {
+    const warning = JSON.stringify({ reason: "compiler-message", message: { level: "warning", rendered: "warning: noisy dependency" } });
+    const error = JSON.stringify({ reason: "compiler-message", message: { level: "error", rendered: "error[E0609]: exact field failure\n" } });
+    expect(capturedTestFailureDiagnostics(`${warning}\n${error}\n`, "warning: stderr noise")).toBe("error[E0609]: exact field failure\n");
+  });
+
+  test("captured Cargo failures retain unrendered structured errors and stderr causes", () => {
+    const error = JSON.stringify({
+      reason: "compiler-message",
+      message: {
+        level: "error",
+        message: "missing schema attribute",
+        spans: [{ file_name: "src/schema.rs", line_start: 17, column_start: 4, is_primary: true }],
+      },
+    });
+    expect(capturedTestFailureDiagnostics(error, "warning: noise\nCaused by: fixture failed")).toBe(
+      "missing schema attribute\n  --> src/schema.rs:17:4\nCaused by: fixture failed",
+    );
+  });
 
   test("kills a command that exceeds its explicit budget", () => {
     const start = Date.now();

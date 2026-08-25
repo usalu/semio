@@ -17,6 +17,6 @@ pub fn diff(payload: &ReplaceModel, base: &EnergyModelSnapshot) -> protocol::Mut
     if model == crate::artifacts::model::energy_model(base) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Energy model already has this value.");
     }
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(&model))
+    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

@@ -18,10 +18,12 @@ import {
   type ToolDefinition,
   type WindowMeasure,
   type UtilityNode,
+  type BuiltNode,
   type Component,
   type UiNodeRecord,
   type UiSnapshot,
   type ActionBinding,
+  type UiIntent,
   type LayoutSpec,
   createMemoryStoragePort,
   createTurnOutcomeBroadcast,
@@ -173,6 +175,7 @@ import {
   resolveUtilityNodes,
   resolveUtilities,
   panelTabDefinitionToNode,
+  uiIntentToActionDescriptor,
   actionStageKey,
   actionRequiresStagedForm,
   resolveKeybindingIntent,
@@ -292,6 +295,8 @@ type ContractNodeSpec = {
 };
 
 const CONTRACT_LEAF_LAYOUT: LayoutSpec = { kind: "leaf", width: "hug", height: "hug" };
+const CONTRACT_STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" } as const;
+const CONTRACT_ACCESSIBILITY = { label: null, description: null, live: "off", shortcut: null, hidden: false } as const;
 
 function buildContractSnapshot(root: ContractNodeSpec): UiSnapshot {
   const nodes: UiNodeRecord[] = [];
@@ -305,12 +310,12 @@ function buildContractSnapshot(root: ContractNodeSpec): UiSnapshot {
       key: spec.key,
       component: spec.component,
       layout: spec.layout ?? CONTRACT_LEAF_LAYOUT,
-      style: {},
+      style: CONTRACT_STYLE,
       activity: "idle",
       disabled: spec.disabled ?? false,
       transition: null,
-      accessibility: {},
-      bindings: spec.bindings ?? [],
+      accessibility: CONTRACT_ACCESSIBILITY,
+      bindings: [...(spec.bindings ?? [])],
       menu: null,
       children,
     });
@@ -318,6 +323,21 @@ function buildContractSnapshot(root: ContractNodeSpec): UiSnapshot {
   };
   const rootId = walk(root);
   return { surface: "test", revision: 0, root: rootId, nodes, layoutEpoch: 0n } as UiSnapshot;
+}
+
+function buildContractNode(spec: ContractNodeSpec): BuiltNode {
+  return {
+    key: spec.key,
+    component: spec.component,
+    layout: spec.layout ?? CONTRACT_LEAF_LAYOUT,
+    style: CONTRACT_STYLE,
+    activity: "idle",
+    disabled: spec.disabled ?? false,
+    accessibility: CONTRACT_ACCESSIBILITY,
+    bindings: [...(spec.bindings ?? [])],
+    menu: null,
+    children: (spec.children ?? []).map(buildContractNode),
+  } as BuiltNode;
 }
 
 /** 🌳️ Renders `root` (and its nested `children`) through the real `UiDocumentStore`/`interpretUiNode`
@@ -4092,26 +4112,29 @@ describe("s workflow flow routing", () => {
     expect(flowSpotlightSuggestionListScrollClass(true)).toContain("max-h-[min(24rem,70vh)]");
   });
 
-  it("attaches a drag-and-drop controller to tree panels whose items carry drag data", () => {
+  it("hosts a semantic tree document inside a panel leaf", () => {
     const config = uiNodeToTreePanelConfig(
-      {
-        type: "tree",
-        sections: [
+      buildContractNode({
+        key: "catalogue",
+        component: { type: "tree", interactionDomain: null },
+        children: [
           {
-            id: "catalogue",
-            label: "Catalogue",
-            items: [{ id: "s-play-catalogue.document.draw", label: "Draw", draggable: true, dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' } }],
+            key: "catalogue.section",
+            component: { type: "treeSection", label: "Catalogue", defaultOpen: true },
+            children: [{ key: "s-play-catalogue.document.draw", component: { type: "treeItem", label: "Draw", description: null, icon: null, defaultOpen: null, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' }, dimmed: null, rowActions: [] } }],
           },
         ],
-      },
+      }),
       noopAction,
     );
-    expect(config.dragAndDropController).toBeDefined();
+    const control = config.sections[0]?.items[0]?.control as ReactElement;
+    const rendered = render(control);
+    expect(rendered.getByText("Draw")).toBeTruthy();
   });
 
-  it("omits the drag-and-drop controller for tree panels without drag data", () => {
-    const config = uiNodeToTreePanelConfig({ type: "tree", sections: [{ id: "catalogue", label: "Catalogue", items: [{ id: "s-play-catalogue.document.draw", label: "Draw" }] }] }, noopAction);
-    expect(config.dragAndDropController).toBeUndefined();
+  it("bridges semantic intent scope, version, args, and input into the plugin action channel", () => {
+    const intent = { surface: "panel:settings", revision: 1, node: 7, nodeKey: "spacing", trigger: "change", action: { scope: "puzzle3d-play", name: "setSpacing", version: 1 }, args: { axis: "x", value: 1 }, input: { value: 2 }, seq: 1n } as UiIntent;
+    expect(uiIntentToActionDescriptor(intent)).toEqual({ controllerId: "puzzle3d-play", action: "setSpacing", args: { axis: "x", value: 2 } });
   });
 
   it("resolves a fixture widget id to its workflow instance id, independent of selection state", () => {
@@ -4702,14 +4725,26 @@ describe("registry-derived utilities and activation (P5)", () => {
       groupLabels: {},
     };
     const historyTab = { kind: { kind: "app" as const, id: "framework.panel.history" }, label: "History", group: "settings" as const, bodyKey: "framework.body.history", children: [] };
-    const historyUiNode = { type: "tree" as const, sections: [{ id: "framework.history.commands", label: undefined, defaultOpen: true, items: [{ id: "framework.history.entry.1", label: "Increment" }] }] };
+    const historyUiNode = buildContractNode({
+      key: "framework.history",
+      component: { type: "tree", interactionDomain: null },
+      children: [
+        {
+          key: "framework.history.commands",
+          component: { type: "treeSection", label: null, defaultOpen: true },
+          children: [{ key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, rowActions: [] } }],
+        },
+      ],
+    });
     const node = panelTabDefinitionToNode(historyTab, "settings", { "framework.panel.history": historyUiNode }, () => {}, 1, emptyAppLabelsOverlay);
     expect(node.kind).toBe("leaf");
     if (node.kind !== "leaf") return;
     expect(node.id).toBe("framework.panel.history");
     const source = node.trees[0].tree;
     const config = "resolveTree" in source ? source.resolveTree() : source;
-    expect(config.sections[0]?.items?.[0]?.id).toBe("framework.history.entry.1");
+    const control = config.sections[0]?.items[0]?.control as ReactElement;
+    const rendered = render(control);
+    expect(rendered.getByText("Increment")).toBeTruthy();
   });
 });
 

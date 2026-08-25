@@ -94,6 +94,14 @@ mod tests {
     }
 
     #[test]
+    fn text_editor_scene_round_trips_with_absent_optional_fields() {
+        let scene = crate::TextEditorScene::base("playground.custom".into(), Some("playground".into()), None);
+        let props = encode(SurfaceKind::TextEditor, &scene).expect("bounded fixture");
+        let back: crate::TextEditorScene = decode(&props).expect("decode");
+        assert_eq!(scene, back);
+    }
+
+    #[test]
     fn board_scene_round_trips_with_absent_optional_fields() {
         let scene = Board2dScene::base("{}".into(), "{}".into(), true);
         let props = encode(SurfaceKind::Board2d, &scene).expect("bounded fixture");

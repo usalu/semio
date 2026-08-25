@@ -466,8 +466,35 @@ pub struct TextEditorScene {
     pub rename_json: Option<String>,
 }
 
+scene_pack_wire!(TextEditorScenePack, TextEditorScene {
+    buffer: String,
+    language: Option<String>,
+    selection_json: Option<String>,
+    tokens_json: Option<String>,
+    diagnostics_json: Option<String>,
+    completions_json: Option<String>,
+    overlays_json: Option<String>,
+    occurrences_json: Option<String>,
+    placeholders_json: Option<String>,
+    extra_carets_json: Option<String>,
+    selectable_spans_json: Option<String>,
+    settings_json: Option<String>,
+    camera_json: Option<String>,
+    hover_json: Option<String>,
+    newline_gates_json: Option<String>,
+    rename_json: Option<String>,
+});
+
 impl SceneDoc for TextEditorScene {
     const SCHEMA: &'static str = "text-editor@1";
+
+    fn encode_pack(&self) -> Result<Vec<u8>, crate::pack::PackError> {
+        crate::pack::to_bytes(&TextEditorScenePack::from(self))
+    }
+
+    fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
+        crate::pack::from_bytes::<TextEditorScenePack>(bytes).map(Into::into)
+    }
 }
 
 impl TextEditorScene {

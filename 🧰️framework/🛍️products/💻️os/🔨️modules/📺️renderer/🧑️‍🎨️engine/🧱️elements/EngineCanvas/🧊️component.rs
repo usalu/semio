@@ -8,18 +8,18 @@
 //! 🎨️ Embeds GraphHost, FlowHost, and EditorHost via vello offscreen compositing.
 
 use crate::interpreter::FrameworkWidgetContext;
-use flow::{FlowFixture, FlowHost, dag::dag_screen_to_world};
+use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent, tiles::VisibleTileCursor};
+use framework_surface_tiled_map::tiled_map::{tiles::VisibleTileCursor, MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
-use infinite_world::world::{WORLD_ASSET_URL_BYTE_CAPACITY, WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
-use serde_json::{Value, json};
+use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind, WORLD_ASSET_URL_BYTE_CAPACITY};
+use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Mutex, MutexGuard, OnceLock};
+use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
-use ui_wgpu::wgpu::{FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme, draw_text_overlay};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
@@ -83,10 +83,13 @@ struct EngineSurface {
     editor_scene_pack: Option<Vec<u8>>,
     width: u32,
     height: u32,
+    metrics_generation: u64,
+    document_generation: u64,
+    scene_revision: u64,
     last_note_click: Option<(String, f64)>,
 }
 
-const ENGINE_SURFACE_CAPACITY: usize = 256;
+pub(crate) const ENGINE_SURFACE_CAPACITY: usize = 256;
 const ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -106,7 +109,7 @@ impl EngineSurfaceId {
     }
 
     fn as_str(&self) -> &str {
-        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).unwrap_or("")
+        unsafe { std::str::from_utf8_unchecked(&self.bytes[..usize::from(self.len)]) }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -124,20 +127,34 @@ impl EngineSurfaceId {
         bytes[..PREFIX.len()].copy_from_slice(PREFIX);
         let end = PREFIX.len() + usize::from(self.len);
         bytes[PREFIX.len()..end].copy_from_slice(&self.bytes[..usize::from(self.len)]);
-        apply(std::str::from_utf8(&bytes[..end]).unwrap_or("engine:"))
+        apply(unsafe { std::str::from_utf8_unchecked(&bytes[..end]) })
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct EngineSurfaceToken {
-    slot: u16,
-    generation: u64,
+    pub(crate) slot: u16,
+    pub(crate) generation: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct EngineSurfaceIdentity {
     token: EngineSurfaceToken,
     id: EngineSurfaceId,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct EngineSurfaceSnapshot {
+    identity: EngineSurfaceIdentity,
+    metrics_generation: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct EngineSurfaceLiveFreshness {
+    identity: EngineSurfaceIdentity,
+    metrics_generation: u64,
+    document_generation: u64,
+    scene_revision: u64,
 }
 
 struct EngineSurfaceSlot {
@@ -248,11 +265,16 @@ impl EngineSurfaceRegistry {
         let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
             return false;
         };
-        if slot.generation != token.generation || slot.retirement.is_some() {
+        if slot.generation != token.generation {
             return false;
         }
-        let Some(surface) = slot.value.take() else {
-            return false;
+        if slot.retirement.is_some() {
+            return true;
+        }
+        let surface = match slot.value.take() {
+            Some(surface) => surface,
+            None if slot.id.is_some() => empty_engine_surface(1, 1),
+            None => return false,
         };
         slot.retirement = Some(EngineSurfaceRetirement::new(surface));
         true
@@ -271,7 +293,10 @@ impl EngineSurfaceRegistry {
         if !retirement.close_step(context, input) {
             return false;
         }
-        assert!(retirement.terminal_nonopaque_is_empty());
+        if !retirement.terminal_nonopaque_is_empty() {
+            self.faulted = true;
+            return false;
+        }
         slot.retirement = None;
         slot.id = None;
         let Some(generation) = slot.generation.checked_add(1) else {
@@ -294,6 +319,13 @@ impl EngineSurfaceRegistry {
 enum EngineSurfaceClosePhase {
     Claim,
     Events,
+    NodeGraph,
+    NodeGraphSync,
+    Map,
+    MapSync,
+    Editor,
+    EditorPack,
+    TileRequests,
     Board,
     BoardSync,
     Scalars,
@@ -301,8 +333,45 @@ enum EngineSurfaceClosePhase {
     Released,
 }
 
+enum NodeGraphEngineRetirement {
+    Dag(framework_surface_node_graph::node_graph::GraphHostRetirement),
+    Flow(flow::FlowHostRetirement),
+}
+
+impl NodeGraphEngineRetirement {
+    fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+        match self {
+            Self::Dag(owner) => owner.close_step(context),
+            Self::Flow(owner) => owner.close_step(context),
+        }
+    }
+
+    fn terminal_nonopaque_is_empty(&self) -> bool {
+        match self {
+            Self::Dag(owner) => owner.terminal_nonopaque_is_empty(),
+            Self::Flow(owner) => owner.terminal_nonopaque_is_empty(),
+        }
+    }
+}
+
 struct EngineSurfaceRetirement {
-    surface: ManuallyDrop<EngineSurface>,
+    node_graph_source: Option<NodeGraphEngine>,
+    sync_cache: NodeGraphSyncCache,
+    map_source: Option<MapHost>,
+    map_sync_cache: MapSyncCache,
+    map_tile_requests: Option<MapTileRequestCursor>,
+    board_source: Option<ManuallyDrop<puzzle::editor::puzzle2d::engine::BoardHost>>,
+    board_sync_cache: BoardSyncCache,
+    board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue,
+    board_retiring_events: Option<puzzle::editor::puzzle2d::engine::BoardEventQueue>,
+    board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
+    board_pointer_controller_id: Option<String>,
+    editor_source: Option<EditorHost>,
+    editor_scene_pack: Option<Vec<u8>>,
+    last_note_click: Option<(String, f64)>,
+    node_graph: Option<NodeGraphEngineRetirement>,
+    map: Option<framework_surface_tiled_map::tiled_map::MapHostRetirement>,
+    editor: Option<framework_editor::EditorHostRetirement>,
     board: Option<puzzle::editor::puzzle2d::engine::BoardHostRetirement>,
     phase: EngineSurfaceClosePhase,
     faulted: bool,
@@ -310,7 +379,130 @@ struct EngineSurfaceRetirement {
 
 impl EngineSurfaceRetirement {
     fn new(surface: EngineSurface) -> Self {
-        Self { surface: ManuallyDrop::new(surface), board: None, phase: EngineSurfaceClosePhase::Claim, faulted: false }
+        let EngineSurface {
+            node_graph: node_graph_source,
+            sync_cache,
+            map_host: map_source,
+            map_sync_cache,
+            map_tile_requests,
+            board_host: board_source,
+            board_sync_cache,
+            board_pending_events,
+            board_retiring_events,
+            board_pointer_inside: _,
+            board_pointer_claim,
+            board_pointer_controller_id,
+            editor: editor_source,
+            editor_scene_pack,
+            width: _,
+            height: _,
+            metrics_generation: _,
+            document_generation: _,
+            scene_revision: _,
+            last_note_click,
+        } = surface;
+        Self {
+            node_graph_source,
+            sync_cache,
+            map_source,
+            map_sync_cache,
+            map_tile_requests,
+            board_source,
+            board_sync_cache,
+            board_pending_events,
+            board_retiring_events,
+            board_pointer_claim,
+            board_pointer_controller_id,
+            editor_source,
+            editor_scene_pack,
+            last_note_click,
+            node_graph: None,
+            map: None,
+            editor: None,
+            board: None,
+            phase: EngineSurfaceClosePhase::Claim,
+            faulted: false,
+        }
+    }
+
+    fn close_string(value: &mut Option<String>) -> bool {
+        let Some(text) = value.as_mut() else {
+            return false;
+        };
+        if text.pop().is_none() {
+            *value = None;
+        }
+        true
+    }
+
+    fn close_bytes(value: &mut Option<Vec<u8>>) -> bool {
+        let Some(bytes) = value.as_mut() else {
+            return false;
+        };
+        if bytes.pop().is_none() {
+            *value = None;
+        }
+        true
+    }
+
+    fn close_node_graph_sync(cache: &mut NodeGraphSyncCache) -> bool {
+        if Self::close_string(&mut cache.fixture_json)
+            || cache.selection.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(|id| id.pop().is_some()))
+            || cache.selection.as_mut().is_some_and(|ids| ids.pop().is_some())
+            || Self::close_string(&mut cache.preview_off_json)
+            || Self::close_string(&mut cache.catalogue_json)
+            || cache.operators.as_mut().is_some_and(|operators| operators.pop().is_some())
+            || Self::close_string(&mut cache.computing_json)
+            || Self::close_string(&mut cache.status_json)
+            || Self::close_string(&mut cache.eval_json)
+            || Self::close_string(&mut cache.lod_json)
+            || cache.viewport.take().is_some()
+            || Self::close_bytes(&mut cache.scene_pack)
+        {
+            return false;
+        }
+        cache.selection = None;
+        cache.operators = None;
+        true
+    }
+
+    fn close_map_sync(cache: &mut MapSyncCache) -> bool {
+        if Self::close_string(&mut cache.map_fixture_json)
+            || Self::close_string(&mut cache.camera_json)
+            || Self::close_string(&mut cache.render_mode)
+            || Self::close_string(&mut cache.vector_style)
+            || Self::close_string(&mut cache.lod_mode)
+            || Self::close_string(&mut cache.layer_visibility_json)
+            || Self::close_string(&mut cache.layer_stroke_scale_json)
+            || Self::close_string(&mut cache.selection_json)
+            || Self::close_string(&mut cache.hover_json)
+            || Self::close_string(&mut cache.theme_json)
+            || Self::close_string(&mut cache.size_key)
+        {
+            return false;
+        }
+        true
+    }
+
+    fn close_board_sync(cache: &mut BoardSyncCache) -> bool {
+        if Self::close_string(&mut cache.fixture_json)
+            || Self::close_string(&mut cache.glyph_catalogs_json)
+            || Self::close_string(&mut cache.placement_compatibility_json)
+            || Self::close_string(&mut cache.selection_json)
+            || Self::close_string(&mut cache.camera_json)
+            || Self::close_string(&mut cache.hovered_id)
+            || Self::close_string(&mut cache.active_utility)
+            || Self::close_string(&mut cache.selection_method)
+            || cache.grid_snap_enabled.take().is_some()
+            || cache.grid_factor.take().is_some()
+            || cache.suggestion_offset.take().is_some()
+            || Self::close_string(&mut cache.brush_weights_json)
+            || Self::close_string(&mut cache.lod_mode)
+            || Self::close_string(&mut cache.size_key)
+        {
+            return false;
+        }
+        true
     }
 
     fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
@@ -319,79 +511,151 @@ impl EngineSurfaceRetirement {
         }
         match self.phase {
             EngineSurfaceClosePhase::Claim => {
-                if let Some(claim) = self.surface.board_pointer_claim.take() {
+                if let Some(claim) = self.board_pointer_claim.take() {
                     if input.release_action_claim(claim).is_err() {
                         self.faulted = true;
                         return false;
                     }
-                } else if let Some(controller) = self.surface.board_pointer_controller_id.take() {
-                    drop(controller);
+                } else if Self::close_string(&mut self.board_pointer_controller_id) {
                 } else {
                     self.phase = EngineSurfaceClosePhase::Events;
                 }
             }
             EngineSurfaceClosePhase::Events => {
-                if let Some(events) = self.surface.board_retiring_events.as_mut() {
+                if let Some(events) = self.board_retiring_events.as_mut() {
                     if events.close_step() {
-                        self.surface.board_retiring_events = None;
+                        self.board_retiring_events = None;
                     }
-                } else if self.surface.board_pending_events.close_step() {
+                } else if self.board_pending_events.close_step() {
+                    self.phase = EngineSurfaceClosePhase::NodeGraph;
+                }
+            }
+            EngineSurfaceClosePhase::NodeGraph => {
+                if self.node_graph.is_none() {
+                    if let Some(owner) = self.node_graph_source.take() {
+                        self.node_graph = Some(match owner {
+                            NodeGraphEngine::Dag(owner) => NodeGraphEngineRetirement::Dag(framework_surface_node_graph::node_graph::GraphHostRetirement::new(owner)),
+                            NodeGraphEngine::Flow(owner) => NodeGraphEngineRetirement::Flow(flow::FlowHostRetirement::new(owner)),
+                        });
+                    } else {
+                        self.phase = EngineSurfaceClosePhase::NodeGraphSync;
+                    }
+                    context.consume_fuel(1);
+                } else if self.node_graph.as_mut().is_some_and(|owner| owner.close_step(context)) {
+                    if !self.node_graph.as_ref().is_some_and(NodeGraphEngineRetirement::terminal_nonopaque_is_empty) {
+                        self.faulted = true;
+                        return false;
+                    }
+                    self.node_graph = None;
+                    self.phase = EngineSurfaceClosePhase::NodeGraphSync;
+                }
+                return false;
+            }
+            EngineSurfaceClosePhase::NodeGraphSync => {
+                if Self::close_node_graph_sync(&mut self.sync_cache) {
+                    self.phase = EngineSurfaceClosePhase::Map;
+                }
+            }
+            EngineSurfaceClosePhase::Map => {
+                if self.map.is_none() {
+                    if let Some(owner) = self.map_source.take() {
+                        self.map = Some(framework_surface_tiled_map::tiled_map::MapHostRetirement::new(owner));
+                    } else {
+                        self.phase = EngineSurfaceClosePhase::MapSync;
+                    }
+                } else if self.map.as_mut().is_some_and(framework_surface_tiled_map::tiled_map::MapHostRetirement::close_step) {
+                    if !self.map.as_ref().is_some_and(framework_surface_tiled_map::tiled_map::MapHostRetirement::terminal_is_empty) {
+                        self.faulted = true;
+                        return false;
+                    }
+                    self.map = None;
+                    self.phase = EngineSurfaceClosePhase::MapSync;
+                }
+            }
+            EngineSurfaceClosePhase::MapSync => {
+                if Self::close_map_sync(&mut self.map_sync_cache) {
+                    self.phase = EngineSurfaceClosePhase::Editor;
+                }
+            }
+            EngineSurfaceClosePhase::Editor => {
+                if self.editor.is_none() {
+                    if let Some(owner) = self.editor_source.take() {
+                        self.editor = Some(framework_editor::EditorHostRetirement::new(owner));
+                    } else {
+                        self.phase = EngineSurfaceClosePhase::EditorPack;
+                    }
+                } else if self.editor.as_mut().is_some_and(framework_editor::EditorHostRetirement::close_step) {
+                    if !self.editor.as_ref().is_some_and(framework_editor::EditorHostRetirement::terminal_is_empty) {
+                        self.faulted = true;
+                        return false;
+                    }
+                    self.editor = None;
+                    self.phase = EngineSurfaceClosePhase::EditorPack;
+                }
+            }
+            EngineSurfaceClosePhase::EditorPack => {
+                if !Self::close_bytes(&mut self.editor_scene_pack) {
+                    self.phase = EngineSurfaceClosePhase::TileRequests;
+                }
+            }
+            EngineSurfaceClosePhase::TileRequests => {
+                if self.map_tile_requests.take().is_none() {
                     self.phase = EngineSurfaceClosePhase::Board;
                 }
             }
             EngineSurfaceClosePhase::Board => {
                 if self.board.is_none() {
-                    if let Some(host) = self.surface.board_host.take() {
+                    if let Some(host) = self.board_source.take() {
                         self.board = Some(puzzle::editor::puzzle2d::engine::BoardHostRetirement::new(ManuallyDrop::into_inner(host)));
                         context.consume_fuel(1);
                     } else {
                         self.phase = EngineSurfaceClosePhase::BoardSync;
                         context.consume_fuel(1);
                     }
-                } else if self.board.as_mut().expect("board retirement owner").close_step(context) {
-                    assert!(self.board.as_ref().is_some_and(puzzle::editor::puzzle2d::engine::BoardHostRetirement::terminal_nonopaque_is_empty));
+                } else if self.board.as_mut().is_some_and(|owner| owner.close_step(context)) {
+                    if !self.board.as_ref().is_some_and(puzzle::editor::puzzle2d::engine::BoardHostRetirement::terminal_nonopaque_is_empty) {
+                        self.faulted = true;
+                        return false;
+                    }
                     self.board = None;
                     self.phase = EngineSurfaceClosePhase::BoardSync;
                 }
                 return false;
             }
             EngineSurfaceClosePhase::BoardSync => {
-                let cache = &mut self.surface.board_sync_cache;
-                if cache.fixture_json.take().is_some()
-                    || cache.glyph_catalogs_json.take().is_some()
-                    || cache.placement_compatibility_json.take().is_some()
-                    || cache.selection_json.take().is_some()
-                    || cache.camera_json.take().is_some()
-                    || cache.hovered_id.take().is_some()
-                    || cache.active_utility.take().is_some()
-                    || cache.selection_method.take().is_some()
-                    || cache.grid_snap_enabled.take().is_some()
-                    || cache.grid_factor.take().is_some()
-                    || cache.suggestion_offset.take().is_some()
-                    || cache.brush_weights_json.take().is_some()
-                    || cache.lod_mode.take().is_some()
-                    || cache.size_key.take().is_some()
-                {
-                } else {
+                if Self::close_board_sync(&mut self.board_sync_cache) {
                     self.phase = EngineSurfaceClosePhase::Scalars;
                 }
             }
             EngineSurfaceClosePhase::Scalars => {
-                if let Some((id, _)) = self.surface.last_note_click.take() {
-                    drop(id);
-                } else if let Some(pack) = self.surface.editor_scene_pack.take() {
-                    drop(pack);
-                } else if self.surface.map_tile_requests.take().is_some() {
-                } else {
+                if self.last_note_click.as_mut().is_some_and(|(id, _)| id.pop().is_some()) {
+                } else if self.last_note_click.take().is_none() {
                     self.phase = EngineSurfaceClosePhase::Witness;
                 }
             }
             EngineSurfaceClosePhase::Witness => {
-                if self.surface.node_graph.is_some() || self.surface.map_host.is_some() || self.surface.editor.is_some() || !node_graph_sync_terminal(&self.surface.sync_cache) || !map_sync_terminal(&self.surface.map_sync_cache) {
+                if self.node_graph_source.is_some()
+                    || self.map_source.is_some()
+                    || self.editor_source.is_some()
+                    || self.board_source.is_some()
+                    || self.editor_scene_pack.is_some()
+                    || self.map_tile_requests.is_some()
+                    || self.board_pointer_claim.is_some()
+                    || self.board_pointer_controller_id.is_some()
+                    || self.board_retiring_events.is_some()
+                    || !self.board_pending_events.terminal_is_empty()
+                    || !node_graph_sync_terminal(&self.sync_cache)
+                    || !map_sync_terminal(&self.map_sync_cache)
+                    || !board_sync_terminal(&self.board_sync_cache)
+                    || self.last_note_click.is_some()
+                    || self.node_graph.is_some()
+                    || self.map.is_some()
+                    || self.editor.is_some()
+                    || self.board.is_some()
+                {
                     self.faulted = true;
                     return false;
                 }
-                unsafe { ManuallyDrop::drop(&mut self.surface) };
                 self.phase = EngineSurfaceClosePhase::Released;
             }
             EngineSurfaceClosePhase::Released => return true,
@@ -401,7 +665,26 @@ impl EngineSurfaceRetirement {
     }
 
     fn terminal_nonopaque_is_empty(&self) -> bool {
-        self.phase == EngineSurfaceClosePhase::Released && self.board.is_none() && !self.faulted
+        self.phase == EngineSurfaceClosePhase::Released
+            && self.node_graph_source.is_none()
+            && node_graph_sync_terminal(&self.sync_cache)
+            && self.map_source.is_none()
+            && map_sync_terminal(&self.map_sync_cache)
+            && self.map_tile_requests.is_none()
+            && self.board_source.is_none()
+            && board_sync_terminal(&self.board_sync_cache)
+            && self.board_pending_events.terminal_is_empty()
+            && self.board_retiring_events.is_none()
+            && self.board_pointer_claim.is_none()
+            && self.board_pointer_controller_id.is_none()
+            && self.editor_source.is_none()
+            && self.editor_scene_pack.is_none()
+            && self.last_note_click.is_none()
+            && self.node_graph.is_none()
+            && self.map.is_none()
+            && self.editor.is_none()
+            && self.board.is_none()
+            && !self.faulted
     }
 }
 
@@ -417,7 +700,10 @@ impl Drop for EngineSurfaceRetirement {
 /// enclosing frame generation has passed the prepared-render gate.
 #[derive(Clone)]
 pub(crate) struct EngineCanvasPacket {
-    surface_id: String,
+    surface: EngineSurfaceIdentity,
+    document_generation: u64,
+    scene_revision: u64,
+    metrics_generation: u64,
     scene: canvas::Scene,
     clear: Color,
     width: u32,
@@ -426,7 +712,8 @@ pub(crate) struct EngineCanvasPacket {
 
 impl EngineCanvasPacket {
     pub(crate) fn close_step(&mut self) -> bool {
-        if self.surface_id.pop().is_some() {
+        if !self.surface.id.terminal_is_empty() {
+            self.surface.id.close_step();
             return false;
         }
         if self.scene.retirement_is_empty() {
@@ -441,29 +728,60 @@ impl EngineCanvasPacket {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.surface_id.is_empty() && self.scene.retirement_is_empty()
+        self.surface.id.terminal_is_empty() && self.scene.retirement_is_empty()
     }
 }
 
 const ENGINE_CANVAS_FRAME_PACKET_CAPACITY: usize = 256;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EngineCanvasPacketDestination {
+    Ready(usize),
+    Rejected(usize),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct EngineCanvasPacketReservation {
+    generation: u64,
+    sequence: u64,
+    destination: EngineCanvasPacketDestination,
+    surface: EngineSurfaceSnapshot,
+}
+
 /// 🧰️ Worker-owned fixed resource sink threaded through chrome/scene traversal.
 pub(crate) struct EngineCanvasBuildContext {
     dpr: f64,
+    document_generation: u64,
+    scene_revision: u64,
     packets: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
+    rejected: Box<[Option<EngineCanvasPacket>; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]>,
     len: usize,
-    rejected: Option<EngineCanvasPacket>,
+    rejected_len: usize,
+    reservation_sequence: u64,
+    published_reservation_sequence: u64,
+    outstanding_reservations: usize,
 }
 
 impl Default for EngineCanvasBuildContext {
     fn default() -> Self {
-        Self { dpr: 0.0, packets: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]), len: 0, rejected: None }
+        Self {
+            dpr: 0.0,
+            document_generation: 0,
+            scene_revision: 0,
+            packets: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]),
+            rejected: Box::new([const { None }; ENGINE_CANVAS_FRAME_PACKET_CAPACITY]),
+            len: 0,
+            rejected_len: 0,
+            reservation_sequence: 0,
+            published_reservation_sequence: 0,
+            outstanding_reservations: 0,
+        }
     }
 }
 
 impl EngineCanvasBuildContext {
-    pub(crate) fn new(dpr: f64) -> Self {
-        Self { dpr, ..Self::default() }
+    pub(crate) fn new(dpr: f64, document_generation: u64, scene_revision: u64) -> Self {
+        Self { dpr, document_generation, scene_revision, ..Self::default() }
     }
 
     pub(crate) fn dpr(&self) -> f64 {
@@ -471,8 +789,11 @@ impl EngineCanvasBuildContext {
     }
 
     pub(crate) fn take_packet_step(&mut self) -> Result<Option<EngineCanvasPacket>, EngineCanvasPacket> {
-        if let Some(rejected) = self.rejected.take() {
-            return Err(rejected);
+        if let Some(index) = self.rejected_len.checked_sub(1) {
+            self.rejected_len = index;
+            if let Some(rejected) = self.rejected[index].take() {
+                return Err(rejected);
+            }
         }
         let Some(index) = self.len.checked_sub(1) else { return Ok(None) };
         self.len = index;
@@ -480,19 +801,56 @@ impl EngineCanvasBuildContext {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.len == 0 && self.rejected.is_none() && self.packets.iter().all(Option::is_none)
+        self.len == 0 && self.rejected_len == 0 && self.reservation_sequence == self.published_reservation_sequence && self.outstanding_reservations == 0 && self.packets.iter().all(Option::is_none) && self.rejected.iter().all(Option::is_none)
     }
 
-    fn enqueue(&mut self, surface_id: &str, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
-        let packet = EngineCanvasPacket { surface_id: surface_id.to_string(), scene, clear, width, height };
-        if self.len == ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
-            if self.rejected.is_none() {
-                self.rejected = Some(packet);
-            }
-            return;
+    fn try_reserve_packet(&mut self, surface: EngineSurfaceSnapshot) -> Result<EngineCanvasPacketReservation, EngineSurfaceSnapshot> {
+        if !observe_engine_surface_packet_freshness(surface, self.document_generation, self.scene_revision) {
+            return Err(surface);
         }
-        self.packets[self.len] = Some(packet);
-        self.len += 1;
+        self.try_reserve_fresh_packet(surface)
+    }
+
+    fn try_reserve_fresh_packet(&mut self, surface: EngineSurfaceSnapshot) -> Result<EngineCanvasPacketReservation, EngineSurfaceSnapshot> {
+        let destination = if self.len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
+            let index = self.len;
+            self.len += 1;
+            EngineCanvasPacketDestination::Ready(index)
+        } else if self.rejected_len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
+            let index = self.rejected_len;
+            self.rejected_len += 1;
+            EngineCanvasPacketDestination::Rejected(index)
+        } else {
+            return Err(surface);
+        };
+        let Some(sequence) = self.reservation_sequence.checked_add(1) else {
+            match destination {
+                EngineCanvasPacketDestination::Ready(_) => self.len -= 1,
+                EngineCanvasPacketDestination::Rejected(_) => self.rejected_len -= 1,
+            }
+            return Err(surface);
+        };
+        let Some(outstanding_reservations) = self.outstanding_reservations.checked_add(1) else {
+            match destination {
+                EngineCanvasPacketDestination::Ready(_) => self.len -= 1,
+                EngineCanvasPacketDestination::Rejected(_) => self.rejected_len -= 1,
+            }
+            return Err(surface);
+        };
+        self.reservation_sequence = sequence;
+        self.outstanding_reservations = outstanding_reservations;
+        Ok(EngineCanvasPacketReservation { generation: self.document_generation, sequence, destination, surface })
+    }
+
+    fn publish_reserved(&mut self, reservation: EngineCanvasPacketReservation, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
+        self.published_reservation_sequence = reservation.sequence;
+        let packet =
+            EngineCanvasPacket { surface: reservation.surface.identity, document_generation: reservation.generation, scene_revision: self.scene_revision, metrics_generation: reservation.surface.metrics_generation, scene, clear, width, height };
+        match reservation.destination {
+            EngineCanvasPacketDestination::Ready(index) => self.packets[index] = Some(packet),
+            EngineCanvasPacketDestination::Rejected(index) => self.rejected[index] = Some(packet),
+        }
+        self.outstanding_reservations -= 1;
     }
 }
 
@@ -511,92 +869,514 @@ struct EngineGpuSurface {
     height: u32,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EngineGpuBuildPhase {
+    Reserve,
+    Texture,
+    View,
+    Renderer,
+    Render,
+    ReplacementTexture,
+    ReplacementView,
+    Stage,
+    Publish,
+    ClosingAdmission,
+    ClosingRenderer,
+    ClosingView,
+    ClosingTexture,
+    ClosingReplacementView,
+    ClosingReplacementTexture,
+    Terminal,
+}
+
+struct EngineGpuCandidate {
+    surface: EngineSurfaceIdentity,
+    document_generation: u64,
+    scene_revision: u64,
+    metrics_generation: u64,
+    primary_metrics_generation: u64,
+    raster_generation: ui_wgpu::wgpu::RasterTextureWitness,
+    width: u32,
+    height: u32,
+    admission: Option<ui_wgpu::wgpu::RasterTextureAdmission>,
+    renderer: Option<Renderer>,
+    texture: Option<wgpu::Texture>,
+    view: Option<wgpu::TextureView>,
+    replacement_texture: Option<wgpu::Texture>,
+    replacement_view: Option<wgpu::TextureView>,
+    phase: EngineGpuBuildPhase,
+}
+
+impl EngineGpuCandidate {
+    fn new(packet: &EngineCanvasPacket, raster_generation: ui_wgpu::wgpu::RasterTextureWitness, primary_metrics_generation: u64) -> Self {
+        Self {
+            surface: packet.surface,
+            document_generation: packet.document_generation,
+            scene_revision: packet.scene_revision,
+            metrics_generation: packet.metrics_generation,
+            primary_metrics_generation,
+            raster_generation,
+            width: packet.width.max(1),
+            height: packet.height.max(1),
+            admission: None,
+            renderer: None,
+            texture: None,
+            view: None,
+            replacement_texture: None,
+            replacement_view: None,
+            phase: EngineGpuBuildPhase::Reserve,
+        }
+    }
+
+    fn matches(&self, packet: &EngineCanvasPacket, expected: ui_wgpu::wgpu::RasterTextureWitness, primary_metrics_generation: u64) -> bool {
+        self.surface == packet.surface
+            && self.document_generation == packet.document_generation
+            && self.scene_revision == packet.scene_revision
+            && self.metrics_generation == packet.metrics_generation
+            && self.primary_metrics_generation == primary_metrics_generation
+            && self.raster_generation == expected
+            && self.width == packet.width.max(1)
+            && self.height == packet.height.max(1)
+    }
+
+    fn matches_live(&self, live: EngineSurfaceLiveFreshness) -> bool {
+        engine_gpu_freshness_matches(self.surface, self.document_generation, self.scene_revision, self.metrics_generation, live)
+    }
+
+    fn begin_close(&mut self) {
+        if self.phase != EngineGpuBuildPhase::Terminal {
+            self.phase = EngineGpuBuildPhase::ClosingAdmission;
+        }
+    }
+
+    fn close_step(&mut self, gpu: &mut GpuContext) -> Result<bool, String> {
+        match self.phase {
+            EngineGpuBuildPhase::ClosingAdmission => {
+                if let Some(admission) = self.admission.take() {
+                    gpu.cancel_engine_texture_admission(admission)?;
+                    return Ok(false);
+                }
+                self.phase = EngineGpuBuildPhase::ClosingRenderer;
+            }
+            EngineGpuBuildPhase::ClosingRenderer => {
+                if self.renderer.take().is_some() {
+                    return Ok(false);
+                }
+                self.phase = EngineGpuBuildPhase::ClosingView;
+            }
+            EngineGpuBuildPhase::ClosingView => {
+                if self.view.take().is_some() {
+                    return Ok(false);
+                }
+                self.phase = EngineGpuBuildPhase::ClosingTexture;
+            }
+            EngineGpuBuildPhase::ClosingTexture => {
+                if self.texture.take().is_some() {
+                    return Ok(false);
+                }
+                self.phase = EngineGpuBuildPhase::ClosingReplacementView;
+            }
+            EngineGpuBuildPhase::ClosingReplacementView => {
+                if self.replacement_view.take().is_some() {
+                    return Ok(false);
+                }
+                self.phase = EngineGpuBuildPhase::ClosingReplacementTexture;
+            }
+            EngineGpuBuildPhase::ClosingReplacementTexture => {
+                if self.replacement_texture.take().is_some() {
+                    return Ok(false);
+                }
+                self.phase = EngineGpuBuildPhase::Terminal;
+            }
+            EngineGpuBuildPhase::Terminal => return Ok(true),
+            _ => self.begin_close(),
+        }
+        Ok(self.phase == EngineGpuBuildPhase::Terminal)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.phase == EngineGpuBuildPhase::Terminal && self.admission.is_none() && self.renderer.is_none() && self.texture.is_none() && self.view.is_none() && self.replacement_texture.is_none() && self.replacement_view.is_none()
+    }
+}
+
+fn engine_gpu_freshness_matches(surface: EngineSurfaceIdentity, document_generation: u64, scene_revision: u64, metrics_generation: u64, live: EngineSurfaceLiveFreshness) -> bool {
+    surface == live.identity && document_generation == live.document_generation && scene_revision == live.scene_revision && metrics_generation == live.metrics_generation
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EngineGpuRetirementPhase {
+    Renderer,
+    View,
+    Texture,
+    Terminal,
+}
+
+struct EngineGpuRetirement {
+    renderer: Option<Renderer>,
+    view: Option<wgpu::TextureView>,
+    texture: Option<wgpu::Texture>,
+    phase: EngineGpuRetirementPhase,
+}
+
+impl EngineGpuRetirement {
+    fn new(surface: EngineGpuSurface) -> Self {
+        Self { renderer: Some(surface.vello), view: Some(surface.view), texture: Some(surface.texture), phase: EngineGpuRetirementPhase::Renderer }
+    }
+
+    fn close_step(&mut self) -> bool {
+        match self.phase {
+            EngineGpuRetirementPhase::Renderer => {
+                if self.renderer.take().is_some() {
+                    return false;
+                }
+                self.phase = EngineGpuRetirementPhase::View;
+            }
+            EngineGpuRetirementPhase::View => {
+                if self.view.take().is_some() {
+                    return false;
+                }
+                self.phase = EngineGpuRetirementPhase::Texture;
+            }
+            EngineGpuRetirementPhase::Texture => {
+                if self.texture.take().is_some() {
+                    return false;
+                }
+                self.phase = EngineGpuRetirementPhase::Terminal;
+            }
+            EngineGpuRetirementPhase::Terminal => return true,
+        }
+        self.phase == EngineGpuRetirementPhase::Terminal
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.phase == EngineGpuRetirementPhase::Terminal && self.renderer.is_none() && self.view.is_none() && self.texture.is_none()
+    }
+}
+
+struct EngineGpuSlot {
+    id: Option<EngineSurfaceId>,
+    generation: u64,
+    exhausted: bool,
+    live: Option<EngineGpuSurface>,
+    candidate: Option<EngineGpuCandidate>,
+    retirement: Option<EngineGpuRetirement>,
+    closing: bool,
+}
+
+impl EngineGpuSlot {
+    fn new() -> Self {
+        Self { id: None, generation: 0, exhausted: false, live: None, candidate: None, retirement: None, closing: false }
+    }
+
+    fn token(&self, slot: usize) -> Option<EngineSurfaceToken> {
+        (self.id.is_some() || self.live.is_some() || self.candidate.is_some() || self.retirement.is_some()).then_some(EngineSurfaceToken { slot: slot as u16, generation: self.generation })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.id.is_none() && self.live.is_none() && self.candidate.is_none() && self.retirement.is_none()
+    }
+
+    fn publish_candidate(&mut self, packet: &EngineCanvasPacket, expected: ui_wgpu::wgpu::RasterTextureWitness, primary_metrics_generation: u64) -> Result<bool, String> {
+        let Some(candidate) = self.candidate.as_mut() else {
+            return Err("engine GPU publication candidate disappeared".to_string());
+        };
+        if !candidate.matches(packet, expected, primary_metrics_generation) || self.retirement.is_some() {
+            candidate.begin_close();
+            return Err("engine CPU/GPU publication freshness changed".to_string());
+        }
+        if candidate.renderer.is_none() || candidate.replacement_texture.is_none() || candidate.replacement_view.is_none() {
+            candidate.begin_close();
+            return Err("engine GPU publication candidate was incomplete".to_string());
+        }
+        let Some(mut candidate) = self.candidate.take() else {
+            return Err("engine GPU publication candidate transfer failed".to_string());
+        };
+        let (Some(renderer), Some(texture), Some(view)) = (candidate.renderer.take(), candidate.replacement_texture.take(), candidate.replacement_view.take()) else {
+            candidate.begin_close();
+            self.candidate = Some(candidate);
+            return Err("engine GPU publication owner transfer was incomplete".to_string());
+        };
+        let published = EngineGpuSurface { vello: renderer, texture, view, width: candidate.width, height: candidate.height };
+        if let Some(displaced) = self.live.replace(published) {
+            self.retirement = Some(EngineGpuRetirement::new(displaced));
+        }
+        candidate.phase = EngineGpuBuildPhase::Terminal;
+        if !candidate.terminal_is_empty() {
+            candidate.begin_close();
+            self.candidate = Some(candidate);
+            return Err("engine GPU publication retained an unclassified candidate owner".to_string());
+        }
+        self.candidate = Some(candidate);
+        Ok(false)
+    }
+}
+
 /// 🖥️ UI-capability owner for EngineCanvas GPU realization.
-#[derive(Default)]
 pub(crate) struct EngineCanvasPresenter {
-    surfaces: HashMap<String, EngineGpuSurface>,
+    slots: ManuallyDrop<Option<Box<[EngineGpuSlot; ENGINE_SURFACE_CAPACITY]>>>,
+    primary_metrics_generation: u64,
+    metrics_invalidation_scan: Option<usize>,
+}
+
+impl Default for EngineCanvasPresenter {
+    fn default() -> Self {
+        Self { slots: ManuallyDrop::new(Some(Box::new(std::array::from_fn(|_| EngineGpuSlot::new())))), primary_metrics_generation: 0, metrics_invalidation_scan: None }
+    }
 }
 
 impl EngineCanvasPresenter {
-    pub(crate) fn realize_one(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket, candidate: ui_wgpu::wgpu::RasterTextureWitness, expected: ui_wgpu::wgpu::RasterTextureWitness) -> Result<(), String> {
-        let width = packet.width.max(1);
-        let height = packet.height.max(1);
-        if candidate != expected {
+    fn slots(&self) -> Result<&[EngineGpuSlot; ENGINE_SURFACE_CAPACITY], String> {
+        self.slots.as_deref().ok_or_else(|| "engine presenter fixed slot authority was abandoned".to_string())
+    }
+
+    fn slots_mut(&mut self) -> Result<&mut [EngineGpuSlot; ENGINE_SURFACE_CAPACITY], String> {
+        self.slots.as_deref_mut().ok_or_else(|| "engine presenter fixed slot authority was abandoned".to_string())
+    }
+
+    pub(crate) fn observe_primary_metrics_generation(&mut self, generation: u64) -> bool {
+        if generation <= self.primary_metrics_generation {
+            return generation == self.primary_metrics_generation;
+        }
+        self.primary_metrics_generation = generation;
+        self.metrics_invalidation_scan = Some(0);
+        true
+    }
+
+    pub(crate) fn invalidate_primary_metrics_step(&mut self) -> bool {
+        let Some(index) = self.metrics_invalidation_scan else { return true };
+        if index == ENGINE_SURFACE_CAPACITY {
+            self.metrics_invalidation_scan = None;
+            return true;
+        }
+        if let Ok(slots) = self.slots_mut() {
+            if let Some(candidate) = slots.get_mut(index).and_then(|slot| slot.candidate.as_mut()) {
+                candidate.begin_close();
+            }
+        }
+        self.metrics_invalidation_scan = index.checked_add(1);
+        self.metrics_invalidation_scan.is_none()
+    }
+
+    pub(crate) fn realize_step(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket, candidate_generation: ui_wgpu::wgpu::RasterTextureWitness, expected: ui_wgpu::wgpu::RasterTextureWitness) -> Result<bool, String> {
+        if candidate_generation != expected {
             return Err("engine raster operation authority was stale before realization".to_string());
         }
-        let key = raster_key(&packet.surface_id);
-        let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;
-        let needs_create = !self.surfaces.contains_key(&packet.surface_id);
-        if needs_create {
-            if let Err(error) = gpu.validate_engine_target_texture_allocation(&admission, expected) {
-                let _ = gpu.cancel_engine_texture_admission(admission);
-                return Err(error);
+        if self.metrics_invalidation_scan.is_some() {
+            return Err("engine primary metrics invalidation is pending".to_string());
+        }
+        let primary_metrics_generation = self.primary_metrics_generation;
+        let index = usize::from(packet.surface.token.slot);
+        let slot = self.slots_mut()?.get_mut(index).ok_or_else(|| "engine surface token exceeded fixed GPU slots".to_string())?;
+        if slot.closing || slot.exhausted {
+            return Err("engine surface slot was closing or exhausted".to_string());
+        }
+        if let Some(retirement) = slot.retirement.as_mut() {
+            if retirement.close_step() && retirement.terminal_is_empty() {
+                slot.retirement = None;
             }
-            let texture = create_target_texture(gpu.device(), width, height);
-            if let Err(error) = gpu.validate_engine_target_view_allocation(&admission, expected) {
-                gpu.retain_engine_allocation_fault(admission, Some(texture), None);
-                return Err(error);
+            return Ok(false);
+        }
+        if slot.id.is_none() {
+            if slot.generation != 0 && slot.generation != packet.surface.token.generation {
+                return Err("engine surface GPU generation was stale before reservation".to_string());
             }
-            let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-            if let Err(error) = gpu.validate_engine_renderer_allocation(&admission, expected) {
-                gpu.retain_engine_allocation_fault(admission, Some(texture), Some(view));
-                return Err(error);
+            slot.id = Some(packet.surface.id);
+            slot.generation = packet.surface.token.generation;
+        }
+        if slot.generation != packet.surface.token.generation || slot.id != Some(packet.surface.id) {
+            return Err("engine surface CPU/GPU identity pair was stale".to_string());
+        }
+        if slot.candidate.is_none() {
+            slot.candidate = Some(EngineGpuCandidate::new(packet, candidate_generation, primary_metrics_generation));
+            return Ok(false);
+        }
+        let build = slot.candidate.as_mut().ok_or_else(|| "engine GPU candidate disappeared".to_string())?;
+        if !build.matches(packet, expected, primary_metrics_generation) {
+            return Err("engine GPU candidate freshness changed before step".to_string());
+        }
+        match build.phase {
+            EngineGpuBuildPhase::Reserve => {
+                let admission = build.surface.id.with_raster_key(|key| gpu.reserve_engine_texture(key, build.width, build.height, candidate_generation, expected))?;
+                build.admission = Some(admission);
+                build.phase = EngineGpuBuildPhase::Texture;
             }
-            let vello = match Renderer::new(gpu.device(), RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None }) {
-                Ok(vello) => vello,
-                Err(error) => {
-                    gpu.retain_engine_allocation_fault(admission, Some(texture), Some(view));
-                    return Err(format!("vello renderer: {error:?}"));
+            EngineGpuBuildPhase::Texture => {
+                let admission = build.admission.as_ref().ok_or_else(|| "engine texture admission was missing".to_string())?;
+                gpu.validate_engine_target_texture_allocation(admission, expected)?;
+                build.texture = Some(create_target_texture(gpu.device(), build.width, build.height));
+                build.phase = EngineGpuBuildPhase::View;
+            }
+            EngineGpuBuildPhase::View => {
+                let admission = build.admission.as_ref().ok_or_else(|| "engine view admission was missing".to_string())?;
+                gpu.validate_engine_target_view_allocation(admission, expected)?;
+                let texture = build.texture.as_ref().ok_or_else(|| "engine texture owner was missing".to_string())?;
+                build.view = Some(texture.create_view(&wgpu::TextureViewDescriptor::default()));
+                build.phase = EngineGpuBuildPhase::Renderer;
+            }
+            EngineGpuBuildPhase::Renderer => {
+                let admission = build.admission.as_ref().ok_or_else(|| "engine renderer admission was missing".to_string())?;
+                gpu.validate_engine_renderer_allocation(admission, expected)?;
+                build.renderer = Some(
+                    Renderer::new(gpu.device(), RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
+                        .map_err(|error| format!("vello renderer: {error:?}"))?,
+                );
+                build.phase = EngineGpuBuildPhase::Render;
+            }
+            EngineGpuBuildPhase::Render => {
+                let renderer = build.renderer.as_mut().ok_or_else(|| "engine renderer owner was missing".to_string())?;
+                let view = build.view.as_ref().ok_or_else(|| "engine render view owner was missing".to_string())?;
+                let params = RenderParams { base_color: packet.clear, width: build.width, height: build.height, antialiasing_method: AaConfig::Area };
+                renderer.render_to_texture(gpu.device(), gpu.queue(), packet.scene.vello_scene(), view, &params).map_err(|error| format!("vello render: {error:?}"))?;
+                build.phase = EngineGpuBuildPhase::ReplacementTexture;
+            }
+            EngineGpuBuildPhase::ReplacementTexture => {
+                let admission = build.admission.as_ref().ok_or_else(|| "engine replacement texture admission was missing".to_string())?;
+                gpu.validate_engine_replacement_texture_allocation(admission, expected)?;
+                build.replacement_texture = Some(create_target_texture(gpu.device(), build.width, build.height));
+                build.phase = EngineGpuBuildPhase::ReplacementView;
+            }
+            EngineGpuBuildPhase::ReplacementView => {
+                let admission = build.admission.as_ref().ok_or_else(|| "engine replacement view admission was missing".to_string())?;
+                gpu.validate_engine_replacement_view_allocation(admission, expected)?;
+                let texture = build.replacement_texture.as_ref().ok_or_else(|| "engine replacement texture owner was missing".to_string())?;
+                build.replacement_view = Some(texture.create_view(&wgpu::TextureViewDescriptor::default()));
+                build.phase = EngineGpuBuildPhase::Stage;
+            }
+            EngineGpuBuildPhase::Stage => {
+                let admission = build.admission.take().ok_or_else(|| "engine stage admission was missing".to_string())?;
+                let texture = build.texture.take().ok_or_else(|| "engine rendered texture owner was missing".to_string())?;
+                let view = build.view.take().ok_or_else(|| "engine rendered view owner was missing".to_string())?;
+                match gpu.stage_engine_texture(admission, texture, view, expected) {
+                    Ok(()) => build.phase = EngineGpuBuildPhase::Publish,
+                    Err(RasterTextureStageFault::Returned { fault, admission, texture, view }) => {
+                        build.admission = Some(admission);
+                        build.texture = Some(texture);
+                        build.view = Some(view);
+                        build.begin_close();
+                        return Err(fault.to_owned());
+                    }
+                    Err(RasterTextureStageFault::Retained(fault)) => {
+                        build.begin_close();
+                        return Err(fault.to_owned());
+                    }
                 }
-            };
-            self.surfaces.insert(packet.surface_id.clone(), EngineGpuSurface { vello, texture, view, width, height });
-        } else if self.surfaces.get(&packet.surface_id).is_some_and(|surface| surface.width != width || surface.height != height) {
-            if let Err(error) = gpu.validate_engine_replacement_texture_allocation(&admission, expected) {
-                let _ = gpu.cancel_engine_texture_admission(admission);
-                return Err(error);
             }
-            let texture = create_target_texture(gpu.device(), width, height);
-            if let Err(error) = gpu.validate_engine_replacement_view_allocation(&admission, expected) {
-                gpu.retain_engine_allocation_fault(admission, Some(texture), None);
-                return Err(error);
-            }
-            let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-            let surface = self.surfaces.get_mut(&packet.surface_id).expect("engine surface");
-            surface.texture = texture;
-            surface.view = view;
-            surface.width = width;
-            surface.height = height;
-        }
-        let surface = self.surfaces.get_mut(&packet.surface_id).expect("engine surface");
-        let params = RenderParams { base_color: packet.clear, width, height, antialiasing_method: AaConfig::Area };
-        if let Err(error) = surface.vello.render_to_texture(gpu.device(), gpu.queue(), packet.scene.vello_scene(), &surface.view, &params) {
-            let _ = gpu.cancel_engine_texture_admission(admission);
-            return Err(format!("vello render: {error:?}"));
-        }
-        if let Err(error) = gpu.validate_engine_replacement_texture_allocation(&admission, expected) {
-            let _ = gpu.cancel_engine_texture_admission(admission);
-            return Err(error);
-        }
-        let replacement_texture = create_target_texture(gpu.device(), width, height);
-        if let Err(error) = gpu.validate_engine_replacement_view_allocation(&admission, expected) {
-            gpu.retain_engine_allocation_fault(admission, Some(replacement_texture), None);
-            return Err(error);
-        }
-        let replacement_view = replacement_texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let published_texture = std::mem::replace(&mut surface.texture, replacement_texture);
-        let published_view = std::mem::replace(&mut surface.view, replacement_view);
-        if let Err(fault) = gpu.stage_engine_texture(admission, published_texture, published_view, expected) {
-            match fault {
-                RasterTextureStageFault::Returned { fault, admission, texture, view } => {
-                    let _ = gpu.cancel_engine_texture_admission(admission);
-                    surface.texture = texture;
-                    surface.view = view;
-                    return Err(fault.to_owned());
+            EngineGpuBuildPhase::Publish => {
+                let live = match engine_surface_live_freshness(packet.surface.token) {
+                    Ok(Some(live)) => live,
+                    Ok(None) => {
+                        build.begin_close();
+                        return Err("engine CPU surface disappeared before GPU publication".to_string());
+                    }
+                    Err(()) => return Ok(false),
+                };
+                if !build.matches_live(live) {
+                    build.begin_close();
+                    return Err("engine CPU surface freshness changed before GPU publication".to_string());
                 }
-                RasterTextureStageFault::Retained(fault) => return Err(fault.to_owned()),
+                return slot.publish_candidate(packet, expected, primary_metrics_generation);
+            }
+            EngineGpuBuildPhase::ClosingAdmission
+            | EngineGpuBuildPhase::ClosingRenderer
+            | EngineGpuBuildPhase::ClosingView
+            | EngineGpuBuildPhase::ClosingTexture
+            | EngineGpuBuildPhase::ClosingReplacementView
+            | EngineGpuBuildPhase::ClosingReplacementTexture => {
+                return Err("engine GPU candidate requires retained close".to_string());
+            }
+            EngineGpuBuildPhase::Terminal => {
+                slot.candidate = None;
+                return Ok(true);
             }
         }
-        Ok(())
+        Ok(false)
+    }
+
+    pub(crate) fn close_active_candidate_step(&mut self, gpu: &mut GpuContext) -> Result<bool, String> {
+        let slots = self.slots_mut()?;
+        let Some(index) = slots.iter().position(|slot| slot.candidate.is_some()) else { return Ok(true) };
+        let Some(candidate) = slots[index].candidate.as_mut() else { return Ok(false) };
+        candidate.begin_close();
+        if candidate.close_step(gpu)? && candidate.terminal_is_empty() {
+            slots[index].candidate = None;
+        }
+        Ok(false)
+    }
+
+    pub(crate) fn surface_token_at(&self, index: usize) -> Option<EngineSurfaceToken> {
+        self.slots().ok()?.get(index)?.token(index)
+    }
+
+    pub(crate) fn begin_surface_close(&mut self, token: EngineSurfaceToken) -> bool {
+        let Ok(slots) = self.slots_mut() else { return false };
+        let Some(slot) = slots.get_mut(usize::from(token.slot)) else { return false };
+        if slot.generation != token.generation {
+            return false;
+        }
+        slot.closing = true;
+        if let Some(candidate) = slot.candidate.as_mut() {
+            candidate.begin_close();
+        }
+        true
+    }
+
+    pub(crate) fn close_surface_step(&mut self, gpu: &mut GpuContext, token: EngineSurfaceToken) -> Result<bool, String> {
+        let slot = self.slots_mut()?.get_mut(usize::from(token.slot)).ok_or_else(|| "engine close token exceeded fixed GPU slots".to_string())?;
+        if slot.generation != token.generation || !slot.closing {
+            return Err("engine GPU close token was stale".to_string());
+        }
+        if let Some(candidate) = slot.candidate.as_mut() {
+            candidate.begin_close();
+            if candidate.close_step(gpu)? && candidate.terminal_is_empty() {
+                slot.candidate = None;
+            }
+            return Ok(false);
+        }
+        if slot.retirement.is_none() {
+            if let Some(live) = slot.live.take() {
+                slot.retirement = Some(EngineGpuRetirement::new(live));
+                return Ok(false);
+            }
+        }
+        if let Some(retirement) = slot.retirement.as_mut() {
+            if retirement.close_step() && retirement.terminal_is_empty() {
+                slot.retirement = None;
+            }
+            return Ok(false);
+        }
+        if let Some(id) = slot.id.as_mut() {
+            if !id.terminal_is_empty() {
+                id.close_step();
+                return Ok(false);
+            }
+            slot.id = None;
+            return Ok(false);
+        }
+        let Some(generation) = slot.generation.checked_add(1) else {
+            slot.exhausted = true;
+            slot.closing = false;
+            return Ok(true);
+        };
+        slot.generation = generation;
+        slot.closing = false;
+        Ok(true)
+    }
+
+    pub(crate) fn surface_terminal_is_empty(&self, token: EngineSurfaceToken) -> bool {
+        self.slots().ok().and_then(|slots| slots.get(usize::from(token.slot))).is_none_or(|slot| slot.generation != token.generation || slot.terminal_is_empty())
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.metrics_invalidation_scan.is_none() && self.slots().is_ok_and(|slots| slots.iter().all(EngineGpuSlot::terminal_is_empty))
+    }
+}
+
+impl Drop for EngineCanvasPresenter {
+    fn drop(&mut self) {
+        debug_assert!(self.terminal_is_empty(), "EngineCanvasPresenter must reach terminal-empty before release");
+        if self.terminal_is_empty() {
+            unsafe { ManuallyDrop::drop(&mut self.slots) };
+        }
     }
 }
 //#endregion 📦️PreparedEngineCanvas
@@ -662,6 +1442,23 @@ fn map_sync_terminal(cache: &MapSyncCache) -> bool {
         && cache.size_key.is_none()
 }
 
+fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
+    cache.fixture_json.is_none()
+        && cache.glyph_catalogs_json.is_none()
+        && cache.placement_compatibility_json.is_none()
+        && cache.selection_json.is_none()
+        && cache.camera_json.is_none()
+        && cache.hovered_id.is_none()
+        && cache.active_utility.is_none()
+        && cache.selection_method.is_none()
+        && cache.grid_snap_enabled.is_none()
+        && cache.grid_factor.is_none()
+        && cache.suggestion_offset.is_none()
+        && cache.brush_weights_json.is_none()
+        && cache.lod_mode.is_none()
+        && cache.size_key.is_none()
+}
+
 /// 🧵️ Worker-safe retained cell whose existing `with`/`borrow` call shape keeps scene code concise.
 struct WorkerCell<T> {
     inner: OnceLock<Mutex<T>>,
@@ -684,6 +1481,10 @@ impl<T: Default> WorkerCell<T> {
 
     fn borrow_mut(&self) -> MutexGuard<'_, T> {
         self.borrow()
+    }
+
+    fn try_borrow_mut(&self) -> Option<MutexGuard<'_, T>> {
+        self.state().try_lock().ok()
     }
 
     fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
@@ -732,7 +1533,11 @@ pub(crate) fn theme_is_dark(theme: &Theme) -> bool {
 }
 
 fn linear_to_rgba8_channel(linear: f32) -> u8 {
-    if linear <= 0.0031308 { (linear * 12.92 * 255.0).round() as u8 } else { (1.055 * linear.powf(1.0 / 2.4) - 0.055).mul_add(255.0, 0.0).round() as u8 }
+    if linear <= 0.0031308 {
+        (linear * 12.92 * 255.0).round() as u8
+    } else {
+        (1.055 * linear.powf(1.0 / 2.4) - 0.055).mul_add(255.0, 0.0).round() as u8
+    }
 }
 
 fn sync_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, flow: &mut FlowHost) {
@@ -771,6 +1576,81 @@ fn engine_surface_registry_rejects_oversized_identity_before_reservation() {
 }
 
 #[cfg(test)]
+#[test]
+fn engine_surface_registry_accepts_exact_id_capacity_and_refuses_generation_exhaustion() {
+    let mut registry = EngineSurfaceRegistry::default();
+    let exact = "s".repeat(ENGINE_SURFACE_ID_BYTE_CAPACITY);
+    assert!(registry.reserve(&exact).is_some());
+    let mut exhausted = EngineSurfaceRegistry::default();
+    exhausted.slots[0].generation = u64::MAX;
+    assert!(exhausted.reserve("never-alias").is_none());
+    assert!(exhausted.slots[0].exhausted);
+    assert!(exhausted.slots[0].id.is_none());
+}
+
+#[cfg(test)]
+#[test]
+fn engine_packet_capacity_plus_one_returns_the_exact_snapshot_before_scene_transfer() {
+    let Some(id) = EngineSurfaceId::try_from_str("packet-owner").ok() else {
+        panic!("bounded packet identity");
+    };
+    let snapshot = EngineSurfaceSnapshot { identity: EngineSurfaceIdentity { token: EngineSurfaceToken { slot: 7, generation: 11 }, id }, metrics_generation: 13 };
+    let mut context = EngineCanvasBuildContext::new(17.0, 19, 23);
+    for index in 0..(ENGINE_CANVAS_FRAME_PACKET_CAPACITY * 2) {
+        let Ok(reservation) = context.try_reserve_fresh_packet(snapshot) else {
+            panic!("fixed packet and rejection authorities admit their declared capacity");
+        };
+        assert_eq!(reservation.sequence, (index + 1) as u64);
+        if index < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
+            assert_eq!(reservation.destination, EngineCanvasPacketDestination::Ready(index));
+        } else {
+            assert_eq!(reservation.destination, EngineCanvasPacketDestination::Rejected(index - ENGINE_CANVAS_FRAME_PACKET_CAPACITY));
+        }
+    }
+    assert_eq!(context.try_reserve_fresh_packet(snapshot), Err(snapshot));
+    assert_eq!(context.len, ENGINE_CANVAS_FRAME_PACKET_CAPACITY);
+    assert_eq!(context.rejected_len, ENGINE_CANVAS_FRAME_PACKET_CAPACITY);
+}
+
+#[cfg(test)]
+#[test]
+fn gpu_publish_freshness_uses_the_live_cpu_identity_metrics_document_and_scene() {
+    let Some(id) = EngineSurfaceId::try_from_str("freshness-owner").ok() else {
+        panic!("bounded freshness identity");
+    };
+    let identity = EngineSurfaceIdentity { token: EngineSurfaceToken { slot: 3, generation: 5 }, id };
+    let live = EngineSurfaceLiveFreshness { identity, metrics_generation: 13, document_generation: 7, scene_revision: 11 };
+    assert!(engine_gpu_freshness_matches(identity, 7, 11, 13, live));
+    assert!(!engine_gpu_freshness_matches(identity, 7, 11, 13, EngineSurfaceLiveFreshness { metrics_generation: 14, ..live }));
+    assert!(!engine_gpu_freshness_matches(identity, 7, 11, 13, EngineSurfaceLiveFreshness { document_generation: 8, ..live }));
+    assert!(!engine_gpu_freshness_matches(identity, 7, 11, 13, EngineSurfaceLiveFreshness { scene_revision: 12, ..live }));
+}
+
+#[cfg(test)]
+#[test]
+fn normal_replacement_drains_displaced_renderer_view_texture_before_next_candidate() {
+    let source = include_str!("🧊️component.rs");
+    let start = source.find("pub(crate) fn realize_step").unwrap_or(0);
+    let end = source[start..].find("pub(crate) fn close_active_candidate_step").map(|offset| start + offset).unwrap_or(source.len());
+    let mounted = &source[start..end];
+    assert!(mounted.contains("if let Some(retirement) = slot.retirement.as_mut()"));
+    assert!(mounted.contains("retirement.close_step() && retirement.terminal_is_empty()"));
+    assert!(source.contains("self.retirement = Some(EngineGpuRetirement::new(displaced))"));
+}
+
+#[cfg(test)]
+#[test]
+fn child_and_outer_surface_retirements_require_explicit_field_witnesses() {
+    let source = include_str!("🧊️component.rs");
+    let start = source.find("struct EngineSurfaceRetirement").unwrap_or(0);
+    let end = source[start..].find("//#region 📦️PreparedEngineCanvas").map(|offset| start + offset).unwrap_or(source.len());
+    let retirement = &source[start..end];
+    assert!(retirement.contains("let EngineSurface {"));
+    assert!(retirement.contains("board_pending_events.terminal_is_empty()"));
+    assert!(!retirement.contains("ManuallyDrop::drop(&mut self.surface)"));
+}
+
+#[cfg(test)]
 fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
     let mut sequence = 0;
     let mut context = semio_framework_job::StepContext::new(
@@ -791,7 +1671,7 @@ fn board_surface_close_freezes_registration_and_reaches_nonopaque_terminal() {
     let token = registry.reserve("board-close").expect("fixed surface reservation");
     let mut surface = empty_engine_surface(800, 600);
     surface.board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::BoardHost::default()));
-    registry.publish_reserved(token, surface);
+    assert!(registry.publish_reserved(token, surface).is_ok());
     assert!(registry.begin_close(token));
     assert!(registry.get("board-close").is_none());
     assert!(registry.reserve("board-close").is_none());
@@ -802,6 +1682,56 @@ fn board_surface_close_freezes_registration_and_reaches_nonopaque_terminal() {
         assert!(turns < 8_192, "board surface close reaches a fixed terminal witness");
     }
     assert!(registry.terminal_nonopaque_is_empty(token));
+}
+
+#[cfg(test)]
+fn drive_engine_surface_close(registry: &mut EngineSurfaceRegistry, token: EngineSurfaceToken, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> usize {
+    let mut turns = 0usize;
+    while !with_engine_close_context(1, |context| registry.close_step(token, context, input)) {
+        turns += 1;
+        assert!(turns < 262_144, "populated engine surface close reaches a fixed terminal witness");
+    }
+    turns
+}
+
+#[cfg(test)]
+#[test]
+fn populated_graph_map_editor_surface_closes_one_fuel_turn_at_a_time() {
+    let mut registry = EngineSurfaceRegistry::default();
+    let token = registry.reserve("all-cpu-owners").expect("fixed surface reservation");
+    let mut surface = empty_engine_surface(800, 600);
+    surface.node_graph = Some(NodeGraphEngine::Dag(GraphHost::default()));
+    surface.sync_cache.fixture_json = Some("x".repeat(8_192));
+    surface.sync_cache.selection = Some(vec!["selected".repeat(512)]);
+    surface.sync_cache.scene_pack = Some(vec![7; 8_192]);
+    surface.map_host = Some(MapHost::new());
+    surface.map_sync_cache.map_fixture_json = Some("m".repeat(8_192));
+    surface.editor = Some(EditorHost::default());
+    surface.editor_scene_pack = Some(vec![11; 8_192]);
+    assert!(registry.publish_reserved(token, surface).is_ok());
+    assert!(registry.begin_close(token));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(!with_engine_close_context(0, |context| registry.close_step(token, context, &mut input)));
+    let turns = drive_engine_surface_close(&mut registry, token, &mut input);
+    assert!(turns > 24_576);
+    assert!(registry.terminal_nonopaque_is_empty(token));
+    assert!(!registry.begin_close(token));
+}
+
+#[cfg(test)]
+#[test]
+fn populated_flow_surface_closes_history_and_cache_before_slot_reuse() {
+    let mut registry = EngineSurfaceRegistry::default();
+    let token = registry.reserve("flow-cpu-owner").expect("fixed surface reservation");
+    let mut surface = empty_engine_surface(640, 480);
+    surface.node_graph = Some(NodeGraphEngine::Flow(FlowHost::default()));
+    assert!(registry.publish_reserved(token, surface).is_ok());
+    assert!(registry.begin_close(token));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(drive_engine_surface_close(&mut registry, token, &mut input) > 1);
+    assert!(registry.terminal_nonopaque_is_empty(token));
+    let next = registry.reserve("flow-cpu-owner").expect("terminal slot is reusable");
+    assert_ne!(token.generation, next.generation);
 }
 
 fn raster_key(surface_id: &str) -> String {
@@ -837,6 +1767,9 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
         editor_scene_pack: None,
         width: pw.max(1),
         height: ph.max(1),
+        metrics_generation: 1,
+        document_generation: 0,
+        scene_revision: 0,
         last_note_click: None,
     }
 }
@@ -942,41 +1875,99 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::wgpu::NodeGraphScene, ca
     // flow-backed scenes don't currently emit it, so there is nothing to sync here yet.
 }
 
-fn ensure_surface(surface_id: &str, pw: u32, ph: u32) {
+fn ensure_surface(surface_id: &str, pw: u32, ph: u32) -> Option<EngineSurfaceSnapshot> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let needs_create = !map.contains_key(surface_id);
         let needs_resize = map.get(surface_id).is_some_and(|entry| entry.width != pw.max(1) || entry.height != ph.max(1));
         if needs_create {
             let Some(token) = map.reserve(surface_id) else {
-                return;
+                return None;
             };
             let surface = empty_engine_surface(pw, ph);
-            map.publish_reserved(token, surface);
-            return;
+            if map.publish_reserved(token, surface).is_err() {
+                map.faulted = true;
+                return None;
+            }
         }
         if needs_resize {
-            let entry = map.get_mut(surface_id).expect("surface");
+            let Some(entry) = map.get_mut(surface_id) else {
+                map.faulted = true;
+                return None;
+            };
+            let Some(metrics_generation) = entry.metrics_generation.checked_add(1) else {
+                map.faulted = true;
+                return None;
+            };
             entry.width = pw.max(1);
             entry.height = ph.max(1);
+            entry.metrics_generation = metrics_generation;
         }
-    });
-}
-
-pub(crate) fn begin_engine_surface_close(surface_id: &str) -> Option<EngineSurfaceToken> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut registry = cell.borrow_mut();
-        let token = registry.token(surface_id)?;
-        registry.begin_close(token).then_some(token)
+        let identity = map.identity(surface_id)?;
+        let metrics_generation = map.get(surface_id)?.metrics_generation;
+        Some(EngineSurfaceSnapshot { identity, metrics_generation })
     })
 }
 
-pub(crate) fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
-    ENGINE_SURFACES.with(|cell| cell.borrow_mut().close_step(token, context, input))
+fn observe_engine_surface_packet_freshness(surface: EngineSurfaceSnapshot, document_generation: u64, scene_revision: u64) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let Some(mut registry) = cell.try_borrow_mut() else {
+            return false;
+        };
+        let Some(slot) = registry.slots.get_mut(usize::from(surface.identity.token.slot)) else {
+            return false;
+        };
+        if slot.generation != surface.identity.token.generation || slot.id != Some(surface.identity.id) {
+            return false;
+        }
+        let Some(value) = slot.value.as_mut() else {
+            return false;
+        };
+        if value.metrics_generation != surface.metrics_generation || document_generation < value.document_generation || scene_revision < value.scene_revision {
+            return false;
+        }
+        value.document_generation = document_generation;
+        value.scene_revision = scene_revision;
+        true
+    })
 }
 
-pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> bool {
-    ENGINE_SURFACES.with(|cell| cell.borrow().terminal_nonopaque_is_empty(token))
+fn engine_surface_live_freshness(token: EngineSurfaceToken) -> Result<Option<EngineSurfaceLiveFreshness>, ()> {
+    ENGINE_SURFACES.with(|cell| {
+        let registry = cell.try_borrow_mut().ok_or(())?;
+        let Some(slot) = registry.slots.get(usize::from(token.slot)) else {
+            return Ok(None);
+        };
+        if slot.generation != token.generation {
+            return Ok(None);
+        }
+        let (Some(id), Some(value)) = (slot.id, slot.value.as_ref()) else {
+            return Ok(None);
+        };
+        Ok(Some(EngineSurfaceLiveFreshness { identity: EngineSurfaceIdentity { token, id }, metrics_generation: value.metrics_generation, document_generation: value.document_generation, scene_revision: value.scene_revision }))
+    })
+}
+
+pub(crate) fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfaceToken>, ()> {
+    ENGINE_SURFACES.with(|cell| {
+        let registry = cell.try_borrow_mut().ok_or(())?;
+        let Some(slot) = registry.slots.get(index) else {
+            return Ok(None);
+        };
+        Ok((slot.id.is_some() || slot.value.is_some() || slot.retirement.is_some()).then_some(EngineSurfaceToken { slot: index as u16, generation: slot.generation }))
+    })
+}
+
+pub(crate) fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<bool, ()> {
+    ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().map(|mut registry| registry.begin_close(token)).ok_or(()))
+}
+
+pub(crate) fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().is_some_and(|mut registry| registry.close_step(token, context, input)))
+}
+
+pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> Result<bool, ()> {
+    ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().map(|registry| registry.terminal_nonopaque_is_empty(token)).ok_or(()))
 }
 
 pub(crate) fn opaque_scene_quarantine_status() -> (usize, bool) {
@@ -996,8 +1987,8 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu
     })
 }
 
-fn render_vello_scene(resources: &mut EngineCanvasBuildContext, surface_id: &str, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
-    resources.enqueue(surface_id, scene, clear, width, height);
+fn render_vello_scene(resources: &mut EngineCanvasBuildContext, reservation: EngineCanvasPacketReservation, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
+    resources.publish_reserved(reservation, scene, clear, width, height);
 }
 //#endregion Registry
 
@@ -1010,14 +2001,19 @@ pub fn paint_node_graph(resources: &mut EngineCanvasBuildContext, ctx: &mut Fram
     let ph = inner.h.max(1.0) as u32;
     let dpr = resources.dpr();
     let flow = is_flow_graph(graph);
-    ensure_surface(&scene.surface_id, pw, ph);
+    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
+        return;
+    };
+    let Ok(reservation) = resources.try_reserve_packet(surface) else {
+        return;
+    };
     let clear = vello_clear(ctx.theme);
     let scene_pack = graph_scene_pack(graph);
     let dark = theme_is_dark(ctx.theme);
     let mut canvas_scene = canvas::Scene::new();
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let entry = map.get_mut(&scene.surface_id).expect("engine surface");
+        let Some(entry) = map.get_mut(&scene.surface_id) else { return };
         if flow {
             let engine = match entry.node_graph.as_mut() {
                 Some(NodeGraphEngine::Flow(host)) => host,
@@ -1054,7 +2050,7 @@ pub fn paint_node_graph(resources: &mut EngineCanvasBuildContext, ctx: &mut Fram
             engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
         }
     });
-    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
+    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.pane", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
@@ -2057,23 +3053,28 @@ pub fn paint_tiled_map(resources: &mut EngineCanvasBuildContext, ctx: &mut Frame
     let pw = inner.w.max(1.0) as u32;
     let ph = inner.h.max(1.0) as u32;
     let dpr = resources.dpr();
-    ensure_surface(&scene.surface_id, pw, ph);
+    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
+        return;
+    };
+    let Ok(reservation) = resources.try_reserve_packet(surface) else {
+        return;
+    };
     let theme_json = map_theme_json_from_ui_theme(ctx.theme);
     let clear = vello_clear(ctx.theme);
     let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let entry = map.get_mut(&scene.surface_id).expect("engine surface");
+        let Some(entry) = map.get_mut(&scene.surface_id) else { return canvas::Scene::new() };
         if entry.map_host.is_none() {
             entry.map_host = Some(MapHost::new());
             entry.map_sync_cache = MapSyncCache::default();
         }
         let EngineSurface { map_host, map_sync_cache, map_tile_requests, .. } = entry;
-        let host = map_host.as_mut().expect("map host");
+        let Some(host) = map_host.as_mut() else { return canvas::Scene::new() };
         sync_map_host(host, map_scene, map_sync_cache, pw, ph, dpr, &theme_json);
         queue_map_tile_fetch_step(&scene.surface_id, map_scene, host, map_tile_requests);
         host.build_render_scene()
     });
-    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
+    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.map", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
@@ -2118,7 +3119,11 @@ pub fn map_marquee_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
 }
 
 pub fn map_marquee_crossing(method: &str, start_x: f32, end_x: f32) -> bool {
-    if method == "lasso" { end_x < start_x } else { end_x < start_x }
+    if method == "lasso" {
+        end_x < start_x
+    } else {
+        end_x < start_x
+    }
 }
 
 pub fn map_merge_selection(mode: &str, current_positions: &[String], current_routes: &[String], next_positions: &[String], next_routes: &[String]) -> (Vec<String>, Vec<String>) {
@@ -2531,20 +3536,25 @@ pub fn paint_puzzle_board(resources: &mut EngineCanvasBuildContext, ctx: &mut Fr
     let pw = inner.w.max(1.0) as u32;
     let ph = inner.h.max(1.0) as u32;
     let dpr = resources.dpr();
-    ensure_surface(&scene.surface_id, pw, ph);
+    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
+        return;
+    };
+    let Ok(reservation) = resources.try_reserve_packet(surface) else {
+        return;
+    };
     let clear = vello_clear(ctx.theme);
     let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let entry = map.get_mut(&scene.surface_id).expect("engine surface");
+        let Some(entry) = map.get_mut(&scene.surface_id) else { return canvas::Scene::new() };
         if entry.board_host.is_none() {
             entry.board_host = Some(ManuallyDrop::new(puzzle::editor::puzzle2d::engine::board_host::puzzle_board_host()));
             entry.board_sync_cache = BoardSyncCache::default();
         }
-        let host = entry.board_host.as_mut().expect("board host");
+        let Some(host) = entry.board_host.as_mut() else { return canvas::Scene::new() };
         sync_board_host(host, board_scene, &mut entry.board_sync_cache, pw, ph, dpr);
         host.build_vector_scene()
     });
-    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
+    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     if board_scene.interactive {
         ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.board", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
@@ -3249,23 +4259,28 @@ pub fn paint_text_editor(resources: &mut EngineCanvasBuildContext, ctx: &mut Fra
     let pw = inner.w.max(1.0) as u32;
     let ph = inner.h.max(1.0) as u32;
     let dpr = resources.dpr();
-    ensure_surface(&scene.surface_id, pw, ph);
+    let Some(surface) = ensure_surface(&scene.surface_id, pw, ph) else {
+        return;
+    };
+    let Ok(reservation) = resources.try_reserve_packet(surface) else {
+        return;
+    };
     let clear = vello_clear(ctx.theme);
     let scene_pack = editor_scene_pack(editor);
     let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let entry = map.get_mut(&scene.surface_id).expect("engine surface");
+        let Some(entry) = map.get_mut(&scene.surface_id) else { return canvas::Scene::new() };
         if entry.editor.is_none() {
             entry.editor = Some(EditorHost::new());
         }
-        let host = entry.editor.as_mut().expect("editor host");
+        let Some(host) = entry.editor.as_mut() else { return canvas::Scene::new() };
         if sync_bytes_field(&mut entry.editor_scene_pack, &scene_pack) {
             let _ = host.sync_from_scene_pack(&scene_pack);
         }
         host.set_size(pw, ph, dpr);
         host.build_scene()
     });
-    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
+    render_vello_scene(resources, reservation, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     let editor_id = format!("{}.editor", scene.surface_id);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(editor_id), kind: HitKind::Input, drag_axis: None, drag_data: None });
@@ -3413,7 +4428,11 @@ fn write_text_editor_action_pair(batch: &mut ui_wgpu::wgpu::BoundedActionBatchRe
 }
 
 fn decimal_digits(value: usize) -> usize {
-    if value == 0 { 1 } else { value.ilog10() as usize + 1 }
+    if value == 0 {
+        1
+    } else {
+        value.ilog10() as usize + 1
+    }
 }
 
 fn text_editor_pair_bytes(scene: &UiComponentSceneNode, document_bytes: usize, selection_bytes: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {

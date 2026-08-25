@@ -23,6 +23,8 @@ pub struct EnergyModelSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
+    pub model: crate::model::Model,
+    #[state(artifact)]
     #[child(kind = "s.stdio.semio.value")]
     pub structure: EnergyStructureChild,
     #[state(artifact)]
@@ -92,10 +94,11 @@ fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
 
 //#region 🔖️TextPrimitives
 fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
-    format!("schema={}\nstructure={}\nzones={}\nreferencedModel={}", enc_str(&s.schema), enc_child(&s.structure), enc_child(&s.zones), enc_json(&s.referenced_model),)
+    format!("schema={}\nmodel={}\nstructure={}\nzones={}\nreferencedModel={}", enc_str(&s.schema), enc_json(&s.model), enc_child(&s.structure), enc_child(&s.zones), enc_json(&s.referenced_model),)
 }
 fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, String> {
     let mut schema = None;
+    let mut model = None;
     let mut structure = None;
     let mut zones = None;
     let mut referenced_model = None;
@@ -106,6 +109,8 @@ fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, S
         }
         if let Some(rest) = line.strip_prefix("schema=") {
             schema = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("model=") {
+            model = Some(dec_json(rest)?);
         } else if let Some(rest) = line.strip_prefix("structure=") {
             structure = Some(dec_child(rest)?);
         } else if let Some(rest) = line.strip_prefix("zones=") {
@@ -118,6 +123,7 @@ fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, S
     }
     Ok(EnergyModelSnapshot {
         schema: schema.ok_or_else(|| "energy model snapshot: missing schema line".to_string())?,
+        model: model.ok_or_else(|| "energy model snapshot: missing model line".to_string())?,
         structure: structure.ok_or_else(|| "energy model snapshot: missing structure line".to_string())?,
         zones: zones.ok_or_else(|| "energy model snapshot: missing zones line".to_string())?,
         referenced_model: referenced_model.ok_or_else(|| "energy model snapshot: missing referencedModel line".to_string())?,
@@ -163,22 +169,23 @@ fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>)
 }
 
 fn encode_energy_model_snapshot_binary(s: &EnergyModelSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
+    const PACK_BINARY_FORMAT: u8 = 2;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
+    write_json(&mut out, &s.model);
     write_child(&mut out, &s.structure);
     write_child(&mut out, &s.zones);
     write_json(&mut out, &s.referenced_model);
     out
 }
 fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
+    const PACK_BINARY_FORMAT: u8 = 2;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_json(&mut reader)? })
+    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, model: read_json(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_json(&mut reader)? })
 }
 //#endregion 🔖️BinaryPrimitives
 

@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmdStatus, runViteBunxDev, runVitest, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 import { DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️brand.ts";
 
 const demonstratorRoot = import.meta.dir;
@@ -43,6 +44,42 @@ export function demonstratorRuntimeBuildVariants(primaryVariant: string): readon
     variants.push(variant);
   }
   return variants;
+}
+
+export type DemonstratorRuntimeModuleLayout = {
+  readonly pluginModuleDirNames: readonly string[];
+  readonly extensionModuleDirNames: readonly string[];
+};
+
+/** @emoji 🛣️ Separates runtime plugin and extension directories by their public catalog roots while preserving the full transitive dependency and contribution closure. */
+export function demonstratorRuntimeModuleLayout(rootPluginIds: readonly string[]): DemonstratorRuntimeModuleLayout {
+  const catalog = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
+  const byId = new Map(catalog.map((target) => [target.pluginId, target] as const));
+  const selected = new Set(rootPluginIds);
+  const queue = [...rootPluginIds];
+  for (let index = 0; index < queue.length; index++) {
+    const target = byId.get(queue[index]!);
+    if (!target) continue;
+    for (const dependency of target.dependsOn ?? []) {
+      if (selected.has(dependency)) continue;
+      selected.add(dependency);
+      queue.push(dependency);
+    }
+    const consumes = new Set(target.consumes ?? []);
+    if (consumes.size === 0) continue;
+    for (const extension of EXTENSION_TARGETS) {
+      if (selected.has(extension.pluginId) || !(extension.contributes ?? []).some((tag) => consumes.has(tag))) continue;
+      selected.add(extension.pluginId);
+      queue.push(extension.pluginId);
+    }
+  }
+  const pluginIds: string[] = [];
+  const extensionIds: string[] = [];
+  for (const id of selected) {
+    if (byId.get(id)?.role === "extension") extensionIds.push(id);
+    else pluginIds.push(id);
+  }
+  return { pluginModuleDirNames: ["_vendor", "_shard", ...pluginIds], extensionModuleDirNames: extensionIds };
 }
 
 /** @emoji 🎪️ Builds every pane's runtime plugin crate + declared engines into the shared
@@ -121,6 +158,30 @@ if (import.meta.vitest) {
   describe("demonstratorRuntimeBuildVariants", () => {
     it("builds one additional artifact for six pane runtime variants", () => {
       expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["procedural3d"]);
+    });
+
+    it("publishes plugins, the shared shard, and consumed extensions at their catalog URL roots", () => {
+      const layout = demonstratorRuntimeModuleLayout(["demonstrator", "procedural"]);
+      expect(layout.pluginModuleDirNames.slice(0, 2)).toEqual(["_vendor", "_shard"]);
+      expect(new Set(layout.pluginModuleDirNames.slice(2))).toEqual(new Set(["demonstrator", "procedural", "cad", "gis", "process", "puzzle", "sourcing", "stdio", "flow"]));
+      expect(new Set(layout.extensionModuleDirNames)).toEqual(
+        new Set([
+          "flow-extension-bim",
+          "flow-extension-brep",
+          "flow-extension-dictionary",
+          "flow-extension-draw",
+          "flow-extension-list",
+          "flow-extension-logic",
+          "flow-extension-math",
+          "flow-extension-primitive",
+          "flow-extension-text",
+          "process-extension-concrete",
+          "process-extension-metal",
+          "process-extension-robotic",
+          "process-extension-wood",
+        ]),
+      );
+      expect(layout.extensionModuleDirNames.every((id) => !layout.pluginModuleDirNames.includes(id))).toBe(true);
     });
   });
   //#endregion 🧪️DemonstratorPluginBuildTests

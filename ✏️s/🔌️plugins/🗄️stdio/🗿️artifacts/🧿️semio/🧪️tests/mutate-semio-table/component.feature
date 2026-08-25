@@ -30,6 +30,15 @@ Feature: Apply every typed semio TABLE mutation to its committed specification f
   and `reorder-rows` can be told apart from a rebuild that keeps the same set — and the undone table
   against the committed before-snapshot, cell values included.
 
+  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
+  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
+  and both committed example files were produced by these very codecs — so re-printing the parsed
+  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
+  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
+  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
+  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
+  the same document the text does, which no single codec can arrange on its own.
+
   @id-mutate
   @level-exhaustive
   @mode-conformance
@@ -69,3 +78,12 @@ Feature: Apply every typed semio TABLE mutation to its committed specification f
       | remove-row      | ➖remove-row      | removes-the-leading-row                                    |
       | reorder-rows    | 🔃reorder-rows    | moves-the-last-row-to-the-front                            |
       | edit-cell       | ✏️edit-cell       | rewrites-the-population-cell-of-the-second-row              |
+
+  @id-identity-round-trip
+  @level-long
+  @mode-round-trip
+  Scenario: Decode the real sheet artifact through both of its committed encodings and reproduce each byte for byte
+    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio
+    When the text artifact is parsed and printed back to DSL, and the binary twin is decoded and re-encoded
+    Then both encodings decode to the same sheet and each re-encoding reproduces its committed file byte for byte

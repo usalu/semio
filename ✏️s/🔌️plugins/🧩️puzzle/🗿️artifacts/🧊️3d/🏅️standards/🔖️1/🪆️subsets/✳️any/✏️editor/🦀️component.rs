@@ -2883,6 +2883,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     ])
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             )
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             .build_definition()
 }
 

@@ -42,6 +42,10 @@ pub(crate) struct PreparedSurfaceResize {
 }
 
 impl PreparedSurfaceResize {
+    pub(crate) fn metrics_generation(self) -> u64 {
+        self.metrics_generation
+    }
+
     pub(crate) fn logical_width(self) -> f32 {
         self.logical_width
     }

@@ -7,9 +7,8 @@
 //!
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle2dPlaySnapshot` newtype over a bare
 //! `serde_json::Value` fixture (see `crate::artifacts::puzzle2d::op`'s `🔖️ValueBridge`), not the typed
-//! `Puzzle2dSnapshot` — every helper below therefore works on `Value`, and each action emits the
-//! granular typed operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into
-//! the new one.
+//! `Puzzle2dSnapshot`. Ordinary commands derive granular typed deltas; mounted fill continuations
+//! bypass whole fixture materialization and publish their already-prepared typed mutations directly.
 
 use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::editor::puzzle2d::commands::{
@@ -754,6 +753,10 @@ puzzle2d_command_variants! {
     ApplyBoardEvents = "applyBoardEvents",
     SetFillCount = "setFillCount",
     BrushFillSessionStep = "brushFillSessionStep",
+    BrushFillSessionAdopt = "brushFillSessionAdopt",
+    BrushFillSessionCancel = "brushFillSessionCancel",
+    BrushFillSessionRetry = "brushFillSessionRetry",
+    BrushFillSessionDiscard = "brushFillSessionDiscard",
     BrushCommitSlot = "brushCommitSlot",
     SetCamera = "setCamera",
     EngagementInput = "engagementInput",
@@ -807,7 +810,10 @@ pub struct Puzzle2dActionCtx<'a> {
     /// `.selected_ids()` here instead of the deleted `Puzzle2dConfig::selected_ids` field.
     pub interaction: &'a InteractionView<'a>,
     pub effects: &'a mut Vec<Effect>,
+    pub artifact_mutations: &'a mut Vec<Puzzle2dMutation>,
     pub ui_scope: &'a mut UiDirtyScope,
+    /// 🪪️ Exact public command authority retained by framework continuations.
+    pub operation: Option<semio_framework_plugin::AppOperationContext>,
 }
 
 impl<'a> Puzzle2dActionCtx<'a> {
@@ -818,8 +824,7 @@ impl<'a> Puzzle2dActionCtx<'a> {
 
 /// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d label admission failed"))
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d label admission failed"))
 }
 
 /// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
@@ -928,6 +933,24 @@ impl Puzzle2dPlayApp {
     }
 }
 
+fn is_fill_session_action(action: &str) -> bool {
+    matches!(action, "setFillCount" | "brushFillSessionBegin" | "brushFillSessionStep" | "brushFillSessionClear" | "brushFillSessionAdopt" | "brushFillSessionCancel" | "brushFillSessionRetry" | "brushFillSessionDiscard")
+}
+
+fn dispatch_fill_session_action(action: &str, args: Option<&Value>, ctx: &mut set_fill_count::Puzzle2dFillActionCtx<'_>) {
+    match action {
+        "setFillCount" => set_fill_count::set_fill_count(ctx, args),
+        "brushFillSessionBegin" => fill_session_begin::fill_session_begin(ctx, args),
+        "brushFillSessionStep" => fill_session_step::fill_session_step(ctx, args),
+        "brushFillSessionClear" => fill_session_clear::fill_session_clear(ctx),
+        "brushFillSessionAdopt" => set_fill_count::adopt_fill_job(ctx, args.and_then(|value| value.get("generation")).and_then(Value::as_u64)),
+        "brushFillSessionCancel" => set_fill_count::cancel_fill_job(ctx, args.and_then(|value| value.get("generation")).and_then(Value::as_u64)),
+        "brushFillSessionRetry" => set_fill_count::retry_fill_job(ctx),
+        "brushFillSessionDiscard" => set_fill_count::discard_fill_job(ctx, args.and_then(|value| value.get("generation")).and_then(Value::as_u64)),
+        _ => {}
+    }
+}
+
 impl ArtifactEditor for Puzzle2dPlayApp {
     const DIALECT: Dialect = crate::artifacts::puzzle2d::PUZZLE2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
@@ -962,9 +985,16 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         command.action_id()
     }
 
-    /// 🎬️ Dispatch only: sync the board host, delegate to the owning `🎮️commands/*` arm, then replay
-    /// the host's own events and turn the mutated scene into the granular operation delta plus a
-    /// config snapshot. No behaviour lives in this match.
+    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
+        set_fill_count::prepare_snapshot_read(operation, snapshot)
+    }
+
+    async fn pending_effects(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> Vec<Effect> {
+        set_fill_count::reconcile_snapshot_read(doc, cfg)
+    }
+
+    /// 🎬️ Dispatches mounted fill continuations before document materialization; ordinary commands then
+    /// sync the board host, delegate to `🎮️commands/*`, replay host events, and derive granular deltas.
     async fn handle(
         command: &Puzzle2dCommand,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
@@ -981,6 +1011,21 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         if action == set_active_example::STEP_ACTION_ID {
             return Ok(set_active_example::step_active_example(doc.snapshot, config, args));
         }
+        if is_fill_session_action(action) {
+            let mut runtime = crate::editor::puzzle2d::config::Puzzle2dFillRuntime::from_config(config);
+            let mut effects = Vec::new();
+            let mut artifact_mutations = Vec::new();
+            let mut boundary_fault = None;
+            {
+                let ctx = &mut set_fill_count::Puzzle2dFillActionCtx { runtime: &mut runtime, effects: &mut effects, artifact_mutations: &mut artifact_mutations, operation: doc.operation_optional().cloned(), boundary_fault: &mut boundary_fault };
+                dispatch_fill_session_action(action, args, ctx);
+            }
+            if let Some(code) = boundary_fault {
+                return Err(Fault::from(code));
+            }
+            let config_mutations = if runtime.differs_from(config) { vec![Puzzle2dConfigMutation::Fill { runtime }] } else { Vec::new() };
+            return Ok(Emit { artifact_mutations, config_mutations, coalesce_key: None, effects, ui_scope: UiDirtyScope::Full, ..Default::default() });
+        }
         let before = doc.snapshot.0.clone();
         let active_utility = puzzle2d_active_utility(config, window_id);
         let mut scene = Self::scene_for(before.clone(), config, window_id);
@@ -996,11 +1041,22 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             sync_host_runtime_state(&mut host_mut, &scene, &interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).await.ids);
         }
         let mut effects: Vec<Effect> = Vec::new();
+        let mut artifact_mutations = Vec::new();
         // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
         // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
         let mut ui_scope = UiDirtyScope::Full;
         {
-            let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, active_utility, interaction, effects: &mut effects, ui_scope: &mut ui_scope };
+            let ctx = &mut Puzzle2dActionCtx {
+                host: &host,
+                scene: &mut scene,
+                window_id,
+                active_utility,
+                interaction,
+                effects: &mut effects,
+                artifact_mutations: &mut artifact_mutations,
+                ui_scope: &mut ui_scope,
+                operation: doc.operation_optional().cloned(),
+            };
             match action {
                 "selectSameKind" => select_same_kind::select_same_kind(ctx),
                 "deleteSelection" => delete_selection::delete_selection(ctx),
@@ -1029,10 +1085,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
                 "brushOpenSlot" => open_slot::open_slot(ctx, args),
                 "brushCommitSlot" => commit_slot::commit_slot(ctx),
                 "brushCancelSlot" => cancel_slot::cancel_slot(ctx),
-                "setFillCount" => set_fill_count::set_fill_count(ctx, args),
-                "brushFillSessionBegin" => fill_session_begin::fill_session_begin(ctx, args),
-                "brushFillSessionStep" => fill_session_step::fill_session_step(ctx, args),
-                "brushFillSessionClear" => fill_session_clear::fill_session_clear(ctx),
                 "applyBoardEvents" => apply_board_events::apply_board_events(ctx, args),
                 "setLocale" => set_locale::set_locale(ctx, args),
                 "setTerminology" => set_terminology::set_terminology(ctx, args),
@@ -1040,7 +1092,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             }
         }
         apply_host_events(&mut host.borrow_mut(), &mut scene);
-        let operations = puzzle2d_document_delta_operations(&before, &scene.fixture);
+        let mut operations = puzzle2d_document_delta_operations(&before, &scene.fixture);
+        operations.append(&mut artifact_mutations);
         // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
         // actual document mutation (would silently desync remote clients' UI from the committed operation).
         if !operations.is_empty() && matches!(ui_scope, UiDirtyScope::None) {
@@ -1114,8 +1167,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             document::PUZZLE2D_PLAY_BODY_LAYERS => document::render(&envelope, labels)?,
             catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels)?,
             inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
@@ -1238,6 +1290,10 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("brushFillSessionStep", LocalizedLabel::native("Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("brushFillSessionAdopt", LocalizedLabel::native("Adopt Fill Result", "Füllergebnis übernehmen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("brushFillSessionCancel", LocalizedLabel::native("Cancel Fill", "Füllen abbrechen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("brushFillSessionRetry", LocalizedLabel::native("Retry Fill", "Füllen erneut versuchen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("brushFillSessionDiscard", LocalizedLabel::native("Discard Fill Session", "Füllsitzung verwerfen"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("brushCommitSlot", LocalizedLabel::native("Brush Commit Slot", "Pinsel-Platz übernehmen"), ActionKind::Mutation))
             // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
             // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
@@ -1256,8 +1312,8 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("brushSetCandidateIndex", LocalizedLabel::native("Brush Set Candidate Index", "Pinselkandidatenindex festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("brushOpenSlot", LocalizedLabel::native("Brush Open Slot", "Pinsel-Platz öffnen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("brushCancelSlot", LocalizedLabel::native("Brush Cancel Slot", "Pinsel-Platz abbrechen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushFillSessionBegin", LocalizedLabel::native("Brush Fill Session Begin", "Pinsel-Füllsitzung beginnen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushFillSessionClear", LocalizedLabel::native("Brush Fill Session Clear", "Pinsel-Füllsitzung leeren"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("brushFillSessionBegin", LocalizedLabel::native("Brush Fill Session Begin", "Pinsel-Füllsitzung beginnen"), ActionKind::Mutation))
+            .action_with(puzzle2d_internal_action("brushFillSessionClear", LocalizedLabel::native("Brush Fill Session Clear", "Pinsel-Füllsitzung leeren"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("lodScaleJson", LocalizedLabel::native("LOD Scale Json", "LOD-Skalierung-Json"), ActionKind::View))
             // 📝️ Staged palette args for the two content commands that need a target.
             .action_args("addNode", vec![
@@ -1466,6 +1522,58 @@ mod tests {
     use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
     use semio_framework_plugin::PluginApp;
     use store::{Backbone, BackboneMessage, MemoryBackbone};
+
+    fn mounted_fill_dispatch_contract(source: &str) -> bool {
+        let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);
+        let Some(handle) = production.find("async fn handle(") else { return false };
+        let Some(fill_relative) = production[handle..].find("if is_fill_session_action(action) {") else { return false };
+        let fill = handle + fill_relative;
+        let Some(normal_relative) = production[fill..].find("let before = doc.snapshot.0.clone();") else { return false };
+        let normal = fill + normal_relative;
+        let prefix = &production[handle..fill];
+        let branch = &production[fill..normal];
+        production.contains("fn mounted_job_prepare_snapshot_read")
+            && production.contains("async fn pending_effects")
+            && branch.contains("dispatch_fill_session_action(action, args, ctx)")
+            && branch.contains("set_fill_count::Puzzle2dFillActionCtx")
+            && branch.contains("Puzzle2dFillRuntime::from_config(config)")
+            && branch.contains("Puzzle2dConfigMutation::Fill { runtime }")
+            && branch.contains("boundary_fault")
+            && branch.contains("artifact_mutations")
+            && !prefix.contains("doc.snapshot.0.clone()")
+            && !branch.contains("doc.snapshot.0.clone()")
+            && !branch.contains("config.clone()")
+            && !branch.contains("Puzzle2dConfigMutation::Snapshot")
+            && !branch.contains("Vec<Value>")
+            && !branch.contains("BTreeMap")
+            && !branch.contains("BoardHost")
+            && !branch.contains("RefCell")
+            && !branch.contains("sync_host_fixture_content")
+            && !branch.contains("puzzle2d_document_delta_operations")
+    }
+
+    /// 🧱️ The mounted fill branch excludes whole ArtifactView and dynamic config snapshot work.
+    #[test]
+    fn mounted_fill_dispatch_whole_artifact_and_config_mutations_are_rejected() {
+        let source = include_str!("🦀️component.rs");
+        assert!(mounted_fill_dispatch_contract(source));
+        let cloned = source.replacen("if is_fill_session_action(action) {", "if is_fill_session_action(action) { let _whole = doc.snapshot.0.clone();", 1);
+        assert!(!mounted_fill_dispatch_contract(&cloned));
+        let rebuilt = source.replacen("dispatch_fill_session_action(action, args, ctx);", "sync_host_fixture_content(&mut host.borrow_mut(), &scene); dispatch_fill_session_action(action, args, ctx);", 1);
+        assert!(!mounted_fill_dispatch_contract(&rebuilt));
+        let diffed = source.replacen("dispatch_fill_session_action(action, args, ctx);", "let _whole = puzzle2d_document_delta_operations(&doc.snapshot.0, &scene.fixture); dispatch_fill_session_action(action, args, ctx);", 1);
+        assert!(!mounted_fill_dispatch_contract(&diffed));
+        let default_host = source.replacen(
+            "let mut runtime = crate::editor::puzzle2d::config::Puzzle2dFillRuntime::from_config(config);",
+            "let host = RefCell::new(BoardHost::default()); let mut runtime = crate::editor::puzzle2d::config::Puzzle2dFillRuntime::from_config(config);",
+            1,
+        );
+        assert!(!mounted_fill_dispatch_contract(&default_host));
+        let config_clone = source.replacen("if is_fill_session_action(action) {", "if is_fill_session_action(action) { let _whole_config = config.clone();", 1);
+        assert!(!mounted_fill_dispatch_contract(&config_clone));
+        let snapshot = source.replacen("Puzzle2dConfigMutation::Fill { runtime }", "Puzzle2dConfigMutation::Snapshot { config: config.clone() }", 1);
+        assert!(!mounted_fill_dispatch_contract(&snapshot));
+    }
 
     /// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
     /// `Board2dScene.cameraJson` — the only externally observable surface for the runtime camera

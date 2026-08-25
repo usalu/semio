@@ -557,33 +557,26 @@ export class AppRouter {
     this.ownerByArtifactKind = ownerByArtifactKind;
   }
 
-  /** 🏗️ Builds the router. Ownership claiming is a SINGLE pass over `manifests` in order,
-   * interleaved per manifest — first its own `artifactKinds` claim any still-unclaimed kind, THEN
-   * each of its apps claims its dialect's `artifactKind` if still unclaimed (first plugin to
-   * touch a kind, whether by declaring it or merely by registering a surface for it, wins —
-   * mirrors Rust `state.owners.entry(...).or_insert_with(...)`,
-   * `💻️os/🔌️plugin/🖥️host/🦀️component.rs:1759-1763`). Throws {@link SemioFaultError} with
+  /** 🏗️ Builds the router. Loaded manifests are ordered dependency-first before ownership is
+   * claimed, matching the Rust host's resolved plugin load order even when browser workers finish
+   * nondeterministically. Dependencies not loaded yet are ignored for this transient rebuild; the
+   * router is rebuilt again as each plugin arrives. Within that order, first its own
+   * `artifactKinds` claim any still-unclaimed kind, then each app claims its dialect's
+   * `artifactKind` if still unclaimed. Throws {@link SemioFaultError} with
    * `"surface.contribution-not-permitted"` (checked first) or `"surface.conflict"` (checked
-   * second) per app — same order as Rust `register_manifest` (`🦀️component.rs:1755-1785`). A
-   * prior version of this method computed ownership from `artifactKinds` in one pass BEFORE any
-   * app was processed, which silently diverged from Rust whenever a plugin claimed a kind only
-   * implicitly, by being first to register a surface for it (Rust test
-   * `step3_first_entry_when_the_owner_has_no_surface_for_this_role`, `🦀️component.rs:2101`) —
-   * fixed here, see `📓️w1-d-report.md` parity table. */
+   * second) per app — same order as Rust `register_manifest` (`🦀️component.rs:1755-1785`). */
   static build(manifests: readonly AppRouterManifest[]): AppRouter {
     const ownerByArtifactKind = new Map<string, string>();
     const seenRefs = new Set<string>();
     const grouped = new Map<string, { readonly dialect: ArtifactDialect; readonly role: AppRole; readonly entries: AppRef[] }>();
-    // 🔢️ Ownership is claimed by whoever registers a kind FIRST (the single-pass rule above, kept for
-    // Rust parity), which makes the result depend on the ORDER manifests arrive in. The Rust host
-    // registers in a resolved, dependency-respecting order; the browser host collects manifests as ~55
-    // plugin workers finish loading, i.e. in nondeterministic completion order. A contributor
-    // extension could therefore land before the plugin that actually declares the kind and be recorded
-    // as its owner, after which the real owner — or a sibling extension — was rejected as an
-    // impermissible contributor and the whole router threw, leaving the shell with no surfaces at all.
-    // Sorting declarers ahead of pure contributors restores the host-independent order without
-    // changing the per-surface semantics.
-    const ordered = [...manifests].sort((left, right) => Number((right.artifactKinds?.length ?? 0) > 0) - Number((left.artifactKinds?.length ?? 0) > 0));
+    const loadedIds = new Set(manifests.map((manifest) => manifest.pluginId));
+    const dependencyNodes = manifests.map((manifest) => ({
+      pluginId: manifest.pluginId,
+      dependencies: (manifest.dependencies ?? []).filter((dependency) => loadedIds.has(dependency.pluginId)),
+    }));
+    const resolved = resolvePluginLoadOrder(dependencyNodes);
+    const byId = new Map(manifests.map((manifest) => [manifest.pluginId, manifest] as const));
+    const ordered = resolved.errors.length === 0 ? resolved.order.map((pluginId) => byId.get(pluginId)!).filter(Boolean) : [...manifests];
     for (const manifest of ordered) {
       for (const kind of manifest.artifactKinds ?? []) {
         if (!ownerByArtifactKind.has(kind.id)) ownerByArtifactKind.set(kind.id, manifest.pluginId);
@@ -676,6 +669,33 @@ export class AppRouter {
     return gaps;
   }
 }
+
+//#region 🧪️AppRouterTests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("AppRouter", () => {
+    it("orders a loaded aggregate plugin after the foreign surface owner it depends on", () => {
+      const cadDialect = { artifactKind: "s.cad.cad", standard: "1", subset: "*" };
+      const aggregate: AppRouterManifest = {
+        pluginId: "demonstrator",
+        apps: [{ id: "s.cad.cad@1/*#editor", role: "editor", dialect: cadDialect }],
+        dependencies: [{ pluginId: "cad", version: "*" }],
+      };
+      const owner: AppRouterManifest = {
+        pluginId: "cad",
+        apps: [{ id: "s.cad.cad@1/*#editor", role: "editor", dialect: cadDialect }],
+      };
+      const router = AppRouter.build([aggregate, owner]);
+      expect(router.ownerPluginId("s.cad.cad")).toBe("cad");
+      expect(router.entriesFor(cadDialect, "editor")).toEqual([
+        { pluginId: "cad", appId: "s.cad.cad@1/*#editor" },
+        { pluginId: "demonstrator", appId: "s.cad.cad@1/*#editor" },
+      ]);
+    });
+  });
+}
+//#endregion 🧪️AppRouterTests
 //#endregion 🔖️AppRouter
 
 //#region 🔖️IoRouter

@@ -13,10 +13,13 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "modelJson": {
-      "type": "string",
+    "model": {
+      "type": "object",
       "x-semio-state": "artifact"
     },
+    "structure": { "type": "object", "x-semio-state": "artifact" },
+    "zones": { "type": "object", "x-semio-state": "artifact" },
+    "referencedModel": { "x-semio-state": "artifact" },
     "resultsJson": {
       "type": "string",
       "x-semio-state": "artifact"
@@ -29,16 +32,19 @@
       "additionalProperties": false,
       "required": [
         "schema",
-        "modelJson",
+        "model",
+        "structure",
+        "zones",
         "resultsJson"
       ],
       "properties": {
         "schema": {
           "type": "string"
         },
-        "modelJson": {
-          "type": "string"
-        },
+        "model": { "type": "object" },
+        "structure": { "type": "object" },
+        "zones": { "type": "object" },
+        "referencedModel": {},
         "resultsJson": {
           "type": "string"
         }

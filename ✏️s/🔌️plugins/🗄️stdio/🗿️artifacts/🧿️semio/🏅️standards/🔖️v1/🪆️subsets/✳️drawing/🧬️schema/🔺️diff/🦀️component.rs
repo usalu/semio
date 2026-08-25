@@ -905,7 +905,7 @@ fn enc_node_diff(d: &DrawNodeDiff) -> String {
             "G[{},{}]",
             encode_option(&g.transform, enc_transform),
             match &g.children {
-                Some(c) => format!("[1,{}.await]", enc_indexed_triple(c, enc_node_diff, enc_node)),
+                Some(c) => format!("[1,{}]", enc_indexed_triple(c, enc_node_diff, enc_node)),
                 None => "[0]".to_string(),
             }
         ),
