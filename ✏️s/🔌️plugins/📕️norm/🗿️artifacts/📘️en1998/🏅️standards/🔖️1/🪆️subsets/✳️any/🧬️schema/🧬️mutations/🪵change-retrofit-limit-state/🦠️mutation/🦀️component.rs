@@ -15,15 +15,15 @@ pub struct ChangeRetrofitLimitState {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitLimitState {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "retrofit-limit-state", kind: "change-retrofit-limit-state", record: "ChangedRetrofitLimitState" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_retrofit_limit_state::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_retrofit_limit_state::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change retrofit limit state to \"{}\"", self.new_retrofit_limit_state)
     }
 }

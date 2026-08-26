@@ -48,7 +48,7 @@ impl protocol::InferenceSpec<PdfSnapshot> for PdfInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.pdf.inference.outline", reads: &["page"] }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.pdf.inference.outline", reads: &["pages"] }]
     }
 }
 //#endregion 🔖️Inference

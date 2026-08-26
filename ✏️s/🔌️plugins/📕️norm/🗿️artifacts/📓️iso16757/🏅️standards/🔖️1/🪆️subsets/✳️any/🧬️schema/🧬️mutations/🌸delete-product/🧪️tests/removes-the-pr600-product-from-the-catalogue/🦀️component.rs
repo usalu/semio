@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// ▶️ `delete-product` retains everything whose id differs, emptying the product list. The series the product
 /// belonged to is NOT deleted with it — the oracle touches only `catalogue.products`.
 #[semio_framework_async_macros::async_test]
-async fn removes_the_pr600_product_from_the_catalogue() {
+fn removes_the_pr600_product_from_the_catalogue() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("delete-product applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "delete-product/removes-the-pr600-product-from-the-catalogue: the applied state differs from the committed after-snapshot");
     assert!(applied.catalogue.products.is_empty(), "delete-product/removes-the-pr600-product-from-the-catalogue: the addressed product must be gone");
@@ -44,7 +44,7 @@ async fn removes_the_pr600_product_from_the_catalogue() {
 /// ↩️ `delete-product`'s inverse is a `CreateProduct` carrying the removed product AND its recorded position
 /// (`index: Some(0)`), so the round trip restores order as well as content.
 #[semio_framework_async_macros::async_test]
-async fn recreating_the_pr600_product_restores_before() {
+fn recreating_the_pr600_product_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward delete-product applies");
@@ -61,7 +61,7 @@ async fn recreating_the_pr600_product_restores_before() {
 /// is a fixed point. The committed payload is spelled `{"DeleteProduct": {"id": "product.pr600"}}` —
 /// externally tagged, snake_case payload key.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -75,7 +75,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ `product.pr600` IS in the committed catalogue, so the `mutation.target-missing` Error branch is not taken.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-product/removes-the-pr600-product-from-the-catalogue: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -87,7 +87,7 @@ async fn declared_outcome_holds() {
 /// this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `catalogue` is rewritten and
 /// the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced delete-product diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "delete-product/removes-the-pr600-product-from-the-catalogue: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -96,7 +96,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten
 /// catalogue and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed delete-product diff decodes");
     let catalogue = decoded.catalogue.as_ref().expect("the committed delete-product diff carries the catalogue");
     assert!(catalogue.products.is_empty(), "delete-product/removes-the-pr600-product-from-the-catalogue: the deletion is expressed as the shorter whole product list");
@@ -114,7 +114,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the product deletion, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed delete-product diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-product/removes-the-pr600-product-from-the-catalogue: the committed diff did not carry before to after");

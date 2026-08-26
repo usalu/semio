@@ -1,19 +1,22 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `s.gis.gismap` carries three parallel id-keyed, order-meaningful `MapFeature` collections whose payloads are opaque `dsl::DslValue`s, and two derived composed children content-addressed off all three. Semio-NATIVE, no oracle; GeoJSON and GDAL were surveyed and declined for the reasons recorded below.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.gis.gismap` carries three parallel id-keyed, order-meaningful `MapFeature` collections whose payloads are opaque `dsl::DslValue`s, and two derived composed children content-addressed off all three. No third party reads `.dsl.semio` — GeoJSON, `geo` and GDAL were surveyed and declined for the reasons recorded on the oracle entry — so the reference is a SECOND IMPLEMENTATION in Python, written from this subset's committed schema, grammar and specification vectors.",
+  "oracles": [
     {
-      "id": "gismap-mutation-semantics",
+      "id": "gismap-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
       "capabilities": [
         "gismap-1-mutate"
       ],
-      "rationale": "`s.gis.gismap` is a semio-NATIVE artifact and no third party reads `.dsl.semio`. The obvious candidates were surveyed and DECLINED rather than merely absent. `geojson` and `geo` model a FeatureCollection, which is the nearest foreign shape, but three properties this vocabulary rests on have no GeoJSON counterpart: a `MapFeature` is addressed by a stable `id` (GeoJSON's `id` is optional and carries no uniqueness rule), member ORDER is meaningful here and `reorder-positions`/`reorder-routes`/`reorder-regions` address it explicitly (a FeatureCollection's array order is not semantic), and a feature's payload is an opaque `dsl::DslValue` this artifact never interprets, so `replace-position-data` swaps a whole untyped value rather than a typed geometry. `gdal` was declined for the additional reason that it is a system library with a C dependency, which this repository does not take on for a test. Evidence is the twelve committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/` — one per kind, each chosen against a different hazard, with the three reorder vectors deliberately moving the LEADING position to the end, the LAST route to the front and one region BETWEEN two others — plus the inverse law, which is sharpened here by the two DERIVED composed children: `drawing` and `value` are content-addressed off all three collections together, so an undo that restored the features but not the handles is caught.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.gis.gismap` document and all twelve typed mutations, in Python, at `../../../../../🧪️tests/mutate-gismap-1/🐍️component.py`. It was written from `../🧬️schema/📸️snapshot/🔣️component.json` (the document: three arrays of `{id, data}` with `data` declared opaque), `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the twelve verbs and their positional argument lists) and the twelve committed `(before, mutation, after, diff, outcome)` vectors (the externally tagged wire form of each verb, and the three reorder displacements that pin MOVE rather than swap semantics). It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `geojson` and `geo` model a FeatureCollection, but a `MapFeature` is addressed by a stable `id` that GeoJSON leaves optional and un-unique, member ORDER is meaningful here and a FeatureCollection's is not, and a feature's payload is an untyped value this artifact never inspects — so `replace-<noun>-data` swaps a whole opaque value and no geometry library can adjudicate it. `gdal` was declined additionally as a system library with a C dependency. What a reference CAN adjudicate is the collection algebra, and that is exactly what this one implements. The `.dsl.semio` carrier layout has no prose document of its own and was DERIVED from the committed example's bytes (banner line, one `key=value` member per collection holding the hex of compact UTF-8 JSON, composed child handles as `[hex(childId),hex(target)]`); the derivation is pinned by `identity-round-trip`, which re-encodes the committed file byte for byte. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
   "mutationCatalogs": [

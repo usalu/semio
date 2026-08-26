@@ -1,14 +1,17 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.kit` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.kit` is a semio-NATIVE format that no third party reads or writes, so the reference is a second IMPLEMENTATION in another language, written from this subset's own committed specification documents.",
+  "oracles": [
     {
-      "id": "semio-kit-mutation-semantics",
+      "id": "semio-kit-python-independent",
+      "ecosystem": "python",
+      "package": "",
       "capabilities": ["semio-v1-kit-mutate"],
-      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, let alone one authoritative over this subset's `SemioKitMutation` vocabulary (create/delete-object, create/delete-model, create/delete-properties, bind/unbind-representation, change-representation-pin, add/remove/rename-type, add/remove/edit-design) — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. Confidence instead comes from the committed, independently handcrafted per-kind fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff)` specification vector per kind, authored by hand and already unit-tested inside the production crate itself (`kinds_match_the_enum_and_the_catalog`, `produces_committed_diff`, `committed_diff_applies_to_after`, `committed_json_is_canonical` per leaf) — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture. This feature re-exercises those SAME committed fixtures end-to-end through `apply_semio_kit_mutation`, the entry point this ticket added, rather than calling `Mutation::diff`/`inverse` directly as the in-crate unit tests do.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-kit/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the JSON projection and all fifteen verbs of `SemioKitMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` for the record grammar and its `h|c|s` pin tags, `…/📸️snapshot/💾️binary/📡️component.protocol.semio` for the pack header and the sentence naming its six collections, `…/📸️snapshot/🔣️component.json` for the projection, `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` for the fifteen verbs and their argument lists, `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs` for the semio envelope, and `ArtifactRef::to_uri` plus `LinkPin`/`BlobRef` for the dialect coordinate and the three pin shapes. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️example.pack.semio` byte for byte, which a misreading could not do."
     }
   ],
   "mutationCatalogs": [

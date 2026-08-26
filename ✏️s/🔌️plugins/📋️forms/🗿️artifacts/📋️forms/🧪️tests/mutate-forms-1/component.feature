@@ -1,52 +1,64 @@
 @capability-forms-1-mutate
-@no-oracle-forms-document-mutation-semantics
+@oracle-forms-python-independent
 @comparison-ordered-json-v1
 @mutations-forms-1-any
-Feature: Apply every typed forms document mutation to its committed specification vectors
-  `s.forms.form` is a semio-NATIVE artifact: it is persisted as `.dsl.semio` text and `.pack.semio`
-  binary through this subset's own codecs, and no third party reads or writes either. There is
-  therefore no reference implementation to register as an oracle — recorded as the
-  `forms-document-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, whose substitutes are the
-  committed specification vectors and the inverse law. Because that decision is recorded, the runner
-  dispatches NO oracle role for this case: every assertion below lives inside the subject handler,
-  and a handler that merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed form document mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.forms.form` document and all ten typed mutations, written in
+  Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from rules 1, 2
+  and 3 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`,
+  and from the ten committed vectors together with the `scene` array each scenario carries in
+  its own doc string. It imports nothing from this repository's Rust.
 
-  What distinguishes this subset is that its document is almost entirely NOT in its snapshot.
-  `FormsSnapshot` persists a title and two composed CHILD handles — an `s.stdio.semio.value`
-  `structure` and an `s.stdio.semio.table` `results` — and the whole steps-and-questions tree the
-  ten kinds edit lives behind the first of them, in a session-side working scene. Both handles are
-  content-addressed: a successful mutation re-mints them from a `DefaultHasher` digest of the child
-  content.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. This case used to say that because this artifact is persisted through this subset's own
+  codecs and no third party reads them, there is no reference to register. The fifteen `📕️norm` and
+  nineteen `🧿️semio` references refuted that in this same wave over this same carrier. A third-party
+  library was nonetheless declined and the reason is concrete: XForms, JSON Schema forms and ODK all carry the survey INLINE,
+  none of them models a survey whose content is a child artifact addressed by content, and none of them
+  reads this carrier.
 
-  ⚠️ That has a consequence this feature states rather than hides. NINE of the ten committed vectors
-  pin a REJECTION or a NO-OP branch, not an effect, and the leaves say why: hand-authoring an
-  effect vector's `➡️after` would mean forging a value out of `std`'s deliberately unspecified
-  default hasher (`🌱create-step/🧪️tests/rejects-a-duplicate-step-id/🦀️component.rs`). So nine of
-  the ten kinds are named in the adapter's `GUARD_VECTORS` list and exempted from the observability
-  law — the largest exemption in this wave, and a real limit on what this case proves. In exchange
-  each `mutate-<kind>` scenario asserts something a plain effect vector never does: the committed
-  `🎯️outcome`'s declared status AND its declared diagnostic code, so `create-step`'s Fatal
-  `mutation.duplicate-id` is distinguished from the Error-level `mutation.target-missing` that the
-  delete, rename, reorder, move and replace verbs raise, and from the Warning-level `mutation.no-op`
-  that a genuinely idempotent request raises. `change-form-title` is the one kind whose vector is an
-  effect vector, and it carries the observability law unexempted.
+  📌️ WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated plainly rather than left to be inferred from a
+  green row. Nine of the ten committed vectors leave the snapshot BYTE-IDENTICAL,
+  because Nine of the ten kinds address steps and blocks that live in the CHILD
+  SCENE and not in this document — the snapshot carries only `schema`, `id`, `version`, a title and
+  two composed child handles. What those vectors really pin is a DIAGNOSTIC, and the reference DERIVES
+  it from the scene the doc string carries — status, code and path — rather than reading it off the
+  committed outcome, which is the only way this comparison says anything at all. So this case's
+  evidence is ONE applied mutation and Nine diagnostics: no committed vector in it
+  exercises a create/delete/move/replace that SUCCEEDS. That is a real gap in the case's fixtures, and the reference
+  states it rather than passing over it.
 
-  📌️ The `scene` column is the other half of each before-state. The persisted `⬅️before` vector
-  carries only the child handle, so the rows behind it have to be seeded before the mutation runs —
-  without that every addressed id is absent and all ten kinds collapse onto one
-  `mutation.target-missing` path, which would look green while testing a single branch ten times.
-  Each cell is transcribed from that leaf's OWN `🧪️tests/<fixture>/🦀️component.rs::before()`, which
-  is where this subset keeps that half today. Committing the scene as a fixture file beside the
-  snapshot is the fix; until it lands, an external host cannot reconstruct it and this column is the
-  honest way to carry it.
+  📌️ A CROSS-CASE DIVERGENCE THE REFERENCE SURFACED, which neither case could see alone.
+  `s.playbook.playbook` is the same shape with the same verbs, and the two subsets answer the same
+  situation differently: a duplicate step id is a REJECTED `mutation.duplicate-id` here
+  (`create-step`) and an APPLIED `mutation.no-op` there (`add-step`); a block added to a step that does
+  not exist is `mutation.invariant` here (`create-block`) and `mutation.target-missing` there
+  (`add-block`). Neither divergence is stated anywhere. Both are visible only
+  because one reference was written against both surfaces, and both are reported rather than absorbed
+  into a per-case table.
 
-  Every scenario reads the committed vectors where the domain already keeps them, through
-  `asset://`, and never writes to them.
+  📌️ A SIBLING NOTE, because the count of second implementations must not be overstated. This
+  reference and `mutate-playbook-1`'s are ONE implementation instantiated twice, differing in the verb
+  names, in the diagnostic each situation raises and in the handle members. That the two
+  instantiations DISAGREE on two situations is the finding above.
+
+  🚧️ TWO OF THE TWENTY-ONE SCENARIOS ARE REFUSED BY CLAUSE. `inverse-change-form-title`: the
+  committed vector ADDS the `title` member to a snapshot that carried none, so undoing it requires
+  REMOVING the member, and nothing committed says whether the verb accepts a null argument or what
+  removing a title means — a gap the `📖️playbook` sibling does not have, because there `title` is
+  always present and nullable. And `identity-round-trip`: the committed grammar
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` describes a
+  DIFFERENT DOCUMENT — the generic `family-scene` canvas grammar, `layers { shape { … } }` with
+  `id`/`x`/`y`/`fill`/`stroke`/`opacity` fields — while the committed artifact carries a `steps=[ … ]`
+  list of nested `blocks=[ … ]`, `options=[ … ]`, `fields=[ … ]`, `params={ … }` and a bare
+  `condition { }` block, none of which the grammar mentions. Four more subsets — `📖️playbook`,
+  `📏️layout`, `🖍️draw` and `🖨️raster` — carry that same canvas grammar over four equally unrelated
+  documents, differing from this one only in their `grammar`, `extension` and `artifact-mark` lines.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json
@@ -72,7 +84,7 @@ Feature: Apply every typed forms document mutation to its committed specificatio
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json

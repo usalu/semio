@@ -175,19 +175,82 @@ store::impl_whole_record_config!(Puzzle5dConfig);
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Puzzle5dConfigMutation {
     Snapshot { config: Puzzle5dConfig },
+    SetBrushCandidateIndex { index: usize },
+    SetActiveUtility { window_id: String, value: Option<String> },
+    SetCamera2d { camera: Puzzle5dCamera2d },
+    SetCamera3d { camera: Puzzle5dCamera3d },
+    SetEngagementInput { window_id: String, value: String },
+    SetFillCount { count: u32 },
+    SetGridFactor { value: f64 },
+    SetGridSnapEnabled { enabled: bool },
+    SetLodMode { mode: String },
+    SetOverlapBudget { value: f64 },
+    SetObjectKindWeights { value: HashMap<String, f64> },
+    SetSuggestionOffset { distance: f64 },
+    SetSun { sun: WorldSunConfig },
+    SetVortexKindWeights { value: HashMap<String, f64> },
 }
 
 impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
     type Diff = Puzzle5dConfig;
 
-    fn diff(&self, _base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfig> {
-        protocol::MutationOutcome::new(match self {
-            Puzzle5dConfigMutation::Snapshot { config } => config.clone(),
-        })
+    fn diff(&self, base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfig> {
+        if let Puzzle5dConfigMutation::Snapshot { config } = self {
+            return protocol::MutationOutcome::new(config.clone());
+        }
+        let mut next = base.clone();
+        match self {
+            Puzzle5dConfigMutation::Snapshot { .. } => {}
+            Puzzle5dConfigMutation::SetBrushCandidateIndex { index } => next.brush_candidate_index = *index,
+            Puzzle5dConfigMutation::SetActiveUtility { window_id, value } => {
+                if let Some(value) = value {
+                    next.active_utility_by_window_id.insert(window_id.clone(), value.clone());
+                } else {
+                    next.active_utility_by_window_id.remove(window_id);
+                }
+            }
+            Puzzle5dConfigMutation::SetCamera2d { camera } => next.camera2d = camera.clone(),
+            Puzzle5dConfigMutation::SetCamera3d { camera } => next.camera3d = camera.clone(),
+            Puzzle5dConfigMutation::SetEngagementInput { window_id, value } => {
+                next.engagement_input_by_window.insert(window_id.clone(), value.clone());
+            }
+            Puzzle5dConfigMutation::SetFillCount { count } => next.fill_count = *count,
+            Puzzle5dConfigMutation::SetGridFactor { value } => next.grid_factor = *value,
+            Puzzle5dConfigMutation::SetGridSnapEnabled { enabled } => next.grid_snap_enabled = *enabled,
+            Puzzle5dConfigMutation::SetLodMode { mode } => next.lod_mode = mode.clone(),
+            Puzzle5dConfigMutation::SetOverlapBudget { value } => next.overlap_budget = *value,
+            Puzzle5dConfigMutation::SetObjectKindWeights { value } => next.object_kind_weights = value.clone(),
+            Puzzle5dConfigMutation::SetSuggestionOffset { distance } => next.suggestion_offset = *distance,
+            Puzzle5dConfigMutation::SetSun { sun } => next.sun = sun.clone(),
+            Puzzle5dConfigMutation::SetVortexKindWeights { value } => next.vortex_kind_weights = value.clone(),
+        }
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &Puzzle5dConfig) -> Vec<Self> {
-        vec![Puzzle5dConfigMutation::Snapshot { config: base.clone() }]
+        vec![match self {
+            Puzzle5dConfigMutation::Snapshot { .. } => Puzzle5dConfigMutation::Snapshot { config: base.clone() },
+            Puzzle5dConfigMutation::SetBrushCandidateIndex { .. } => Puzzle5dConfigMutation::SetBrushCandidateIndex { index: base.brush_candidate_index },
+            Puzzle5dConfigMutation::SetActiveUtility { window_id, .. } => Puzzle5dConfigMutation::SetActiveUtility {
+                window_id: window_id.clone(),
+                value: base.active_utility_by_window_id.get(window_id).cloned(),
+            },
+            Puzzle5dConfigMutation::SetCamera2d { .. } => Puzzle5dConfigMutation::SetCamera2d { camera: base.camera2d.clone() },
+            Puzzle5dConfigMutation::SetCamera3d { .. } => Puzzle5dConfigMutation::SetCamera3d { camera: base.camera3d.clone() },
+            Puzzle5dConfigMutation::SetEngagementInput { window_id, .. } => Puzzle5dConfigMutation::SetEngagementInput {
+                window_id: window_id.clone(),
+                value: base.engagement_input_by_window.get(window_id).cloned().unwrap_or_default(),
+            },
+            Puzzle5dConfigMutation::SetFillCount { .. } => Puzzle5dConfigMutation::SetFillCount { count: base.fill_count },
+            Puzzle5dConfigMutation::SetGridFactor { .. } => Puzzle5dConfigMutation::SetGridFactor { value: base.grid_factor },
+            Puzzle5dConfigMutation::SetGridSnapEnabled { .. } => Puzzle5dConfigMutation::SetGridSnapEnabled { enabled: base.grid_snap_enabled },
+            Puzzle5dConfigMutation::SetLodMode { .. } => Puzzle5dConfigMutation::SetLodMode { mode: base.lod_mode.clone() },
+            Puzzle5dConfigMutation::SetOverlapBudget { .. } => Puzzle5dConfigMutation::SetOverlapBudget { value: base.overlap_budget },
+            Puzzle5dConfigMutation::SetObjectKindWeights { .. } => Puzzle5dConfigMutation::SetObjectKindWeights { value: base.object_kind_weights.clone() },
+            Puzzle5dConfigMutation::SetSuggestionOffset { .. } => Puzzle5dConfigMutation::SetSuggestionOffset { distance: base.suggestion_offset },
+            Puzzle5dConfigMutation::SetSun { .. } => Puzzle5dConfigMutation::SetSun { sun: base.sun.clone() },
+            Puzzle5dConfigMutation::SetVortexKindWeights { .. } => Puzzle5dConfigMutation::SetVortexKindWeights { value: base.vortex_kind_weights.clone() },
+        }]
     }
 }
 

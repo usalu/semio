@@ -3,14 +3,14 @@ use crate::artifacts::jack::JackSnapshot;
 use semio_s_plugin_stdio::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
 use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
-pub async fn register() {}
+pub fn register() {}
 
-pub async fn deserialize(from: &MdSnapshot) -> Result<JackSnapshot, store::TextError> {
+pub fn deserialize(from: &MdSnapshot) -> Result<JackSnapshot, store::TextError> {
     let _ = STDIO_MD_DOCUMENT_SCHEMA;
     <JackSnapshot as store::ArtifactDsl>::parse_dsl(&render_markdown_blocks(&from.blocks))
 }
 
-pub async fn deserialize_bytes(bytes: &[u8]) -> Result<JackSnapshot, store::TextError> {
+pub fn deserialize_bytes(bytes: &[u8]) -> Result<JackSnapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     <JackSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }

@@ -619,13 +619,13 @@ async fn read_str_field(input: &mut ByteReader<'_>) -> Result<String, ProtocolEr
     std::str::from_utf8(bytes).map(str::to_string).map_err(|_| ProtocolError::Malformed { what: "utf8", offset: 0, detail: "invalid utf-8".to_string() })
 }
 
-async fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+async fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut DictBuilder, edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync)) -> Result<(), ProtocolError> {
     // ✏️ Genuine `|s|` closure — see `read_id_field`'s tag above (the HRTB gap applies to
     // `AsyncFnMut` the same way it does to `AsyncFn`).
     crate::os_spr::scalar::write_id(out, id, |s| dict.intern(s), edit_ordinal_of).map_err(ProtocolError::from)
 }
 
-fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<String, ProtocolError> {
+fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -> Result<String, ProtocolError> {
     crate::os_spr::scalar::read_id(
         input,
         |idx: u32| dict.resolve(idx).map_err(|_| crate::os_pack::PackError::Malformed { what: "dict index", offset: idx as u64, detail: "out of range".to_string() }),
@@ -753,7 +753,7 @@ async fn read_op_payload(input: &mut ByteReader<'_>) -> Result<OpPayload, Protoc
     Ok(OpPayload { text, binary })
 }
 
-async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuilder, edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync)) -> Result<(), ProtocolError> {
     let mut presence = 0u8;
     if meta.op_id.is_some() {
         presence |= 1 << 0;
@@ -824,7 +824,7 @@ async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut Di
     Ok(())
 }
 
-async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryOpMeta, ProtocolError> {
+async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -> Result<HistoryOpMeta, ProtocolError> {
     let presence = input.read_u8()?;
     let op_id = if presence & (1 << 0) != 0 { Some(read_id_field(input, dict, ordinal_to_id)?) } else { None };
     let dep_count = input.read_varint_u64()?;
@@ -864,8 +864,8 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
     Ok(HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages })
 }
 
-pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
-    let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
+    let edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &edit_ordinal_of;
     let mut out = ByteWriter::new();
     out.write_u8(1);
     let mut presence = 0u8;
@@ -927,8 +927,8 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     Ok(out.into_bytes())
 }
 
-pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryEdit, ProtocolError> {
-    let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) -> Result<HistoryEdit, ProtocolError> {
+    let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
     if format > 1 {
@@ -984,8 +984,8 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
 //#endregion 🔖️Edit
 
 //#region 🔖️Change
-pub async fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
-    let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+pub async fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
+    let edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &edit_ordinal_of;
     let mut out = ByteWriter::new();
     out.write_u8(1);
     let mut presence = 0u8;
@@ -1005,8 +1005,8 @@ pub async fn encode_change(change: &HistoryChange, dict: &mut DictBuilder, edit_
     Ok(out.into_bytes())
 }
 
-pub async fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryChange, ProtocolError> {
-    let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+pub async fn decode_change<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) -> Result<HistoryChange, ProtocolError> {
+    let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
     if format > 1 {
@@ -1154,8 +1154,8 @@ pub const REC_CURSOR: u8 = 0x40;
 /// @emoji 🎯️ `format u8 (=1) | presence u8 (bit0 checkpoint) | applied_count varint + id* |
 /// redo_count varint + id* | [checkpoint id]`. Edit ids go through `write_id_field` (dict +
 /// edit-ordinal refs), same as every other edit-id reference in this crate.
-pub async fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
-    let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+pub async fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
+    let edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &edit_ordinal_of;
     let mut out = ByteWriter::new();
     out.write_u8(1);
     out.write_u8(if cursor.checkpoint_id.is_some() { 1 } else { 0 });
@@ -1174,8 +1174,8 @@ pub async fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_
 }
 
 /// @emoji 🎯️ Inverse of [`encode_cursor`].
-pub async fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryCursor, ProtocolError> {
-    let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+pub async fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) -> Result<HistoryCursor, ProtocolError> {
+    let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
     if format > 1 {
@@ -1216,7 +1216,7 @@ pub const REC_COMPOSITION: u8 = 0x41;
 /// identifier in this crate — composition ids repeat heavily across checkpoints, so dictionary
 /// coding is what keeps the overlay small on a document with a long pinned history.
 pub async fn encode_composition(composition: &HistoryComposition, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
-    let plain: &dyn Fn(&str) -> Option<u64> = &|_: &str| None;
+    let plain: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &|_: &str| None;
     let mut out = ByteWriter::new();
     out.write_u8(1);
     let presence = u8::from(composition.owner.is_some()) | (u8::from(composition.dialect.is_some()) << 1);
@@ -1245,7 +1245,7 @@ pub async fn encode_composition(composition: &HistoryComposition, dict: &mut Dic
 
 /// @emoji 🧩️ Inverse of [`encode_composition`].
 pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<HistoryComposition, ProtocolError> {
-    let miss: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
+    let miss: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
     if format > 1 {
@@ -1254,7 +1254,7 @@ pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Res
     let presence = input.read_u8()?;
     // 🚫️async: R10 shape 1 — `read_id_field` is async but a plain closure can't await; hoisted into
     // a nested async fn (`dict`/`miss` threaded through explicitly, since a nested fn can't capture).
-    async fn read_triple<'r>(input: &mut ByteReader<'_>, dict: &'r DictReader, miss: &dyn Fn(u64) -> Result<&'r str, ProtocolError>) -> Result<(String, String, String), ProtocolError> {
+    async fn read_triple<'r>(input: &mut ByteReader<'_>, dict: &'r DictReader, miss: &(dyn Fn(u64) -> Result<&'r str, ProtocolError> + Send + Sync)) -> Result<(String, String, String), ProtocolError> {
         Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?))
     }
     let owner = if presence & 1 != 0 { Some(read_triple(&mut input, dict, miss).await?) } else { None };
@@ -1296,7 +1296,7 @@ async fn validate_conflict_tags(kind: u8, status: u8, offset: u64) -> Result<(),
     Ok(())
 }
 
-async fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+async fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: &mut DictBuilder, edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync)) -> Result<(), ProtocolError> {
     validate_conflict_tags(conflict.kind, conflict.status, 0).await?;
     write_id_field(out, &conflict.id, dict, &|_: &str| None).await?;
     out.write_u8(conflict.kind);
@@ -1324,7 +1324,7 @@ async fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: 
     Ok(())
 }
 
-async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryConflict, ProtocolError> {
+async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -> Result<HistoryConflict, ProtocolError> {
     let id = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
     let kind = input.read_u8()?;
     let status = input.read_u8()?;
@@ -1363,8 +1363,8 @@ async fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ord
 /// one message's shape). Envelopes are opaque bytes to this crate (already-serialized
 /// `crate::os_spr::causal::MutationEnvelope`s) — same "never interprets" stance the module
 /// docstring states for op payloads.
-pub async fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
-    let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+pub async fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
+    let edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &edit_ordinal_of;
     let mut out = ByteWriter::new();
     out.write_u8(1);
     out.write_varint_u64(conflicts.len() as u64);
@@ -1375,8 +1375,8 @@ pub async fn encode_conflicts(conflicts: &[HistoryConflict], dict: &mut DictBuil
 }
 
 /// @emoji 🎯️ Inverse of [`encode_conflicts`].
-pub async fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<Vec<HistoryConflict>, ProtocolError> {
-    let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+pub async fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) -> Result<Vec<HistoryConflict>, ProtocolError> {
+    let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
     if format > 1 {

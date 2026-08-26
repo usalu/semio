@@ -15,15 +15,15 @@ pub struct ChangeFoundationPRdKpa {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeFoundationPRdKpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "foundation-p-rd-kpa", kind: "change-foundation-p-rd-kpa", record: "ChangedFoundationPRdKpa" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_foundation_p_rd_kpa::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_foundation_p_rd_kpa::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change foundation bearing resistance p_Rd [kPa] to {}", self.new_foundation_p_rd_kpa)
     }
 }

@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-retrofit-knowledge-level` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `retrofit_knowledge_level` from kl2 to kl3, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_knowledge_level_applies_to_committed_after() {
+fn change_retrofit_knowledge_level_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-retrofit-knowledge-level applies to its committed before-snapshot");
     assert_eq!(applied.retrofit_knowledge_level, "kl3", "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: retrofit_knowledge_level must read kl3 after the change");
     assert_eq!(applied, expected_after(), "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_retrofit_knowledge_level_applies_to_committed_after() {
 /// ↩️ `change-retrofit-knowledge-level` is its own inverse partner: the inverse step restores `retrofit_knowledge_level` to its pre-change
 /// kl2 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_knowledge_level_inverse_restores_before() {
+fn change_retrofit_knowledge_level_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-retrofit-knowledge-level applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_retrofit_knowledge_level_inverse_restores_before() {
 /// decode then encode is a fixed point, so `retrofitKnowledgeLevel` and `newRetrofitKnowledgeLevel` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_knowledge_level_committed_json_is_canonical() {
+fn change_retrofit_knowledge_level_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-retrofit-knowledge-level snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-retrofit-knowledge-level snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_retrofit_knowledge_level_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-retrofit-knowledge-level` at kl3 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_knowledge_level_declared_outcome_holds() {
+fn change_retrofit_knowledge_level_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-retrofit-knowledge-level outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_retrofit_knowledge_level_declared_outcome_holds() {
 /// assertion: it pins that only `retrofitKnowledgeLevel` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `retrofitLimitState`.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_knowledge_level_produces_committed_diff() {
+fn change_retrofit_knowledge_level_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().retrofit_knowledge_level.as_deref(), Some("kl3"), "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: the diff must set retrofit_knowledge_level to kl3");
     assert!(outcome.diff().artifact.is_none(), "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_retrofit_knowledge_level_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-retrofit-knowledge-level`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_knowledge_level_committed_diff_is_canonical() {
+fn change_retrofit_knowledge_level_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-retrofit-knowledge-level committed diff decodes");
     assert_eq!(decoded.retrofit_knowledge_level.as_deref(), Some("kl3"), "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: the committed diff must carry retrofit_knowledge_level at kl3");
     assert!(decoded.selected_check_index.is_none(), "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_retrofit_knowledge_level_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the kl2 to kl3 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_knowledge_level_committed_diff_applies_to_after() {
+fn change_retrofit_knowledge_level_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-retrofit-knowledge-level committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-retrofit-knowledge-level committed diff applies to the before-snapshot");
     assert_eq!(produced.retrofit_knowledge_level, "kl3", "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: the committed diff must leave retrofit_knowledge_level reading kl3");

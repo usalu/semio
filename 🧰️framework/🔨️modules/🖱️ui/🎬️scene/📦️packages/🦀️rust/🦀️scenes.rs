@@ -46,6 +46,7 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
 macro_rules! scene_pack_wire {
     ($wire:ident, $scene:ident { $($field:ident: $ty:ty),+ $(,)? }) => {
         #[derive(Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
         struct $wire {
             $($field: $ty),+
         }

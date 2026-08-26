@@ -2,6 +2,7 @@
 
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawAttributes, DrawImageAsset, DrawLayerBase, DrawLayerNode, DrawSnapshot, FillStyle, GradientStop, PathSegment, StrokeStyle};
+use protocol::{Mutation, OpBinary};
 
 //#region 🔖️OwnedSprCatalog
 const DRAW_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
@@ -1768,7 +1769,7 @@ impl DrawLayerCloneAuthority {
                 &[]
             }
             4 => {
-                let source_stops = match source_base.attributes.fill.as_ref() {
+                let source_stops: &[GradientStop] = match source_base.attributes.fill.as_ref() {
                     Some(FillStyle::LinearGradient { stops, .. }) | Some(FillStyle::RadialGradient { stops, .. }) => stops,
                     _ => &[],
                 };
@@ -2036,7 +2037,7 @@ impl DrawSnapshotCloneAuthority {
                 if self.pending_asset.is_none() {
                     use std::ops::Bound::{Excluded, Unbounded};
                     let next = match target.assets.last_key_value() {
-                        Some((key, _)) => source.assets.range((Excluded(key), Unbounded)).next(),
+                        Some((key, _)) => source.assets.range::<str, _>((Excluded(key.as_str()), Unbounded)).next(),
                         None => source.assets.iter().next(),
                     };
                     let Some((key, value)) = next else {
@@ -2101,8 +2102,8 @@ impl DrawSnapshotCloneAuthority {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+            return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
                 }
@@ -2582,8 +2583,8 @@ impl DrawFillCloneAuthority {
 
     fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+            return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
@@ -2668,8 +2669,8 @@ impl DrawStrokeCloneAuthority {
 
     fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+            return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
@@ -5080,7 +5081,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, 
                     self.phase = DrawStoreInitializationPhase::ValidateEditId { edit: edit + 1 };
                     return semio_framework_job::StepOutcome::Yield;
                 };
-                if value.timestamp.len() > DRAW_OWNED_FIELD_BYTES || value.mutation_id.as_ref().is_some_and(|id| id.0.len() > DRAW_OWNED_FIELD_BYTES) {
+                if value.mutation_id.as_ref().is_some_and(|id| id.0.len() > DRAW_OWNED_FIELD_BYTES) {
                     self.fail(b"draw-store.initializer-hostile-edit-field");
                 } else {
                     self.phase = DrawStoreInitializationPhase::ValidateEditMeta { edit, meta: meta + 1 };
@@ -5402,7 +5403,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, 
                         semio_framework_job::StepOutcome::Cancelled
                     } else {
                         self.phase = DrawStoreInitializationPhase::Fault;
-                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.take().unwrap_or_else(|| b"draw-store.initializer-fault".to_vec()) })
+                        let source = self.fault.take().unwrap_or_else(|| b"draw-store.initializer-fault".to_vec());
+                        let detail = cx
+                            .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, &source)
+                            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                        semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
                     }
                 }
                 Err(error) => {
@@ -5415,7 +5420,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, 
                 output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
             }),
             DrawStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
-            DrawStoreInitializationPhase::Fault => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: self.fault.clone().unwrap_or_else(|| b"draw-store.initializer-fault".to_vec()) }),
+            DrawStoreInitializationPhase::Fault => {
+                let source = self.fault.as_deref().unwrap_or(b"draw-store.initializer-fault");
+                let detail = cx
+                    .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source)
+                    .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+                semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
+            }
         }
     }
 

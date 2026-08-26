@@ -6,7 +6,7 @@ use crate::artifacts::din4108::diff::Din4108LayerList;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeLayerThickness, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+pub fn diff(payload: &ChangeLayerThickness, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if !payload.new_thickness_m.is_finite() || payload.new_thickness_m <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Layer thickness must be a positive finite number, got {}.", payload.new_thickness_m), [payload.index.to_string()]);
     }

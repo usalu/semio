@@ -1,6 +1,0 @@
-
-running 1 test
-test editor::puzzle3d::component::tests::two_documents_never_share_or_serialize_their_runtime_session ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1123 filtered out; finished in 0.02s
-

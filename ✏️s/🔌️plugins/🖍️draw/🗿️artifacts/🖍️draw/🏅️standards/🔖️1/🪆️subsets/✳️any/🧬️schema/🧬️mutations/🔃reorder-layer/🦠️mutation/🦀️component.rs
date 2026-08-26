@@ -18,23 +18,23 @@ pub struct ReorderLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn reorder_layer(layer_id: String, parent_id: Option<String>, index: usize) -> DrawMutation {
+pub fn reorder_layer(layer_id: String, parent_id: Option<String>, index: usize) -> DrawMutation {
     DrawMutation::ReorderLayer(ReorderLayer { layer_id, parent_id, index })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for ReorderLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layer", record: "ReorderedLayer" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Reorder layer \"{}\"", self.layer_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

@@ -1,0 +1,9 @@
+[package]
+name = "flow-pack-diagnostic"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+semio-framework-os-flow = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
+
+[workspace]

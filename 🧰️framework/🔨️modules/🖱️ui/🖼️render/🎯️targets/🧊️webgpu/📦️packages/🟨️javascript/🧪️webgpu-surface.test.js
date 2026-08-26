@@ -1,4 +1,4 @@
-import { GPU_MAX_FRAME_BYTES, GPU_MAX_IN_FLIGHT_FRAMES, GPU_MAX_IN_FLIGHT_PAGES, GPU_MAX_SURFACE_SESSIONS, createBrowserWebGpuImports, createWebGpuSurfacePort } from "./🟨️webgpu-surface.js";
+import { GPU_MAX_FRAME_BYTES, GPU_MAX_IN_FLIGHT_CONTROLS, GPU_MAX_IN_FLIGHT_FRAMES, GPU_MAX_IN_FLIGHT_PAGES, GPU_MAX_SURFACE_SESSIONS, createBrowserWebGpuImports, createWebGpuSurfacePort } from "./🟨️webgpu-surface.js";
 
 class Canvas {
   constructor() { this.attributes = new Map(); this.width = 0; this.height = 0; this.listeners = new Map(); this.style = {}; this.tabIndex = 0; }
@@ -81,6 +81,33 @@ const sessionPort = createWebGpuSurfacePort({ resolveCanvas: () => new Canvas(),
 for (let id = 1; id <= GPU_MAX_SURFACE_SESSIONS; id += 1) sessionPort.state.sessions.set(id, { canvas: new Canvas() });
 equal(sessionPort.create({ surfaceId: 9, canvasId: 9 }).accepted, false, "max-plus-one-session");
 
+const controlBoundaryHost = createBrowserWebGpuImports({ maximumQueue: GPU_MAX_IN_FLIGHT_CONTROLS + 1 }); controlBoundaryHost.bindMemory(memory);
+for (let index = 0; index < GPU_MAX_IN_FLIGHT_CONTROLS; index += 1) equal(controlBoundaryHost.surfacePort.cancel(BigInt(index + 1), 1).accepted, true, `control-boundary-${index}`);
+equal(controlBoundaryHost.surfacePort.cancel(9n, 1).accepted, false, "control-max-plus-one");
+equal(controlBoundaryHost.surfacePort.state.controls, GPU_MAX_IN_FLIGHT_CONTROLS, "control-boundary-retained");
+while (controlBoundaryHost.surfacePort.state.queue.length) poll(controlBoundaryHost.surfacePort, memory);
+equal(controlBoundaryHost.surfacePort.state.controls, 0, "control-boundary-released");
+equal(controlBoundaryHost.surfacePort.cancel(10n, 1).accepted, true, "control-valid-after-max-plus-one"); poll(controlBoundaryHost.surfacePort, memory);
+equal(controlBoundaryHost.surfacePort.state.controls, 0, "control-valid-after-max-plus-one-released");
+controlBoundaryHost.close();
+
+const noQueueHost = createBrowserWebGpuImports({ maximumQueue: 0 }); noQueueHost.bindMemory(memory);
+for (let index = 0; index <= GPU_MAX_IN_FLIGHT_CONTROLS; index += 1) equal(noQueueHost.surfacePort.cancel(BigInt(index + 1), 1).accepted, false, `zero-queue-rejected-cancel-${index}`);
+equal(noQueueHost.surfacePort.state.controls, 0, "zero-queue-rejections-retain-no-control");
+equal(noQueueHost.surfacePort.state.queue.length, 0, "zero-queue-rejections-retain-no-message");
+noQueueHost.close();
+
+for (const kind of ["cancel", "acknowledge", "close"]) rejectedControlRecoveryLaw(kind);
+
+const closedHost = createBrowserWebGpuImports({ maximumQueue: 1 }); closedHost.bindMemory(memory); closedHost.close();
+for (let index = 0; index <= GPU_MAX_IN_FLIGHT_CONTROLS; index += 1) {
+  equal(closedHost.surfacePort.cancel(BigInt(index + 1), 1).accepted, false, `closed-rejected-cancel-${index}`);
+  equal(closedHost.surfacePort.acknowledge({ slot: 1, generation: 1 }, index).accepted, false, `closed-rejected-acknowledge-${index}`);
+  equal(closedHost.surfacePort.closePage({ slot: 1, generation: 1 }).accepted, false, `closed-rejected-close-${index}`);
+}
+equal(closedHost.surfacePort.state.controls, 0, "closed-rejections-retain-no-control");
+equal(closedHost.surfacePort.state.queue.length, 0, "closed-rejections-retain-no-message");
+
 const lifecycleCanvas = new Canvas();
 const lifecycle = createWebGpuSurfacePort({ resolveCanvas: () => lifecycleCanvas, adapterSupported: true }); lifecycle.bindMemory(memory);
 const lifecycleCreate = lifecycle.create({ surfaceId: 7, canvasId: 7, generation: 1, width: 320, height: 200 }); poll(lifecycle, memory);
@@ -100,7 +127,35 @@ equal(lifecycleCanvas.getAttribute("data-raw-handle"), undefined, "drop-removes-
 
 port.close(); equal(canvas.getAttribute("data-raw-handle"), undefined, "exact-close-removes-handle");
 host.close();
-console.log(JSON.stringify({ a2Composition: true, surfaceTrace: "create-resize-frame-drop", maxSessions: GPU_MAX_SURFACE_SESSIONS, maxFrames: GPU_MAX_IN_FLIGHT_FRAMES, maxPages: GPU_MAX_IN_FLIGHT_PAGES, callbackMilliseconds: 8 }));
+console.log(JSON.stringify({ a2Composition: true, surfaceTrace: "create-resize-frame-drop", maxSessions: GPU_MAX_SURFACE_SESSIONS, maxFrames: GPU_MAX_IN_FLIGHT_FRAMES, maxPages: GPU_MAX_IN_FLIGHT_PAGES, maxControls: GPU_MAX_IN_FLIGHT_CONTROLS, rejectedControlRecovery: ["cancel", "acknowledge", "close"], callbackMilliseconds: 8 }));
+
+function rejectedControlRecoveryLaw(kind) {
+  const lawHost = createBrowserWebGpuImports({ maximumQueue: 1 }); lawHost.bindMemory(memory);
+  const lawPort = lawHost.surfacePort;
+  const slot = kind === "cancel" ? 20 : kind === "acknowledge" ? 21 : 22;
+  const retainedFrame = lawPort.frame({ surfaceId: 1, generation: 1, frameId: BigInt(slot), bytes: Uint8Array.of(slot) });
+  equal(retainedFrame.accepted, true, `${kind}-retained-frame-admitted`); poll(lawPort, memory);
+  sendOutcome(lawPort, memory, page(slot, 1, 0, outcome(3, retainedFrame.requestId, 1, 1, (writer) => writer.u64(BigInt(slot)).u32(1))));
+  equal(lawPort.state.frames, 1, `${kind}-frame-retained-before-control`);
+  equal(lawPort.state.pages.length, 1, `${kind}-page-retained-before-control`);
+  equal(lawPort.resize({ surfaceId: 1, generation: 1, width: 1, height: 1 }).accepted, true, `${kind}-queue-saturated`);
+  const submit = () => kind === "cancel"
+    ? lawPort.cancel(retainedFrame.requestId, 1)
+    : kind === "acknowledge"
+      ? lawPort.acknowledge({ slot, generation: 1 }, 0)
+      : lawPort.closePage({ slot, generation: 1 });
+  for (let index = 0; index <= GPU_MAX_IN_FLIGHT_CONTROLS; index += 1) equal(submit().accepted, false, `${kind}-queue-full-rejection-${index}`);
+  equal(lawPort.state.controls, 0, `${kind}-queue-full-rejections-retain-no-control`);
+  equal(lawPort.state.frames, 1, `${kind}-rejections-preserve-frame-owner`);
+  equal(lawPort.state.pages.length, 1, `${kind}-rejections-preserve-page-owner`);
+  poll(lawPort, memory);
+  equal(submit().accepted, true, `${kind}-valid-after-rejections`);
+  equal(lawPort.state.controls, 1, `${kind}-valid-control-retained`); poll(lawPort, memory);
+  equal(lawPort.state.controls, 0, `${kind}-valid-control-released`);
+  equal(lawPort.state.frames, 0, `${kind}-valid-control-releases-frame-owner`);
+  equal(lawPort.state.pages.length, 0, `${kind}-valid-control-releases-page-owner`);
+  lawHost.close();
+}
 
 function poll(portValue, memoryValue) {
   const bridge = portValue.imports.semio_webgpu_surface;

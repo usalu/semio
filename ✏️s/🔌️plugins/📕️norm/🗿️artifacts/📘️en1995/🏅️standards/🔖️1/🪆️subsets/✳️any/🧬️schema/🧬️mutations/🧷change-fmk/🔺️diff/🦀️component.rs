@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_f_m_k::mutation::ChangeFMK;
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeFMK, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub fn diff(payload: &ChangeFMK, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if !payload.new_f_m_k.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Fmk must be a finite number.", Vec::<String>::new());
     }

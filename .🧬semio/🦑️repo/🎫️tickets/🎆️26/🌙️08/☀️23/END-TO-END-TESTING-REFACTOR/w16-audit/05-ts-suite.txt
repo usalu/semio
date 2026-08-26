@@ -1,0 +1,44 @@
+bun test v1.3.14 (0d9b296a)
+
+🧪️index.test.ts:
+242 |   // ⏱️ Repo-wide: also runs the legacy-test survey and the oracle-purity scan over every
+243 |   // non-excluded path, so it needs the quick-level budget rather than bun's 5 s default.
+244 |   test(
+245 |     "every committed case satisfies the frozen contract",
+246 |     () => {
+247 |       expect(validateAllContracts(repoRoot).map((breach) => `${breach.kind}:${breach.scope}:${breach.summary}`)).toEqual([]);
+                                                                                                                       ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   "testing/discovery:🧰️framework:42 executable test file(s) outside the canonical owner-root test tree, baseline allows 35",
++   "testing/discovery:✏️s:4 executable test file(s) outside the canonical owner-root test tree, baseline allows 1",
++ ]
+
+- Expected  - 1
++ Received  + 4
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:247:114)
+(fail) 🔍️ discovery and contract > every committed case satisfies the frozen contract [25586.34ms]
+252 |   test(
+253 |     "the migration backlog is a shrink-only ratchet, never a growing allowlist",
+254 |     () => {
+255 |       const baseline = loadMigrationBaseline(repoRoot);
+256 |       const live = surveyUnmanagedTests(repoRoot).reduce((map, entry) => map.set(entry.area, (map.get(entry.area) ?? 0) + 1), new Map<string, number>());
+257 |       for (const [area, count] of live) expect(count).toBeLessThanOrEqual(baseline.unmanagedTests.byArea[area] ?? 0);
+                                                            ^
+error: expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 1
+Received: 4
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:257:55)
+(fail) 🔍️ discovery and contract > the migration backlog is a shrink-only ratchet, never a growing allowlist [3840.61ms]
+(fail) 🧹️ clean safety > removes marked outputs, never unmarked directories, and reports identically in dry mode [58547.59ms]
+  ^ this test timed out after 5000ms.
+
+ 66 pass
+ 3 fail
+ 2061 expect() calls
+Ran 69 tests across 1 file. [153.21s]

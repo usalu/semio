@@ -14,12 +14,12 @@ use crate::artifacts::jack::JackSnapshot;
 use store::{ArtifactPack, PackError};
 
 /// 📦️ Encodes a `JackSnapshot` to its binary pack form.
-pub async fn encode(document: &JackSnapshot) -> Vec<u8> {
+pub fn encode(document: &JackSnapshot) -> Vec<u8> {
     ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `JackSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<JackSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<JackSnapshot, PackError> {
     <JackSnapshot as ArtifactPack>::decode_pack(bytes)
 }
 

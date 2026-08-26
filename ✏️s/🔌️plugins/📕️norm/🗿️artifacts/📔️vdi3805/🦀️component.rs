@@ -16,12 +16,12 @@ pub use crate::document::LocalizedText;
 /// always exactly a German+English pair before the `LocalizedText` unification; a `Vec` (matching
 /// `iso16757::Names.alternatives`'s established `Vec<LocalizedText>` convention) is genuinely
 /// more general than the old hardcoded-bilingual struct, not just a rename.
-pub async fn bilingual(de: impl Into<String>, en: impl Into<String>) -> Vec<LocalizedText> {
+pub fn bilingual(de: impl Into<String>, en: impl Into<String>) -> Vec<LocalizedText> {
     vec![LocalizedText::new("de", de), LocalizedText::new("en", en)]
 }
 
 /// 🔎️ Reads the text for one `locale` out of a `Vec<LocalizedText>`, `""` if absent.
-pub async fn text_in(variants: &[LocalizedText], locale: &str) -> String {
+pub fn text_in(variants: &[LocalizedText], locale: &str) -> String {
     variants.iter().find(|t| t.locale == locale).map(|t| t.text.clone()).unwrap_or_default()
 }
 
@@ -119,11 +119,11 @@ pub struct VdiUnit {
 }
 
 impl VdiUnit {
-    pub async fn absolute(symbol: impl Into<String>, kind: VdiQuantityKind, si_factor: f64) -> Self {
+    pub fn absolute(symbol: impl Into<String>, kind: VdiQuantityKind, si_factor: f64) -> Self {
         Self { symbol: symbol.into(), kind, delta: false, si_factor }
     }
 
-    pub async fn delta(symbol: impl Into<String>, kind: VdiQuantityKind, si_factor: f64) -> Self {
+    pub fn delta(symbol: impl Into<String>, kind: VdiQuantityKind, si_factor: f64) -> Self {
         Self { symbol: symbol.into(), kind, delta: true, si_factor }
     }
 }
@@ -148,13 +148,13 @@ pub enum VdiValue {
 /// `DslVariants`, so it can't satisfy that site. Binds through `Shape::Value` (the engine's existing
 /// serde_json escape hatch), reusing the `Serialize`/`Deserialize` this type already has.
 impl dsl::DslField for VdiValue {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Value
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("VdiValue always serializes to DslValue"))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Value(dsl_value) => {
                 let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
@@ -222,7 +222,7 @@ impl Default for SecurityLimits {
 }
 
 impl SecurityLimits {
-    pub async fn validate_text(&self, text: &str) -> Result<(), NormError> {
+    pub fn validate_text(&self, text: &str) -> Result<(), NormError> {
         if text.len() > self.max_file_bytes {
             return Err(NormError::InvalidValue { field: "file".into(), reason: format!("exceeds {} bytes", self.max_file_bytes) });
         }
@@ -237,7 +237,7 @@ impl SecurityLimits {
 pub struct SheetId(pub u16);
 
 impl SheetId {
-    pub async fn part_str(self) -> String {
+    pub fn part_str(self) -> String {
         format!("{}", self.0)
     }
 }
@@ -246,13 +246,13 @@ impl SheetId {
 /// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::UInt` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
 impl dsl::DslField for SheetId {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::UInt
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::UInt(self.0 as u64)
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::UInt(v) => Ok(SheetId(*v as u16)),
             other => Err(format!("expected UInt, found {other:?}")),
@@ -268,11 +268,11 @@ pub struct EditionId {
 }
 
 impl EditionId {
-    pub async fn new(year: u16, month: u8) -> Self {
+    pub fn new(year: u16, month: u8) -> Self {
         Self { year, month }
     }
 
-    pub async fn key(self) -> u32 {
+    pub fn key(self) -> u32 {
         (self.year as u32) * 100 + self.month as u32
     }
 }
@@ -291,7 +291,7 @@ pub enum SchemaStatus {
 }
 
 impl SchemaStatus {
-    pub async fn is_operative(self) -> bool {
+    pub fn is_operative(self) -> bool {
         matches!(self, Self::Published | Self::Checked)
     }
 }
@@ -331,7 +331,7 @@ pub struct CorrectionOverlay {
 }
 
 impl CorrectionOverlay {
-    pub async fn applies_as_of(&self, as_of: EditionId) -> bool {
+    pub fn applies_as_of(&self, as_of: EditionId) -> bool {
         as_of.key() >= self.effective.key()
     }
 }
@@ -516,40 +516,40 @@ pub const CORRECTION_OVERLAYS: &[CorrectionOverlay] = &[
 ];
 
 impl SchemaCatalog {
-    async fn build(filter: Option<SchemaStatus>) -> Self {
+    fn build(filter: Option<SchemaStatus>) -> Self {
         let sheets: Vec<SheetEntry> = SHEET_ENTRIES.iter().filter(|s| filter.is_none_or(|f| s.status == f)).copied().collect();
         Self { sheets, corrections: CORRECTION_OVERLAYS, filter }
     }
 
-    pub async fn current() -> Self {
+    pub fn current() -> Self {
         Self::build(None)
     }
 
-    pub async fn with_status(status: SchemaStatus) -> Self {
+    pub fn with_status(status: SchemaStatus) -> Self {
         Self::build(Some(status))
     }
 
-    pub async fn sheets(&self) -> &[SheetEntry] {
+    pub fn sheets(&self) -> &[SheetEntry] {
         &self.sheets
     }
 
-    pub async fn sheet(&self, id: SheetId) -> Option<&SheetEntry> {
+    pub fn sheet(&self, id: SheetId) -> Option<&SheetEntry> {
         self.sheets.iter().find(|s| s.id == id)
     }
 
-    pub async fn sheets_in_domain(&self, domain: Domain) -> Vec<&SheetEntry> {
+    pub fn sheets_in_domain(&self, domain: Domain) -> Vec<&SheetEntry> {
         self.sheets.iter().filter(|s| s.domains.contains(&domain)).collect()
     }
 
-    pub async fn operative_sheets(&self) -> Vec<&SheetEntry> {
+    pub fn operative_sheets(&self) -> Vec<&SheetEntry> {
         self.sheets.iter().filter(|s| s.status.is_operative()).collect()
     }
 
-    pub async fn corrections_for_sheet(&self, sheet: SheetId) -> Vec<&'static CorrectionOverlay> {
+    pub fn corrections_for_sheet(&self, sheet: SheetId) -> Vec<&'static CorrectionOverlay> {
         self.corrections.iter().filter(|c| c.sheet == sheet).collect()
     }
 
-    pub async fn reserved_numbers(&self) -> BTreeSet<u16> {
+    pub fn reserved_numbers(&self) -> BTreeSet<u16> {
         self.sheets.iter().filter(|s| s.status == SchemaStatus::Reserved).map(|s| s.id.0).collect()
     }
 }
@@ -565,7 +565,7 @@ pub struct BuildingSystemNumber {
 }
 
 impl BuildingSystemNumber {
-    pub async fn parse(raw: &str) -> Result<Self, NormError> {
+    pub fn parse(raw: &str) -> Result<Self, NormError> {
         let parts: Vec<&str> = raw.split('.').collect();
         if parts.len() != 3 {
             return Err(NormError::InvalidValue { field: "building_system_number".into(), reason: "expected SYS.SUB.NNN".into() });
@@ -574,7 +574,7 @@ impl BuildingSystemNumber {
         Ok(Self { system_code: parts[0].into(), subsystem: parts[1].into(), sequence })
     }
 
-    pub async fn render(&self) -> String {
+    pub fn render(&self) -> String {
         format!("{}.{}.{}", self.system_code, self.subsystem, self.sequence)
     }
 }
@@ -587,13 +587,13 @@ pub struct RecordFamilyId(pub String);
 /// for `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
 impl dsl::DslField for RecordFamilyId {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(RecordFamilyId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -700,7 +700,7 @@ impl RecordFamilyId {
     pub const R960: &'static str = "960";
     pub const R970_41: &'static str = "970.41";
 
-    pub async fn all_known() -> &'static [&'static str] {
+    pub fn all_known() -> &'static [&'static str] {
         &[
             Self::R010,
             Self::R020,
@@ -847,7 +847,7 @@ pub struct ManufacturerCatalog {
 }
 
 impl ManufacturerCatalog {
-    pub async fn product_for_sheet(&self, sheet: SheetId) -> Option<&CatalogueProduct> {
+    pub fn product_for_sheet(&self, sheet: SheetId) -> Option<&CatalogueProduct> {
         self.products.iter().find(|p| p.sheet == sheet)
     }
 }
@@ -866,15 +866,15 @@ pub struct BoundingBox {
 }
 
 impl BoundingBox {
-    pub async fn from_size(w: f64, h: f64, d: f64) -> Self {
+    pub fn from_size(w: f64, h: f64, d: f64) -> Self {
         Self { min_x: 0.0, min_y: 0.0, min_z: 0.0, max_x: w, max_y: h, max_z: d }
     }
 
-    pub async fn volume_m3(self) -> f64 {
+    pub fn volume_m3(self) -> f64 {
         (self.max_x - self.min_x) * (self.max_y - self.min_y) * (self.max_z - self.min_z)
     }
 
-    pub async fn overlaps(self, other: Self, clearance: f64) -> bool {
+    pub fn overlaps(self, other: Self, clearance: f64) -> bool {
         self.min_x - clearance < other.max_x && self.max_x + clearance > other.min_x && self.min_y - clearance < other.max_y && self.max_y + clearance > other.min_y && self.min_z - clearance < other.max_z && self.max_z + clearance > other.min_z
     }
 }
@@ -901,12 +901,12 @@ pub struct ParametricGeometry {
 }
 
 impl ParametricGeometry {
-    pub async fn evaluate_bbox(&self) -> BoundingBox {
+    pub fn evaluate_bbox(&self) -> BoundingBox {
         let scale = self.parameters.get("scale").copied().unwrap_or(1.0);
         BoundingBox { min_x: self.bbox.min_x * scale, min_y: self.bbox.min_y * scale, min_z: self.bbox.min_z * scale, max_x: self.bbox.max_x * scale, max_y: self.bbox.max_y * scale, max_z: self.bbox.max_z * scale }
     }
 
-    pub async fn connection_count(&self) -> usize {
+    pub fn connection_count(&self) -> usize {
         self.connections.len()
     }
 }
@@ -931,7 +931,7 @@ pub struct CharacteristicCurve {
 }
 
 impl CharacteristicCurve {
-    pub async fn interpolate(&self, x: f64) -> f64 {
+    pub fn interpolate(&self, x: f64) -> f64 {
         if self.points.is_empty() {
             return 0.0;
         }
@@ -971,7 +971,7 @@ pub struct CatalogIndex {
 }
 
 impl CatalogIndex {
-    pub async fn from_catalog(catalog: &ManufacturerCatalog) -> Self {
+    pub fn from_catalog(catalog: &ManufacturerCatalog) -> Self {
         let entries = catalog
             .products
             .iter()
@@ -989,15 +989,15 @@ impl CatalogIndex {
         Self { entries }
     }
 
-    pub async fn filter_by_sheet(&self, sheet: SheetId) -> Vec<&CatalogIndexEntry> {
+    pub fn filter_by_sheet(&self, sheet: SheetId) -> Vec<&CatalogIndexEntry> {
         self.entries.iter().filter(|e| e.sheet == sheet).collect()
     }
 
-    pub async fn filter_by_dn(&self, dn: u16) -> Vec<&CatalogIndexEntry> {
+    pub fn filter_by_dn(&self, dn: u16) -> Vec<&CatalogIndexEntry> {
         self.entries.iter().filter(|e| e.dn == Some(dn)).collect()
     }
 
-    pub async fn filter_by_tag(&self, tag: &str) -> Vec<&CatalogIndexEntry> {
+    pub fn filter_by_tag(&self, tag: &str) -> Vec<&CatalogIndexEntry> {
         let lower = tag.to_lowercase();
         self.entries.iter().filter(|e| e.tags.iter().any(|t| t.to_lowercase().contains(&lower))).collect()
     }
@@ -1022,15 +1022,15 @@ pub enum Severity {
 }
 
 impl Diagnostic {
-    pub async fn info(field: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn info(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self { field: field.into(), message: message.into(), severity: Severity::Info }
     }
 
-    pub async fn warning(field: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn warning(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self { field: field.into(), message: message.into(), severity: Severity::Warning }
     }
 
-    pub async fn error(field: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn error(field: impl Into<String>, message: impl Into<String>) -> Self {
         Self { field: field.into(), message: message.into(), severity: Severity::Error }
     }
 }
@@ -1050,7 +1050,7 @@ pub const VDI3805_EXTENSION: &str = "vdi3805";
 
 /// 📋️ VDI 3805 evaluation document.
 /// 🧪️ Minimal valid heating valve (sheet 2) reference fixture.
-pub async fn reference_fixture() -> Vdi3805Snapshot {
+pub fn reference_fixture() -> Vdi3805Snapshot {
     let bsn = BuildingSystemNumber { system_code: "420".into(), subsystem: "10".into(), sequence: 1 };
     let file = ManufacturerFile { header_version: "3805".into(), manufacturer: "DEMO".into(), building_system_number: bsn, created: "2026-07-22".into(), charset: "UTF-8".into(), record_count: 3, extensions: ExtensionBag::default() };
     let mut parameters = BTreeMap::new();
@@ -1100,7 +1100,7 @@ pub async fn reference_fixture() -> Vdi3805Snapshot {
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("vdi3805", "VDI 3805")
 }
 //#endregion 🔖️ArtifactKind
@@ -1116,38 +1116,38 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn building_system_number_parse_render() {
+    fn building_system_number_parse_render() {
         let bsn = BuildingSystemNumber::parse("420.10.1").expect("parse");
         assert_eq!(bsn.render(), "420.10.1");
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn building_system_number_parse_rejects_wrong_part_count() {
+    fn building_system_number_parse_rejects_wrong_part_count() {
         let err = BuildingSystemNumber::parse("420.10").unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "building_system_number"));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn building_system_number_parse_rejects_non_numeric_sequence() {
+    fn building_system_number_parse_rejects_non_numeric_sequence() {
         let err = BuildingSystemNumber::parse("420.10.abc").unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "building_system_number.sequence"));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn security_limits_validate_text_rejects_oversized_input() {
+    fn security_limits_validate_text_rejects_oversized_input() {
         let limits = SecurityLimits { max_file_bytes: 8, ..SecurityLimits::default() };
         let err = limits.validate_text("this text is way longer than eight bytes").unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "file"));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn security_limits_validate_text_accepts_within_bound() {
+    fn security_limits_validate_text_accepts_within_bound() {
         let limits = SecurityLimits::default();
         assert!(limits.validate_text("short").is_ok());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn characteristic_curve_interpolates() {
+    fn characteristic_curve_interpolates() {
         let doc = Vdi3805Snapshot::default();
         let curve = doc.curves.get("curve.kvs").expect("curve");
         let y = curve.interpolate(50.0);
@@ -1155,7 +1155,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn characteristic_curve_interpolate_handles_edges() {
+    fn characteristic_curve_interpolate_handles_edges() {
         let empty = CharacteristicCurve { id: "empty".into(), x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01), y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0), points: Vec::new() };
         assert_eq!(empty.interpolate(10.0), 0.0);
 
@@ -1166,7 +1166,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn bounding_box_overlaps_detects_intersection_and_gap() {
+    fn bounding_box_overlaps_detects_intersection_and_gap() {
         let a = BoundingBox::from_size(1.0, 1.0, 1.0);
         let b = BoundingBox { min_x: 0.5, min_y: 0.5, min_z: 0.5, max_x: 1.5, max_y: 1.5, max_z: 1.5 };
         assert!(a.overlaps(b, 0.0));
@@ -1175,7 +1175,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn geometry_bbox_volume() {
+    fn geometry_bbox_volume() {
         let doc = Vdi3805Snapshot::default();
         let geom = doc.geometry.get("geom.valve.50").expect("geom");
         let bbox = geom.evaluate_bbox();
@@ -1183,7 +1183,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn catalog_index_filters_by_dn() {
+    fn catalog_index_filters_by_dn() {
         let doc = Vdi3805Snapshot::default();
         let matches = doc.index.filter_by_dn(50);
         assert_eq!(matches.len(), 1);
@@ -1191,7 +1191,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn catalog_index_filter_by_sheet_and_tag() {
+    fn catalog_index_filter_by_sheet_and_tag() {
         let doc = Vdi3805Snapshot::default();
         let by_sheet = doc.index.filter_by_sheet(SheetId(2));
         assert_eq!(by_sheet.len(), 1);
@@ -1201,7 +1201,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn correction_overlay_applicability() {
+    fn correction_overlay_applicability() {
         let registry = SchemaCatalog::current();
         let corrections = registry.corrections_for_sheet(SheetId(2));
         let corr = corrections.first().expect("part 2 correction");
@@ -1211,7 +1211,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn schema_registry_with_status_and_sheet_lookup() {
+    fn schema_registry_with_status_and_sheet_lookup() {
         let registry = SchemaCatalog::with_status(SchemaStatus::Reserved);
         assert!(registry.sheets().iter().all(|s| s.status == SchemaStatus::Reserved));
         let full = SchemaCatalog::current();
@@ -1221,7 +1221,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn schema_registry_sheets_in_domain_and_reserved_numbers() {
+    fn schema_registry_sheets_in_domain_and_reserved_numbers() {
         let registry = SchemaCatalog::current();
         let heating = registry.sheets_in_domain(Domain::Heating);
         assert!(heating.iter().any(|s| s.id == SheetId(2)));
@@ -1231,13 +1231,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn sheet_id_part_str_and_edition_id_key() {
+    fn sheet_id_part_str_and_edition_id_key() {
         assert_eq!(SheetId(42).part_str(), "42");
         assert!(EditionId::new(2023, 3).key() > EditionId::new(2022, 6).key());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn schema_status_is_operative() {
+    fn schema_status_is_operative() {
         assert!(SchemaStatus::Published.is_operative());
         assert!(SchemaStatus::Checked.is_operative());
         assert!(!SchemaStatus::Draft.is_operative());
@@ -1245,14 +1245,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn record_family_id_all_known_contains_expected() {
+    fn record_family_id_all_known_contains_expected() {
         let known = RecordFamilyId::all_known();
         assert!(known.contains(&RecordFamilyId::R010));
         assert!(known.contains(&RecordFamilyId::R970_41));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn manufacturer_catalog_product_for_sheet() {
+    fn manufacturer_catalog_product_for_sheet() {
         let doc = Vdi3805Snapshot::default();
         assert!(doc.catalog.product_for_sheet(SheetId(2)).is_some());
         assert!(doc.catalog.product_for_sheet(SheetId(3)).is_none());
@@ -1264,7 +1264,7 @@ mod tests {
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805.inference" }];
@@ -1290,7 +1290,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     crate::artifacts::definition::assemble_definition("s.vdi3805", ROWS)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor())
         .inferences([crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::vdi3805_artifact_inference_descriptor()])
@@ -1303,7 +1303,7 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_period_ratio::mutation::ChangePe
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangePeriodRatio, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangePeriodRatio, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_period_ratio.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Period ratio must be a finite number, got {}.", payload.new_period_ratio), Vec::<String>::new());
     }

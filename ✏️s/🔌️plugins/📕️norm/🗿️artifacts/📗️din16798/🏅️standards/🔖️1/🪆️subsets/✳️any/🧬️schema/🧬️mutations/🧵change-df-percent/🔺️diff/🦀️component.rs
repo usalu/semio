@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_df_percent::mutation::ChangeDf
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeDfPercent, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeDfPercent, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_df_percent.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Daylight factor must be a finite number, got {}.", payload.new_df_percent), Vec::<String>::new());
     }

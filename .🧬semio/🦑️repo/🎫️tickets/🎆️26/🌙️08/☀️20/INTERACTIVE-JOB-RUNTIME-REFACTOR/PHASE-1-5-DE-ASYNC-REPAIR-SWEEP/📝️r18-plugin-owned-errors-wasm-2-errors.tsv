@@ -1,1 +1,0 @@
-E0599	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8780	no method named `unwrap_or_else` found for opaque type `impl Future<Output = Result<std::string::String, VcsError>>` in the current scope

@@ -12,13 +12,13 @@ pub struct ChangeMoistureMuExterior {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeMoistureMuExterior {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "moisture-mu-exterior", kind: "change-moisture-mu-exterior", record: "ChangedMoistureMuExterior" };
 
-    async fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change moisture mu exterior to {}", self.new_moisture_mu_exterior)
     }
 }

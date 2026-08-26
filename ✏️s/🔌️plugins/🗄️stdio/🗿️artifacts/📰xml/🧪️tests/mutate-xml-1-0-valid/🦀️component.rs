@@ -26,11 +26,24 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "declare-doctype", "rena
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://📰️macos-uttype-plist.xml";
+/// 📰️ The document every mutation row runs on: a real 40 440-byte Apple PropertyList 1.0 document
+/// derived ONCE from the real committed 50-row German building-material-reuse survey by
+/// `🐍️derive-xml-valid-fixture.py` in the ticket folder, carrying the same real Apple DOCTYPE the
+/// committed UTType declaration carries.
+const INPUT: &str = "shared://📰️reuse-marketplaces-plist.xml";
+/// 📰️ The real macOS UTType declaration this case used to rest on — the real production document
+/// this repository ships — kept for `identity-round-trip`, which still reads it on its own.
+const UTTYPE_INPUT: &str = "shared://📰️macos-uttype-plist.xml";
 
 /// 🧫️ Copies the immutable real document into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("uttype.plist.xml"))?;
+    let copy = ctx.copy_fixture(INPUT, Some("reuse-marketplaces.plist.xml"))?;
+    std::fs::read(&copy).map_err(|error| error.to_string())
+}
+
+/// 🧫️ The same, for the UTType declaration the round-trip scenario additionally reads.
+fn mutable_uttype_input(ctx: &Context) -> Result<Vec<u8>, String> {
+    let copy = ctx.copy_fixture(UTTYPE_INPUT, Some("uttype.plist.xml"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -90,17 +103,23 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// without that insignificant whitespace), and the re-encoded document's own projection must still
 /// equal the input's.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = mutable_input(ctx)?;
-    let bytes = oracle_round_trip(&input)?;
+    let uttype = round_trip_oracle_once(&mutable_uttype_input(ctx)?, "the UTType declaration")?;
+    let survey = round_trip_oracle_once(&mutable_input(ctx)?, "the survey property list")?;
+    Ok(Outcome::with_raw(survey.0, Json::Object(vec![("uttype".to_string(), uttype.1), ("survey".to_string(), survey.1)])))
+}
+
+/// 🔁️ The probe itself, over one document.
+fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), String> {
+    let bytes = oracle_round_trip(input)?;
     if bytes == input {
-        return Err("byte pass-through: the oracle's re-encoded bytes are bit-identical to the input, so nothing here proves the document was parsed rather than copied".to_string());
+        return Err(format!("byte pass-through on {what}: the oracle's re-encoded bytes are bit-identical to the input, so nothing here proves the document was parsed rather than copied"));
     }
     let projection = project_xml_valid(&bytes)?;
-    let original = project_xml_valid(&input)?;
+    let original = project_xml_valid(input)?;
     if let Some(divergence) = projection_divergence(&projection, &original) {
-        return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic projection -- {divergence}"));
+        return Err(format!("round-trip law violated on {what}: decode then re-encode did not preserve the semantic projection -- {divergence}"));
     }
-    Ok(Outcome::with_raw(bytes, projection))
+    Ok((bytes, projection))
 }
 //#endregion 🔖️Oracle
 
@@ -228,14 +247,20 @@ mod subject {
     /// typed snapshot and re-serialize from the model alone -- `XmlSnapshot::import_utf8`/
     /// `export_utf8` are this subset's ONLY channel from input to output.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let snapshot = XmlSnapshot::import_utf8(&input).map_err(|error| format!("import_utf8 failed: {error}"))?;
-        let output = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
+        let uttype = round_trip_once(&super::mutable_uttype_input(ctx)?, "the UTType declaration")?;
+        let survey = round_trip_once(&mutable_input(ctx)?, "the survey property list")?;
+        Ok(Outcome::with_raw(survey.0, Json::Object(vec![("uttype".to_string(), uttype.1), ("survey".to_string(), survey.1)])))
+    }
+
+    /// 🔁️ The probe itself, over one document.
+    fn round_trip_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), String> {
+        let snapshot = XmlSnapshot::import_utf8(input).map_err(|error| format!("import_utf8 of {what} failed: {error}"))?;
+        let output = snapshot.export_utf8().map_err(|error| format!("export_utf8 of {what} failed: {error}"))?;
         if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".to_string());
+            return Err(format!("byte pass-through on {what}: output is bit-identical to the input"));
         }
         let projection = project_xml_valid(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        Ok((output, projection))
     }
     //#endregion 🔖️Handlers
 

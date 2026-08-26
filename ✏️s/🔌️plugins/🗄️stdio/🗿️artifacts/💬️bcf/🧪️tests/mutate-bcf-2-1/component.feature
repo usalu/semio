@@ -99,7 +99,7 @@ Feature: Apply every typed BCF 2.1 mutation to a real-world coordination review
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the coordination review
     Given the real input document shared://wellness-center-coordination-review.bcf
     When the <id> mutation is applied and then undone

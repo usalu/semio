@@ -6,23 +6,23 @@
 //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
-use crate::dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette, compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border};
+use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette};
 use crate::engine_canvas::theme_is_dark;
 #[cfg(test)]
 use crate::interpreter::render_ui_document;
-use crate::interpreter::{UiDocumentFrameCursor, begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, resolve_ui_image};
-use crate::program_bridge::{PluginHostConfig, ProgramBridgeEntry, is_space_mode, resolve_playground_app_id, resolve_plugin_host_config};
-use crate::scenes::{AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface, clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click};
-use infinite_world::world::{World3dState, WorldInteractionIntent, WorldInteractionPhase, enqueue_world3d_events};
-use semio_framework::{AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel, app_breadcrumb, app_window_label, resolve_app_breadcrumb};
+use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, resolve_ui_image, UiDocumentFrameCursor};
+use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
+use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
+use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::PresencePeer;
-#[cfg(not(target_arch = "wasm32"))]
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
-use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease, UiFixedList, UiText};
+#[cfg(not(target_arch = "wasm32"))]
+use store_sync::PresencePeer;
+use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
 // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
@@ -32,9 +32,9 @@ use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS,
 // `ShellState` (`document_host`, `sync_channel`, `sync_status`).
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
+    client::{native::NativeDirectoryTransport, DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport},
+    identity::{actor_id, mint_or_restore, Identity, IdentityOutcome, IdentityStatus},
     DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
-    client::{DirectoryClient, DirectoryStream, DirectoryStreamTurn, DirectoryTransport, native::NativeDirectoryTransport},
-    identity::{Identity, IdentityOutcome, IdentityStatus, actor_id, mint_or_restore},
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
 // methods now carry an `OperationContext` (cancellation/deadline/trace), and the native transport
@@ -49,12 +49,12 @@ use semio_framework_async::{CancelToken, Lane, OperationContext, ScopeOwner, Tra
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
-    ActionDescriptor, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem,
-    UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowMeasure,
+    chrome_item_bg, chrome_item_text, draw_text, paint_retained_glyph_step, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep,
+    Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
 };
 use ui_wgpu::wgpu::{
-    DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep, Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
-    chrome_item_bg, chrome_item_text, draw_text, paint_retained_glyph_step, push_chrome_group_border,
+    ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
@@ -7116,7 +7116,11 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
 /// left/right. A middle anchor would fold right (the details/overflow side) but never occurs here — `PanelGroup`
 /// only ever maps to the four corner anchors.
 fn group_side(group: PanelGroup) -> &'static str {
-    if group.anchor().ends_with("left") { "left" } else { "right" }
+    if group.anchor().ends_with("left") {
+        "left"
+    } else {
+        "right"
+    }
 }
 
 fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static str {
@@ -7184,7 +7188,11 @@ pub(crate) fn window_action_definition<'a>(app: &'a AppDefinition, window_kind_i
 
 /// 🔢️ Formats a number for a staged input/vec3 field — integers without a trailing `.0`.
 fn fmt_num(value: f64) -> String {
-    if value.is_finite() && value == value.trunc() && value.abs() < 1e15 { format!("{}", value as i64) } else { format!("{value}") }
+    if value.is_finite() && value == value.trunc() && value.abs() < 1e15 {
+        format!("{}", value as i64)
+    } else {
+        format!("{value}")
+    }
 }
 
 /// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::wgpu::SemioCursor}.
@@ -7246,7 +7254,11 @@ fn format_keybinding_shortcut(keys: &str) -> String {
         }
     };
     let parts: Vec<String> = chord.split('+').map(str::trim).filter(|part| !part.is_empty()).map(glyph).collect();
-    if apple { parts.join("") } else { parts.join("+") }
+    if apple {
+        parts.join("")
+    } else {
+        parts.join("+")
+    }
 }
 
 /// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
@@ -7514,7 +7526,11 @@ impl ShellState {
     pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
         let staged_dsl = semio_framework::to_dsl_value(&Value::Object(staged.clone())).ok()?;
         let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
-        if semio_framework::missing_required_args(defs, &effective).is_empty() { semio_framework::from_dsl_value::<Value>(effective).ok().and_then(|value| value.as_object().cloned()) } else { None }
+        if semio_framework::missing_required_args(defs, &effective).is_empty() {
+            semio_framework::from_dsl_value::<Value>(effective).ok().and_then(|value| value.as_object().cloned())
+        } else {
+            None
+        }
     }
 
     /// 🚀️ Executes a staged action once (P2): validates required args, dispatches exactly one
@@ -8674,7 +8690,11 @@ fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::wgpu::
 /// `render_engagement_input` so it's unit-testable without a `GpuContext` fixture (that function
 /// unconditionally needs a real wgpu device, per its own `_gpu` parameter).
 fn engagement_ghost_accept_on_click(ghost_rect: Rect, pointer_x: f32, pointer_y: f32, clicked_this_frame: bool, query: &str, suffix: &str) -> Option<String> {
-    if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) { Some(format!("{query}{suffix}")) } else { None }
+    if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) {
+        Some(format!("{query}{suffix}"))
+    } else {
+        None
+    }
 }
 //#endregion 🔖️ChromeOverlaysAndTour
 
@@ -9069,7 +9089,11 @@ fn tutorial_advance_playhead(playhead_ms: f64, dt_ms: f64, rate: f32) -> f64 {
 /// 🎚️ Pure scrub-bar progress (0–1) for a given playhead/duration — `0.0` for a zero-length timeline
 /// (the in-progress recording case) rather than dividing by zero.
 fn tutorial_scrub_progress(playhead_ms: f64, duration_ms: u64) -> f32 {
-    if duration_ms == 0 { 0.0 } else { (playhead_ms / duration_ms as f64).clamp(0.0, 1.0) as f32 }
+    if duration_ms == 0 {
+        0.0
+    } else {
+        (playhead_ms / duration_ms as f64).clamp(0.0, 1.0) as f32
+    }
 }
 
 /// 🎚️ Pure scrub-bar hit math: pointer x within `track` → target playhead ms.
@@ -10259,7 +10283,11 @@ impl ShellState {
     /// active — `0.0` otherwise, so `body_rect`/the canvas layout are byte-identical to before this
     /// region existed whenever no tutorial is running.
     fn tutorial_bar_reserve(&self, theme: &Theme) -> f32 {
-        if self.tutorial.is_some() { tutorial_bar_height(theme) } else { 0.0 }
+        if self.tutorial.is_some() {
+            tutorial_bar_height(theme)
+        } else {
+            0.0
+        }
     }
 
     fn shell_uri(&self) -> String {
@@ -10389,7 +10417,11 @@ impl ShellState {
     fn floating_panel_rect(&self, left: bool, body: Rect, theme: &Theme) -> Rect {
         let inset = theme.panel_inset;
         let width = if left { floating_panel_width(self.left_panel_width, body, theme) } else { floating_panel_width(self.right_panel_width, body, theme) };
-        if left { Rect::new(body.x + inset, body.y + inset, width, body.h - inset * 2.0) } else { Rect::new(body.x + body.w - inset - width, body.y + inset, width, body.h - inset * 2.0) }
+        if left {
+            Rect::new(body.x + inset, body.y + inset, width, body.h - inset * 2.0)
+        } else {
+            Rect::new(body.x + body.w - inset - width, body.y + inset, width, body.h - inset * 2.0)
+        }
     }
 
     fn render_main_window_step(
@@ -12958,7 +12990,7 @@ impl ShellState {
         bounds: Rect,
         control: &WindowEngagementControl,
     ) {
-        use ui_wgpu::wgpu::widgets::{WidgetNode, render_widget};
+        use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
         let node = match control {
             WindowEngagementControl::Slider { id, value, min, max, step, disabled, on_change, .. } => WidgetNode::Slider {
                 id: id.clone().unwrap_or_else(|| "engagement-slider".into()),
@@ -13566,25 +13598,23 @@ impl FilePrefsStore {
         let flush_state = std::sync::Arc::clone(&self.flush_state);
         crate::renderer_worker_pool().submit(
             Lane::Io,
-            Box::new(move || {
-                loop {
-                    let snapshot = {
-                        let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                        match state.latest.take() {
-                            Some(snapshot) => snapshot,
-                            None => {
-                                state.running = false;
-                                break;
-                            }
+            Box::new(move || loop {
+                let snapshot = {
+                    let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    match state.latest.take() {
+                        Some(snapshot) => snapshot,
+                        None => {
+                            state.running = false;
+                            break;
                         }
-                    };
-                    use std::fs as system_fs;
-                    if let Some(parent) = path.parent() {
-                        let _ = system_fs::create_dir_all(parent);
                     }
-                    if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
-                        let _ = system_fs::write(&path, json);
-                    }
+                };
+                use std::fs as system_fs;
+                if let Some(parent) = path.parent() {
+                    let _ = system_fs::create_dir_all(parent);
+                }
+                if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
+                    let _ = system_fs::write(&path, json);
                 }
             }),
         );
@@ -13668,31 +13698,18 @@ fn native_pref_field_path(key: &str) -> Option<std::path::PathBuf> {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn native_pref_read_page(key: &str) -> Option<String> {
-    use std::io::Read;
     let path = native_pref_field_path(key)?;
-    let mut file = std::fs::File::open(path).ok()?;
-    let len = usize::try_from(file.metadata().ok()?.len()).ok()?;
-    if len > SHELL_CHROME_IO_FIELD_BYTES {
-        return None;
-    }
-    let mut page = [0u8; SHELL_CHROME_IO_FIELD_BYTES];
-    file.read_exact(&mut page[..len]).ok()?;
-    String::from_utf8(page[..len].to_vec()).ok()
+    let page = semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES).ok()?;
+    String::from_utf8(page).ok()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn native_pref_write_page(key: &str, value: &str) -> bool {
-    use std::io::Write;
     let Some(path) = native_pref_field_path(key) else { return false };
     if value.len() > SHELL_CHROME_IO_FIELD_BYTES {
         return false;
     }
-    let Some(parent) = path.parent() else { return false };
-    if std::fs::create_dir_all(parent).is_err() {
-        return false;
-    }
-    let Ok(mut file) = std::fs::OpenOptions::new().create(true).truncate(true).write(true).open(path) else { return false };
-    file.write_all(value.as_bytes()).is_ok()
+    semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES).is_ok()
 }
 
 fn prefs_get(key: &str) -> Option<String> {

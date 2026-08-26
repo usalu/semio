@@ -10,7 +10,7 @@
 //! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::{writer_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::artifacts::writer::{writer_text, writer_text_owner, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
 use crate::editor::writer::commands::set_locale;
@@ -24,16 +24,18 @@ use crate::editor::writer::modes::edit::windows::main;
 use crate::editor::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::editor::writer::terminology::writer_play_labels;
-use semio_framework::kernel::Effect;
-use semio_framework_plugin::app::InteractionView;
+use semio_framework::{kernel::Effect, InteractiveJobClassification, RetainedToolWireInput, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
+use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Dialect,
-    DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
+    engagement_token_matches, strip_engagement_prefix, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec,
+    ContextMenuRequest, ContextMenuTextContext, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::sync::Arc;
 use store::ArtifactPack;
 use store::EngineHandles;
 
@@ -50,12 +52,9 @@ pub fn writer_action(action: &str, args: Option<semio_framework_plugin::UiValue>
     ActionFactory::new(WRITER_PLAY_APP_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -68,27 +67,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -98,13 +90,10 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
-
 
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
@@ -167,11 +156,15 @@ pub async fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterP
 /// gesture builds this effect instead of an `Emit::mutations([...])` — mirrors `📐️cad`'s identical
 /// `reset_document_effect` (`📓️wave3-reports/cad-report.md`). The spr is a fresh, edit-free op-log
 /// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
-pub async fn reset_document_effect(scene: &WriterSnapshot) -> Effect {
+fn reset_document_effect_now(scene: &WriterSnapshot) -> Effect {
     let pack = <WriterSnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&scene.schema, &scene.id, scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("writer document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
+}
+
+pub async fn reset_document_effect(scene: &WriterSnapshot) -> Effect {
+    reset_document_effect_now(scene)
 }
 //#endregion 🔖️Io
 
@@ -200,6 +193,18 @@ async fn writer_ast_topology(document: &WriterSnapshot) -> DomainTopology {
 //#endregion 🔖️Interaction
 
 //#region 🔖️Commands
+mod record_tutorial {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[dsl(keyword = "record-tutorial")]
+    pub struct RecordTutorial {}
+
+    pub async fn handle(_payload: &RecordTutorial, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+        Ok(Emit::default())
+    }
+}
+
 semio_framework_plugin::app_commands! {
     /// 🎯️ `WriterPlayApp::Command` — the SOLE dispatch surface for writer's own behavior, assembled from
     /// the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`,
@@ -231,6 +236,7 @@ semio_framework_plugin::app_commands! {
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "setLocale" as "locale" => set_locale::SetLocale,
+        "recordTutorial" as "record-tutorial" => record_tutorial::RecordTutorial,
     }
 }
 //#endregion 🔖️Commands
@@ -289,6 +295,431 @@ async fn writer_context_menu_items(registry: &AppActionRegistry, text: Option<&C
 }
 //#endregion 🔖️ContextMenu
 
+//#region 🧵️InteractiveJobs
+const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
+    "textEdit",
+    "setText",
+    "setCamera",
+    "requestCompletions",
+    "lintDocument",
+    "setEditorSelection",
+    "toggleLineNumbers",
+    "setEditorSetting",
+    "engagementInput",
+    "setActiveExample",
+    "setSnapshot",
+    "setSnapshotJson",
+    "setFixtureJson",
+    "formatDocument",
+    "commitRename",
+    "engagementSubmit",
+    "setLocale",
+    "recordTutorial",
+];
+const WRITER_COMMAND_PAYLOAD_SCHEMA: &str = "writer.writer.tool-command.v1";
+const MAX_WRITER_COMMAND_RAW_BYTES: usize = 4_096;
+const MAX_WRITER_COMMAND_DECODED_ITEMS: usize = 4_096;
+const MAX_WRITER_COMMAND_TEXT_BYTES: usize = 4_096;
+const MAX_WRITER_LOCALE_BYTES: usize = 64;
+
+struct WriterCommandToolPayload {
+    command: WriterCommand,
+    snapshot: Arc<WriterSnapshot>,
+    text: Arc<str>,
+    config: Arc<WriterConfig>,
+    completion: Option<ArtifactToolCompletion<EditorApp<WriterPlayApp>>>,
+}
+
+struct WriterCommandToolJob {
+    command: Option<WriterCommand>,
+    snapshot: Option<Arc<WriterSnapshot>>,
+    text: Option<Arc<str>>,
+    config: Option<Arc<WriterConfig>>,
+    completion: Option<ArtifactToolCompletion<EditorApp<WriterPlayApp>>>,
+    raw_input: Option<RetainedToolWireInput>,
+    raw_bytes: Vec<u8>,
+    raw_page_cursor: usize,
+    raw_scan_cursor: usize,
+    raw_validated: bool,
+    text_admitted: bool,
+    completed: bool,
+    closing: bool,
+}
+
+impl WriterCommandToolJob {
+    fn checkpoint(&self, context: &mut StepContext<'_>) -> StepOutcome {
+        let progress = self.raw_bytes.len().saturating_add(self.raw_scan_cursor).saturating_add(usize::from(self.raw_validated)).saturating_add(usize::from(self.text_admitted)) as u64;
+        let state = context.payload_from_bytes(JobPayloadStream::CheckpointState, &progress.to_le_bytes()).unwrap_or_else(|rejected| {
+            drop(rejected.into_source());
+            RetainedJobPayload::empty(JobPayloadStream::CheckpointState)
+        });
+        StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: progress })
+    }
+
+    fn admit_text(&mut self) -> bool {
+        let Some(command) = self.command.as_ref() else { return false };
+        let Some(config) = self.config.as_ref() else { return false };
+        if matches!(command, WriterCommand::SetLocale(payload) if payload.value.len() > MAX_WRITER_LOCALE_BYTES) {
+            return false;
+        }
+        let requires_text = match command {
+            WriterCommand::FormatDocument(_) | WriterCommand::CommitRename(_) => true,
+            WriterCommand::EngagementSubmit(payload) => {
+                let value = payload.value.as_deref().unwrap_or(&config.engagement_input);
+                engagement_token_matches(value.trim(), "format")
+            }
+            _ => false,
+        };
+        if requires_text && self.text.as_ref().is_none_or(|text| text.len() > MAX_WRITER_COMMAND_TEXT_BYTES) {
+            return false;
+        }
+        self.text_admitted = true;
+        true
+    }
+
+    fn emit(&mut self) -> Result<Emit<WriterMutation, WriterConfigMutation>, &'static str> {
+        let command = self.command.take().ok_or("writer command job lost its command owner")?;
+        let config = self.config.as_ref().ok_or("writer command job lost its config owner")?;
+        let snapshot = self.snapshot.as_ref().ok_or("writer command job lost its snapshot owner")?;
+        let text = self.text.as_ref().ok_or("writer command job lost its text owner")?;
+        Ok(match command {
+            WriterCommand::TextEdit(payload) => Emit::amend(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: payload.text })], "writer-text-edit"),
+            WriterCommand::SetText(payload) => Emit::mutations(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: payload.text })]),
+            WriterCommand::SetCamera(payload) => Emit::config(vec![WriterConfigMutation::SetCamera { camera: payload.camera }]),
+            WriterCommand::RequestCompletions(_) => Emit::config(vec![WriterConfigMutation::SetRevision { value: config.revision + 1 }]),
+            WriterCommand::LintDocument(_) => Emit::config(vec![WriterConfigMutation::SetLintSignal { value: config.lint_signal + 1 }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]),
+            WriterCommand::SetEditorSelection(payload) => Emit::config(vec![
+                WriterConfigMutation::SetEditorSelection { selection: Some(crate::editor::writer::config::WriterEditorSelection { start: payload.start, end: payload.end }) },
+                WriterConfigMutation::SetRevision { value: config.revision + 1 },
+            ]),
+            WriterCommand::ToggleLineNumbers(_) => {
+                let mut settings = config.editor_settings.clone();
+                settings.show_line_numbers = !settings.show_line_numbers;
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::SetFontPx(payload) => {
+                let mut settings = config.editor_settings.clone();
+                settings.font_px = payload.value;
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::SetLineHeight(payload) => {
+                let mut settings = config.editor_settings.clone();
+                settings.line_height = payload.value;
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::SetTabSize(payload) => {
+                let mut settings = config.editor_settings.clone();
+                settings.tab_size = payload.value.max(1);
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::EngagementInput(payload) if payload.value != config.engagement_input => {
+                Emit::config(vec![WriterConfigMutation::SetEngagementInput { value: payload.value }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::EngagementInput(_) => Emit::default(),
+            WriterCommand::SetActiveExample(payload) => {
+                let document = match payload.example_id.as_str() {
+                    "jack" => crate::artifacts::writer::dsl::jack_example_document(),
+                    "dag.jack" => crate::artifacts::writer::dsl::dag_jack_example_document(),
+                    _ => crate::artifacts::writer::schema::empty_writer_snapshot(),
+                };
+                Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }
+            }
+            WriterCommand::SetSnapshot(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::SetSnapshotJson(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::SetFixtureJson(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::FormatDocument(_) => {
+                let formatted = crate::artifacts::writer::schema::format_writer_text(text, &snapshot.language_id);
+                let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 }]);
+                if formatted != text.as_ref() {
+                    emit.artifact_mutations = vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: formatted })];
+                }
+                emit
+            }
+            WriterCommand::CommitRename(payload) => {
+                use crate::artifacts::writer::schema::{apply_jack_rename, jack_symbol_at_offset, JackSymbolKind};
+                let selection = config.editor_selection.clone().unwrap_or(crate::editor::writer::config::WriterEditorSelection { start: 0, end: 0 });
+                if selection.start == selection.end {
+                    if let Some(symbol) = jack_symbol_at_offset(text, selection.start) {
+                        if symbol.kind == JackSymbolKind::Variable {
+                            let renamed = apply_jack_rename(text, &symbol.occurrences, &payload.text);
+                            return Ok(Emit::mutations(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: renamed })]));
+                        }
+                    }
+                }
+                if selection.start <= selection.end && selection.end <= text.len() {
+                    let mut updated = text.to_string();
+                    updated.replace_range(selection.start..selection.end, &payload.text);
+                    Emit::mutations(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: updated })])
+                } else {
+                    Emit::default()
+                }
+            }
+            WriterCommand::EngagementSubmit(payload) => {
+                let value = payload.value.unwrap_or_else(|| config.engagement_input.clone());
+                let trimmed = value.trim();
+                let mut config_mutations = vec![WriterConfigMutation::SetEngagementInput { value: String::new() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }];
+                let mut artifact_mutations = Vec::new();
+                if engagement_token_matches(trimmed, "format") {
+                    config_mutations.push(WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 });
+                    let formatted = crate::artifacts::writer::schema::format_writer_text(text, &snapshot.language_id);
+                    if formatted != text.as_ref() {
+                        artifact_mutations.push(WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: formatted }));
+                    }
+                } else if engagement_token_matches(trimmed, "lint") {
+                    config_mutations.push(WriterConfigMutation::SetLintSignal { value: config.lint_signal + 1 });
+                } else if engagement_token_matches(trimmed, "line numbers") || engagement_token_matches(trimmed, "numbers") || engagement_token_matches(trimmed, "gutter") {
+                    let mut settings = config.editor_settings.clone();
+                    settings.show_line_numbers = !settings.show_line_numbers;
+                    config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
+                } else if let Some(rest) = strip_engagement_prefix(trimmed, "font size").or_else(|| strip_engagement_prefix(trimmed, "font")) {
+                    if let Ok(px) = rest.parse::<u32>() {
+                        let mut settings = config.editor_settings.clone();
+                        settings.font_px = px;
+                        config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
+                    }
+                } else if let Some(rest) = strip_engagement_prefix(trimmed, "tab size").or_else(|| strip_engagement_prefix(trimmed, "tab")) {
+                    if let Ok(size) = rest.parse::<u32>() {
+                        let mut settings = config.editor_settings.clone();
+                        settings.tab_size = size.max(1);
+                        config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
+                    }
+                }
+                Emit { artifact_mutations, config_mutations, ..Default::default() }
+            }
+            WriterCommand::SetLocale(payload) => Emit::config(vec![WriterConfigMutation::SetLocale { value: payload.value }]),
+            WriterCommand::RecordTutorial(_) => Emit::default(),
+            _ => return Err("writer command job received an unregistered command"),
+        })
+    }
+
+    fn fault() -> StepOutcome {
+        StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) })
+    }
+}
+
+impl InteractiveJob for WriterCommandToolJob {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if context.should_yield() || context.fuel_remaining() == 0 {
+            return StepOutcome::Yield;
+        }
+        context.set_stage(if self.raw_validated { "writer-command-reduce" } else { "writer-command-retained-wire-decode" });
+        if !self.raw_validated {
+            let Some(input) = self.raw_input.as_ref() else { return Self::fault() };
+            if let Some(page) = input.page(self.raw_page_cursor) {
+                if self.raw_bytes.len().checked_add(page.len()).is_none_or(|bytes| bytes > MAX_WRITER_COMMAND_RAW_BYTES) {
+                    return Self::fault();
+                }
+                self.raw_bytes.extend_from_slice(page);
+                self.raw_page_cursor += 1;
+                context.consume_fuel(1);
+                return self.checkpoint(context);
+            }
+            if self.raw_scan_cursor < self.raw_bytes.len() {
+                self.raw_scan_cursor += 1;
+                context.consume_fuel(1);
+                return self.checkpoint(context);
+            }
+            let decoded = match <WriterCommand as protocol::OpBinary>::decode_op(&self.raw_bytes) {
+                Ok(command) => command,
+                Err(_) => return Self::fault(),
+            };
+            if self.command.as_ref() != Some(&decoded) {
+                return Self::fault();
+            }
+            self.raw_validated = true;
+            context.consume_fuel(1);
+            return self.checkpoint(context);
+        }
+        if !self.text_admitted {
+            if !self.admit_text() {
+                return Self::fault();
+            }
+            context.consume_fuel(1);
+            return self.checkpoint(context);
+        }
+        if !self.completed {
+            let Some(completion) = self.completion.clone() else { return Self::fault() };
+            if !completion.has_mounted_consumer() {
+                return Self::fault();
+            }
+            let emit = match self.emit() {
+                Ok(emit) => emit,
+                Err(_) => return Self::fault(),
+            };
+            if completion.complete(Ok(emit), EphemeralEmit::default()).is_err() {
+                return Self::fault();
+            }
+            self.completed = true;
+            context.consume_fuel(1);
+        }
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(input) = self.raw_input.as_mut() {
+            input.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if !self.closing {
+            return InteractiveJobCloseStep::Blocked;
+        }
+        if !self.raw_bytes.is_empty() {
+            if maximum_bytes == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let released_bytes = self.raw_bytes.len().min(maximum_bytes);
+            self.raw_bytes.truncate(self.raw_bytes.len() - released_bytes);
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
+        }
+        if self.raw_bytes.capacity() != 0 {
+            let released_bytes = self.raw_bytes.capacity();
+            if maximum_items == 0 || maximum_bytes < released_bytes {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.raw_bytes = Vec::new();
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+        }
+        if let Some(input) = self.raw_input.as_mut() {
+            let step = input.close_step(maximum_items.min(1), maximum_bytes);
+            if input.terminal_is_empty() {
+                self.raw_input = None;
+            }
+            return step;
+        }
+        if self.command.is_some() {
+            if maximum_items == 0 || maximum_bytes < MAX_WRITER_COMMAND_RAW_BYTES {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.command = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: MAX_WRITER_COMMAND_RAW_BYTES };
+        }
+        if self.text.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.text = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.snapshot.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.snapshot = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.config.is_some() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.config = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(completion) = self.completion.as_ref() {
+            if maximum_items == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if !completion.has_mounted_consumer() {
+                return InteractiveJobCloseStep::Blocked;
+            }
+            self.completion = None;
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.command.is_none() && self.snapshot.is_none() && self.text.is_none() && self.config.is_none() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.raw_bytes.capacity() == 0
+    }
+}
+
+struct WriterCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl WriterCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: WRITER_COMMAND_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for WriterCommandJobFactory {
+    type Payload = WriterCommandToolPayload;
+    type Job = WriterCommandToolJob;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        WRITER_COMMAND_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        ToolExecutionContract::resumable(MAX_WRITER_COMMAND_RAW_BYTES, MAX_WRITER_COMMAND_DECODED_ITEMS, 1, 64, 2_000, 1, 1)
+    }
+
+    fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(WriterCommandToolJob {
+            command: Some(payload.command),
+            snapshot: Some(payload.snapshot),
+            text: Some(payload.text),
+            config: Some(payload.config),
+            completion: payload.completion,
+            raw_input: None,
+            raw_bytes: Vec::new(),
+            raw_page_cursor: 0,
+            raw_scan_cursor: 0,
+            raw_validated: true,
+            text_admitted: false,
+            completed: false,
+            closing: false,
+        })
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        operation: Operation,
+        payload: Self::Payload,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+        if checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("writer command retained ingress rejects unvalidated checkpoints"), input, checkpoint));
+        }
+        let declared_bytes = input.declared_bytes();
+        if declared_bytes > MAX_WRITER_COMMAND_RAW_BYTES {
+            return Err((ToolJobFactoryError::new("writer command retained ingress exceeds its admitted wire cap"), input, None));
+        }
+        let mut job = match self.create_job(operation, payload) {
+            Ok(job) => job,
+            Err(error) => return Err((error, input, None)),
+        };
+        if job.raw_bytes.try_reserve_exact(declared_bytes).is_err() {
+            return Err((ToolJobFactoryError::new("writer command retained decoder capacity was not admitted"), input, None));
+        }
+        job.raw_input = Some(input);
+        job.raw_validated = false;
+        Ok(job)
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
+    type Owner = EditorApp<WriterPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = WRITER_COMMAND_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
+}
+//#endregion 🧵️InteractiveJobs
+
 //#region 🔖️WriterPlayApp
 /// 🧪️ B1: unit struct — every former `WriterPlayRuntime` field now lives in [`WriterConfig`], written
 /// through [`WriterConfigMutation`]s.
@@ -311,6 +742,35 @@ impl ArtifactEditor for WriterPlayApp {
 
     const DIALECT: Dialect = crate::artifacts::writer::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<WriterPlayApp>,
+        owner_file: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.writer.writer@1/*#editor",
+        document_schema: "writer.document",
+        factory: "BoundedFirstStepCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(4_096, 4_096, 1, 64, 2_000),
+        tools: [
+            "textEdit",
+            "setText",
+            "setCamera",
+            "requestCompletions",
+            "lintDocument",
+            "setEditorSelection",
+            "toggleLineNumbers",
+            "setEditorSetting",
+            "engagementInput",
+            "setActiveExample",
+            "setSnapshot",
+            "setSnapshotJson",
+            "setFixtureJson",
+            "formatDocument",
+            "commitRename",
+            "engagementSubmit",
+            "setLocale",
+            "recordTutorial"
+        ]
+    }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::artifacts::writer::spr::writer_envelope_decode_owner_bundle())
@@ -355,6 +815,23 @@ impl ArtifactEditor for WriterPlayApp {
     /// `app_commands!`'s generated `command_id()`.
     async fn command_id(command: &WriterCommand) -> &'static str {
         command.command_id()
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(WriterCommandJobFactory::new(&controller_id))
+    }
+
+    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !WRITER_COMMAND_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::from("writer-command-tool-mismatch"));
+        }
+        let text = writer_text_owner(&request.snapshot);
+        let payload = WriterCommandToolPayload { command: *request.command, snapshot: request.snapshot, text, config: request.config, completion: Some(request.completion) };
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     async fn handle(
@@ -498,6 +975,24 @@ pub async fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(writer_hidden_view("toggleLineNumbers", LocalizedLabel::native("Toggle Line Numbers", "Zeilennummern umschalten")))
             .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen")))
             .action_with(writer_hidden_view("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe")))
+            .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setText", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("requestCompletions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("lintDocument", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setEditorSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleLineNumbers", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setEditorSetting", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSnapshotJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFixtureJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
+            .action_interactive_job("commitRename", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+            .action_interactive_job("recordTutorial", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms: example choice + the dev JSON setters.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
@@ -633,6 +1128,141 @@ mod tests {
         panic!("Writer fixture envelope retirement did not reach terminal")
     }
 
+    #[test]
+    fn interactive_job_fixture_matches_the_exact_factory_join() {
+        let fixture: Value = serde_json::from_str(include_str!("📚️examples/🎬️demo-session/🧵️interactive-job-migration.json")).expect("language-neutral Writer migration fixture");
+        assert_eq!(fixture["payloadSchema"], WRITER_COMMAND_PAYLOAD_SCHEMA);
+        assert_eq!(fixture["maxRawWireBytes"], MAX_WRITER_COMMAND_RAW_BYTES);
+        assert_eq!(fixture["maxCurrentTextBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
+        assert_eq!(fixture["maxWorkUnitsPerStep"], 1);
+        let actions = fixture["migrated"].as_array().expect("migrated action rows").iter().map(|row| row["action"].as_str().expect("action id")).collect::<Vec<_>>();
+        assert_eq!(actions, WRITER_COMMAND_TOOL_IDS);
+        assert_eq!(fixture["textAdmissionCases"][0]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES);
+        assert_eq!(fixture["textAdmissionCases"][1]["textBytes"], MAX_WRITER_COMMAND_TEXT_BYTES + 1);
+        assert_eq!(fixture["textAdmissionCases"][1]["fuelDelta"], 0);
+        assert_eq!(fixture["textAdmissionCases"][1]["cursorDelta"], 0);
+        assert_eq!(fixture["textAdmissionCases"][1]["ownersPreserved"], true);
+        assert_eq!(fixture["localeAdmissionCases"][0]["localeBytes"], MAX_WRITER_LOCALE_BYTES);
+        assert_eq!(fixture["localeAdmissionCases"][1]["localeBytes"], MAX_WRITER_LOCALE_BYTES + 1);
+        assert_eq!(fixture["localeAdmissionCases"][1]["fuelDelta"], 0);
+        assert_eq!(fixture["localeAdmissionCases"][1]["cursorDelta"], 0);
+        assert_eq!(fixture["localeAdmissionCases"][1]["ownersPreserved"], true);
+        assert_eq!(fixture["requiredLifecycle"].as_array().map(Vec::len), Some(10));
+    }
+
+    #[test]
+    fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
+        let snapshot_json = serde_json::to_string(&crate::artifacts::writer::schema::empty_writer_snapshot()).expect("bounded snapshot fixture");
+        let commands = vec![
+            WriterCommand::TextEdit(text_edit::TextEdit { text: "ä".into() }),
+            WriterCommand::SetText(set_text::SetText { text: "bounded".into() }),
+            WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::writer::WriterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }),
+            WriterCommand::RequestCompletions(request_completions::RequestCompletions {}),
+            WriterCommand::LintDocument(lint_document::LintDocument {}),
+            WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 1, end: 2 }),
+            WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {}),
+            WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 14 }),
+            WriterCommand::SetLineHeight(set_line_height::SetLineHeight { value: 20 }),
+            WriterCommand::SetTabSize(set_tab_size::SetTabSize { value: 4 }),
+            WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "Format".into() }),
+            WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
+            WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: snapshot_json.clone() }),
+            WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: snapshot_json.clone() }),
+            WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: snapshot_json }),
+            WriterCommand::FormatDocument(format_document::FormatDocument {}),
+            WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
+            WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("format".into()) }),
+            WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            WriterCommand::RecordTutorial(record_tutorial::RecordTutorial {}),
+        ];
+        for command in commands {
+            let wire = <WriterCommand as protocol::OpBinary>::encode_op(&command).expect("owned protocol wire");
+            assert!(wire.len() <= MAX_WRITER_COMMAND_RAW_BYTES);
+            assert_eq!(<WriterCommand as protocol::OpBinary>::decode_op(&wire).expect("owned retained decoder"), command);
+            let serde_wire = serde_json::to_vec(&command).expect("third-party serde wire");
+            assert_eq!(serde_json::from_slice::<WriterCommand>(&serde_wire).expect("third-party serde decoder"), command);
+        }
+    }
+
+    fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandToolJob {
+        WriterCommandToolJob {
+            command: Some(command),
+            snapshot: Some(Arc::new(crate::artifacts::writer::schema::empty_writer_snapshot())),
+            text: Some(text),
+            config: Some(Arc::new(WriterConfig::default())),
+            completion: None,
+            raw_input: None,
+            raw_bytes: vec![1, 2, 3],
+            raw_page_cursor: 2,
+            raw_scan_cursor: 1,
+            raw_validated: true,
+            text_admitted: false,
+            completed: false,
+            closing: false,
+        }
+    }
+
+    #[test]
+    fn bounded_text_admission_preserves_rejected_job_state_and_owners() {
+        for command in [
+            WriterCommand::FormatDocument(format_document::FormatDocument {}),
+            WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
+            WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("format".into()) }),
+        ] {
+            let maximum: Arc<str> = Arc::from("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES));
+            let mut accepted = writer_command_job(command, maximum.clone());
+            let accepted_cursor = (accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone());
+            assert!(accepted.admit_text());
+            assert!(accepted.text_admitted);
+            assert_eq!((accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone()), accepted_cursor);
+            assert_eq!(Arc::strong_count(&maximum), 2);
+
+            let over: Arc<str> = Arc::from("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1));
+            let mut rejected = writer_command_job(accepted.command.take().expect("accepted command owner"), over.clone());
+            let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
+            let rejected_command = rejected.command.clone();
+            let rejected_snapshot = rejected.snapshot.clone();
+            let rejected_config = rejected.config.clone();
+            assert!(!rejected.admit_text());
+            assert!(!rejected.text_admitted);
+            assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
+            assert_eq!(rejected.command, rejected_command);
+            assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
+            assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+            assert_eq!(Arc::strong_count(&over), 2);
+        }
+
+        let over: Arc<str> = Arc::from("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1));
+        let mut lint = writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("lint".into()) }), over);
+        assert!(lint.admit_text());
+    }
+
+    #[test]
+    fn bounded_locale_admission_preserves_maximum_plus_one_job_state_and_owners() {
+        let current: Arc<str> = Arc::from("");
+        let mut accepted = writer_command_job(WriterCommand::SetLocale(set_locale::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES) }), current.clone());
+        let accepted_cursor = (accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone());
+        assert!(accepted.admit_text());
+        assert!(accepted.text_admitted);
+        assert_eq!((accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone()), accepted_cursor);
+        assert_eq!(Arc::strong_count(&current), 2);
+        let accepted_emit = accepted.emit().expect("bounded locale emission");
+        assert_eq!(accepted_emit.config_mutations, vec![WriterConfigMutation::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES) }]);
+
+        let mut rejected = writer_command_job(WriterCommand::SetLocale(set_locale::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES + 1) }), current.clone());
+        let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
+        let rejected_command = rejected.command.clone();
+        let rejected_snapshot = rejected.snapshot.clone();
+        let rejected_config = rejected.config.clone();
+        assert!(!rejected.admit_text());
+        assert!(!rejected.text_admitted);
+        assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
+        assert_eq!(rejected.command, rejected_command);
+        assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
+        assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
+        assert_eq!(Arc::strong_count(&current), 3);
+    }
+
     fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
         let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Writer live envelope ingress credits");
@@ -700,7 +1330,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
         let commands = every_command();
-        assert_eq!(commands.len(), 20, "every WriterCommand row must be covered by every_command()");
+        assert_eq!(commands.len(), 21, "every WriterCommand row must be covered by every_command()");
         let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
         keywords.sort();
         keywords.dedup();
@@ -741,6 +1371,7 @@ mod tests {
             ("engagement-input", WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".into() })),
             ("engagement-submit", WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".into()) })),
             ("locale", WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })),
+            ("record-tutorial", WriterCommand::RecordTutorial(record_tutorial::RecordTutorial {})),
         ];
         for (expected_keyword, command) in expectations {
             let printed = protocol::OpText::print_op(&command);
@@ -776,6 +1407,7 @@ mod tests {
             WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() }),
             WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }),
             WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
+            WriterCommand::RecordTutorial(record_tutorial::RecordTutorial {}),
         ]
     }
 

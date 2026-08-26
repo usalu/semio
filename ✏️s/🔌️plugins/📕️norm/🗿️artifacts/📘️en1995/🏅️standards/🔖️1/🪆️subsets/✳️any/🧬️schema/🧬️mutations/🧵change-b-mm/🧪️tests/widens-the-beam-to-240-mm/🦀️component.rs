@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// modulus is recomputed — en1995 stores b, h, A and W as four independent declared inputs, and this fixture
 /// is the pin on that.
 #[semio_framework_async_macros::async_test]
-async fn widens_the_beam_to_240_mm() {
+fn widens_the_beam_to_240_mm() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-b-mm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-b-mm/widens-the-beam-to-240-mm: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.b_mm, 240.0, "change-b-mm/widens-the-beam-to-240-mm: b_mm must read 240.0 mm once the change lands");
@@ -44,7 +44,7 @@ async fn widens_the_beam_to_240_mm() {
 /// ↩️ `change-b-mm`'s inverse reads the OLD 200.0 mm out of BASE, so replaying it puts the 200.0 mm width back
 /// on `b_mm`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_200_mm_restores_before() {
+fn restoring_200_mm_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-b-mm applies");
@@ -62,7 +62,7 @@ async fn restoring_200_mm_restores_before() {
 /// a fixed point, so `{"ChangeBMm": {"newBMm": 240.0}}` — externally tagged is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ 240.0 mm is finite and differs from the committed 200.0 mm, so `change-b-mm` stays silent.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-b-mm/widens-the-beam-to-240-mm: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `bMm` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-b-mm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-b-mm/widens-the-beam-to-240-mm: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the beam width and nothing
 /// else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-b-mm diff decodes");
     assert_eq!(decoded.b_mm, Some(240.0), "change-b-mm/widens-the-beam-to-240-mm: the committed diff must carry bMm = 240.0 mm");
     assert!(decoded.a_mm2.is_none(), "change-b-mm/widens-the-beam-to-240-mm: change-b-mm writes bMm and must leave `a_mm2` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the width change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-b-mm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-b-mm/widens-the-beam-to-240-mm: the committed diff did not carry before to after");

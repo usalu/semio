@@ -33,7 +33,7 @@ pub struct JackFlatPosition {
 /// 📐️ Computes `flat-position` directly from `nodes`/`edges`/`root_node_id` — deterministic because
 /// both the remaining-node seed pick and each seed's BFS walk are always drawn from `BTreeMap`/
 /// `BTreeSet` id order, never from `edges`'/`nodes`' own fixture order.
-pub async fn compute_flat_position(snapshot: &JackSnapshot) -> JackFlatPosition {
+pub fn compute_flat_position(snapshot: &JackSnapshot) -> JackFlatPosition {
     let scene = crate::artifacts::jack::jack_working_scene(snapshot);
     if scene.nodes.is_empty() {
         return JackFlatPosition::default();
@@ -56,7 +56,7 @@ pub async fn compute_flat_position(snapshot: &JackSnapshot) -> JackFlatPosition 
     JackFlatPosition { positions }
 }
 
-async fn has_incoming_from_remaining(edges: &BTreeMap<String, &Edge>, node_id: &str, remaining: &BTreeSet<String>) -> bool {
+fn has_incoming_from_remaining(edges: &BTreeMap<String, &Edge>, node_id: &str, remaining: &BTreeSet<String>) -> bool {
     edges.values().any(|edge| {
         let Some(target_node) = port_node_id(&edge.target) else {
             return false;
@@ -68,7 +68,7 @@ async fn has_incoming_from_remaining(edges: &BTreeMap<String, &Edge>, node_id: &
     })
 }
 
-async fn extend_from_seed(edges: &BTreeMap<String, &Edge>, flat: &mut BTreeMap<String, (f64, f64)>, seed_id: String) {
+fn extend_from_seed(edges: &BTreeMap<String, &Edge>, flat: &mut BTreeMap<String, (f64, f64)>, seed_id: String) {
     if flat.contains_key(&seed_id) {
         return;
     }
@@ -106,7 +106,7 @@ mod tests {
     use crate::artifacts::jack::{Camera, Manifest, Port, PortDirection, PropertyBag};
 
     //#region 🧸️Fixtures
-    async fn mini_fixture() -> JackSnapshot {
+    fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),

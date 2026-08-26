@@ -771,7 +771,7 @@ interface events {
 /// ⚠️ Deviation from the design table's literal `resource surface`: same reasoning as
 /// `capabilities.wit`'s `capability-token` — `pure` and `host-async` are `world actor`'s only
 /// imports (B1 world-collapse) and neither of them is `ui`, so a `resource` here would have no
-/// host-callable methods. `surface-ref` (an `(instance, surface)` id pair) is the real
+/// host-callable methods. `surface-ref` (an `(instance, body-key)` id pair) is the real
 /// handle carried on every UI-facing effect/event; `surface` is declared as an empty marker
 /// resource purely so the design table's vocabulary has a nominal type, and is not referenced by
 /// any function signature in this wave.
@@ -780,7 +780,7 @@ interface ui {
 
   record surface-ref {
     instance: instance-id,
-    surface: u32,
+    surface: string,
   }
 
   resource surface;

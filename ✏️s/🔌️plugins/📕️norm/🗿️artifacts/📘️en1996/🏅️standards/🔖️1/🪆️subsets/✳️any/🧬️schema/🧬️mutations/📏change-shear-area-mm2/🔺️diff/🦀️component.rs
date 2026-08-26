@@ -5,7 +5,7 @@ use crate::artifacts::en1996::mutations::change_shear_area_mm2::mutation::Change
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeShearAreaMm2, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+pub fn diff(payload: &ChangeShearAreaMm2, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if !payload.new_shear_area_mm2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Shear area mm2 must be a finite number.", Vec::<String>::new());
     }

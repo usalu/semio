@@ -16,12 +16,12 @@ use crate::artifacts::en1990::En1990Snapshot;
 pub const EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️high-consequence-office/🖼️assets/🗣️high-consequence-office.dsl.semio");
 
 /// 📖️ Parses `.en1990` DSL text into a `Document`.
-pub async fn parse_dsl(text: &str) -> Result<En1990Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1990Snapshot, store::TextError> {
     <En1990Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.en1990` DSL text.
-pub async fn print_dsl(document: &En1990Snapshot) -> String {
+pub fn print_dsl(document: &En1990Snapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -31,19 +31,19 @@ mod tests {
     use crate::document::AnnexChoice;
 
     #[semio_framework_async_macros::async_test]
-    async fn document_dsl_round_trips() {
+    fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1990Snapshot::default());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn dsl_round_trip_agrees_with_print_parse_wrappers() {
+    fn dsl_round_trip_agrees_with_print_parse_wrappers() {
         let document = En1990Snapshot::default();
         let printed = print_dsl(&document);
         assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn high_consequence_office_example_fixture_parses_and_round_trips() {
+    fn high_consequence_office_example_fixture_parses_and_round_trips() {
         // 🌱️ `q_k` is a composed `s.stdio.semio.table` child slot (ticket
         // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — the printed DSL text only encodes
         // the content-addressed HANDLE, never the entries themselves (that's the whole point of

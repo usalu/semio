@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-height-m` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `height_m` from 12.0 to 18.75, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_height_m_applies_to_committed_after() {
+fn change_height_m_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-height-m applies to its committed before-snapshot");
     assert_eq!(applied.height_m, 18.75, "change-height-m/raises-height-m-to-18-75: height_m must read 18.75 after the change");
     assert_eq!(applied, expected_after(), "change-height-m/raises-height-m-to-18-75: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_height_m_applies_to_committed_after() {
 /// ↩️ `change-height-m` is its own inverse partner: the inverse step restores `height_m` to its pre-change
 /// 12.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_height_m_inverse_restores_before() {
+fn change_height_m_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-height-m applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_height_m_inverse_restores_before() {
 /// decode then encode is a fixed point, so `heightM` and `newHeightM` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_height_m_committed_json_is_canonical() {
+fn change_height_m_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-height-m snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-height-m snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_height_m_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-height-m` at 18.75 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_height_m_declared_outcome_holds() {
+fn change_height_m_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-height-m outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-height-m/raises-height-m-to-18-75: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_height_m_declared_outcome_holds() {
 /// assertion: it pins that only `heightM` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `multipleResistingSystems`.
 #[semio_framework_async_macros::async_test]
-async fn change_height_m_produces_committed_diff() {
+fn change_height_m_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().height_m, Some(18.75), "change-height-m/raises-height-m-to-18-75: the diff must set height_m to 18.75");
     assert!(outcome.diff().artifact.is_none(), "change-height-m/raises-height-m-to-18-75: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_height_m_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-height-m`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_height_m_committed_diff_is_canonical() {
+fn change_height_m_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-height-m committed diff decodes");
     assert_eq!(decoded.height_m, Some(18.75), "change-height-m/raises-height-m-to-18-75: the committed diff must carry height_m at 18.75");
     assert!(decoded.selected_check_index.is_none(), "change-height-m/raises-height-m-to-18-75: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_height_m_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 12.0 to 18.75 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_height_m_committed_diff_applies_to_after() {
+fn change_height_m_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-height-m committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-height-m committed diff applies to the before-snapshot");
     assert_eq!(produced.height_m, 18.75, "change-height-m/raises-height-m-to-18-75: the committed diff must leave height_m reading 18.75");

@@ -34,7 +34,7 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::mutations::{JsonPath, JsonPathSegment};
     use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{parse_json_text, write_json_text, JsonMember, JsonSnapshot, JsonValue};
-    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, JsonIJsonMutation, JsonIJsonRoot};
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, inverse_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, JsonIJsonMutation, JsonIJsonRoot};
     use semio_s_plugin_stdio_test_oracle::artifacts::json::standards::v_rfc8259::subsets::any::project_json_value;
 
     //#region 🔖️Input
@@ -152,7 +152,7 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = snapshot_of(&mutable_input(ctx)?)?;
         let mutation = mutation_from_spec(&ctx.doc_json()?)?;
-        let undo = protocol_inverse(&mutation, &base);
+        let undo = inverse_json_i_json_mutation(&mutation, &base);
         let mut snapshot = base;
         apply_json_i_json_mutation(&mut snapshot, &mutation);
         for step in &undo {
@@ -161,13 +161,6 @@ mod subject {
         let bytes = emit(&snapshot)?;
         let projection = project_json_value(&bytes)?;
         Ok(Outcome::with_raw(bytes, projection))
-    }
-
-    /// ↩️ `Mutation::inverse` reached without naming the `protocol` crate in this adapter's own
-    /// dependency list — the trait is re-exported through the subject crate's own public surface.
-    fn protocol_inverse(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
-        use semio_s_plugin_stdio::protocol::Mutation;
-        Mutation::inverse(mutation, base)
     }
 
     /// 🛡️ The same four RFC 7493 clauses the oracle checks, computed from the subject's own decoded

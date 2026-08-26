@@ -1,0 +1,3002 @@
+{
+  "limits": {
+    "operations": 4,
+    "pages": 4,
+    "items": 256,
+    "bytes": 65536,
+    "outputs": 4,
+    "events": 12,
+    "controls": 4,
+    "history": 256,
+    "depth": 12,
+    "deadlineMilliseconds": 8
+  },
+  "features": [
+    "addWidget",
+    "removeWidget",
+    "moveWidget",
+    "patchWidget",
+    "addSynapse",
+    "removeSynapse",
+    "moveSynapse",
+    "patchSynapse",
+    "setLayout",
+    "replaceDocument",
+    "undo",
+    "redo",
+    "checkpoint"
+  ],
+  "events": [
+    "progress",
+    "checkpoint",
+    "preview",
+    "pageReady",
+    "terminal"
+  ],
+  "controls": [
+    "poll",
+    "takePage",
+    "resumePage",
+    "retryPage",
+    "acknowledgePage",
+    "cancel",
+    "fault",
+    "rediscover",
+    "closeOperationStep",
+    "closeRetiredStep"
+  ],
+  "laws": [
+    "preflightBeforeTake",
+    "zero",
+    "maximum",
+    "maximumPlusOne",
+    "repeatedRejectedThenValid",
+    "wrongHandle",
+    "staleHandle",
+    "duplicateControl",
+    "abaGeneration",
+    "staleAuthority",
+    "lostHandleRediscovery",
+    "faultBeforePublish",
+    "cancelBeforePublish",
+    "ackAfterPublish",
+    "interruptedClose",
+    "terminalEmpty",
+    "malformed",
+    "panicFault",
+    "idempotentClose",
+    "cancelAroundTransfers",
+    "oneSemanticUnitPerGrant",
+    "persistentActionCursor",
+    "nonShiftingCollectionEdit",
+    "incrementalDocumentReplacement",
+    "schemaFixedAdmissionMetadata",
+    "schemaFixedSlotDiscovery",
+    "scalarDigestMetadata",
+    "redoRetirementRestoration",
+    "controlGrantFailClosed",
+    "splitPublication"
+  ],
+  "cursorBoundaries": [
+    "loadHistory",
+    "scanOne",
+    "pushOne",
+    "popOne",
+    "swapOne",
+    "transferSchema",
+    "transferCameraX",
+    "transferCameraY",
+    "transferCameraZoom",
+    "transferWidget",
+    "reverseWidgetPair",
+    "transferSynapse",
+    "reverseSynapsePair",
+    "transferLayoutRelation",
+    "retireRedoOwner",
+    "transferHistoryOwner",
+    "transferSurfaceOwner",
+    "publishVisibility",
+    "publishPage",
+    "rollbackVisibility",
+    "rollbackSurface",
+    "rollbackHistory",
+    "rollbackRedo",
+    "rollbackSemanticOwner"
+  ],
+  "publicationPhases": [
+    "transferHistoryOwner",
+    "transferSurfaceOwner",
+    "publishVisibility",
+    "publishPage"
+  ],
+  "hostileMutations": [
+    "wholeApplyAtPublish",
+    "hiddenCollectionScan",
+    "atomicVecInsert",
+    "atomicVecRemove",
+    "atomicReplaceDocument",
+    "wholeSerialization",
+    "recursiveAdmissionCensus",
+    "wholeFixtureDigest",
+    "slotIterator",
+    "combinedPublication",
+    "unrestoredRedoRetirement",
+    "partialGrantValidation"
+  ],
+  "cancelAroundTransfers": [
+    "afterLoadHistory",
+    "afterScanOne",
+    "afterPushOne",
+    "afterPopOne",
+    "afterSwapOne",
+    "afterSchema",
+    "afterCameraX",
+    "afterCameraY",
+    "afterCameraZoom",
+    "afterWidget",
+    "afterWidgetReverse",
+    "afterSynapse",
+    "afterSynapseReverse",
+    "afterLayoutRelation",
+    "afterRedoOwner",
+    "afterHistoryOwner",
+    "afterSurfaceOwner",
+    "afterVisibility",
+    "beforePage",
+    "afterRollbackVisibility",
+    "afterRollbackSurface",
+    "afterRollbackHistory",
+    "afterRollbackRedo",
+    "afterRollbackSemanticOwner"
+  ],
+  "grantRejections": {
+    "controls": [
+      "cancel",
+      "fault",
+      "panicFault",
+      "closeOperationStep",
+      "closeRetiredStep"
+    ],
+    "grants": [
+      "zeroFuel",
+      "interrupted",
+      "expiredDeadline",
+      "overWindowDeadline"
+    ],
+    "fingerprintUnchanged": true
+  },
+  "admissionMetadata": {
+    "kind": "schemaFixedScalar",
+    "recursiveWalk": false,
+    "fields": [
+      "topLevelItems",
+      "schemaBytes",
+      "widgetSlots",
+      "synapseSlots",
+      "layoutSlots",
+      "schemaDepth"
+    ]
+  },
+  "resourceFingerprint": [
+    "operations",
+    "pages",
+    "items",
+    "bytes",
+    "outputs",
+    "events",
+    "controls",
+    "activeOperations",
+    "leasedPages",
+    "undoOwners",
+    "redoOwners",
+    "retiredActionOwners",
+    "retiredSurfaceOwners",
+    "revision",
+    "parentRevision",
+    "documentGeneration",
+    "documentDigest",
+    "documentVersions",
+    "activeDocumentVersion",
+    "editOwner",
+    "documentRetained",
+    "closing"
+  ],
+  "malformed": {
+    "kind": "patchIdentityMismatch",
+    "sourceRetained": true,
+    "creditsUnchanged": true
+  },
+  "idempotentClose": {
+    "terminalResult": true,
+    "fingerprintUnchanged": true
+  },
+  "cardinalityVectors": [
+    {
+      "name": "empty",
+      "value": 0,
+      "accepted": true
+    },
+    {
+      "name": "single",
+      "value": 1,
+      "accepted": true
+    },
+    {
+      "name": "operationWindow",
+      "value": 3,
+      "accepted": true
+    },
+    {
+      "name": "depthMaximum",
+      "value": 16,
+      "accepted": true
+    },
+    {
+      "name": "depthMaximumPlusOne",
+      "value": 17,
+      "accepted": false
+    },
+    {
+      "name": "itemMaximum",
+      "value": 256,
+      "accepted": true
+    },
+    {
+      "name": "itemMaximumPlusOne",
+      "value": 257,
+      "accepted": false
+    }
+  ],
+  "authorityVectors": [
+    {
+      "name": "wrongHandle",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint"
+        },
+        "call": {
+          "method": "poll",
+          "handle": {
+            "operation": 999,
+            "slot": 0,
+            "generation": 1
+          },
+          "grant": "valid"
+        },
+        "expectedAdmittedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "wrongHandle",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    },
+    {
+      "name": "staleHandle",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint"
+        },
+        "call": {
+          "method": "poll",
+          "handle": {
+            "operation": 1,
+            "slot": 0,
+            "generation": 0
+          },
+          "grant": "valid"
+        },
+        "expectedAdmittedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "staleHandle",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    },
+    {
+      "name": "abaGeneration",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint"
+        },
+        "call": {
+          "method": "poll",
+          "handle": {
+            "operation": 1,
+            "slot": 0,
+            "generation": 2
+          },
+          "priorGeneration": 1,
+          "grant": "valid"
+        },
+        "expectedAdmittedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "staleHandle",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    },
+    {
+      "name": "staleAuthority",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint",
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 0,
+            "parentRevision": 0
+          }
+        },
+        "call": {
+          "method": "poll",
+          "polls": 3,
+          "grant": "valid"
+        },
+        "expectedAdmittedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "staleAuthority",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    }
+  ],
+  "malformedVectors": [
+    {
+      "name": "identityMismatch",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "patchWidget",
+          "id": {
+            "present": true,
+            "value": "α"
+          },
+          "widget": {
+            "present": true,
+            "value": {
+              "kind": "inputNote",
+              "id": "different",
+              "text": "retained"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        }
+      },
+      "expected": {
+        "result": "invalidMutation",
+        "sources": {
+          "idRetained": true,
+          "widgetRetained": true
+        },
+        "atResultState": "base",
+        "expectedHandle": null
+      }
+    },
+    {
+      "name": "omittedWidget",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "patchWidget",
+          "id": {
+            "present": true,
+            "value": "α"
+          },
+          "widget": {
+            "present": false
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        }
+      },
+      "expected": {
+        "result": "sourceExhausted",
+        "sources": {
+          "idRetained": true,
+          "widgetRetained": false
+        },
+        "atResultState": "base",
+        "expectedHandle": null
+      }
+    },
+    {
+      "name": "omittedId",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "patchWidget",
+          "id": {
+            "present": false
+          },
+          "widget": {
+            "present": true,
+            "value": {
+              "kind": "inputNote",
+              "id": "α",
+              "text": "retained"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        }
+      },
+      "expected": {
+        "result": "sourceExhausted",
+        "sources": {
+          "idRetained": false,
+          "widgetRetained": true
+        },
+        "atResultState": "base",
+        "expectedHandle": null
+      }
+    }
+  ],
+  "grantVectors": [
+    {
+      "name": "valid",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint",
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "call": {
+          "method": "poll",
+          "grant": {
+            "items": 1,
+            "bytes": 256,
+            "outputs": 1,
+            "events": 1,
+            "controls": 1,
+            "fuel": 1,
+            "nowMilliseconds": 1,
+            "deadlineMilliseconds": 8,
+            "interrupted": false
+          }
+        },
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "progress",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    },
+    {
+      "name": "zeroFuel",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint",
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "call": {
+          "method": "poll",
+          "grant": {
+            "items": 1,
+            "bytes": 256,
+            "outputs": 1,
+            "events": 1,
+            "controls": 1,
+            "fuel": 0,
+            "nowMilliseconds": 1,
+            "deadlineMilliseconds": 8,
+            "interrupted": false
+          }
+        },
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "insufficientGrant",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    },
+    {
+      "name": "expiredDeadline",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint",
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "call": {
+          "method": "poll",
+          "grant": {
+            "items": 1,
+            "bytes": 256,
+            "outputs": 1,
+            "events": 1,
+            "controls": 1,
+            "fuel": 1,
+            "nowMilliseconds": 8,
+            "deadlineMilliseconds": 8,
+            "interrupted": false
+          }
+        },
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "insufficientGrant",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    },
+    {
+      "name": "overWindowDeadline",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint",
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "call": {
+          "method": "poll",
+          "grant": {
+            "items": 1,
+            "bytes": 256,
+            "outputs": 1,
+            "events": 1,
+            "controls": 1,
+            "fuel": 1,
+            "nowMilliseconds": 1,
+            "deadlineMilliseconds": 10,
+            "interrupted": false
+          }
+        },
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "insufficientGrant",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    },
+    {
+      "name": "interrupted",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "checkpoint",
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "call": {
+          "method": "poll",
+          "grant": {
+            "items": 1,
+            "bytes": 256,
+            "outputs": 1,
+            "events": 1,
+            "controls": 1,
+            "fuel": 1,
+            "nowMilliseconds": 1,
+            "deadlineMilliseconds": 8,
+            "interrupted": true
+          }
+        },
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "expected": {
+        "result": "insufficientGrant",
+        "atResultState": "admittedZeroBytes",
+        "afterCloseState": "base"
+      }
+    }
+  ],
+  "transferControlLedger": [
+    {
+      "boundary": "afterLoadHistory",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "undoOwners": 1
+        },
+        "operation": {
+          "feature": "undo",
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "historyLoaded": true
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "undoOne"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "undoOne"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterScanOne",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Scan",
+          "scan": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterPushOne",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "addWidget",
+          "input": {
+            "index": 1,
+            "widget": {
+              "kind": "inputNote",
+              "id": "new",
+              "text": "owner"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Shift",
+          "kind": "InsertWidget",
+          "mutated": true
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterPopOne",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "removeWidget",
+          "input": {
+            "id": "γ"
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "TransferHistory",
+          "kind": "RemoveWidget",
+          "mutated": true
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterSwapOne",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "moveWidget",
+          "input": {
+            "id": "α",
+            "index": 2
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Shift",
+          "kind": "MoveWidget",
+          "mutated": true,
+          "current": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterSchema",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReplaceCameraX"
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterCameraX",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReplaceCameraY"
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterCameraY",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReplaceCameraZoom"
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterCameraZoom",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReplaceWidgets"
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterWidget",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReplaceWidgets",
+          "candidateWidgets": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterWidgetReverse",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReverseWidgets",
+          "scan": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterSynapse",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReplaceSynapses",
+          "candidateSynapses": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterSynapseReverse",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReverseSynapses",
+          "scan": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterLayoutRelation",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "replaceDocument",
+          "input": {
+            "document": {
+              "fixture": "lifecycle",
+              "path": "protocolDocuments.replacementBoundary"
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "ReplaceLayout",
+          "candidateLayout": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterRedoOwner",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "redoOwners": 3
+        },
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "RetireRedo",
+          "redoRetired": 1
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "redoThree"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "redoThree"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterHistoryOwner",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "TransferSurface",
+          "historyTransferred": true
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterSurfaceOwner",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "surface": {
+            "surface": 101,
+            "host": 202,
+            "generation": 303
+          }
+        },
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "PublishVisibility",
+          "surfaceTransferred": true
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterVisibility",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "PublishPage",
+          "visibilityPublished": true
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "beforePage",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {},
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "PublishPage",
+          "visibilityPublished": true
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "finalState": "base"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterRollbackVisibility",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "redoOwners": 3,
+          "surface": {
+            "surface": 101,
+            "host": 202,
+            "generation": 303
+          }
+        },
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Rollback",
+          "rollbackSteps": 1,
+          "historyTransferred": true,
+          "surfaceTransferred": true,
+          "visibilityPublished": false,
+          "redoRetired": 3,
+          "ownsEdit": true,
+          "mutated": true,
+          "surfaceOwner": {
+            "location": "retired",
+            "surface": 101,
+            "host": 202,
+            "generation": 303,
+            "document": 1,
+            "widgets": 3,
+            "synapses": 3,
+            "previews": 3,
+            "expanded": 3,
+            "layout": 3,
+            "history": 1,
+            "edit": 1,
+            "conflict": 1,
+            "control": 1,
+            "output": 1
+          }
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Cancelled",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackVisibility"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Faulted",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackVisibility"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterRollbackSurface",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "redoOwners": 3,
+          "surface": {
+            "surface": 101,
+            "host": 202,
+            "generation": 303
+          }
+        },
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Rollback",
+          "rollbackSteps": 2,
+          "historyTransferred": true,
+          "surfaceTransferred": false,
+          "visibilityPublished": false,
+          "redoRetired": 3,
+          "ownsEdit": true,
+          "mutated": true,
+          "surfaceOwner": {
+            "location": "document",
+            "surface": 101,
+            "host": 202,
+            "generation": 303,
+            "document": 1,
+            "widgets": 3,
+            "synapses": 3,
+            "previews": 3,
+            "expanded": 3,
+            "layout": 3,
+            "history": 1,
+            "edit": 1,
+            "conflict": 1,
+            "control": 1,
+            "output": 1
+          }
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Cancelled",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackSurface"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Faulted",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackSurface"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterRollbackHistory",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "redoOwners": 3,
+          "surface": {
+            "surface": 101,
+            "host": 202,
+            "generation": 303
+          }
+        },
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Rollback",
+          "rollbackSteps": 3,
+          "historyTransferred": false,
+          "surfaceTransferred": false,
+          "visibilityPublished": false,
+          "redoRetired": 3,
+          "ownsEdit": true,
+          "mutated": true,
+          "surfaceOwner": {
+            "location": "document",
+            "surface": 101,
+            "host": 202,
+            "generation": 303,
+            "document": 1,
+            "widgets": 3,
+            "synapses": 3,
+            "previews": 3,
+            "expanded": 3,
+            "layout": 3,
+            "history": 1,
+            "edit": 1,
+            "conflict": 1,
+            "control": 1,
+            "output": 1
+          }
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Cancelled",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackHistory"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Faulted",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackHistory"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterRollbackRedo",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "redoOwners": 3,
+          "surface": {
+            "surface": 101,
+            "host": 202,
+            "generation": 303
+          }
+        },
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Rollback",
+          "rollbackSteps": 6,
+          "historyTransferred": false,
+          "surfaceTransferred": false,
+          "visibilityPublished": false,
+          "redoRetired": 0,
+          "ownsEdit": true,
+          "mutated": true,
+          "surfaceOwner": {
+            "location": "document",
+            "surface": 101,
+            "host": 202,
+            "generation": 303,
+            "document": 1,
+            "widgets": 3,
+            "synapses": 3,
+            "previews": 3,
+            "expanded": 3,
+            "layout": 3,
+            "history": 1,
+            "edit": 1,
+            "conflict": 1,
+            "control": 1,
+            "output": 1
+          }
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Cancelled",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackRedo"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Faulted",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackRedo"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        }
+      ]
+    },
+    {
+      "boundary": "afterRollbackSemanticOwner",
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "setup": {
+          "redoOwners": 3,
+          "surface": {
+            "surface": 101,
+            "host": 202,
+            "generation": 303
+          }
+        },
+        "operation": {
+          "feature": "setLayout",
+          "input": {
+            "id": "β",
+            "layout": {
+              "x": 8,
+              "y": 9
+            }
+          },
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "target": {
+          "phase": "Scan",
+          "rollbackSteps": 7,
+          "historyTransferred": false,
+          "surfaceTransferred": false,
+          "visibilityPublished": false,
+          "redoRetired": 0,
+          "ownsEdit": false,
+          "mutated": false,
+          "surfaceOwner": {
+            "location": "document",
+            "surface": 101,
+            "host": 202,
+            "generation": 303,
+            "document": 1,
+            "widgets": 3,
+            "synapses": 3,
+            "previews": 3,
+            "expanded": 3,
+            "layout": 3,
+            "history": 1,
+            "edit": 1,
+            "conflict": 1,
+            "control": 1,
+            "output": 1
+          }
+        },
+        "grant": "valid",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "controls": [
+        {
+          "control": "cancel",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Cancelled",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackSemanticOwner"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        },
+        {
+          "control": "fault",
+          "expected": {
+            "result": "ok",
+            "atBoundary": {
+              "stage": "Faulted",
+              "authority": {
+                "sessionGeneration": 77,
+                "baseRevision": 1,
+                "parentRevision": 0
+              },
+              "state": "rollbackSemanticOwner"
+            },
+            "repeatResult": "duplicateControl",
+            "finalState": "redoThree"
+          }
+        }
+      ]
+    }
+  ],
+  "fingerprints": {
+    "base": {
+      "credits": {
+        "operations": 0,
+        "pages": 0,
+        "items": 0,
+        "bytes": 0,
+        "outputs": 0,
+        "events": 0,
+        "controls": 0
+      },
+      "activeOperations": 0,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 0,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    },
+    "undoOne": {
+      "credits": {
+        "operations": 0,
+        "pages": 0,
+        "items": 0,
+        "bytes": 0,
+        "outputs": 0,
+        "events": 0,
+        "controls": 0
+      },
+      "activeOperations": 0,
+      "leasedPages": 0,
+      "undoOwners": 1,
+      "redoOwners": 0,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    },
+    "redoThree": {
+      "credits": {
+        "operations": 0,
+        "pages": 0,
+        "items": 0,
+        "bytes": 0,
+        "outputs": 0,
+        "events": 0,
+        "controls": 0
+      },
+      "activeOperations": 0,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 3,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    },
+    "admittedZeroBytes": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 0,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 0,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    },
+    "admittedTwelveBytes": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 12,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 0,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    },
+    "admittedMaximumBytes": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 65536,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 0,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    },
+    "rollbackVisibility": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 18,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 1,
+      "redoOwners": 0,
+      "retiredActionOwners": 3,
+      "retiredSurfaceOwners": 1,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": 1,
+      "documentRetained": true,
+      "closing": false
+    },
+    "rollbackSurface": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 18,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 1,
+      "redoOwners": 0,
+      "retiredActionOwners": 3,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": 1,
+      "documentRetained": true,
+      "closing": false
+    },
+    "rollbackHistory": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 18,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 0,
+      "retiredActionOwners": 3,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": 1,
+      "documentRetained": true,
+      "closing": false
+    },
+    "rollbackRedo": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 18,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 3,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": 1,
+      "documentRetained": true,
+      "closing": false
+    },
+    "rollbackSemanticOwner": {
+      "credits": {
+        "operations": 1,
+        "pages": 1,
+        "items": 1,
+        "bytes": 18,
+        "outputs": 1,
+        "events": 3,
+        "controls": 1
+      },
+      "activeOperations": 1,
+      "leasedPages": 0,
+      "undoOwners": 0,
+      "redoOwners": 3,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "revision": 1,
+      "parentRevision": 0,
+      "documentGeneration": 1,
+      "documentDigest": "17585039788360711097",
+      "documentVersions": 1,
+      "activeDocumentVersion": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    }
+  },
+  "expectedStates": {
+    "base": {
+      "document": {
+        "fixture": "oracle",
+        "path": "initial"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "base"
+      }
+    },
+    "undoOne": {
+      "document": {
+        "fixture": "oracle",
+        "path": "initial"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 1,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "undoOne"
+      }
+    },
+    "redoThree": {
+      "document": {
+        "fixture": "oracle",
+        "path": "initial"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 3
+      },
+      "handback": {
+        "fingerprint": "redoThree"
+      }
+    },
+    "admittedZeroBytes": {
+      "document": {
+        "fixture": "oracle",
+        "path": "initial"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "admittedZeroBytes"
+      }
+    },
+    "admittedTwelveBytes": {
+      "document": {
+        "fixture": "oracle",
+        "path": "initial"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "admittedTwelveBytes"
+      }
+    },
+    "admittedMaximumBytes": {
+      "document": {
+        "fixture": "oracle",
+        "path": "initial"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "admittedMaximumBytes"
+      }
+    },
+    "rollbackVisibility": {
+      "document": {
+        "fixture": "lifecycle",
+        "path": "protocolDocuments.publishedLayoutBoundary"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 1,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "rollbackVisibility"
+      }
+    },
+    "rollbackSurface": {
+      "document": {
+        "fixture": "lifecycle",
+        "path": "protocolDocuments.publishedLayoutBoundary"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 1,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "rollbackSurface"
+      }
+    },
+    "rollbackHistory": {
+      "document": {
+        "fixture": "lifecycle",
+        "path": "protocolDocuments.publishedLayoutBoundary"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 0
+      },
+      "handback": {
+        "fingerprint": "rollbackHistory"
+      }
+    },
+    "rollbackRedo": {
+      "document": {
+        "fixture": "lifecycle",
+        "path": "protocolDocuments.publishedLayoutBoundary"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 3
+      },
+      "handback": {
+        "fingerprint": "rollbackRedo"
+      }
+    },
+    "rollbackSemanticOwner": {
+      "document": {
+        "fixture": "oracle",
+        "path": "initial"
+      },
+      "page": null,
+      "history": {
+        "undoOwners": 0,
+        "redoOwners": 3
+      },
+      "handback": {
+        "fingerprint": "rollbackSemanticOwner"
+      }
+    }
+  },
+  "byteVectors": [
+    {
+      "name": "acceptedMultibyte",
+      "input": {
+        "feature": "removeWidget",
+        "encoding": "literal",
+        "value": "é界🌊️",
+        "characterCount": 4,
+        "byteLength": 12
+      },
+      "expected": {
+        "result": "accepted",
+        "sourceRetained": false,
+        "admissionState": "admittedTwelveBytes",
+        "afterCloseState": "base",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "removeWidget",
+          "encoding": "literal",
+          "value": "é界🌊️",
+          "characterCount": 4,
+          "byteLength": 12,
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "cleanup": {
+          "control": "cancel",
+          "grant": "valid"
+        }
+      }
+    },
+    {
+      "name": "maximumMultibyte",
+      "input": {
+        "feature": "removeWidget",
+        "encoding": "repeatUtf8",
+        "unit": "é",
+        "repetitions": 32768,
+        "characterCount": 32768,
+        "byteLength": 65536
+      },
+      "expected": {
+        "result": "accepted",
+        "sourceRetained": false,
+        "admissionState": "admittedMaximumBytes",
+        "afterCloseState": "base",
+        "expectedHandle": {
+          "operation": 1,
+          "slot": 0,
+          "generation": 1
+        }
+      },
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "removeWidget",
+          "encoding": "repeatUtf8",
+          "unit": "é",
+          "repetitions": 32768,
+          "characterCount": 32768,
+          "byteLength": 65536,
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "cleanup": {
+          "control": "cancel",
+          "grant": "valid"
+        }
+      }
+    },
+    {
+      "name": "maximumPlusOne",
+      "input": {
+        "feature": "removeWidget",
+        "encoding": "repeatUtf8",
+        "unit": "a",
+        "repetitions": 65537,
+        "characterCount": 65537,
+        "byteLength": 65537
+      },
+      "expected": {
+        "result": "limit",
+        "sourceRetained": true,
+        "admissionState": "base",
+        "afterCloseState": "base",
+        "expectedHandle": null
+      },
+      "protocol": {
+        "document": "oracle.initial",
+        "session": {
+          "generation": 77,
+          "revision": 1,
+          "parentRevision": 0
+        },
+        "operation": {
+          "feature": "removeWidget",
+          "encoding": "repeatUtf8",
+          "unit": "a",
+          "repetitions": 65537,
+          "characterCount": 65537,
+          "byteLength": 65537,
+          "authority": {
+            "sessionGeneration": 77,
+            "baseRevision": 1,
+            "parentRevision": 0
+          }
+        },
+        "cleanup": {
+          "control": "cancel",
+          "grant": "valid"
+        }
+      }
+    }
+  ],
+  "protocolDocuments": {
+    "replacementBoundary": {
+      "schema": "flow.boundary.多",
+      "camera": {
+        "x": -1,
+        "y": 7.5,
+        "zoom": 2
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "r-一",
+          "text": "one"
+        },
+        {
+          "kind": "inputNote",
+          "id": "r-二",
+          "text": "two"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "r-s1",
+          "from": "r-一",
+          "to": "r-二",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "r-s2",
+          "from": "r-二",
+          "to": "r-一",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "r-一": {
+          "x": 9,
+          "y": 10
+        },
+        "r-二": {
+          "x": 11,
+          "y": 12
+        }
+      }
+    },
+    "publishedLayoutBoundary": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "γ",
+          "text": "drei"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-c",
+          "from": "γ",
+          "to": "α",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 8,
+          "y": 9
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    }
+  },
+  "hostileVectorDigests": {
+    "byteVectors": [
+      "12238797961369786762",
+      "6176816775363864644",
+      "5324703646024653104"
+    ],
+    "authorityVectors": [
+      "8495461260391525340",
+      "12591742934971526423",
+      "5144453838820557391",
+      "5751626007277717879"
+    ],
+    "malformedVectors": [
+      "6482178633068624230",
+      "17013858610290451200",
+      "1724461104434883625"
+    ],
+    "grantVectors": [
+      "2043935194715277475",
+      "5678830288263736152",
+      "1970616640544683551",
+      "10084645191644459677",
+      "10144779741749516250"
+    ],
+    "transferControlLedger": [
+      "16321170944435367556",
+      "3621523688262824047",
+      "6389507257872264799",
+      "10637378418973830869",
+      "8791611250524200836",
+      "5490167266427111739",
+      "3982135109340746428",
+      "6233306154074804355",
+      "7826784538413236470",
+      "8000154797447822841",
+      "14860936598148502484",
+      "5999539928759069248",
+      "670430576230409282",
+      "16658726179642662943",
+      "11999069147777044765",
+      "11460280419832150998",
+      "6670380168659571917",
+      "7990330587134555549",
+      "1936733399001868215",
+      "17922552276160874724",
+      "7048606562888364787",
+      "5508508074825649303",
+      "12537281780130619414",
+      "4323772329486665967"
+    ],
+    "fingerprints": {
+      "base": "14062942916437410942",
+      "undoOne": "8464896721954341577",
+      "redoThree": "17225561073704935530",
+      "admittedZeroBytes": "4026400537699307224",
+      "admittedTwelveBytes": "11697411534614898418",
+      "admittedMaximumBytes": "11586934906989902478",
+      "rollbackVisibility": "12415539810564113577",
+      "rollbackSurface": "7666811784486899846",
+      "rollbackHistory": "15024485290795180285",
+      "rollbackRedo": "18289764147238030797",
+      "rollbackSemanticOwner": "8735407148754871301"
+    },
+    "expectedStates": {
+      "base": "9502954807986203511",
+      "undoOne": "17791804584249478151",
+      "redoThree": "17468656650370470914",
+      "admittedZeroBytes": "13077544192476912561",
+      "admittedTwelveBytes": "11605314853994393176",
+      "admittedMaximumBytes": "2360261306868206421",
+      "rollbackVisibility": "14147423033262898567",
+      "rollbackSurface": "1594614915223638012",
+      "rollbackHistory": "2866994803726968168",
+      "rollbackRedo": "519070830629373028",
+      "rollbackSemanticOwner": "11628075413886109533"
+    },
+    "protocolDocuments": {
+      "replacementBoundary": "2523595825283660306",
+      "publishedLayoutBoundary": "4693369211537159587"
+    }
+  }
+}

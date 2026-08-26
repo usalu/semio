@@ -25,7 +25,7 @@ pub struct CapabilitySpec {
 }
 
 /// 🧩️ Validates and assembles one leaf's already-declared capability rows.
-pub async fn assemble_definition(identity: &'static str, capabilities: &'static [CapabilitySpec]) -> Result<ArtifactDefinition, ArtifactDefinitionError> {
+pub fn assemble_definition(identity: &'static str, capabilities: &'static [CapabilitySpec]) -> Result<ArtifactDefinition, ArtifactDefinitionError> {
     let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse(identity)?);
     for row in capabilities {
         let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(row.identity)?, ArtifactCapabilityKind::parse(row.kind)?).descriptor(row.descriptor.as_bytes())?;

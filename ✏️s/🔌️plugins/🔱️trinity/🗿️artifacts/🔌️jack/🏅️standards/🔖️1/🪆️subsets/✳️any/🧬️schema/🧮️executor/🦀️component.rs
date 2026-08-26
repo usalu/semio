@@ -16,7 +16,7 @@ pub struct Binding {
 }
 
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
-pub async fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
+pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
     let mut fixture = graph.to_fixture();
     let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
@@ -78,7 +78,7 @@ pub async fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<T
 }
 
 /// ▶️ Parse and execute jack in one step.
-pub async fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
+pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
     let query = parse(source)?;
     let (result, operations) = execute(graph, &query)?;
     if !operations.is_empty() {
@@ -89,12 +89,12 @@ pub async fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String>
 }
 
 /// ▶️ Execute jack and return JSON result.
-pub async fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
+pub fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
     let result = run(graph, source)?;
     serde_json::to_string(&result).map_err(|e| e.to_string())
 }
 
-async fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
+fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
     let mut bindings = vec![Binding::default()];
     for pattern in patterns {
         let mut next = Vec::new();
@@ -106,7 +106,7 @@ async fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Bindi
     Ok(bindings)
 }
 
-async fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
+fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
     let left = pattern.nodes.first().ok_or_else(|| "empty pattern".to_string())?;
     if let Some(edge_pat) = &pattern.edge {
         let mut out = Vec::new();
@@ -160,11 +160,11 @@ async fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Resu
     Ok(out)
 }
 
-async fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
+fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
     base.nodes.get(var).is_some_and(|existing| existing != node_id)
 }
 
-async fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
+fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
     match expr {
         Expr::Eq { var, prop, value } => binding_value(graph, binding, var, prop) == Some(value.clone()),
         Expr::Ne { var, prop, value } => binding_value(graph, binding, var, prop) != Some(value.clone()),
@@ -173,7 +173,7 @@ async fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
     }
 }
 
-async fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
+fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
     let node_id = binding.nodes.get(var)?;
     let node = graph.node(node_id)?;
     match prop {
@@ -184,18 +184,18 @@ async fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) 
     }
 }
 
-async fn binding_has_entity(binding: &Binding, var: &str) -> bool {
+fn binding_has_entity(binding: &Binding, var: &str) -> bool {
     binding.nodes.contains_key(var) || binding.edges.contains_key(var)
 }
 
-async fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
+fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
     items.iter().any(|item| {
         let ReturnItem::Var(v) = item else { return false };
         bindings.iter().any(|b| binding_has_entity(b, v))
     })
 }
 
-async fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
+fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
     let mut node_ids = BTreeSet::new();
     let mut edge_ids = BTreeSet::new();
     for binding in bindings {
@@ -213,7 +213,7 @@ async fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (
     (node_ids, edge_ids)
 }
 
-async fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
+fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
     let columns: Vec<String> = items
         .iter()
         .map(|item| match item {
@@ -241,7 +241,7 @@ async fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem])
     QueryResult::table(columns, rows)
 }
 
-async fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
+fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let node = scene.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
@@ -263,7 +263,7 @@ async fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, v
     }
 }
 
-async fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
+fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
     let left_id = format!("{}-{}", left.var, scene.nodes.len());
@@ -304,7 +304,7 @@ mod tests {
     use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
     use crate::lexer::{lex, tokenize, TokenClass};
 
-    async fn mini_graph() -> Graph {
+    fn mini_graph() -> Graph {
         let fixture = JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),

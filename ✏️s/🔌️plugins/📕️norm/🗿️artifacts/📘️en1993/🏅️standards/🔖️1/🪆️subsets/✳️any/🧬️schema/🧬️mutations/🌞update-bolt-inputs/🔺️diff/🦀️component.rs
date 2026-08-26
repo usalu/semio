@@ -4,7 +4,7 @@ use super::mutation::UpdateBoltInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdateBoltInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdateBoltInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_bolt_f_ed_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Bolt f ed kn must be a finite number, got {}.", payload.new_bolt_f_ed_kn), Vec::<String>::new());
     }

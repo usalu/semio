@@ -55,7 +55,7 @@ enum TrinityDrawLod {
 }
 
 impl TrinityDrawLod {
-    async fn label(self) -> &'static str {
+    fn label(self) -> &'static str {
         match self {
             Self::Minimap => "minimap",
             Self::Overview => "overview",
@@ -66,7 +66,7 @@ impl TrinityDrawLod {
         }
     }
 
-    async fn from_id(id: &str) -> Option<Self> {
+    fn from_id(id: &str) -> Option<Self> {
         Some(match id {
             "minimap" => Self::Minimap,
             "overview" => Self::Overview,
@@ -78,7 +78,7 @@ impl TrinityDrawLod {
         })
     }
 
-    async fn from_scale_index(index: usize) -> Self {
+    fn from_scale_index(index: usize) -> Self {
         match index {
             0 => Self::Minimap,
             1 => Self::Overview,
@@ -90,23 +90,23 @@ impl TrinityDrawLod {
     }
 
     #[cfg(test)]
-    async fn handles_visible(self) -> bool {
+    fn handles_visible(self) -> bool {
         matches!(self, Self::Detail | Self::Micro)
     }
 
     #[cfg(test)]
-    async fn labels_visible(self) -> bool {
+    fn labels_visible(self) -> bool {
         !matches!(self, Self::Minimap | Self::Overview)
     }
 
     #[cfg(test)]
-    async fn full_labels(self) -> bool {
+    fn full_labels(self) -> bool {
         matches!(self, Self::Normal | Self::Detail | Self::Micro)
     }
 }
 
 #[cfg(test)]
-async fn trinity_abbreviate_label(name: &str) -> String {
+fn trinity_abbreviate_label(name: &str) -> String {
     let trimmed = name.trim();
     if trimmed.len() <= 4 {
         return trimmed.to_string();
@@ -114,11 +114,11 @@ async fn trinity_abbreviate_label(name: &str) -> String {
     trimmed.chars().take(3).collect()
 }
 
-async fn trinity_lod_index(zoom: f64) -> usize {
+fn trinity_lod_index(zoom: f64) -> usize {
     TRINITY_LOD_SCALE.resolve_index(zoom.max(0.05))
 }
 
-pub async fn trinity_lod_scale_json() -> String {
+pub fn trinity_lod_scale_json() -> String {
     let rows: Vec<serde_json::Value> = TRINITY_LODS
         .iter()
         .map(|lod| {
@@ -133,20 +133,20 @@ pub async fn trinity_lod_scale_json() -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
-async fn trinity_node_radius(node: &Node) -> f64 {
+fn trinity_node_radius(node: &Node) -> f64 {
     let w = if node.width > 0.0 { node.width } else { 88.0 };
     let h = if node.height > 0.0 { node.height } else { 40.0 };
     (w.max(h) * 0.5).max(TRINITY_DEFAULT_NODE_RADIUS * 0.5)
 }
 
-async fn trinity_circle_port_angle(index: usize, count: usize, left: bool) -> f64 {
+fn trinity_circle_port_angle(index: usize, count: usize, left: bool) -> f64 {
     let base = if left { std::f64::consts::PI } else { 0.0 };
     let spread = 0.35;
     let t = (index as f64 + 0.5) / count.max(1) as f64 - 0.5;
     base + t * spread
 }
 
-async fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
+fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
     let nodes: Vec<serde_json::Value> = graph
         .nodes
         .values()
@@ -205,7 +205,7 @@ async fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
     })
 }
 
-async fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
+fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
     let nodes: Vec<serde_json::Value> = graph
         .nodes
         .values()
@@ -230,7 +230,7 @@ async fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Val
     })
 }
 
-async fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &serde_json::Value) -> Result<(), TrinityRewriteError> {
+fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &serde_json::Value) -> Result<(), TrinityRewriteError> {
     let nodes = fixture.get("nodes").and_then(|v| v.as_array()).ok_or(TrinityRewriteError::ForceLayoutFixtureMissingNodes)?;
     for node in nodes {
         let Some(obj) = node.as_object() else {
@@ -252,7 +252,7 @@ async fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixtur
     Ok(())
 }
 
-async fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Vec<TrinityGraphMutation>, TrinityRewriteError> {
+fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Vec<TrinityGraphMutation>, TrinityRewriteError> {
     let mut graph = Graph::from_fixture(fixture.clone())?;
     apply_force_layout_to_trinity_graph(&mut graph)?;
     let next = graph.to_fixture();
@@ -270,7 +270,7 @@ async fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Ve
     Ok(operations)
 }
 
-async fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityRewriteError> {
+fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityRewriteError> {
     let mut fixture = trinity_graph_to_force_layout_fixture(graph);
     apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &ForceGraphLayoutOptions::default()).map_err(TrinityRewriteError::Layout)?;
     apply_force_layout_positions_to_trinity_graph(graph, &fixture)
@@ -297,7 +297,7 @@ pub struct TrinityBridge {
 }
 
 impl TrinityBridge {
-    pub async fn from_graph(graph: &Graph) -> Self {
+    pub fn from_graph(graph: &Graph) -> Self {
         let fixture = graph.to_fixture();
         let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture)).expect("failed to create trinity graph store");
         let graph = Graph::from_fixture(store.snapshot().expect("projection")).expect("graph");
@@ -321,22 +321,22 @@ impl TrinityBridge {
         host
     }
 
-    pub async fn load_fixture_json(json: &str) -> Result<Self, TrinityRewriteError> {
+    pub fn load_fixture_json(json: &str) -> Result<Self, TrinityRewriteError> {
         let graph = Graph::load_json(json)?;
         Ok(Self::from_graph(&graph))
     }
 
-    async fn refresh_graph_from_store(&mut self) -> Result<(), TrinityRewriteError> {
+    fn refresh_graph_from_store(&mut self) -> Result<(), TrinityRewriteError> {
         self.graph = Graph::from_fixture(self.store.snapshot()?)?;
         Ok(())
     }
 
-    async fn dispatch(&mut self, operations: Vec<TrinityGraphMutation>) -> Result<(), TrinityRewriteError> {
+    fn dispatch(&mut self, operations: Vec<TrinityGraphMutation>) -> Result<(), TrinityRewriteError> {
         crate::artifacts::jack::op::dispatch_trinity_graph_mutations(&mut self.store, operations)?;
         self.refresh_graph_from_store()
     }
 
-    pub async fn undo(&mut self) -> Result<(), TrinityRewriteError> {
+    pub fn undo(&mut self) -> Result<(), TrinityRewriteError> {
         use store::ArtifactCommand;
         self.store.dispatch(ArtifactCommand::Undo)?;
         self.refresh_graph_from_store()?;
@@ -344,7 +344,7 @@ impl TrinityBridge {
         Ok(())
     }
 
-    pub async fn redo(&mut self) -> Result<(), TrinityRewriteError> {
+    pub fn redo(&mut self) -> Result<(), TrinityRewriteError> {
         use store::ArtifactCommand;
         self.store.dispatch(ArtifactCommand::Redo)?;
         self.refresh_graph_from_store()?;
@@ -352,27 +352,27 @@ impl TrinityBridge {
         Ok(())
     }
 
-    pub async fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewriteError> {
+    pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewriteError> {
         use store::ArtifactCommand;
         self.store.dispatch(ArtifactCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from).map(|_| ())
     }
 
-    pub async fn store_generation(&self) -> u64 {
+    pub fn store_generation(&self) -> u64 {
         self.store.generation()
     }
 
-    pub async fn fixture_json(&self) -> Result<String, TrinityRewriteError> {
+    pub fn fixture_json(&self) -> Result<String, TrinityRewriteError> {
         Ok(self.graph.fixture_json()?)
     }
 
-    pub async fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
+    pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
         self.width = width.max(1);
         self.height = height.max(1);
         self.dpr = dpr.max(1.0);
         self.board.set_size(self.width, self.height, self.dpr);
     }
 
-    pub async fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.graph.camera.x = x;
         self.graph.camera.y = y;
         self.graph.camera.zoom = zoom;
@@ -380,24 +380,24 @@ impl TrinityBridge {
         self.board.set_camera_silent(x, y, zoom);
     }
 
-    pub async fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), TrinityRewriteError> {
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), TrinityRewriteError> {
         self.canvas_theme.merge_from_json(json).map_err(TrinityRewriteError::CanvasTheme)?;
         self.board.canvas_theme = self.canvas_theme;
         Ok(())
     }
 
-    pub async fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
+    pub fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_down(world.x, world.y, extend);
     }
 
-    pub async fn pointer_move(&mut self, x: f64, y: f64) {
+    pub fn pointer_move(&mut self, x: f64, y: f64) {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_move(world.x, world.y);
         self.sync_ephemeral_positions_from_engine();
     }
 
-    pub async fn pointer_up(&mut self, x: f64, y: f64) {
+    pub fn pointer_up(&mut self, x: f64, y: f64) {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_up(world.x, world.y);
         if let Err(err) = self.commit_drag_positions() {
@@ -406,7 +406,7 @@ impl TrinityBridge {
         self.rebuild_engine();
     }
 
-    pub async fn reorganize(&mut self) {
+    pub fn reorganize(&mut self) {
         match force_layout_reposition_operations(&self.store.snapshot().unwrap_or_else(|_| self.graph.to_fixture())) {
             Ok(operations) if !operations.is_empty() => {
                 if let Err(err) = self.dispatch(operations) {
@@ -420,7 +420,7 @@ impl TrinityBridge {
         }
     }
 
-    pub async fn run_jack(&mut self, query: &str) -> Result<QueryResult, TrinityRewriteError> {
+    pub fn run_jack(&mut self, query: &str) -> Result<QueryResult, TrinityRewriteError> {
         let parsed = parse(query).map_err(TrinityRewriteError::Jack)?;
         let (result, operations) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
         if !operations.is_empty() {
@@ -430,29 +430,29 @@ impl TrinityBridge {
         Ok(result)
     }
 
-    pub async fn run_jack_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
+    pub fn run_jack_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
         let result = self.run_jack(query)?;
         Ok(serde_json::to_string(&result)?)
     }
 
-    pub async fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
+    pub fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
         let result = self.run_jack(query)?;
         let fixture_json = self.fixture_json()?;
         let out = JackRunWithFixture { result, fixture_json };
         Ok(serde_json::to_string(&out)?)
     }
 
-    pub async fn tokenize_jack_json(&self, source: &str) -> Result<String, TrinityRewriteError> {
+    pub fn tokenize_jack_json(&self, source: &str) -> Result<String, TrinityRewriteError> {
         let tokens = tokenize_jack(source);
         Ok(serde_json::to_string(&tokens)?)
     }
 
-    pub async fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, TrinityRewriteError> {
+    pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, TrinityRewriteError> {
         let items = complete_jack(&self.graph, source, cursor);
         Ok(serde_json::to_string(&items)?)
     }
 
-    pub async fn apply_rewrite_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
+    pub fn apply_rewrite_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
         let rule: Rule = serde_json::from_str(rule_json)?;
         let bindings = crate::artifacts::rewrite::schema::parse_bindings_json(bindings_json)?;
         let query = crate::artifacts::rewrite::schema::build_rule_query(&rule, &bindings);
@@ -465,25 +465,25 @@ impl TrinityBridge {
         Ok(serde_json::to_string(&ApplyRuleResult { fixture: self.fixture_json()?, query: result })?)
     }
 
-    pub async fn node_overlays_json(&self) -> Result<String, TrinityRewriteError> {
+    pub fn node_overlays_json(&self) -> Result<String, TrinityRewriteError> {
         Ok("[]".into())
     }
 
-    pub async fn draw_lod_label(&self) -> &'static str {
+    pub fn draw_lod_label(&self) -> &'static str {
         self.draw_lod_for_frame().label()
     }
 
-    pub async fn set_automatic_lod(&mut self, enabled: bool) {
+    pub fn set_automatic_lod(&mut self, enabled: bool) {
         self.automatic_lod = enabled;
         self.board.set_automatic_lod(enabled);
     }
 
-    pub async fn set_forced_draw_lod_label(&mut self, label: &str) {
+    pub fn set_forced_draw_lod_label(&mut self, label: &str) {
         self.forced_draw_lod = if label.is_empty() { None } else { TrinityDrawLod::from_id(label) };
         self.board.set_forced_draw_lod_label(label);
     }
 
-    async fn draw_lod_for_frame(&self) -> TrinityDrawLod {
+    fn draw_lod_for_frame(&self) -> TrinityDrawLod {
         if !self.automatic_lod {
             if let Some(forced) = self.forced_draw_lod {
                 return forced;
@@ -492,7 +492,7 @@ impl TrinityBridge {
         TrinityDrawLod::from_scale_index(trinity_lod_index(self.graph.camera.zoom))
     }
 
-    pub async fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
+    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         use canvas::camera::{wheel_screen, Camera as CanvasCamera, Viewport};
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
         let mut cam = CanvasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
@@ -500,7 +500,7 @@ impl TrinityBridge {
         self.set_camera(cam.x, cam.y, cam.zoom);
     }
 
-    pub async fn selected_node_ids_json(&self) -> Result<String, TrinityRewriteError> {
+    pub fn selected_node_ids_json(&self) -> Result<String, TrinityRewriteError> {
         let mut ids = Vec::new();
         for &nid in &self.engine.selection.node_ids {
             if let Some(tid) = self.node_id_map.get(&nid) {
@@ -519,13 +519,13 @@ impl TrinityBridge {
         Ok(serde_json::to_string(&ids)?)
     }
 
-    pub async fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), TrinityRewriteError> {
+    pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), TrinityRewriteError> {
         let ids: Vec<String> = serde_json::from_str(json)?;
         self.board.set_highlighted_ids(ids);
         Ok(())
     }
 
-    async fn screen_to_world(&self, sx: f64, sy: f64) -> canvas::Point {
+    fn screen_to_world(&self, sx: f64, sy: f64) -> canvas::Point {
         use canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
         use canvas::Point;
         let cam = CanvasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
@@ -533,7 +533,7 @@ impl TrinityBridge {
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
     }
 
-    async fn sync_ephemeral_positions_from_engine(&mut self) {
+    fn sync_ephemeral_positions_from_engine(&mut self) {
         for (&nid, widget_id) in &self.node_id_map {
             if let Some(node) = self.engine.nodes.get(&nid) {
                 if let Some(entry) = self.graph.nodes.get_mut(widget_id) {
@@ -545,7 +545,7 @@ impl TrinityBridge {
         self.sync_board_from_graph();
     }
 
-    async fn commit_drag_positions(&mut self) -> Result<(), TrinityRewriteError> {
+    fn commit_drag_positions(&mut self) -> Result<(), TrinityRewriteError> {
         let projection = self.store.snapshot()?;
         let projection_nodes = projection.nodes();
         let mut operations = Vec::new();
@@ -566,7 +566,7 @@ impl TrinityBridge {
         self.dispatch(operations)
     }
 
-    async fn sync_board_from_graph(&mut self) {
+    fn sync_board_from_graph(&mut self) {
         let _ = self.board.set_board_kind_catalogs_from_json(TRINITY_BOARD_KIND_CATALOGS_JSON);
         let fixture = trinity_graph_to_board_fixture(&self.graph);
         if !self.board.parse_fixture_v1(&fixture) {
@@ -584,7 +584,7 @@ impl TrinityBridge {
     // ids, handle ids starting at a different base, edge ids) interleaved across nested loops — no
     // single `.zip()` range captures all three, so the explicit-counter-loop suggestion doesn't apply.
     #[allow(clippy::explicit_counter_loop)]
-    async fn rebuild_engine(&mut self) {
+    fn rebuild_engine(&mut self) {
         self.engine = TrinityBoardEngine::new();
         self.node_id_map.clear();
         self.handle_key_map.clear();
@@ -645,7 +645,7 @@ impl TrinityBridge {
         self.sync_board_from_graph();
     }
 
-    pub async fn paint_scene(&self, scene: &mut canvas::Scene, _viewport_w: u32, _viewport_h: u32, _dpr: f64) {
+    pub fn paint_scene(&self, scene: &mut canvas::Scene, _viewport_w: u32, _viewport_h: u32, _dpr: f64) {
         let lod_index = trinity_lod_index(self.graph.camera.zoom) as i8;
         if self.last_logged_lod.get() != lod_index {
             self.last_logged_lod.set(lod_index);
@@ -659,11 +659,11 @@ impl TrinityBridge {
 
 /// 🩹️ Delegates to `crate::artifacts::jack::parse_port_key` (the one place the `nodeId@portId`
 /// convention is owned) instead of hand-rolling a second splitter here.
-async fn trinity_port_endpoint_parts(endpoint: &str) -> (String, String) {
+fn trinity_port_endpoint_parts(endpoint: &str) -> (String, String) {
     crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), String::new()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
-async fn trinity_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
+fn trinity_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
     format!("{}:{}:{}", node_id, if input { "in" } else { "out" }, port_id)
 }
 
@@ -960,11 +960,11 @@ mod wasm_bridge {
 mod wasm_session {
     use super::*;
     use crate::artifacts::jack::{Camera, Manifest};
+    use semio_framework_async::browser::future_to_promise;
     use std::cell::RefCell;
     use std::rc::Rc;
     use store::ArtifactDsl;
     use wasm_bindgen::prelude::*;
-    use wasm_bindgen_futures::future_to_promise;
     use web_sys::HtmlCanvasElement;
 
     struct TrinitySessionInner {
@@ -983,7 +983,7 @@ mod wasm_session {
     #[wasm_bindgen]
     impl TrinitySession {
         #[wasm_bindgen(constructor)]
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             let dsl = include_str!("../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             let host = JackSnapshot::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
                 let empty = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "empty".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), vec![], vec![], None);
@@ -993,24 +993,24 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = loadFixtureJson)]
-        pub async fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
+        pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
             let host = TrinityBridge::load_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             self.state.borrow_mut().host = host;
             Ok(())
         }
 
         #[wasm_bindgen(js_name = fixtureJson)]
-        pub async fn fixture_json(&self) -> Result<String, JsValue> {
+        pub fn fixture_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = nodeOverlaysJson)]
-        pub async fn node_overlays_json(&self) -> Result<String, JsValue> {
+        pub fn node_overlays_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = attachCanvas)]
-        pub async fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
+        pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
             let inner = self.state.clone();
             let lw = logical_w.max(1);
             let lh = logical_h.max(1);
@@ -1030,17 +1030,17 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = gpuReady)]
-        pub async fn gpu_ready(&self) -> bool {
+        pub fn gpu_ready(&self) -> bool {
             self.state.borrow().gpu.gpu_ready()
         }
 
         #[wasm_bindgen(js_name = detachGpu)]
-        pub async fn detach_gpu(&mut self) {
+        pub fn detach_gpu(&mut self) {
             self.state.borrow_mut().gpu.detach();
         }
 
         #[wasm_bindgen(js_name = setSize)]
-        pub async fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+        pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
             let mut inner = self.state.borrow_mut();
             inner.width = width.max(1);
             inner.height = height.max(1);
@@ -1053,73 +1053,73 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = setCamera)]
-        pub async fn set_camera(&self, x: f64, y: f64, zoom: f64) {
+        pub fn set_camera(&self, x: f64, y: f64, zoom: f64) {
             self.state.borrow_mut().host.set_camera(x, y, zoom);
         }
 
         #[wasm_bindgen(js_name = lodScaleJson)]
-        pub async fn lod_scale_json(&self) -> String {
+        pub fn lod_scale_json(&self) -> String {
             trinity_lod_scale_json()
         }
 
         #[wasm_bindgen(js_name = setAutomaticLod)]
-        pub async fn set_automatic_lod(&self, enabled: bool) {
+        pub fn set_automatic_lod(&self, enabled: bool) {
             self.state.borrow_mut().host.set_automatic_lod(enabled);
         }
 
         #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
-        pub async fn set_forced_draw_lod_label(&self, label: &str) {
+        pub fn set_forced_draw_lod_label(&self, label: &str) {
             self.state.borrow_mut().host.set_forced_draw_lod_label(label);
         }
 
         #[wasm_bindgen(js_name = drawLodLabel)]
-        pub async fn draw_lod_label(&self) -> String {
+        pub fn draw_lod_label(&self) -> String {
             self.state.borrow().host.draw_lod_label().to_string()
         }
 
         #[wasm_bindgen(js_name = pointerDown)]
-        pub async fn pointer_down(&self, x: f64, y: f64, extend: bool) {
+        pub fn pointer_down(&self, x: f64, y: f64, extend: bool) {
             self.state.borrow_mut().host.pointer_down(x, y, extend);
         }
 
         #[wasm_bindgen(js_name = pointerMove)]
-        pub async fn pointer_move(&self, x: f64, y: f64) {
+        pub fn pointer_move(&self, x: f64, y: f64) {
             self.state.borrow_mut().host.pointer_move(x, y);
         }
 
         #[wasm_bindgen(js_name = pointerUp)]
-        pub async fn pointer_up(&self, x: f64, y: f64) {
+        pub fn pointer_up(&self, x: f64, y: f64) {
             self.state.borrow_mut().host.pointer_up(x, y);
         }
 
         #[wasm_bindgen(js_name = wheelScreen)]
-        pub async fn wheel_screen(&self, x: f64, y: f64, delta_y: f64) {
+        pub fn wheel_screen(&self, x: f64, y: f64, delta_y: f64) {
             self.state.borrow_mut().host.wheel_screen(x, y, delta_y);
         }
 
         #[wasm_bindgen(js_name = selectedNodeIdsJson)]
-        pub async fn selected_node_ids_json(&self) -> Result<String, JsValue> {
+        pub fn selected_node_ids_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.selected_node_ids_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = setHighlightedNodeIdsJson)]
-        pub async fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
+        pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
             self.state.borrow_mut().host.set_highlighted_node_ids_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = reorganize)]
-        pub async fn reorganize(&self, _options_json: &str) -> Result<(), JsValue> {
+        pub fn reorganize(&self, _options_json: &str) -> Result<(), JsValue> {
             self.state.borrow_mut().host.reorganize();
             Ok(())
         }
 
         #[wasm_bindgen(js_name = setCanvasThemeJson)]
-        pub async fn set_canvas_theme_json(&mut self, json: &str) {
+        pub fn set_canvas_theme_json(&mut self, json: &str) {
             let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
         }
 
         #[wasm_bindgen(js_name = renderFrame)]
-        pub async fn render_frame(&self) -> Result<(), JsValue> {
+        pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
             let clear = inner.host.canvas_theme.raster_clear;
             let scene = inner.host.board.build_vector_scene();
@@ -1127,54 +1127,54 @@ mod wasm_session {
         }
 
         #[wasm_bindgen(js_name = runJackJson)]
-        pub async fn run_jack_json(&self, query: &str) -> Result<String, JsValue> {
+        pub fn run_jack_json(&self, query: &str) -> Result<String, JsValue> {
             self.state.borrow_mut().host.run_jack_json(query).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = runJackJsonWithFixture)]
-        pub async fn run_jack_json_with_fixture(&self, query: &str) -> Result<String, JsValue> {
+        pub fn run_jack_json_with_fixture(&self, query: &str) -> Result<String, JsValue> {
             self.state.borrow_mut().host.run_jack_with_fixture_json(query).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = tokenizeJackJson)]
-        pub async fn tokenize_jack_json(&self, source: &str) -> Result<String, JsValue> {
+        pub fn tokenize_jack_json(&self, source: &str) -> Result<String, JsValue> {
             self.state.borrow().host.tokenize_jack_json(source).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = completeJackJson)]
-        pub async fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, JsValue> {
+        pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, JsValue> {
             self.state.borrow().host.complete_jack_json(source, cursor).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = applyRewriteJson)]
-        pub async fn apply_rewrite_json(&self, rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
+        pub fn apply_rewrite_json(&self, rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
             self.state.borrow_mut().host.apply_rewrite_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = undo)]
-        pub async fn undo(&self) -> Result<(), JsValue> {
+        pub fn undo(&self) -> Result<(), JsValue> {
             self.state.borrow_mut().host.undo().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = redo)]
-        pub async fn redo(&self) -> Result<(), JsValue> {
+        pub fn redo(&self) -> Result<(), JsValue> {
             self.state.borrow_mut().host.redo().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = commitCheckpoint)]
-        pub async fn commit_checkpoint(&self, message: &str) -> Result<(), JsValue> {
+        pub fn commit_checkpoint(&self, message: &str) -> Result<(), JsValue> {
             let message = if message.is_empty() { None } else { Some(message.to_string()) };
             self.state.borrow_mut().host.commit_checkpoint(message).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = storeGeneration)]
-        pub async fn store_generation(&self) -> u64 {
+        pub fn store_generation(&self) -> u64 {
             self.state.borrow().host.store_generation()
         }
     }
 
     #[wasm_bindgen(js_name = ruleQueryJson)]
-    pub async fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
+    pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
         crate::artifacts::rewrite::schema::rule_query_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
@@ -1258,7 +1258,7 @@ mod tests {
         assert!(!rejected.has_page());
     }
 
-    async fn nakagin_graph() -> Graph {
+    fn nakagin_graph() -> Graph {
         let dsl = include_str!("../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
         Graph::from_fixture(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap()
     }

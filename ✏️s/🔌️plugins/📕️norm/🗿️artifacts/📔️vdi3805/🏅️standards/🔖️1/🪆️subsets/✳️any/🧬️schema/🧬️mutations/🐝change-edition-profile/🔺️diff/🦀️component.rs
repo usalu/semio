@@ -4,7 +4,7 @@ use super::mutation::ChangeEditionProfile;
 use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeEditionProfile, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub fn diff(payload: &ChangeEditionProfile, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     if base.edition_profile.get(&payload.sheet) == Some(&payload.new_choice) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Sheet {} already has this edition profile.", payload.sheet));
     }

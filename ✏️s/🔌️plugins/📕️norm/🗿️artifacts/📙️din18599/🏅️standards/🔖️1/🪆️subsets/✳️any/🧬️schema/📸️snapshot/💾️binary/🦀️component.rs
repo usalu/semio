@@ -10,12 +10,12 @@ use crate::artifacts::din18599::Din18599Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
-pub async fn encode(document: &Din18599Snapshot) -> Vec<u8> {
+pub fn encode(document: &Din18599Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<Din18599Snapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<Din18599Snapshot, PackError> {
     <Din18599Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -25,12 +25,12 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn document_dsl_pack_equivalence() {
+    fn document_dsl_pack_equivalence() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&Din18599Snapshot::default());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn pack_round_trips() {
+    fn pack_round_trips() {
         let document = Din18599Snapshot::default();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);

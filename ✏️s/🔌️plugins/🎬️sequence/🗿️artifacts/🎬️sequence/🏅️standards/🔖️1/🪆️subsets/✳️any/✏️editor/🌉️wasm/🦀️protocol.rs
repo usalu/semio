@@ -349,9 +349,7 @@ impl<D: SequenceDomain> SequenceBridge<D> {
             let mut writer = SequencePayloadWriter::default();
             writer.handle(handle);
             self.push_reply(success_reply(request.request_id, request.generation, writer.finish())).map_err(|code| AbiPortRejection { code, message: message() })?;
-            self.request_ledger
-                .accept(&success_reply(request.request_id, request.generation, Vec::new()))
-                .map_err(|code| AbiPortRejection { code, message: message() })?;
+            self.request_ledger.accept(&success_reply(request.request_id, request.generation, Vec::new())).map_err(|code| AbiPortRejection { code, message: message() })?;
             return Ok(());
         }
         let mut reader = SequencePayloadReader::new(request.bytes.as_slice());
@@ -400,6 +398,9 @@ impl<D: SequenceDomain> SequenceBridge<D> {
                 let SequenceResource::Operation(operation) = self.resources.get_mut(entry.operation)? else {
                     return Err(AbiErrorCode::UnknownHandle);
                 };
+                if operation.cancelled {
+                    return Err(AbiErrorCode::Cancelled);
+                }
                 operation.cancelled = true;
                 if let Some(reader) = operation.reader.as_mut() {
                     reader.cancel();
@@ -414,12 +415,18 @@ impl<D: SequenceDomain> SequenceBridge<D> {
                 operation.reader.as_mut().ok_or(AbiErrorCode::UnknownHandle)?.acknowledge(AbiControl::Acknowledge { handle, index })
             }
             AbiControl::Close { handle } => {
+                if self.closing {
+                    return Err(AbiErrorCode::Closed);
+                }
                 if matches!(self.resources.get(handle)?, SequenceResource::Session(_)) {
                     self.close_session(handle)?;
                 } else {
                     let SequenceResource::Operation(operation) = self.resources.get_mut(handle)? else {
                         return Err(AbiErrorCode::UnknownHandle);
                     };
+                    if operation.cancelled {
+                        return Err(AbiErrorCode::Cancelled);
+                    }
                     operation.cancelled = true;
                 }
                 Ok(())
@@ -443,6 +450,15 @@ impl<D: SequenceDomain> SequenceBridge<D> {
         let Some(handle) = self.work.pop_front() else {
             return Ok(());
         };
+        let request_id = match self.resources.get(handle)? {
+            SequenceResource::Operation(operation) => operation.request_id,
+            SequenceResource::Session(_) => return Err(AbiErrorCode::UnknownHandle),
+        };
+        let next_event_request = AbiRequestId(request_id.0 ^ ((self.next_event_sequence as u64) << 32));
+        if self.event_count == SEQUENCE_MAX_EVENTS_IN_FLIGHT || self.events[request_slot(next_event_request)].is_some() {
+            self.work.push_back(handle);
+            return Ok(());
+        }
         let mut retain = true;
         let mut event = None;
         let mut page = None;
@@ -722,6 +738,7 @@ mod tests {
                 }
                 SEQUENCE_OPERATION_FIXTURE => Ok(self.fixture.clone()),
                 SEQUENCE_OPERATION_CATALOGUE => Ok(vec![b'x'; SEQUENCE_MAX_INLINE_REPLY_BYTES + 1]),
+                SEQUENCE_OPERATION_RUN if payload == b"oversized" => Ok(vec![b'x'; SEQUENCE_MAX_OUTPUT_BYTES + 1]),
                 SEQUENCE_OPERATION_RUN => Ok(br#"{"status":"ok"}"#.to_vec()),
                 _ => Ok(payload.to_vec()),
             }
@@ -761,6 +778,27 @@ mod tests {
                 AbiPortPoll::Closed => break,
             }
         }
+    }
+
+    fn fingerprint(bridge: &SequenceBridge<MockDomain>) -> String {
+        let requests = bridge.requests.iter().flatten().map(|entry| (entry.request_id.0, entry.generation, entry.operation.slot(), entry.operation.generation())).collect::<Vec<_>>();
+        let events = bridge.events.iter().flatten().map(|entry| (entry.request_id.0, entry.generation)).collect::<Vec<_>>();
+        let operations = bridge
+            .requests
+            .iter()
+            .flatten()
+            .filter_map(|entry| match bridge.resources.get(entry.operation).ok()? {
+                SequenceResource::Operation(operation) => Some((
+                    operation.request_id.0,
+                    operation.generation,
+                    operation.cursor,
+                    operation.cancelled,
+                    operation.reader.as_ref().and_then(|reader| reader.page()).map(|page| (page.handle.slot(), page.handle.generation(), page.index, page.bytes.len())),
+                )),
+                SequenceResource::Session(_) => None,
+            })
+            .collect::<Vec<_>>();
+        format!("{}:{}:{}:{}:{}:{:?}:{:?}:{:?}:{:?}:{:?}:{}", bridge.active_resources, bridge.work.len(), bridge.outbound.len(), bridge.event_count, bridge.sessions.len(), bridge.work, bridge.sessions, requests, events, operations, bridge.closing)
     }
 
     #[test]
@@ -806,6 +844,20 @@ mod tests {
             _ => unreachable!(),
         };
         assert_eq!(before, after);
+    }
+
+    #[test]
+    fn unacknowledged_event_does_not_advance_the_byte_cursor() {
+        let mut bridge = SequenceBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1);
+        bridge.try_send(request(SEQUENCE_OPERATION_RUN, 2, 1, body(session, b"abc")), AbiWorkBudget::credits(1)).unwrap();
+        let entry = bridge.requests[request_slot(AbiRequestId(2))].unwrap();
+        let AbiPortPoll::Message(AbiMessage::Event(_)) = bridge.poll(AbiWorkBudget::credits(1)).unwrap() else {
+            panic!("admitted event");
+        };
+        assert_eq!(bridge.poll(AbiWorkBudget::credits(1)).unwrap(), AbiPortPoll::Pending);
+        let SequenceResource::Operation(operation) = bridge.resources.get(entry.operation).unwrap() else { unreachable!() };
+        assert_eq!(operation.cursor, 0);
     }
 
     #[test]
@@ -879,6 +931,116 @@ mod tests {
         let ack = AbiControl::Acknowledge { handle: page.handle, index: page.index };
         bridge.try_send(AbiMessage::Control(ack), AbiWorkBudget::credits(1)).unwrap();
         assert_eq!(bridge.try_send(AbiMessage::Control(ack), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::DuplicateAcknowledgement);
+    }
+
+    #[test]
+    fn rejected_cancel_event_ack_and_close_preserve_every_ledger_then_valid_controls_progress() {
+        let mut bridge = SequenceBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1);
+        bridge.try_send(request(SEQUENCE_OPERATION_RUN, 2, 1, body(session, b"abc")), AbiWorkBudget::credits(1)).unwrap();
+        let before_cancel = fingerprint(&bridge);
+        for (request_id, generation, code) in [(AbiRequestId(999), 1, AbiErrorCode::UnknownHandle), (AbiRequestId(2), 0, AbiErrorCode::AbaHandle), (AbiRequestId(2), 2, AbiErrorCode::StaleGeneration)] {
+            let rejection = bridge.try_send(AbiMessage::Control(AbiControl::Cancel { request_id, generation }), AbiWorkBudget::credits(1)).unwrap_err();
+            assert_eq!(rejection.code, code);
+            assert_eq!(fingerprint(&bridge), before_cancel);
+        }
+        let malformed = AbiMessage::Event(AbiEvent { request_id: AbiRequestId(999), generation: 1, sequence: 1, event: AbiEventCode::try_new(SEQUENCE_EVENT_PROGRESS).unwrap(), status: AbiStatus::OK, bytes: AbiBytes::default() });
+        assert_eq!(bridge.try_send(malformed, AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::MalformedTag);
+        assert_eq!(fingerprint(&bridge), before_cancel);
+
+        bridge.try_send(AbiMessage::Control(AbiControl::Cancel { request_id: AbiRequestId(2), generation: 1 }), AbiWorkBudget::credits(1)).unwrap();
+        let cancelled = fingerprint(&bridge);
+        assert_eq!(bridge.try_send(AbiMessage::Control(AbiControl::Cancel { request_id: AbiRequestId(2), generation: 1 }), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::Cancelled);
+        assert_eq!(fingerprint(&bridge), cancelled);
+        ack_events(&mut bridge);
+
+        let close_before = fingerprint(&bridge);
+        for (handle, code) in [(AbiHandle::try_new(99, session.generation()).unwrap(), AbiErrorCode::UnknownHandle), (AbiHandle::try_new(session.slot(), session.generation() + 1).unwrap(), AbiErrorCode::StaleGeneration)] {
+            assert_eq!(bridge.try_send(AbiMessage::Control(AbiControl::Close { handle }), AbiWorkBudget::credits(1)).unwrap_err().code, code);
+            assert_eq!(fingerprint(&bridge), close_before);
+        }
+        bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), AbiWorkBudget::credits(1)).unwrap();
+        let closed = fingerprint(&bridge);
+        assert_eq!(bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::UnknownHandle);
+        assert_eq!(fingerprint(&bridge), closed);
+
+        let reused = open(&mut bridge, 3);
+        let reuse_before = fingerprint(&bridge);
+        assert_eq!(bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::AbaHandle);
+        assert_eq!(fingerprint(&bridge), reuse_before);
+        bridge.begin_close();
+        let closing = fingerprint(&bridge);
+        assert_eq!(bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: reused }), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::Closed);
+        assert_eq!(fingerprint(&bridge), closing);
+    }
+
+    #[test]
+    fn rejected_page_and_event_acknowledgements_preserve_retained_ownership_then_valid_ack_progresses() {
+        let mut bridge = SequenceBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1);
+        bridge.try_send(request(SEQUENCE_OPERATION_CATALOGUE, 2, 1, body(session, &[])), AbiWorkBudget::credits(1)).unwrap();
+        let event = loop {
+            let AbiPortPoll::Message(message) = bridge.poll(AbiWorkBudget::credits(usize::MAX)).unwrap() else { continue };
+            if let AbiMessage::Event(event) = message {
+                break event;
+            }
+        };
+        let event_before = fingerprint(&bridge);
+        for (request_id, generation) in [(event.request_id, event.generation + 1), (AbiRequestId(event.request_id.0 + 99), event.generation)] {
+            let reply = AbiReply { request_id, generation, status: AbiStatus::OK, bytes: AbiBytes::default() };
+            assert_eq!(bridge.try_send(AbiMessage::Reply(reply), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::LateReply);
+            assert_eq!(fingerprint(&bridge), event_before);
+        }
+        let acknowledgement = AbiReply { request_id: event.request_id, generation: event.generation, status: AbiStatus::OK, bytes: AbiBytes::default() };
+        bridge.try_send(AbiMessage::Reply(acknowledgement.clone()), AbiWorkBudget::credits(1)).unwrap();
+        let event_acked = fingerprint(&bridge);
+        assert_eq!(bridge.try_send(AbiMessage::Reply(acknowledgement), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::LateReply);
+        assert_eq!(fingerprint(&bridge), event_acked);
+
+        let page = loop {
+            match bridge.poll(AbiWorkBudget::credits(usize::MAX)).unwrap() {
+                AbiPortPoll::Message(AbiMessage::Event(event)) => {
+                    bridge.try_send(AbiMessage::Reply(AbiReply { request_id: event.request_id, generation: event.generation, status: AbiStatus::OK, bytes: AbiBytes::default() }), AbiWorkBudget::credits(1)).unwrap();
+                }
+                AbiPortPoll::Message(AbiMessage::Page(page)) => break page,
+                AbiPortPoll::Message(_) | AbiPortPoll::Pending | AbiPortPoll::Closed => {}
+            }
+        };
+        let page_before = fingerprint(&bridge);
+        for (handle, index, code) in [
+            (AbiHandle::try_new(page.handle.slot() + 1, page.handle.generation()).unwrap(), page.index, AbiErrorCode::UnknownHandle),
+            (AbiHandle::try_new(page.handle.slot(), page.handle.generation() + 1).unwrap(), page.index, AbiErrorCode::StaleGeneration),
+            (page.handle, page.index + 1, AbiErrorCode::OutOfOrderPage),
+            (page.handle, u32::MAX, AbiErrorCode::OutOfOrderPage),
+        ] {
+            let control = AbiControl::Acknowledge { handle, index };
+            assert_eq!(bridge.try_send(AbiMessage::Control(control), AbiWorkBudget::credits(1)).unwrap_err().code, code);
+            assert_eq!(fingerprint(&bridge), page_before);
+        }
+        let valid = AbiControl::Acknowledge { handle: page.handle, index: page.index };
+        bridge.try_send(AbiMessage::Control(valid), AbiWorkBudget::credits(1)).unwrap();
+        let page_acked = fingerprint(&bridge);
+        assert_eq!(bridge.try_send(AbiMessage::Control(valid), AbiWorkBudget::credits(1)).unwrap_err().code, AbiErrorCode::DuplicateAcknowledgement);
+        assert_eq!(fingerprint(&bridge), page_acked);
+        ack_events(&mut bridge);
+        assert_eq!(bridge.active_resources, 1);
+    }
+
+    #[test]
+    fn event_and_output_max_plus_one_are_pre_admission() {
+        let mut events = SequenceBridge::new(MockDomain::default);
+        assert_eq!(events.event_count, 0);
+        for id in 0..SEQUENCE_MAX_EVENTS_IN_FLIGHT as u64 {
+            events.push_event(AbiRequestId(id), 1, SEQUENCE_EVENT_PROGRESS, AbiStatus::OK, Vec::new()).unwrap();
+        }
+        assert_eq!(events.event_count, SEQUENCE_MAX_EVENTS_IN_FLIGHT);
+        assert_eq!(events.push_event(AbiRequestId(65), 1, SEQUENCE_EVENT_PROGRESS, AbiStatus::OK, Vec::new()), Err(AbiErrorCode::LimitExceeded));
+
+        let mut bridge = SequenceBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1);
+        bridge.try_send(request(SEQUENCE_OPERATION_RUN, 2, 1, body(session, b"oversized")), AbiWorkBudget::credits(1)).unwrap();
+        ack_events(&mut bridge);
+        assert_eq!(bridge.active_resources, 1);
     }
 
     #[test]

@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// ▶️ Raising the connection's design force from 18.0 kN to 24.0 kN rewrites `f_ed_kn` alone — the effective
 /// connection area it is carried by is a detailing quantity and must not be enlarged to compensate.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_design_fastener_force_to_24_kn() {
+fn raises_the_design_fastener_force_to_24_kn() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-f-ed-kn applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-f-ed-kn/raises-the-design-fastener-force-to-24-kn: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.f_ed_kn, 24.0, "change-f-ed-kn/raises-the-design-fastener-force-to-24-kn: f_ed_kn must read 24.0 kN once the change lands");
@@ -43,7 +43,7 @@ async fn raises_the_design_fastener_force_to_24_kn() {
 /// ↩️ `change-f-ed-kn`'s inverse reads the OLD 18.0 kN out of BASE, so replaying it puts the 18.0 kN back on
 /// `f_ed_kn`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_18_kn_restores_before() {
+fn restoring_18_kn_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-f-ed-kn applies");
@@ -61,7 +61,7 @@ async fn restoring_18_kn_restores_before() {
 /// is a fixed point, so `{"ChangeFEdKn": {"newFEdKn": 24.0}}` — externally tagged is spelled here exactly as
 /// this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 24.0 kN is finite and differs from the committed 18.0 kN, so `change-f-ed-kn` produces a
 /// clean outcome.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-f-ed-kn/raises-the-design-fastener-force-to-24-kn: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `fEdKn` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-f-ed-kn diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-f-ed-kn/raises-the-design-fastener-force-to-24-kn: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the design fastener force
 /// and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-f-ed-kn diff decodes");
     assert_eq!(decoded.f_ed_kn, Some(24.0), "change-f-ed-kn/raises-the-design-fastener-force-to-24-kn: the committed diff must carry fEdKn = 24.0 kN");
     assert!(decoded.a_ef_mm2.is_none(), "change-f-ed-kn/raises-the-design-fastener-force-to-24-kn: change-f-ed-kn writes fEdKn and must leave `a_ef_mm2` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the connection-force change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-f-ed-kn diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-f-ed-kn/raises-the-design-fastener-force-to-24-kn: the committed diff did not carry before to after");

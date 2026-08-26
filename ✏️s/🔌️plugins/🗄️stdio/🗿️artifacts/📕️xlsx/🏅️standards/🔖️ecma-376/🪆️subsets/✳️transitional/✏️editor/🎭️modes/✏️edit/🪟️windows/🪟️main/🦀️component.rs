@@ -37,6 +37,7 @@ pub fn render(document: &XlsxSnapshot) -> semio_framework_plugin::UiAssemblyResu
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use semio_framework_plugin::Component;
     use super::*;
 
     #[semio_framework_async_macros::async_test]
@@ -50,8 +51,9 @@ mod tests {
     async fn render_lists_one_row_per_cell() {
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.table.expect("table scene");
+        let node = render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
+        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
         let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
         assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
     }

@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_silo_radius_m::mutation::ChangeS
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSiloRadiusM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeSiloRadiusM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_silo_radius_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Silo radius [m] must be a finite number, got {}.", payload.new_silo_radius_m), Vec::<String>::new());
     }

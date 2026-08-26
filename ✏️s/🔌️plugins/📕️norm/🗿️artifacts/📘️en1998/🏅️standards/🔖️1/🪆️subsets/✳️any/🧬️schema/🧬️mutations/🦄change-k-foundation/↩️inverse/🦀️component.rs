@@ -6,7 +6,7 @@ use crate::artifacts::en1998::mutations::En1998Mutation;
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeKFoundation, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+pub fn inverse(_payload: &ChangeKFoundation, base: &En1998Snapshot) -> Vec<En1998Mutation> {
     vec![En1998Mutation::ChangeKFoundation(ChangeKFoundation { new_k_foundation: base.k_foundation.clone() })]
 }
 //#endregion 🔖️Inverse

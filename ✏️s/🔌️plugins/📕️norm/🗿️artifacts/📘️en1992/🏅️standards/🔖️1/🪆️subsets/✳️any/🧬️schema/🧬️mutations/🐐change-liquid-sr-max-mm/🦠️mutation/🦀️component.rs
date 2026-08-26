@@ -15,15 +15,15 @@ pub struct ChangeLiquidSRMaxMm {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidSRMaxMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "liquid-sr-max-mm", kind: "change-liquid-sr-max-mm", record: "ChangedLiquidSRMaxMm" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_liquid_s_r_max_mm::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_liquid_s_r_max_mm::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change liquid s r max mm to {:?}", self.new_liquid_s_r_max_mm)
     }
 }

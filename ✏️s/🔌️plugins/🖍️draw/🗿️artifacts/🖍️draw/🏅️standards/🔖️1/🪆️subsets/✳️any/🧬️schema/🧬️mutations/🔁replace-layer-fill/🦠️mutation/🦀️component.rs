@@ -18,23 +18,23 @@ pub struct ReplaceLayerFill {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_layer_fill(layer_id: String, fill: Option<FillStyle>) -> DrawMutation {
+pub fn replace_layer_fill(layer_id: String, fill: Option<FillStyle>) -> DrawMutation {
     DrawMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id, fill })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for ReplaceLayerFill {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "layer", kind: "replace-layer-fill", record: "ReplacedLayerFill" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace layer \"{}\" fill", self.layer_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

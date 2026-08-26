@@ -10,6 +10,17 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   `…conversation.\n\n`, which matters below. Every scenario copies it into the case work
   directory before touching it; the committed file is never written to.
 
+  ⚠️ WHAT THE `oracle` AND `subject` ROWS BELOW ACTUALLY COMPARE, stated plainly. The reference half is
+  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle`'s hand-written `oracle_apply_mutation`/`independent_split`/
+  `independent_render`, which never calls this subset's production `TxtSnapshot`/`TxtMutation` code.
+  That is a genuinely separate implementation — and it is OUR code, in OUR language, in OUR crate, by
+  OUR authors. Under the raised bar it is not a second PRODUCER, and the `txt-utf-8-line-structure`
+  decision now records that as a DEBT rather than as a verdict. A Python reference is writable here
+  from `🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json` and the nine literal
+  byte vectors this feature already carries; what blocks it is that the oracle role is already
+  occupied by another owner's module, and that the projection's `schema` member is the Rust constant
+  `STDIO_TXT_DOCUMENT_SCHEMA` whose value no committed document states.
+
   There is no credible third-party crate that is authoritative over plain-text line structure —
   line splitting on LF/CRLF, one line-ending style per document and trailing-newline presence are
   exactly what THIS subset defines, not a fact an external library could confirm or refute. See the
@@ -55,7 +66,7 @@ Feature: Apply every typed UTF-8 text-line mutation to a real document
   scenarios and no evidence at all. That is exactly why every subject handler below asserts its law
   IN ROLE: until 2026-08-24 the `mutate-<kind>`, `inverse-<kind>` and `identity-round-trip` handlers
   computed a result and asserted NOTHING about it — 15 of the 24 scenarios were reporting green
-  while proving only that the codec did not panic. `parity=0/0` is the correct and permanent reading
+  while proving only that the codec did not panic. That is the correct and permanent reading
   for this case; it is not a number waiting to improve. The reference module's own `#[cfg(test)]`
   suite (`cargo test --features oracles --lib`) exercises the observability, inverse and carrier
   laws against THIS fixture with THESE exact Examples parameters, independently of the subject.

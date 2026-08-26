@@ -139,8 +139,8 @@ function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiP
  * produced (or the retained tree if nothing changed). Only the ONE "window" surface renders this wave
  * (`⚛️reactor/🦀️component.rs`'s `dirty_render` loop hardcodes it) — `bodyKey`/`viewState` are accepted
  * for ABI compatibility but not yet threaded through, matching `PluginRuntime`'s own identical gap. */
-async function performRender(actorId: string, instanceId: number): Promise<unknown> {
-  const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }]);
+async function performRender(actorId: string, instanceId: number, bodyKey: string): Promise<unknown> {
+  const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
   if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
   return retainedWindowByActor.get(actorId)?.node ?? null;
 }
@@ -344,7 +344,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     },
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
-    render: (instanceId) => performRender(requireActorId(instanceId), instanceId),
+    render: (instanceId, bodyKey) => performRender(requireActorId(instanceId), instanceId, bodyKey),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     dispose: () => {
       for (const instanceId of channelByInstance.keys()) channelByInstance.get(instanceId)?.dispose();

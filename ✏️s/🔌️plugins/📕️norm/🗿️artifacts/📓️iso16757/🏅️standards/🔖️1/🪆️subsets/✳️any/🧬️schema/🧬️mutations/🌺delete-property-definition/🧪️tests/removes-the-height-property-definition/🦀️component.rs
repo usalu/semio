@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// radiator.required_property_ids` and the selection's height constraint still name `prop.height`; neither is
 /// cleaned up, because the oracle touches only the definition list.
 #[semio_framework_async_macros::async_test]
-async fn removes_the_height_property_definition() {
+fn removes_the_height_property_definition() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("delete-property-definition applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "delete-property-definition/removes-the-height-property-definition: the applied state differs from the committed after-snapshot");
     assert!(applied.catalogue.property_definitions.is_empty(), "delete-property-definition/removes-the-height-property-definition: the addressed definition must be gone");
@@ -45,7 +45,7 @@ async fn removes_the_height_property_definition() {
 /// ↩️ `delete-property-definition`'s inverse is a `CreatePropertyDefinition` carrying the removed definition AND
 /// its recorded index, so it returns to position 0 with its unit and cardinality intact.
 #[semio_framework_async_macros::async_test]
-async fn recreating_the_height_property_definition_restores_before() {
+fn recreating_the_height_property_definition_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward delete-property-definition applies");
@@ -62,7 +62,7 @@ async fn recreating_the_height_property_definition_restores_before() {
 /// decode → encode is a fixed point. The committed payload is spelled `{"DeletePropertyDefinition": {"id":
 /// "prop.height"}}` — externally tagged, snake_case payload key.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ `prop.height` IS in the committed catalogue, so the `mutation.target-missing` Error branch is not taken.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-property-definition/removes-the-height-property-definition: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `catalogue` is
 /// rewritten and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced delete-property-definition diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "delete-property-definition/removes-the-height-property-definition: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten
 /// catalogue and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed delete-property-definition diff decodes");
     let catalogue = decoded.catalogue.as_ref().expect("the committed delete-property-definition diff carries the catalogue");
     assert!(catalogue.property_definitions.is_empty(), "delete-property-definition/removes-the-height-property-definition: the deletion is expressed as the shorter whole definition list");
@@ -119,7 +119,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the property-definition deletion, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed delete-property-definition diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-property-definition/removes-the-height-property-definition: the committed diff did not carry before to after");

@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_silo_v_rd_kn::mutation::ChangeSi
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSiloVRdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeSiloVRdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_silo_v_rd_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Silo shear resistance V_Rd [kN] must be a finite number, got {}.", payload.new_silo_v_rd_kn), Vec::<String>::new());
     }

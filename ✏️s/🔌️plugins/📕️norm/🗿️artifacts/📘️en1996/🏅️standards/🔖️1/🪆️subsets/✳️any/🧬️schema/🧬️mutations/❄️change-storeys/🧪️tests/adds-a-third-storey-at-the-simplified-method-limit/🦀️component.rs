@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// the simplified method stays applicable — and the effective height, which the other half of that scope test
 /// reads, must not be touched.
 #[semio_framework_async_macros::async_test]
-async fn adds_a_third_storey_at_the_simplified_method_limit() {
+fn adds_a_third_storey_at_the_simplified_method_limit() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-storeys applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.storeys, 3, "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: storeys must read 3 storeys once the change lands");
@@ -44,7 +44,7 @@ async fn adds_a_third_storey_at_the_simplified_method_limit() {
 /// ↩️ `change-storeys`'s inverse reads the OLD 2 out of BASE, so replaying it puts the two-storey count back on
 /// `storeys`.
 #[semio_framework_async_macros::async_test]
-async fn returning_to_two_storeys_restores_before() {
+fn returning_to_two_storeys_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-storeys applies");
@@ -62,7 +62,7 @@ async fn returning_to_two_storeys_restores_before() {
 /// is a fixed point, so `newStoreys`, carrying a bare JSON integer because the field is a `u32` is spelled
 /// here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `storeys` is a `u32`, so `change-storeys` has no finiteness guard; 3 differs from the
 /// committed 2, so no `mutation.no-op` warning is raised.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `storeys` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-storeys diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the storey count and nothing
 /// else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-storeys diff decodes");
     assert_eq!(decoded.storeys, Some(3), "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: the committed diff must carry storeys = 3 storeys");
     assert!(decoded.h_ef_mm.is_none(), "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: change-storeys writes storeys and must leave `h_ef_mm` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the storey-count change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-storeys diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-storeys/adds-a-third-storey-at-the-simplified-method-limit: the committed diff did not carry before to after");

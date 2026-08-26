@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-wall-h-rd-kn` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `wall_h_rd_kn` from 150.0 to 187.5, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_wall_h_rd_kn_applies_to_committed_after() {
+fn change_wall_h_rd_kn_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-wall-h-rd-kn applies to its committed before-snapshot");
     assert_eq!(applied.wall_h_rd_kn, 187.5, "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: wall_h_rd_kn must read 187.5 after the change");
     assert_eq!(applied, expected_after(), "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_wall_h_rd_kn_applies_to_committed_after() {
 /// ↩️ `change-wall-h-rd-kn` is its own inverse partner: the inverse step restores `wall_h_rd_kn` to its pre-change
 /// 150.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_wall_h_rd_kn_inverse_restores_before() {
+fn change_wall_h_rd_kn_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-wall-h-rd-kn applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_wall_h_rd_kn_inverse_restores_before() {
 /// decode then encode is a fixed point, so `wallHRdKn` and `newWallHRdKn` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_wall_h_rd_kn_committed_json_is_canonical() {
+fn change_wall_h_rd_kn_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-wall-h-rd-kn snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-wall-h-rd-kn snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_wall_h_rd_kn_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-wall-h-rd-kn` at 187.5 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_wall_h_rd_kn_declared_outcome_holds() {
+fn change_wall_h_rd_kn_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-wall-h-rd-kn outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_wall_h_rd_kn_declared_outcome_holds() {
 /// assertion: it pins that only `wallHRdKn` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `seismicZone`.
 #[semio_framework_async_macros::async_test]
-async fn change_wall_h_rd_kn_produces_committed_diff() {
+fn change_wall_h_rd_kn_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().wall_h_rd_kn, Some(187.5), "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: the diff must set wall_h_rd_kn to 187.5");
     assert!(outcome.diff().artifact.is_none(), "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_wall_h_rd_kn_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-wall-h-rd-kn`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_wall_h_rd_kn_committed_diff_is_canonical() {
+fn change_wall_h_rd_kn_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-wall-h-rd-kn committed diff decodes");
     assert_eq!(decoded.wall_h_rd_kn, Some(187.5), "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: the committed diff must carry wall_h_rd_kn at 187.5");
     assert!(decoded.selected_check_index.is_none(), "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_wall_h_rd_kn_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 150.0 to 187.5 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_wall_h_rd_kn_committed_diff_applies_to_after() {
+fn change_wall_h_rd_kn_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-wall-h-rd-kn committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-wall-h-rd-kn committed diff applies to the before-snapshot");
     assert_eq!(produced.wall_h_rd_kn, 187.5, "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: the committed diff must leave wall_h_rd_kn reading 187.5");

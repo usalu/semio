@@ -16,13 +16,13 @@ use ui_wgpu::wgpu::{WindowEngagement, WindowMeasure};
 #[cfg(target_arch = "wasm32")]
 use js_sys::{Array, Function, Reflect};
 #[cfg(target_arch = "wasm32")]
+use semio_framework_async::browser::JsFuture;
+#[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen_futures::JsFuture;
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::kernel_runtime::{KernelClient, MountedProductReplayAdmission};

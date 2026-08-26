@@ -4,21 +4,17 @@
 //! storage on Intel Macs) and is reallocated only when a frame's data outgrows the current capacity,
 //! never shrunk, mirroring the wgpu target's "next power of two, floor 256 bytes" growth policy.
 
-use objc2::rc::Retained;
-use objc2::runtime::ProtocolObject;
-use objc2_metal::{MTLBuffer, MTLDevice, MTLResourceOptions};
+use crate::objective_c::{MTLBuffer as MetalBuffer, MTLDevice as Device, Owned};
+use objc2_metal::MTLResourceOptions;
 
 //#region 🔖️FrameBuffers
-
-type Device = ProtocolObject<dyn MTLDevice>;
-type MetalBuffer = ProtocolObject<dyn MTLBuffer>;
 
 /// 📬️ One growable `Shared`-storage buffer, rewritten wholesale every upload. Ported from
 /// `GrowBuffer` in the wgpu target 1:1 — same growth policy, same "empty data uploads nothing and
 /// returns `None`" contract.
 #[derive(Default)]
 pub struct GrowBuffer {
-    buffer: Option<Retained<MetalBuffer>>,
+    buffer: Option<Owned<MetalBuffer>>,
     capacity: usize,
 }
 

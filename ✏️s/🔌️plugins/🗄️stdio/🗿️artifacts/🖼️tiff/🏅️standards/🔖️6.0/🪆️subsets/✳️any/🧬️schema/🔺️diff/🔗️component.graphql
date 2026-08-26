@@ -10,7 +10,9 @@ type TiffTagsDiff {
   added: [TiffTagAdded!]
 }
 
-type TiffIfdModified { index: Int! diff: TiffTagsDiff! }
+"One IFD's own delta: the recursive tag triple plus a whole-value slot for its raw strip payload."
+type TiffIfdDiff { entries: TiffTagsDiff! pixels: [Int!] }
+type TiffIfdModified { index: Int! diff: TiffIfdDiff! }
 type TiffIfdAdded { index: Int! ifd: TiffIfd! }
 
 "Index-keyed `ifds` triple (TIFF's IFD chain is positional)."

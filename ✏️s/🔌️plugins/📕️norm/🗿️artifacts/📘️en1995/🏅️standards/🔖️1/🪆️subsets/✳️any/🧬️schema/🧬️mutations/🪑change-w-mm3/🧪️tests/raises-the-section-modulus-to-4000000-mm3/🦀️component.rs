@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// bh²/6 is exactly 3000000.0 mm³, and this mutation must NOT push b or h to keep that identity — W is its
 /// own declared input.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_section_modulus_to_4000000_mm3() {
+fn raises_the_section_modulus_to_4000000_mm3() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-w-mm3 applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-w-mm3/raises-the-section-modulus-to-4000000-mm3: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.w_mm3, 4000000.0, "change-w-mm3/raises-the-section-modulus-to-4000000-mm3: w_mm3 must read 4000000.0 mm³ once the change lands");
@@ -44,7 +44,7 @@ async fn raises_the_section_modulus_to_4000000_mm3() {
 /// ↩️ `change-w-mm3`'s inverse reads the OLD 3000000.0 mm³ out of BASE, so replaying it puts the 3000000.0 mm³
 /// back on `w_mm3`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_3000000_mm3_restores_before() {
+fn restoring_3000000_mm3_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-w-mm3 applies");
@@ -62,7 +62,7 @@ async fn restoring_3000000_mm3_restores_before() {
 /// is a fixed point, so `{"ChangeWMm3": {"newWMm3": 4000000.0}}` — externally tagged is spelled here exactly
 /// as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 4000000.0 mm³ is finite and differs from the committed 3000000.0 mm³, so `change-w-mm3`
 /// produces a clean outcome.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-w-mm3/raises-the-section-modulus-to-4000000-mm3: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `wMm3` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-w-mm3 diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-w-mm3/raises-the-section-modulus-to-4000000-mm3: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the section modulus and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-w-mm3 diff decodes");
     assert_eq!(decoded.w_mm3, Some(4000000.0), "change-w-mm3/raises-the-section-modulus-to-4000000-mm3: the committed diff must carry wMm3 = 4000000.0 mm³");
     assert!(decoded.b_mm.is_none(), "change-w-mm3/raises-the-section-modulus-to-4000000-mm3: change-w-mm3 writes wMm3 and must leave `b_mm` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the section-modulus change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-w-mm3 diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-w-mm3/raises-the-section-modulus-to-4000000-mm3: the committed diff did not carry before to after");

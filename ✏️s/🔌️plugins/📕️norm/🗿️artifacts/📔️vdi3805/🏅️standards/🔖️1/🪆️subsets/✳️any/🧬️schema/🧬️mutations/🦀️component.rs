@@ -25,13 +25,13 @@ use std::collections::BTreeMap;
 /// 🧮️ Mirrors `CatalogIndex::from_catalog`'s per-product mapping — kept here so every product
 /// mutation (`create`/`rename`/`replace-configuration`) can update the persisted `index` field
 /// directly from the payload instead of rebuilding the whole index from the whole catalog.
-pub async fn catalog_index_entry_for(product: &CatalogueProduct) -> CatalogIndexEntry {
+pub fn catalog_index_entry_for(product: &CatalogueProduct) -> CatalogIndexEntry {
     CatalogIndexEntry { product_id: product.identity.article_number.clone(), sheet: product.sheet, tags: product.title.iter().map(|t| t.text.clone()).collect(), dn: extract_dn(&product.configuration.parameters) }
 }
 
 /// 🔢️ Extracts a `CatalogIndexEntry.dn` value from a configuration's parameter bag, mirroring
 /// `CatalogIndex::from_catalog`'s own extraction exactly.
-pub async fn extract_dn(parameters: &BTreeMap<String, VdiValue>) -> Option<u16> {
+pub fn extract_dn(parameters: &BTreeMap<String, VdiValue>) -> Option<u16> {
     parameters.get("dn").and_then(|v| match v {
         VdiValue::Integer { value } => Some(*value as u16),
         VdiValue::Decimal { value, .. } => Some(*value as u16),
@@ -126,7 +126,7 @@ impl Vdi3805Mutation {
     /// `🔖️IndexSync` above), so recreating every product from `target` rebuilds it for free. `base`
     /// is required because `products`/`geometry`/`curves` are real id-keyed collections needing full
     /// remove/re-insert, and `edition_profile` is a real map needing a key-diff.
-    pub async fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+    pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         let mut mutations = Vec::new();
         mutations.push(Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::mutation::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }));
         mutations.push(Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::mutation::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of.clone() }));
@@ -174,7 +174,7 @@ mod tests {
     use super::*;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    async fn round_trip(base: &Vdi3805Snapshot, operation: &Vdi3805Mutation) -> Vdi3805Snapshot {
+    fn round_trip(base: &Vdi3805Snapshot, operation: &Vdi3805Mutation) -> Vdi3805Snapshot {
         let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn update_manufacturer_file_round_trips() {
+    fn update_manufacturer_file_round_trips() {
         let base = Vdi3805Snapshot::default();
         let mut new_file = base.manufacturer_file.clone();
         new_file.manufacturer = "ACME".into();
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_correction_as_of_and_strict_mode_round_trip() {
+    fn change_correction_as_of_and_strict_mode_round_trip() {
         let base = Vdi3805Snapshot::default();
         let correction = Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::mutation::ChangeCorrectionAsOf { new_correction_as_of: crate::artifacts::vdi3805::EditionId::new(2025, 3) });
         let after = round_trip(&base, &correction);
@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn update_limits_round_trips() {
+    fn update_limits_round_trips() {
         let base = Vdi3805Snapshot::default();
         let new_limits = crate::artifacts::vdi3805::SecurityLimits { max_file_bytes: 1, max_records: 2, max_field_length: 3, max_nesting_depth: 4 };
         let mutation = Vdi3805Mutation::UpdateLimits(update_limits::mutation::UpdateLimits { new_limits });
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_and_remove_edition_profile_round_trip() {
+    fn change_and_remove_edition_profile_round_trip() {
         let base = Vdi3805Snapshot::default();
         let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: "8".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Legacy });
         let after_change = round_trip(&base, &change);
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
+    fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
         let base = Vdi3805Snapshot::default();
         let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::mutation::ChangeEditionProfile { sheet: "fresh".into(), new_choice: crate::artifacts::vdi3805::EditionProfileChoice::Current });
         let undo = change.inverse(&base);
@@ -237,7 +237,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn create_rename_replace_configuration_delete_product_round_trip() {
+    fn create_rename_replace_configuration_delete_product_round_trip() {
         let base = Vdi3805Snapshot::default();
         let product = CatalogueProduct {
             identity: crate::artifacts::vdi3805::ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
@@ -278,14 +278,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn delete_product_of_a_missing_id_has_an_empty_inverse() {
+    fn delete_product_of_a_missing_id_has_an_empty_inverse() {
         let base = Vdi3805Snapshot::default();
         let delete = Vdi3805Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: "nope".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn geometry_lifecycle_round_trips() {
+    fn geometry_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
         let geometry = crate::artifacts::vdi3805::ParametricGeometry { id: "geom.new".into(), bbox: crate::artifacts::vdi3805::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
         let create = Vdi3805Mutation::CreateGeometry(create_geometry::mutation::CreateGeometry { geometry: geometry.clone() });
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn curve_lifecycle_round_trips() {
+    fn curve_lifecycle_round_trips() {
         let base = Vdi3805Snapshot::default();
         let curve = crate::artifacts::vdi3805::CharacteristicCurve {
             id: "curve.new".into(),
@@ -342,7 +342,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn semantic_kinds_cover_every_variant() {
+    fn semantic_kinds_cover_every_variant() {
         assert_eq!(Vdi3805Mutation::kinds().len(), 19);
         let mutation = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::mutation::ChangeStrictMode { new_strict_mode: true });
         assert_eq!(mutation.semantics().kind, "change-strict-mode");

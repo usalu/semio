@@ -1138,10 +1138,10 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ztxt_and_itxt_round_trip() {
-        // zTXt: keyword\0 + compression-method(0) + zlib(value)
+        // zTXt: keyword\0 + compression-method(0).await + zlib(value)
         let mut ztxt = b"Comment\0\0".to_vec();
         ztxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(b"compressed value").unwrap());
-        // iTXt (compressed): keyword\0 + flag(1) + method(0) + lang\0 + translated\0 + zlib(value)
+        // iTXt (compressed): keyword\0 + flag(1) + method(0).await + lang\0 + translated\0 + zlib(value)
         let mut itxt = b"Title\0".to_vec();
         itxt.push(1);
         itxt.push(0);

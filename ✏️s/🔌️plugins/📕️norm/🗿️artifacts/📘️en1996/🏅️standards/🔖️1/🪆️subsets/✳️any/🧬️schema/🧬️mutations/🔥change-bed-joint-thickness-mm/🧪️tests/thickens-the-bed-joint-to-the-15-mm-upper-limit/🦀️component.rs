@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// ▶️ Thickening the bed joint from 12.0 mm to 15.0 mm — the top of the EN 1996-2 §8 6–15 mm general-purpose
 /// band — rewrites `bed_joint_thickness_mm` alone.
 #[semio_framework_async_macros::async_test]
-async fn thickens_the_bed_joint_to_the_15_mm_upper_limit() {
+fn thickens_the_bed_joint_to_the_15_mm_upper_limit() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-bed-joint-thickness-mm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-bed-joint-thickness-mm/thickens-the-bed-joint-to-the-15-mm-upper-limit: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.bed_joint_thickness_mm, 15.0, "change-bed-joint-thickness-mm/thickens-the-bed-joint-to-the-15-mm-upper-limit: bed_joint_thickness_mm must read 15.0 mm once the change lands");
@@ -43,7 +43,7 @@ async fn thickens_the_bed_joint_to_the_15_mm_upper_limit() {
 /// ↩️ `change-bed-joint-thickness-mm`'s inverse reads the OLD 12.0 mm out of BASE, so replaying it puts the 12.0
 /// mm bed joint back on `bed_joint_thickness_mm`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_12_mm_restores_before() {
+fn restoring_12_mm_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-bed-joint-thickness-mm applies");
@@ -61,7 +61,7 @@ async fn restoring_12_mm_restores_before() {
 /// decode → encode is a fixed point, so `newBedJointThicknessMm` (serde camelCase over
 /// `new_bed_joint_thickness_mm`) is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 15.0 mm is finite and differs from the committed 12.0 mm. The 6–15 mm band is enforced by
 /// the EN 1996-2 §8 CHECK, not by this mutation — its diff builder has no range guard.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-bed-joint-thickness-mm/thickens-the-bed-joint-to-the-15-mm-upper-limit: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -88,7 +88,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `bedJointThicknessMm` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-bed-joint-thickness-mm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-bed-joint-thickness-mm/thickens-the-bed-joint-to-the-15-mm-upper-limit: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -97,7 +97,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the bed-joint thickness and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-bed-joint-thickness-mm diff decodes");
     assert_eq!(decoded.bed_joint_thickness_mm, Some(15.0), "change-bed-joint-thickness-mm/thickens-the-bed-joint-to-the-15-mm-upper-limit: the committed diff must carry bedJointThicknessMm = 15.0 mm");
     assert!(decoded.mortar.is_none(), "change-bed-joint-thickness-mm/thickens-the-bed-joint-to-the-15-mm-upper-limit: change-bed-joint-thickness-mm writes bedJointThicknessMm and must leave `mortar` untouched");
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the bed-joint-thickness change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-bed-joint-thickness-mm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-bed-joint-thickness-mm/thickens-the-bed-joint-to-the-15-mm-upper-limit: the committed diff did not carry before to after");

@@ -184,7 +184,7 @@ mod tests {
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_component_snapshot();
         let pure = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&snapshot, None);
-        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
+        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
         let via_disabled = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&snapshot, Some(&mut disabled));
         assert_eq!(pure, via_disabled);
     }
@@ -193,12 +193,12 @@ mod tests {
     //#region 🧪️IncrementalityLaw
     #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_component_snapshot();
         let _ = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.stats().await;
         let _ = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
         assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
         assert_eq!(after.hits - before.hits, 3, "all three nodes must be cache hits");
     }
@@ -209,15 +209,15 @@ mod tests {
     /// for every key (plus `key` itself — see that method's own doc comment for why).
     #[semio_framework_async_macros::async_test]
     async fn editing_any_edge_misses_every_entry_because_connectivity_is_whole_graph() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_component_snapshot();
         let _ = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.edges.push(edge("e2", "b", "c"));
-        let before = cache.stats();
+        let before = cache.stats().await;
         let values = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 3, "adding one edge must miss all three entries, not just the two it touches");
         assert_eq!(values.get("a").map(|v| v.component), values.get("c").map(|v| v.component), "a and c are now connected through b");
@@ -232,7 +232,7 @@ mod tests {
     /// own uncached recompute AND that two structurally-different nodes stay distinct.
     #[semio_framework_async_macros::async_test]
     async fn distinct_keys_never_collide_in_the_cache() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_component_snapshot();
         let cached = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, Some(&mut cache));
         let pure = store::infer_field::<SemioGraphSnapshot, NodeConnectivity>(&base, None);

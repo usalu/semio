@@ -132,6 +132,42 @@ pub async fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &B
     mutation.inverse(projection)
 }
 
+//#region 🌉️TestBridge
+/// 🌉️ One report for a `(base, mutation, after)` triple, in the framework's own JSON, so a test host
+/// can exercise this subset's codec without linking `serde_json` itself. Mirrors the bridge every
+/// other converted subset ships (`🗺️gismap`, `🏗️fem`); this subset had none, so its adapter could
+/// only read committed vectors and never ran the implementation at all.
+///
+/// `base` is the decoded input, `snapshot` the applied document, `expectedSnapshot` the decoded
+/// `after_json`, `diff` the produced delta, `messages` the diagnostics it raised, `inverseSteps` the
+/// computed inverse and `inverseSnapshot` the document those steps land on.
+pub fn block2d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    let base: Block2dSnapshot = serde_json::from_str(base_json).map_err(|error| error.to_string())?;
+    let expected: Block2dSnapshot = serde_json::from_str(after_json).map_err(|error| error.to_string())?;
+    let mutation: Block2dMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mut applied = base.clone();
+    let forward = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let inverse = <Block2dMutation as Mutation<Block2dSnapshot>>::inverse(&mutation, &base);
+    let mut undone = applied.clone();
+    let mut inverse_messages = Vec::new();
+    for step in &inverse {
+        let outcome = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        inverse_messages.extend(outcome.messages().iter().cloned());
+    }
+    let report = serde_json::json!({
+        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
+        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
+        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
+        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
+        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
+        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
+        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
+        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
+    });
+    Ok(report.to_string())
+}
+//#endregion 🌉️TestBridge
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

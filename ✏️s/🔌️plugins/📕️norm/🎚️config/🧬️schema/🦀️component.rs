@@ -18,7 +18,7 @@ pub struct NormConfig {
 /// every standard's `PlayApp` uses, so every one of the fifteen `app_schema()` overrides returns this
 /// same struct literal; `register_document_app` inserting the identical `id`/content fifteen times
 /// into the OS-wide `HashMap<&'static str, _>` catalog is an idempotent overwrite, not a conflict.
-pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.norm.norm",
         config: ::schema::FacetLeaves {

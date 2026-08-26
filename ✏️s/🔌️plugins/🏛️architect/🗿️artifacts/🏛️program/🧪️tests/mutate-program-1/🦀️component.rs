@@ -1,15 +1,14 @@
 //! 🦀️ Architect program exhaustive mutation case — Rust adapter. Ticket `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //!
-//! Recorded no-oracle decision `architect-program-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.architect.program` is a
-//! semio-NATIVE artifact with no third-party reader or writer, so this case registers SUBJECT
-//! handlers only. That is not an omission — the runner resolves an oracle implementation from the
-//! feature's `@oracle-` tag, this feature carries `@no-oracle-` instead, and the oracle role is
-//! therefore never dispatched for it. Registering an oracle handler here would be dead code that
-//! reads as coverage in every listing, so there is none; every law this case claims is asserted
-//! inside the subject handlers, through the shared
+//! This file registers the SUBJECT half only. The reference half is `🐍️component.py` beside it — a
+//! second implementation of this document and its 266 mutations, in Python, registered as
+//! `architect-program-python-independent` in
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`. Registering a Rust oracle here
+//! would make this repository its own reference and manufacture a green self-comparison, so there
+//! is none. The laws this half claims are asserted inside the subject handlers through the shared
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module, whose helpers are dependency-free
-//! and format-neutral by their own doc comment.
+//! and format-neutral by their own doc comment; the Python half restates them by hand in its own
+//! `🔖️Laws` region, because the Python host exposes no `law` module.
 //!
 //! The evidence rests on the committed `(before, mutation, after, outcome)` specification vector
 //! under each of the 266 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves. Those files are read HERE

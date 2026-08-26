@@ -40,6 +40,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 import { Footer, navbarFillItem, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../../../🧱️elements/Interpreter/🟦️component.tsx";
+import { parseWorldBrushPreview } from "../../../../🧱️elements/World3dHost/🟦️component.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
@@ -68,6 +69,7 @@ import {
   catalogueGhostDescriptorJson,
   computeDagMarqueeOverlay,
   flowCatalogueItemDescriptor,
+  flowSurfaceRenderAllowed,
   flowRankCatalogueSuggestions,
   flowSpotlightSuggestionListScrollClass,
   nodeGraphViewportActionArgs,
@@ -138,6 +140,7 @@ import {
   fetchDescriptorManifest,
   resolveDescriptorBeforeRuntime,
   applyUiPatchToRetained,
+  decodeWirePatchOps,
   UiDocumentStore,
   type UiInterpreterContext,
   UiPresenceOverlayContext,
@@ -1296,10 +1299,6 @@ describe("framework plugin runtime", () => {
   // coverage of "apply a `UiPatch` to a retained tree, honour `baseRevision`" that does not depend on
   // the unverified jco wasm boundary this file's `🔖️ActorAdapter` doc flags.
   describe("applyUiPatchToRetained", () => {
-    // 🧬️ MIGRATION (react-tests packet): `PatchOp::Replace`'s payload is a whole `UiSnapshot` (root
-    // pointer + flat node table), not a single recursive `UiNode` (deleted) — see
-    // `PluginRuntime/🟦️component.tsx`'s own `🔖️RetainedUiPatch` doc. `RetainedSurface` is a
-    // `UiDocumentState`, so a successful result's `surface.nodes` is a `ReadonlyMap`, not a bare node.
     const leaf = (id: number, value: string): UiNodeRecord => ({
       id,
       key: `leaf-${id}`,
@@ -1314,33 +1313,45 @@ describe("framework plugin runtime", () => {
       menu: null,
       children: [],
     });
-    const snapshot = (revision: number, value: string): UiSnapshot => ({ surface: "s", revision, root: 0, nodes: [leaf(0, value)], layoutEpoch: 0n }) as UiSnapshot;
 
-    it("a root Replace on a fresh surface (no previous body) is applied", () => {
-      const result = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(1, "a") }] });
+    it("applies the semantic upsert and set-root operations emitted by the actor WIT boundary", async () => {
+      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const ops = decodeWirePatchOps([
+        {
+          tag: "upsert",
+          val: {
+            node: Array.from(
+              encodePackValue({ id: 0, key: "leaf-0", component: leaf(0, "a").component, layout: leaf(0, "a").layout, style: {}, activity: "idle", accessibility: {} }),
+            ),
+          },
+        },
+        { tag: "set-root", val: 0n },
+      ]);
+      const result = applyUiPatchToRetained(null, { surface: "s", revision: 1n, baseRevision: 0n, ops });
       expect(result.desynced).toBe(false);
       expect(result.surface?.revision).toBe(1);
       expect(result.surface?.nodes.get(0)?.component).toEqual({ type: "text", value: "a", emphasize: null, dataAttributes: null });
+      expect(result.surface?.nodes.get(0)?.children).toEqual([]);
     });
 
-    it("a root Replace with a matching baseRevision advances the retained body", () => {
-      const { surface: previous } = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(1, "a") }] });
-      const result = applyUiPatchToRetained(previous, { revision: 2, baseRevision: 1, ops: [{ kind: "Replace", path: [], snapshot: snapshot(2, "b") }] });
+    it("applies incremental semantic field updates with a matching base revision", () => {
+      const first = applyUiPatchToRetained(null, { surface: "s", revision: 1, baseRevision: 0, ops: [{ type: "upsert", ...leaf(0, "a") }, { type: "setRoot", id: 0 }] });
+      const result = applyUiPatchToRetained(first.surface, { surface: "s", revision: 2, baseRevision: 1, ops: [{ type: "setComponent", id: 0, component: { type: "text", value: "b", emphasize: null, dataAttributes: null } }] });
       expect(result.desynced).toBe(false);
       expect(result.surface?.revision).toBe(2);
       expect(result.surface?.nodes.get(0)?.component).toEqual({ type: "text", value: "b", emphasize: null, dataAttributes: null });
     });
 
-    it("a non-root op (no incremental walker yet) is an honest desync — the previous body is kept", () => {
-      const { surface: previous } = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(1, "a") }] });
-      const result = applyUiPatchToRetained(previous, { revision: 2, baseRevision: 1, ops: [{ kind: "SetProps", path: [0], props: {} }] });
+    it("keeps the previous body when a semantic patch has a stale base revision", () => {
+      const { surface: previous } = applyUiPatchToRetained(null, { surface: "s", revision: 1, baseRevision: 0, ops: [{ type: "upsert", ...leaf(0, "a") }, { type: "setRoot", id: 0 }] });
+      const result = applyUiPatchToRetained(previous, { surface: "s", revision: 2, baseRevision: 0, ops: [{ type: "setComponent", id: 0, component: { type: "text", value: "b", emphasize: null, dataAttributes: null } }] });
       expect(result.desynced).toBe(true);
       expect(result.surface).toBe(previous);
     });
 
-    it("an ops-less patch with a stale baseRevision is a desync — nothing to reconcile against", () => {
-      const { surface: previous } = applyUiPatchToRetained(null, { revision: 5, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(5, "a") }] });
-      const result = applyUiPatchToRetained(previous, { revision: 6, baseRevision: 1, ops: [] });
+    it("keeps the previous body when a patch violates the retained document graph", () => {
+      const { surface: previous } = applyUiPatchToRetained(null, { surface: "s", revision: 1, baseRevision: 0, ops: [{ type: "upsert", ...leaf(0, "a") }, { type: "setRoot", id: 0 }] });
+      const result = applyUiPatchToRetained(previous, { surface: "s", revision: 2, baseRevision: 1, ops: [{ type: "setChildren", id: 0, children: [99] }] });
       expect(result.desynced).toBe(true);
       expect(result.surface).toBe(previous);
     });
@@ -2711,6 +2722,197 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("data-world-projection-kind-switch");
   });
 
+  it("admits only the fixed localized fill diagnostic schema", () => {
+    const diagnostic = {
+      operation: 41,
+      baseRevision: 7,
+      registryGeneration: 11,
+      sequence: 5,
+      generation: 3,
+      stage: "test-collision",
+      statusLabel: "Fill progress",
+      targetVortexFullId: "host:v0",
+      candidateObjectKindId: "candidate",
+      candidateGhost: null,
+      currentPairObjectId: "obstacle-1",
+      collisionCount: 1,
+      sampleCursor: 4,
+      insideBoth: 2,
+      lastSample: [0.25, -0.5, 1],
+      candidatePage: ["a", "b", null, null, null, null, null, null],
+      truncated: false,
+      rejectionReason: "solid-overlap",
+      targetCursor: 6,
+      candidateCursor: 7,
+      acceptedCount: 8,
+      totalCount: 1000,
+      searchCount: 23,
+      rejectedCount: 4,
+    };
+    const page = (statusLabel: string, override: Record<string, unknown> = {}, root: Record<string, unknown> = {}) => JSON.stringify({ ...root, fillBuildPreview: { ...diagnostic, statusLabel, ...override } });
+    const oneKeyNullGhostRoot = page("Fill progress");
+    expect(Object.keys(JSON.parse(oneKeyNullGhostRoot))).toHaveLength(1);
+    expect(parseWorldBrushPreview(oneKeyNullGhostRoot)?.fillBuildPreview?.statusLabel).toBe("Fill progress");
+    expect(parseWorldBrushPreview(page("Füllfortschritt"))?.fillBuildPreview?.statusLabel).toBe("Füllfortschritt");
+    expect(parseWorldBrushPreview(page("Fill progress", {}, { extra: true }))).toBeNull();
+    expect(parseWorldBrushPreview(page("Fill progress", { extra: true }))).toBeNull();
+    const missing = { fillBuildPreview: { ...diagnostic } } as { fillBuildPreview: Record<string, unknown> };
+    delete missing.fillBuildPreview.statusLabel;
+    expect(parseWorldBrushPreview(JSON.stringify(missing))).toBeNull();
+    expect(parseWorldBrushPreview(page(""))).toBeNull();
+    expect(parseWorldBrushPreview(page("x".repeat(256)))).not.toBeNull();
+    expect(parseWorldBrushPreview(page("x".repeat(257)))).toBeNull();
+    expect(parseWorldBrushPreview(page("ü".repeat(128)))).not.toBeNull();
+    expect(parseWorldBrushPreview(page("ü".repeat(129)))).toBeNull();
+    for (const field of [
+      "operation",
+      "baseRevision",
+      "registryGeneration",
+      "sequence",
+      "generation",
+      "collisionCount",
+      "sampleCursor",
+      "insideBoth",
+      "targetCursor",
+      "candidateCursor",
+      "acceptedCount",
+      "totalCount",
+      "searchCount",
+      "rejectedCount",
+    ]) {
+      expect(parseWorldBrushPreview(page("Fill progress", { [field]: Number.MAX_SAFE_INTEGER }))).not.toBeNull();
+      expect(parseWorldBrushPreview(page("Fill progress", { [field]: Number.MAX_SAFE_INTEGER + 1 }))).toBeNull();
+    }
+    const emptyStagePage = page("Fill progress", { stage: "" });
+    const exactWirePage = page("Fill progress", { stage: "x".repeat(4096 - emptyStagePage.length) });
+    const plusOneWirePage = page("Fill progress", { stage: "x".repeat(4096 - emptyStagePage.length + 1) });
+    expect(exactWirePage).toHaveLength(4096);
+    expect(plusOneWirePage).toHaveLength(4097);
+    expect(parseWorldBrushPreview(exactWirePage)).not.toBeNull();
+    expect(parseWorldBrushPreview(plusOneWirePage)).toBeNull();
+    const oversizedOrdinaryBrushPage = JSON.stringify({ meshUrl: "x".repeat(4097) });
+    expect(oversizedOrdinaryBrushPage.length).toBeGreaterThan(4096);
+    expect(parseWorldBrushPreview(oversizedOrdinaryBrushPage)?.meshUrl).toHaveLength(4097);
+    expect(parseWorldBrushPreview(JSON.stringify({ fillBuildPreview: { ...diagnostic, statusLabel: 7 } }))).toBeNull();
+    expect(parseWorldBrushPreview("{")).toBeNull();
+    expect(parseWorldBrushPreview(page("Fill progress", { candidatePage: diagnostic.candidatePage.slice(0, 7) }))).toBeNull();
+    expect(parseWorldBrushPreview(page("Fill progress", { candidatePage: [...diagnostic.candidatePage, null] }))).toBeNull();
+    const missingGhost = { fillBuildPreview: { ...diagnostic } } as { fillBuildPreview: Record<string, unknown> };
+    delete missingGhost.fillBuildPreview.candidateGhost;
+    expect(parseWorldBrushPreview(JSON.stringify(missingGhost))).toBeNull();
+
+    const ghost = {
+      targetVortexFullId: "host:v0",
+      objectKindId: "candidate",
+      sourceVortexIndex: 2,
+      meshUrl: "/candidate.glb",
+      origin: [1, 2, 3],
+      orientation: [0, 0, 0, 1],
+    };
+    const ghostRoot = { ...ghost, color: "#38bdf8", opacity: 0.35 };
+    const fullNineKeyGhostRoot = page("Fill progress", { candidateGhost: ghost }, ghostRoot);
+    expect(Object.keys(JSON.parse(fullNineKeyGhostRoot))).toHaveLength(9);
+    expect(parseWorldBrushPreview(fullNineKeyGhostRoot)).not.toBeNull();
+    expect(parseWorldBrushPreview(page("Fill progress", {}, { color: "x".repeat(128) }))).not.toBeNull();
+    for (const malformedRoot of [
+      { targetVortexFullId: 7 },
+      { objectKindId: 7 },
+      { sourceVortexIndex: "2" },
+      { sourceVortexIndex: -1 },
+      { sourceVortexIndex: Number.MAX_SAFE_INTEGER + 1 },
+      { meshUrl: 7 },
+      { origin: "bad" },
+      { origin: [1, 2] },
+      { origin: [1, Number.NaN, 3] },
+      { orientation: "bad" },
+      { orientation: [0, 0, 1] },
+      { orientation: [0, 0, Number.POSITIVE_INFINITY, 1] },
+      { color: 7 },
+      { color: "x".repeat(129) },
+      { color: "ü".repeat(65) },
+      { opacity: true },
+      { opacity: 0.34 },
+    ]) {
+      expect(parseWorldBrushPreview(page("Fill progress", {}, malformedRoot))).toBeNull();
+    }
+    for (const mismatchedRoot of [
+      { ...ghostRoot, targetVortexFullId: "other:v0" },
+      { ...ghostRoot, objectKindId: "other" },
+      { ...ghostRoot, sourceVortexIndex: 3 },
+      { ...ghostRoot, meshUrl: "/other.glb" },
+      { ...ghostRoot, origin: [1, 2, 4] },
+      { ...ghostRoot, orientation: [0, 0, 1, 0] },
+    ]) {
+      expect(parseWorldBrushPreview(page("Fill progress", { candidateGhost: ghost }, mismatchedRoot))).toBeNull();
+    }
+    for (const malformedGhost of [
+      [],
+      {},
+      { ...ghost, meshUrl: undefined },
+      { ...ghost, meshUrl: 7 },
+      { ...ghost, sourceVortexIndex: -1 },
+      { ...ghost, sourceVortexIndex: Number.MAX_SAFE_INTEGER + 1 },
+      { ...ghost, origin: [1, 2] },
+      { ...ghost, orientation: [0, 0, 1] },
+      { ...ghost, origin: [1, Number.NaN, 3] },
+      { ...ghost, orientation: [0, 0, Number.POSITIVE_INFINITY, 1] },
+      { ...ghost, extra: true },
+    ]) {
+      expect(parseWorldBrushPreview(page("Fill progress", { candidateGhost: malformedGhost }, ghostRoot))).toBeNull();
+    }
+  });
+
+  it.each(["Fill progress", "Füllfortschritt"])("renders the %s fill label with visible and ARIA parity", (statusLabel) => {
+    const brushPreviewJson = JSON.stringify({
+      fillBuildPreview: {
+        operation: 1,
+        baseRevision: 1,
+        registryGeneration: 1,
+        sequence: 0,
+        generation: 1,
+        stage: "census",
+        statusLabel,
+        targetVortexFullId: null,
+        candidateObjectKindId: null,
+        candidateGhost: null,
+        currentPairObjectId: null,
+        collisionCount: 0,
+        sampleCursor: 0,
+        insideBoth: 0,
+        lastSample: null,
+        candidatePage: [null, null, null, null, null, null, null, null],
+        truncated: false,
+        rejectionReason: null,
+        targetCursor: 0,
+        candidateCursor: 0,
+        acceptedCount: 0,
+        totalCount: 1,
+        searchCount: 0,
+        rejectedCount: 0,
+      },
+    });
+    const markup = renderToStaticMarkup(
+      createElement(World3dHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "puzzle.3d.play.viewport",
+          controllerId: "puzzle3d-play",
+          componentKind: "world-3d",
+          world3d: {
+            cameraJson: '{"position":[4,4,4],"target":[0,0,0],"zoom":1}',
+            meshesJson: "[]",
+            instancesJson: "[]",
+            selectionJson: "{}",
+            brushPreviewJson,
+          },
+        },
+        onAction: noopAction,
+      }),
+    );
+    expect(markup).toContain(`aria-label="${statusLabel}; census; 0/1;`);
+    expect(markup).toContain(`<span>${statusLabel}</span>`);
+  });
+
   it("keeps world-3d orbit camera seed local per viewport once detached", () => {
     const sceneCamera = '{"position":[1,2,3],"target":[0,0,0],"zoom":1}';
     expect(world3dViewportCameraSeedKey(sceneCamera, 0)).toBe(sceneCamera);
@@ -3268,7 +3470,6 @@ describe("framework renderer hosts", () => {
     // replaces the old `componentScene`/`virtualFileSystem` field pair — `surfacePropsToComponentSceneNode`
     // (Interpreter/🟦️component.tsx) decodes `doc.bytes` back into the exact scene sub-field shape
     // `VirtualFileSystemHost` (unowned, unchanged) already reads.
-    const { encodePackValue } = await import("@semio-tech/framework-os");
     const doc = {
       schemaJson: JSON.stringify({
         fileNodeKinds: { instance: { id: "instance", name: "Instance", descriptors: [] } },
@@ -3277,6 +3478,22 @@ describe("framework renderer hosts", () => {
       }),
       rowsJson: JSON.stringify([{ id: "row-1", fileNodeKindId: "instance", name: "Draw", path: "/draw", level: 0 }]),
     };
+    const docBytes = [13, 2];
+    const pushLength = (value: number) => {
+      for (let remaining = value; ; remaining = Math.floor(remaining / 128)) {
+        docBytes.push((remaining % 128) | (remaining >= 128 ? 128 : 0));
+        if (remaining < 128) break;
+      }
+    };
+    for (const [key, value] of Object.entries(doc)) {
+      const keyBytes = new TextEncoder().encode(key);
+      const valueBytes = new TextEncoder().encode(value);
+      docBytes.push(6);
+      pushLength(keyBytes.length);
+      docBytes.push(...keyBytes, 6);
+      pushLength(valueBytes.length);
+      docBytes.push(...valueBytes);
+    }
     const markup = renderContractTree({
       key: "s.play.media-vfs",
       component: {
@@ -3287,7 +3504,7 @@ describe("framework renderer hosts", () => {
         paneId: null,
         bindingId: null,
         docSchema: "virtual-file-system@1",
-        doc: { bytes: Array.from(encodePackValue(doc)) },
+        doc: { bytes: docBytes },
         domainId: null,
         domainGranularityId: null,
       },
@@ -4048,6 +4265,11 @@ describe("utility ribbon", () => {
 });
 
 describe("s workflow flow routing", () => {
+  it("does not render a flow frame before its surface is ready", () => {
+    expect(flowSurfaceRenderAllowed(false)).toBe(false);
+    expect(flowSurfaceRenderAllowed(true)).toBe(true);
+  });
+
   it("selects the flow engine for scenes with engine flow capabilities", () => {
     expect(isFlowGraphScene('{"engine":"flow","spotlight":false,"noteEdit":false}')).toBe(true);
     expect(isFlowGraphScene('{"spotlight":false,"noteEdit":false,"clusters":false}')).toBe(false);

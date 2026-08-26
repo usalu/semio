@@ -15,15 +15,15 @@ pub struct ChangeDeltaSigmaC {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeDeltaSigmaC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "delta-sigma-c", kind: "change-delta-sigma-c", record: "ChangedDeltaSigmaC" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_delta_sigma_c::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_delta_sigma_c::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change fatigue reference stress range [MPa] to {}", self.new_delta_sigma_c)
     }
 }

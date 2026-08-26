@@ -15,15 +15,15 @@ pub struct ChangeEnergyCarrier {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeEnergyCarrier {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "energy-carrier", kind: "change-energy-carrier", record: "ChangedEnergyCarrier" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_energy_carrier::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_energy_carrier::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change energy carrier to \"{}\"", self.new_energy_carrier)
     }
 }

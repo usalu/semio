@@ -1,5 +1,5 @@
 # 🧬️ PdfArtifact (1.4) schema -- see 📸️snapshot/🔗️component.graphql for PageDoc.
 type PdfArtifact {
   schema: String! @state(class: ARTIFACT)
-  page: PageDoc! @state(class: ARTIFACT)
+  pages: [PageDoc!]! @state(class: ARTIFACT)
 }

@@ -294,7 +294,7 @@ mod tests {
     use semio_framework_plugin::ArtifactDeserializer;
 
     /// 🧱️ Exercises every `BrepCurve`/`BrepSurface` variant (Line/Circle/Ellipse/Nurbs curves;
-    /// Plane/Cylinder/Cone/Sphere/Torus/Nurbs surfaces) plus a face with an inner (hole) loop and
+    /// Plane/Cylinder/Cone/Sphere/Torus/Nurbs surfaces) plus a face with an inner (hole).await loop and
     /// a solid with a void shell — real-world-shaped coverage of the full AP214 vocabulary this
     /// bridge supports, not a minimal degenerate case.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

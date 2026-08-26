@@ -101,30 +101,30 @@ mod tests {
     //#region 🔖️LosslessNativeRouting
     #[semio_framework_async_macros::async_test]
     async fn exact_native_analyzer_text_and_pack_roundtrip() {
-        let original = exact_fixture_bytes();
+        let original = exact_fixture_bytes().await;
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
-        let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
+        let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]).await;
         assert!(text_analysis.diagnostics.is_empty(), "text diagnostics: {:?}", text_analysis.diagnostics);
         let text_snapshot = text_analysis.parts.snapshot.expect("text snapshot");
         assert_eq!(text_snapshot.export_utf8().expect("text analyzer export"), original);
 
         let pack = store::ArtifactPack::encode_pack(&text_snapshot);
-        let pack_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]);
+        let pack_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]).await;
         assert!(pack_analysis.diagnostics.is_empty(), "pack diagnostics: {:?}", pack_analysis.diagnostics);
         assert_eq!(pack_analysis.parts.snapshot.expect("pack snapshot").export_utf8().expect("pack analyzer export"), original);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn exact_native_composer_text_and_pack_roundtrip() {
-        let original = exact_fixture_bytes();
+        let original = exact_fixture_bytes().await;
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
         let text_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Text(text) }];
-        let text_composition = SvgComposerComposition::compose(&text_sources).expect("compose raw SVG text");
+        let text_composition = SvgComposerComposition::compose(&text_sources).await.expect("compose raw SVG text");
         assert_eq!(text_composition.snapshot.export_utf8().expect("text composition export"), original);
 
         let pack = store::ArtifactPack::encode_pack(&text_composition.snapshot);
         let pack_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Binary(&pack) }];
-        let pack_composition = SvgComposerComposition::compose(&pack_sources).expect("compose SVG pack");
+        let pack_composition = SvgComposerComposition::compose(&pack_sources).await.expect("compose SVG pack");
         assert_eq!(pack_composition.snapshot.export_utf8().expect("pack composition export"), original);
     }
     //#endregion 🔖️LosslessNativeRouting

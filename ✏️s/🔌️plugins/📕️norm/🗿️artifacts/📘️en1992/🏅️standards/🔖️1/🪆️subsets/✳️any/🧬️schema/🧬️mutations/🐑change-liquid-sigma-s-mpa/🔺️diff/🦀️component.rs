@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_liquid_sigma_s_mpa::mutation::Ch
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeLiquidSigmaSMpa, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub fn diff(payload: &ChangeLiquidSigmaSMpa, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_liquid_sigma_s_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Liquid sigma s mpa must be a finite number.", Vec::<String>::new());
     }

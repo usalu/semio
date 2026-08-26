@@ -148,7 +148,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_runs_the_same_check() {
-            let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").await.add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).await.build().await.unwrap();
+            let snapshot = PdfXBuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().await.unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let diagnostics = PdfXValidator::validate(&IoPayload::Binary(bytes)).await;
             // The 1.7 writer doesn't re-serialize `objects`, so the wire recheck honestly re-reports

@@ -29,9 +29,10 @@ use crate::editor::puzzle2d::terminology::{is_de_locale, puzzle2d_labels, Puzzle
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
-    HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity,
-    SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
+    Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, WindowEngagement, WindowMeasure,
+    INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
 // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
@@ -723,15 +724,17 @@ macro_rules! puzzle2d_command_variants {
                 }
             }
 
-            /// 🧪️ Test-only reverse of `action_id()` — builds the variant for a given action id, for
-            /// the testkit's `dispatch(...)` helper. Panics on an unknown action id (a test bug, not
-            /// a runtime path).
+            fn try_from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
+                match action {
+                    $($id => Some(Puzzle2dCommand::$Variant { window_id, args })),*,
+                    _ => None,
+                }
+            }
+
             #[cfg(test)]
             fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
-                match action {
-                    $($id => Puzzle2dCommand::$Variant { window_id, args }),*,
-                    other => panic!("unknown puzzle2d action id in test: {other}"),
-                }
+                Self::try_from_action(action, args, window_id)
+                    .unwrap_or_else(|| panic!("unknown puzzle2d action id in test: {action}"))
             }
         }
     };
@@ -808,7 +811,7 @@ pub struct Puzzle2dActionCtx<'a> {
     /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
     /// `.selected_ids()` here instead of the deleted `Puzzle2dConfig::selected_ids` field.
-    pub interaction: &'a InteractionView<'a>,
+    pub selection: &'a protocol::DomainSelection,
     pub effects: &'a mut Vec<Effect>,
     pub artifact_mutations: &'a mut Vec<Puzzle2dMutation>,
     pub ui_scope: &'a mut UiDirtyScope,
@@ -818,7 +821,7 @@ pub struct Puzzle2dActionCtx<'a> {
 
 impl<'a> Puzzle2dActionCtx<'a> {
     pub fn selected_ids(&self) -> Vec<String> {
-        semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE2D_INTERACTION_DOMAIN)).ids.clone()
+        self.selection.ids.clone()
     }
 }
 
@@ -951,6 +954,702 @@ fn dispatch_fill_session_action(action: &str, args: Option<&Value>, ctx: &mut se
     }
 }
 
+//#region 🧵️RetainedCommands
+pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &["addNode", "forceLayout", "setActiveExample"];
+const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.2d.fixture.tool-command.v1";
+
+fn puzzle2d_retained_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    matches!(command.action_id(), "addNode").then_some(1)
+}
+
+fn puzzle2d_retained_reduce(
+    command: &Puzzle2dCommand,
+    _snapshot: &Puzzle2dPlaySnapshot,
+    _config: &Puzzle2dConfig,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
+    if command.action_id() != "addNode" {
+        return Err(Fault::from("puzzle2d-retained-command-mismatch"));
+    }
+    let mut fixture = json!({ "nodes": [] });
+    add_node_to_fixture(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
+    let node = fixture.get_mut("nodes").and_then(Value::as_array_mut).and_then(Vec::pop).ok_or_else(|| Fault::from("puzzle2d-add-node-owner-lost"))?;
+    let node = serde_json::from_value(node).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
+    Ok(Emit { artifact_mutations: vec![crate::artifacts::puzzle2d::mutations::create_node(node, None)], ui_scope: UiDirtyScope::Full, ..Default::default() })
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle2dExampleStage {
+    ClearEdges,
+    ClearNodes,
+    Manifest,
+    ClearCompatibility,
+    AddCompatibility,
+    Catalogs,
+    Nodes,
+    Edges,
+    Complete,
+    Closing,
+}
+
+struct Puzzle2dActiveExampleWork {
+    stage: Puzzle2dExampleStage,
+    source_cursor: usize,
+    target_cursor: usize,
+    mutations: Vec<Puzzle2dMutation>,
+}
+
+impl Default for Puzzle2dActiveExampleWork {
+    fn default() -> Self {
+        Self { stage: Puzzle2dExampleStage::ClearEdges, source_cursor: 0, target_cursor: 0, mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) }
+    }
+}
+
+impl Puzzle2dActiveExampleWork {
+    fn target(command: &Puzzle2dCommand) -> &'static crate::artifacts::puzzle2d::Puzzle2dSnapshot {
+        let id = set_active_example::canonical_example_id(command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or(""));
+        set_active_example::target(id)
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dActiveExampleWork {
+    fn tool_id(&self) -> &'static str {
+        "setActiveExample"
+    }
+
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let target = Self::target(command);
+        let source_nodes = snapshot.0.get("nodes").and_then(Value::as_array).map_or(0, Vec::len);
+        let source_edges = snapshot.0.get("edges").and_then(Value::as_array).map_or(0, Vec::len);
+        let source_compatibility = snapshot.0.get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).map_or(0, Vec::len);
+        let items = source_nodes
+            .checked_add(source_edges)?
+            .checked_add(source_compatibility)?
+            .checked_add(target.nodes.len())?
+            .checked_add(target.edges.len())?
+            .checked_add(target.meta.kind_compatibility.len())?
+            .checked_add(2)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle2dCommand,
+        snapshot: &Puzzle2dPlaySnapshot,
+        config: &Puzzle2dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        let target = Self::target(command);
+        match self.stage {
+            Puzzle2dExampleStage::ClearEdges => {
+                let source = snapshot.0.get("edges").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
+                if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::disconnect_handles(id.to_string()));
+                    self.source_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-example-clear-edge", "Removing existing edge", "Bestehende Kante wird entfernt"));
+                }
+                self.source_cursor = 0;
+                self.stage = Puzzle2dExampleStage::ClearNodes;
+                Ok(Self::progress("puzzle2d-example-clear-node", "Removing existing node", "Bestehender Knoten wird entfernt"))
+            }
+            Puzzle2dExampleStage::ClearNodes => {
+                let source = snapshot.0.get("nodes").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
+                if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::delete_node(id.to_string()));
+                    self.source_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-example-clear-node", "Removing existing node", "Bestehender Knoten wird entfernt"));
+                }
+                self.source_cursor = 0;
+                self.stage = Puzzle2dExampleStage::Manifest;
+                Ok(Self::progress("puzzle2d-example-manifest", "Updating example manifest", "Beispielmanifest wird aktualisiert"))
+            }
+            Puzzle2dExampleStage::Manifest => {
+                let current = snapshot.0.get("meta").and_then(|meta| meta.get("manifestId")).and_then(Value::as_str);
+                if current != target.meta.manifest_id.as_deref() {
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::change_manifest_id(target.meta.manifest_id.clone()));
+                }
+                self.stage = Puzzle2dExampleStage::ClearCompatibility;
+                Ok(Self::progress("puzzle2d-example-clear-compatibility", "Removing kind relation", "Artbeziehung wird entfernt"))
+            }
+            Puzzle2dExampleStage::ClearCompatibility => {
+                let source = snapshot.0.get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
+                if let Some(source) = source {
+                    let row: crate::artifacts::puzzle2d::Puzzle2dKindCompatibility = serde_json::from_value(source.clone()).map_err(|_| Fault::from("puzzle2d-example-compatibility-malformed"))?;
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::disconnect_kind_compatibility(row.source, row.target));
+                    self.source_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-example-clear-compatibility", "Removing kind relation", "Artbeziehung wird entfernt"));
+                }
+                self.stage = Puzzle2dExampleStage::AddCompatibility;
+                Ok(Self::progress("puzzle2d-example-add-compatibility", "Adding kind relation", "Artbeziehung wird hinzugefügt"))
+            }
+            Puzzle2dExampleStage::AddCompatibility => {
+                if let Some(row) = target.meta.kind_compatibility.get(self.target_cursor) {
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
+                    self.target_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-example-add-compatibility", "Adding kind relation", "Artbeziehung wird hinzugefügt"));
+                }
+                self.target_cursor = 0;
+                self.stage = Puzzle2dExampleStage::Catalogs;
+                Ok(Self::progress("puzzle2d-example-catalogs", "Replacing kind catalogs", "Artkataloge werden ersetzt"))
+            }
+            Puzzle2dExampleStage::Catalogs => {
+                self.mutations.push(crate::artifacts::puzzle2d::mutations::replace_kind_catalogs(target.meta.kind_catalogs.clone()));
+                self.stage = Puzzle2dExampleStage::Nodes;
+                Ok(Self::progress("puzzle2d-example-node", "Adding example node", "Beispielknoten wird hinzugefügt"))
+            }
+            Puzzle2dExampleStage::Nodes => {
+                if let Some(node) = target.nodes.get(self.target_cursor) {
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::create_node(node.clone(), None));
+                    self.target_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-example-node", "Adding example node", "Beispielknoten wird hinzugefügt"));
+                }
+                self.target_cursor = 0;
+                self.stage = Puzzle2dExampleStage::Edges;
+                Ok(Self::progress("puzzle2d-example-edge", "Adding example edge", "Beispielkante wird hinzugefügt"))
+            }
+            Puzzle2dExampleStage::Edges => {
+                if let Some(edge) = target.edges.get(self.target_cursor) {
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::connect_handles(
+                        edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y, edge.source_tip.clone(), edge.target_tip.clone(),
+                    ));
+                    self.target_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-example-edge", "Adding example edge", "Beispielkante wird hinzugefügt"));
+                }
+                self.stage = Puzzle2dExampleStage::Complete;
+                let generation = config.example_load_generation.saturating_add(1);
+                let mut next = Puzzle2dPlayRuntime::default();
+                next.example_load_generation = generation;
+                let mutations = std::mem::take(&mut self.mutations);
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: mutations,
+                    config_mutations: vec![Puzzle2dConfigMutation::Snapshot { config: next }],
+                    coalesce_key: Some(format!("setActiveExample:{generation}")),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle2dExampleStage::Complete => Err(Fault::from("puzzle2d-example-complete-repolled")),
+            Puzzle2dExampleStage::Closing => Err(Fault::from("puzzle2d-example-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle2dExampleStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle2dExampleStage::Closing && self.mutations.is_empty()
+    }
+}
+
+const PUZZLE2D_FORCE_MAX_NODES: usize = 64;
+const PUZZLE2D_FORCE_MAX_EDGES: usize = 512;
+const PUZZLE2D_FORCE_MAX_HANDLES: usize = 512;
+const PUZZLE2D_FORCE_ITERATIONS: u32 = 420;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle2dForceStage {
+    Nodes,
+    Handles,
+    Edges,
+    Seed,
+    Center,
+    Reset,
+    Repel,
+    Springs,
+    Integrate,
+    Emit,
+    Complete,
+    Closing,
+}
+
+struct Puzzle2dForceLayoutWork {
+    stage: Puzzle2dForceStage,
+    node_cursor: usize,
+    handle_cursor: usize,
+    edge_cursor: usize,
+    seed_cursor: usize,
+    center_cursor: usize,
+    force_cursor: usize,
+    pair_i: usize,
+    pair_j: usize,
+    iteration: u32,
+    rng: u64,
+    center: [f64; 2],
+    finite_count: usize,
+    node_ids: Vec<String>,
+    raw_node_indices: Vec<usize>,
+    original: Vec<Option<[f64; 2]>>,
+    positions: Vec<[f64; 2]>,
+    velocities: Vec<[f64; 2]>,
+    forces: Vec<[f64; 2]>,
+    radii: Vec<f64>,
+    id_to_index: HashMap<String, usize>,
+    handle_to_node: HashMap<String, String>,
+    edges: Vec<(usize, usize)>,
+    edge_set: HashSet<(usize, usize)>,
+    mutations: Vec<Puzzle2dMutation>,
+    retained_bytes: usize,
+}
+
+impl Default for Puzzle2dForceLayoutWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle2dForceStage::Nodes,
+            node_cursor: 0,
+            handle_cursor: 0,
+            edge_cursor: 0,
+            seed_cursor: 0,
+            center_cursor: 0,
+            force_cursor: 0,
+            pair_i: 0,
+            pair_j: 1,
+            iteration: 0,
+            rng: 0x5eedfaced0,
+            center: [0.0, 0.0],
+            finite_count: 0,
+            node_ids: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            raw_node_indices: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            original: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            positions: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            velocities: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            forces: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            radii: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            id_to_index: HashMap::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            handle_to_node: HashMap::with_capacity(PUZZLE2D_FORCE_MAX_HANDLES),
+            edges: Vec::with_capacity(PUZZLE2D_FORCE_MAX_EDGES),
+            edge_set: HashSet::with_capacity(PUZZLE2D_FORCE_MAX_EDGES),
+            mutations: Vec::with_capacity(PUZZLE2D_FORCE_MAX_NODES),
+            retained_bytes: 0,
+        }
+    }
+}
+
+impl Puzzle2dForceLayoutWork {
+    fn visible(object: &serde_json::Map<String, Value>) -> bool {
+        object.get("hidden").and_then(Value::as_bool).map_or_else(|| object.get("visible").and_then(Value::as_bool).unwrap_or(true), |hidden| !hidden)
+    }
+
+    fn radius(node: &Value) -> f64 {
+        let Some(object) = node.as_object() else { return 32.0 };
+        if object.get("shape").and_then(Value::as_str) == Some("rectangle") {
+            let width = object.get("width").and_then(Value::as_f64).unwrap_or(40.0);
+            let height = object.get("height").and_then(Value::as_f64).unwrap_or(40.0);
+            return ((width * width + height * height).sqrt() * 0.5).max(8.0);
+        }
+        object.get("radius").and_then(Value::as_f64).filter(|radius| radius.is_finite() && *radius > 0.0).unwrap_or(32.0)
+    }
+
+    fn split_mix64(mut value: u64) -> u64 {
+        value = (value ^ (value >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+        value = (value ^ (value >> 27)).wrapping_mul(0x94D049BB133111EB);
+        value ^ (value >> 31)
+    }
+
+    fn random_unit(&mut self) -> f64 {
+        self.rng = Self::split_mix64(self.rng);
+        (self.rng as f64) / (u64::MAX as f64)
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn pop_one(&mut self) -> bool {
+        macro_rules! pop {
+            ($field:ident) => {
+                if self.$field.pop().is_some() {
+                    return true;
+                }
+            };
+        }
+        pop!(mutations);
+        pop!(edges);
+        pop!(radii);
+        pop!(forces);
+        pop!(velocities);
+        pop!(positions);
+        pop!(original);
+        pop!(raw_node_indices);
+        pop!(node_ids);
+        if let Some(key) = self.handle_to_node.keys().next().cloned() {
+            self.handle_to_node.remove(&key);
+            return true;
+        }
+        if let Some(key) = self.id_to_index.keys().next().cloned() {
+            self.id_to_index.remove(&key);
+            return true;
+        }
+        if let Some(edge) = self.edge_set.iter().next().copied() {
+            self.edge_set.remove(&edge);
+            return true;
+        }
+        false
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dForceLayoutWork {
+    fn tool_id(&self) -> &'static str {
+        "forceLayout"
+    }
+
+    fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        if command.action_id() != "forceLayout" || snapshot.0.get("schema").and_then(Value::as_str) != Some(PUZZLE2D_FIXTURE_SCHEMA) {
+            return None;
+        }
+        let nodes = snapshot.0.get("nodes")?.as_array()?.len();
+        let edges = snapshot.0.get("edges").and_then(Value::as_array).map_or(0, Vec::len);
+        (nodes <= PUZZLE2D_FORCE_MAX_NODES && edges <= PUZZLE2D_FORCE_MAX_EDGES).then(|| nodes.saturating_add(edges).max(1))
+    }
+
+    fn step(
+        &mut self,
+        _command: &Puzzle2dCommand,
+        snapshot: &Puzzle2dPlaySnapshot,
+        _config: &Puzzle2dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        let nodes = snapshot.0.get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
+        match self.stage {
+            Puzzle2dForceStage::Nodes => {
+                let Some(node) = nodes.get(self.node_cursor) else {
+                    if self.positions.is_empty() {
+                        self.stage = Puzzle2dForceStage::Emit;
+                        return Ok(Self::progress("puzzle2d-force-emit", "Preparing layout result", "Layout-Ergebnis wird vorbereitet"));
+                    }
+                    if self.finite_count > 0 {
+                        self.center[0] /= self.finite_count as f64;
+                        self.center[1] /= self.finite_count as f64;
+                    }
+                    self.stage = Puzzle2dForceStage::Edges;
+                    return Ok(Self::progress("puzzle2d-force-edges", "Indexing layout edges", "Layout-Kanten werden indiziert"));
+                };
+                let object = node.as_object().ok_or_else(|| Fault::from("puzzle2d-force-node-not-object"))?;
+                if !Self::visible(object) {
+                    self.node_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-force-node", "Reading layout node", "Layout-Knoten wird gelesen"));
+                }
+                let id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-force-node-id-missing"))?;
+                if self.node_ids.len() >= PUZZLE2D_FORCE_MAX_NODES || self.retained_bytes.checked_add(id.len()).map_or(true, |bytes| bytes > crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES) {
+                    return Err(Fault::from("puzzle2d-force-node-capacity"));
+                }
+                let x = object.get("x").and_then(Value::as_f64);
+                let y = object.get("y").and_then(Value::as_f64);
+                let original = match (x, y) {
+                    (Some(x), Some(y)) if x.is_finite() && y.is_finite() => Some([x, y]),
+                    _ => None,
+                };
+                let index = self.positions.len();
+                self.retained_bytes += id.len();
+                self.id_to_index.insert(id.to_string(), index);
+                self.node_ids.push(id.to_string());
+                self.raw_node_indices.push(self.node_cursor);
+                self.original.push(original);
+                self.positions.push(original.unwrap_or([0.0, 0.0]));
+                if let Some(position) = original {
+                    self.center[0] += position[0];
+                    self.center[1] += position[1];
+                    self.finite_count += 1;
+                }
+                self.velocities.push([0.0, 0.0]);
+                self.forces.push([0.0, 0.0]);
+                self.radii.push(Self::radius(node));
+                self.handle_cursor = 0;
+                self.stage = Puzzle2dForceStage::Handles;
+                Ok(Self::progress("puzzle2d-force-node", "Reading layout node", "Layout-Knoten wird gelesen"))
+            }
+            Puzzle2dForceStage::Handles => {
+                let object = nodes.get(self.node_cursor).and_then(Value::as_object).ok_or_else(|| Fault::from("puzzle2d-force-node-owner-lost"))?;
+                let handles = object.get("handles").and_then(Value::as_array);
+                let Some(handle) = handles.and_then(|handles| handles.get(self.handle_cursor)) else {
+                    self.node_cursor += 1;
+                    self.stage = Puzzle2dForceStage::Nodes;
+                    return Ok(Self::progress("puzzle2d-force-node", "Reading layout node", "Layout-Knoten wird gelesen"));
+                };
+                self.handle_cursor += 1;
+                let Some(handle_object) = handle.as_object() else { return Ok(Self::progress("puzzle2d-force-handle", "Reading layout handle", "Layout-Anschluss wird gelesen")) };
+                if !Self::visible(handle_object) {
+                    return Ok(Self::progress("puzzle2d-force-handle", "Reading layout handle", "Layout-Anschluss wird gelesen"));
+                }
+                let Some(handle_id) = handle_object.get("id").and_then(Value::as_str) else { return Ok(Self::progress("puzzle2d-force-handle", "Reading layout handle", "Layout-Anschluss wird gelesen")) };
+                let node_id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-force-node-id-owner-lost"))?;
+                let added_bytes = handle_id.len().saturating_add(node_id.len());
+                if self.handle_to_node.len() >= PUZZLE2D_FORCE_MAX_HANDLES || self.retained_bytes.checked_add(added_bytes).map_or(true, |bytes| bytes > crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES) {
+                    return Err(Fault::from("puzzle2d-force-handle-capacity"));
+                }
+                self.retained_bytes += added_bytes;
+                self.handle_to_node.insert(handle_id.to_string(), node_id.to_string());
+                Ok(Self::progress("puzzle2d-force-handle", "Reading layout handle", "Layout-Anschluss wird gelesen"))
+            }
+            Puzzle2dForceStage::Edges => {
+                let edges = snapshot.0.get("edges").and_then(Value::as_array);
+                let Some(edge) = edges.and_then(|edges| edges.get(self.edge_cursor)) else {
+                    self.stage = Puzzle2dForceStage::Seed;
+                    return Ok(Self::progress("puzzle2d-force-seed", "Seeding layout node", "Layout-Knoten wird initialisiert"));
+                };
+                self.edge_cursor += 1;
+                let Some(object) = edge.as_object() else { return Ok(Self::progress("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert")) };
+                if !Self::visible(object) {
+                    return Ok(Self::progress("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"));
+                }
+                let (Some(source), Some(target)) = (object.get("source").and_then(Value::as_str), object.get("target").and_then(Value::as_str)) else {
+                    return Ok(Self::progress("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"));
+                };
+                let source_node = self.handle_to_node.get(source).map_or(source, String::as_str);
+                let target_node = self.handle_to_node.get(target).map_or(target, String::as_str);
+                let (Some(&a), Some(&b)) = (self.id_to_index.get(source_node), self.id_to_index.get(target_node)) else {
+                    return Ok(Self::progress("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"));
+                };
+                let pair = (a.min(b), a.max(b));
+                if a != b && self.edge_set.insert(pair) {
+                    if self.edges.len() >= PUZZLE2D_FORCE_MAX_EDGES {
+                        return Err(Fault::from("puzzle2d-force-edge-capacity"));
+                    }
+                    self.edges.push(pair);
+                }
+                Ok(Self::progress("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"))
+            }
+            Puzzle2dForceStage::Seed => {
+                if self.seed_cursor >= self.positions.len() {
+                    self.center = [0.0, 0.0];
+                    self.stage = Puzzle2dForceStage::Center;
+                    return Ok(Self::progress("puzzle2d-force-center", "Centering layout", "Layout wird zentriert"));
+                }
+                if self.positions[self.seed_cursor][0].hypot(self.positions[self.seed_cursor][1]) < 1e-9 {
+                    let t = self.seed_cursor as f64;
+                    let angle = t * 2.399_963_229_728_653_5;
+                    let radius = 10.0 + t.sqrt() * 22.0;
+                    let jitter_x = (self.random_unit() - 0.5) * 6.0;
+                    let jitter_y = (self.random_unit() - 0.5) * 6.0;
+                    self.positions[self.seed_cursor] = [self.center[0] + radius * angle.cos() + jitter_x, self.center[1] + radius * angle.sin() + jitter_y];
+                }
+                self.seed_cursor += 1;
+                Ok(Self::progress("puzzle2d-force-seed", "Seeding layout node", "Layout-Knoten wird initialisiert"))
+            }
+            Puzzle2dForceStage::Center => {
+                if let Some(position) = self.positions.get(self.center_cursor) {
+                    self.center[0] += position[0];
+                    self.center[1] += position[1];
+                    self.center_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-force-center", "Centering layout", "Layout wird zentriert"));
+                }
+                if !self.positions.is_empty() {
+                    self.center[0] /= self.positions.len() as f64;
+                    self.center[1] /= self.positions.len() as f64;
+                }
+                self.stage = Puzzle2dForceStage::Reset;
+                self.force_cursor = 0;
+                Ok(Self::progress("puzzle2d-force-iteration", "Running layout iteration", "Layout-Iteration wird ausgeführt"))
+            }
+            Puzzle2dForceStage::Reset => {
+                if self.force_cursor < self.forces.len() {
+                    self.forces[self.force_cursor] = [0.0, 0.0];
+                    self.force_cursor += 1;
+                    return Ok(Self::progress("puzzle2d-force-reset", "Resetting layout force", "Layout-Kraft wird zurückgesetzt"));
+                }
+                self.pair_i = 0;
+                self.pair_j = 1;
+                self.stage = Puzzle2dForceStage::Repel;
+                Ok(Self::progress("puzzle2d-force-repel", "Applying layout repulsion", "Layout-Abstoßung wird angewendet"))
+            }
+            Puzzle2dForceStage::Repel => {
+                let count = self.positions.len();
+                if self.pair_i >= count || self.pair_j >= count {
+                    self.edge_cursor = 0;
+                    self.stage = Puzzle2dForceStage::Springs;
+                    return Ok(Self::progress("puzzle2d-force-spring", "Applying layout spring", "Layout-Feder wird angewendet"));
+                }
+                let i = self.pair_i;
+                let j = self.pair_j;
+                let dx = self.positions[j][0] - self.positions[i][0];
+                let dy = self.positions[j][1] - self.positions[i][1];
+                let distance = dx.hypot(dy).max(1e-4);
+                let cool = (1.0 - self.iteration as f64 / PUZZLE2D_FORCE_ITERATIONS as f64).max(0.08);
+                let repulsion = 6500.0 * cool * (self.radii[i] * self.radii[j]).max(1.0) / (distance * distance);
+                let fx = dx / distance * -repulsion;
+                let fy = dy / distance * -repulsion;
+                self.forces[i][0] += fx;
+                self.forces[i][1] += fy;
+                self.forces[j][0] -= fx;
+                self.forces[j][1] -= fy;
+                self.pair_j += 1;
+                if self.pair_j >= count {
+                    self.pair_i += 1;
+                    self.pair_j = self.pair_i.saturating_add(1);
+                }
+                Ok(Self::progress("puzzle2d-force-repel", "Applying layout repulsion", "Layout-Abstoßung wird angewendet"))
+            }
+            Puzzle2dForceStage::Springs => {
+                let Some(&(i, j)) = self.edges.get(self.edge_cursor) else {
+                    self.force_cursor = 0;
+                    self.stage = Puzzle2dForceStage::Integrate;
+                    return Ok(Self::progress("puzzle2d-force-integrate", "Integrating layout node", "Layout-Knoten wird integriert"));
+                };
+                let dx = self.positions[j][0] - self.positions[i][0];
+                let dy = self.positions[j][1] - self.positions[i][1];
+                let distance = dx.hypot(dy).max(1e-4);
+                let cool = (1.0 - self.iteration as f64 / PUZZLE2D_FORCE_ITERATIONS as f64).max(0.08);
+                let magnitude = 0.028 * cool * (distance - 140.0);
+                let fx = dx / distance * magnitude;
+                let fy = dy / distance * magnitude;
+                self.forces[i][0] += fx;
+                self.forces[i][1] += fy;
+                self.forces[j][0] -= fx;
+                self.forces[j][1] -= fy;
+                self.edge_cursor += 1;
+                Ok(Self::progress("puzzle2d-force-spring", "Applying layout spring", "Layout-Feder wird angewendet"))
+            }
+            Puzzle2dForceStage::Integrate => {
+                if self.force_cursor >= self.positions.len() {
+                    self.iteration += 1;
+                    if self.iteration >= PUZZLE2D_FORCE_ITERATIONS {
+                        self.force_cursor = 0;
+                        self.stage = Puzzle2dForceStage::Emit;
+                        return Ok(Self::progress("puzzle2d-force-emit", "Preparing layout mutation", "Layout-Mutation wird vorbereitet"));
+                    }
+                    self.force_cursor = 0;
+                    self.stage = Puzzle2dForceStage::Reset;
+                    return Ok(Self::progress("puzzle2d-force-iteration", "Running layout iteration", "Layout-Iteration wird ausgeführt"));
+                }
+                let index = self.force_cursor;
+                let cool = (1.0 - self.iteration as f64 / PUZZLE2D_FORCE_ITERATIONS as f64).max(0.08);
+                let delta_time = 0.85 * cool.sqrt();
+                let mut velocity = [
+                    (self.velocities[index][0] + self.forces[index][0] * delta_time) * 0.88,
+                    (self.velocities[index][1] + self.forces[index][1] * delta_time) * 0.88,
+                ];
+                let speed = velocity[0].hypot(velocity[1]);
+                if speed > 48.0 {
+                    velocity[0] *= 48.0 / speed;
+                    velocity[1] *= 48.0 / speed;
+                }
+                self.velocities[index] = velocity;
+                self.positions[index][0] += velocity[0] * delta_time;
+                self.positions[index][1] += velocity[1] * delta_time;
+                self.force_cursor += 1;
+                Ok(Self::progress("puzzle2d-force-integrate", "Integrating layout node", "Layout-Knoten wird integriert"))
+            }
+            Puzzle2dForceStage::Emit => {
+                let index = self.force_cursor;
+                let Some(position) = self.positions.get(index).copied() else {
+                    self.stage = Puzzle2dForceStage::Complete;
+                    let mutations = std::mem::take(&mut self.mutations);
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
+                };
+                if self.original[index] != Some(position) {
+                    self.mutations.push(crate::artifacts::puzzle2d::mutations::move_node(self.node_ids[index].clone(), position[0], position[1]));
+                }
+                self.force_cursor += 1;
+                Ok(Self::progress("puzzle2d-force-emit", "Preparing layout mutation", "Layout-Mutation wird vorbereitet"))
+            }
+            Puzzle2dForceStage::Complete => Err(Fault::from("puzzle2d-force-complete-repolled")),
+            Puzzle2dForceStage::Closing => Err(Fault::from("puzzle2d-force-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle2dForceStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.pop_one() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle2dForceStage::Closing
+            && self.node_ids.is_empty()
+            && self.raw_node_indices.is_empty()
+            && self.original.is_empty()
+            && self.positions.is_empty()
+            && self.velocities.is_empty()
+            && self.forces.is_empty()
+            && self.radii.is_empty()
+            && self.id_to_index.is_empty()
+            && self.handle_to_node.is_empty()
+            && self.edges.is_empty()
+            && self.edge_set.is_empty()
+            && self.mutations.is_empty()
+    }
+}
+
+struct BoundedFirstStepCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl BoundedFirstStepCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: PUZZLE2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle2dPlayApp>>;
+    type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle2dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        PUZZLE2D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        crate::retained_command::puzzle_command_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() || input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
+            return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects checkpoint or oversized wire owner"), input, checkpoint));
+        }
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Owner = EditorApp<Puzzle2dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for Puzzle2dPlayApp {
     const DIALECT: Dialect = crate::artifacts::puzzle2d::PUZZLE2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
@@ -965,6 +1664,48 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle2dCommand;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Puzzle2dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.puzzle.puzzle2d@1/*#editor",
+        document_schema: "puzzle.2d.fixture",
+        factory: "BoundedFirstStepCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 512, 1, 262_144, 7_500),
+        tools: ["addNode", "forceLayout", "setActiveExample"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(BoundedFirstStepCommandJobFactory::new(&controller_id))
+    }
+
+    async fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !PUZZLE2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.action_id() != request.tool_id {
+            return Err(Fault::from("puzzle2d-command-tool-mismatch"));
+        }
+        let tool_id = request.command.action_id();
+        let work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
+            "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
+            "setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default()),
+            "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent)),
+            _ => return Err(Fault::from("puzzle2d-retained-work-missing")),
+        };
+        let payload = crate::retained_command::RetainedPuzzleCommandPayload {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            completion: request.completion,
+            command_id: Puzzle2dCommand::action_id,
+            work,
+        };
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
     /// `crate::editor::puzzle2d::config::schema::register_app_schema()` self-registering call, which
@@ -983,6 +1724,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
     async fn command_id(command: &Puzzle2dCommand) -> &'static str {
         command.action_id()
+    }
+
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(Value::as_str).map(str::to_string);
+        Puzzle2dCommand::try_from_action(action, args.cloned(), window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 2D action '{action}'")))
     }
 
     fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
@@ -1029,6 +1775,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let before = doc.snapshot.0.clone();
         let active_utility = puzzle2d_active_utility(config, window_id);
         let mut scene = Self::scene_for(before.clone(), config, window_id);
+        let selection = interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).await;
         // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
         // each call. The previous last_synced_fixture cache lived on &self and cannot return.
         let host = RefCell::new(BoardHost::default());
@@ -1038,7 +1785,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
                 sync_host_fixture_content(&mut host_mut, &scene);
                 let _ = drain_board_events_json(&mut host_mut);
             }
-            sync_host_runtime_state(&mut host_mut, &scene, &interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).await.ids);
+            sync_host_runtime_state(&mut host_mut, &scene, &selection.ids);
         }
         let mut effects: Vec<Effect> = Vec::new();
         let mut artifact_mutations = Vec::new();
@@ -1051,7 +1798,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
                 scene: &mut scene,
                 window_id,
                 active_utility,
-                interaction,
+                selection: &selection,
                 effects: &mut effects,
                 artifact_mutations: &mut artifact_mutations,
                 ui_scope: &mut ui_scope,
@@ -1325,6 +2072,9 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower")),
                 ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
             ])
+            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("forceLayout", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document
             // operation); bound to the interactive overview pane by that window's own definition.
             .utility(select_utility::definition(puzzle2d_localized(|l| l.select)))
@@ -1522,6 +2272,58 @@ mod tests {
     use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
     use semio_framework_plugin::PluginApp;
     use store::{Backbone, BackboneMessage, MemoryBackbone};
+
+    fn cohort_routes_are_cursorized(source: &str) -> bool {
+        [
+            r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#,
+            r#""setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default())"#,
+            "Puzzle2dForceStage::Nodes",
+            "Puzzle2dForceStage::Handles",
+            "Puzzle2dForceStage::Edges",
+            "Puzzle2dForceStage::Repel",
+            "Puzzle2dForceStage::Springs",
+            "Puzzle2dForceStage::Integrate",
+            "Puzzle2dForceStage::Emit",
+            "Puzzle2dExampleStage::ClearEdges",
+            "Puzzle2dExampleStage::ClearNodes",
+            "Puzzle2dExampleStage::AddCompatibility",
+            "Puzzle2dExampleStage::Nodes",
+            "Puzzle2dExampleStage::Edges",
+            r#"matches!(command.action_id(), "addNode").then_some(1)"#,
+        ]
+        .into_iter()
+        .all(|marker| source.contains(marker))
+            && !source.contains(r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursors() {
+        let source = include_str!("🦀️component.rs");
+        assert!(cohort_routes_are_cursorized(source));
+        for (retained, direct) in [
+            (r#""forceLayout" => Box::new(Puzzle2dForceLayoutWork::default())"#, r#""forceLayout" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
+            (r#""setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default())"#, r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle2d_retained_reduce, puzzle2d_retained_extent))"#),
+        ] {
+            assert!(!cohort_routes_are_cursorized(&source.replace(retained, direct)));
+        }
+        for marker in [
+            "Puzzle2dForceStage::Nodes",
+            "Puzzle2dForceStage::Handles",
+            "Puzzle2dForceStage::Edges",
+            "Puzzle2dForceStage::Repel",
+            "Puzzle2dForceStage::Springs",
+            "Puzzle2dForceStage::Integrate",
+            "Puzzle2dForceStage::Emit",
+            "Puzzle2dExampleStage::ClearEdges",
+            "Puzzle2dExampleStage::ClearNodes",
+            "Puzzle2dExampleStage::AddCompatibility",
+            "Puzzle2dExampleStage::Nodes",
+            "Puzzle2dExampleStage::Edges",
+        ] {
+            assert!(!cohort_routes_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing retained cursor was falsely accepted: {marker}");
+        }
+    }
 
     fn mounted_fill_dispatch_contract(source: &str) -> bool {
         let production = source.split("//#region 🧪️Tests").next().unwrap_or(source);

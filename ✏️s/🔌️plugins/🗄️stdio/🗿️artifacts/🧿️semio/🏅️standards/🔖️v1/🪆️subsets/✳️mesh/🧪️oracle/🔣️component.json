@@ -1,14 +1,17 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.mesh` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is a cross-language pair — three.js for the geometry it genuinely speaks, and an independent TypeScript implementation of the semio-native carrier and the seventeen verbs for the half no third party speaks.",
+  "oracles": [
     {
-      "id": "semio-mesh-mutation-semantics",
+      "id": "semio-mesh-typescript-three-independent",
+      "ecosystem": "javascript",
+      "package": "",
       "capabilities": ["semio-v1-mesh-mutate"],
-      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, let alone one authoritative over this subset's `SemioMeshMutation` vocabulary (mesh/primitive lifecycle, primitive topology/geometry/material, material lifecycle plus base-color/metallic/roughness, texture lifecycle plus mime/bytes, and move-vertex) — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. Confidence instead comes from the committed, independently handcrafted per-kind fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff)` specification vector per kind, authored by hand and already unit-tested inside the production crate itself (`kinds_match_the_enum_and_the_catalog`, `produces_committed_diff`, `committed_diff_applies_to_after`, `committed_json_is_canonical` per leaf) — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture. This feature re-exercises those SAME committed fixtures end-to-end through `apply_semio_mesh_mutation`, the entry point this ticket added, rather than calling `Mutation::diff`/`inverse` directly as the in-crate unit tests do.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🔮️ Two independent producers, each answering the half it genuinely speaks. (1) GEOMETRY — three.js r185 is a real third-party 3D engine and a `SemioPrimitive` is exactly what a `THREE.BufferGeometry` models: parallel position/normal/uv/colour buffers plus an index. Every scenario that produces primitives builds a real `BufferGeometry` — positions in a `Float64Array`, so nothing is quantised on the way in — and three.js states the attribute counts, the bounding box `Box3` computes from the position buffer, and the flat vertex stream `toNonIndexed()` produces by walking the index. The Rust subject computes those same facts by hand from the same primitives, so agreement is between an engine that has never seen this repository and this repository's own codec, and a permuted index buffer or a lost vertex shows up in the expanded stream rather than passing quietly. (2) CARRIER AND VOCABULARY — no third party reads or writes `.dsl.semio`/`.pack.semio`, so the second producer is a second IMPLEMENTATION, `🧪️tests/mutate-semio-mesh/🟦️component.ts`, written in TypeScript from the committed specification documents alone (the snapshot DSL grammar, the pack protocol and its Kaitai mirror, the semio envelope in the framework carrier module, the mutation grammar, the proto and JSON schema mirrors and the committed per-kind specification vectors). It imports nothing from and transliterates nothing of the Rust, and it was pinned before use: it reproduces the committed `📚️examples/🧊️cube` artifact byte for byte in both encodings and reaches all seventeen committed after-snapshots. `three` resolves from the repository root `node_modules` the way every other TypeScript case's bare specifier does; it is not declared as an `oracleHostPackages` entry because that array is collected only from the case OWNER or an ancestor of it and this subset manifest is a descendant of the owner `🗿️artifacts/🧿️semio`, and the TypeScript host only VERIFIES resolution rather than provisioning anything."
     }
   ],
   "mutationCatalogs": [

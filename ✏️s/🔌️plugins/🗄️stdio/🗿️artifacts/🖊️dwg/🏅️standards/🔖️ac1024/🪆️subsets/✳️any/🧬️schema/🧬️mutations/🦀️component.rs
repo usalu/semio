@@ -160,7 +160,7 @@ mod tests {
         let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
         assert_eq!(from_variants, from_kinds, "KINDS must equal every DwgMutation variant's kind()");
         assert_eq!(KINDS.len(), 3, "KINDS must list exactly the declared 3 kinds");
-        for manifest in [include_str!("../../🧪️oracle/🔣️component.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️component.json")] {
+        for manifest in [include_str!("../../🧪️oracle/🔣️component.json"), include_str!("../../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️component.json")] {
             for kind in KINDS {
                 assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
             }

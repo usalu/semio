@@ -8,6 +8,8 @@
 //! leaf path dangles. Do not inline any component file back into this one: the taxonomy validator and the
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
+#[cfg(target_arch = "wasm32")]
+extern crate semio_framework_async as wasm_bindgen_futures;
 extern crate semio_framework_schema as schema;
 
 extern crate semio_framework_os_kernel as dsl;

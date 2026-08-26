@@ -1,6 +1,0 @@
-Diff in /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🤖️generated.rs:87:
-         f.write_str(self.as_str())
-     }
- }
--
- 

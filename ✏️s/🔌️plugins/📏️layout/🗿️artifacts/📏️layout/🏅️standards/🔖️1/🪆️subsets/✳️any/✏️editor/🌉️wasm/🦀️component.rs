@@ -11,8 +11,8 @@ mod wasm_session {
     use infinite_canvas::camera::{self, Camera, Viewport};
     use infinite_canvas::Point;
     use js_sys::Promise;
+    use semio_framework_async::browser::future_to_promise;
     use wasm_bindgen::prelude::*;
-    use wasm_bindgen_futures::future_to_promise;
     use web_sys::HtmlCanvasElement;
 
     use crate::artifacts::layout::schema::parse_layout_document;
@@ -53,68 +53,57 @@ mod wasm_session {
         ClosingSession { session: WorkerJobSession<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot> },
     }
 
-    thread_local! {
-        static LAYOUT_EXPORT_REJECTIONS: RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]> = RefCell::new(std::array::from_fn(|_| LayoutExportRejectionSlot::Empty));
-    }
-
-    fn pump_layout_export_rejections() {
-        LAYOUT_EXPORT_REJECTIONS.with(|registry| {
-            for slot in registry.borrow_mut().iter_mut() {
-                match slot {
-                    LayoutExportRejectionSlot::ClosingRejected { rejected, .. } => {
-                        rejected.begin_close();
-                        let _ = rejected.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-                        if rejected.terminal_is_empty() {
-                            *slot = LayoutExportRejectionSlot::Empty;
-                        }
+    fn pump_layout_export_rejections(registry: &RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>) {
+        for slot in registry.borrow_mut().iter_mut() {
+            match slot {
+                LayoutExportRejectionSlot::ClosingRejected { rejected, .. } => {
+                    rejected.begin_close();
+                    let _ = rejected.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+                    if rejected.terminal_is_empty() {
+                        *slot = LayoutExportRejectionSlot::Empty;
                     }
-                    LayoutExportRejectionSlot::ClosingSession { session, .. } => {
-                        let _ = session.begin_close();
-                        let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
-                        if session.terminal_is_empty() {
-                            *slot = LayoutExportRejectionSlot::Empty;
-                        }
-                    }
-                    LayoutExportRejectionSlot::Empty | LayoutExportRejectionSlot::Reserved => continue,
                 }
-                break;
+                LayoutExportRejectionSlot::ClosingSession { session, .. } => {
+                    let _ = session.begin_close();
+                    let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+                    if session.terminal_is_empty() {
+                        *slot = LayoutExportRejectionSlot::Empty;
+                    }
+                }
+                LayoutExportRejectionSlot::Empty | LayoutExportRejectionSlot::Reserved => continue,
             }
-        });
+            break;
+        }
     }
 
-    fn reserve_layout_export_rejection() -> Option<usize> {
-        pump_layout_export_rejections();
-        LAYOUT_EXPORT_REJECTIONS.with(|registry| {
-            let mut registry = registry.borrow_mut();
-            let index = registry.iter().position(|slot| matches!(slot, LayoutExportRejectionSlot::Empty))?;
-            registry[index] = LayoutExportRejectionSlot::Reserved;
-            Some(index)
-        })
+    fn reserve_layout_export_rejection(registry: &RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>) -> Option<usize> {
+        pump_layout_export_rejections(registry);
+        let mut registry = registry.borrow_mut();
+        let index = registry.iter().position(|slot| matches!(slot, LayoutExportRejectionSlot::Empty))?;
+        registry[index] = LayoutExportRejectionSlot::Reserved;
+        Some(index)
     }
 
-    fn release_layout_export_rejection(index: usize) {
-        LAYOUT_EXPORT_REJECTIONS.with(|registry| registry.borrow_mut()[index] = LayoutExportRejectionSlot::Empty);
+    fn release_layout_export_rejection(registry: &RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>, index: usize) {
+        registry.borrow_mut()[index] = LayoutExportRejectionSlot::Empty;
     }
 
-    fn retain_layout_export_rejection(index: usize, rejected: WorkerJobSessionAdmissionRejected<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot>) {
-        LAYOUT_EXPORT_REJECTIONS.with(|registry| {
-            let mut registry = registry.borrow_mut();
-            debug_assert!(matches!(registry[index], LayoutExportRejectionSlot::Reserved));
-            registry[index] = LayoutExportRejectionSlot::ClosingRejected { rejected, snapshot_owner };
-        });
+    fn retain_layout_export_rejection(registry: &RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>, index: usize, rejected: WorkerJobSessionAdmissionRejected<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot>) {
+        let mut registry = registry.borrow_mut();
+        debug_assert!(matches!(registry[index], LayoutExportRejectionSlot::Reserved));
+        registry[index] = LayoutExportRejectionSlot::ClosingRejected { rejected, snapshot_owner };
     }
 
-    fn retain_layout_export_session(index: usize, session: WorkerJobSession<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot>) {
-        LAYOUT_EXPORT_REJECTIONS.with(|registry| {
-            let mut registry = registry.borrow_mut();
-            debug_assert!(matches!(registry[index], LayoutExportRejectionSlot::Reserved));
-            registry[index] = LayoutExportRejectionSlot::ClosingSession { session, snapshot_owner };
-        });
+    fn retain_layout_export_session(registry: &RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>, index: usize, session: WorkerJobSession<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot>) {
+        let mut registry = registry.borrow_mut();
+        debug_assert!(matches!(registry[index], LayoutExportRejectionSlot::Reserved));
+        registry[index] = LayoutExportRejectionSlot::ClosingSession { session, snapshot_owner };
     }
 
     #[wasm_bindgen]
     pub struct LayoutSession {
         state: Rc<RefCell<LayoutSessionInner>>,
+        export_rejections: Rc<RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>>,
     }
 
     #[wasm_bindgen]
@@ -137,6 +126,7 @@ mod wasm_session {
                     layout_engine: LayoutEngine::new(),
                     gpu: infinite_canvas::gpu_session::CanvasGpuSession::default(),
                 })),
+                export_rejections: Rc::new(RefCell::new(std::array::from_fn(|_| LayoutExportRejectionSlot::Empty))),
             }
         }
 
@@ -267,7 +257,6 @@ mod wasm_session {
         #[wasm_bindgen(js_name = screenToWorld)]
         pub async fn screen_to_world(&self, sx: f64, sy: f64) -> String {
             let inner = self.state.borrow();
-            let snapshot_owner = Arc::clone(&inner.snapshot);
             screen_to_world_json(&inner.camera, &inner.viewport, sx, sy)
         }
 
@@ -334,8 +323,11 @@ mod wasm_session {
                 return Err(JsValue::from_str("layout-export-preflight-byte-limit"));
             }
             let inner = self.state.borrow();
-            let operation = Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(inner.generation), Generation(inner.generation), 0);
-            let request = LayoutExportRequest { kind, page_id, snapshot: inner.snapshot.clone(), preflight_json, parent_document_id: "layout.wasm.session".into(), canonical_base_revision_hex: format!("{:064x}", inner.generation) };
+            let generation = inner.generation;
+            let snapshot_owner = Arc::clone(&inner.snapshot);
+            drop(inner);
+            let operation = Operation::new(semio_framework_job::allocate_operation_id(), RevisionId(generation), Generation(generation), 0);
+            let request = LayoutExportRequest { kind, page_id, snapshot: Arc::clone(&snapshot_owner), preflight_json, parent_document_id: "layout.wasm.session".into(), canonical_base_revision_hex: format!("{:064x}", generation) };
             let name = output_name(&request);
             let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
             let job = LayoutExportJob::new(operation, request).map_err(|error| JsValue::from_str(&error))?.with_output_chunks(output_chunks.clone());
@@ -347,18 +339,19 @@ mod wasm_session {
                 config: BatchDriveConfig { site: "layout.export.wasm", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
                 now_ms: semio_framework_job::default_now_ms,
             };
-            let retirement_slot = reserve_layout_export_rejection().ok_or_else(|| JsValue::from_str("layout-export-rejection-registry-full"))?;
+            let retirement_slot = reserve_layout_export_rejection(&self.export_rejections).ok_or_else(|| JsValue::from_str("layout-export-rejection-registry-full"))?;
             let admission = match WorkerJobSession::try_new(job, params) {
                 Ok(session) => LayoutExportAdmission::Session(session),
                 Err(rejected) => LayoutExportAdmission::Rejected(rejected),
             };
             Ok(LayoutExportOperation {
                 admission,
+                export_rejections: Rc::clone(&self.export_rejections),
                 retirement_slot: Some(retirement_slot),
                 snapshot_owner: Some(snapshot_owner),
                 cancel,
                 authority: self.state.clone(),
-                submitted_generation: inner.generation,
+                submitted_generation: generation,
                 kind,
                 name,
                 status: RefCell::new("submitted".into()),
@@ -377,6 +370,7 @@ mod wasm_session {
     #[wasm_bindgen]
     pub struct LayoutExportOperation {
         admission: LayoutExportAdmission,
+        export_rejections: Rc<RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>>,
         retirement_slot: Option<usize>,
         snapshot_owner: Option<Arc<LayoutSnapshot>>,
         cancel: semio_framework_job::CancelToken,
@@ -396,10 +390,20 @@ mod wasm_session {
             }
             match std::mem::replace(&mut self.admission, LayoutExportAdmission::Empty) {
                 LayoutExportAdmission::Rejected(rejected) => {
-                    retain_layout_export_rejection(self.retirement_slot.take().expect("rejected layout operation owns mounted close slot"), rejected, self.snapshot_owner.take().expect("rejected layout operation owns snapshot handback"));
+                    retain_layout_export_rejection(
+                        &self.export_rejections,
+                        self.retirement_slot.take().expect("rejected layout operation owns mounted close slot"),
+                        rejected,
+                        self.snapshot_owner.take().expect("rejected layout operation owns snapshot handback"),
+                    );
                 }
                 LayoutExportAdmission::Session(session) => {
-                    retain_layout_export_session(self.retirement_slot.take().expect("live layout operation owns mounted close slot"), session, self.snapshot_owner.take().expect("live layout operation owns snapshot handback"));
+                    retain_layout_export_session(
+                        &self.export_rejections,
+                        self.retirement_slot.take().expect("live layout operation owns mounted close slot"),
+                        session,
+                        self.snapshot_owner.take().expect("live layout operation owns snapshot handback"),
+                    );
                 }
                 LayoutExportAdmission::Empty => {}
             }
@@ -410,7 +414,7 @@ mod wasm_session {
     impl LayoutExportOperation {
         #[wasm_bindgen(js_name = step)]
         pub async fn step(&mut self) -> Result<String, JsValue> {
-            pump_layout_export_rejections();
+            pump_layout_export_rejections(&self.export_rejections);
             if self.completed.get() {
                 return Ok("completed".into());
             }
@@ -424,7 +428,7 @@ mod wasm_session {
                 let step = rejected.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
                 if rejected.terminal_is_empty() {
                     self.admission = LayoutExportAdmission::Empty;
-                    release_layout_export_rejection(self.retirement_slot.take().expect("closed rejection releases mounted slot"));
+                    release_layout_export_rejection(&self.export_rejections, self.retirement_slot.take().expect("closed rejection releases mounted slot"));
                     self.snapshot_owner = None;
                 }
                 *self.status.borrow_mut() = "admission-rejected-closing".into();
@@ -440,7 +444,7 @@ mod wasm_session {
                 let close = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
                 if matches!(close, WorkerJobCloseStep::Complete) {
                     self.admission = LayoutExportAdmission::Empty;
-                    release_layout_export_rejection(self.retirement_slot.take().expect("closed layout session releases mounted slot"));
+                    release_layout_export_rejection(&self.export_rejections, self.retirement_slot.take().expect("closed layout session releases mounted slot"));
                     self.snapshot_owner = None;
                 }
                 return Ok(self.status.borrow().clone());

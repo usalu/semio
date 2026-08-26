@@ -1,0 +1,16 @@
+{
+  "controller": "s.playbook.playbook@1/*#editor",
+  "documentSchema": "playbook.program",
+  "factory": "BoundedFirstStepCommandJobFactory",
+  "tools": [
+    {"id":"addStep"},
+    {"id":"removeStep"},
+    {"id":"moveStep"},
+    {"id":"addBlock"},
+    {"id":"removeBlock"},
+    {"id":"moveBlock"},
+    {"id":"updatePlaybook"},
+    {"id":"setLocale"},
+    {"id":"setContributions"}
+  ]
+}

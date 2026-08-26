@@ -33,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// back to the open document. No quota declared: draw's ~14 `Effect` call sites
 /// (`LoadDocument`/`SetActiveUtility`/`ReplayShellCommand`) are per-turn UI/document effects with
 /// no evidence of long-running computation, large held buffers, or high-frequency timers.
-pub async fn plugin() -> Result<Plugin<DrawApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<DrawApps>, semio_framework_plugin::PluginAssemblyError> {
     Plugin::<DrawApps>::builder("draw")
         .label("Draw")
         .version("0.1.0")

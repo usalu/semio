@@ -300,6 +300,19 @@ def inverse_spec(original, mutation):
 
 
 # region 🔖️Scenarios
+def projected(value):
+    """👁️ The compared PROJECTION SHAPE, which both halves of this case must present identically or
+    the profile compares two different questions: `{"format": "json", "value": <document>}`.
+
+    That envelope is not this file's invention — it is what the independent Rust reader
+    (`project_json_value`, `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`) emits,
+    and what the ✳️any sibling case is already compared through on both sides. Returning the bare
+    document here instead made every `mutate-`/`inverse-`/`identity-` row disagree on `$.format` and
+    `$.value` alone, while the documents underneath were identical — a shape mismatch reported as a
+    semantic one."""
+    return {"format": "json", "value": plain(value)}
+
+
 def mutate(ctx: Context) -> Outcome:
     """🔮️ One handler shared by every `mutate-<kind>` scenario id — the scenario's own spec selects
     which kind runs, which is why one function covers all ten.
@@ -314,7 +327,7 @@ def mutate(ctx: Context) -> Outcome:
         raise AssertionError("%s left the document unchanged — a mutation that applies to nothing is a silent no-op, not a pass" % forward["kind"])
     if forward["kind"] == "no-mutation" and plain(mutated) != plain(original):
         raise AssertionError("no-mutation changed the document")
-    return Outcome(plain(mutated), serialize(mutated))
+    return Outcome(projected(mutated), serialize(mutated))
 
 
 def inverse(ctx: Context) -> Outcome:
@@ -330,7 +343,7 @@ def inverse(ctx: Context) -> Outcome:
     restored = apply_mutation(apply_mutation(document(ctx), forward), undo)
     if plain(restored) != plain(original):
         raise AssertionError("applying %s and then its own inverse did not restore the document" % forward["kind"])
-    return Outcome(plain(restored), serialize(restored))
+    return Outcome(projected(restored), serialize(restored))
 
 
 def i_json_conformance(ctx: Context) -> Outcome:
@@ -405,7 +418,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     reread = plain(parse(output.decode("utf-8")))
     if reread != plain(root):
         raise AssertionError("identity law violated: re-reading the reference's own output does not reproduce the decoded document")
-    return Outcome(reread, output)
+    return Outcome(projected(parse(output.decode("utf-8"))), output)
 
 
 # endregion 🔖️Scenarios

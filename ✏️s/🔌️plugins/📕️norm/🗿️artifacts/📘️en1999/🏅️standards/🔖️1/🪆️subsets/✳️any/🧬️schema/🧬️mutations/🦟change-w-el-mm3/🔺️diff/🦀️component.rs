@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_w_el_mm3::mutation::ChangeWElMm3
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeWElMm3, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeWElMm3, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_w_el_mm3.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Elastic section modulus W_el [mm3] must be a finite number, got {}.", payload.new_w_el_mm3), Vec::<String>::new());
     }

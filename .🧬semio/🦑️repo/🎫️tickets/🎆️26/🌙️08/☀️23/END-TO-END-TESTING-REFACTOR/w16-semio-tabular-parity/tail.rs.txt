@@ -1,0 +1,195 @@
+
+    //#region 🔖️Input
+    /// 🏢️ The two-node demo building, in both encodings the domain commits for it — small, but the
+    /// only `stdio.semio.model` bytes in this artifact a codec other than the Python one wrote.
+    const BUILDING_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio";
+    const BUILDING_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio";
+    /// 🏗️ The real 3-node, 181-element, 362-relation capsule tower and its binary twin, derived once
+    /// from the committed Nakagin Capsule Tower IFC with IfcOpenShell.
+    const TOWER_DSL: &str = "local://🏗️nakagin-capsule-tower.dsl.semio";
+    const TOWER_PACK: &str = "local://🏗️nakagin-capsule-tower.pack.semio";
+
+    fn utf8(bytes: Vec<u8>, what: &str) -> Result<String, String> {
+        String::from_utf8(bytes).map_err(|error| format!("{what} is not UTF-8: {error}"))
+    }
+
+    /// 🏗️ The real capsule tower model, parsed through this repository's own DSL codec.
+    fn tower(ctx: &Context) -> Result<SemioModelSnapshot, String> {
+        parse_semio_model_dsl(&utf8(ctx.fixture_bytes(TOWER_DSL)?, "the committed capsule tower model")?)
+    }
+
+    /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector.
+    fn mutation(ctx: &Context) -> Result<SemioModelMutation, String> {
+        let json = semio_repo_test_host::parse_json(ctx.doc_string()?).map_err(|error| format!("{}: the scenario's mutation payload must decode: {error}", ctx.scenario.id))?;
+        Ok(decode_mutation(&json))
+    }
+
+    /// 🧫️ Every `local://` URI the scenario's steps name, in step order, including the ones its data
+    /// table carries — which is how the specification vectors are declared.
+    fn step_fixtures(ctx: &Context) -> Vec<String> {
+        let mut found = Vec::new();
+        let mut scan = |text: &str| {
+            let mut rest = text;
+            while let Some(at) = rest.find("local://") {
+                let tail = &rest[at..];
+                let end = tail.find(char::is_whitespace).unwrap_or(tail.len());
+                found.push(tail[..end].to_string());
+                rest = &tail[end..];
+            }
+        };
+        for (_, text) in &ctx.scenario.steps {
+            scan(text);
+        }
+        for row in ctx.data_table().unwrap_or_default() {
+            for cell in row {
+                scan(&cell);
+            }
+        }
+        found
+    }
+
+    fn vector(ctx: &Context, position: usize, label: &str) -> Result<Json, String> {
+        let uri = step_fixtures(ctx).into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} fixture", ctx.scenario.id))?;
+        ctx.fixture_json(&uri)
+    }
+
+    fn apply(current: &mut SemioModelSnapshot, step: &SemioModelMutation, what: &str) -> Result<(), String> {
+        let outcome = apply_semio_model_mutation(current, step);
+        let refusals = semio_mutation_refusals(&outcome);
+        if refusals.is_empty() {
+            return Ok(());
+        }
+        Err(format!("{what}: the mutation was rejected: {refusals:?}"))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both sides project, so a red
+    /// scenario is readable without re-running anything.
+    fn disagreement(what: &str, got: &SemioModelSnapshot, expected: &SemioModelSnapshot) -> String {
+        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got), snapshot_json(expected))
+    }
+    //#endregion 🔖️Input
+
+    //#region 🔖️Handlers
+    /// 🎯️ One verb applied to the real capsule tower model by this repository's codec alone.
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let mut current = tower(ctx)?;
+        apply(&mut current, &mutation(ctx)?, &ctx.scenario.id)?;
+        let projection = snapshot_json(&current);
+        Ok(Outcome::with_raw(print_semio_model_dsl(&current).into_bytes(), projection))
+    }
+
+    /// ↩️ The metamorphic inverse law on the real model: applying the verb and then its OWN computed
+    /// inverse must restore the capsule tower exactly — collection ORDER, the property sets and the
+    /// 1 840 `f64` transform components included.
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let base = tower(ctx)?;
+        let step = mutation(ctx)?;
+        let mut current = base.clone();
+        apply(&mut current, &step, &ctx.scenario.id)?;
+        let mutated = snapshot_json(&current);
+        for undo in semio_model_mutation_inverse(&step, &base) {
+            apply(&mut current, &undo, &ctx.scenario.id)?;
+        }
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the capsule tower model", ctx.scenario.id), &current, &base));
+        }
+        Ok(Outcome::projection(Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), snapshot_json(&current))])))
+    }
+
+    /// 🧫️ The same verb on its committed `(before, mutation, after)` vector, whose before-snapshot is
+    /// the real committed demo building decoded — a THIRD statement of what the verb means,
+    /// independent of both implementations.
+    pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
+        let base = decode_snapshot(&vector(ctx, 0, "before-snapshot")?);
+        let step = decode_mutation(&vector(ctx, 1, "mutation")?);
+        let expected = decode_snapshot(&vector(ctx, 2, "after-snapshot")?);
+        let mut current = base.clone();
+        apply(&mut current, &step, &ctx.scenario.id)?;
+        if current != expected {
+            return Err(disagreement(&format!("{}: the applied model does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
+        }
+        let applied = snapshot_json(&current);
+        for undo in semio_model_mutation_inverse(&step, &base) {
+            apply(&mut current, &undo, &ctx.scenario.id)?;
+        }
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the committed mutation did not restore its before-snapshot", ctx.scenario.id), &current, &base));
+        }
+        Ok(Outcome::projection(Json::Object(vec![("applied".to_string(), applied), ("restored".to_string(), snapshot_json(&current))])))
+    }
+
+    /// 🔁️ All four committed encodings — the demo building's two and the capsule tower's two — each
+    /// re-emitted from the parsed document.
+    ///
+    /// 🔒️ **The byte half of the identity law, asserted as `carrier_is_exact` and asserted in both
+    /// directions.** `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary
+    /// twin, so reproducing them BYTE FOR BYTE is the correct answer here and
+    /// `law::reparsed_not_copied` would be exactly backwards. Nor is it a self-comparison: the demo
+    /// building's bytes were written by THIS codec and the Python oracle reproduces them from the
+    /// grammar alone, while the capsule tower's bytes were written by the PYTHON implementation and
+    /// this codec has to reproduce THOSE — `OT` element classes, `M` mesh references and elements
+    /// with no `spatialId` among them, three tags no committed pack had carried before.
+    pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let building_dsl = ctx.fixture_bytes(BUILDING_DSL)?;
+        let building = parse_semio_model_dsl(&utf8(building_dsl.clone(), "the committed demo building")?)?;
+        let building_printed = print_semio_model_dsl(&building);
+        carrier_is_exact(building_printed.as_bytes(), &building_dsl)?;
+        let building_pack = ctx.fixture_bytes(BUILDING_PACK)?;
+        let building_unpacked = decode_semio_model_pack(&building_pack)?;
+        if building_unpacked != building {
+            return Err(disagreement("identity-round-trip: the demo building's binary twin decodes to a different model than its text", &building_unpacked, &building));
+        }
+        let building_repacked = encode_semio_model_pack(&building);
+        carrier_is_exact(&building_repacked, &building_pack)?;
+        let tower_dsl = ctx.fixture_bytes(TOWER_DSL)?;
+        let model = parse_semio_model_dsl(&utf8(tower_dsl.clone(), "the committed capsule tower model")?)?;
+        let tower_printed = print_semio_model_dsl(&model);
+        carrier_is_exact(tower_printed.as_bytes(), &tower_dsl)?;
+        let reparsed = parse_semio_model_dsl(&tower_printed)?;
+        if reparsed != model {
+            return Err(disagreement("identity-round-trip: printing the capsule tower back to DSL and reparsing it lost content", &reparsed, &model));
+        }
+        let tower_pack = ctx.fixture_bytes(TOWER_PACK)?;
+        let tower_unpacked = decode_semio_model_pack(&tower_pack)?;
+        if tower_unpacked != model {
+            return Err(disagreement("identity-round-trip: the capsule tower's binary twin decodes to a different model than its text", &tower_unpacked, &model));
+        }
+        let tower_repacked = encode_semio_model_pack(&model);
+        carrier_is_exact(&tower_repacked, &tower_pack)?;
+        Ok(Outcome::projection(Json::Object(vec![
+            ("building".to_string(), snapshot_json(&building)),
+            ("buildingDslDigest".to_string(), Json::String(digest(building_printed.as_bytes()))),
+            ("buildingPackDigest".to_string(), Json::String(digest(&building_repacked))),
+            ("towerDslDigest".to_string(), Json::String(digest(tower_printed.as_bytes()))),
+            ("towerPackDigest".to_string(), Json::String(digest(&tower_repacked))),
+            ("towerSpatial".to_string(), Json::Number(model.spatial.len() as f64)),
+            ("towerElements".to_string(), Json::Number(model.elements.len() as f64)),
+            ("towerRelations".to_string(), Json::Number(model.relations.len() as f64)),
+            ("towerDslLength".to_string(), Json::Number(tower_printed.len() as f64)),
+            ("towerPackLength".to_string(), Json::Number(tower_repacked.len() as f64)),
+        ])))
+    }
+    //#endregion 🔖️Handlers
+}
+//#endregion 🔖️Subject
+
+//#region 🔖️Registration
+/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
+/// id, so the loop mirrors the feature's `Examples` tables exactly. Only subject handlers are
+/// registered: the oracle role belongs to `🐍️component.py`.
+pub fn adapter() -> Adapter {
+    #[allow(unused_mut)]
+    let mut built = Adapter::new("rust");
+    #[cfg(feature = "sut")]
+    {
+        for kind in KINDS {
+            built = built
+                .subject(&format!("mutate-{kind}"), subject::mutate)
+                .subject(&format!("inverse-{kind}"), subject::inverse)
+                .subject(&format!("spec-vector-{kind}"), subject::spec_vector);
+        }
+        built = built.subject("identity-round-trip", subject::identity_round_trip);
+    }
+    built
+}
+//#endregion 🔖️Registration

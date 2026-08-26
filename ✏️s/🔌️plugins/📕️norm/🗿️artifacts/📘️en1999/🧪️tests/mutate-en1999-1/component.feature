@@ -1,137 +1,137 @@
 @capability-en1999-1-mutate
-@no-oracle-en1999-1-mutation-semantics
+@oracle-en1999-1-python-independent
 @comparison-ordered-json-v1
 @mutations-en1999-1-any
-Feature: Apply every typed EN 1999 mutation to its committed specification fixtures
-  `s.norm.en1999` is a semio-NATIVE artifact — no third party reads or writes its
-  `.dsl.semio`/`.pack.semio` envelope — so there is no reference implementation to register as an
-  oracle. That is recorded as the `en1999-1-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and it means the runner
-  executes NO oracle role for this case: every assertion below lives inside the subject handler,
-  which compares the applied document against the committed after-snapshot and the undone document
-  against the committed before-snapshot, and fails with both documents printed. A handler that
-  merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed EN 1999 mutation against an independent Python implementation
+  `s.norm.en1999` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  assumed: PyPI serves no `en1999` distribution, and none for `eurocode`, `vdi3805` or `iso16757`
+  either, and the nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`)
+  implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
+  authoritative over this subset's `En1999Mutation` vocabulary. The second producer a differential
+  comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is
+  it: all 26 kinds of this vocabulary, written in Python from the repository's own written
+  specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
+  ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
+  `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape
+  rules — plus this subset's committed catalog for the closed list of kinds. It imports nothing from
+  the Rust it judges and transliterates none of it: the document field a `new*` argument names is
+  resolved by normalised spelling against the document's own keys, which is what the naming mechanic
+  states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the
+  spellings in THIS subset where that resolution can genuinely go wrong. The recorded no-oracle
+  decision it replaces is gone from
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a
+  reference to compare against.
 
-  Twenty-six document-root scalars and enums, one `change-<field>` each: the design actions N_Ed
-  and M_Ed, the section properties A and W_el, the alloy selection, the buckling reduction chi,
-  the torsion constant I_T and the critical length L_cr, the elevated-temperature theta, the
-  fatigue set (applied and detail stress ranges, the slope m, and the cycle count), the fillet
-  weld set (V_Ed, throat, length and the correlation factor beta_w), the thin-sheet local-buckling
-  set (b, t, k_sigma, W_el and M_Ed) and the shell set (t, r and the applied meridional stress).
+  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path below is a declared `asset://` fixture, so neither side holds a transcription that could
+  drift. All twenty-six kinds are flat `change-<field>` edits, and this subset is the one where the
+  SAME quantity appears three times under different qualifiers: `change-m-ed-knm` (member) beside
+  `change-sheet-m-ed-knm` (sheeting), `change-w-el-mm3` beside `change-sheet-w-el-mm3`,
+  `change-delta-sigma-ed` beside `change-sigma-ed-shell-mpa`, plus a weld group
+  (`change-weld-throat-mm`, `change-weld-length-mm`, `change-v-weld-ed-kn`) and a shell group
+  (`change-shell-r-mm`, `change-shell-t-mm`). Aluminium's `change-alloy` is the one enum and it is
+  what makes the rest of the record mean anything. Each side then asserts the same three laws in
+  role — the applied document must BE the committed after-snapshot; an `applied` vector must move
+  the document and a `rejected` one must leave it bit-identical; and the mutation followed by its
+  OWN computed inverse must restore the before-snapshot exactly. What `parity` adds on top is the
+  only thing a single implementation can never provide: that two implementations, in two languages,
+  written from one written specification, reach the same document.
 
-  Aluminium is the Eurocode where the ALLOY is not a material constant but a branch:
-  `change-alloy` re-selects f_o and f_u, the heat-affected-zone softening factors and the buckling
-  class in one step, which is why it is committed as a whole-document vector rather than as a
-  strength edit. The vocabulary also carries THREE separate copies of the same section symbols
-  because EN 1999 treats them as different members: `change-w-el-mm3` and `change-m-ed-knm` at the
-  document root, `change-sheet-w-el-mm3` and `change-sheet-m-ed-knm` for the thin-sheet
-  local-buckling check, and `change-shell-t-mm`/`change-shell-r-mm` for the shell. A diff builder
-  wired to the root copy instead of the sheet copy produces a document that still checks out
-  numerically and is wrong — which is exactly what a full after-snapshot comparison catches and a
-  spot check does not.
+  `inverse-` projects BOTH the mutated and the restored document. Every kind is scalar, so the
+  restored document repeats the before-document on all twenty-six rows; the mutated projection is
+  the only half that tells the member `m-ed-knm` from the sheeting one.
 
-  Each of the 26 kinds carries its own independently handcrafted `(before, mutation, after, diff,
-  outcome)` quintet under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, and this
-  feature re-exercises those SAME committed bytes end to end through `apply_en1999_mutation`
-  rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture tests do.
-  The committed `🎯️outcome` decides which contract a row is held to: `applied` demands the
-  observability law (the document must MOVE), `rejected` demands the opposite and stricter one —
-  the mutation must be refused and the document must come back bit-identical. All 26 committed
-  vectors declare `applied`, so every row below is held to the observability law: a kind that left
-  the document bit-for-bit unchanged would fail rather than pass silently.
-
-  The identity scenario reads the real committed EN 1999 document at
-  `📚️examples/📕️aluminium-roof-purlin`, not a fixture authored for this case. Its DSL carrier is
-  deliberately byte-preserving — the committed file IS this codec's own canonical printer output,
-  so reproducing it exactly is the correct answer and anything else is the defect — which is why
-  that half of the identity law is asserted as `carrier_is_exact` rather than as the usual
-  no-byte-pass-through inequality. The evidence that the document was genuinely PARSED rather than
-  copied comes from the other half: the same snapshot is round-tripped through two further,
-  independently written codecs — the binary `.pack.semio` protocol and the JSON projection — and
-  all three must agree on one document. The committed binary twin
-  `🎒️aluminium-roof-purlin.pack.semio` is decoded and cross-checked against the text artifact as
-  well, so two separately committed files written by two separate codecs have to describe the same
-  EN 1999 document.
+  ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
+  `📚️examples/📕️aluminium-roof-purlin/🖼️assets/🗣️aluminium-roof-purlin.dsl.semio` — a named
+  aluminium roof purlin, so `change-alloy`, the section keys and the sheeting group are populated by
+  a document that motivates them; the shell and weld groups ride at their committed defaults, which
+  is a real limit on what this file's identity evidence covers. The carrier has no published
+  grammar: the committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+  placeholder, so identity is compared at the envelope preamble, the ordered `key=value` fields and
+  the digest and length of the re-emitted bytes, never at an inferred token-to-enum mapping.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot, mutation and outcome fixture for the <id> kind
-    When <id> is applied through apply_en1999_mutation
-    Then the resulting document matches the committed after-snapshot fixture for <id> and honours the committed outcome status
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id |
-      | change-n-ed-kn |
-      | change-m-ed-knm |
-      | change-a-mm2 |
-      | change-w-el-mm3 |
-      | change-alloy |
-      | change-chi |
-      | change-it-mm4 |
-      | change-l-cr-mm |
-      | change-theta-c |
-      | change-delta-sigma-ed |
-      | change-delta-sigma-c |
-      | change-fatigue-m |
-      | change-n-cycles |
-      | change-v-weld-ed-kn |
-      | change-weld-throat-mm |
-      | change-weld-length-mm |
-      | change-beta-w |
-      | change-sheet-b-mm |
-      | change-sheet-t-mm |
-      | change-sheet-k-sigma |
-      | change-sheet-w-el-mm3 |
-      | change-sheet-m-ed-knm |
-      | change-shell-t-mm |
-      | change-shell-r-mm |
-      | change-sigma-ed-shell-mpa |
-      | change-annex |
+      | id                        | dir                        | fixture                                     |
+      | change-n-ed-kn            | 🦎change-n-ed-kn            | raises-axial-force-to-180-kn                |
+      | change-m-ed-knm           | 🐍change-m-ed-knm           | raises-design-moment-to-9-5-knm             |
+      | change-a-mm2              | 🦂change-a-mm2              | enlarges-section-area-to-2250-mm2           |
+      | change-w-el-mm3           | 🦟change-w-el-mm3           | raises-section-modulus-to-40000-mm3         |
+      | change-alloy              | 🦗change-alloy              | switches-alloy-to-aw7020t6                  |
+      | change-chi                | 🕷️change-chi               | lowers-buckling-chi-to-0-5                  |
+      | change-it-mm4             | 🐜change-it-mm4             | raises-torsion-constant-to-10240-mm4        |
+      | change-l-cr-mm            | 🦔change-l-cr-mm            | lengthens-buckling-length-to-4000-mm        |
+      | change-theta-c            | 🦇change-theta-c            | raises-fatigue-detail-theta-c-to-225-mpa    |
+      | change-delta-sigma-ed     | 🦉change-delta-sigma-ed     | raises-fatigue-stress-range-to-62-5-mpa     |
+      | change-delta-sigma-c      | 🐴change-delta-sigma-c      | upgrades-detail-category-to-90-mpa          |
+      | change-fatigue-m          | 🐎change-fatigue-m          | flattens-sn-slope-to-m-5                    |
+      | change-n-cycles           | 🦄change-n-cycles           | doubles-fatigue-cycles-to-2000000           |
+      | change-v-weld-ed-kn       | 🐑change-v-weld-ed-kn       | raises-weld-shear-to-48-kn                  |
+      | change-weld-throat-mm     | 🐐change-weld-throat-mm     | thickens-weld-throat-to-6-5-mm              |
+      | change-weld-length-mm     | 🐮change-weld-length-mm     | lengthens-weld-to-200-mm                    |
+      | change-beta-w             | 🐷change-beta-w             | raises-weld-correlation-beta-w-to-0-75      |
+      | change-sheet-b-mm         | 🐗change-sheet-b-mm         | widens-sheet-to-320-mm                      |
+      | change-sheet-t-mm         | 🦌change-sheet-t-mm         | thickens-sheet-to-3-5-mm                    |
+      | change-sheet-k-sigma      | 🐘change-sheet-k-sigma      | raises-sheet-plate-buckling-k-sigma-to-6-25 |
+      | change-sheet-w-el-mm3     | 🦏change-sheet-w-el-mm3     | raises-sheet-section-modulus-to-12800-mm3   |
+      | change-sheet-m-ed-knm     | 🦛change-sheet-m-ed-knm     | raises-sheet-design-moment-to-1-25-knm      |
+      | change-shell-t-mm         | 🐪change-shell-t-mm         | thickens-shell-to-6-25-mm                   |
+      | change-shell-r-mm         | 🐫change-shell-r-mm         | widens-shell-radius-to-750-mm               |
+      | change-sigma-ed-shell-mpa | 🦒change-sigma-ed-shell-mpa | raises-shell-design-stress-to-165-mpa       |
+      | change-annex              | 🦘change-annex              | switches-national-annex-to-en               |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_en1999_mutation
-    And the mutation's own computed inverse is applied through apply_en1999_mutation
-    Then the document matches the committed before-snapshot fixture again
+  @mode-differential
+  Scenario Outline: Undoing <id> restores its committed before-snapshot
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When each implementation applies the committed mutation and then its OWN computed inverse
+    Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id |
-      | change-n-ed-kn |
-      | change-m-ed-knm |
-      | change-a-mm2 |
-      | change-w-el-mm3 |
-      | change-alloy |
-      | change-chi |
-      | change-it-mm4 |
-      | change-l-cr-mm |
-      | change-theta-c |
-      | change-delta-sigma-ed |
-      | change-delta-sigma-c |
-      | change-fatigue-m |
-      | change-n-cycles |
-      | change-v-weld-ed-kn |
-      | change-weld-throat-mm |
-      | change-weld-length-mm |
-      | change-beta-w |
-      | change-sheet-b-mm |
-      | change-sheet-t-mm |
-      | change-sheet-k-sigma |
-      | change-sheet-w-el-mm3 |
-      | change-sheet-m-ed-knm |
-      | change-shell-t-mm |
-      | change-shell-r-mm |
-      | change-sigma-ed-shell-mpa |
-      | change-annex |
+      | id                        | dir                        | fixture                                     |
+      | change-n-ed-kn            | 🦎change-n-ed-kn            | raises-axial-force-to-180-kn                |
+      | change-m-ed-knm           | 🐍change-m-ed-knm           | raises-design-moment-to-9-5-knm             |
+      | change-a-mm2              | 🦂change-a-mm2              | enlarges-section-area-to-2250-mm2           |
+      | change-w-el-mm3           | 🦟change-w-el-mm3           | raises-section-modulus-to-40000-mm3         |
+      | change-alloy              | 🦗change-alloy              | switches-alloy-to-aw7020t6                  |
+      | change-chi                | 🕷️change-chi               | lowers-buckling-chi-to-0-5                  |
+      | change-it-mm4             | 🐜change-it-mm4             | raises-torsion-constant-to-10240-mm4        |
+      | change-l-cr-mm            | 🦔change-l-cr-mm            | lengthens-buckling-length-to-4000-mm        |
+      | change-theta-c            | 🦇change-theta-c            | raises-fatigue-detail-theta-c-to-225-mpa    |
+      | change-delta-sigma-ed     | 🦉change-delta-sigma-ed     | raises-fatigue-stress-range-to-62-5-mpa     |
+      | change-delta-sigma-c      | 🐴change-delta-sigma-c      | upgrades-detail-category-to-90-mpa          |
+      | change-fatigue-m          | 🐎change-fatigue-m          | flattens-sn-slope-to-m-5                    |
+      | change-n-cycles           | 🦄change-n-cycles           | doubles-fatigue-cycles-to-2000000           |
+      | change-v-weld-ed-kn       | 🐑change-v-weld-ed-kn       | raises-weld-shear-to-48-kn                  |
+      | change-weld-throat-mm     | 🐐change-weld-throat-mm     | thickens-weld-throat-to-6-5-mm              |
+      | change-weld-length-mm     | 🐮change-weld-length-mm     | lengthens-weld-to-200-mm                    |
+      | change-beta-w             | 🐷change-beta-w             | raises-weld-correlation-beta-w-to-0-75      |
+      | change-sheet-b-mm         | 🐗change-sheet-b-mm         | widens-sheet-to-320-mm                      |
+      | change-sheet-t-mm         | 🦌change-sheet-t-mm         | thickens-sheet-to-3-5-mm                    |
+      | change-sheet-k-sigma      | 🐘change-sheet-k-sigma      | raises-sheet-plate-buckling-k-sigma-to-6-25 |
+      | change-sheet-w-el-mm3     | 🦏change-sheet-w-el-mm3     | raises-sheet-section-modulus-to-12800-mm3   |
+      | change-sheet-m-ed-knm     | 🦛change-sheet-m-ed-knm     | raises-sheet-design-moment-to-1-25-knm      |
+      | change-shell-t-mm         | 🐪change-shell-t-mm         | thickens-shell-to-6-25-mm                   |
+      | change-shell-r-mm         | 🐫change-shell-r-mm         | widens-shell-radius-to-750-mm               |
+      | change-sigma-ed-shell-mpa | 🦒change-sigma-ed-shell-mpa | raises-shell-design-stress-to-165-mpa       |
+      | change-annex              | 🦘change-annex              | switches-national-annex-to-en               |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed EN 1999 document through every encoding it has
+  Scenario: Re-emit the real committed EN 1999 document from the parsed carrier
     Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🖼️assets/🗣️aluminium-roof-purlin.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🖼️assets/🎒️aluminium-roof-purlin.pack.semio
-    When the text artifact is parsed, printed back to DSL and parsed again, and the same document is round-tripped through the binary pack protocol and the JSON projection
-    Then the canonical DSL rendering is reproduced byte for byte and every decoding agrees on one EN 1999 document
+    When each implementation parses the artifact and prints it back to its canonical carrier bytes
+    Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

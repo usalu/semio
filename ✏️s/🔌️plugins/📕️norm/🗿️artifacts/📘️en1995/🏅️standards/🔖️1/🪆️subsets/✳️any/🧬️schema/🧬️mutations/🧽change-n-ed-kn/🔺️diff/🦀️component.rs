@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_n_ed_kn::mutation::ChangeNEdKn;
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeNEdKn, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub fn diff(payload: &ChangeNEdKn, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if !payload.new_n_ed_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "N ed kn must be a finite number.", Vec::<String>::new());
     }

@@ -89,7 +89,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn pass_through_build_never_fails_on_conformance_grounds() {
-            let snapshot = TiffBaselineBuilderConstruction::empty().build().expect("all conformance findings are soft by policy; build must succeed");
+            let snapshot = TiffBaselineBuilderConstruction::empty().await.build().await.expect("all conformance findings are soft by policy; build must succeed");
             assert!(snapshot.ifds.is_empty());
         }
     }
@@ -219,7 +219,7 @@ pub mod derived_analysis {
             TiffSnapshot {
                 schema: "stdio.tiff".into(),
                 byte_order: TiffByteOrder::LittleEndian,
-                ifds: vec![TiffIfd {
+                ifds: vec![TiffIfd { pixels: Vec::new(),
                     entries: vec![
                         tag(256, TiffFieldType::Long, TiffValues::Long(vec![width])),
                         tag(257, TiffFieldType::Long, TiffValues::Long(vec![height])),

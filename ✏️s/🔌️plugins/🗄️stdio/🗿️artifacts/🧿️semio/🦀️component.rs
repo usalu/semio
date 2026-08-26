@@ -1470,8 +1470,8 @@ mod tests {
     /// subset would fail with an unhelpful error rather than a named one.
     #[semio_framework_async_macros::async_test]
     async fn every_composable_subset_dispatches_to_a_real_child_store() {
-        for subset in composable_subsets().await {
-            let dialect = subset_dialect(subset).await;
+        for subset in composable_subsets() {
+            let dialect = subset_dialect(subset);
             // An empty pack is rejected by the production member, so this asserts the DISPATCH
             // reached a real typed variant rather than falling through to "no member kind".
             let error = match create_semio_member("probe", &dialect, &[]).await {
@@ -1480,7 +1480,7 @@ mod tests {
             };
             assert!(!error.to_string().contains("no member kind"), "subset {subset} is not wired into the child-store dispatch");
         }
-        let unknown = match create_semio_member("probe", &subset_dialect("not-a-subset").await, &[]).await {
+        let unknown = match create_semio_member("probe", &subset_dialect("not-a-subset"), &[]).await {
             Ok(_) => panic!("unknown subset must be rejected"),
             Err(error) => error,
         };
@@ -1493,10 +1493,10 @@ mod tests {
     /// subset is recovered from.
     #[semio_framework_async_macros::async_test]
     async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
-        let dialect = subset_dialect("mesh").await;
+        let dialect = subset_dialect("mesh");
 
         let seed = SemioMeshSnapshot::default();
-        let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack().await).await.expect("create child");
+        let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack()).await.expect("create child");
         assert_eq!(child.document_id().await, "mesh-child-1");
 
         let reopened = open_semio_member(&child.envelope_pack_bytes().await.expect("envelope pack")).await.expect("reopen child");

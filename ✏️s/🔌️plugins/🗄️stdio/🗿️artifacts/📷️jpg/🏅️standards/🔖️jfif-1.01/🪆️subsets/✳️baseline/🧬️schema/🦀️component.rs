@@ -97,13 +97,13 @@ pub mod derived_construction {
             let bytes = crate::artifacts::jpg::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
             let decoded = crate::artifacts::jpg::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
             let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
-            let built = JpgBaselineBuilderConstruction::from_binary(&packed).expect("from_binary").build().expect("real baseline JPEG must build clean");
+            let built = JpgBaselineBuilderConstruction::from_binary(&packed).await.expect("from_binary").build().await.expect("real baseline JPEG must build clean");
             assert!(built.frame.is_some());
         }
 
         #[semio_framework_async_macros::async_test]
         async fn empty_snapshot_fails_build_with_no_frame() {
-            let err = JpgBaselineBuilderConstruction::empty().build().expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
+            let err = JpgBaselineBuilderConstruction::empty().await.build().await.expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::CODE_NO_FRAME));
         }
     }

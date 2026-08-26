@@ -77,6 +77,7 @@ pub fn render(document: &EpwSnapshot) -> semio_framework_plugin::UiAssemblyResul
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use semio_framework_plugin::Component;
     use super::*;
 
     #[semio_framework_async_macros::async_test]
@@ -90,8 +91,9 @@ mod tests {
     async fn render_lists_one_row_per_record_with_35_columns() {
         let mut document = EpwSnapshot::default();
         document.records.push(Default::default());
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.table.expect("table scene");
+        let node = render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
+        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
         let columns: Vec<String> = serde_json::from_str(&scene.columns_json).expect("columns json");
         assert_eq!(columns.len(), 35);
         let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");

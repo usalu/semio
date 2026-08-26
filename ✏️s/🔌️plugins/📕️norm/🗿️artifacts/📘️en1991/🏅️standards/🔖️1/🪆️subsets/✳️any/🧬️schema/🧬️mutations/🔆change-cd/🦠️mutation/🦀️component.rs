@@ -12,13 +12,13 @@ pub struct ChangeCD {
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeCD {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cd", kind: "change-cd", record: "ChangedCd" };
 
-    async fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
+    fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change dynamic factor c_d to {:?}", self.new_c_d)
     }
 }

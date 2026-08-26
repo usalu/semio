@@ -4,7 +4,7 @@ use super::mutation::ChangeSpanM;
 use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSpanM, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
+pub fn diff(payload: &ChangeSpanM, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_span_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Span m must be a finite number.", Vec::<String>::new());
     }

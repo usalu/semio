@@ -84,7 +84,7 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document shared://🌐️zukunft-bau-entwerfen-mit-bestand.html
     When the <id> mutation is applied and then undone

@@ -10,7 +10,7 @@ use crate::artifacts::binary::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCU
 use crate::editor::binary::modes::edit;
 use crate::editor::binary::modes::edit::windows::main;
 #[cfg(test)]
-use semio_framework_plugin::UiNode;
+use semio_framework_plugin::Component;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
@@ -194,8 +194,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parse_hex_dump_round_trips_a_rendered_snapshot() {
         let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
-        let UiNode::ComponentScene(node) = main::render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.text_editor.expect("text_editor scene");
+        let node = main::render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
+        let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
         let parsed = parse_hex_dump(&scene.buffer).expect("well-formed hex dump must parse");
         assert_eq!(parsed, vec![0xde, 0xad, 0xbe, 0xef]);
     }

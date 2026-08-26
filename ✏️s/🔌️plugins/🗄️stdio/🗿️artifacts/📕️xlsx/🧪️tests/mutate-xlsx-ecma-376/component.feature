@@ -55,7 +55,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   file is never written to.
 
   THE FIRST DIFFERENTIAL RUN OF THIS CASE FOUND THE ADAPTER'S OWN SUBJECT WIRING WRONG. All six pool
-  scenarios diverged structurally (`parity=15/21`): the oracle emitted `{"sharedStringCount":…,
+  scenarios diverged structurally: the oracle emitted `{"sharedStringCount":…,
   "sharedStrings":[…]}` and the subject emitted `{"format":…,"sheets":[…]}` — projections of two
   different SHAPES, which cannot be compared at all. The oracle half already branches on
   `is_pool_kind` and reads `xl/sharedStrings.xml` back with `zip` + `quick-xml` for exactly those
@@ -119,7 +119,7 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real workbook
     Given the real input workbook shared://📕️reuse-marketplaces.xlsx
     When the <id> mutation is applied with its parameters

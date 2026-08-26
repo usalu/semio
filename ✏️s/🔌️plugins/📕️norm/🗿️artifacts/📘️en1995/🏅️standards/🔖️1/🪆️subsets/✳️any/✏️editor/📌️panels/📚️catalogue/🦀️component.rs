@@ -11,13 +11,13 @@ pub const BODY_CATALOGUE: &str = "norm.en1995.play.catalogue";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render() -> UiNode {
+pub fn render() -> UiNode {
     crate::app_surface::render_catalogue(crate::editor::en1995::LABEL)
 }
 //#endregion 🔖️Render
@@ -29,13 +29,13 @@ mod tests {
     use crate::editor::en1995::testkit;
 
     #[semio_framework_async_macros::async_test]
-    async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
+    fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
         assert_eq!(definition().body_key.as_deref(), Some(BODY_CATALOGUE));
         assert_eq!(definition().id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn renders_this_standards_catalogue_headline() {
+    fn renders_this_standards_catalogue_headline() {
         let mut app = testkit::new_app();
         assert!(testkit::render(&mut app, BODY_CATALOGUE).contains("catalogue"));
     }

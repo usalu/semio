@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_en_a_gr::mutation::ChangeEnAGr;
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeEnAGr, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeEnAGr, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_en_a_gr.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Reference ground acceleration a_gr must be a finite number, got {}.", payload.new_en_a_gr), Vec::<String>::new());
     }

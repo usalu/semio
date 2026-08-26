@@ -35,8 +35,6 @@ pub struct DrawConfig {
     pub trace_pointer_completed_work: u64,
     /// ⏳ Pending bounded trace work units for observable progress.
     pub trace_pointer_pending_work: u64,
-    /// 🎭️ Portable bounded gesture checkpoint used to reconstruct a worker-hopped session.
-    pub gesture_checkpoint_json: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     pub locale: String,
 }
@@ -45,10 +43,10 @@ pub struct DrawConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for DrawConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -56,7 +54,7 @@ impl store::ArtifactDsl for DrawConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -65,12 +63,12 @@ impl store::ArtifactDsl for DrawConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for DrawConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -78,7 +76,7 @@ impl store::ArtifactPack for DrawConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -94,7 +92,6 @@ impl Default for DrawConfig {
             trace_pointer_generation: 0,
             trace_pointer_completed_work: 0,
             trace_pointer_pending_work: 0,
-            gesture_checkpoint_json: String::new(),
             locale: "en-US".into(),
         }
     }
@@ -128,15 +125,13 @@ pub enum DrawConfigMutation {
     SetActiveUtility { utility_id: String },
     #[dsl(key = "trace-pointer-progress")]
     SetTracePointerProgress { generation: u64, completed_work: u64, pending_work: u64 },
-    #[dsl(key = "gesture-checkpoint")]
-    SetGestureCheckpoint { json: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
 impl protocol::OpText for DrawConfigMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -147,7 +142,7 @@ impl protocol::OpText for DrawConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -157,7 +152,7 @@ impl protocol::OpText for DrawConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for DrawConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -170,7 +165,7 @@ impl protocol::OpBinary for DrawConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -192,7 +187,7 @@ impl protocol::OpBinary for DrawConfigMutation {
 impl Mutation<DrawConfig> for DrawConfigMutation {
     type Diff = DrawConfig;
 
-    async fn diff(&self, base: &DrawConfig) -> protocol::MutationOutcome<DrawConfig> {
+    fn diff(&self, base: &DrawConfig) -> protocol::MutationOutcome<DrawConfig> {
         let mut next = base.clone();
         match self {
             DrawConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -209,13 +204,12 @@ impl Mutation<DrawConfig> for DrawConfigMutation {
                 next.trace_pointer_completed_work = *completed_work;
                 next.trace_pointer_pending_work = *pending_work;
             }
-            DrawConfigMutation::SetGestureCheckpoint { json } => next.gesture_checkpoint_json = json.clone(),
             DrawConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }
 
-    async fn inverse(&self, base: &DrawConfig) -> Vec<Self> {
+    fn inverse(&self, base: &DrawConfig) -> Vec<Self> {
         vec![DrawConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -258,7 +252,6 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetActiveUtility { utility_id: "pen".into() });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetTracePointerProgress { generation: 7, completed_work: 32, pending_work: 4 });
-        store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetGestureCheckpoint { json: r#"{"state":"idle"}"#.into() });
         store::os_store::test_support::assert_op_line_round_trip(&DrawConfigMutation::SetLocale { value: "de-DE".into() });
     }
 }

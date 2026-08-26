@@ -17,7 +17,7 @@ consumes = ["process.machines"]
 
 [[package.metadata.semio.playground]]
 variant = "process3d"
-app = "process3d-play"
+app = "s.process.process3d@1/*#editor"
 aliases = ["process 3d"]
 ports = { react = 6022, wgpu = 6122 }
 

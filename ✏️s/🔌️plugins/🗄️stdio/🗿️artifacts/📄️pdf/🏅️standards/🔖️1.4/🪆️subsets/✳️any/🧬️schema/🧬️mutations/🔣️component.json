@@ -9,8 +9,8 @@
     },
     "PdfSnapshot": {
       "type": "object",
-      "required": ["schema", "page"],
-      "properties": { "schema": { "type": "string" }, "page": { "$ref": "#/$defs/PageDoc" } }
+      "required": ["schema", "pages"],
+      "properties": { "schema": { "type": "string" }, "pages": { "type": "array", "items": { "$ref": "#/$defs/PageDoc" } } }
     }
   },
   "type": "object",

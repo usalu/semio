@@ -4,7 +4,7 @@ use super::mutation::UpdatePlatedInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdatePlatedInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdatePlatedInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_plated_lambda_p.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Plated lambda p must be a finite number, got {}.", payload.new_plated_lambda_p), Vec::<String>::new());
     }

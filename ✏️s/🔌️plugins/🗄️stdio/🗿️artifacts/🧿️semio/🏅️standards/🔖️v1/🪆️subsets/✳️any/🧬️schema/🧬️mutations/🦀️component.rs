@@ -564,8 +564,8 @@ mod tests {
         let wrapped = SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 1 });
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
         assert_eq!(diff.diff(), &SemioDiff::NoChange);
-        assert!(diff.messages().await.iter().any(|message| message.code.0 == "mutation.target-missing"));
-        assert_eq!(diff.await.diff().apply(&base).unwrap(), base);
+        assert!(diff.messages().iter().any(|message| message.code.0 == "mutation.target-missing"));
+        assert_eq!(diff.diff().apply(&base).unwrap(), base);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
         assert_eq!(inv, vec![SemioMutation::NoMutation]);
     }
@@ -628,9 +628,9 @@ mod tests {
             let base = SemioSnapshot { schema: "stdio.semio".into(), subset };
             let m = wrap_absent_mutation(&base.subset);
             let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-            assert!(diff.await.diff().is_empty(), "wrapped NoMutation must diff empty: {diff:?}");
+            assert!(diff.diff().is_empty(), "wrapped NoMutation must diff empty: {diff:?}");
             let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-            assert_eq!(inv.await.len(), 1);
+            assert_eq!(inv.len(), 1);
         }
     }
 
@@ -644,14 +644,14 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Text(Default::default()) };
         let m = SemioMutation::Text(SemioTextMutation::InsertRun(insert_run::mutation::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff.await.diff(), SemioDiff::Text(_)));
-        assert!(!diff.await.diff().is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Text(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-        assert_eq!(inv.await.len(), 1);
+        assert_eq!(inv.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv[0]);
         assert_eq!(restored, base);
@@ -668,14 +668,14 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
         let m = SemioMutation::Brep(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v1".into(), point: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff.await.diff(), SemioDiff::Brep(_)));
-        assert!(!diff.await.diff().is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Brep(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-        assert_eq!(inv.await.len(), 1);
+        assert_eq!(inv.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv[0]);
         assert_eq!(restored, base);
@@ -693,14 +693,14 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Mesh(Default::default()) };
         let m = SemioMutation::Mesh(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "m1".into(), primitives: vec![] } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff.await.diff(), SemioDiff::Mesh(_)));
-        assert!(!diff.await.diff().is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Mesh(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-        assert_eq!(inv.await.len(), 1);
+        assert_eq!(inv.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv[0]);
         assert_eq!(restored, base);
@@ -717,14 +717,14 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };
         let m = SemioMutation::Table(SemioTableMutation::InsertRow(insert_row::mutation::InsertRow { index: 0, row: SemioTableRow { cells: vec![] } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff.await.diff(), SemioDiff::Table(_)));
-        assert!(!diff.await.diff().is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Table(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-        assert_eq!(inv.await.len(), 1);
+        assert_eq!(inv.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv[0]);
         assert_eq!(restored, base);
@@ -742,14 +742,14 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Graph(Default::default()) };
         let m = SemioMutation::Graph(SemioGraphMutation::CreateNode(create_node::mutation::CreateNode { id: GraphNodeId::new("n1"), kind: "task".into(), label: "N1".into(), position: SemioPoint2::default(), ports: vec![], properties: vec![] }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff.await.diff(), SemioDiff::Graph(_)));
-        assert!(!diff.await.diff().is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Graph(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-        assert_eq!(inv.await.len(), 1);
+        assert_eq!(inv.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv[0]);
         assert_eq!(restored, base);
@@ -767,14 +767,14 @@ mod tests {
         let target = store::os_io::ArtifactRef { artifact_id: "brep-x".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
         let m = SemioMutation::Object(SemioObjectMutation::CreateBrep(create_brep::mutation::CreateBrep { child_id: "b1".into(), target }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff.await.diff(), SemioDiff::Object(_)));
-        assert!(!diff.await.diff().is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Object(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-        assert_eq!(inv.await.len(), 1);
+        assert_eq!(inv.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv[0]);
         assert_eq!(restored, base);
@@ -791,14 +791,14 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Kit(Default::default()) };
         let m = SemioMutation::Kit(SemioKitMutation::AddType(add_type::mutation::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff.await.diff(), SemioDiff::Kit(_)));
-        assert!(!diff.await.diff().is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Kit(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
-        assert_eq!(inv.await.len(), 1);
+        assert_eq!(inv.len(), 1);
         let mut restored = applied;
         let _ = apply_semio_mutation(&mut restored, &inv[0]);
         assert_eq!(restored, base);
@@ -811,12 +811,12 @@ mod tests {
         let cases = [SemioMutation::NoMutation, SemioMutation::SetSnapshot { snapshot: base.clone() }, SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 22_050 }), SemioMutation::Flow(SemioFlowMutation::NoMutation)];
         for m in cases {
             let printed = m.print_op();
-            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?}");
 
-            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = SemioMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

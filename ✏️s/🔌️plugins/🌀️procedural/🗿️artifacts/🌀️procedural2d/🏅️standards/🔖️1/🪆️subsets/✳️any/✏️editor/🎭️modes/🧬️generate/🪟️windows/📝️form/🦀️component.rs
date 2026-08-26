@@ -37,8 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(document: &Procedural2dSnapshot, generation: &GenerationPlayState, labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let spec = flow_fixture_to_form_spec(&document.fixture);
     let Some(current) = selected_generation(generation) else {
-        return built_text_node(semio_framework_plugin::Label::data(labels.generate_hint.as_str()))
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
+        return built_text_node(semio_framework_plugin::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };
     crate::generation_form(&spec, &current.values, PROCEDURAL2D_PLAY_APP_ID, "updateGenerationValues", &current.id)
 }

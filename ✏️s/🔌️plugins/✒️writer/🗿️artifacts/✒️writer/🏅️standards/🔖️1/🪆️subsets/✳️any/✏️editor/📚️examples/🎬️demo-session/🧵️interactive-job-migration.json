@@ -1,0 +1,47 @@
+{
+  "schema": "writer.interactive-job-migration/v1",
+  "payloadSchema": "writer.writer.tool-command.v1",
+  "maxRawWireBytes": 4096,
+  "maxCurrentTextBytes": 4096,
+  "maxWorkUnitsPerStep": 1,
+  "migrated": [
+    { "action": "textEdit", "variants": ["text-edit"] },
+    { "action": "setText", "variants": ["set-text"] },
+    { "action": "setCamera", "variants": ["camera"] },
+    { "action": "requestCompletions", "variants": ["request-completions"] },
+    { "action": "lintDocument", "variants": ["lint-document"] },
+    { "action": "setEditorSelection", "variants": ["editor-selection"] },
+    { "action": "toggleLineNumbers", "variants": ["toggle-line-numbers"] },
+    { "action": "setEditorSetting", "variants": ["font-px", "line-height", "tab-size"] },
+    { "action": "engagementInput", "variants": ["engagement-input"] },
+    { "action": "setActiveExample", "variants": ["active-example"] },
+    { "action": "setSnapshot", "variants": ["set-snapshot"] },
+    { "action": "setSnapshotJson", "variants": ["document-json"] },
+    { "action": "setFixtureJson", "variants": ["fixture-json"] },
+    { "action": "formatDocument", "variants": ["format-document"] },
+    { "action": "commitRename", "variants": ["commit-rename"] },
+    { "action": "engagementSubmit", "variants": ["engagement-submit"] },
+    { "action": "setLocale", "variants": ["locale"] },
+    { "action": "recordTutorial", "variants": ["record-tutorial"] }
+  ],
+  "textAdmissionCases": [
+    { "textBytes": 4096, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
+    { "textBytes": 4097, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
+  ],
+  "localeAdmissionCases": [
+    { "localeBytes": 64, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
+    { "localeBytes": 65, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
+  ],
+  "requiredLifecycle": [
+    "exact-wire-admission",
+    "retained-page-consume",
+    "bounded-byte-scan",
+    "typed-wire-parity",
+    "progress-checkpoint",
+    "per-step-cancel",
+    "freshness-before-exposure",
+    "result-page-ack",
+    "bounded-retry",
+    "bounded-close"
+  ]
+}

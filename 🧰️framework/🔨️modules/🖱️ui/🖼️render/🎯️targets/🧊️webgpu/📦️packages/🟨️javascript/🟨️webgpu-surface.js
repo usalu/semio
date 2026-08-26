@@ -59,23 +59,24 @@ export function createWebGpuSurfacePort(options = {}) {
   const drop = ({ surfaceId, generation }) => request(1830, generation, body((writer) => writer.u32(surfaceId).u32(generation)), { kind: "drop", surfaceId, generation });
   const control = (bytes, delivered) => {
     if (state.controls === GPU_MAX_IN_FLIGHT_CONTROLS) return { accepted: false, code: 19 };
-    state.controls += 1;
-    return enqueue(bytes, () => { state.controls -= 1; delivered?.(); });
+    const result = enqueue(bytes, () => { state.controls -= 1; delivered?.(); });
+    if (result.accepted) state.controls += 1;
+    return result;
   };
-  const cancel = (requestId, generation) => control(encodeCancel(requestId, generation));
+  const releasePage = (predicate) => {
+    const position = state.pages.findIndex(predicate);
+    if (position < 0) return;
+    const [page] = state.pages.splice(position, 1);
+    if (page.effect?.kind === "frame" && !page.effect.frameReleased) state.frames = Math.max(0, state.frames - 1);
+  };
+  const cancel = (requestId, generation) => control(encodeCancel(requestId, generation), () => {
+    releasePage((page) => page.outcome.requestId === BigInt(requestId) && page.outcome.generation === generation);
+  });
   const acknowledge = (handle, index) => control(encodeAcknowledge(handle, index), () => {
-    const position = state.pages.findIndex((page) => page.handle.slot === handle.slot && page.handle.generation === handle.generation && page.index === index);
-    if (position >= 0) {
-      const [page] = state.pages.splice(position, 1);
-      if (page.effect?.kind === "frame" && !page.effect.frameReleased) state.frames = Math.max(0, state.frames - 1);
-    }
+    releasePage((page) => page.handle.slot === handle.slot && page.handle.generation === handle.generation && page.index === index);
   });
   const closePage = (handle) => control(encodeClose(handle), () => {
-    const position = state.pages.findIndex((page) => page.handle.slot === handle.slot && page.handle.generation === handle.generation);
-    if (position >= 0) {
-      const [page] = state.pages.splice(position, 1);
-      if (page.effect?.kind === "frame" && !page.effect.frameReleased) state.frames = Math.max(0, state.frames - 1);
-    }
+    releasePage((page) => page.handle.slot === handle.slot && page.handle.generation === handle.generation);
   });
   const poll = (pointer, capacity) => {
     if (state.closed && state.queue.length === 0) return 0xffffffff;

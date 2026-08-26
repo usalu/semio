@@ -1,0 +1,240 @@
+{
+  "count": 47,
+  "rows": [
+    {
+      "file": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs",
+      "line": 152,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🦀️component.rs",
+      "line": 317,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+      "line": 288,
+      "text": "OnceLock<std::sync::Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+      "line": 312,
+      "text": "OnceLock<std::sync::Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+      "line": 298,
+      "text": "OnceLock<std::sync::Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+      "line": 322,
+      "text": "OnceLock<std::sync::Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️component.rs",
+      "line": 177,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️component.rs",
+      "line": 291,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs",
+      "line": 518,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs",
+      "line": 325,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️component.rs",
+      "line": 255,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs",
+      "line": 2116,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs",
+      "line": 2048,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs",
+      "line": 3371,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
+      "line": 73,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs",
+      "line": 160,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+      "line": 227,
+      "text": "OnceLock<std::sync::Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
+      "line": 251,
+      "text": "OnceLock<std::sync::Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 153,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs",
+      "line": 209,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs",
+      "line": 37,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs",
+      "line": 45,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs",
+      "line": 147,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs",
+      "line": 148,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs",
+      "line": 350,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs",
+      "line": 17,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs",
+      "line": 28,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️component.rs",
+      "line": 382,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs",
+      "line": 56,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs",
+      "line": 67,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs",
+      "line": 95,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️component.rs",
+      "line": 217,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🦀️component.rs",
+      "line": 202,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️run-reconstruction/🦀️component.rs",
+      "line": 347,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+      "line": 421,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+      "line": 552,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs",
+      "line": 817,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️component.rs",
+      "line": 1708,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️component.rs",
+      "line": 303,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️component.rs",
+      "line": 152,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
+      "line": 608,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
+      "line": 609,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 174,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "line": 175,
+      "text": "OnceLock<Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs",
+      "line": 1092,
+      "text": "OnceLock<std::sync::Mutex<"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
+      "line": 588,
+      "text": "thread_local! {"
+    },
+    {
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs",
+      "line": 355,
+      "text": "OnceLock<Mutex<"
+    }
+  ]
+}

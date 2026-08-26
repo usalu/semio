@@ -1,28 +1,27 @@
-//! 🧬️ PdfMutation — document mutation dispatch.
+//! 🧬️ PdfMutation — document mutation dispatch for `stdio.pdf` (1.4).
 //!
-//! 🧪️ F6 (real `OpText`/`OpBinary`): `PdfMutation`'s only enum-shaped payload is `SetSnapshot`'s
-//! whole `PdfSnapshot`, and `PdfSnapshot`'s tree has zero data-carrying enums, so per
-//! f6-recon-report.md §3 `#[derive(dsl::DslOps)]` derives clean (verified via `cargo check`,
-//! zero pdf-scoped errors) giving `dsl::DslVariants` for free. Per P6
-//! (`🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs:914-915`) `DslOps`
-//! never emits `OpText`/`OpBinary` itself -- those are the §2 handcrafted boilerplate wrapper
-//! below (identical shape to `BinaryMutation`/`GifMutation`), replacing the prior
-//! `serde_json`-based stubs.
+//! ✍️ **Why `OpText`/`OpBinary` are hand-rolled here.** `SetSnapshot` carries the whole
+//! `PdfSnapshot`, and the printed form of that payload is what the sibling facet file
+//! `📝️text/📖️component.grammar.semio` has to state production for production. A derived printer
+//! chooses that shape for us; a hand-rolled one lets the grammar be written from this file's own
+//! `format!` call sites, which is what `ops_grammar_conformance_law` actually checks. The 1.7
+//! standard hand-rolls its own for the same reason, and the binary payload is genuine
+//! varint/length-prefixed structure reusing the diff facet's `pub(crate)` primitives rather than a
+//! second encoding of the same snapshot.
 
-use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::diff::{diff_set_snapshot, PdfDiff};
+use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::diff::{dec_snapshot_bin, diff_set_snapshot, enc_snapshot_bin, PdfDiff};
 use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
-use protocol::Mutation;
+use protocol::{Mutation, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.pdf`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 pub enum PdfMutation {
     #[default]
     NoMutation,
     SetSnapshot {
-        #[dsl(block)]
         snapshot: PdfSnapshot,
     },
 }
@@ -69,38 +68,82 @@ impl Mutation<PdfSnapshot> for PdfMutation {
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🧪️ F6: `#[derive(dsl::DslOps)]` on `PdfMutation` derives clean (no data-carrying enum
-/// anywhere in `PdfSnapshot`'s tree) and gives `dsl::DslVariants` for free, but per P6
-/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs:914-915`) `DslOps`
-/// NEVER emits `OpText`/`OpBinary` — those are always handcrafted. This is the exact
-/// boilerplate wrapper from f6-recon-report.md §2 (verbatim shape as `BinaryMutation`/
-/// `GifMutation`), replacing the prior `serde_json`-based stubs.
-impl protocol::OpText for PdfMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+/// 📸️ The snapshot payload as lowercase hex over its own binary encoding — one structure, one
+/// encoding, shared with the diff facet (`enc_snapshot_bin`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_snapshot(snapshot: &PdfSnapshot) -> String {
+    let mut bytes = Vec::new();
+    enc_snapshot_bin(snapshot, &mut bytes);
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_snapshot(text: &str) -> Result<PdfSnapshot, String> {
+    if text.len() % 2 != 0 {
+        return Err(format!("odd hex length: {text:?}"));
     }
+    let bytes: Result<Vec<u8>, String> = (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|error| error.to_string())).collect();
+    let bytes = bytes?;
+    let mut reader = store::ByteReader::new(&bytes);
+    let snapshot = dec_snapshot_bin(&mut reader)?;
+    if reader.remaining() != 0 {
+        return Err(format!("snapshot: {} trailing bytes", reader.remaining()));
+    }
+    Ok(snapshot)
+}
+
+impl OpText for PdfMutation {
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        match self {
+            PdfMutation::NoMutation => "no-mutation".to_string(),
+            PdfMutation::SetSnapshot { snapshot } => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
+        }
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let parse = |line: &str| -> Result<Self, String> {
+            if line == "no-mutation" {
+                return Ok(PdfMutation::NoMutation);
+            }
+            match line.strip_prefix("set-snapshot snapshot=") {
+                Some(rest) => Ok(PdfMutation::SetSnapshot { snapshot: dec_snapshot(rest)? }),
+                None => Err(format!("pdf 1.4 mutation: unknown operation line {line:?}")),
+            }
+        };
+        parse(line).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
 }
 
-impl protocol::OpBinary for PdfMutation {
+/// 🧪️ Real binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape. `tag` is
+/// the variant ordinal in [`KINDS`] order.
+impl OpBinary for PdfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        let tag: u8 = match self {
+            PdfMutation::NoMutation => 0,
+            PdfMutation::SetSnapshot { .. } => 1,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        if let PdfMutation::SetSnapshot { snapshot } = self {
+            enc_snapshot_bin(snapshot, &mut out);
+        }
+        Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let format = reader.read_u8().map_err(|error| malformed("op format", 0, error.to_string()))?;
+        if format != store::pack_rt::OP_BINARY_FORMAT {
+            return Err(malformed("op format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
+        }
+        let tag = reader.read_u8().map_err(|error| malformed("op tag", 1, error.to_string()))?;
+        let mutation = match tag {
+            0 => PdfMutation::NoMutation,
+            1 => PdfMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader).map_err(|error| malformed("op snapshot", reader.position(), error))? },
+            other => return Err(malformed("op tag", 1, format!("unknown variant tag {other}"))),
+        };
+        if reader.remaining() != 0 {
+            return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
+        }
+        Ok(mutation)
     }
 }
 //#endregion OpCodecs
@@ -115,7 +158,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snap(width: f64, height: f64, text: &str) -> PdfSnapshot {
-        PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width, height, text: text.into() } }
+        PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width, height, text: text.into() }] }
     }
 
     //#region mutation_diff_law
@@ -136,7 +179,7 @@ mod tests {
     //#region inverse_law
     #[semio_framework_async_macros::async_test]
     async fn mutation_apply_inverse_round_trips_every_variant() {
-        let base = snap(612.0, 792.0, "base");
+        let base = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: 612.0, height: 792.0, text: "base".into() }, PageDoc { width: 1.0, height: 2.0, text: "second".into() }] };
         for m in [PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }] {
             let diff = m.diff(&base);
             let mutated = diff.diff().apply(&base).unwrap();
@@ -161,11 +204,7 @@ mod tests {
         let variants = [PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: PdfSnapshot::default() }];
         assert_eq!(KINDS.len(), variants.len(), "KINDS must list exactly one kebab-case entry per PdfMutation variant");
         for (kind, variant) in KINDS.iter().zip(variants.iter()) {
-            let matches = match (*kind, variant) {
-                ("no-mutation", PdfMutation::NoMutation) => true,
-                ("set-snapshot", PdfMutation::SetSnapshot { .. }) => true,
-                _ => false,
-            };
+            let matches = matches!((*kind, variant), ("no-mutation", PdfMutation::NoMutation) | ("set-snapshot", PdfMutation::SetSnapshot { .. }));
             assert!(matches, "KINDS entry {kind:?} does not correspond to variant {variant:?} in declaration order");
         }
     }
@@ -184,12 +223,15 @@ mod tests {
 
     //#region op_text_binary_roundtrip_law
     /// 🧪️ F6: `protocol::OpText`/`OpBinary` LAW, exercised for every variant incl. `SetSnapshot`'s
-    /// nested-struct payload -- both text (`print_op`/`parse_op`) and binary
+    /// multi-page payload -- both text (`print_op`/`parse_op`) and binary
     /// (`encode_op`/`decode_op`) sides.
     #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
-        use protocol::{OpBinary, OpText};
-        let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.5, 400.25, "hello world") }];
+        let many = PdfSnapshot {
+            schema: STDIO_PDF_DOCUMENT_SCHEMA.into(),
+            pages: vec![PageDoc { width: 300.5, height: 400.25, text: "hello world".into() }, PageDoc { width: 1.0, height: 2.0, text: String::new() }, PageDoc { width: 0.0, height: 841.89, text: "a (parenthesised, comma'd) line".into() }],
+        };
+        let cases = vec![PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.5, 400.25, "hello world") }, PdfMutation::SetSnapshot { snapshot: many }];
         for m in cases {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must not contain a newline: {printed:?}");

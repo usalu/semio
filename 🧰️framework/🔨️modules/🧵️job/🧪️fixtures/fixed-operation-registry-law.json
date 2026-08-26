@@ -1,0 +1,144 @@
+{
+  "schema": "semio.framework.job.fixed-operation-registry-law.v1",
+  "cases": [
+    {
+      "id": "empty",
+      "capacity": 1,
+      "maximumBytes": 1,
+      "steps": [{ "action": "close", "maximumItems": 1, "maximumBytes": 1 }],
+      "expected": ["close:complete"]
+    },
+    {
+      "id": "single",
+      "capacity": 1,
+      "maximumBytes": 1,
+      "steps": [
+        { "action": "admit", "owner": "single-owner", "operation": 1, "generation": 1, "bytes": 1 },
+        { "action": "take", "operation": 1, "generation": 1 },
+        { "action": "inspect" }
+      ],
+      "expected": ["admit:accepted:single-owner", "take:single-owner", "state:0:0:0"]
+    },
+    {
+      "id": "maximum-plus-one",
+      "capacity": 4,
+      "maximumBytes": 8,
+      "steps": [
+        { "action": "admit", "owner": "slot-0", "operation": 0, "generation": 0, "bytes": 1 },
+        { "action": "admit", "owner": "slot-1", "operation": 1, "generation": 0, "bytes": 1 },
+        { "action": "admit", "owner": "slot-2", "operation": 2, "generation": 0, "bytes": 1 },
+        { "action": "admit", "owner": "slot-3", "operation": 3, "generation": 0, "bytes": 1 },
+        { "action": "admit", "owner": "slot-plus-one", "operation": 4, "generation": 0, "bytes": 1 },
+        { "action": "cancel", "operation": 0, "generation": 0 },
+        { "action": "cancel", "operation": 1, "generation": 0 },
+        { "action": "cancel", "operation": 2, "generation": 0 },
+        { "action": "cancel", "operation": 3, "generation": 0 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 }
+      ],
+      "expected": [
+        "admit:accepted:slot-0",
+        "admit:accepted:slot-1",
+        "admit:accepted:slot-2",
+        "admit:accepted:slot-3",
+        "admit:rejected:slot-plus-one",
+        "cancel:true",
+        "cancel:true",
+        "cancel:true",
+        "cancel:true",
+        "close:pending",
+        "close:pending",
+        "close:pending",
+        "close:complete",
+        "close:complete"
+      ]
+    },
+    {
+      "id": "collision",
+      "capacity": 4,
+      "maximumBytes": 2,
+      "steps": [
+        { "action": "admit", "owner": "collision-live", "operation": 0, "generation": 0, "bytes": 1 },
+        { "action": "admit", "owner": "collision-returned", "operation": 4, "generation": 0, "bytes": 1 },
+        { "action": "cancel", "operation": 0, "generation": 0 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 }
+      ],
+      "expected": ["admit:accepted:collision-live", "admit:rejected:collision-returned", "cancel:true", "close:complete"]
+    },
+    {
+      "id": "byte-maximum-plus-one",
+      "capacity": 1,
+      "maximumBytes": 8,
+      "steps": [
+        { "action": "admit", "owner": "byte-max", "operation": 0, "generation": 0, "bytes": 8 },
+        { "action": "admit", "owner": "byte-plus-one", "operation": 1, "generation": 0, "bytes": 1 },
+        { "action": "cancel", "operation": 0, "generation": 0 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 }
+      ],
+      "expected": [
+        "admit:accepted:byte-max",
+        "admit:rejected:byte-plus-one",
+        "cancel:true",
+        "close:pending",
+        "close:pending",
+        "close:pending",
+        "close:pending",
+        "close:pending",
+        "close:pending",
+        "close:pending",
+        "close:complete"
+      ]
+    },
+    {
+      "id": "cancel-stale",
+      "capacity": 2,
+      "maximumBytes": 2,
+      "steps": [
+        { "action": "admit", "owner": "stale-owner", "operation": 0, "generation": 1, "bytes": 1 },
+        { "action": "cancelStaleStep", "operation": 0, "liveGeneration": 2 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 }
+      ],
+      "expected": ["admit:accepted:stale-owner", "stale:true", "close:pending", "close:complete"]
+    },
+    {
+      "id": "aba",
+      "capacity": 1,
+      "maximumBytes": 2,
+      "steps": [
+        { "action": "admit", "owner": "aba-old", "operation": 9, "generation": 1, "bytes": 1 },
+        { "action": "take", "operation": 9, "generation": 2 },
+        { "action": "take", "operation": 9, "generation": 1 },
+        { "action": "admit", "owner": "aba-fresh", "operation": 9, "generation": 2, "bytes": 1 },
+        { "action": "cancel", "operation": 9, "generation": 1 },
+        { "action": "cancel", "operation": 9, "generation": 2 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 }
+      ],
+      "expected": ["admit:accepted:aba-old", "take:none", "take:aba-old", "admit:accepted:aba-fresh", "cancel:false", "cancel:true", "close:complete"]
+    },
+    {
+      "id": "interrupted-repeated-close",
+      "capacity": 1,
+      "maximumBytes": 2,
+      "steps": [
+        { "action": "admit", "owner": "close-owner", "operation": 3, "generation": 4, "bytes": 2 },
+        { "action": "cancel", "operation": 3, "generation": 4 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "inspect" },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 },
+        { "action": "close", "maximumItems": 1, "maximumBytes": 1 }
+      ],
+      "expected": ["admit:accepted:close-owner", "cancel:true", "close:pending", "state:1:2:1", "close:complete", "close:complete"]
+    }
+  ]
+}

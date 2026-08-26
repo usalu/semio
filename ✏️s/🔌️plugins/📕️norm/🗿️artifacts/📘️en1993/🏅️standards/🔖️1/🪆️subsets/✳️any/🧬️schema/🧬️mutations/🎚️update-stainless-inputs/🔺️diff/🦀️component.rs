@@ -4,7 +4,7 @@ use super::mutation::UpdateStainlessInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdateStainlessInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdateStainlessInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_stainless_m_ed_knm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Stainless m ed knm must be a finite number, got {}.", payload.new_stainless_m_ed_knm), Vec::<String>::new());
     }

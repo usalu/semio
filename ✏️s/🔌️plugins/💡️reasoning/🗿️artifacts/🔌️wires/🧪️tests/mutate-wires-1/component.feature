@@ -6,9 +6,25 @@ Feature: Apply every typed wires mutation to its committed vector and to a real-
   `s.reasoning.wires` is a semio-NATIVE argument board. Its five-line `.wires.dsl.semio` body is
   hex-encoded `DslValue`, nothing third-party reads it, and the thing being mutated is an UNTYPED
   value tree — `wiresFixture` holding `identities`, `relationships` and a nested `board` — edited one
-  scalar key at a time through this facet's own `set_node_field`. So no oracle is registered
-  (recorded as the `wires-1-argument-board-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`).
+  scalar key at a time through this facet's own `set_node_field`. No reference library is registered
+  — recorded as the `wires-1-argument-board-mutation-semantics` no-oracle decision in
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
+  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
+  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   What genuinely distinguishes this vocabulary is the shape of its committed evidence. Ten kinds,
   ten handcrafted specification vectors under

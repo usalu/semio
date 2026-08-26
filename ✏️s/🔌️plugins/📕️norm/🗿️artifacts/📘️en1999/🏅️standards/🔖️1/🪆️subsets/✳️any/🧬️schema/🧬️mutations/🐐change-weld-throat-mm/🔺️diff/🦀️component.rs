@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_weld_throat_mm::mutation::Change
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeWeldThroatMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeWeldThroatMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_weld_throat_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Weld throat thickness [mm] must be a finite number, got {}.", payload.new_weld_throat_mm), Vec::<String>::new());
     }

@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// 1995-1-1 §3.2 size-effect factor k_h reads — is a SEPARATE field that happens to start equal, and it must
 /// not be dragged along.
 #[semio_framework_async_macros::async_test]
-async fn deepens_the_beam_to_360_mm() {
+fn deepens_the_beam_to_360_mm() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-h-mm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-h-mm/deepens-the-beam-to-360-mm: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.h_mm, 360.0, "change-h-mm/deepens-the-beam-to-360-mm: h_mm must read 360.0 mm once the change lands");
@@ -44,7 +44,7 @@ async fn deepens_the_beam_to_360_mm() {
 /// ↩️ `change-h-mm`'s inverse reads the OLD 300.0 mm out of BASE, so replaying it puts the 300.0 mm depth back
 /// on `h_mm`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_300_mm_restores_before() {
+fn restoring_300_mm_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-h-mm applies");
@@ -62,7 +62,7 @@ async fn restoring_300_mm_restores_before() {
 /// a fixed point, so `{"ChangeHMm": {"newHMm": 360.0}}` — externally tagged is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 360.0 mm is finite and differs from the committed 300.0 mm, so `change-h-mm` produces a
 /// message-free outcome.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-h-mm/deepens-the-beam-to-360-mm: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `hMm` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-h-mm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-h-mm/deepens-the-beam-to-360-mm: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the beam depth and nothing
 /// else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-h-mm diff decodes");
     assert_eq!(decoded.h_mm, Some(360.0), "change-h-mm/deepens-the-beam-to-360-mm: the committed diff must carry hMm = 360.0 mm");
     assert!(decoded.section_depth_mm.is_none(), "change-h-mm/deepens-the-beam-to-360-mm: change-h-mm writes hMm and must leave `section_depth_mm` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the depth change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-h-mm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-h-mm/deepens-the-beam-to-360-mm: the committed diff did not carry before to after");

@@ -2,7 +2,7 @@
 
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
-use crate::editor::draw::commands::canvas_pointer_down::{cancel_trace_pointer_job, DrawSession};
+use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -15,11 +15,11 @@ pub struct SetActiveUtility {
 
 /// 🧰️ Host-owned utility switch: clear any in-progress gesture scratch (discarding any
 /// document-op the FSM would produce — `UtilityChanged` never carries one).
-pub async fn handle(payload: &SetActiveUtility, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveUtility, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let mut config = cfg.snapshot.clone();
     let operation = doc.operation()?;
-    cancel_trace_pointer_job(operation.app_instance_id, &operation.parent_document_id, config.trace_pointer_generation);
+    session.cancel_trace_pointer(operation.app_instance_id, &operation.parent_document_id, config.trace_pointer_generation);
     session.step_gesture(crate::editor::draw::commands::canvas_pointer_down::draw_gesture::Event::UtilityChanged, document, &mut config);
     Ok(Emit::config(vec![DrawConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
 }

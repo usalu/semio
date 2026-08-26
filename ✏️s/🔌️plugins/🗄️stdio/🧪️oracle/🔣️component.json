@@ -395,6 +395,12 @@
       "package": "simplejson",
       "version": "4.1.1",
       "module": "simplejson"
+    },
+    {
+      "implementation": "python",
+      "package": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "module": "ifcopenshell"
     }
   ],
   "migrationStatus": {

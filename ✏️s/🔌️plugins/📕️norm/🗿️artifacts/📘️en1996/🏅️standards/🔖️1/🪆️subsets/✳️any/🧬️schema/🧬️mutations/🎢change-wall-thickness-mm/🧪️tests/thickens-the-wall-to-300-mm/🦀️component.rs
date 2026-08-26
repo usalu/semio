@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// ▶️ Thickening the wall from 240.0 mm to 300.0 mm rewrites `wall_thickness_mm` alone — the EFFECTIVE thickness
 /// `t_ef_mm` that EN 1996-3 §4.2 slenderness uses is its own field and does not follow.
 #[semio_framework_async_macros::async_test]
-async fn thickens_the_wall_to_300_mm() {
+fn thickens_the_wall_to_300_mm() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-wall-thickness-mm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-wall-thickness-mm/thickens-the-wall-to-300-mm: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.wall_thickness_mm, 300.0, "change-wall-thickness-mm/thickens-the-wall-to-300-mm: wall_thickness_mm must read 300.0 mm once the change lands");
@@ -43,7 +43,7 @@ async fn thickens_the_wall_to_300_mm() {
 /// ↩️ `change-wall-thickness-mm`'s inverse reads the OLD 240.0 mm out of BASE, so replaying it puts the 240.0 mm
 /// back on `wall_thickness_mm`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_240_mm_restores_before() {
+fn restoring_240_mm_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-wall-thickness-mm applies");
@@ -61,7 +61,7 @@ async fn restoring_240_mm_restores_before() {
 /// decode → encode is a fixed point, so `newWallThicknessMm` (serde camelCase over `new_wall_thickness_mm`)
 /// is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 300.0 mm is finite and differs from the committed 240.0 mm, so the fire-check thickness
 /// edit lands cleanly with no diagnostics.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-wall-thickness-mm/thickens-the-wall-to-300-mm: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `wallThicknessMm` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-wall-thickness-mm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-wall-thickness-mm/thickens-the-wall-to-300-mm: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the built wall thickness and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-wall-thickness-mm diff decodes");
     assert_eq!(decoded.wall_thickness_mm, Some(300.0), "change-wall-thickness-mm/thickens-the-wall-to-300-mm: the committed diff must carry wallThicknessMm = 300.0 mm");
     assert!(decoded.t_ef_mm.is_none(), "change-wall-thickness-mm/thickens-the-wall-to-300-mm: change-wall-thickness-mm writes wallThicknessMm and must leave `t_ef_mm` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the wall-thickness change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-wall-thickness-mm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-wall-thickness-mm/thickens-the-wall-to-300-mm: the committed diff did not carry before to after");

@@ -3,9 +3,11 @@ import {
   SEQUENCE_MAX_ENCODED_MESSAGE_BYTES,
   SEQUENCE_MAX_IN_FLIGHT,
   SEQUENCE_MAX_PAGE_BYTES,
+  SEQUENCE_MAX_REQUEST_BYTES,
   SequenceOperation,
+  createSequenceFeatures,
   createSequenceHost,
-  createSequenceSession,
+  decodeMessage,
 } from "../🟨️sequence-host.js";
 
 const equal = (actual, expected, law) => {
@@ -17,32 +19,37 @@ const bridge = new MockBridge(memory);
 const canvas = new Canvas();
 const renders = [];
 const host = createSequenceHost({ exports: bridge.exports, memory, resolveCanvas: () => canvas, render: (_canvas, state) => renders.push(state) });
-const session = await createSequenceSession({ exports: bridge.exports, memory, resolveCanvas: () => canvas, render: (_canvas, state) => renders.push(state) });
+const features = await createSequenceFeatures(createSequenceHost({ exports: bridge.exports, memory, resolveCanvas: () => canvas, render: (_canvas, state) => renders.push(state) }));
 
-equal((await session.ready).slot, 1, "open-session");
-equal(await session.addStepDropped("math.add", 1, 2, undefined), "step-101", "missing-optional-payload");
-await session.loadFixtureJson('{"schema":"sequence.sequence","steps":[],"edges":[]}');
-equal(await session.fixtureJson(), '{"schema":"sequence.sequence","steps":[],"edges":[]}', "fixture-json-roundtrip");
+equal(features.lifetime.session.slot, 1, "open-session");
+equal(await result(features.editing.addStepDropped("math.add", 1, 2, undefined)), "step-101", "missing-optional-payload");
+await result(features.document.loadFixtureJson('{"schema":"sequence.sequence","steps":[],"edges":[]}'));
+equal(await result(features.document.fixtureJson()), '{"schema":"sequence.sequence","steps":[],"edges":[]}', "fixture-json-roundtrip");
 let malformedJson = false;
-try { await session.loadFixtureJson("[]"); } catch { malformedJson = true; }
+try { await result(features.document.loadFixtureJson("[]")); } catch { malformedJson = true; }
 equal(malformedJson, true, "malformed-json-owned-rejection");
 
 let canvasMissing = false;
 try {
-  const missing = await createSequenceSession({ exports: bridge.exports, memory, resolveCanvas: () => undefined });
-  await missing.attachCanvas(undefined, 10, 10, 1);
+  const missing = await createSequenceFeatures(createSequenceHost({ exports: bridge.exports, memory, resolveCanvas: () => undefined }));
+  await result(missing.viewport.attach());
 } catch { canvasMissing = true; }
 equal(canvasMissing, true, "canvas-missing");
 
-await session.attachCanvas(canvas, 100, 50, 2);
-equal(await session.gpuReady(), true, "surface-ready");
-await session.renderFrame();
+await result(features.viewport.attach(canvas));
+await result(features.viewport.setSize(100, 50, 2));
+equal(await result(features.viewport.gpuReady()), true, "surface-ready");
+await result(features.viewport.renderFrame());
 equal(renders.length, 1, "render-callback-once");
-equal((await session.selectedNodeIds()).length, 0, "selection-preserved");
-await session.play(); await session.pause(); await session.stop();
+equal((await result(features.selection.selectedNodeIds())).length, 0, "selection-preserved");
+await result(features.playback.play()); await result(features.playback.pause()); await result(features.playback.stop());
 
-const large = await session.catalogueJson();
+const largeTask = features.document.catalogueJson();
+const progressEvents = [];
+largeTask.subscribe((event) => progressEvents.push(event.event));
+const large = await result(largeTask);
 equal(large.length, SEQUENCE_MAX_PAGE_BYTES + 1, "zero-max-plus-one-pages");
+equal(progressEvents.includes(2400) && progressEvents.includes(2406), true, "reactive-progress-events");
 equal(bridge.shortPolls > 0, true, "undersized-poll-reported");
 equal(bridge.exactRetries, bridge.shortPolls, "undersized-poll-exact-retry");
 equal(bridge.pageAcknowledgements, 2, "page-ack-exact");
@@ -54,16 +61,20 @@ const interruptedHost = createSequenceHost({
   schedule: () => { callbackInterrupted = true; throw new Error("callback interrupted"); },
 });
 let interrupted = false;
-try { await interruptedHost.request(SequenceOperation.open); } catch { interrupted = true; }
+try { await result(interruptedHost.start(SequenceOperation.open)); } catch { interrupted = true; }
 equal(callbackInterrupted && interrupted, true, "callback-interruption");
 
 const cappedBridge = new MockBridge(memory);
-const capped = createSequenceHost({ exports: cappedBridge.exports, memory, maximumInFlight: 1 });
-const first = capped.request(SequenceOperation.open);
+const capped = createSequenceHost({ exports: cappedBridge.exports, memory });
+const admitted = Array.from({ length: SEQUENCE_MAX_IN_FLIGHT }, () => capped.start(SequenceOperation.open).result);
+const cappedBefore = `${capped.state.nextRequest}:${credits(capped)}`;
+const overflow = capped.start(SequenceOperation.open).result;
+equal(`${capped.state.nextRequest}:${credits(capped)}`, cappedBefore, "in-flight-rejection-credit-stability");
 let inFlightRejected = false;
-try { await capped.request(SequenceOperation.open); } catch { inFlightRejected = true; }
+try { await overflow; } catch { inFlightRejected = true; }
 equal(inFlightRejected, true, "in-flight-max-plus-one");
-await first;
+await Promise.all(admitted);
+await capped.close();
 
 const stale = bridge.rejectHandle({ slot: 1, generation: 2 });
 equal(stale, "stale", "stale-handle");
@@ -71,25 +82,97 @@ equal(bridge.rejectHandle({ slot: 1, generation: 0 }), "aba", "aba-handle");
 equal(bridge.rejectHandle({ slot: 9, generation: 1 }), "lost", "lost-handle");
 equal(bridge.rejectPage(SEQUENCE_MAX_PAGE_BYTES + 1), "pre-admission", "page-max-plus-one");
 equal(bridge.rejectMessage(SEQUENCE_MAX_ENCODED_MESSAGE_BYTES + 1), "pre-admission", "message-max-plus-one");
+let malformedPage = false;
+try { decodeMessage(Uint8Array.of(1, 4, 1)); } catch { malformedPage = true; }
+equal(malformedPage, true, "malformed-page");
 equal(SEQUENCE_MAX_IN_FLIGHT, 256, "request-bound");
 
 const cancelledBridge = new MockBridge(memory, { holdRun: true });
 const cancelledHost = createSequenceHost({ exports: cancelledBridge.exports, memory });
-const cancelledSession = await createSequenceSession({ exports: cancelledBridge.exports, memory });
-const run = cancelledSession.run();
+const cancelledFeatures = await createSequenceFeatures(cancelledHost);
+const runTask = cancelledFeatures.execution.run();
+const run = runTask.result;
 await Promise.resolve();
-const runRequest = [...cancelledHost.state?.pending?.keys?.() ?? []][0];
-if (runRequest !== undefined) cancelledHost.cancel(runRequest);
+runTask.cancel();
 cancelledBridge.cancelHeld();
 let cancelled = false;
 try { await run; } catch { cancelled = true; }
-equal(cancelledBridge.cancelControls > 0 || cancelled, true, "cancel-during-compute");
+equal(cancelledBridge.cancelControls, 1, "cancel-control-exact");
+equal(cancelled, true, "cancel-during-compute");
 
-session.close();
-host.close();
+const hostileCancelBridge = new MockBridge(memory, { holdRun: true, rejectControls: SEQUENCE_MAX_IN_FLIGHT });
+const hostileCancelHost = createSequenceHost({ exports: hostileCancelBridge.exports, memory });
+const hostileCancelFeatures = await createSequenceFeatures(hostileCancelHost);
+const heldRun = hostileCancelFeatures.execution.run();
+const heldRejected = heldRun.result.then(() => false, () => true);
+const hostileBefore = credits(hostileCancelHost);
+for (let attempt = 0; attempt < SEQUENCE_MAX_IN_FLIGHT; attempt += 1) {
+  let controlRejected = false;
+  try { heldRun.cancel(); } catch { controlRejected = true; }
+  equal(controlRejected, true, "hostile-cancel-control-rejected");
+  equal(credits(hostileCancelHost), hostileBefore, "hostile-cancel-credit-stability");
+}
+equal(hostileCancelBridge.rejectedControls, SEQUENCE_MAX_IN_FLIGHT, "cancel-rejections-exact");
+equal(new Set(hostileCancelBridge.rejectedControlFrames).size, 1, "cancel-rejection-frame-retained");
+equal(heldRun.cancel(), true, "valid-cancel-after-hostile-rejections");
+hostileCancelBridge.cancelHeld();
+equal(await heldRejected, true, "valid-cancel-terminal-reply");
+equal(credits(hostileCancelHost), "0:0:empty", "valid-cancel-credit-handback");
+await hostileCancelHost.close();
+
+const hostileAckBridge = new MockBridge(memory, { rejectControls: 6 });
+const hostileAckHost = createSequenceHost({ exports: hostileAckBridge.exports, memory });
+const hostileAckFeatures = await createSequenceFeatures(hostileAckHost);
+equal((await result(hostileAckFeatures.document.catalogueJson())).length, SEQUENCE_MAX_PAGE_BYTES + 1, "ack-retry-output");
+equal(hostileAckBridge.rejectedControls, 6, "ack-rejections-exact");
+equal(new Set(hostileAckBridge.rejectedControlFrames).size, 1, "ack-rejection-frame-retained");
+equal(hostileAckBridge.pageAcknowledgements, 2, "ack-retry-page-handback");
+equal(credits(hostileAckHost), "0:0:empty", "ack-retry-credit-handback");
+await hostileAckHost.close();
+
+const hostileCloseBridge = new MockBridge(memory, { rejectCloses: 3 });
+const hostileCloseHost = createSequenceHost({ exports: hostileCloseBridge.exports, memory });
+const hostileCloseFeatures = await createSequenceFeatures(hostileCloseHost);
+const hostileCloseBefore = `${credits(hostileCloseHost)}:${hostileCloseHost.state.closing}:${hostileCloseHost.state.closed}`;
+for (let attempt = 0; attempt < 3; attempt += 1) {
+  let rejected = false;
+  try { await hostileCloseFeatures.lifetime.close(); } catch { rejected = true; }
+  equal(rejected, true, "hostile-close-control-rejected");
+  equal(`${credits(hostileCloseHost)}:${hostileCloseHost.state.closing}:${hostileCloseHost.state.closed}`, hostileCloseBefore, "hostile-close-credit-stability");
+}
+equal(new Set(hostileCloseBridge.rejectedCloseFrames).size, 1, "close-rejection-frame-retained");
+await hostileCloseFeatures.lifetime.close();
+equal(hostileCloseHost.terminalIsEmpty(), true, "valid-close-after-hostile-rejections");
+
+const preflightBridge = new MockBridge(memory, { rejectInvalidHandle: true });
+const preflightHost = createSequenceHost({ exports: preflightBridge.exports, memory });
+const preflightFeatures = await createSequenceFeatures(preflightHost);
+for (const invalid of [{ slot: 9, generation: 1 }, { slot: 1, generation: 0 }, { slot: 1, generation: 2 }]) {
+  const before = `${preflightHost.state.nextRequest}:${credits(preflightHost)}`;
+  let rejected = false;
+  try { await result(preflightHost.start(SequenceOperation.run, new Uint8Array(), invalid)); } catch { rejected = true; }
+  equal(rejected, true, "invalid-handle-rejected");
+  equal(`${preflightHost.state.nextRequest}:${credits(preflightHost)}`, before, "invalid-handle-preflight-stability");
+}
+const oversizedBefore = `${preflightHost.state.nextRequest}:${credits(preflightHost)}`;
+let oversizedRejected = false;
+try { await result(preflightHost.start(SequenceOperation.run, new Uint8Array(SEQUENCE_MAX_REQUEST_BYTES + 1), preflightFeatures.lifetime.session)); } catch { oversizedRejected = true; }
+equal(oversizedRejected, true, "request-max-plus-one-rejected");
+equal(`${preflightHost.state.nextRequest}:${credits(preflightHost)}`, oversizedBefore, "request-max-plus-one-preflight-stability");
+equal(preflightHost.cancel(999n), false, "unknown-control-rejected");
+equal(`${preflightHost.state.nextRequest}:${credits(preflightHost)}`, oversizedBefore, "unknown-control-credit-stability");
+await preflightHost.close();
+const closedBefore = `${preflightHost.state.nextRequest}:${credits(preflightHost)}`;
+let closedRejected = false;
+try { await result(preflightHost.start(SequenceOperation.open)); } catch { closedRejected = true; }
+equal(closedRejected, true, "closed-request-rejected");
+equal(`${preflightHost.state.nextRequest}:${credits(preflightHost)}`, closedBefore, "closed-request-credit-stability");
+
+await features.lifetime.close();
+await host.close();
 equal(bridge.closed, true, "close-called");
 equal(bridge.terminalEmpty, true, "terminal-empty");
-equal(bridge.outputDigest, bridge.outputDigest, "deterministic-output");
+equal(bridge.outputDigest, (SEQUENCE_MAX_PAGE_BYTES + 1) * 120, "deterministic-output");
 
 console.log(JSON.stringify({
   commands: "valid",
@@ -97,14 +180,17 @@ console.log(JSON.stringify({
   malformedJson: "owned",
   callback: "interrupted",
   cancel: "during-compute",
+  hostileControls: "rejected-256-then-valid",
   handles: "lost-stale-aba",
   canvas: "missing",
   pages: "zero-max-plus-one",
+  malformedPage: "rejected",
   bytes: "zero-max-plus-one",
   events: "bounded",
   inFlight: "max-plus-one",
   retainedRetry: "exact",
   acknowledgement: "exact",
+  acknowledgementRetry: "rejected-then-valid",
   playback: "closed",
   output: "deterministic",
   terminal: "empty",
@@ -121,10 +207,15 @@ function MockBridge(targetMemory, options = {}) {
   let retained;
   let held;
   const queue = [];
+  let rejectedControlsRemaining = options.rejectControls ?? 0;
+  let rejectedClosesRemaining = options.rejectCloses ?? 0;
   this.shortPolls = 0;
   this.exactRetries = 0;
   this.pageAcknowledgements = 0;
   this.cancelControls = 0;
+  this.rejectedControls = 0;
+  this.rejectedControlFrames = [];
+  this.rejectedCloseFrames = [];
   this.closed = false;
   this.terminalEmpty = false;
   this.outputDigest = 0;
@@ -140,11 +231,23 @@ function MockBridge(targetMemory, options = {}) {
       const reader = new Reader(bytes);
       equal(reader.u8(), 1, "mock-version");
       const tag = reader.u8();
+      if (tag === 5 && bytes[2] === 2 && rejectedClosesRemaining > 0) {
+        rejectedClosesRemaining -= 1;
+        this.rejectedCloseFrames.push(hex(bytes));
+        return -1;
+      }
+      if ((tag === 2 || tag === 5) && rejectedControlsRemaining > 0) {
+        rejectedControlsRemaining -= 1;
+        this.rejectedControls += 1;
+        this.rejectedControlFrames.push(hex(bytes));
+        return -1;
+      }
       if (tag === 1) {
         const operation = reader.u16(); const id = reader.u64(); const generation = reader.u32(); const body = reader.bytes();
         if (operation === SequenceOperation.open) queue.push(reply(id, generation, 0, handle(1, 1)));
         else {
           const session = new Reader(body); const slot = session.u32(); const handleGeneration = session.u32(); const payload = body.subarray(8);
+          if ((slot !== 1 || handleGeneration !== 1) && options.rejectInvalidHandle) return -1;
           if (slot !== 1 || handleGeneration !== 1) queue.push(reply(id, generation, 3, new Uint8Array(), 7, "handle"));
           else if (operation === SequenceOperation.loadFixtureJson) {
             const text = new TextDecoder().decode(payload);
@@ -192,6 +295,15 @@ function MockBridge(targetMemory, options = {}) {
     sequence_bridge_terminal_is_empty: () => this.terminalEmpty ? 1 : 0,
   };
 }
+
+function credits(host) {
+  const pages = [...host.state.pages.entries()].map(([key, value]) => `${key}:${value.length}:${value.chunks.length}`).join(",") || "0";
+  const blocked = host.state.blockedInbound ? `${host.state.blockedInbound.tag}` : "empty";
+  return `${host.state.pending.size}:${pages}:${blocked}`;
+}
+
+function result(task) { return task.result; }
+function hex(bytes) { return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join(""); }
 
 function reply(id, generation, status, body, errorCode, errorMessage = "") {
   return write((w) => { w.u8(1); w.u8(2); w.u64(id); w.u32(generation); w.u16(status); if (errorCode) { w.u8(1); w.u16(errorCode); w.bytes(new TextEncoder().encode(errorMessage)); } else w.u8(0); w.bytes(body); });

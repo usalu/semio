@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_chiller_type::mutation::Change
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeChillerType, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeChillerType, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if base.chiller_type == payload.new_chiller_type {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Chiller type is already \"{}\".", payload.new_chiller_type));
     }

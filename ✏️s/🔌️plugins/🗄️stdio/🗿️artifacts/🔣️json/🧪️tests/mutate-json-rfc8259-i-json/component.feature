@@ -72,7 +72,7 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real document
     Given the real input document shared://🔣️hexagonal-cut-concrete-forest-left.model.json
     When the <id> mutation is applied with its parameters

@@ -4,7 +4,7 @@ use crate::artifacts::rewrite::mutations::{change_rule_layout_point, RewriteRule
 use crate::artifacts::rewrite::RewriteSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::RemoveRuleLayoutPoint, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+pub fn inverse(payload: &super::mutation::RemoveRuleLayoutPoint, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
     base.rule_layout.get(&payload.key).map(|old| vec![change_rule_layout_point(payload.key.clone(), *old)]).unwrap_or_default()
 }
 //#endregion 🔖️Inverse

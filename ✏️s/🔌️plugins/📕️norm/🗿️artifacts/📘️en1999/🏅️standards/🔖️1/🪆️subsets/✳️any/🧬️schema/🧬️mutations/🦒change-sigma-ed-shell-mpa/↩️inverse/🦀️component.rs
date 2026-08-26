@@ -6,7 +6,7 @@ use crate::artifacts::en1999::mutations::En1999Mutation;
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeSigmaEdShellMpa, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+pub fn inverse(_payload: &ChangeSigmaEdShellMpa, base: &En1999Snapshot) -> Vec<En1999Mutation> {
     vec![En1999Mutation::ChangeSigmaEdShellMpa(ChangeSigmaEdShellMpa { new_sigma_ed_shell_mpa: base.sigma_ed_shell_mpa.clone() })]
 }
 //#endregion 🔖️Inverse

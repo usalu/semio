@@ -85,8 +85,8 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
   under the full law.
 
   THE DEFECT THE DIFFERENTIAL RUN FOUND, AND IT WAS FIXED IN THE CODEC RATHER THAN EXEMPTED. The
-  first time this case actually ran oracle AGAINST subject it scored parity 24 of 37, and ten of the
-  thirteen failures were one bug: PdfSnapshot carries the document twice — pages/info are the
+  first time this case actually ran oracle AGAINST subject it scored the ratio recorded in the
+  ticket, not here, and ten of its thirteen failures were one bug: PdfSnapshot carries the document twice — pages/info are the
   resolved authoring lanes every page and metadata mutation edits, objects/trailer are the retained
   native carrier — and encode_pdf serialized the carrier ALONE whenever it was non-empty. On this
   thesis it always is, so set-page-rotation, set-page-media-box, set-page-crop-box, set-page-content,
@@ -150,7 +150,7 @@ Feature: Apply every typed PDF 1.7 mutation to a real-world document
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf
     When the <id> mutation is applied and then undone

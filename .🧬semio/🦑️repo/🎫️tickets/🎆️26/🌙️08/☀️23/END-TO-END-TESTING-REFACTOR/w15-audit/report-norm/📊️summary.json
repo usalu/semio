@@ -1,0 +1,18 @@
+{
+  "level": "exhaustive",
+  "cases": 15,
+  "scenarios": 799,
+  "executed": 799,
+  "passed": 795,
+  "failed": 4,
+  "errored": 0,
+  "byImplementation": {
+    "python": {
+      "passed": 795,
+      "failed": 4,
+      "errored": 0
+    }
+  },
+  "parity": [],
+  "problems": []
+}

@@ -683,10 +683,10 @@ impl Drop for GraphHostRetirement {
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
     use super::*;
+    use semio_framework_async::browser::future_to_promise;
     use std::cell::RefCell;
     use std::rc::Rc;
     use wasm_bindgen::prelude::*;
-    use wasm_bindgen_futures::future_to_promise;
     use web_sys::HtmlCanvasElement;
 
     struct GraphSessionInner {

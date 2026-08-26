@@ -37,6 +37,7 @@ crate-type = ["rlib", "cdylib"]
 path = "📦️glue.rs"
 
 [dependencies]
+semio-framework-async = { workspace = true }
 ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -47,7 +48,5 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"
-serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = "0.2.106"
-wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }

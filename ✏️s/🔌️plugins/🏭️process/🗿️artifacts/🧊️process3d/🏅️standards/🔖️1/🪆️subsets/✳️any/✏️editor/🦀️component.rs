@@ -479,6 +479,12 @@ impl ArtifactEditor for Process3dPlayApp {
         }
     }
 
+    fn host_configuration_mutation(action: &str, args: Option<&Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        Ok((action == "setContributions").then(|| Process3dConfigMutation::SetContributions {
+            json: args.and_then(|value| value.get("json")).and_then(Value::as_str).unwrap_or("[]").to_string(),
+        }))
+    }
+
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): reads the framework-owned
     /// `"geometry"` domain selection once per dispatch and threads it through `Process3dDispatchCtx`
     /// — the one retained verb that operates ON the selection (`remove_selected_step`) reads it from
@@ -1345,6 +1351,18 @@ mod tests {
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_testkit);
         assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
+    }
+
+    #[test]
+    fn host_contributions_resolve_to_the_event_sourced_config_lane() {
+        let mutation = <Process3dPlayApp as ArtifactEditor>::host_configuration_mutation(
+            "setContributions",
+            Some(&serde_json::json!({ "json": "[{\"id\":\"process\"}]" })),
+        )
+        .expect("host configuration")
+        .expect("process contribution mutation");
+        assert_eq!(mutation, Process3dConfigMutation::SetContributions { json: "[{\"id\":\"process\"}]".into() });
+        assert_eq!(<Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setCursor", None).expect("non-host action"), None);
     }
 
     /// 🖱️ The interaction payload shape that regressed retains its identifier through the transport

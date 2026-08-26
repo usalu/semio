@@ -24,19 +24,19 @@ pub struct En1995Inference {
 }
 
 impl protocol::Inference<En1995Snapshot> for En1995Inference {
-    async fn infer(snapshot: &En1995Snapshot) -> Self {
+    fn infer(snapshot: &En1995Snapshot) -> Self {
         Self { outline: En1995Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1995Snapshot> for En1995Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.norm.en1995.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1995.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1995::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1995.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1995_artifact_schema_descriptor`'s registration.
-pub async fn en1995_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn en1995_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1995.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    fn inference_determinism_law() {
         let snapshot = En1995Snapshot::default();
         assert_eq!(En1995Inference::infer(&snapshot), En1995Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    fn inference_default_law() {
         assert_eq!(En1995Inference::infer(&En1995Snapshot::default()), En1995Inference::default());
     }
 }
@@ -95,7 +95,7 @@ use crate::document::{AnnexChoice, CheckReport, LoadDuration};
 
 /// 📋️ Full EN 1995 check across bending, compression, shear, connections, fire, and bridge parts.
 #[allow(clippy::too_many_arguments)]
-pub async fn check_full_timber(
+pub fn check_full_timber(
     m_ed_knm: f64,
     n_ed_kn: f64,
     v_ed_kn: f64,
@@ -133,7 +133,7 @@ pub async fn check_full_timber(
     report
 }
 
-async fn parse_service_class(value: &str) -> ServiceClass {
+fn parse_service_class(value: &str) -> ServiceClass {
     match value.to_ascii_lowercase().as_str() {
         "sc2" => ServiceClass::Sc2,
         "sc3" => ServiceClass::Sc3,
@@ -141,7 +141,7 @@ async fn parse_service_class(value: &str) -> ServiceClass {
     }
 }
 
-async fn parse_load_duration(value: &str) -> LoadDuration {
+fn parse_load_duration(value: &str) -> LoadDuration {
     match value.to_ascii_lowercase().as_str() {
         "permanent" => LoadDuration::Permanent,
         "long" => LoadDuration::Long,
@@ -153,7 +153,7 @@ async fn parse_load_duration(value: &str) -> LoadDuration {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1995Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub async fn evaluate(document: &En1995Snapshot) -> CheckReport {
+pub fn evaluate(document: &En1995Snapshot) -> CheckReport {
     check_full_timber(
         document.m_ed_knm,
         document.n_ed_kn,
@@ -186,7 +186,7 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn full_timber_worked_example() {
+    fn full_timber_worked_example() {
         let report = check_full_timber(25.0, 50.0, 15.0, 1_800_000.0, 20_000.0, 200.0, 300.0, 24.0, 21.0, 4.0, ServiceClass::Sc1, LoadDuration::Medium, 80.0, 18.0, 12_000.0, 30.0, 300.0, AnnexChoice::De, 0.3, 500_000.0);
         assert_eq!(report.checks.len(), 8);
         assert!(report.checks[0].utilization < 1.0, "beam bending check should pass");
@@ -197,7 +197,7 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn evaluate_runs_all_parts() {
+    fn evaluate_runs_all_parts() {
         let report = evaluate(&En1995Snapshot::default());
         assert_eq!(report.checks.len(), 8);
     }

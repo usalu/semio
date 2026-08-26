@@ -6,7 +6,7 @@ use crate::artifacts::en1999::mutations::En1999Mutation;
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeFatigueM, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+pub fn inverse(_payload: &ChangeFatigueM, base: &En1999Snapshot) -> Vec<En1999Mutation> {
     vec![En1999Mutation::ChangeFatigueM(ChangeFatigueM { new_fatigue_m: base.fatigue_m.clone() })]
 }
 //#endregion 🔖️Inverse

@@ -8,7 +8,7 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
-async fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
+fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
     let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
@@ -55,7 +55,7 @@ async fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool
     }
     changed
 }
-pub(crate) async fn add_rule_clause_command(state: &RewriteSnapshot, kind: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn add_rule_clause_command(state: &RewriteSnapshot, kind: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     if add_rule_clause(&mut next, kind) {
         Ok(Emit::mutations(rewrite_snapshot_mutations(state, &next)))

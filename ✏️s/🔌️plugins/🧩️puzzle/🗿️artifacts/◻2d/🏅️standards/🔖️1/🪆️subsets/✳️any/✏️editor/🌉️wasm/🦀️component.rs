@@ -33,11 +33,11 @@ use geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
 #[cfg(target_arch = "wasm32")]
 use js_sys::Promise;
 #[cfg(target_arch = "wasm32")]
+use semio_framework_async::browser::future_to_promise;
+#[cfg(target_arch = "wasm32")]
 use std::cell::RefCell;
 #[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen_futures::future_to_promise;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]

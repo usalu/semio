@@ -1,10 +1,11 @@
 //! 🧪️ `set-snapshot` fixture — `shrinks-the-page-to-a5-and-rewrites-its-text`.
 //!
-//! The 1.4 standard is deliberately frozen at a single `PageDoc{width,height,text}` page —
-//! no object graph, no page list — so `PdfDiff` is a flat three-scalar patch and
-//! `PdfDiff::between` sets exactly the scalars that differ. This payload moves all three at
-//! once, which is what makes the fixture prove that `schema` (an identity field with no slot
-//! on `PdfDiff` at all) still cannot be reached by a whole-snapshot replacement.
+//! The 1.4 standard carries the document's real page TREE (`pages: Vec<PageDoc>`), so `PdfDiff`
+//! is the recipe's INDEX-KEYED triple over it and `PdfDiff::between` names only the pages that
+//! actually differ. This payload replaces the whole two-page snapshot but moves all three fields
+//! of PAGE 0 alone, which is what makes the fixture prove two things at once: that a
+//! whole-snapshot replacement still produces a SPARSE delta (page 1 appears nowhere in it), and
+//! that `schema` — an identity field with no slot on `PdfDiff` at all — cannot be reached by one.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`), every value of which was transcribed from this
@@ -39,9 +40,11 @@ async fn applies_to_committed_after() {
     let outcome = apply_pdf_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.page.width, 420.0, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: the page must narrow to the A5 width");
-    assert_eq!(snapshot.page.height, 595.0, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: the page must shorten to the A5 height");
-    assert_eq!(snapshot.page.text, "Final", "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: the page text must be rewritten");
+    assert_eq!(snapshot.pages.len(), 2, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: the page tree keeps both of its pages");
+    assert_eq!(snapshot.pages[0].width, 420.0, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: page 0 must narrow to the A5 width");
+    assert_eq!(snapshot.pages[0].height, 595.0, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: page 0 must shorten to the A5 height");
+    assert_eq!(snapshot.pages[0].text, "Final", "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: page 0's text must be rewritten");
+    assert_eq!(snapshot.pages[1], before().pages[1], "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: page 1 is untouched by this payload and must come through unchanged");
     assert_eq!(snapshot.schema, "stdio.pdf", "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: PdfDiff has no schema slot, so the identity field survives a whole-snapshot replacement");
 }
 
@@ -114,9 +117,13 @@ async fn produces_committed_diff() {
     let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: produced diff differs from the committed 🔺️diff/🔣️component.json");
-    assert_eq!(raised.diff().width, Some(420.0), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: width is one of the three flat scalars this payload moves");
-    assert_eq!(raised.diff().height, Some(595.0), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: height is one of the three flat scalars this payload moves");
-    assert_eq!(raised.diff().text.as_deref(), Some("Final"), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: text is one of the three flat scalars this payload moves");
+    let pages = raised.diff().pages.as_ref().expect("the delta names the pages triple");
+    assert!(pages.removed.is_empty() && pages.added.is_empty(), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: this payload neither drops nor appends a page");
+    assert_eq!(pages.modified.len(), 1, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: exactly one page moved, so exactly one page may appear in the delta");
+    assert_eq!(pages.modified[0].index, 0, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: the page that moved is page 0");
+    assert_eq!(pages.modified[0].diff.width, Some(420.0), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: width is one of the three fields this payload moves on page 0");
+    assert_eq!(pages.modified[0].diff.height, Some(595.0), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: height is one of the three fields this payload moves on page 0");
+    assert_eq!(pages.modified[0].diff.text.as_deref(), Some("Final"), "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: text is one of the three fields this payload moves on page 0");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to PdfDiff.
@@ -128,8 +135,8 @@ async fn committed_diff_is_canonical() {
     assert_eq!(reencoded, original, "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: committed diff JSON is not canonical");
     assert_eq!(
         serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").as_object().expect("diff is an object").len(),
-        3,
-        "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: the 1.4 diff has exactly three slots and all three are written here — an extra key would mean the frozen 1.4 model grew a field this fixture never checked"
+        1,
+        "set-snapshot/shrinks-the-page-to-a5-and-rewrites-its-text: the 1.4 diff has exactly one slot — the `pages` triple — and an extra key would mean the model grew a field this fixture never checked"
     );
 }
 

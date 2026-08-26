@@ -31,8 +31,8 @@ serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+semio-framework-async = { workspace = true }
 wasm-bindgen = "0.2.106"
-wasm-bindgen-futures = "0.4.71"
 js-sys = "0.3.83"
 
 [dev-dependencies]

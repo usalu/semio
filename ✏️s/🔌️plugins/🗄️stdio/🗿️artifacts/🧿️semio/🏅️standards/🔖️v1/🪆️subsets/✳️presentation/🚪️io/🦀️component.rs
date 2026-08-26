@@ -194,7 +194,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn validator_roundtrips_through_pack_payload() {
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&clean_snapshot());
-            let diagnostics = SemioPresentationValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioPresentationValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.is_empty(), "got {diagnostics:?}");
         }
 

@@ -19,7 +19,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::en1997::create_en1997_viewer`. Read-only variant
 /// — a viewer never declares `editable_window_kind()`'s `set-cell` command.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     TableWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -27,7 +27,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `En1997Snapshot -> UiNode` read: recomputes the compliance report straight off the document
 /// (the same pure inference the editor's results window renders through `NormHost`), then tables it.
-pub async fn render(document: &En1997Snapshot) -> UiNode {
+pub fn render(document: &En1997Snapshot) -> UiNode {
     let report = crate::artifacts::en1997::standards::v1::subsets::any::schema::inferences::evaluate(document);
     TableWindowKit::render(&TableView { columns: crate::app_surface::report_table_columns(), rows: crate::app_surface::report_table_rows(&report) })
 }
@@ -39,13 +39,13 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_shared_table_window_kind() {
+    fn definition_declares_the_shared_table_window_kind() {
         let def = definition();
         assert_eq!(def.id, TableWindowKit::KIND_ID);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn render_produces_a_node_for_the_default_document() {
+    fn render_produces_a_node_for_the_default_document() {
         let document = En1997Snapshot::default();
         let _node = render(&document);
     }

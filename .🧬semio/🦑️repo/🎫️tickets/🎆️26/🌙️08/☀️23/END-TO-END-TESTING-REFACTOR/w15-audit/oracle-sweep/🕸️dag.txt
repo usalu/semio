@@ -1,0 +1,3 @@
+[test] not-exercised ✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/mutate-dag-1 (recorded no-oracle decision dag-1-port-directed-graph-mutation-semantics — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+EXIT=0

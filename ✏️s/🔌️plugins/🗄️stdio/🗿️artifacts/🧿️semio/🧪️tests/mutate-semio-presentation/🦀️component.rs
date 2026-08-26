@@ -1,44 +1,40 @@
-//! 🦀️ Semio PRESENTATION exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-
-//! TESTING-REFACTOR. Recorded no-oracle decision `semio-presentation-mutation-semantics`
-//! (`../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧪️oracle/🔣️component.json`):
-//! `s.stdio.semio.presentation` is a semio-NATIVE format with no third-party reader or writer, and
-//! `python-pptx` — the obvious candidate now that the Python oracle host has landed — was rejected
-//! because reaching a `SemioPresentationSnapshot` from pptx bytes needs this repository's own pptx
-//! bridge, because it cannot create masters or layouts at all, and because `set-snapshot` has no
-//! counterpart in any presentation library.
+//! 🦀️ Semio PRESENTATION exhaustive mutation case — Rust SUBJECT adapter. Ticket 26/08/23/END-TO-
+//! END-TESTING-REFACTOR.
 //!
-//! `oracle` therefore reads the committed specification fixtures literally — no recomputation, no
-//! reimplementation of mutation semantics — while `subject` drives this repository's own
-//! `apply_semio_presentation_mutation` over the full fifteen-kind `SemioPresentationMutation`
-//! vocabulary. Both roles read the SAME committed bytes through the host's `Context::fixture_json`,
-//! so nothing about a fixture is transcribed into either role's source where it could silently
-//! drift.
+//! **This file no longer serves the oracle role.** The reference for `semio-v1-presentation-mutate`
+//! is the registered oracle `semio-presentation-python-independent` (`../../🏅️standards/🔖️v1/
+//! 🪆️subsets/✳️presentation/🧪️oracle/🔣️component.json`) — an independent Python implementation of the
+//! semio presentation carrier, document's own recursive `DocBlock` grammar and all fifteen verbs,
+//! written from the committed grammar and protocol documents and living beside this file as
+//! `🐍️component.py`. The runner dispatches the oracle role there and the subject role here, and
+//! compares the two projections under `@comparison-ordered-json-v1`. Registering oracle handlers
+//! here as well would put this repository's own answer on both sides of that comparison, which is
+//! the precise failure the platform exists to prevent.
 //!
-//! The before-state of every vector is the real committed example artifact
-//! `🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio`, and
-//! `identity-round-trip` reads that artifact and its `.pack.semio` sibling directly, so the claim
-//! that the vectors describe the real deck is checked rather than asserted.
+//! **The deck under test is a real one.** `local://🗣️talk.dsl.semio` and its binary twin were derived
+//! ONCE from the real committed PowerPoint deck
+//! `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧫️fixtures/🎞️semio-talk.pptx` — a genuine 2020 conference
+//! talk with one master, eleven layouts, seven slides, ninety-eight shapes and three embedded PNG
+//! parts — by an independent Python OOXML reader built on `zipfile` and `xml.etree`, never through
+//! this repository's own pptx bridge. Using that bridge is exactly what the old no-oracle decision
+//! refused, and it stays out of the fixture's provenance for the same reason.
 //!
-//! The oracle-only build must never link the subject crate (fleet brief §5.3), so the subject module
-//! below carries its own small, forward-only, hand-written structural JSON decoder built on the
-//! framework's dependency-free `protocol::Json` — a mechanical field-by-field decode, never a
-//! reimplementation of mutation semantics. The subject half is gated behind the generated host's `sut`
-//! feature; the Rust SUBJECT phase RUNS. The os-kernel blocker earlier waves recorded here was cleared on
-//! 2026-08-24 — `cargo check -p semio-framework-os-kernel --lib` exits 0 and `semio-s-plugin-stdio`
-//! builds — so `bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case mutate-semio-presentation`
-//! really executes every scenario below. The gate keeps the two BUILDS apart; it has never been a reason
-//! the subject half goes unmeasured, and for this recorded no-oracle case the subject phase is the only
-//! phase that runs at all.
+//! **What the handlers assert in role.** Parity across the two implementations is the primary
+//! evidence, but each side still states its own law so a scenario can fail for the right reason with
+//! a readable message: `inverse-<kind>` requires the mutation's OWN computed inverse to restore the
+//! deck with slide and shape ORDER intact, `spec-vector-<kind>` requires the applied deck to be the
+//! committed after-snapshot, and `identity-round-trip` requires all four committed encodings — the
+//! derived talk deck's and the committed `📽️deck` example's — to be reproduced byte for byte through
+//! `law::carrier_is_exact`.
 //!
-//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
-//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
-//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
-//! the written statement of the reference answer rather than a second running party. Every law this
-//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
-//! printed. A handler that merely ran the mutation and returned would report a pass having checked
-//! nothing.
+//! The generated host links only `semio-repo-test-host` and, behind `sut`, this subset's own crate —
+//! no `serde`, no `serde_json` — so the subject module below carries its own small, forward-only,
+//! hand-written structural JSON decoder built on the framework's dependency-free `protocol::Json`. It
+//! is a mechanical field-by-field decode, never a reimplementation of mutation semantics, and every
+//! input it reads is a fixture the FEATURE declares, so neither adapter holds a transcription that
+//! could drift away from what the other one read.
 
-use semio_repo_test_host::{Adapter, Context, Outcome};
+use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioPresentationMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/
@@ -46,6 +42,7 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 /// must not link the subject crate. The contract's mutation-coverage gate keeps this list honest
 /// against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it
 /// honest against the enum.
+#[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
     "no-mutation",
     "set-snapshot",
@@ -64,72 +61,57 @@ const KINDS: &[&str] = &[
     "set-layout-master",
 ];
 
-/// 🗣️ The real committed example artifact, in both of the subset's own envelopes — read by
-/// `identity-round-trip`'s subject role, which is the only role that decodes bytes rather than a
-/// committed projection, so both constants belong to the `sut` build alone.
-#[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio";
-#[cfg(feature = "sut")]
-const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio";
 //#endregion 🔖️Kinds
 
-//#region 🔖️Fixtures
-/// 🗂️ Builds the same `local://` URIs `component.feature` declares, so the fixture-resolution
-/// contract has already proved every one of them exists and pinned its digest.
-fn before_uri(kind: &str) -> String {
-    format!("local://{kind}/⬅️before.json")
-}
-#[cfg(feature = "sut")]
-fn mutation_uri(kind: &str) -> String {
-    format!("local://{kind}/🦠️mutation.json")
-}
-fn after_uri(kind: &str) -> String {
-    format!("local://{kind}/➡️after.json")
-}
-//#endregion 🔖️Fixtures
-
-//#region 🔖️Oracle
-/// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally through the host.
-fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |ctx: &Context| {
-        let after = ctx.fixture_json(&after_uri(kind))?;
-        let bytes = after.to_string().into_bytes();
-        Ok(Outcome::with_raw(bytes, after))
-    }
-}
-
-/// 🔮️ The inverse reference answer: the committed BEFORE snapshot — undoing any mutation must
-/// return to exactly where the specification vector started, slide and shape order included.
-fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |ctx: &Context| {
-        let before = ctx.fixture_json(&before_uri(kind))?;
-        let bytes = before.to_string().into_bytes();
-        Ok(Outcome::with_raw(bytes, before))
-    }
-}
-
-/// 🔮️ The round-trip reference answer: the committed canonical snapshot of the real artifact.
-fn identity_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let expected = ctx.fixture_json(&before_uri("no-mutation"))?;
-    let bytes = expected.to_string().into_bytes();
-    Ok(Outcome::with_raw(bytes, expected))
-}
-//#endregion 🔖️Oracle
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{after_uri, before_uri, mutation_uri, DSL_ASSET, PACK_ASSET};
-    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, RunStyle};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, semio_presentation_mutation_inverse, SemioPresentationMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{
         decode_semio_presentation_pack, encode_semio_presentation_pack, parse_semio_presentation_dsl, print_semio_presentation_dsl, PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage,
         SlideShape, SlideTableCell, SlideTableRow,
     };
+
+    //#region 🔖️Input
+    /// 🎤️ The real derived talk deck — the committed `🎞️semio-talk.pptx` read once by an independent
+    /// OOXML reader and written out through the independent Python implementation of this carrier.
+    const TALK_DSL: &str = "local://🗣️talk.dsl.semio";
+    const TALK_PACK: &str = "local://🎒️talk.pack.semio";
+    /// 📽️ The committed example deck, kept because it is the artifact this subset's own
+    /// `fixture_honesty_law` pins to `demo_semio_presentation_snapshot()`.
+    const DECK_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio";
+    const DECK_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio";
+
+    /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order — including the
+    /// cells of a step's data table, which is where the specification-vector paths live. The feature
+    /// is the single place those paths are written down; both adapters read them from there.
+    fn step_uris(ctx: &Context, scheme: &str) -> Vec<String> {
+        let mut found = Vec::new();
+        for (_, text) in &ctx.scenario.steps {
+            for token in text.split_whitespace() {
+                if token.starts_with(scheme) {
+                    found.push(token.to_string());
+                }
+            }
+        }
+        for table in &ctx.scenario.data_tables {
+            for cell in table.iter().flatten() {
+            for token in cell.split_whitespace() {
+                if token.starts_with(scheme) {
+                    found.push(token.to_string());
+                }
+            }
+            }
+        }
+        found
+    }
+    //#endregion 🔖️Input
 
     //#region 🔖️JsonReaders
     /// 🧫️ Structural readers over the framework's dependency-free `Json`. Every one of them mirrors
@@ -165,8 +147,8 @@ mod subject {
     //#endregion 🔖️JsonReaders
 
     //#region 🔖️DecodeDocument
-    /// 🧫️ `document::DocBlock` reuse — only the block kinds a real deck's text bodies, table cells
-    /// and speaker notes actually carry are decoded; an unknown one is an error, never a silent
+    /// 🧫️ `document::DocBlock` reuse — all eight block kinds, because the real derived deck's
+    /// mutation payloads exercise the whole union; an unknown one is an error, never a silent
     /// default that would make a wrong fixture look right.
     fn decode_run_style(json: &Json) -> RunStyle {
         RunStyle {
@@ -186,6 +168,17 @@ mod subject {
         match json.str("kind").as_str() {
             "paragraph" => DocBlock::Paragraph { style_id: opt_string(json, "style_id"), runs: json.array("runs").iter().map(decode_run).collect() },
             "heading" => DocBlock::Heading { level: number(json, "level") as u8, style_id: opt_string(json, "style_id"), runs: json.array("runs").iter().map(decode_run).collect() },
+            "list" => DocBlock::List { ordered: flag(json, "ordered"), items: json.array("items").iter().map(|item| DocListItem { blocks: decode_blocks(item, "blocks") }).collect() },
+            "table" => DocBlock::Table {
+                rows: json
+                    .array("rows")
+                    .iter()
+                    .map(|row| DocTableRow { cells: row.array("cells").iter().map(|cell| DocTableCell { blocks: decode_blocks(cell, "blocks") }).collect() })
+                    .collect(),
+            },
+            "code" => DocBlock::Code { language: opt_string(json, "language"), text: json.str("text") },
+            "quote" => DocBlock::Quote { blocks: decode_blocks(json, "blocks") },
+            "image" => DocBlock::Image { image_id: json.str("image_id"), alt: json.str("alt"), width: opt_number(json, "width"), height: opt_number(json, "height") },
             "pageBreak" => DocBlock::PageBreak,
             other => panic!("mutate-semio-presentation: no decoder for document block kind {other:?}"),
         }
@@ -325,8 +318,28 @@ mod subject {
             DocBlock::Heading { level, style_id, runs } => {
                 object(vec![("kind", text("heading")), ("level", Json::Number(f64::from(*level))), ("style_id", optional_text(style_id)), ("runs", Json::Array(runs.iter().map(run_json).collect()))])
             }
+            DocBlock::List { ordered, items } => object(vec![
+                ("kind", text("list")),
+                ("ordered", Json::Bool(*ordered)),
+                ("items", Json::Array(items.iter().map(|item| object(vec![("blocks", blocks_json(&item.blocks))])).collect())),
+            ]),
+            DocBlock::Table { rows } => object(vec![(
+                "kind",
+                text("table"),
+            ), (
+                "rows",
+                Json::Array(rows.iter().map(|row| object(vec![("cells", Json::Array(row.cells.iter().map(|cell| object(vec![("blocks", blocks_json(&cell.blocks))])).collect()))])).collect()),
+            )]),
+            DocBlock::Code { language, text: body } => object(vec![("kind", text("code")), ("language", optional_text(language)), ("text", text(body))]),
+            DocBlock::Quote { blocks } => object(vec![("kind", text("quote")), ("blocks", blocks_json(blocks))]),
+            DocBlock::Image { image_id, alt, width, height } => object(vec![
+                ("kind", text("image")),
+                ("image_id", text(image_id)),
+                ("alt", text(alt)),
+                ("width", optional_number(width)),
+                ("height", optional_number(height)),
+            ]),
             DocBlock::PageBreak => object(vec![("kind", text("pageBreak"))]),
-            other => panic!("mutate-semio-presentation: no projection for document block {other:?}"),
         }
     }
     fn blocks_json(blocks: &[DocBlock]) -> Json {
@@ -400,119 +413,149 @@ mod subject {
             ),
         ])
     }
-    fn outcome_of(snapshot: &SemioPresentationSnapshot) -> Outcome {
-        let projection = snapshot_json(snapshot);
-        let bytes = projection.to_string().into_bytes();
-        Outcome::with_raw(bytes, projection)
-    }
     //#endregion 🔖️Projection
 
     //#region 🔖️Handlers
-    fn fixture_for(kind: &str, ctx: &Context) -> Result<(SemioPresentationSnapshot, SemioPresentationMutation, SemioPresentationSnapshot), String> {
-        let before = decode_snapshot(&ctx.fixture_json(&before_uri(kind))?);
-        let mutation = decode_mutation(&ctx.fixture_json(&mutation_uri(kind))?);
-        let after = decode_snapshot(&ctx.fixture_json(&after_uri(kind))?);
-        Ok((before, mutation, after))
+    /// 🎤️ The real derived talk deck, parsed through this repository's own DSL codec.
+    fn talk(ctx: &Context) -> Result<SemioPresentationSnapshot, String> {
+        let text = String::from_utf8(ctx.fixture_bytes(TALK_DSL)?).map_err(|error| format!("the derived talk deck is not UTF-8: {error}"))?;
+        parse_semio_presentation_dsl(&text)
     }
 
-    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
-    /// vectors are written in, so a red scenario is readable without re-running anything.
+    /// 📜️ The scenario's own committed mutation payload — the feature owns the vector.
+    fn payload(ctx: &Context) -> Result<SemioPresentationMutation, String> {
+        let uri = step_uris(ctx, "local://🦠️").into_iter().next().ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
+        Ok(decode_mutation(&ctx.fixture_json(&uri)?))
+    }
+
+    fn apply(current: &mut SemioPresentationSnapshot, step: &SemioPresentationMutation, what: &str) -> Result<(), String> {
+        let outcome = apply_semio_presentation_mutation(current, step);
+        let refusals = semio_mutation_refusals(&outcome);
+        if refusals.is_empty() {
+            return Ok(());
+        }
+        Err(format!("{what}: the mutation was rejected: {refusals:?}"))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON both sides
+    /// project — trimmed to the deck's shape, because the real talk deck embeds three PNG parts.
     fn disagreement(what: &str, got: &SemioPresentationSnapshot, expected: &SemioPresentationSnapshot) -> String {
-        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got).to_string(), snapshot_json(expected).to_string())
+        let short = |deck: &SemioPresentationSnapshot| {
+            let slides = deck.slides.iter().map(|slide| format!("{}({} shapes,{} notes)", slide.id, slide.shapes.len(), slide.notes.len())).collect::<Vec<_>>().join(",");
+            let layouts = deck.layouts.iter().map(|layout| format!("{}->{}", layout.id, layout.master_id)).collect::<Vec<_>>().join(",");
+            let masters = deck.masters.iter().map(|master| master.id.clone()).collect::<Vec<_>>().join(",");
+            format!("masters=[{masters}] layouts=[{layouts}] slides=[{slides}] digest={}", digest(snapshot_json(deck).to_string().as_bytes()))
+        };
+        format!("{what}\n     got: {}\nexpected: {}", short(got), short(expected))
     }
 
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
-    /// after-snapshot — slide ORDER included, which is what separates a real reorder from a rebuild
-    /// that happens to keep the same set. The assertion lives here rather than in the comparison
-    /// because a recorded no-oracle case runs no oracle role: a handler that merely returned `Ok`
-    /// would report a pass having checked nothing.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let (mut base, mutation, expected) = fixture_for(kind, ctx)?;
-            let outcome = apply_semio_presentation_mutation(&mut base, &mutation);
-            if !semio_mutation_refusals(&outcome).is_empty() {
-                return Err(format!("mutate-{kind}: mutation rejected: {:?}", semio_mutation_refusals(&outcome)));
-            }
-            if base != expected {
-                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &base, &expected));
-            }
-            Ok(outcome_of(&base))
+    /// 🎯️ One verb applied to the real derived talk deck by this repository's codec alone.
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let mut current = talk(ctx)?;
+        apply(&mut current, &payload(ctx)?, &ctx.scenario.id)?;
+        Ok(Outcome::projection(snapshot_json(&current)))
+    }
+
+    /// ↩️ The metamorphic inverse law on the real deck: applying the verb and then its OWN computed
+    /// inverse must restore it exactly, slide and shape ORDER included — which is what an
+    /// index-addressed vocabulary makes load-bearing.
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let base = talk(ctx)?;
+        let step = payload(ctx)?;
+        let mut current = base.clone();
+        apply(&mut current, &step, &ctx.scenario.id)?;
+        let mutated = snapshot_json(&current);
+        for undo in &semio_presentation_mutation_inverse(&step, &base) {
+            apply(&mut current, undo, &ctx.scenario.id)?;
         }
-    }
-
-    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
-    /// restore the committed before-snapshot exactly, the removed slide's position in the deck
-    /// included and not merely its presence.
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let (base, mutation, _expected) = fixture_for(kind, ctx)?;
-            let mut current = base.clone();
-            let outcome = apply_semio_presentation_mutation(&mut current, &mutation);
-            if !semio_mutation_refusals(&outcome).is_empty() {
-                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", semio_mutation_refusals(&outcome)));
-            }
-            for step in &semio_presentation_mutation_inverse(&mutation, &base) {
-                let step_outcome = apply_semio_presentation_mutation(&mut current, step);
-                if !semio_mutation_refusals(&step_outcome).is_empty() {
-                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", semio_mutation_refusals(&step_outcome)));
-                }
-            }
-            if current != base {
-                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
-            }
-            Ok(outcome_of(&current))
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the deck", ctx.scenario.id), &current, &base));
         }
+        Ok(Outcome::projection(Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), snapshot_json(&current))])))
     }
 
-    /// 🔁 The real committed artifact, decoded from BOTH of its envelopes and carried back through
-    /// each of them. Nothing here transcribes the deck: the only channel from the committed bytes to
-    /// the projection is the subset's own codecs.
+    /// 🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector, whose
+    /// before-state is the committed `📽️deck` example artifact — a THIRD statement of what the verb
+    /// means, independent of both implementations.
+    pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
+        let uris = step_uris(ctx, "local://");
+        if uris.len() < 3 {
+            return Err(format!("{}: the scenario names {} specification-vector fixtures, expected three", ctx.scenario.id, uris.len()));
+        }
+        let mut current = decode_snapshot(&ctx.fixture_json(&uris[0])?);
+        let step = decode_mutation(&ctx.fixture_json(&uris[1])?);
+        let expected = decode_snapshot(&ctx.fixture_json(&uris[2])?);
+        apply(&mut current, &step, &ctx.scenario.id)?;
+        if current != expected {
+            return Err(disagreement(&format!("{}: the applied deck does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
+        }
+        Ok(Outcome::projection(snapshot_json(&current)))
+    }
+
+    /// 🔁️ Both committed encodings of BOTH decks, each re-emitted from the parsed document.
+    ///
     /// 🔒️ **The byte half of the identity law — asserted, and asserted as `carrier_is_exact`.**
-    /// `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin; the two
-    /// committed example artifacts this scenario reads were produced by these very codecs, so
-    /// reproducing them BYTE FOR BYTE is the correct answer here and `law::reparsed_not_copied`
-    /// would be exactly backwards — the same reading `mutate-dag-1` records for `.dag.dsl.semio`
-    /// and `mutate-bmp-v3` for its own reference-authored fixture. Saying so in prose alone would
-    /// leave the claim an excuse; asserting it makes it checkable, and it fails with the offset of
-    /// the first differing byte the moment the printer or the packer drifts. Nor is it a
-    /// self-comparison: one side is a file committed to the repository, the other is computed now.
+    /// `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin, so
+    /// reproducing all four committed files BYTE FOR BYTE is the correct answer here and
+    /// `law::reparsed_not_copied` would be exactly backwards — the same reading `mutate-dag-1`
+    /// records for `.dag.dsl.semio`. Nor is it a self-comparison any more: the talk deck's two files
+    /// were written by the INDEPENDENT Python implementation from the same grammar, and the digests
+    /// of what each side emitted are what the runner compares.
     pub fn identity(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed dsl artifact is not utf-8: {error}"))?;
-        let from_text = parse_semio_presentation_dsl(&text)?;
-        let pack_bytes = ctx.fixture_bytes(PACK_ASSET)?;
-        let from_pack = decode_semio_presentation_pack(&pack_bytes)?;
-        if from_text != from_pack {
-            return Err("identity-round-trip: the committed dsl and pack envelopes decode to different decks".to_string());
+        let mut report = Vec::new();
+        for (name, dsl_uri, pack_uri) in [("talk", TALK_DSL, TALK_PACK), ("deck", DECK_DSL, DECK_PACK)] {
+            let dsl_bytes = ctx.fixture_bytes(dsl_uri)?;
+            let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: the committed {name} artifact is not UTF-8: {error}"))?;
+            let parsed = parse_semio_presentation_dsl(&text)?;
+            let printed = print_semio_presentation_dsl(&parsed);
+            carrier_is_exact(printed.as_bytes(), &dsl_bytes)?;
+            let reparsed = parse_semio_presentation_dsl(&printed)?;
+            if reparsed != parsed {
+                return Err(disagreement(&format!("identity-round-trip: printing the {name} back to DSL and reparsing it lost content"), &reparsed, &parsed));
+            }
+            let pack_bytes = ctx.fixture_bytes(pack_uri)?;
+            let unpacked = decode_semio_presentation_pack(&pack_bytes)?;
+            if unpacked != parsed {
+                return Err(disagreement(&format!("identity-round-trip: the {name}'s binary twin decodes to a different deck than its text artifact"), &unpacked, &parsed));
+            }
+            let repacked_bytes = encode_semio_presentation_pack(&parsed);
+            carrier_is_exact(&repacked_bytes, &pack_bytes)?;
+            let repacked = decode_semio_presentation_pack(&repacked_bytes)?;
+            if repacked != parsed {
+                return Err(disagreement(&format!("identity-round-trip: encoding the {name} to a pack and decoding it back lost content"), &repacked, &parsed));
+            }
+            report.push((
+                name.to_string(),
+                Json::Object(vec![
+                    ("document".to_string(), snapshot_json(&parsed)),
+                    ("dslDigest".to_string(), Json::String(digest(printed.as_bytes()))),
+                    ("packDigest".to_string(), Json::String(digest(&repacked_bytes))),
+                    ("dslLength".to_string(), Json::Number(printed.len() as f64)),
+                    ("packLength".to_string(), Json::Number(repacked_bytes.len() as f64)),
+                ]),
+            ));
         }
-        let repacked_bytes = encode_semio_presentation_pack(&from_text);
-        carrier_is_exact(&repacked_bytes, &pack_bytes)?;
-        let repacked = decode_semio_presentation_pack(&repacked_bytes)?;
-        let printed = print_semio_presentation_dsl(&repacked);
-        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
-        let reparsed = parse_semio_presentation_dsl(&printed)?;
-        if reparsed != from_text {
-            return Err("identity-round-trip: re-encoding through pack and dsl did not preserve the deck".to_string());
-        }
-        Ok(outcome_of(&reparsed))
+        Ok(Outcome::projection(Json::Object(report)))
     }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls.
+/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
+/// id, so the loop mirrors the feature's `Examples` tables exactly. Only subject handlers are
+/// registered: the oracle role belongs to `🐍️component.py`.
 pub fn adapter() -> Adapter {
+    #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
-        }
-    }
-    built = built.oracle("identity-round-trip", identity_oracle);
     #[cfg(feature = "sut")]
     {
+        for kind in KINDS {
+            built = built
+                .subject(&format!("mutate-{kind}"), subject::mutate)
+                .subject(&format!("inverse-{kind}"), subject::inverse)
+                .subject(&format!("spec-vector-{kind}"), subject::spec_vector);
+        }
         built = built.subject("identity-round-trip", subject::identity);
     }
     built

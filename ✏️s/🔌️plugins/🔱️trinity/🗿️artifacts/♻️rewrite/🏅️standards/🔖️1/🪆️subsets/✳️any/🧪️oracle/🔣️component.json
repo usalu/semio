@@ -1,21 +1,37 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `s.trinity.rewrite` is a semio-NATIVE graph-rewrite rule whose three authored bodies are opaque JSON strings, so no oracle is registered and the evidence rests on the seven committed per-kind specification vectors plus the inverse law (see noOracleDecisions).",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.trinity.rewrite` is a semio-NATIVE graph-rewrite RULE document — three whole JSON documents carried as strings plus two string-keyed maps — not a rewriting engine, so a rewriting library has nothing to adjudicate. The reference is a SECOND IMPLEMENTATION in Python written from this subset's committed snapshot schema, mutation grammar and specification vectors.",
+  "oracles": [
     {
-      "id": "rewrite-1-graph-rewrite-rule-mutation-semantics",
-      "capabilities": ["rewrite-1-mutate"],
-      "rationale": "No third party reads or writes `.rewrite.dsl.semio`, and — the decisive point — no third party could adjudicate this vocabulary even if it did, because the vocabulary deliberately does NOT look inside the thing it edits. `beforeFixtureJson`, `lhsJson` and `rhsJson` are opaque JSON STRINGS on this artifact's wire: a whole `trinity.graph` document, a whole match pattern with its where-clause, and a whole create/delete/set/merge body with its parameter declarations, each replaced atomically by one `edit` verb. A JSON library asked whether `edit-rhs` is correct would be checking that a string parses, which is not the claim. The claim is that a rule is edited body-at-a-time while its two KEY-ADDRESSED maps — `parameterBindings` and `ruleLayout` — are edited key-at-a-time through a `change`/`remove` pair, and that no verb ever reaches across from one to the other. Confidence comes instead from the seven committed, independently handcrafted `(before, mutation, after, diff, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, re-exercised end to end here through `apply_rewrite_mutation_reporting`; and from the inverse law as a metamorphic property, which is the strongest available statement about a `remove` whose undo has to restore a value the payload never carried.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "id": "rewrite-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "rewrite-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.trinity.rewrite` rule document and all seven typed mutations, in Python, at `../../../../../🧪️tests/mutate-rewrite-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the five members, with the three `contentMediaType: application/json` strings and the two maps), `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the seven verbs and their positional argument lists) and the seven committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: GrGen, AGG and `networkx`'s isomorphism module implement graph REWRITING, while this artifact is the rule DOCUMENT — a before-fixture, a pattern, a right-hand side, the parameter bindings and the editor layout — which none of them models, none reads `.dsl.semio`, and none has an opinion on whether `change-parameter-binding` on an absent key inserts or refuses. This reference deliberately does NOT read the carrier: `.rewrite.dsl.semio` has no prose document and mixes three value encodings in one file — a backslash-escaped quoted string, a braced block and a fenced ```json block — with nothing stating which member gets which, so the reading is done once in a recorded derivation script and the carrier's own byte-exact law stays asserted in role on the Rust side. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
   "mutationCatalogs": [
     {
       "id": "rewrite-1-any",
       "capability": "rewrite-1-mutate",
-      "kinds": ["edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point"]
+      "kinds": [
+        "edit-before-fixture",
+        "edit-lhs",
+        "edit-rhs",
+        "change-parameter-binding",
+        "remove-parameter-binding",
+        "change-rule-layout-point",
+        "remove-rule-layout-point"
+      ]
     }
   ]
 }

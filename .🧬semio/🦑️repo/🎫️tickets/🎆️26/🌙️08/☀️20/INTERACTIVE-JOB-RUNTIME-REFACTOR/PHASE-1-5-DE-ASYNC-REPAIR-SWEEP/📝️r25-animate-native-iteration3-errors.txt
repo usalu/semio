@@ -1,4 +1,0 @@
-✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:303:112: error[E0277]: `UiNode` is not a future: `UiNode` is not a future
-✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:65:111: error[E0277]: `UiNode` is not a future: `UiNode` is not a future
-✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/🦀️component.rs:942:5: error[E0072]: recursive types `ChangeSpeed` and `animations_catalog::Animations` have infinite size
-error: could not compile `semio-s-plugin-animate` (lib) due to 3 previous errors; 14 warnings emitted

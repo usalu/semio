@@ -69,7 +69,7 @@ pub enum PlainEffect {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlainPatch {
     pub surface_instance: u32,
-    pub surface: u32,
+    pub surface: String,
     pub revision: u64,
     pub base_revision: u64,
     pub bytes: Vec<u8>,
@@ -195,7 +195,7 @@ fn turn_ui(budget: TurnBudget) -> TurnOutcome {
             state.revision += 1;
             let bytes = format!("{{\"revision\":{}}}", state.revision).into_bytes();
             let bytes = if (bytes.len() as u32) > budget.max_patch_bytes.max(1) { bytes[..(budget.max_patch_bytes.max(1) as usize).min(bytes.len())].to_vec() } else { bytes };
-            patches.push(PlainPatch { surface_instance: 0, surface: 0, revision: state.revision, base_revision, bytes });
+            patches.push(PlainPatch { surface_instance: 0, surface: "window".to_owned(), revision: state.revision, base_revision, bytes });
         }
         state.turns += 1;
     });

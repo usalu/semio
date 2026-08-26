@@ -5,9 +5,24 @@
 Feature: Apply every typed s.space.space index mutation to its committed specification vector
 
   `s.space.space` is a semio-NATIVE artifact — no third party reads `.sspace.dsl.semio` — so no
-  oracle is registered (recorded as the `s-space-index-mutation-semantics` no-oracle decision in
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why generic table
-  readers and content-addressed store crates were surveyed and DECLINED rather than merely absent).
+  reference library is registered, recorded as the `s-space-index-mutation-semantics` no-oracle
+  decision in `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why
+  generic table readers and content-addressed store crates were surveyed and DECLINED rather than
+  merely absent.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-cad-1` and `mutate-lowpoly-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   What distinguishes this subset is that it is an INDEX, not a document. Each row carries an
   artifact's metadata — `id`, `name`, `kind_id`, `schema`, a nested `dialect` block of

@@ -15,15 +15,15 @@ pub struct ChangeRhoL {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeRhoL {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "rho-l", kind: "change-rho-l", record: "ChangedRhoL" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_rho_l::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_rho_l::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change rho l to {:?}", self.new_rho_l)
     }
 }

@@ -95,7 +95,7 @@ enum Din16798MutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for Din16798MutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -106,7 +106,7 @@ impl OpText for Din16798MutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -115,16 +115,16 @@ impl OpText for Din16798MutationDsl {
 }
 
 impl protocol::OpBinary for Din16798MutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn din16798_mutation_to_dsl(mutation: &Din16798Mutation) -> Din16798MutationDsl {
+fn din16798_mutation_to_dsl(mutation: &Din16798Mutation) -> Din16798MutationDsl {
     match mutation {
         Din16798Mutation::ChangeAnnex(payload) => Din16798MutationDsl::ChangeAnnex { new_annex: payload.new_annex.clone() },
         Din16798Mutation::ChangeOccupancy(payload) => Din16798MutationDsl::ChangeOccupancy { new_occupancy: payload.new_occupancy.clone() },
@@ -191,7 +191,7 @@ async fn din16798_mutation_to_dsl(mutation: &Din16798Mutation) -> Din16798Mutati
     }
 }
 
-async fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mutation {
+fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mutation {
     match mutation {
         Din16798MutationDsl::ChangeAnnex { new_annex } => Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex }),
         Din16798MutationDsl::ChangeOccupancy { new_occupancy } => Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy }),
@@ -269,11 +269,11 @@ async fn din16798_mutation_from_dsl(mutation: Din16798MutationDsl) -> Din16798Mu
 }
 
 impl OpText for Din16798Mutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(din16798_mutation_from_dsl(<Din16798MutationDsl as OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         <Din16798MutationDsl as OpText>::print_op(&din16798_mutation_to_dsl(self))
     }
 }
@@ -281,11 +281,11 @@ impl OpText for Din16798Mutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `Din16798MutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for Din16798Mutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         din16798_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(din16798_mutation_from_dsl(Din16798MutationDsl::decode_op(bytes)?))
     }
 }
@@ -296,40 +296,40 @@ impl protocol::OpBinary for Din16798Mutation {
 mod tests {
     use super::*;
     #[semio_framework_async_macros::async_test]
-    async fn op_text_round_trips_change_annex() {
+    fn op_text_round_trips_change_annex() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn op_text_round_trips_change_t_op_c() {
+    fn op_text_round_trips_change_t_op_c() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: 21.5 }));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn op_text_round_trips_change_occupancy() {
+    fn op_text_round_trips_change_occupancy() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn op_text_round_trips_change_persons() {
+    fn op_text_round_trips_change_persons() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangePersons(change_persons::mutation::ChangePersons { new_persons: 6 }));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn op_text_round_trips_change_sfp_required_class() {
+    fn op_text_round_trips_change_sfp_required_class() {
         store::os_store::test_support::assert_op_line_round_trip(&Din16798Mutation::ChangeSfpRequiredClass(change_sfp_required_class::mutation::ChangeSfpRequiredClass { new_sfp_required_class: 2 }));
     }
 
     /// ⚖️ Every variant, not just the five hand-picked above — full-coverage `OpText` round trip
     /// over the closed vocabulary, one sample value per field.
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_op_text_round_trips() {
+    fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
     }
 
-    async fn every_mutation() -> Vec<Din16798Mutation> {
+    fn every_mutation() -> Vec<Din16798Mutation> {
         vec![
             Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: AnnexChoice::En }),
             Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }),

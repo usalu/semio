@@ -21,7 +21,9 @@ message TiffTagsDiff {
   repeated TiffTagAdded added = 3;
 }
 
-message TiffIfdModified { uint64 index = 1; TiffTagsDiff diff = 2; }
+// One IFD's own delta: the recursive tag triple plus a whole-value slot for its raw strip payload.
+message TiffIfdDiff { TiffTagsDiff entries = 1; optional bytes pixels = 2; }
+message TiffIfdModified { uint64 index = 1; TiffIfdDiff diff = 2; }
 message TiffIfdAdded { uint64 index = 1; semio.s_stdio_tiff.snapshot.TiffIfd ifd = 2; }
 
 // Index-keyed ifds triple (TIFF's IFD chain is positional).

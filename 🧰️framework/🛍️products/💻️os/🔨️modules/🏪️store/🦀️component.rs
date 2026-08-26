@@ -3072,6 +3072,14 @@ impl<'a, P, Mutation> ArtifactEnvelopeView<'a, P, Mutation> {
 pub type DraftStore<P, Mutation> = ArtifactStore<P, Mutation>;
 
 //#region 🔖️EphemeralLanes
+/// 🧬️ Exact witness returned after one, and only one, lane item changes a live root.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LaneItemReceipt {
+    pub generation_before: u64,
+    pub generation_after: u64,
+}
+
 /// @emoji 👥️ The PRESENCE lane's store: ephemeral SHARED state — a last-writer-wins roster, NOT an
 /// event log.
 ///
@@ -3533,6 +3541,22 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         Ok(())
     }
 
+    /// 🎯️ Applies one retained publication item against an exact generation and returns its
+    /// per-lane receipt. A stale item is rejected before its mutation is inspected.
+    pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)> {
+        if self.generation != expected_generation {
+            return Err(("presence publication generation is stale".into(), mutation));
+        }
+        let before = self.generation;
+        let candidate = match mutation.diff(self.local.as_ref()).diff().apply(self.local.as_ref()) {
+            Ok(candidate) => candidate,
+            Err(error) => return Err((error.to_string(), mutation)),
+        };
+        self.local = Arc::new(candidate);
+        self.generation = self.generation.wrapping_add(1);
+        Ok(LaneItemReceipt { generation_before: before, generation_after: self.generation })
+    }
+
     pub fn peers_root(&self) -> Arc<PresencePeersRoot<P>> {
         self.peers.clone()
     }
@@ -3629,6 +3653,21 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
             self.generation = self.generation.wrapping_add(1);
         }
         Ok(())
+    }
+
+    /// 🎯️ Applies one retained local-only item against an exact live generation.
+    pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)> {
+        if self.generation != expected_generation {
+            return Err(("transient publication generation is stale".into(), mutation));
+        }
+        let before = self.generation;
+        let candidate = match mutation.diff(self.current.as_ref()).diff().apply(self.current.as_ref()) {
+            Ok(candidate) => candidate,
+            Err(error) => return Err((error.to_string(), mutation)),
+        };
+        self.current = Arc::new(candidate);
+        self.generation = self.generation.wrapping_add(1);
+        Ok(LaneItemReceipt { generation_before: before, generation_after: self.generation })
     }
 
     /// 🔄️ Discards everything — what a host does when a view closes.
@@ -8346,7 +8385,12 @@ impl ArtifactCodec {
                     store
                 };
                 store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await?;
-                let files = print_document_pack(store.envelope().await).await?;
+                // 🧵️ Reads the envelope through the private field rather than `ArtifactStore::envelope`.
+                // That accessor is a non-suspending `&self` getter declared `async` (AGENTS.md:44's
+                // convention debt), so awaiting it holds `&ArtifactStore` across this `await` and makes
+                // the whole thunk non-`Send` — which is the only thing that kept os-kernel's `sync`
+                // feature from compiling. `&ArtifactEnvelope` is plain data and is `Sync`.
+                let files = print_document_pack(&store.envelope).await?;
                 Ok((files.pack, files.spr, files.ops))
             })
         }
@@ -12681,6 +12725,10 @@ where
         previous.map(|previous| Box::new(ArtifactStoreStringRetirement::new(previous)) as Box<dyn ErasedSnapshotRetirement>)
     }
 
+    fn take_string_at_retained(target: &mut std::mem::ManuallyDrop<Vec<String>>, position: usize) -> String {
+        target.remove(position)
+    }
+
     fn push_revision_replacement_reserved(&mut self, next: CursorRevisionAccumulator) {
         let previous = std::mem::replace(&mut *self.revision_accumulator, next);
         if !previous.applied.is_empty() || previous.applied.capacity() != 0 || !previous.redo.is_empty() || previous.redo.capacity() != 0 {
@@ -13418,6 +13466,28 @@ where
         Ok(CommandReceipt { edit_ids, generation: self.generation().await, messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
     }
 
+    /// 🎯️ Publishes exactly one durable lane item after validating the live generation.
+    /// The returned lane witness is independent of the edit receipt so a retained publisher can
+    /// validate, ACK, retry, and retire one semantic unit without entering a batch API.
+    pub async fn apply_one(&mut self, expected_generation: u64, mutation: Mutation, description: Option<String>, lane: HistoryLane) -> Result<(CommandReceipt, LaneItemReceipt), VcsError>
+    where
+        P: Sync,
+    {
+        self.pump().await?;
+        if self.generation != expected_generation {
+            return Err(VcsError::ValidationFailed("one-item publication generation is stale".to_string()));
+        }
+        let generation_before = self.generation;
+        self.replace_pending_report_retained(PendingCommandReport::default())?;
+        let before = self.applied_edit_ids.len();
+        self.apply_command(vec![mutation], description, lane).await?;
+        self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
+        self.flush_outbound(lane.is_document().await).await?;
+        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| self.applied_edit_ids[before..].to_vec());
+        let receipt = CommandReceipt { edit_ids, generation: self.generation, messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() };
+        Ok((receipt, LaneItemReceipt { generation_before, generation_after: self.generation }))
+    }
+
     async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>) -> Result<(), VcsError>
     where
         P: Sync,
@@ -13447,7 +13517,7 @@ where
                         candidates.push((self.edit_is_local(id).await, self.edit_lane(id).await));
                     }
                     let position = candidates.iter().rposition(|(is_local, lane)| *is_local && *lane == HistoryLane::Document).ok_or(VcsError::NothingToUndo)?;
-                    let removed = self.applied_edit_ids.remove(position);
+                    let removed = Self::take_string_at_retained(&mut self.applied_edit_ids, position);
                     self.redo_edit_ids.push(removed);
                     // 🔂️ Removing a MID-history edit has no cheap incremental inverse; cold-path replay.
                     self.replace_tail_undo_cache_retained(None)?;
@@ -13621,13 +13691,11 @@ where
     /// `tail_undo_cache` when `position` really is the tail, cold-path `fold_current` otherwise,
     /// exactly mirroring the pre-lane `ExactBaseOnly` arm's own fast path).
     async fn undo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
-        let target = self.applied_edit_ids[position].clone();
-        if !self.edit_is_local(&target).await {
-            return Err(VcsError::ForeignEdit(target));
+        if !self.edit_is_local(&self.applied_edit_ids[position]).await {
+            return Err(VcsError::ForeignEdit(self.applied_edit_ids[position].clone()));
         }
         let is_tail = position + 1 == self.applied_edit_ids.len();
-        self.applied_edit_ids.remove(position);
-        self.redo_edit_ids.push(target.clone());
+        let target = Self::take_string_at_retained(&mut self.applied_edit_ids, position);
         if is_tail && self.tail_undo_cache.as_ref().is_some_and(|(cached_id, _)| cached_id == &target) {
             let cached_pre = self.take_tail_snapshot_for_current()?;
             self.replace_current_retained(cached_pre)?;
@@ -13636,6 +13704,7 @@ where
             let current = Arc::new(self.fold_current().await?);
             self.replace_current_retained(current)?;
         }
+        self.redo_edit_ids.push(target);
         self.bump().await?;
         Ok(())
     }
@@ -13646,8 +13715,7 @@ where
     /// undos from more than one lane have interleaved — folded onto `current` and re-appended to
     /// `applied_edit_ids`, mirroring the pre-lane `Redo` arm's own logic exactly.
     async fn redo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
-        let next = self.redo_edit_ids.remove(position);
-        self.applied_edit_ids.push(next.clone());
+        let next = Self::take_string_at_retained(&mut self.redo_edit_ids, position);
         if let Some(edit) = self.envelope.vcs.edits.iter().find(|entry| entry.id == next) {
             let pre = Arc::clone(&*self.current);
             let mut folded = pre.as_ref().clone();
@@ -13656,8 +13724,9 @@ where
                 folded = apply_mutation(&folded, operation).await?.0;
             }
             self.replace_current_retained(Arc::new(folded))?;
-            self.replace_tail_undo_cache_retained(Some((next, pre)))?;
+            self.replace_tail_undo_cache_retained(Some((next.clone(), pre)))?;
         }
+        self.applied_edit_ids.push(next);
         self.bump().await?;
         Ok(())
     }
@@ -16712,6 +16781,47 @@ impl CompositionGraph {
         }
         Ok(())
     }
+
+    /// 🧹 Releases at most one retained graph edge or empty adjacency owner.
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> SnapshotRetirementStep {
+        if maximum_items == 0 {
+            return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(child) = self.owns.keys().next() {
+            let bytes = child.len();
+            if bytes > maximum_bytes {
+                return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let child = child.clone();
+            drop(self.owns.remove(&child));
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some((source, target)) = self.links.iter().find_map(|(source, targets)| targets.iter().next().map(|target| (source.clone(), target.clone()))) {
+            let bytes = source.len().saturating_add(target.len());
+            if bytes > maximum_bytes {
+                return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(targets) = self.links.get_mut(&source) {
+                targets.remove(&target);
+            }
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        if let Some(source) = self.links.keys().next() {
+            let bytes = source.len();
+            if bytes > maximum_bytes {
+                return SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let source = source.clone();
+            drop(self.links.remove(&source));
+            return SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes };
+        }
+        SnapshotRetirementStep::Complete
+    }
+
+    /// 🧺 Proves that no graph edge or adjacency owner remains.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.owns.is_empty() && self.links.is_empty()
+    }
 }
 
 /// @emoji 🧵️ Builds the exact `ArtifactCommand::<Mutation>::Apply` binary layout (see that impl's
@@ -16901,6 +17011,16 @@ impl TransactionCoordinator {
 
     pub async fn graph_mut(&mut self) -> &mut CompositionGraph {
         &mut self.graph
+    }
+
+    /// 🧹 Releases one retained composition-graph owner within the caller's grant.
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> SnapshotRetirementStep {
+        self.graph.close_step(maximum_items, maximum_bytes)
+    }
+
+    /// 🧺 Proves that the coordinator retains no composition owner.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.graph.terminal_is_empty()
     }
 
     /// ✂️ Undoes `undo`/re-dispatches `undo` on the applied-so-far members in REVERSE application
@@ -22381,6 +22501,24 @@ mod tests {
         assert_eq!(reopened.envelope().await.id, "child-round-trip");
         assert_eq!(reopened.snapshot().await.expect("head snapshot"), child.snapshot().await.expect("head snapshot"), "reopened child's live content diverged from the persisted one");
         assert_eq!(reopened.snapshot().await.expect("head snapshot"), DemoSnapshot { n: 11 }, "reopen restored the wrong cursor position");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog() {
+        type Wrapped = ArtifactStore<DemoSnapshot, DemoMutation>;
+        let dialect = demo_child_dialect();
+        let created = <Wrapped as MemberFactory>::create("demo/v1", "wrapped-member", &dialect, &DemoSnapshot { n: 3 }.encode_pack()).await.expect("wrapper create");
+        assert!(created.snapshot_retirement_factory.is_some());
+        assert!(created.initial_snapshot_retirement_factory.is_some());
+        assert!(created.mutation_retirement_factory.is_some());
+        assert!(created.owned_disposer_installed());
+        let files = print_document_pack(created.envelope().await).await.expect("print wrapped member");
+        let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
+        let reopened = <Wrapped as MemberFactory>::open("demo/v1", &persisted).await.expect("wrapper open");
+        assert!(reopened.snapshot_retirement_factory.is_some());
+        assert!(reopened.initial_snapshot_retirement_factory.is_some());
+        assert!(reopened.mutation_retirement_factory.is_some());
+        assert!(reopened.owned_disposer_installed());
     }
 
     #[semio_framework_async_macros::async_test]

@@ -4,26 +4,25 @@ version 1
 schema stdio.pdf.op
 start op
 
-# P2-FG3: `protocol::OpBinary::encode_op`/`decode_op` for `stdio.pdf` (1.4) forward straight to
-# `dsl::variants_binary::encode_op`/`decode_op` (../../🦀️component.rs) -- ALREADY real binary
-# before this wave touched it, NOT the F6-era `print_op().into_bytes()` text-as-binary shortcut
-# (confirmed empirically, not assumed: a real `[DEBUG]` dump shows `encode_op(NoMutation) == [1,
-# 0, 0, 0]` -- format=1, ordinal=varint(0), then `os_pack::encode_record_body`'s own
-# symbol-count=varint(0), zero fields -- byte-identical to stdio.txt's own documented example for
-# the same generic derive-path wire). Layout: a fixed `format` byte (always `1`), the matched
-# `PdfMutation` variant's ordinal as a `varint` (declaration order: `NoMutation`=0,
-# `SetSnapshot`=1 -- `dsl::DslVariants::variants()`'s own emission order), then the variant's own
-# field payload via `os_pack::encode_record_body` -- a varint-prefixed STRING-SYMBOL TABLE
-# followed by a generic, self-describing per-field-id TAG+value wire, shared verbatim by every
-# `#[derive(dsl::DslRecord)]`/`DslOps`/`DslDiff` type in the whole repo (not stdio.pdf-specific),
-# and genuinely NOT expressible by this dialect's `Array`/`Ref`/`repeat` primitives as they stand
-# today (no dynamic per-field TAG dispatch keyed by a runtime field-id, no symbol-table
-# back-reference resolution) -- the SAME structurally-irreducible gap stdio.txt's own identical
-# protocol file documents (`txt-opbinary-record-body-wire-is-framework-generic`, recorded once
-# more here in this wave's `mechanism_gaps`, not re-solved locally). Modeled honestly:
-# `format`/`ordinal` are genuinely, individually byte-walked and validated; the remaining
-# record-body bytes are one opaque tail.
+# P2-FG3: `protocol::OpBinary::encode_op`/`decode_op` for `stdio.pdf` (1.4) are hand-rolled
+# (../../🦀️component.rs's `OpCodecs` region) since ticket 26/08/23/END-TO-END-TESTING-REFACTOR
+# gave this standard a real page tree — the derive path's generic `os_pack::encode_record_body`
+# wire (a varint-prefixed string-symbol table plus a self-describing per-field-id TAG stream) is
+# framework-generic and, as this dialect stands today, structurally irreducible here; a hand-rolled
+# frame is not.
+#
+# Layout, byte for byte as `encode_op` writes it: a fixed `format` byte
+# (`store::pack_rt::OP_BINARY_FORMAT`), then the variant tag as a single byte in declaration order
+# (`NoMutation`=0, `SetSnapshot`=1), then the variant's own payload. `NoMutation` has none;
+# `SetSnapshot` carries `enc_snapshot_bin` — a length-prefixed schema string, a varint page count,
+# and per page two little-endian `f64`s plus a length-prefixed text. The payload is genuinely
+# structured binary, never the text form's bytes.
+#
+# `header fixed 2` + `chain payload bytes` is the honest shape: `format` and `tag` are individually
+# walked and validated; the variant payload past them is a length-driven chain this dialect has no
+# per-variant dispatch primitive for.
 framing record
+header fixed 2
 field format u8
-field ordinal varint
-chain bytes
+field tag u8
+chain payload bytes

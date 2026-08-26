@@ -30,7 +30,7 @@ fn mutation() -> En1992Mutation {
 /// ▶️ `change-tightness-class` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `tightness_class` from Tc1 to Tc2, leaving every other EN 1992 concrete-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_tightness_class_applies_to_committed_after() {
+fn change_tightness_class_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-tightness-class applies to its committed before-snapshot");
     assert_eq!(applied.tightness_class, crate::artifacts::en1992::part_3::TightnessClass::Tc2, "change-tightness-class/switches-tightness-class-to-tc2: tightness_class must read Tc2 after the change");
     assert_eq!(applied, expected_after(), "change-tightness-class/switches-tightness-class-to-tc2: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_tightness_class_applies_to_committed_after() {
 /// ↩️ `change-tightness-class` is its own inverse partner: the inverse step restores `tightness_class` to its pre-change
 /// Tc1 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_tightness_class_inverse_restores_before() {
+fn change_tightness_class_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-tightness-class applies");
     let inverse = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_tightness_class_inverse_restores_before() {
 /// decode then encode is a fixed point, so `tightnessClass` and `newTightnessClass` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_tightness_class_committed_json_is_canonical() {
+fn change_tightness_class_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1992Snapshot = serde_json::from_str(text).expect("change-tightness-class snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-tightness-class snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_tightness_class_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-tightness-class` at Tc2 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_tightness_class_declared_outcome_holds() {
+fn change_tightness_class_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-tightness-class outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-tightness-class/switches-tightness-class-to-tc2: this fixture declares an applied outcome");
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_tightness_class_declared_outcome_holds() {
 /// assertion: it pins that only `tightnessClass` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `hdOverH`.
 #[semio_framework_async_macros::async_test]
-async fn change_tightness_class_produces_committed_diff() {
+fn change_tightness_class_produces_committed_diff() {
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().tightness_class, Some(crate::artifacts::en1992::part_3::TightnessClass::Tc2), "change-tightness-class/switches-tightness-class-to-tc2: the diff must set tightness_class to Tc2");
     assert!(outcome.diff().artifact.is_none(), "change-tightness-class/switches-tightness-class-to-tc2: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_tightness_class_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-tightness-class`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_tightness_class_committed_diff_is_canonical() {
+fn change_tightness_class_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-tightness-class committed diff decodes");
     assert_eq!(decoded.tightness_class, Some(crate::artifacts::en1992::part_3::TightnessClass::Tc2), "change-tightness-class/switches-tightness-class-to-tc2: the committed diff must carry tightness_class at Tc2");
     assert!(decoded.selected_check_index.is_none(), "change-tightness-class/switches-tightness-class-to-tc2: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_tightness_class_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the Tc1 to Tc2 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_tightness_class_committed_diff_applies_to_after() {
+fn change_tightness_class_committed_diff_applies_to_after() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-tightness-class committed diff decodes");
     let produced = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(&decoded, &before()).expect("change-tightness-class committed diff applies to the before-snapshot");
     assert_eq!(produced.tightness_class, crate::artifacts::en1992::part_3::TightnessClass::Tc2, "change-tightness-class/switches-tightness-class-to-tc2: the committed diff must leave tightness_class reading Tc2");

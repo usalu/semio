@@ -6,7 +6,7 @@ use crate::artifacts::en1999::mutations::En1999Mutation;
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeSheetWElMm3, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+pub fn inverse(_payload: &ChangeSheetWElMm3, base: &En1999Snapshot) -> Vec<En1999Mutation> {
     vec![En1999Mutation::ChangeSheetWElMm3(ChangeSheetWElMm3 { new_sheet_w_el_mm3: base.sheet_w_el_mm3.clone() })]
 }
 //#endregion 🔖️Inverse

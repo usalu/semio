@@ -3,7 +3,7 @@
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    use crate::artifacts::fem2d::mutations::{Fem2dEnvelope, Fem2dStore};
+    use crate::artifacts::fem2d::mutations::Fem2dStore;
     use std::cell::RefCell;
     use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
@@ -16,14 +16,8 @@ mod wasm_bridge {
     #[wasm_bindgen]
     impl Fem2dSnapshotVcs {
         #[wasm_bindgen(js_name = create)]
-        pub async fn create(envelope_json: Option<String>) -> Result<Fem2dSnapshotVcs, JsValue> {
-            let store = match envelope_json {
-                Some(json) => {
-                    let envelope: Fem2dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    Fem2dStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
-                }
-                None => Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,
-            };
+        pub async fn create() -> Result<Fem2dSnapshotVcs, JsValue> {
+            let store = Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(store) })
         }
 

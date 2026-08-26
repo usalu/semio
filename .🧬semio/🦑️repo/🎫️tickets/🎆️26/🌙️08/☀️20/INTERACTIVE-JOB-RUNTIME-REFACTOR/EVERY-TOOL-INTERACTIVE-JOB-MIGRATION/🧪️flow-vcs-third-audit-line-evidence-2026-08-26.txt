@@ -1,0 +1,826 @@
+  3030	    struct FlowHostileState {
+  3031	        document: String,
+  3032	        page: Option<FlowOraclePage>,
+  3033	        history: FlowOracleHistory,
+  3034	        handback: FlowOracleHandback,
+  3035	    }
+  3036	
+  3037	    trait FlowSemanticOracle {
+  3038	        fn evaluate_operations(&self, source: &str) -> Vec<FlowOracleCase>;
+  3039	        fn expected_operations(&self, source: &str) -> Vec<FlowOracleCase>;
+  3040	    }
+  3041	
+  3042	    struct SerdeJsonFlowOracle;
+  3043	
+  3044	    impl FlowSemanticOracle for SerdeJsonFlowOracle {
+  3045	        fn evaluate_operations(&self, source: &str) -> Vec<FlowOracleCase> {
+  3046	            let root: serde_json::Value = serde_json::from_str(source).expect("test-only Flow oracle fixture");
+  3047	            let mut document = root.get("initial").expect("oracle initial document").clone();
+  3048	            let mut undo: Vec<(serde_json::Value, usize)> = Vec::new();
+  3049	            let mut redo: Vec<(serde_json::Value, usize)> = Vec::new();
+  3050	            let mut versions = 1usize;
+  3051	            let mut active = 0usize;
+  3052	            let mut revision = 1u64;
+  3053	            let mut parent_revision = 0u64;
+  3054	            let mut document_generation = 1u64;
+  3055	            let mut semantic_digest = flow_oracle_scalar_digest(&document);
+  3056	            let mut results = Vec::new();
+  3057	            let operations = root.get("operations").and_then(serde_json::Value::as_array).expect("oracle operations");
+  3058	            for (index, operation) in operations.iter().enumerate() {
+  3059	                let feature = operation.get("feature").and_then(serde_json::Value::as_str).expect("oracle feature");
+  3060	                let input = operation.get("input").expect("oracle operation input");
+  3061	                match feature {
+  3062	                    "undo" => {
+  3063	                        let previous = undo.pop().expect("oracle undo owner");
+  3064	                        redo.push((document.clone(), active));
+  3065	                        document = previous.0;
+  3066	                        active = previous.1;
+  3067	                    }
+  3068	                    "redo" => {
+  3069	                        let next = redo.pop().expect("oracle redo owner");
+  3070	                        undo.push((document.clone(), active));
+  3071	                        document = next.0;
+  3072	                        active = next.1;
+  3073	                    }
+  3074	                    "checkpoint" => {}
+  3075	                    _ => {
+  3076	                        undo.push((document.clone(), active));
+  3077	                        redo.clear();
+  3078	                        flow_oracle_apply_operation(feature, input, &mut document);
+  3079	                        if feature == "replaceDocument" {
+  3080	                            versions += 1;
+  3081	                            active = versions - 1;
+  3082	                        }
+  3083	                    }
+  3084	                }
+  3085	                parent_revision = revision;
+  3086	                revision += 1;
+  3087	                document_generation += 1;
+  3088	                let widget_count = flow_oracle_collection_len(&document, "widgets");
+  3089	                let synapse_count = flow_oracle_collection_len(&document, "synapses");
+  3090	                let layout_count = flow_oracle_object_len(&document, "layout");
+  3091	                semantic_digest = semantic_digest.rotate_left(13)
+  3092	                    ^ revision
+  3093	                    ^ u64::try_from(widget_count).expect("oracle widget count").rotate_left(7)
+  3094	                    ^ u64::try_from(synapse_count).expect("oracle synapse count").rotate_left(17)
+  3095	                    ^ u64::try_from(layout_count).expect("oracle layout count").rotate_left(29)
+  3096	                    ^ u64::try_from(active).expect("oracle active version");
+  3097	                let page = FlowOraclePage {
+  3098	                    sequence: u64::try_from(index + 1).expect("oracle page sequence"),
+  3099	                    operation: u64::try_from(index + 1).expect("oracle operation id"),
+  3100	                    session_generation: 77,
+  3101	                    revision,
+  3102	                    parent_revision,
+  3103	                    document_generation,
+  3104	                    widget_count: u32::try_from(widget_count).expect("oracle widget count"),
+  3105	                    synapse_count: u32::try_from(synapse_count).expect("oracle synapse count"),
+  3106	                    layout_count: u32::try_from(layout_count).expect("oracle layout count"),
+  3107	                    semantic_digest,
+  3108	                };
+  3109	                let history = FlowOracleHistory { undo_owners: undo.len(), redo_owners: redo.len() };
+  3110	                let fingerprint_name = operation.get("expected").and_then(|value| value.get("handback")).and_then(|value| value.get("fingerprint")).and_then(serde_json::Value::as_str).expect("oracle fingerprint reference");
+  3111	                let fingerprint = root.get("terminalFingerprints").and_then(|value| value.get(fingerprint_name)).expect("oracle terminal fingerprint");
+  3112	                results.push(FlowOracleCase { feature: feature.to_owned(), document: flow_oracle_canonical_json(&document), handback: flow_oracle_expected_handback(fingerprint, &page, &history, versions, active), page, history });
+  3113	            }
+  3114	            results
+  3115	        }
+  3116	
+  3117	        fn expected_operations(&self, source: &str) -> Vec<FlowOracleCase> {
+  3118	            let root: serde_json::Value = serde_json::from_str(source).expect("test-only Flow oracle fixture");
+  3119	            let documents = root.get("documents").and_then(serde_json::Value::as_object).expect("oracle document ledger");
+  3120	            root.get("operations")
+  3121	                .and_then(serde_json::Value::as_array)
+  3122	                .expect("oracle operations")
+  3123	                .iter()
+  3124	                .map(|operation| {
+  3125	                    let feature = operation.get("feature").and_then(serde_json::Value::as_str).expect("oracle feature").to_owned();
+  3126	                    let expected = operation.get("expected").expect("oracle expected result");
+  3127	                    let document_name = expected.get("document").and_then(serde_json::Value::as_str).expect("oracle expected document");
+  3128	                    let page = flow_oracle_expected_page(expected.get("page").expect("oracle expected page"));
+  3129	                    let history = flow_oracle_expected_history(expected.get("history").expect("oracle expected history"));
+  3130	                    let handback = expected.get("handback").expect("oracle expected handback");
+  3131	                    let versions = flow_oracle_usize(handback, "documentVersions");
+  3132	                    let active = flow_oracle_usize(handback, "activeDocumentVersion");
+  3133	                    let fingerprint_name = handback.get("fingerprint").and_then(serde_json::Value::as_str).expect("oracle fingerprint reference");
+  3134	                    let fingerprint = root.get("terminalFingerprints").and_then(|value| value.get(fingerprint_name)).expect("oracle terminal fingerprint");
+  3135	                    FlowOracleCase {
+  3136	                        feature,
+  3137	                        document: flow_oracle_canonical_json(documents.get(document_name).expect("oracle document reference")),
+  3138	                        handback: flow_oracle_expected_handback(fingerprint, &page, &history, versions, active),
+  3139	                        page,
+  3140	                        history,
+  3141	                    }
+  3142	                })
+  3143	                .collect()
+  3144	        }
+  3145	    }
+  3146	
+  3147	    fn flow_oracle_collection_len(document: &serde_json::Value, key: &str) -> usize {
+  3148	        document.get(key).and_then(serde_json::Value::as_array).expect("oracle collection").len()
+  3149	    }
+  3150	
+  3288	    }
+  3289	
+  3290	    fn flow_oracle_expected_history(value: &serde_json::Value) -> FlowOracleHistory {
+  3291	        FlowOracleHistory { undo_owners: flow_oracle_usize(value, "undoOwners"), redo_owners: flow_oracle_usize(value, "redoOwners") }
+  3292	    }
+  3293	
+  3294	    fn flow_oracle_expected_handback(template: &serde_json::Value, page: &FlowOraclePage, history: &FlowOracleHistory, document_versions: usize, active_document_version: usize) -> FlowOracleHandback {
+  3295	        let credits = template.get("credits").expect("oracle terminal credits");
+  3296	        FlowOracleHandback {
+  3297	            credits: [
+  3298	                flow_oracle_usize(credits, "operations"),
+  3299	                flow_oracle_usize(credits, "pages"),
+  3300	                flow_oracle_usize(credits, "items"),
+  3301	                flow_oracle_usize(credits, "bytes"),
+  3302	                flow_oracle_usize(credits, "outputs"),
+  3303	                flow_oracle_usize(credits, "events"),
+  3304	                flow_oracle_usize(credits, "controls"),
+  3305	            ],
+  3306	            active_operations: flow_oracle_usize(template, "activeOperations"),
+  3307	            leased_pages: flow_oracle_usize(template, "leasedPages"),
+  3308	            undo_owners: history.undo_owners,
+  3309	            redo_owners: history.redo_owners,
+  3310	            retired_action_owners: flow_oracle_usize(template, "retiredActionOwners"),
+  3311	            retired_surface_owners: flow_oracle_usize(template, "retiredSurfaceOwners"),
+  3312	            revision: page.revision,
+  3313	            parent_revision: page.parent_revision,
+  3314	            document_generation: page.document_generation,
+  3315	            document_digest: page.semantic_digest,
+  3316	            document_versions,
+  3317	            active_document_version,
+  3318	            edit_owner: template.get("editOwner").and_then(serde_json::Value::as_u64),
+  3319	            document_retained: template.get("documentRetained").and_then(serde_json::Value::as_bool).expect("oracle document retained"),
+  3320	            closing: template.get("closing").and_then(serde_json::Value::as_bool).expect("oracle closing"),
+  3321	        }
+  3322	    }
+  3323	
+  3324	    fn flow_hostile_expected_fingerprint(lifecycle: &serde_json::Value, name: &str) -> FlowOracleHandback {
+  3325	        let value = lifecycle.get("fingerprints").and_then(|values| values.get(name)).expect("hostile fingerprint reference");
+  3326	        let credits = value.get("credits").expect("hostile fingerprint credits");
+  3327	        FlowOracleHandback {
+  3328	            credits: [
+  3329	                flow_oracle_usize(credits, "operations"),
+  3330	                flow_oracle_usize(credits, "pages"),
+  3331	                flow_oracle_usize(credits, "items"),
+  3332	                flow_oracle_usize(credits, "bytes"),
+  3333	                flow_oracle_usize(credits, "outputs"),
+  3334	                flow_oracle_usize(credits, "events"),
+  3335	                flow_oracle_usize(credits, "controls"),
+  3336	            ],
+  3337	            active_operations: flow_oracle_usize(value, "activeOperations"),
+  3338	            leased_pages: flow_oracle_usize(value, "leasedPages"),
+  3339	            undo_owners: flow_oracle_usize(value, "undoOwners"),
+  3340	            redo_owners: flow_oracle_usize(value, "redoOwners"),
+  3341	            retired_action_owners: flow_oracle_usize(value, "retiredActionOwners"),
+  3342	            retired_surface_owners: flow_oracle_usize(value, "retiredSurfaceOwners"),
+  3343	            revision: flow_oracle_u64(value, "revision"),
+  3344	            parent_revision: flow_oracle_u64(value, "parentRevision"),
+  3345	            document_generation: flow_oracle_u64(value, "documentGeneration"),
+  3346	            document_digest: flow_oracle_u64(value, "documentDigest"),
+  3347	            document_versions: flow_oracle_usize(value, "documentVersions"),
+  3348	            active_document_version: flow_oracle_usize(value, "activeDocumentVersion"),
+  3349	            edit_owner: value.get("editOwner").and_then(serde_json::Value::as_u64),
+  3350	            document_retained: value.get("documentRetained").and_then(serde_json::Value::as_bool).expect("hostile document retained"),
+  3351	            closing: value.get("closing").and_then(serde_json::Value::as_bool).expect("hostile closing"),
+  3352	        }
+  3353	    }
+  3354	
+  3355	    fn flow_hostile_resolve_document<'a>(lifecycle: &'a serde_json::Value, oracle: &'a serde_json::Value, reference: &serde_json::Value) -> &'a serde_json::Value {
+  3356	        let fixture = reference.get("fixture").and_then(serde_json::Value::as_str).expect("hostile document fixture");
+  3357	        let path = reference.get("path").and_then(serde_json::Value::as_str).expect("hostile document path");
+  3358	        match (fixture, path) {
+  3359	            ("oracle", "initial") => oracle.get("initial").expect("oracle initial document"),
+  3360	            ("lifecycle", "protocolDocuments.replacementBoundary") => lifecycle.get("protocolDocuments").and_then(|value| value.get("replacementBoundary")).expect("replacement boundary document"),
+  3361	            _ => panic!("unsupported hostile document reference {fixture}:{path}"),
+  3362	        }
+  3363	    }
+  3364	
+  3365	    fn flow_hostile_expected_state(lifecycle: &serde_json::Value, oracle: &serde_json::Value, name: &str) -> FlowHostileState {
+  3366	        let state = lifecycle.get("expectedStates").and_then(|states| states.get(name)).expect("hostile expected state reference");
+  3367	        let document = flow_hostile_resolve_document(lifecycle, oracle, state.get("document").expect("hostile expected document"));
+  3368	        assert!(state.get("page").is_some_and(serde_json::Value::is_null), "hostile state page must be explicitly null");
+  3369	        let history = flow_oracle_expected_history(state.get("history").expect("hostile expected history"));
+  3370	        let fingerprint_name = state.get("handback").and_then(|value| value.get("fingerprint")).and_then(serde_json::Value::as_str).expect("hostile fingerprint name");
+  3371	        FlowHostileState { document: flow_oracle_canonical_json(document), page: None, history, handback: flow_hostile_expected_fingerprint(lifecycle, fingerprint_name) }
+  3372	    }
+  3373	
+  3374	    fn flow_hostile_actual_fingerprint(fingerprint: FlowVcsResourceFingerprint) -> FlowOracleHandback {
+  3375	        FlowOracleHandback {
+  3376	            credits: [fingerprint.credits.operations, fingerprint.credits.pages, fingerprint.credits.items, fingerprint.credits.bytes, fingerprint.credits.outputs, fingerprint.credits.events, fingerprint.credits.controls],
+  3377	            active_operations: fingerprint.active_operations,
+  3378	            leased_pages: fingerprint.leased_pages,
+  3379	            undo_owners: fingerprint.undo_owners,
+  3380	            redo_owners: fingerprint.redo_owners,
+  3381	            retired_action_owners: fingerprint.retired_action_owners,
+  3382	            retired_surface_owners: fingerprint.retired_surface_owners,
+  3383	            revision: fingerprint.revision,
+  3384	            parent_revision: fingerprint.parent_revision,
+  3385	            document_generation: fingerprint.document_generation,
+  3386	            document_digest: fingerprint.document_digest,
+  3387	            document_versions: fingerprint.document_versions,
+  3388	            active_document_version: fingerprint.active_document_version,
+  3389	            edit_owner: fingerprint.edit_owner,
+  3390	            document_retained: fingerprint.document_retained,
+  3391	            closing: fingerprint.closing,
+  3392	        }
+  3393	    }
+  3394	
+  3395	    fn flow_hostile_actual_state(session: &FlowRetainedVcs) -> FlowHostileState {
+  3396	        let fingerprint = session.resource_fingerprint();
+  3397	        let document = serde_json::to_value(session.document.as_ref().expect("hostile retained document").fixture()).expect("hostile actual document");
+  3398	        FlowHostileState {
+  3399	            document: flow_oracle_canonical_json(&document),
+  3400	            page: None,
+  3401	            history: FlowOracleHistory { undo_owners: fingerprint.undo_owners, redo_owners: fingerprint.redo_owners },
+  3402	            handback: flow_hostile_actual_fingerprint(fingerprint),
+  3403	        }
+  3404	    }
+  3405	
+  3406	    fn flow_hostile_grant(value: &serde_json::Value) -> FlowVcsGrant {
+  3407	        FlowVcsGrant {
+  3408	            items: flow_oracle_usize(value, "items"),
+  3409	            bytes: flow_oracle_usize(value, "bytes"),
+  3410	            outputs: flow_oracle_usize(value, "outputs"),
+  3411	            events: flow_oracle_usize(value, "events"),
+  3412	            controls: flow_oracle_usize(value, "controls"),
+  3413	            fuel: u32::try_from(flow_oracle_u64(value, "fuel")).expect("hostile grant fuel"),
+  3414	            now_milliseconds: flow_oracle_u64(value, "nowMilliseconds"),
+  3415	            deadline_milliseconds: flow_oracle_u64(value, "deadlineMilliseconds"),
+  3416	            interrupted: value.get("interrupted").and_then(serde_json::Value::as_bool).expect("hostile grant interruption"),
+  3417	        }
+  3418	    }
+  3419	
+  3420	    fn flow_hostile_fault_name(fault: FlowVcsFault) -> &'static str {
+  3421	        match fault {
+  3422	            FlowVcsFault::Limit => "limit",
+  3423	            FlowVcsFault::SourceExhausted => "sourceExhausted",
+  3424	            FlowVcsFault::WrongHandle => "wrongHandle",
+  3425	            FlowVcsFault::StaleHandle => "staleHandle",
+  3426	            FlowVcsFault::StaleAuthority => "staleAuthority",
+  3427	            FlowVcsFault::DuplicateControl => "duplicateControl",
+  3428	            FlowVcsFault::InsufficientGrant => "insufficientGrant",
+  3429	            FlowVcsFault::InvalidMutation => "invalidMutation",
+  3430	            _ => "unexpectedFault",
+  3431	        }
+  3432	    }
+  3433	
+  3434	    #[derive(Clone)]
+  3435	    enum FlowHostilePath {
+  3436	        Key(String),
+  3437	        Index(usize),
+  3438	    }
+  3439	
+  3440	    fn flow_hostile_fixture_digest(value: &serde_json::Value) -> u64 {
+  3441	        let mut digest = 14_695_981_039_346_656_037u64;
+  3442	        for byte in flow_oracle_canonical_json(value).as_bytes() {
+  3443	            digest ^= u64::from(*byte);
+  3444	            digest = digest.wrapping_mul(1_099_511_628_211);
+  3445	        }
+  3446	        digest
+  3447	    }
+  3448	
+  3449	    fn flow_hostile_scalar_paths(value: &serde_json::Value, path: &mut Vec<FlowHostilePath>, output: &mut Vec<Vec<FlowHostilePath>>) {
+  3450	        match value {
+  3451	            serde_json::Value::Array(values) => {
+  3452	                for (index, value) in values.iter().enumerate() {
+  3453	                    path.push(FlowHostilePath::Index(index));
+  3454	                    flow_hostile_scalar_paths(value, path, output);
+  3455	                    path.pop();
+  3456	                }
+  3457	            }
+  3458	            serde_json::Value::Object(values) => {
+  3459	                for (key, value) in values {
+  3460	                    path.push(FlowHostilePath::Key(key.clone()));
+  3461	                    flow_hostile_scalar_paths(value, path, output);
+  3462	                    path.pop();
+  3463	                }
+  3464	            }
+  3465	            _ => output.push(path.clone()),
+  3466	        }
+  3467	    }
+  3468	
+  3469	    fn flow_hostile_mutate_scalar(value: &mut serde_json::Value, path: &[FlowHostilePath]) {
+  3470	        let mut target = value;
+  3471	        for component in path {
+  3472	            target = match component {
+  3473	                FlowHostilePath::Key(key) => target.get_mut(key).expect("hostile mutation key"),
+  3474	                FlowHostilePath::Index(index) => target.get_mut(*index).expect("hostile mutation index"),
+  3475	            };
+  3476	        }
+  3477	        *target = match target {
+  3478	            serde_json::Value::Null => serde_json::Value::Bool(true),
+  3479	            serde_json::Value::Bool(value) => serde_json::Value::Bool(!*value),
+  3480	            serde_json::Value::Number(value) => serde_json::json!(value.as_f64().expect("hostile mutation number") + 1.0),
+  3481	            serde_json::Value::String(value) => serde_json::Value::String(format!("{value}!")),
+  3482	            _ => unreachable!("hostile mutation targets scalars"),
+  3483	        };
+  3484	    }
+  3485	
+  3486	    fn flow_hostile_assert_every_scalar_is_signed(value: &serde_json::Value, expected: u64) {
+  3487	        assert_eq!(flow_hostile_fixture_digest(value), expected);
+  3488	        let mut paths = Vec::new();
+  3489	        flow_hostile_scalar_paths(value, &mut Vec::new(), &mut paths);
+  3490	        assert!(!paths.is_empty());
+  3491	        for path in paths {
+  3492	            let mut mutation = value.clone();
+  3493	            flow_hostile_mutate_scalar(&mut mutation, &path);
+  3494	            assert_ne!(flow_hostile_fixture_digest(&mutation), expected, "every hostile vector scalar must affect its fixture signature");
+  3495	        }
+  3496	    }
+  3497	
+  3498	    fn flow_oracle_actual_case(feature: &str, session: &FlowRetainedVcs, page: FlowVcsPage) -> FlowOracleCase {
+  3499	        let fingerprint = session.resource_fingerprint();
+  3500	        let document = serde_json::to_value(session.document.as_ref().expect("oracle retained document").fixture()).expect("oracle actual document");
+  3501	        FlowOracleCase {
+  3502	            feature: feature.to_owned(),
+  3503	            document: flow_oracle_canonical_json(&document),
+  3504	            page: FlowOraclePage {
+  3505	                sequence: page.sequence,
+  3506	                operation: page.operation,
+  3507	                session_generation: page.session_generation,
+  3508	                revision: page.revision,
+  3509	                parent_revision: page.parent_revision,
+  3510	                document_generation: page.document_generation,
+  3600	
+  3601	    fn flow_hostile_session(lifecycle: &serde_json::Value, oracle: &serde_json::Value, protocol: &serde_json::Value) -> FlowRetainedVcs {
+  3602	        let document_reference = protocol.get("document").and_then(serde_json::Value::as_str).expect("hostile protocol document");
+  3603	        assert_eq!(document_reference, "oracle.initial");
+  3604	        let document = serde_json::from_value::<FlowFixture>(oracle.get("initial").expect("hostile oracle initial").clone()).expect("hostile initial Flow fixture");
+  3605	        let session = protocol.get("session").expect("hostile protocol session");
+  3606	        let _ = lifecycle;
+  3607	        FlowRetainedVcs::new(document, u32::try_from(flow_oracle_u64(session, "generation")).expect("hostile session generation"), flow_oracle_u64(session, "revision"), flow_oracle_u64(session, "parentRevision"))
+  3608	    }
+  3609	
+  3610	    fn flow_hostile_apply_setup(session: &mut FlowRetainedVcs, setup: &serde_json::Value) {
+  3611	        let undo_owners = setup.get("undoOwners").and_then(serde_json::Value::as_u64).unwrap_or(0);
+  3612	        let redo_owners = setup.get("redoOwners").and_then(serde_json::Value::as_u64).unwrap_or(0);
+  3613	        for _ in 0..undo_owners {
+  3614	            session.undo.push(FlowVcsAction::Checkpoint).expect("hostile undo setup");
+  3615	        }
+  3616	        for _ in 0..redo_owners {
+  3617	            session.redo.push(FlowVcsAction::Checkpoint).expect("hostile redo setup");
+  3618	        }
+  3619	        if let Some(surface) = setup.get("surface") {
+  3620	            session.bind_surface(flow_oracle_u64(surface, "surface"), flow_oracle_u64(surface, "host"), flow_oracle_u64(surface, "generation")).expect("hostile surface setup");
+  3621	        }
+  3622	    }
+  3623	
+  3624	    fn flow_hostile_authority(session: &FlowRetainedVcs, operation: &serde_json::Value) -> FlowVcsAuthority {
+  3625	        operation.get("authority").map_or_else(
+  3626	            || session.authority(),
+  3627	            |value| FlowVcsAuthority {
+  3628	                session_generation: u32::try_from(flow_oracle_u64(value, "sessionGeneration")).expect("hostile authority session"),
+  3629	                base_revision: flow_oracle_u64(value, "baseRevision"),
+  3630	                parent_revision: flow_oracle_u64(value, "parentRevision"),
+  3631	            },
+  3632	        )
+  3633	    }
+  3634	
+  3635	    fn flow_hostile_begin_operation(session: &mut FlowRetainedVcs, lifecycle: &serde_json::Value, oracle: &serde_json::Value, operation: &serde_json::Value) -> FlowVcsHandle {
+  3636	        let feature = operation.get("feature").and_then(serde_json::Value::as_str).expect("hostile feature");
+  3637	        let authority = flow_hostile_authority(session, operation);
+  3638	        match feature {
+  3639	            "checkpoint" => session.begin_checkpoint(authority).expect("hostile checkpoint"),
+  3640	            "undo" => session.begin_undo(authority).expect("hostile undo"),
+  3641	            "setLayout" => {
+  3642	                let input = operation.get("input").expect("hostile layout input");
+  3643	                let layout = input.get("layout").expect("hostile layout value");
+  3644	                let mut source = FlowVcsSource::new(FlowLayoutEntry {
+  3645	                    id: input.get("id").and_then(serde_json::Value::as_str).expect("hostile layout id").to_owned(),
+  3646	                    layout: Some(WidgetLayout { x: layout.get("x").and_then(serde_json::Value::as_f64).expect("hostile layout x"), y: layout.get("y").and_then(serde_json::Value::as_f64).expect("hostile layout y") }),
+  3647	                });
+  3648	                session.begin_set_layout(authority, &mut source).expect("hostile set layout")
+  3649	            }
+  3650	            "addWidget" => {
+  3651	                let input = operation.get("input").expect("hostile widget input");
+  3652	                let mut source = FlowVcsSource::new(serde_json::from_value::<Widget>(input.get("widget").expect("hostile widget").clone()).expect("hostile widget input"));
+  3653	                session.begin_add_widget(authority, flow_oracle_usize(input, "index"), &mut source).expect("hostile add widget")
+  3654	            }
+  3655	            "removeWidget" => {
+  3656	                let input = operation.get("input").expect("hostile remove input");
+  3657	                let mut source = FlowVcsSource::new(input.get("id").and_then(serde_json::Value::as_str).expect("hostile remove id").to_owned());
+  3658	                session.begin_remove_widget(authority, &mut source).expect("hostile remove widget")
+  3659	            }
+  3660	            "moveWidget" => {
+  3661	                let input = operation.get("input").expect("hostile move input");
+  3662	                let mut source = FlowVcsSource::new(input.get("id").and_then(serde_json::Value::as_str).expect("hostile move id").to_owned());
+  3663	                session.begin_move_widget(authority, flow_oracle_usize(input, "index"), &mut source).expect("hostile move widget")
+  3664	            }
+  3665	            "replaceDocument" => {
+  3666	                let reference = operation.get("input").and_then(|value| value.get("document")).expect("hostile replacement reference");
+  3667	                let document = flow_hostile_resolve_document(lifecycle, oracle, reference);
+  3668	                let mut source = FlowVcsSource::new(serde_json::from_value::<FlowFixture>(document.clone()).expect("hostile replacement document"));
+  3669	                session.begin_replace_document(authority, &mut source).expect("hostile replace document")
+  3670	            }
+  3671	            _ => panic!("unsupported hostile operation {feature}"),
+  3672	        }
+  3673	    }
+  3674	
+  3675	    fn flow_hostile_cursor_matches(session: &FlowRetainedVcs, handle: FlowVcsHandle, target: &serde_json::Value) -> bool {
+  3676	        let operation = session.operations[usize::from(handle.slot)].as_ref().expect("hostile operation slot");
+  3677	        let cursor = &operation.cursor;
+  3678	        if let Some(phase) = target.get("phase").and_then(serde_json::Value::as_str) {
+  3679	            let actual = match cursor.phase {
+  3680	                FlowVcsCursorPhase::LoadHistory => "LoadHistory",
+  3681	                FlowVcsCursorPhase::Scan => "Scan",
+  3682	                FlowVcsCursorPhase::Mutate => "Mutate",
+  3683	                FlowVcsCursorPhase::Shift => "Shift",
+  3684	                FlowVcsCursorPhase::ReserveReplacement => "ReserveReplacement",
+  3685	                FlowVcsCursorPhase::ReplaceSchema => "ReplaceSchema",
+  3686	                FlowVcsCursorPhase::ReplaceCameraX => "ReplaceCameraX",
+  3687	                FlowVcsCursorPhase::ReplaceCameraY => "ReplaceCameraY",
+  3688	                FlowVcsCursorPhase::ReplaceCameraZoom => "ReplaceCameraZoom",
+  3689	                FlowVcsCursorPhase::ReplaceWidgets => "ReplaceWidgets",
+  3690	                FlowVcsCursorPhase::ReverseWidgets => "ReverseWidgets",
+  3691	                FlowVcsCursorPhase::ReplaceSynapses => "ReplaceSynapses",
+  3692	                FlowVcsCursorPhase::ReverseSynapses => "ReverseSynapses",
+  3693	                FlowVcsCursorPhase::ReplaceLayout => "ReplaceLayout",
+  3694	                FlowVcsCursorPhase::RetireRedo => "RetireRedo",
+  3695	                FlowVcsCursorPhase::TransferHistory => "TransferHistory",
+  3696	                FlowVcsCursorPhase::TransferSurface => "TransferSurface",
+  3697	                FlowVcsCursorPhase::PublishVisibility => "PublishVisibility",
+  3698	                FlowVcsCursorPhase::PublishPage => "PublishPage",
+  3699	                FlowVcsCursorPhase::Rollback => "Rollback",
+  3700	            };
+  3701	            if actual != phase {
+  3702	                return false;
+  3703	            }
+  3704	        }
+  3705	        if let Some(kind) = target.get("kind").and_then(serde_json::Value::as_str) {
+  3706	            let actual = match cursor.kind {
+  3707	                FlowVcsCursorKind::None => "None",
+  3708	                FlowVcsCursorKind::InsertWidget => "InsertWidget",
+  3709	                FlowVcsCursorKind::RemoveWidget => "RemoveWidget",
+  3710	                FlowVcsCursorKind::MoveWidget => "MoveWidget",
+  3711	                FlowVcsCursorKind::PatchWidget => "PatchWidget",
+  3712	                FlowVcsCursorKind::InsertSynapse => "InsertSynapse",
+  3713	                FlowVcsCursorKind::RemoveSynapse => "RemoveSynapse",
+  3714	                FlowVcsCursorKind::MoveSynapse => "MoveSynapse",
+  3715	                FlowVcsCursorKind::PatchSynapse => "PatchSynapse",
+  3716	                FlowVcsCursorKind::Layout => "Layout",
+  3717	                FlowVcsCursorKind::ReplaceDocument => "ReplaceDocument",
+  3718	            };
+  3719	            if actual != kind {
+  3720	                return false;
+  3721	            }
+  3722	        }
+  3723	        if target.get("scan").is_some_and(|value| value.as_u64() != u64::try_from(cursor.scan).ok())
+  3724	            || target.get("current").is_some_and(|value| value.as_u64() != u64::try_from(cursor.current).ok())
+  3725	            || target.get("redoRetired").is_some_and(|value| value.as_u64() != u64::try_from(cursor.redo_retired).ok())
+  3726	            || target.get("historyLoaded").is_some_and(|value| value.as_bool() != Some(cursor.history_loaded))
+  3727	            || target.get("historyTransferred").is_some_and(|value| value.as_bool() != Some(cursor.history_transferred))
+  3728	            || target.get("surfaceTransferred").is_some_and(|value| value.as_bool() != Some(cursor.surface_transferred))
+  3729	            || target.get("visibilityPublished").is_some_and(|value| value.as_bool() != Some(cursor.visibility_published))
+  3730	            || target.get("mutated").is_some_and(|value| value.as_bool() != Some(cursor.mutated))
+  3731	        {
+  3732	            return false;
+  3733	        }
+  3734	        let candidate = session.document.as_ref().and_then(|document| document.versions.get(cursor.target));
+  3735	        if target.get("candidateWidgets").is_some_and(|value| value.as_u64() != candidate.and_then(|document| u64::try_from(document.widgets.len()).ok()))
+  3736	            || target.get("candidateSynapses").is_some_and(|value| value.as_u64() != candidate.and_then(|document| u64::try_from(document.synapses.len()).ok()))
+  3737	            || target.get("candidateLayout").is_some_and(|value| value.as_u64() != candidate.and_then(|document| u64::try_from(document.layout.len()).ok()))
+  3738	        {
+  3739	            return false;
+  3740	        }
+  3741	        true
+  3742	    }
+  3743	
+  3744	    fn flow_hostile_close_and_drain(session: &mut FlowRetainedVcs, handle: FlowVcsHandle, grant: FlowVcsGrant) {
+  3745	        while !session.close_operation_step(handle, grant).expect("hostile operation close") {}
+  3746	        while session.resource_fingerprint().retired_action_owners > 0 || session.resource_fingerprint().retired_surface_owners > 0 {
+  3747	            session.close_retired_step(grant).expect("hostile retirement close");
+  3748	        }
+  3749	    }
+  3750	
+  3751	    fn flow_hostile_expected_handle(value: &serde_json::Value) -> FlowVcsHandle {
+  3752	        FlowVcsHandle {
+  3753	            operation: flow_oracle_u64(value, "operation"),
+  3754	            slot: u8::try_from(flow_oracle_u64(value, "slot")).expect("hostile handle slot"),
+  3755	            generation: u32::try_from(flow_oracle_u64(value, "generation")).expect("hostile handle generation"),
+  3756	        }
+  3757	    }
+  3758	
+  3759	    fn retained_grant() -> FlowVcsGrant {
+  3760	        FlowVcsGrant { items: 1, bytes: 256, outputs: 1, events: 1, controls: 1, fuel: 1, now_milliseconds: 1, deadline_milliseconds: 8, interrupted: false }
+  3761	    }
+  3762	
+  3763	    fn rejected_control_grants() -> [FlowVcsGrant; 4] {
+  3764	        let mut zero_fuel = retained_grant();
+  3765	        zero_fuel.fuel = 0;
+  3766	        let mut interrupted = retained_grant();
+  3767	        interrupted.interrupted = true;
+  3768	        let mut expired = retained_grant();
+  3769	        expired.deadline_milliseconds = expired.now_milliseconds;
+  3770	        let mut over_window = retained_grant();
+  3771	        over_window.deadline_milliseconds = over_window.now_milliseconds + FLOW_VCS_DEADLINE_MILLISECONDS + 1;
+  3772	        [zero_fuel, interrupted, expired, over_window]
+  3773	    }
+  3774	
+  3775	    fn retained_fixture() -> FlowFixture {
+  3776	        let mut fixture = FlowFixture::default();
+  3777	        fixture.widgets.push(Widget::InputNote { id: "source".into(), text: "retained".into() });
+  3778	        fixture.widgets.push(Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::from(["value".into()]) });
+  3779	        fixture.synapses.push(SynapseSpec { id: "source-preview".into(), from: "source".into(), to: "preview".into(), from_port: "text".into(), to_port: String::new() });
+  3780	        fixture.layout.insert("source".into(), WidgetLayout { x: 1.0, y: 2.0 });
+  3781	        fixture.layout.insert("preview".into(), WidgetLayout { x: 4.0, y: 5.0 });
+  3782	        fixture
+  3783	    }
+  3784	
+  3785	    fn drive_to_preview(session: &mut FlowRetainedVcs, handle: FlowVcsHandle) -> FlowVcsPoll {
+  3840	    }
+  3841	
+  3842	    #[test]
+  3843	    fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_oracle_after_ack_close() {
+  3844	        let source = include_str!("🪞️fixtures/🔮️oracle.json");
+  3845	        let expected = SerdeJsonFlowOracle.expected_operations(source);
+  3846	        let independently_evaluated = SerdeJsonFlowOracle.evaluate_operations(source);
+  3847	        assert_eq!(independently_evaluated, expected);
+  3848	        assert_eq!(expected.len(), FLOW_VCS_FEATURES.len());
+  3849	
+  3850	        let root: serde_json::Value = serde_json::from_str(source).expect("retained oracle fixture");
+  3851	        let initial = serde_json::from_value::<FlowFixture>(root.get("initial").expect("oracle initial document").clone()).expect("oracle initial Flow fixture");
+  3852	        let operations = root.get("operations").and_then(serde_json::Value::as_array).expect("oracle operation ledger");
+  3853	        let mut session = FlowRetainedVcs::new(initial, 77, 1, 0);
+  3854	        let mut actual = Vec::new();
+  3855	        for (operation, expected_feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
+  3856	            let feature = operation.get("feature").and_then(serde_json::Value::as_str).expect("oracle feature");
+  3857	            assert_eq!(feature, expected_feature);
+  3858	            let handle = flow_oracle_begin_operation(&mut session, operation);
+  3859	            let page = publish_and_close(&mut session, handle);
+  3860	            actual.push(flow_oracle_actual_case(feature, &session, page));
+  3861	        }
+  3862	        assert_eq!(actual, independently_evaluated);
+  3863	    }
+  3864	
+  3865	    #[test]
+  3866	    fn retained_vcs_language_neutral_vector_signatures_detect_every_field_and_value_mutation() {
+  3867	        let oracle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/🔮️oracle.json")).expect("oracle fixture");
+  3868	        let lifecycle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/📒️lifecycle.json")).expect("lifecycle fixture");
+  3869	        let owners: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/🗂️owners.json")).expect("owner fixture");
+  3870	        let operations = oracle.get("operations").and_then(serde_json::Value::as_array).expect("operation ledger");
+  3871	        assert_eq!(operations.len(), FLOW_VCS_FEATURES.len());
+  3872	        for (operation, feature) in operations.iter().zip(FLOW_VCS_FEATURES) {
+  3873	            assert_eq!(operation.get("feature").and_then(serde_json::Value::as_str), Some(feature));
+  3874	            let expected = operation.get("expected").expect("expected operation ledger");
+  3875	            assert!(operation.get("input").is_some());
+  3876	            assert!(expected.get("document").is_some());
+  3877	            assert!(expected.get("page").is_some());
+  3878	            assert!(expected.get("history").is_some());
+  3879	            assert!(expected.get("handback").is_some());
+  3880	        }
+  3881	        let signatures = lifecycle.get("hostileVectorDigests").expect("hostile vector signatures");
+  3882	        for name in ["byteVectors", "authorityVectors", "malformedVectors", "grantVectors", "transferControlLedger"] {
+  3883	            let values = lifecycle.get(name).and_then(serde_json::Value::as_array).expect("hostile vector collection");
+  3884	            let expected = signatures.get(name).and_then(serde_json::Value::as_array).expect("hostile vector digest collection");
+  3885	            assert_eq!(values.len(), expected.len());
+  3886	            for (value, digest) in values.iter().zip(expected) {
+  3887	                flow_hostile_assert_every_scalar_is_signed(value, digest.as_str().and_then(|value| value.parse().ok()).expect("hostile vector digest"));
+  3888	            }
+  3889	        }
+  3890	        for name in ["fingerprints", "expectedStates", "protocolDocuments"] {
+  3891	            let values = lifecycle.get(name).and_then(serde_json::Value::as_object).expect("hostile vector map");
+  3892	            let expected = signatures.get(name).and_then(serde_json::Value::as_object).expect("hostile vector digest map");
+  3893	            assert_eq!(values.len(), expected.len());
+  3894	            for (key, value) in values {
+  3895	                flow_hostile_assert_every_scalar_is_signed(value, expected.get(key).and_then(serde_json::Value::as_str).and_then(|value| value.parse().ok()).expect("hostile map digest"));
+  3896	            }
+  3897	        }
+  3898	        assert_eq!(lifecycle.get("byteVectors").and_then(serde_json::Value::as_array).expect("byte vectors").len(), 3);
+  3899	        assert_eq!(lifecycle.get("authorityVectors").and_then(serde_json::Value::as_array).expect("authority vectors").len(), 4);
+  3900	        assert_eq!(lifecycle.get("malformedVectors").and_then(serde_json::Value::as_array).expect("malformed vectors").len(), 3);
+  3901	        assert_eq!(lifecycle.get("grantVectors").and_then(serde_json::Value::as_array).expect("grant vectors").len(), 5);
+  3902	        let transfers = lifecycle.get("transferControlLedger").and_then(serde_json::Value::as_array).expect("transfer ledgers");
+  3903	        assert_eq!(transfers.len(), 24);
+  3904	        assert!(transfers.iter().all(|value| value.get("controls").and_then(serde_json::Value::as_array).is_some_and(|controls| controls.len() == 2)));
+  3905	        assert_eq!(owners.get("fixtureLedgers").and_then(|value| value.get("hostileOmissionLaws")).and_then(serde_json::Value::as_array).expect("hostile omission laws").len(), 12);
+  3906	
+  3907	        let source = include_str!("🦀️component.rs");
+  3908	        for required in ["evaluate_operations", "flow_oracle_apply_operation", "flow_oracle_actual_case(feature, &session, page)", "flow_hostile_expected_state", "flow_hostile_actual_state", "flow_hostile_assert_every_scalar_is_signed"] {
+  3909	            assert!(source.contains(required), "oracle extraction source law lacks {required}");
+  3910	            assert!(!source.replace(required, "").contains(required), "hostile omission must fail the extraction gate for {required}");
+  3911	        }
+  3912	        let forbidden_literals = [["semantic: \"widget", "Count+1\""].concat(), ["semantic: \"inverse", "Published\""].concat(), ["feature_", "cases("].concat()];
+  3913	        for forbidden in forbidden_literals {
+  3914	            assert!(!source.contains(&forbidden), "literal oracle label remains reachable: {forbidden}");
+  3915	        }
+  3916	    }
+  3917	
+  3918	    #[test]
+  3919	    fn retained_vcs_fixture_byte_vectors_execute_exact_multibyte_max_and_max_plus_one_results() {
+  3920	        let oracle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/🔮️oracle.json")).expect("oracle fixture");
+  3921	        let lifecycle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/📒️lifecycle.json")).expect("lifecycle fixture");
+  3922	        for vector in lifecycle.get("byteVectors").and_then(serde_json::Value::as_array).expect("byte vectors") {
+  3923	            let protocol = vector.get("protocol").expect("byte protocol");
+  3924	            let input = protocol.get("operation").expect("byte operation");
+  3925	            assert_eq!(input.get("feature").and_then(serde_json::Value::as_str), Some("removeWidget"));
+  3926	            let value = match input.get("encoding").and_then(serde_json::Value::as_str).expect("byte encoding") {
+  3927	                "literal" => input.get("value").and_then(serde_json::Value::as_str).expect("byte literal").to_owned(),
+  3928	                "repeatUtf8" => input.get("unit").and_then(serde_json::Value::as_str).expect("byte unit").repeat(flow_oracle_usize(input, "repetitions")),
+  3929	                encoding => panic!("unsupported byte encoding {encoding}"),
+  3930	            };
+  3931	            assert_eq!(value.chars().count(), flow_oracle_usize(input, "characterCount"));
+  3932	            assert_eq!(value.len(), flow_oracle_usize(input, "byteLength"));
+  3933	            let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
+  3934	            let mut source = FlowVcsSource::new(value);
+  3935	            let authority = flow_hostile_authority(&session, input);
+  3936	            let result = session.begin_remove_widget(authority, &mut source);
+  3937	            let expected = vector.get("expected").expect("byte expected result");
+  3938	            let expected_result = expected.get("result").and_then(serde_json::Value::as_str).expect("byte result");
+  3939	            match result {
+  3940	                Ok(handle) => {
+  3941	                    assert_eq!(expected_result, "accepted");
+  3942	                    assert_eq!(handle, flow_hostile_expected_handle(expected.get("expectedHandle").expect("byte expected handle")));
+  3943	                    assert_eq!(source.retained(), expected.get("sourceRetained").and_then(serde_json::Value::as_bool).expect("byte retained result"));
+  3944	                    assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("admissionState").and_then(serde_json::Value::as_str).expect("byte admission state")));
+  3945	                    let grant_name = protocol.get("cleanup").and_then(|value| value.get("grant")).and_then(serde_json::Value::as_str).expect("byte cleanup grant");
+  3946	                    let grant = flow_hostile_named_grant(&lifecycle, grant_name);
+  3947	                    let cleanup = protocol.get("cleanup").and_then(|value| value.get("control")).and_then(serde_json::Value::as_str).expect("byte cleanup control");
+  3948	                    assert_eq!(cleanup, "cancel");
+  3949	                    session.cancel(handle, grant).expect("byte vector cleanup cancel");
+  3950	                    flow_hostile_close_and_drain(&mut session, handle, grant);
+  3951	                }
+  3952	                Err(fault) => {
+  3953	                    assert_eq!(flow_hostile_fault_name(fault), expected_result);
+  3954	                    assert!(expected.get("expectedHandle").is_some_and(serde_json::Value::is_null));
+  3955	                    assert_eq!(source.retained(), expected.get("sourceRetained").and_then(serde_json::Value::as_bool).expect("byte retained result"));
+  3956	                }
+  3957	            }
+  3958	            assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(serde_json::Value::as_str).expect("byte final state")));
+  3959	        }
+  3960	    }
+  3961	
+  3962	    #[test]
+  3963	    fn retained_vcs_fixture_authority_malformed_and_grant_vectors_execute_exact_results() {
+  3964	        let oracle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/🔮️oracle.json")).expect("oracle fixture");
+  3965	        let lifecycle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/📒️lifecycle.json")).expect("lifecycle fixture");
+  3966	        let valid_grant = flow_hostile_named_grant(&lifecycle, "valid");
+  3967	
+  3968	        for vector in lifecycle.get("authorityVectors").and_then(serde_json::Value::as_array).expect("authority vectors") {
+  3969	            let protocol = vector.get("protocol").expect("authority protocol");
+  3970	            let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
+  3971	            let operation = protocol.get("operation").expect("authority operation");
+  3972	            assert_eq!(operation.get("feature").and_then(serde_json::Value::as_str), Some("checkpoint"));
+  3973	            let authority = operation.get("authority").map_or_else(
+  3974	                || session.authority(),
+  3975	                |value| FlowVcsAuthority {
+  3976	                    session_generation: u32::try_from(flow_oracle_u64(value, "sessionGeneration")).expect("authority session"),
+  3977	                    base_revision: flow_oracle_u64(value, "baseRevision"),
+  3978	                    parent_revision: flow_oracle_u64(value, "parentRevision"),
+  3979	                },
+  3980	            );
+  3981	            let handle = session.begin_checkpoint(authority).expect("authority checkpoint admission");
+  3982	            assert_eq!(handle, flow_hostile_expected_handle(protocol.get("expectedAdmittedHandle").expect("authority admitted handle")));
+  3983	            let call = protocol.get("call").expect("authority call");
+  3984	            assert_eq!(call.get("method").and_then(serde_json::Value::as_str), Some("poll"));
+  3985	            let grant = flow_hostile_named_grant(&lifecycle, call.get("grant").and_then(serde_json::Value::as_str).expect("authority grant"));
+  3986	            let result = if let Some(polls) = call.get("polls").and_then(serde_json::Value::as_u64) {
+  3987	                for _ in 1..polls {
+  3988	                    session.poll(handle, grant).expect("authority setup poll");
+  3989	                }
+  3990	                session.poll(handle, grant)
+  3991	            } else {
+  3992	                let forged = call.get("handle").expect("forged handle");
+  3993	                if let Some(prior) = call.get("priorGeneration").and_then(serde_json::Value::as_u64) {
+  3994	                    assert_eq!(prior, u64::from(handle.generation));
+  3995	                }
+  3996	                session.poll(
+  3997	                    FlowVcsHandle {
+  3998	                        operation: flow_oracle_u64(forged, "operation"),
+  3999	                        slot: u8::try_from(flow_oracle_u64(forged, "slot")).expect("forged slot"),
+  4000	                        generation: u32::try_from(flow_oracle_u64(forged, "generation")).expect("forged generation"),
+  4001	                    },
+  4002	                    grant,
+  4003	                )
+  4004	            };
+  4005	            let expected = vector.get("expected").expect("authority expected");
+  4006	            assert_eq!(flow_hostile_fault_name(result.expect_err("authority rejection")), expected.get("result").and_then(serde_json::Value::as_str).expect("authority result"));
+  4007	            assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(serde_json::Value::as_str).expect("authority result state")));
+  4008	            session.cancel(handle, valid_grant).expect("authority cleanup cancel");
+  4009	            flow_hostile_close_and_drain(&mut session, handle, valid_grant);
+  4010	            assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(serde_json::Value::as_str).expect("authority final state")));
+  4011	        }
+  4012	
+  4013	        for vector in lifecycle.get("malformedVectors").and_then(serde_json::Value::as_array).expect("malformed vectors") {
+  4014	            let protocol = vector.get("protocol").expect("malformed protocol");
+  4015	            let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
+  4016	            let operation = protocol.get("operation").expect("malformed operation");
+  4017	            assert_eq!(operation.get("feature").and_then(serde_json::Value::as_str), Some("patchWidget"));
+  4018	            let id = operation.get("id").expect("malformed id");
+  4019	            let widget = operation.get("widget").expect("malformed widget");
+  4020	            let mut id_source = FlowVcsSource { value: id.get("present").and_then(serde_json::Value::as_bool).filter(|present| *present).map(|_| id.get("value").and_then(serde_json::Value::as_str).expect("malformed id value").to_owned()) };
+  4021	            let mut widget_source = FlowVcsSource {
+  4022	                value: widget.get("present").and_then(serde_json::Value::as_bool).filter(|present| *present).map(|_| serde_json::from_value::<Widget>(widget.get("value").expect("malformed widget value").clone()).expect("malformed widget")),
+  4023	            };
+  4024	            let authority = flow_hostile_authority(&session, operation);
+  4025	            let result = session.begin_patch_widget(authority, &mut id_source, &mut widget_source);
+  4026	            let expected = vector.get("expected").expect("malformed expected");
+  4027	            assert_eq!(flow_hostile_fault_name(result.expect_err("malformed rejection")), expected.get("result").and_then(serde_json::Value::as_str).expect("malformed result"));
+  4028	            assert!(expected.get("expectedHandle").is_some_and(serde_json::Value::is_null));
+  4029	            let sources = expected.get("sources").expect("malformed source results");
+  4030	            assert_eq!(id_source.retained(), sources.get("idRetained").and_then(serde_json::Value::as_bool).expect("malformed id retained"));
+  4031	            assert_eq!(widget_source.retained(), sources.get("widgetRetained").and_then(serde_json::Value::as_bool).expect("malformed widget retained"));
+  4032	            assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(serde_json::Value::as_str).expect("malformed result state")));
+  4033	        }
+  4034	
+  4035	        for vector in lifecycle.get("grantVectors").and_then(serde_json::Value::as_array).expect("grant vectors") {
+  4036	            let protocol = vector.get("protocol").expect("grant protocol");
+  4037	            let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
+  4038	            assert_eq!(protocol.get("operation").and_then(|value| value.get("feature")).and_then(serde_json::Value::as_str), Some("checkpoint"));
+  4039	            let handle = flow_hostile_begin_operation(&mut session, &lifecycle, &oracle, protocol.get("operation").expect("grant operation"));
+  4040	            assert_eq!(handle, flow_hostile_expected_handle(protocol.get("expectedHandle").expect("grant expected handle")));
+  4041	            let call = protocol.get("call").expect("grant call");
+  4042	            assert_eq!(call.get("method").and_then(serde_json::Value::as_str), Some("poll"));
+  4043	            let result = session.poll(handle, flow_hostile_grant(call.get("grant").expect("grant input")));
+  4044	            let actual_result = match result {
+  4045	                Ok(FlowVcsPoll::Progress { .. }) => "progress",
+  4046	                Ok(_) => "unexpectedPoll",
+  4047	                Err(fault) => flow_hostile_fault_name(fault),
+  4048	            };
+  4049	            let expected = vector.get("expected").expect("grant expected");
+  4050	            assert_eq!(actual_result, expected.get("result").and_then(serde_json::Value::as_str).expect("grant result"));
+  4051	            assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("atResultState").and_then(serde_json::Value::as_str).expect("grant result state")));
+  4052	            session.cancel(handle, valid_grant).expect("grant cleanup cancel");
+  4053	            flow_hostile_close_and_drain(&mut session, handle, valid_grant);
+  4054	            assert_eq!(flow_hostile_actual_state(&session), flow_hostile_expected_state(&lifecycle, &oracle, expected.get("afterCloseState").and_then(serde_json::Value::as_str).expect("grant final state")));
+  4055	        }
+  4056	    }
+  4057	
+  4058	    #[test]
+  4059	    fn retained_vcs_fixture_cancel_and_fault_execute_all_twenty_four_exact_transfer_states() {
+  4060	        let oracle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/🔮️oracle.json")).expect("oracle fixture");
+  4061	        let lifecycle: serde_json::Value = serde_json::from_str(include_str!("🪞️fixtures/📒️lifecycle.json")).expect("lifecycle fixture");
+  4062	        for boundary in lifecycle.get("transferControlLedger").and_then(serde_json::Value::as_array).expect("transfer control ledger") {
+  4063	            let protocol = boundary.get("protocol").expect("transfer protocol");
+  4064	            let target = protocol.get("target").expect("transfer target");
+  4065	            let grant = flow_hostile_named_grant(&lifecycle, protocol.get("grant").and_then(serde_json::Value::as_str).expect("transfer grant"));
+  4066	            for control in boundary.get("controls").and_then(serde_json::Value::as_array).expect("transfer controls") {
+  4067	                let mut session = flow_hostile_session(&lifecycle, &oracle, protocol);
+  4068	                flow_hostile_apply_setup(&mut session, protocol.get("setup").expect("transfer setup"));
+  4069	                let handle = flow_hostile_begin_operation(&mut session, &lifecycle, &oracle, protocol.get("operation").expect("transfer operation"));
+  4070	                assert_eq!(handle, flow_hostile_expected_handle(protocol.get("expectedHandle").expect("transfer expected handle")));
+  4071	                session.poll(handle, grant).expect("transfer admission progress");
+  4072	                session.poll(handle, grant).expect("transfer admission checkpoint");
+  4073	
+  4074	                if let Some(primary) = target.get("primaryControl").and_then(serde_json::Value::as_str) {
+  4075	                    for _ in 0..2048 {
+  4076	                        let operation = session.operations[usize::from(handle.slot)].as_ref().expect("transfer operation");
+  4077	                        if operation.cursor.phase == FlowVcsCursorPhase::PublishPage && operation.cursor.visibility_published {
+  4078	                            break;
+  4079	                        }
+  4080	                        session.poll(handle, grant).expect("reach rollback publication boundary");
+  4081	                    }
+  4082	                    let primary_result = match primary {
+  4083	                        "cancel" => session.cancel(handle, grant),
+  4084	                        "fault" => session.fault(handle, grant),
+  4085	                        value => panic!("unsupported primary control {value}"),
+  4086	                    };
+  4087	                    assert_eq!(primary_result.map(|_| "ok").unwrap_or_else(flow_hostile_fault_name), target.get("primaryExpected").and_then(serde_json::Value::as_str).expect("primary control result"));
+  4088	                    if let Some(steps) = target.get("rollbackStep").and_then(serde_json::Value::as_u64) {
+  4089	                        for _ in 0..steps {
+  4090	                            assert!(!session.close_operation_step(handle, grant).expect("rollback boundary step"));
+  4091	                        }
+  4092	                    } else {
+  4093	                        for _ in 0..2048 {
+  4094	                            if flow_hostile_cursor_matches(&session, handle, target) {
+  4095	                                break;
+  4096	                            }
+  4097	                            assert!(!session.close_operation_step(handle, grant).expect("reach rollback cursor target"));
+  4098	                        }
+  4099	                    }
+  4100	                } else {
+  4101	                    for _ in 0..2048 {
+  4102	                        if flow_hostile_cursor_matches(&session, handle, target) {
+  4103	                            break;
+  4104	                        }
+  4105	                        session.poll(handle, grant).expect("reach transfer cursor target");
+  4106	                    }
+  4107	                }
+  4108	                assert!(flow_hostile_cursor_matches(&session, handle, target));
+  4109	
+  4110	                let before_control = session.resource_fingerprint();
+  4111	                let control_name = control.get("control").and_then(serde_json::Value::as_str).expect("transfer control");
+  4112	                let result = match control_name {
+  4113	                    "cancel" => session.cancel(handle, grant),
+  4114	                    "fault" => session.fault(handle, grant),
+  4115	                    value => panic!("unsupported transfer control {value}"),
+  4116	                };
+  4117	                let expected = control.get("expected").expect("transfer expected");
+  4118	                assert_eq!(result.map(|_| "ok").unwrap_or_else(flow_hostile_fault_name), expected.get("result").and_then(serde_json::Value::as_str).expect("transfer control result"));
+  4119	                if expected.get("result").and_then(serde_json::Value::as_str) == Some("duplicateControl") {
+  4120	                    assert_eq!(session.resource_fingerprint(), before_control);
+  4121	                }
+  4122	                flow_hostile_close_and_drain(&mut session, handle, grant);
+  4123	                assert_eq!(
+  4124	                    flow_hostile_actual_state(&session),
+  4125	                    flow_hostile_expected_state(&lifecycle, &oracle, expected.get("finalState").and_then(serde_json::Value::as_str).expect("transfer final state")),
+  4126	                    "fixture transfer result mismatch at {} via {}",
+  4127	                    boundary.get("boundary").and_then(serde_json::Value::as_str).expect("transfer boundary"),
+  4128	                    control_name
+  4129	                );
+  4130	            }
+  4131	        }
+  4132	    }
+  4133	
+  4134	    #[test]
+  4135	    fn retained_vcs_zero_fuel_deadline_and_interrupted_close_preserve_every_credit() {

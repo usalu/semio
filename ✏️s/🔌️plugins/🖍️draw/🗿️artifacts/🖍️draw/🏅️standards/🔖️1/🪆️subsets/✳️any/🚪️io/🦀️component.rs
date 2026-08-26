@@ -36,12 +36,12 @@ const SVG_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifac
 /// that had not added this, causing `draw_document_to_svg_bridges_shape_text_image_and_gradient_nodes_through_semio_drawing`
 /// and `draw_io_declares_vector_out_and_export_media_covers_both_ports` to fail with "no composer
 /// registered").
-async fn ensure_semio_drawing_bridge_registered() {
+fn ensure_semio_drawing_bridge_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::register);
 }
 
-async fn resolve_draw_document_artboard(doc: &DrawSnapshot) -> (u32, u32) {
+fn resolve_draw_document_artboard(doc: &DrawSnapshot) -> (u32, u32) {
     if let Some(artboard) = &doc.artboard {
         return (artboard.width.max(1.0).round() as u32, artboard.height.max(1.0).round() as u32);
     }
@@ -59,7 +59,7 @@ async fn resolve_draw_document_artboard(doc: &DrawSnapshot) -> (u32, u32) {
 /// 🌉️ [DrawTransform]'s 6-value affine matrix → semio's [SemioTransform] (Z-only rotation
 /// quaternion, axis scale, zero-z translation) — the same decomposition stdio's own svg↔drawing
 /// bridge applies on its side (`matrix_to_semio_transform` in that leaf).
-async fn matrix_to_semio_transform(matrix: [f64; 6]) -> SemioTransform {
+fn matrix_to_semio_transform(matrix: [f64; 6]) -> SemioTransform {
     let transform = crate::artifacts::draw::schema::draw_matrix_to_transform(matrix);
     SemioTransform {
         translation: SemioPoint3 { x: transform.x, y: transform.y, z: 0.0 },
@@ -70,7 +70,7 @@ async fn matrix_to_semio_transform(matrix: [f64; 6]) -> SemioTransform {
 
 /// ✏️ Draw's own [PathSegment] → semio's [SemioPathSegment] — same SVG-command grammar, field
 /// renames only (no geometry recomputed).
-async fn to_semio_path_segment(segment: &PathSegment) -> SemioPathSegment {
+fn to_semio_path_segment(segment: &PathSegment) -> SemioPathSegment {
     match *segment {
         PathSegment::Move { to } => SemioPathSegment::MoveTo { to: SemioPoint2 { x: to[0], y: to[1] } },
         PathSegment::Line { to } => SemioPathSegment::LineTo { to: SemioPoint2 { x: to[0], y: to[1] } },
@@ -84,7 +84,7 @@ async fn to_semio_path_segment(segment: &PathSegment) -> SemioPathSegment {
 /// 🎨️ [FillStyle::Solid]/[StrokeStyle] → [SemioRgba] — `DrawStyle` is solid-color-only, so
 /// gradients have no representable equivalent and are honestly dropped (matching the pre-migration
 /// SVG renderer's own gradient fallback: no fill, not a fabricated flat color).
-async fn solid_fill_to_semio_rgba(fill: &FillStyle) -> Option<SemioRgba> {
+fn solid_fill_to_semio_rgba(fill: &FillStyle) -> Option<SemioRgba> {
     match fill {
         FillStyle::Solid { color } => Some(SemioRgba { r: color[0] as f32, g: color[1] as f32, b: color[2] as f32, a: color[3] as f32 }),
         FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => None,
@@ -95,7 +95,7 @@ async fn solid_fill_to_semio_rgba(fill: &FillStyle) -> Option<SemioRgba> {
 /// its name, or `None` when the node carries no representable presentation at all. 🕳️ stdio_gap:
 /// `blend_mode`/`fill_rule` have no `DrawStyle` field and `Group`/`Image` nodes have no opacity
 /// slot at all (only `Path`/`Text` reference a style) — both honestly dropped, not fabricated.
-async fn intern_semio_style(styles: &mut Vec<SemioDrawStyle>, node: &DrawSceneNode) -> Option<String> {
+fn intern_semio_style(styles: &mut Vec<SemioDrawStyle>, node: &DrawSceneNode) -> Option<String> {
     let fill = node.fill.as_ref().and_then(solid_fill_to_semio_rgba);
     let stroke = node.stroke.as_ref().map(|style| SemioRgba { r: style.color[0] as f32, g: style.color[1] as f32, b: style.color[2] as f32, a: style.color[3] as f32 });
     let stroke_width = node.stroke.as_ref().map(|style| style.width);
@@ -110,7 +110,7 @@ async fn intern_semio_style(styles: &mut Vec<SemioDrawStyle>, node: &DrawSceneNo
 
 /// 🖼️ Decodes one `data:<mime>;base64,<data>` URI (as built by
 /// [flatten_draw_document_to_scene_nodes] for image scene nodes) into real mime + bytes.
-async fn decode_data_uri_bytes(uri: &str) -> Option<(String, Vec<u8>)> {
+fn decode_data_uri_bytes(uri: &str) -> Option<(String, Vec<u8>)> {
     let rest = uri.strip_prefix("data:")?;
     let (meta, data) = rest.split_once(',')?;
     let mime = meta.split(';').next().unwrap_or("application/octet-stream").to_string();
@@ -121,7 +121,7 @@ async fn decode_data_uri_bytes(uri: &str) -> Option<(String, Vec<u8>)> {
 /// 🖍️ One [DrawSceneNode] → semio's recursive [SemioDrawNode]: each becomes its own `Group`
 /// carrying the node's baked world transform, wrapping exactly one Path/Text/Image leaf (mirrors
 /// the pre-migration SVG renderer's own `<g transform="matrix(...)"><path/></g>` shape).
-async fn semio_draw_node_from_scene_node(node: &DrawSceneNode, styles: &mut Vec<SemioDrawStyle>) -> Option<SemioDrawNode> {
+fn semio_draw_node_from_scene_node(node: &DrawSceneNode, styles: &mut Vec<SemioDrawStyle>) -> Option<SemioDrawNode> {
     let style = intern_semio_style(styles, node);
     let leaf = if let Some(text) = &node.text {
         SemioDrawNode::Text { value: text.content.clone(), at: SemioPoint2 { x: 0.0, y: text.size }, style }
@@ -141,7 +141,7 @@ async fn semio_draw_node_from_scene_node(node: &DrawSceneNode, styles: &mut Vec<
 /// 🌉️ Builds a real [SemioDrawingSnapshot] from this plugin's own domain document — the semio hub
 /// side of draw's domain↔semio bridge. [flatten_draw_document_to_scene_nodes] has already resolved
 /// booleans/traces/curve-flattening, so every scene node here is a concrete leaf.
-pub async fn draw_document_to_semio_drawing(doc: &DrawSnapshot) -> SemioDrawingSnapshot {
+pub fn draw_document_to_semio_drawing(doc: &DrawSnapshot) -> SemioDrawingSnapshot {
     let (width, height) = resolve_draw_document_artboard(doc);
     let mut styles = Vec::new();
     let children: Vec<SemioDrawNode> = flatten_draw_document_to_scene_nodes(doc).iter().filter_map(|node| semio_draw_node_from_scene_node(node, &mut styles)).collect();
@@ -156,7 +156,7 @@ pub async fn draw_document_to_semio_drawing(doc: &DrawSnapshot) -> SemioDrawingS
 /// @emoji 🌉️ Serializes a draw document to SVG markup and raster dimensions by building a real
 /// [SemioDrawingSnapshot] and dispatching through stdio's real semio/drawing↔svg bridge
 /// (`io_dispatch`) — replaces the deleted hand-rolled SVG string builder.
-pub async fn draw_document_to_svg(doc: &DrawSnapshot) -> Result<(String, u32, u32), String> {
+pub fn draw_document_to_svg(doc: &DrawSnapshot) -> Result<(String, u32, u32), String> {
     ensure_semio_drawing_bridge_registered();
     let (width, height) = resolve_draw_document_artboard(doc);
     let semio_drawing = draw_document_to_semio_drawing(doc);
@@ -179,14 +179,14 @@ pub async fn draw_document_to_svg(doc: &DrawSnapshot) -> Result<(String, u32, u3
     Ok((write_svg_xml(&svg.doc), width, height))
 }
 
-pub async fn draw_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
+pub fn draw_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
     let doc: DrawSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
     draw_document_to_svg(&doc)
 }
 //#endregion 🔖️SemioBridge
 
 //#region 🔖️IoDeclaration
-pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::draw::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::draw::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::draw::{DrawMutation, DrawSnapshot, DRAW_DIALECT, DRAW_DOCUMENT_SCHEMA};
@@ -194,7 +194,7 @@ pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    async fn entries() -> &'static [IoEntry] {
+    fn entries() -> &'static [IoEntry] {
         static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {

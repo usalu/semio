@@ -47,7 +47,7 @@ Feature: Apply every typed STEP AP214 mutation to a real-world exchange structur
 
 
   THE FIRST DIFFERENTIAL RUN OF THIS CASE DIVERGED ON EVERY SINGLE SCENARIO, AND THE PROJECTION WAS
-  WHAT WAS WRONG. Both roles passed their own laws (`executed=46 passed=46`) and yet `parity=1/23`:
+  WHAT WAS WRONG. Both roles passed their own laws (`executed=46 passed=46`) and yet the two producers still disagreed:
   `$.entities[824].args[3].v` read `…at asserted c<LF>onnectivities` from the oracle and `…at
   asserted c\X2\000A\X0\onnectivities` from the subject. That is ONE value spelled two ways.
   ST-Developer wrapped its output line INSIDE that string literal, so the real committed fixture

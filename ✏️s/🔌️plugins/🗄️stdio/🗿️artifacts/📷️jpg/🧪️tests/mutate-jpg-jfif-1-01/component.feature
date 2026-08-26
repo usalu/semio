@@ -102,7 +102,7 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg
     When the <id> mutation is applied and then undone

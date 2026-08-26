@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_foundation_area_m2::mutation::Ch
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeFoundationAreaM2, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeFoundationAreaM2, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_foundation_area_m2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Foundation area [m2] must be a finite number, got {}.", payload.new_foundation_area_m2), Vec::<String>::new());
     }

@@ -1776,12 +1776,12 @@ mod handcrafted_diff_codec_tests {
         let cases = vec![PptxDiff::default(), PptxDiff::between(&a, &b), PptxDiff::between(&b, &a), PptxDiff::between(&a, &c), PptxDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = PptxDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = PptxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = PptxDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = PptxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
@@ -1792,13 +1792,13 @@ mod handcrafted_diff_codec_tests {
         let mut sourced = base.clone();
         sourced.xml_parts = vec![PptxXmlPart { path: "docProps/core.xml".into(), content_type: "application/vnd.openxmlformats-package.core-properties+xml".into(), document: crate::artifacts::xml::schema::snapshot::XmlDocument::default() }];
         let diff = PptxDiff::between(&base, &sourced);
-        assert_eq!(diff.await.xml_parts, Some(sourced.xml_parts.clone()));
+        assert_eq!(diff.xml_parts, Some(sourced.xml_parts.clone()));
         assert_eq!(diff.apply(&base).unwrap(), sourced);
 
         let printed = diff.print_diff();
-        assert_eq!(PptxDiff::parse_diff(&printed).await.expect("parse logical XML parts diff"), diff.await);
+        assert_eq!(PptxDiff::parse_diff(&printed).expect("parse logical XML parts diff"), diff);
         let encoded = diff.encode_diff().expect("encode logical XML parts diff");
-        assert_eq!(PptxDiff::decode_diff(&encoded).await.expect("decode logical XML parts diff"), diff.await);
+        assert_eq!(PptxDiff::decode_diff(&encoded).expect("decode logical XML parts diff"), diff);
 
         let inverse = diff.inverse(&base);
         assert_eq!(inverse.apply(&sourced).unwrap(), base);
@@ -1821,7 +1821,7 @@ mod result_apply_tests {
         let diff =
             PptxDiff { presentation: Some(PptxPresentationDiff { slides: Some(PptxSlidesDiff { modified: vec![IndexModified { index: 0, diff: PptxSlideDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
         let result = diff.apply(&base);
-        assert_eq!(result.await.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
         assert_eq!(base, PptxSnapshot::default());
     }
 }

@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-tower-m-ed-knm` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `tower_m_ed_knm` from 1200.0 to 1562.5, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_m_ed_knm_applies_to_committed_after() {
+fn change_tower_m_ed_knm_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-tower-m-ed-knm applies to its committed before-snapshot");
     assert_eq!(applied.tower_m_ed_knm, 1562.5, "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: tower_m_ed_knm must read 1562.5 after the change");
     assert_eq!(applied, expected_after(), "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_tower_m_ed_knm_applies_to_committed_after() {
 /// ↩️ `change-tower-m-ed-knm` is its own inverse partner: the inverse step restores `tower_m_ed_knm` to its pre-change
 /// 1200.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_m_ed_knm_inverse_restores_before() {
+fn change_tower_m_ed_knm_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-tower-m-ed-knm applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_tower_m_ed_knm_inverse_restores_before() {
 /// decode then encode is a fixed point, so `towerMEdKnm` and `newTowerMEdKnm` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_m_ed_knm_committed_json_is_canonical() {
+fn change_tower_m_ed_knm_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-tower-m-ed-knm snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-tower-m-ed-knm snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_tower_m_ed_knm_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-tower-m-ed-knm` at 1562.5 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_m_ed_knm_declared_outcome_holds() {
+fn change_tower_m_ed_knm_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-tower-m-ed-knm outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_tower_m_ed_knm_declared_outcome_holds() {
 /// assertion: it pins that only `towerMEdKnm` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `towerMRdKnm`.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_m_ed_knm_produces_committed_diff() {
+fn change_tower_m_ed_knm_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().tower_m_ed_knm, Some(1562.5), "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: the diff must set tower_m_ed_knm to 1562.5");
     assert!(outcome.diff().artifact.is_none(), "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_tower_m_ed_knm_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-tower-m-ed-knm`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_m_ed_knm_committed_diff_is_canonical() {
+fn change_tower_m_ed_knm_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-tower-m-ed-knm committed diff decodes");
     assert_eq!(decoded.tower_m_ed_knm, Some(1562.5), "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: the committed diff must carry tower_m_ed_knm at 1562.5");
     assert!(decoded.selected_check_index.is_none(), "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_tower_m_ed_knm_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 1200.0 to 1562.5 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_m_ed_knm_committed_diff_applies_to_after() {
+fn change_tower_m_ed_knm_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-tower-m-ed-knm committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-tower-m-ed-knm committed diff applies to the before-snapshot");
     assert_eq!(produced.tower_m_ed_knm, 1562.5, "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: the committed diff must leave tower_m_ed_knm reading 1562.5");

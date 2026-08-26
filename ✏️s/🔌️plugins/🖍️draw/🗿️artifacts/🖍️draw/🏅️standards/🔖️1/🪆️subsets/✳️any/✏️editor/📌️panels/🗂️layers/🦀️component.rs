@@ -4,13 +4,13 @@ use crate::artifacts::draw::schema::{draw_play_boolean_child_row_id, draw_play_l
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
 use crate::editor::draw::terminology::DrawPlayLabels;
 use crate::editor::draw::{draw_play_action, DRAW_INTERACTION_DOMAIN};
-use semio_framework_plugin::{tree_item, tree_item_with_action, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item, tree_item_with_action, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 pub const DRAW_PLAY_BODY_LAYERS: &str = "draw.play.layers";
 pub const DRAW_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-draw-layer-kind";
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -55,7 +55,9 @@ fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> semio_framework
     let drag_value = semio_framework_plugin::UiText::try_from_str(&base.id)
         .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.drag-value", "fixed drag value admission failed"))?;
     drag_data.try_push(drag_key, drag_value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.drag-data", "fixed drag-data admission failed"))?;
-    let mut builder = semio_framework_ui_contract::tree_item(Label::data(base.name.clone()))?
+    let label = semio_framework_ui_contract::Label::try_from(base.name.clone())
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.label", "fixed layer label admission failed"))?;
+    let mut builder = semio_framework_ui_contract::tree_item(label)
         .try_id(row_id)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.id", "fixed layer id admission failed"))?
         .description(semio_framework_plugin::UiText::try_from_str(&description).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.description", "fixed layer description admission failed"))?)
@@ -73,8 +75,8 @@ fn layer_tree_item(doc: &DrawSnapshot, layer: &DrawLayerNode) -> semio_framework
 fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let row_id = draw_play_boolean_child_row_id(boolean_id, child_id);
     let mut item = match find_draw_layer(doc, child_id) {
-        Some(child) => tree_item(row_id, Label::data(layer_base(child).name.clone()))?,
-        None => tree_item(row_id, Label::data(format!("{child_id} (missing)")))?,
+        Some(child) => tree_item(row_id, layer_base(child).name.clone())?,
+        None => tree_item(row_id, format!("{child_id} (missing)"))?,
     };
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.draggable = Some(false);
@@ -87,7 +89,7 @@ fn boolean_child_item(doc: &DrawSnapshot, boolean_id: &str, child_id: &str) -> s
     Ok(item)
 }
 
-fn tree_button(id: &str, label: impl TryInto<Label>, icon: &str, action: &str, args: semio_framework_plugin::UiValue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn tree_button(id: &str, label: &str, icon: &str, action: &str, args: semio_framework_plugin::UiValue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut item = tree_item_with_action(id, label, None, draw_play_action(action, Some(args))?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.icon", "fixed layer icon admission failed"))?);
@@ -95,16 +97,16 @@ fn tree_button(id: &str, label: impl TryInto<Label>, icon: &str, action: &str, a
     Ok(item)
 }
 
-pub async fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action_items = crate::editor::draw::ui_node_list([
-        tree_button("draw-play-layers.add.path", labels.add_path, "pen-tool", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("path")?)])?),
-        tree_button("draw-play-layers.add.rect", labels.add_rectangle, "square", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("shape:rect")?)])?),
-        tree_button("draw-play-layers.add.text", labels.add_text, "type", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("text")?)])?),
-        tree_button("draw-play-layers.add.group", labels.add_group, "folder-plus", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("group")?)])?),
-        tree_button("draw-play-layers.add.boolean", labels.add_boolean, "combine", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("boolean")?)])?),
+        tree_button("draw-play-layers.add.path", labels.add_path.as_str(), "pen-tool", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("path")?)])?),
+        tree_button("draw-play-layers.add.rect", labels.add_rectangle.as_str(), "square", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("shape:rect")?)])?),
+        tree_button("draw-play-layers.add.text", labels.add_text.as_str(), "type", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("text")?)])?),
+        tree_button("draw-play-layers.add.group", labels.add_group.as_str(), "folder-plus", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("group")?)])?),
+        tree_button("draw-play-layers.add.boolean", labels.add_boolean.as_str(), "combine", "addLayer", crate::editor::draw::ui_value_map([("kind", crate::editor::draw::ui_value_text("boolean")?)])?),
     ])?;
     let layer_items = if document.layers.is_empty() {
-        let mut empty = tree_item("draw-play-layers.empty", labels.empty_state)?;
+        let mut empty = tree_item("draw-play-layers.empty", labels.empty_state.as_str())?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut empty.component {
             props.icon = Some(semio_framework_plugin::UiText::try_from_str("pen-tool").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.layer.icon", "fixed layer icon admission failed"))?);
         }
@@ -119,6 +121,8 @@ pub async fn render(document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_f
     for item in action_items.into_iter().chain(layer_items) {
         items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.items", "fixed layer-list admission failed"))?;
     }
-    PanelTreeBuilder::new("draw-play-layers")?.section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, items)?.interaction_domain(DRAW_INTERACTION_DOMAIN)?.build()
+    let section = semio_framework_ui_contract::Label::try_from(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.layer.section-label", "fixed layer section label admission failed"))?;
+    PanelTreeBuilder::new("draw-play-layers")?.section("draw-play-layers", Some(section), true, items)?.interaction_domain(DRAW_INTERACTION_DOMAIN)?.build()
 }
 //#endregion 🔖️Render

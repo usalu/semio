@@ -1714,8 +1714,13 @@ mod tests {
             registry.try_submit(semio_framework_job::OperationId(8_000 + index as u64), generation, present_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("every fixed registry slot admits exactly once"));
         }
         let collision = semio_framework_job::OperationId(8_000 + PRESENT_ENVELOPE_MATERIALIZE_CAPACITY as u64);
-        let (fault, pages) = registry.try_submit(collision, generation, present_envelope_test_pages(&hex)).expect_err("capacity +1 returns the exact caller pages");
+        let pages = present_envelope_test_pages(&hex);
+        let rejected_page_count = pages.page_count();
+        let rejected_byte_count = pages.byte_count();
+        let (fault, pages) = registry.try_submit(collision, generation, pages).expect_err("capacity +1 returns the exact caller pages");
         assert_eq!(fault, PresentEnvelopeMaterializeRegistryFault::Capacity);
+        assert_eq!(pages.page_count(), rejected_page_count);
+        assert_eq!(pages.byte_count(), rejected_byte_count);
         close_present_pages(pages);
         let duplicate = semio_framework_job::OperationId(8_000);
         let (fault, pages) = registry.try_submit(duplicate, generation, present_envelope_test_pages(&hex)).expect_err("duplicate operation never replaces its live owner");
@@ -1723,6 +1728,33 @@ mod tests {
         close_present_pages(pages);
         let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
         close_present_registry(&mut registry, &pool);
+        drop(registry);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn retained_present_envelope_wrong_owner_abort_and_interrupted_close_preserve_live_slot() {
+        let pack = <PresentSnapshot as store::ArtifactPack>::encode_pack(&empty_present_snapshot());
+        let hex = pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        let operation = semio_framework_job::OperationId(8_050);
+        let generation = semio_framework_job::Generation(13);
+        let wrong_generation = semio_framework_job::Generation(14);
+        let wrong_operation = semio_framework_job::OperationId(operation.0 + PRESENT_ENVELOPE_MATERIALIZE_CAPACITY as u64);
+        let mut registry = PresentEnvelopeMaterializeRegistry::new();
+        registry.try_submit(operation, generation, present_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("one exact retained caller is admitted"));
+        let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
+
+        assert_eq!(registry.cancel(operation, wrong_generation), Err(PresentEnvelopeMaterializeRegistryFault::Stale));
+        assert_eq!(registry.cancel(wrong_operation, generation), Err(PresentEnvelopeMaterializeRegistryFault::Stale));
+        assert!(registry.close_step(operation, wrong_generation, &pool, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err());
+        assert!(registry.fault(operation, generation).is_ok(), "wrong-owner probes preserve the exact live slot");
+
+        registry.cancel(operation, generation).expect("the exact owner may still abort");
+        assert_eq!(
+            registry.close_step(operation, generation, &pool, 0, 0).expect("zero-grant interrupted close"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        );
+        close_present_registry(&mut registry, &pool);
+        assert!(registry.terminal_is_empty());
         drop(registry);
     }
 

@@ -6,7 +6,7 @@ use crate::artifacts::en1992::mutations::En1992Mutation;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeAnchorFUkMpa, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+pub fn inverse(_payload: &ChangeAnchorFUkMpa, base: &En1992Snapshot) -> Vec<En1992Mutation> {
     vec![En1992Mutation::ChangeAnchorFUkMpa(ChangeAnchorFUkMpa { new_anchor_f_uk_mpa: base.anchor_f_uk_mpa.clone() })]
 }
 //#endregion 🔖️Inverse

@@ -1,34 +1,64 @@
 @capability-block-5d-1-mutate
-@no-oracle-block-5d-mutation-semantics
+@oracle-block-5d-python-independent
 @comparison-ordered-json-v1
 @mutations-block-5d-1-any
-Feature: Replay every typed Block 5d 1 mutation against its committed specification vector
-  `s.block.5d@1/*` is a semio-NATIVE document, carried as `.dsl.semio`/`.pack.semio`. No third party reads
-  those, and none is authoritative over `Block5dMutation`, so this case rests on the recorded
-  `block-5d-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) and its two named substitutes: the
-  committed specification vectors, and the metamorphic laws below.
+Feature: Apply every typed block5d part-kind mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.block.5d` part-kind document and all forty-one typed mutations,
+  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from
+  `…/🧬️schema/🧬️mutations/🔣️component.json`, from rules 1, 2 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the forty-one committed quintets. It imports nothing from this repository's Rust.
 
-  This is the widest vocabulary in the block plugin — forty-one kinds — because a part kind carries BOTH
-  facets at once. `update-part2d` and `update-part3d` are separate verbs on the same definition;
-  `move-grip2d`, `move-grip3d` and `resize-grip3d` are three verbs where the 2d sibling has one; there are
-  two cameras, each with its own move and scale; and on top of that sits a representation catalogue with
-  mesh urls, LODs, descriptions, tags and per-representation attributes that the 2d sibling has no
-  equivalent for at all.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. `s.block.5d@1/*` is a semio-NATIVE KIND DEFINITION carried as `.dsl.semio`/`.pack.semio`,
+  and this case used to argue that because the diff renames the two facet members — the snapshot
+  calls them `2d` and `3d`, names no Rust identifier can carry, and the diff calls them
+  `part2d`/`part3d` — "that mapping IS this subset's specification, not a fact an external library
+  could confirm or refute". The sibling `mutate-block-2d-1` — same plugin, same carrier, same
+  kind-definition document shape — refuted that in this very wave by taking a Python second
+  implementation. A renaming is not an obstacle to a second implementation; it is something a second
+  implementation resolves through a declared alias table, and the reference declares one.
 
-  It is also the only subset in this scope whose diff RENAMES snapshot fields. The snapshot calls the two
-  facets `2d` and `3d` — names no Rust identifier can carry — and the diff calls them `part2d` and
-  `part3d`. The adapter's alias table states that mapping explicitly; without it the footprint law would
-  report `update-part2d` as an undeclared change on every single run.
+  What the document is, and what makes it the widest vocabulary in this plugin: one part kind
+  carrying BOTH presentations at once — a 2d facet whose members change shape with the shape itself,
+  and a 3d facet of orientation quaternion and scale — the mesh representations it offers at several
+  levels of detail with their tags and attributes, the grip kinds it declares, and the grips placed
+  on it in BOTH spaces at the same time, each grip carrying a polar 2d placement (`angle`,
+  `radius2d`) and a 3d placement (`position`, `direction`, `radius3d`). Forty-one kinds, and two
+  independent editor cameras.
 
-  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same
-  bytes the production crate's own fixture tests beside each leaf assert against — end to end through
-  the test platform. The vector each row names is written out in full in the row itself, so the
-  provenance of every input is readable here and pinned by digest at plan time.
+  The one thing only the committed vectors state, and both implementations take it from there:
+  `update-part2d` REBUILDS the 2d facet from its six arguments in their declared order and DROPS
+  every member whose argument is `null`. Its vector turns a circle with a radius and an icon kind
+  into a rectangle with a width and a height and neither, so the facet loses two members and gains
+  two — which is why the reference validates that facet by its shape discriminant rather than by a
+  fixed member list, as it does for every other member.
+
+  Unlike its `🧊️3d` sibling this subset holds its whole grip-kind vocabulary LOCALLY: no verb here
+  reaches a composed child whose id is content-addressed by a function no specification states, so
+  all forty-one kinds are adjudicated and none is refused.
+
+  📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
+  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  crate and replays the committed vectors, so today the comparison establishes that an independent
+  implementation of the specification computes the committed after-snapshots — a real check of the
+  vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec
+  against a second producer. A `block5d_mutation_report_json` bridge beside the mutation enum, the
+  one thing `mutate-block-2d-1` gained in this wave, is what closes that; it was not added here
+  because `semio-s-plugin-block` does not compile today (1,522 errors from a peer session's in-flight
+  async refactor), so it could not be verified. Second, this case reads no real-world artifact: all
+  205 of its fixtures are handcrafted specification vectors.
+
+  The committed specification vectors were KEPT, not replaced, and the reference asserts more against
+  them than the subject half can: it applies each verb, requires the committed after-snapshot member
+  by member, requires that the verb moved exactly ONE of the thirteen members, applies its OWN
+  computed inverse and requires the committed before-snapshot back — the full inverse law, where the
+  subject half asserts only the weaker footprint precondition.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: The committed <id> vector declares its own kind and moves the document
     Given the committed specification vector for the <id> kind
       """
@@ -89,7 +119,7 @@ Feature: Replay every typed Block 5d 1 mutation against its committed specificat
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: The committed <id> vector changes only what its diff declares
     Given the committed specification vector for the <id> kind
       """

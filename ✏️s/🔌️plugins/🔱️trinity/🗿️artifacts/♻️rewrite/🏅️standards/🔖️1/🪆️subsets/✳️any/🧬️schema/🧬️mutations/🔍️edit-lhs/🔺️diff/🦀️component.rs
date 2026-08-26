@@ -3,7 +3,7 @@ use crate::artifacts::rewrite::diff::RewriteDiff;
 use crate::artifacts::rewrite::RewriteSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::EditLhs, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+pub fn diff(payload: &super::mutation::EditLhs, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
     if base.lhs_json == payload.new_lhs_json {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Lhs is already up to date.");
     }

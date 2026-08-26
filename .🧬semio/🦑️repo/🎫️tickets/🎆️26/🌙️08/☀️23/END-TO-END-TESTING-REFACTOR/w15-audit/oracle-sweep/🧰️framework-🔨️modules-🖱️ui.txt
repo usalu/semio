@@ -1,0 +1,3 @@
+[test] not-exercised 🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🧪️tests/merge-conflicting-utilities (recorded no-oracle decision repository-owned-utility-groups — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=3 executed=7 passed=7 failed=0 errored=0 parity=0/0 not-exercised=1
+EXIT=0

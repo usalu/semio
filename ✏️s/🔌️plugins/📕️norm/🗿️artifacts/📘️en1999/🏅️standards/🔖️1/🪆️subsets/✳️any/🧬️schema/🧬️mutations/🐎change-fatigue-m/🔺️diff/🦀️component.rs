@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_fatigue_m::mutation::ChangeFatig
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeFatigueM, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeFatigueM, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_fatigue_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fatigue S-N slope m must be a finite number, got {}.", payload.new_fatigue_m), Vec::<String>::new());
     }

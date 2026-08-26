@@ -18,10 +18,10 @@ pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples
 /// the `DrawSnapshot` struct and its `Default` impl).
 impl store::ArtifactDsl for DrawSnapshot {
     const EXTENSION: &'static str = "draw";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "draw.draw"
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -29,7 +29,7 @@ impl store::ArtifactDsl for DrawSnapshot {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -38,12 +38,12 @@ impl store::ArtifactDsl for DrawSnapshot {
 //#endregion 🔖️HandcraftedArtifactDsl
 
 /// 📖️ Parses `.draw` DSL text into a `DrawSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<DrawSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<DrawSnapshot, store::TextError> {
     <DrawSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DrawSnapshot` back to `.draw` DSL text.
-pub async fn print_dsl(document: &DrawSnapshot) -> String {
+pub fn print_dsl(document: &DrawSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -55,7 +55,7 @@ mod tests {
     use crate::artifacts::draw::{DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA};
     use store::ArtifactDsl;
 
-    async fn representative_draw_document() -> DrawSnapshot {
+    fn representative_draw_document() -> DrawSnapshot {
         let mut assets = std::collections::BTreeMap::new();
         assets.insert("src-1".to_string(), DrawImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
 

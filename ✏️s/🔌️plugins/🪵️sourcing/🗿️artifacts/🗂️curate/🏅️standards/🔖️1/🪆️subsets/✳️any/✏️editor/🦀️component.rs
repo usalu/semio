@@ -304,6 +304,12 @@ impl ArtifactEditor for SourcingCurateApp {
         sourcing_curate_command_from_action(action, args)
     }
 
+    fn host_configuration_mutation(action: &str, args: Option<&serde_json::Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        Ok((action == "setContributions").then(|| SourcingCurateConfigMutation::SetContributions {
+            json: args.and_then(|value| value.get("json")).and_then(serde_json::Value::as_str).unwrap_or("[]").to_string(),
+        }))
+    }
+
     async fn handle(
         command: &SourcingCurateCommand,
         doc: &ArtifactView<'_, CurateSnapshot>,
@@ -682,6 +688,18 @@ mod tests {
         assert_eq!(def.window_kinds.iter().find(|entry| entry.id == pool::SOURCING_CURATE_WINDOW_POOL).expect("pool window").label.resolve(terminology, locale), "Pool");
         assert_eq!(def.window_kinds.iter().find(|entry| entry.id == curated::SOURCING_CURATE_WINDOW_CURATED).expect("curated window").label.resolve(terminology, locale), "Kuratiert");
         assert_eq!(def.modes.iter().find(|entry| entry.id == edit::SOURCING_CURATE_MODE_CURATE).expect("curate mode").label.resolve(terminology, locale), "Kuratieren");
+    }
+
+    #[test]
+    fn host_contributions_resolve_to_the_event_sourced_config_lane() {
+        let mutation = <SourcingCurateApp as ArtifactEditor>::host_configuration_mutation(
+            "setContributions",
+            Some(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" })),
+        )
+        .expect("host configuration")
+        .expect("sourcing contribution mutation");
+        assert_eq!(mutation, SourcingCurateConfigMutation::SetContributions { json: "[{\"id\":\"sourcing\"}]".into() });
+        assert_eq!(<SourcingCurateApp as ArtifactEditor>::host_configuration_mutation("setFilterQuery", None).expect("non-host action"), None);
     }
 
     #[semio_framework_async_macros::async_test]

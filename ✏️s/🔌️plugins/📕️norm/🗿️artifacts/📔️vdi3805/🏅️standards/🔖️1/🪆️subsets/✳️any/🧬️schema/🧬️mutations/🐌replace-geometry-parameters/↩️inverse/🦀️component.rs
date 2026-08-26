@@ -5,7 +5,7 @@ use super::mutation::ReplaceGeometryParameters;
 use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ReplaceGeometryParameters, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &ReplaceGeometryParameters, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
     let Some(geometry) = base.geometry.get(&payload.id) else {
         return Vec::new();
     };

@@ -8,16 +8,16 @@ Feature: Apply every typed ISO 15930 (PDF/X) conformance mutation to a real docu
   carrying real extractable text. It is read where the domain already keeps it; every scenario copies
   it into the case work directory before touching it, and the committed document is never written to.
 
-  WHY THIS VOCABULARY HAS FOUR KINDS AND NOT FIFTEEN. PDF 1.4's retained snapshot is a bare
-  PageDoc { width, height, text } — no object graph — and this subset's own check_pdf_x_conformance says so in
-  as many words: it raises exactly two diagnostics, stdio.pdf.x.degenerate-page-size and stdio.pdf.x.schema-gap-unverifiable, and the second fires
-  unconditionally on every document to record that full conformance cannot be checked from this
-  schema at all. A vocabulary derived honestly from that checker therefore has exactly ONE movable
-  axis, page.width and page.height — whether the page has a strictly positive MediaBox, and the schema-gap axis is not movable by anything, because no mutation can give
-  PDF 1.4's snapshot an object graph it does not have. Inventing the kinds the 1.7 subsets
-  legitimately declare — encryption dictionaries, JavaScript and launch actions, output intents, font
-  embedding, per-page trim boxes — would be fabricating a vocabulary for a schema that cannot observe
-  a single one of them.
+  WHY THIS VOCABULARY HAS FOUR KINDS AND NOT FIFTEEN. PDF 1.4's retained snapshot is the document's
+  page TREE — PageDoc { width, height, text } per page, no object graph — and this subset's own
+  check_pdf_x_conformance says so in as many words: it raises exactly two diagnostics,
+  stdio.pdf.x.degenerate-page-size and stdio.pdf.x.schema-gap-unverifiable, and the second fires unconditionally on every document to record that full
+  conformance cannot be checked from this schema at all. A vocabulary derived honestly from that
+  checker therefore has exactly ONE movable axis, page 1's geometry — whether the first page has a strictly positive MediaBox,
+  and the schema-gap axis is not movable by anything, because no mutation can give PDF 1.4's snapshot
+  an object graph it does not have. Inventing the kinds the 1.7 subsets legitimately declare —
+  encryption dictionaries, JavaScript and launch actions, output intents, font embedding, per-page
+  trim boxes — would be fabricating a vocabulary for a schema that cannot observe a single one of them.
 
   AND WHY IT SHARES NO KIND WITH ITS SIBLING. 1.4/✳️a, whose checker reads the extractable text and never looks at the geometry. Two subsets of one standard over one
   snapshot type, sharing not a single kind, because their checkers read different fields of it. That
@@ -32,6 +32,16 @@ Feature: Apply every typed ISO 15930 (PDF/X) conformance mutation to a real docu
   document already carries both a positive page box and real page-1 text, so both the "set" and the
   "clear/collapse" direction of the single axis have something genuine to move. No pre-state is
   fabricated anywhere in this case.
+
+  WHAT THE FIRST DIFFERENTIAL RUN FOUND, AND WHAT IT COST. This case scored 0 of 9 the first time
+  its oracle half was ever compared against its subject half, and every one of the nine failures had
+  the same cause: PDF 1.4's snapshot was `{schema, page: PageDoc}` — a SINGLE page — and its
+  `decode_pdf` hardcoded `612×792` instead of reading a real `/MediaBox`. Fed this 65-page thesis the
+  subject produced a 607-byte one-page skeleton whose only text was `SemIO`. The oracle reported
+  `pageCount: 65`; the subject reported `1`. The snapshot is the document's real page TREE now
+  (`pages: Vec<PageDoc>`) and the codec walks `/Root → /Pages → /Kids` with real `/MediaBox`
+  inheritance, which is why `pageCount` sits in the projection at all: it is the anchor that fails
+  the moment a producer starts dropping pages again.
 
   THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because `lopdf` did not
   error. mutate-<id> fails unless the mutation actually MOVED the conformance projection — and the

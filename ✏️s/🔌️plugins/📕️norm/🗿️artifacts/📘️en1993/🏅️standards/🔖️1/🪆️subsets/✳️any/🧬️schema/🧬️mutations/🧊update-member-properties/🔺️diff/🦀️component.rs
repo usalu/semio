@@ -4,7 +4,7 @@ use super::mutation::UpdateMemberProperties;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdateMemberProperties, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdateMemberProperties, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let fields: [(&str, f64); 11] = [
         ("N Ed kn", payload.new_n_ed_kn),
         ("M Ed knm", payload.new_m_ed_knm),

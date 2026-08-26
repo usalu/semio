@@ -1,36 +1,85 @@
 @capability-puzzle-3d-1-mutate
-@no-oracle-puzzle-3d-mutation-semantics
+@oracle-puzzle-3d-python-independent
 @comparison-ordered-json-v1
 @mutations-puzzle-3d-1-any
-Feature: Replay every typed Puzzle 3d 1 mutation against its committed specification vector
-  `s.puzzle.3d@1/*` is a semio-NATIVE document, carried as `.dsl.semio`/`.pack.semio`/`.op.semio`/
-  `.spr.semio`. No third party reads those, and none is authoritative over `Puzzle3dMutation`, so this case
-  rests on the recorded `puzzle-3d-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) and its two named substitutes: the
-  committed specification vectors, and the metamorphic laws below.
+Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.puzzle.3d` scene document and its thirty-five typed mutations,
+  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from
+  rules 2, 4 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the thirty-five committed quintets. It imports nothing from this repository's Rust.
 
-  This is the widest vocabulary in the puzzle plugin — thirty-five kinds over FOUR independent top-level
-  collections. `objects` hold vortices; `attractions` name their endpoints as `object:vortex` pairs, so an
-  attraction refers into a collection it does not contain and `remove-object-vortex` can strand one;
-  `targetVolumes` are placed solids with their own move/rotate/scale/hidden/locked family; and `references`
-  are image planes with a source, a width and their own lifecycle. Four collections mean four different
-  footprints, which is what makes the footprint law informative here where the shallow `💠️lowpoly` and
-  `🌀️procedural` documents give it almost nothing to say.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. This case used to argue that its two-level connectivity — objects owning VORTICES, an
+  attraction joining two of them by a `"<objectId>:<vortexId>"` address — is this subset's own
+  specification and so not a fact an external library could confirm or refute. `mutate-fem3d-1` and
+  `mutate-gisterrain-1` refuted that in this same wave by taking Python second implementations over
+  this same carrier. The two-level connectivity is not an obstacle; it is something a second
+  implementation must model — and the reference models BOTH cascades: deleting an object severs every
+  attraction naming any of its vortices, and removing a single vortex severs the attractions
+  addressed to that port alone. A third-party library was nonetheless declined and the reason is
+  concrete: glTF, USD and IFC all model a scene graph of transforms, none of them can express a joint
+  whose endpoints are named ports owned by two nodes, and none of them reads this carrier.
 
-  One row deserves naming rather than hiding: `replace-object-vortex`'s ONLY committed vector is
-  `rekind-vortex-1-is-noop`, whose own `🎯️outcome` records a `mutation.no-op` warning. For a vector the
-  fixture itself declares a no-op, the scenario asserts the OPPOSITE of observability: nothing moved, and
-  the diff declares nothing. That the kind has no vector which actually replaces a vortex is a real gap in
-  this subset's production fixtures, visible here rather than papered over.
+  What the document is: a domain, a metadata block holding a kind-compatibility relation and an
+  optional kind catalogue, the objects with their own vortices and placements, the attractions
+  between ports, the target volumes and the image references. Thirty-five kinds, and one union worth
+  naming: `scale` is per-axis on an object and uniform on a target volume, and each verb writes the
+  other shape over the one the before-snapshot holds.
 
-  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same
-  bytes the production crate's own fixture tests beside each leaf assert against — end to end through
-  the test platform. The vector each row names is written out in full in the row itself, so the
-  provenance of every input is readable here and pinned by digest at plan time.
+  🚧️ THREE REFUSALS THE REFERENCE ARGUES BY CLAUSE, and reports rather than works around. First,
+  `replace-object-vortex` in both roles. Its ONLY committed vector, `rekind-vortex-1-is-noop`,
+  supplies a genuinely different vortex — `vortex-1` moves from `vortex-kind-a` to `vortex-kind-c` —
+  and yet its committed outcome declares `mutation.no-op` and its after-snapshot is identical to its
+  before-snapshot. At least three rules produce exactly that and no committed document distinguishes
+  them: the verb is unimplemented; it refuses a vortex an attraction is addressed to, which
+  `vortex-1` is; or it refuses a vortex kind the `kindCompatibility` relation does not admit, which
+  `vortex-kind-c` is. `📓️derivation-rules.md` rule 2 says `replace-<singular>-<member>` replaces the
+  addressed record, so a second implementation written from the specification would move the
+  document. ONE more vector, on an unattracted vortex, decides it. Second,
+  `inverse-replace-kind-catalogs`: the committed vector INSTALLS a catalogue where the before-snapshot
+  carried none, so undoing it means REMOVING the member, and nothing committed says whether the verb
+  accepts a null argument. The sibling `mutate-puzzle-2d-1` reports both gaps identically.
+
+  📌️ A FINDING MADE WHILE THE REFERENCE WAS BEING WRITTEN.
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json` is not a mutation schema at
+  all: it is titled `Puzzle3dMutation` and declares the SNAPSHOT's members — the pre-migration
+  whole-snapshot-shaped generic schema that `s.architect.program`'s own mutation schema records itself
+  as superseding. It was never replaced here, so the verbs and their argument lists had to be read off
+  the committed payloads instead. It is also where the one spelling inconsistency in this vocabulary
+  would have been caught: `replace-attraction-geometry` names the eight attraction-geometry values
+  with a `new` prefix and `connect-vortices` names the same eight bare.
+
+  📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
+  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  crate and replays the committed vectors, so today the comparison establishes that an independent
+  implementation of the specification computes the committed after-snapshots — a real check of the
+  vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec
+  against a second producer. A `puzzle3d_mutation_report_json` bridge beside the mutation enum closes
+  it; it was not added here for two reasons, and neither is that
+  the verb is hard: it is PRODUCTION code in a crate this test-side pass deliberately does not
+  touch, and it could not be verified end to end today anyway.
+  `parity` was not measured for any case in this pass: the single-case probe
+  `parity exhaustive --owner 🗒️note --case mutate-note-1` was killed at the runner's OWN 900 s
+  per-case budget while still COMPILING the generated subject host — the runner's message names the
+  cause, shared cargo target-dir lock contention from a concurrent session — and then threw
+  `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all.
+  `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import
+  component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated
+  host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so
+  rather than repeating it as fact. This subset's own plugin crate compiles clean at
+  `cargo check --lib`. Second, this case reads no real-world
+  artifact: all 175 of its fixtures are handcrafted specification vectors.
+
+  The committed specification vectors were KEPT, not replaced, and the reference asserts more against
+  them than the subject half can: it applies each verb, requires the committed after-snapshot member
+  by member, applies its OWN computed inverse and requires the committed before-snapshot back — the
+  full inverse law, where the subject half asserts only the weaker footprint precondition.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: The committed <id> vector declares its own kind and moves the document
     Given the committed specification vector for the <id> kind
       """
@@ -85,7 +134,7 @@ Feature: Replay every typed Puzzle 3d 1 mutation against its committed specifica
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: The committed <id> vector changes only what its diff declares
     Given the committed specification vector for the <id> kind
       """

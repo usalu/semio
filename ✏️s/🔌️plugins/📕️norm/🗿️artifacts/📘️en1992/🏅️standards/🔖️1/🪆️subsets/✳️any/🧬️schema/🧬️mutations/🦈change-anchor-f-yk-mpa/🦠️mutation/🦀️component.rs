@@ -15,15 +15,15 @@ pub struct ChangeAnchorFYkMpa {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorFYkMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "anchor-f-yk-mpa", kind: "change-anchor-f-yk-mpa", record: "ChangedAnchorFYkMpa" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_anchor_f_yk_mpa::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_anchor_f_yk_mpa::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change anchor f yk mpa to {:?}", self.new_anchor_f_yk_mpa)
     }
 }

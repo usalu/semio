@@ -290,7 +290,12 @@ impl PagedCommandReader {
     }
 
     pub fn read_byte(&mut self) -> Result<u8, crate::Fault> {
-        let byte = self.command.front_page().and_then(|page| page.as_slice().get(self.offset)).copied().ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-truncated"), "paged command ended inside a field"))?;
+        let byte = self
+            .command
+            .front_page()
+            .and_then(|page| page.as_slice().get(self.offset))
+            .copied()
+            .ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-truncated"), "paged command ended inside a field"))?;
         self.offset += 1;
         if self.command.front_page().is_some_and(|page| self.offset == page.len()) {
             let _ = self.command.release_front_page(COMMAND_PAGE_MAXIMUM_BYTES).expect("fully consumed fixed page is releasable");
@@ -381,9 +386,13 @@ pub struct CommandEnvelopeSet {
 impl CommandEnvelopeSet {
     pub fn try_new() -> Result<Self, crate::Fault> {
         let mut commands = std::collections::VecDeque::new();
-        commands.try_reserve_exact(COMMAND_BATCH_MAXIMUM_ITEMS).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-allocation"), "fixed command batch authority could not reserve its exact 64 slots"))?;
+        commands
+            .try_reserve_exact(COMMAND_BATCH_MAXIMUM_ITEMS)
+            .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-allocation"), "fixed command batch authority could not reserve its exact 64 slots"))?;
         let mut page_storage = std::collections::VecDeque::new();
-        page_storage.try_reserve_exact(COMMAND_MAXIMUM_PAGES).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-allocation"), "fixed command batch authority could not reserve its exact 64 page slots"))?;
+        page_storage
+            .try_reserve_exact(COMMAND_MAXIMUM_PAGES)
+            .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-allocation"), "fixed command batch authority could not reserve its exact 64 page slots"))?;
         Ok(Self { commands, page_storage, pages: 0, bytes: 0 })
     }
 
@@ -839,7 +848,8 @@ impl CommandBatchDriver {
                 let Some(command) = self.batch.commands.front_mut() else {
                     return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "accepted page has no exact host owner"));
                 };
-                let page_len = self.batch.pages.front().map(FixedCommandPage::len).ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "accepted page has no exact retained batch page"))?;
+                let page_len =
+                    self.batch.pages.front().map(FixedCommandPage::len).ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "accepted page has no exact retained batch page"))?;
                 if page_len > maximum_release_bytes {
                     return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-release-budget"), "accepted page exceeds its exact release grant"));
                 }
@@ -847,8 +857,10 @@ impl CommandBatchDriver {
                 let released = page.len();
                 self.batch.bytes -= released;
                 drop(page);
-                command.remaining_pages =
-                    command.remaining_pages.checked_sub(1).ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-underflow"), "accepted page arrived after the retained command page owner was empty"))?;
+                command.remaining_pages = command
+                    .remaining_pages
+                    .checked_sub(1)
+                    .ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-underflow"), "accepted page arrived after the retained command page owner was empty"))?;
                 let empty = command.remaining_pages == 0;
                 self.page_index = self.page_index.saturating_add(1);
                 if empty {
@@ -1142,7 +1154,7 @@ impl PresenceCommandCursor {
 //#endregion 🔖️PresenceCommandCursor
 
 //#region 🔖️PagedAppCommandDecode
-const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = COMMAND_PAGE_MAXIMUM_BYTES;
+const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 
 #[derive(Debug)]
 enum PagedAppCommandDecodeState {
@@ -1153,6 +1165,15 @@ enum PagedAppCommandDecodeState {
     CommandText { seq: u64 },
     ContextMenu { seq: u64 },
     ArtifactCommand { seq: u64 },
+    LoadDocumentPack { seq: u64 },
+    LoadDocumentSpr { seq: u64, pack: Option<Vec<u8>> },
+    ReadDocument { seq: u64 },
+    LoadConfigPack { seq: u64 },
+    LoadConfigSpr { seq: u64, pack: Option<Vec<u8>> },
+    ReadConfig { seq: u64 },
+    ReadChildren { seq: u64 },
+    ReadHistory { seq: u64 },
+    ReadConflicts { seq: u64 },
     RejectedFields { first: Option<Vec<u8>>, second: Option<Vec<u8>> },
     Terminal,
     Faulted,
@@ -1186,7 +1207,9 @@ impl DecodedAppCommandOwner {
         let field = match (self.close_stage, command) {
             (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => Some(std::mem::take(command)),
             (0, AppCommand::CommandText { line, .. }) => Some(std::mem::take(line).into_bytes()),
+            (0, AppCommand::LoadDocument { pack, .. }) | (0, AppCommand::LoadConfig { pack, .. }) => Some(std::mem::take(pack)),
             (1, AppCommand::Command { view_state, .. }) => Some(std::mem::take(view_state)),
+            (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => Some(std::mem::take(spr)),
             _ => None,
         };
         if let Some(field) = field {
@@ -1194,7 +1217,9 @@ impl DecodedAppCommandOwner {
                 match (self.close_stage, self.command.as_mut().expect("decoded command owner was present")) {
                     (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => *command = field,
                     (0, AppCommand::CommandText { line, .. }) => *line = String::from_utf8(field).expect("decoded command text remains valid UTF-8"),
+                    (0, AppCommand::LoadDocument { pack, .. }) | (0, AppCommand::LoadConfig { pack, .. }) => *pack = field,
                     (1, AppCommand::Command { view_state, .. }) => *view_state = field,
+                    (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => *spr = field,
                     _ => unreachable!("decoded command close field has an exact restoration target"),
                 }
                 return (false, 0, 0);
@@ -1235,12 +1260,15 @@ impl PagedAppCommandDecodeCursor {
                     2 => PagedAppCommandDecodeState::CommandText { seq },
                     3 => PagedAppCommandDecodeState::ContextMenu { seq },
                     4 => PagedAppCommandDecodeState::ArtifactCommand { seq },
+                    6 => PagedAppCommandDecodeState::LoadDocumentPack { seq },
+                    7 => PagedAppCommandDecodeState::ReadDocument { seq },
+                    8 => PagedAppCommandDecodeState::LoadConfigPack { seq },
+                    9 => PagedAppCommandDecodeState::ReadConfig { seq },
+                    15 => PagedAppCommandDecodeState::ReadChildren { seq },
+                    16 => PagedAppCommandDecodeState::ReadHistory { seq },
+                    27 => PagedAppCommandDecodeState::ReadConflicts { seq },
                     _ => {
-                        return Err(crate::Fault::new(
-                            crate::FaultOrigin::Framework,
-                            crate::FaultCode::new("plugin.command-route-state-machine-required"),
-                            "this AppCommand kind requires its route-specific retained decoder before admission",
-                        ));
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-route-state-machine-required"), "this AppCommand kind requires its route-specific retained decoder before admission"));
                     }
                 };
                 None
@@ -1283,6 +1311,41 @@ impl PagedAppCommandDecodeCursor {
                 let command = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
                 Some(AppCommand::ArtifactCommand { seq, command })
             }
+            PagedAppCommandDecodeState::LoadDocumentPack { seq } => {
+                let pack = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                self.state = PagedAppCommandDecodeState::LoadDocumentSpr { seq, pack: Some(pack) };
+                None
+            }
+            PagedAppCommandDecodeState::LoadDocumentSpr { seq, mut pack } => {
+                let spr = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
+                    Ok(spr) => spr,
+                    Err(fault) => {
+                        self.state = PagedAppCommandDecodeState::LoadDocumentSpr { seq, pack };
+                        return Err(fault);
+                    }
+                };
+                Some(AppCommand::LoadDocument { seq, pack: pack.take().expect("retained document pack"), spr })
+            }
+            PagedAppCommandDecodeState::ReadDocument { seq } => Some(AppCommand::ReadDocument { seq }),
+            PagedAppCommandDecodeState::LoadConfigPack { seq } => {
+                let pack = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                self.state = PagedAppCommandDecodeState::LoadConfigSpr { seq, pack: Some(pack) };
+                None
+            }
+            PagedAppCommandDecodeState::LoadConfigSpr { seq, mut pack } => {
+                let spr = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
+                    Ok(spr) => spr,
+                    Err(fault) => {
+                        self.state = PagedAppCommandDecodeState::LoadConfigSpr { seq, pack };
+                        return Err(fault);
+                    }
+                };
+                Some(AppCommand::LoadConfig { seq, pack: pack.take().expect("retained config pack"), spr })
+            }
+            PagedAppCommandDecodeState::ReadConfig { seq } => Some(AppCommand::ReadConfig { seq }),
+            PagedAppCommandDecodeState::ReadChildren { seq } => Some(AppCommand::ReadChildren { seq }),
+            PagedAppCommandDecodeState::ReadHistory { seq } => Some(AppCommand::ReadHistory { seq }),
+            PagedAppCommandDecodeState::ReadConflicts { seq } => Some(AppCommand::ReadConflicts { seq }),
             PagedAppCommandDecodeState::RejectedFields { first, second } => {
                 self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
                 return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
@@ -1297,6 +1360,8 @@ impl PagedAppCommandDecodeCursor {
                     AppCommand::ConfigCommand { command, .. } | AppCommand::ContextMenu { request: command, .. } | AppCommand::ArtifactCommand { command, .. } => (Some(command), None),
                     AppCommand::Command { command, view_state, .. } => (Some(command), Some(view_state)),
                     AppCommand::CommandText { line, .. } => (Some(line.into_bytes()), None),
+                    AppCommand::LoadDocument { pack, spr, .. } | AppCommand::LoadConfig { pack, spr, .. } => (Some(pack), Some(spr)),
+                    AppCommand::ReadDocument { .. } | AppCommand::ReadConfig { .. } | AppCommand::ReadChildren { .. } | AppCommand::ReadHistory { .. } | AppCommand::ReadConflicts { .. } => (None, None),
                     AppCommand::Presence { .. } => unreachable!("Presence is never decoded by the generic paged cursor"),
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
                 };
@@ -1317,6 +1382,20 @@ impl PagedAppCommandDecodeCursor {
                     return (false, 0);
                 }
                 let bytes = command.take().expect("retained command payload");
+                let released = bytes.len();
+                drop(bytes);
+                return (false, released);
+            }
+        }
+        if let Some(retained) = match &mut self.state {
+            PagedAppCommandDecodeState::LoadDocumentSpr { pack, .. } | PagedAppCommandDecodeState::LoadConfigSpr { pack, .. } => Some(pack),
+            _ => None,
+        } {
+            if let Some(bytes) = retained.as_ref() {
+                if bytes.len() > maximum_bytes {
+                    return (false, 0);
+                }
+                let bytes = retained.take().expect("retained pack was present");
                 let released = bytes.len();
                 drop(bytes);
                 return (false, released);
@@ -1729,7 +1808,11 @@ async fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
 }
 
 async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
-    if crate::os_spr::read_bool(bytes, pos)? { Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?)) } else { Ok(None) }
+    if crate::os_spr::read_bool(bytes, pos)? {
+        Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
 }
 
 /// 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand::Presence.own_color`), the same
@@ -2832,7 +2915,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn paged_generic_decoder_crosses_a_two_page_field_boundary_without_concatenation() {
-        let expected = AppCommand::Command { seq: 1, command: vec![0xA5; 4_090], view_state: vec![7, 8] };
+        let expected = AppCommand::Command { seq: 1, command: vec![0xA5; COMMAND_PAGE_MAXIMUM_BYTES + 1], view_state: vec![7, 8] };
         let encoded = encode_app_command(&expected).await.unwrap();
         assert_eq!(encoded.page_len(), 2);
         let mut cursor = PagedAppCommandDecodeCursor::new(encoded);
@@ -2843,8 +2926,34 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn paged_generic_decoder_admits_document_config_and_projection_commands_used_during_browser_boot() {
+        let commands = [
+            AppCommand::LoadDocument { seq: 1, pack: vec![1, 2], spr: vec![3] },
+            AppCommand::ReadDocument { seq: 2 },
+            AppCommand::LoadConfig { seq: 3, pack: vec![4], spr: vec![5, 6] },
+            AppCommand::ReadConfig { seq: 4 },
+            AppCommand::ReadChildren { seq: 5 },
+            AppCommand::ReadHistory { seq: 6 },
+            AppCommand::ReadConflicts { seq: 7 },
+        ];
+        for expected in commands {
+            let encoded = encode_app_command(&expected).await.unwrap();
+            let mut cursor = PagedAppCommandDecodeCursor::new(encoded);
+            let mut decoded = None;
+            for _ in 0..4 {
+                decoded = cursor.step().unwrap();
+                if decoded.is_some() {
+                    break;
+                }
+            }
+            assert_eq!(decoded, Some(expected));
+            assert!(cursor.terminal_is_empty());
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn paged_generic_decoder_faults_hostile_field_length_and_closes_exact_owner() {
-        let page = FixedCommandPage::try_copy_from(&[0, 1, 0x81, 0x20]).unwrap();
+        let page = FixedCommandPage::try_copy_from(&[0, 1, 0x81, 0x80, 0x10]).unwrap();
         let mut pages = CommandPageSet::try_new().unwrap();
         pages.try_push(page).unwrap();
         let mut cursor = PagedAppCommandDecodeCursor::new(PagedCommand::try_from_pages(pages).unwrap());

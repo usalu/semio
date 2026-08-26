@@ -1,0 +1,552 @@
+files=164
+shared-sentences(>=3 files, >70 chars)=74
+features touched=115
+
+### 15  It imports nothing from the Rust it judges and transliterates none of it; the document field a `new*` argument names is resolved by normalised spelling against the document's own keys, which is what the naming mechanic states, never from a table copied out of `🧬️mutations/**`.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  The recorded no-oracle decision it replaces is gone from `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a reference to compare against.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  Both implementations read the SAME committed bytes, and both read them from THIS file: every `(before, mutation, after, outcome)` path below is a declared `asset://` fixture, so neither side holds a transcription that could drift from what the other one read.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  Each side then asserts the same three laws in role — the applied document must BE the committed after-snapshot; an `applied` vector must move the document and a `rejected` one must leave it bit-identical; and the mutation followed by its OWN computed inverse must restore the before-snapshot exactly.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  What `parity` adds on top is the only thing a single implementation can never provide: that two implementations, in two languages, written from one written specification, reach the same document.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  Projecting only the restored one would make every row of the table project the same value and the differential would be vacuous.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  `.dsl.semio` has no specification in this repository: this subset's committed `🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` is the repository-wide placeholder whose entire body is `payload = OCTET+`, and the framework's DSL notation module publishes no grammar document either.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  `identity-round-trip` therefore compares the two implementations at the CARRIER level — the envelope preamble and the ordered `key=value` fields as written, plus the digest and length of the bytes each side re-emitted — and does not map carrier tokens onto the JSON snapshot's enum spellings, because that mapping is stated nowhere and inferring it would be reverse-engineering rather than a second reading.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 15  The Python side's reading is pinned by reproducing the committed artifact byte for byte, which a misreading could not do.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature
+### 10  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same bytes the production crate's own fixture tests beside each leaf assert against — end to end through the test platform.
+      ./✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧪️tests/mutate-cad-1/component.feature
+      ./✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🧪️tests/mutate-block-3d-1/component.feature
+      ./✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🧪️tests/mutate-block-5d-1/component.feature
+      ./✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🧪️tests/mutate-assembly-1/component.feature
+      ./✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🧪️tests/mutate-procedural-2d-1/component.feature
+      ./✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🧪️tests/mutate-procedural-3d-1/component.feature
+      ./✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🧪️tests/mutate-puzzle-3d-1/component.feature
+      ./✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🧪️tests/mutate-puzzle-5d-1/component.feature
+      ./✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🧪️tests/mutate-puzzle-2d-1/component.feature
+      ./✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🧪️tests/mutate-lowpoly-1/component.feature
+### 10  The vector each row names is written out in full in the row itself, so the provenance of every input is readable here and pinned by digest at plan time.
+      ./✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧪️tests/mutate-cad-1/component.feature
+      ./✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🧪️tests/mutate-block-3d-1/component.feature
+      ./✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🧪️tests/mutate-block-5d-1/component.feature
+      ./✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🧪️tests/mutate-assembly-1/component.feature
+      ./✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🧪️tests/mutate-procedural-2d-1/component.feature
+      ./✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🧪️tests/mutate-procedural-3d-1/component.feature
+      ./✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🧪️tests/mutate-puzzle-3d-1/component.feature
+      ./✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🧪️tests/mutate-puzzle-5d-1/component.feature
+      ./✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🧪️tests/mutate-puzzle-2d-1/component.feature
+      ./✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🧪️tests/mutate-lowpoly-1/component.feature
+### 8  📌️ Every Examples row below other than `no-mutation` is required to MOVE the semantic projection, and the adapter fails the scenario in role when it does not: a row whose parameters make the mutation a no-op passes whenever the reference library merely declined to error, which is not a test.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🧪️tests/mutate-bcf-2-1/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🧪️tests/mutate-dxf-r12/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cobie/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-sav/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cv20/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214/component.feature
+### 8  The baseline it is measured against runs one `no-mutation` cycle first, so the comparison isolates the mutation rather than the writer's own normal form.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🧪️tests/mutate-bcf-2-1/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🧪️tests/mutate-dxf-r12/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cobie/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-sav/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cv20/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214/component.feature
+### 8  It is read where the domain already keeps it; every scenario copies it into the case work directory before touching it, and the committed document is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-x/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 8  It is test-only; this repository's own PDF codec is hand-written and links nothing.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-x/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  A handler that merely ran the mutation and returned would report a pass having checked nothing.
+      ./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/mutate-os-config-opening/component.feature
+      ./✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/mutate-dag-1/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-any/component.feature
+      ./✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/mutate-wires-1/component.feature
+      ./✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🧪️tests/mutate-vcs-1/component.feature
+      ./✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🧪️tests/mutate-imperative-1/component.feature
+### 6  `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed, independently handcrafted `(before, mutation, after)` vector for each kind, now applied by BOTH implementations and checked against the committed after-snapshot by each of them in role.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-graph/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-kit/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/component.feature
+### 6  The input is `shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp`, the same real committed export the `✳️any` case reads: a real Rhino 8.31 / ST-Developer v19.2 BIM export whose 1,396-entity DATA section is byte-for-byte untouched real data, with one edit recorded in its own header comment — the `FILE_SCHEMA` line, changed from the source's real AP242 declaration to `AUTOMOTIVE_DESIGN`, because no git-tracked native AP214 file exists anywhere in this repository.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  Every scenario copies it into the case work directory first; the committed fixture is never written to. 🎯️ What makes this case NOT a copy of the `✳️any` case that reads the same bytes.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  `✳️any` declares the ISO 10303-21 GRAMMAR — insert an entity, set an argument, remove an argument — eleven verbs that would read identically for any Part-21 file on earth.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  The projection reports those three axes and nothing else — a projection carrying the whole entity graph would drown every class-level difference in 1,396 entities of unrelated geometry.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  `has_product_definition_chain` used to match the three chain types by EXACT name, and the real file carries `#822=PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` — the ISO 10303-41 SUBTYPE every real AP214/AP242 exporter writes.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  Every `✳️ccN` analyzer therefore reported the soft `product-definition-chain` diagnostic against a file that genuinely carries the chain.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  The ladder half of that module already classified `*_SHAPE_REPRESENTATION` subtypes; the product half did not, and only a real export made it visible.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  Both halves now enumerate their ISO 10303-41 subtypes explicitly, because a name PREFIX is not an EXPRESS subtype relation.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  `ruststep` 0.4 is a real ISO 10303-21 reader (it parses this fixture's 1,396 entities with zero errors) and has NO writer at all — no `Display`/`fmt::Formatter` impl exists on `Exchange`/`DataSection`/`Record`/`Parameter`, and `ast::ser::to_record` only builds an in-memory `Record` from an already-typed struct.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  Per the fleet brief's §6 that rules out `@mode-differential`: it cannot be a second PRODUCER.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  It is registered as the INDEPENDENT READER, and the re-serializer is this standard's own from-scratch Part-21 writer, shared by all seven `ap214` subsets and deliberately independent of this repository's production `engine::part21`.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  The ladder classification the oracle applies is likewise re-derived from ISO 10303-214 §4.3 rather than called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would be comparing an implementation with itself.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  📌️ Every row below was chosen against the file's REAL content: `#13` is the real `ADVANCED_BREP_SHAPE_REPRESENTATION` named `brep_rep_0`, `#836` is the real `SHAPE_REPRESENTATION` named `Document` carrying items `(#837,#895)` in context `#835`, and `#827`/`#822`/`#821` are the real product chain.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  The adapter FAILS any row other than `no-mutation` whose projection did not move: a row whose parameters make the mutation a no-op is not a test.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature
+### 6  The input is the real, committed 6.3 MB bachelor thesis produced by MiKTeX pdfTeX 1.40.21 — 65 pages, 3,189 indirect objects, a classic cross-reference table, 70 /Type /Font objects and 23 /Type /FontDescriptor objects, every one of the 23 carrying an embedded font program (5 /FontFile, 16 /FontFile2, 2 /FontFile3).
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  Scanning the committed file confirms it carries NO /Encrypt, no /S /JavaScript action and no /JS key, no /S /Launch action, no /Subtype /Movie or /Sound annotation, no /Type /Filespec, no /OutputIntents, no /MarkInfo, no /StructTreeRoot, no /Lang, no /ViewerPreferences, no /AcroForm, no /DPartRoot and no /TrimBox or /ArtBox on any page — it is a perfectly ordinary PDF that conforms to no conformance class at all, which is exactly what makes it the right input here: every scenario moves the real document along ONE axis of the class and then back.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  The ✳️any subset of this same standard owns the DOCUMENT vocabulary — insert-page, remove-page, move-page, the media/crop box kinds, page content, /Info as authoring metadata, and the raw object/dict/trailer edit primitives.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  No ✳️any mutation moves any of those axes and no mutation here touches page content, so the two vocabularies are disjoint by construction.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  `lopdf` 0.44 parses the complete COS object graph of the real document and writes a fresh file from that graph alone — never a patch of the input bytes — and it both performs and observes every kind this catalog declares, which is why every mutate scenario is @mode-differential rather than a weaker mode.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  ONE DELIBERATE SCOPE NOTE, RECORDED RATHER THAN GLOSSED. insert-encryption-dictionary adds a free-standing Standard Security Handler dictionary OBJECT and does not link it from the trailer's /Encrypt.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  The committed document carries none of the constructs listed above, so a scenario whose mutation REMOVES one runs on the real document after the SAME independent implementation has put it there.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  A conformance class is defined on what a document contains, not on where a writer chose to put it: re-inserting a removed action at a fresh object number is a faithful undo, and a projection that recorded the number would report a false divergence for it.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 6  THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because `lopdf` did not error. mutate-<id> fails unless the mutation actually MOVED the conformance-class projection. inverse-<id> applies the mutation, applies its own independently computed inverse, and fails with the first diverging field unless the result projects onto exactly what the pre-state projects onto. identity-round-trip fails unless the re-serialized bytes differ from the input AND their projection is identical to the input's.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature
+### 5  This case records a no-oracle decision, so the runner dispatches NO oracle role at all: `oracleDecision` resolves an oracle implementation from an `@oracle-` tag, this feature has none, and the comparison profile therefore never receives two sides to compare.
+      ./✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/mutate-process3d-1/component.feature
+      ./✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🧪️tests/mutate-s-home-1/component.feature
+      ./✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🧪️tests/mutate-s-space-1/component.feature
+      ./✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🧪️tests/mutate-mathematical-1/component.feature
+      ./✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/mutate-energy-model-1/component.feature
+### 5  Every law below is asserted INSIDE the adapter's handler, through the shared law module `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio subsets use — `divergence` for a path-named first difference, `mutation_is_observable` for the forward law, `inverse_restores` for the inverse law, `round_trip_preserves` and `carrier_is_exact` for the identity law.
+      ./✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/mutate-process3d-1/component.feature
+      ./✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🧪️tests/mutate-s-home-1/component.feature
+      ./✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🧪️tests/mutate-s-space-1/component.feature
+      ./✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🧪️tests/mutate-mathematical-1/component.feature
+      ./✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/mutate-energy-model-1/component.feature
+### 5  A handler that applied the mutation and returned would report a pass having checked nothing, which is exactly the failure this platform exists to prevent.
+      ./✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/mutate-process3d-1/component.feature
+      ./✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🧪️tests/mutate-s-home-1/component.feature
+      ./✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🧪️tests/mutate-s-space-1/component.feature
+      ./✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🧪️tests/mutate-mathematical-1/component.feature
+      ./✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/mutate-energy-model-1/component.feature
+### 5  Every scenario copies the fixture into the case work directory before touching it; the committed asset is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-sav/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-basic/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧪️tests/mutate-binary-raw/component.feature
+### 5  Every scenario copies it into the case work directory before touching it; the committed document is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧪️tests/mutate-xml-1-0-valid/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/mutate-png-1-2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4/component.feature
+### 5  `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin, and both committed files were produced by the Rust codec — so an exact re-emission is the CORRECT answer here and the wave's must-differ tripwire would be backwards, which is why the Rust side asserts `law::carrier_is_exact`.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-graph/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-kit/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object/component.feature
+### 5  `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed `(before, mutation, after)` vector for each kind in this case's own `🧫️fixtures/`, now applied by BOTH implementations and checked against the committed after-snapshot by each of them in role.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/component.feature
+### 5  Because that decision is recorded, the runner dispatches NO oracle role for this case: every assertion below lives inside the subject handler, and a handler that merely ran the mutation and returned would report a pass having checked nothing.
+      ./✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🧪️tests/mutate-writer-1/component.feature
+      ./✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/mutate-note-1/component.feature
+      ./✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/mutate-forms-1/component.feature
+      ./✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧪️tests/mutate-program-1/component.feature
+      ./✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧪️tests/mutate-playbook-1/component.feature
+### 5  Every scenario reads the committed vectors where the domain already keeps them, through `asset://`, and never writes to them.
+      ./✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🧪️tests/mutate-writer-1/component.feature
+      ./✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/mutate-note-1/component.feature
+      ./✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/mutate-forms-1/component.feature
+      ./✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧪️tests/mutate-program-1/component.feature
+      ./✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧪️tests/mutate-playbook-1/component.feature
+### 4  The committed specification vectors were KEPT, not replaced: `spec-vector-<kind>` replays each handcrafted `(before, mutation, after)` triple through both implementations.
+      ./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🧪️tests/mutate-rewrite-1/component.feature
+      ./✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🧪️tests/mutate-block-2d-1/component.feature
+      ./✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧪️tests/mutate-fem3d-1/component.feature
+      ./✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧪️tests/mutate-fem2d-1/component.feature
+### 4  Because this case records a no-oracle decision the runner executes NO oracle role, so every assertion below lives in the subject handler, which compares against the committed after-document through the shared `⚖️law` module and fails with the first divergence named by JSON path.
+      ./✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🧪️tests/mutate-remodel-1/component.feature
+      ./✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🧪️tests/mutate-playground-1/component.feature
+      ./✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🧪️tests/mutate-layout-1/component.feature
+      ./✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧪️tests/mutate-draw-1/component.feature
+### 4  ⚠️ Consequence, stated plainly: the runner dispatches NO oracle role for a recorded no-oracle case, so every scenario below carries its evidence in the SUBJECT role or carries none at all.
+      ./✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/mutate-flow-1/component.feature
+      ./✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/mutate-sequence-1/component.feature
+      ./✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🧪️tests/mutate-present-1/component.feature
+      ./✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🧪️tests/mutate-shooting-1/component.feature
+### 4  A handler that merely applied the mutation and returned would report a pass having checked nothing, which is why each one asserts its law through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module before it returns.
+      ./✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/mutate-flow-1/component.feature
+      ./✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/mutate-sequence-1/component.feature
+      ./✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🧪️tests/mutate-present-1/component.feature
+      ./✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🧪️tests/mutate-shooting-1/component.feature
+### 4  The second producer a differential comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is it: all 22 kinds of this vocabulary, written in Python from the repository's own written specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape rules — plus this subset's committed catalog for the closed list of kinds.
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature
+      ./✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature
+### 4  Every scenario copies it into the case work directory before touching it; the committed file is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧪️tests/mutate-json-rfc8259-i-json/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🧪️tests/mutate-mp3-mpeg1-layer3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧪️tests/mutate-txt-utf-8/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🧪️tests/mutate-las-1-0/component.feature
+### 4  Every scenario copies the fixture into the case work directory before touching it; the committed file is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧪️tests/mutate-json-rfc8259/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🧪️tests/mutate-csv-rfc4180/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🧪️tests/mutate-tsv-iana/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🧪️tests/mutate-stl-ascii/component.feature
+### 4  Every scenario copies it into the case work directory before touching it; the committed asset is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cobie/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cv20/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/mutate-gif-89a/component.feature
+### 4  Both non-differential laws are asserted IN ROLE, by the handler that plays the role, and are not deferred to the oracle-vs-subject comparison: every `inverse-<kind>` row requires apply-then-undo to restore that side's OWN reading of the original document's projection, and `identity-round-trip` requires that side's own decode → re-encode both to preserve its own projection and to move the bytes.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-tiny/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-basic/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🧪️tests/mutate-html-5/component.feature
+### 4  A scenario that only proved the reference library did not error would be vacuous — it is checkable without a second producer, so it is checked without one.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-tiny/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-basic/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🧪️tests/mutate-html-5/component.feature
+### 4  What stops that being a codec agreeing with itself is that the Python side reproduces the same two files byte for byte from the grammar and the protocol alone, and the two sides' digests of the re-emitted bytes are compared.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-graph/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-kit/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object/component.feature
+### 4  `identity-round-trip` carries the BYTE half of the identity law, in both directions.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/component.feature
+### 4  ISO 10303-214 §4.3 defines the six conformance classes as one monotone ladder over a single capability — which `*_SHAPE_REPRESENTATION` types the exchange structure may carry — and varies nothing else: the `AUTOMOTIVE_DESIGN` declaration and the PRODUCT/formation/definition chain are required identically by all six.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+### 4  A vocabulary derived one kind per axis therefore depends only on WHERE the ceiling sits, and there are three places.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+### 4  Strictly inside the ladder (CC2, CC3, CC4, CC5) there is a ceiling type to write and at least one rung above it to demote from, so both ladder verbs exist and the list is these six.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+### 4  Below the ladder (CC1) no representation is admitted at all, so deletion replaces both verbs.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+### 4  On top of it (CC6) nothing can be above the ceiling, so no demotion has a subject.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature
+### 3  Because this case records a no-oracle decision the runner executes NO oracle role, so every assertion lives inside the subject handler.
+      ./✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/mutate-dag-1/component.feature
+      ./✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/mutate-wires-1/component.feature
+      ./✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🧪️tests/mutate-imperative-1/component.feature
+### 3  `✳️any` declares generic ISO 10303-21 graph editing — `upsert-instance`, `remove-instance`, `set-header` — and knows nothing about model view definitions.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cobie/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-sav/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cv20/component.feature
+### 3  Per the fleet brief's §6 that rules out `@mode-differential`: ruststep cannot be a second PRODUCER of mutated bytes to diff the subject against.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cobie/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-sav/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cv20/component.feature
+### 3  Every scenario copies the fixture into the case work directory before touching it; the committed document is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🧪️tests/mutate-ply-1-0/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-tiny/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0/component.feature
+### 3  `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin, so reproducing both committed files byte for byte is the CORRECT answer here and the wave's must-differ tripwire would be backwards — which is why the Rust side asserts `law::carrier_is_exact`.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/component.feature
+### 3  `.dsl.semio` is a fixed-layout record grammar and the committed file was produced by the Rust codec, so an exact re-emission is the CORRECT answer here and the wave's must-differ tripwire would be backwards, which is why the Rust side asserts `law::carrier_is_exact`.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/component.feature
+### 3  `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin, so an exact re-emission is the CORRECT answer here and the wave's must-differ tripwire would be backwards, which is why the Rust side asserts `law::carrier_is_exact`.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/component.feature
+### 3  Every scenario copies it into the case work directory before touching it; the committed fixture is never written to.
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🧪️tests/mutate-md-commonmark/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧪️tests/mutate-xml-1-0/component.feature
+      ./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01/component.feature

@@ -1,0 +1,846 @@
+## ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs:152 OnceLock<Mutex<
+148:     pub language_id: String,
+149: }
+150: 
+151: fn writer_scratch() -> &'static Mutex<HashMap<String, Arc<str>>> {
+152:     static WRITER_SCRATCH: OnceLock<Mutex<HashMap<String, Arc<str>>>> = OnceLock::new();
+153:     WRITER_SCRATCH.get_or_init(|| Mutex::new(HashMap::new()))
+154: }
+155: 
+156: /// 📝 Seeds the scratch cache for a handle — call whenever new text content is about to become a
+157: /// document's `document` field (every mutation-diff/fixture builder in this plugin does, via
+158: /// [`document_child_handle_and_cache`]).
+159: pub fn cache_writer_document_text(child_id: &str, text: &str) {
+160:     writer_scratch().lock().unwrap_or_else(|poisoned| poisoned.into_inner()).insert(child_id.to_string(), Arc::<str>::from(text));
+161: }
+162: 
+163: /// 🔎 Reads the cached live text for a document child handle — empty string (never a panic) when
+164: /// nothing has cached it yet (see this region's module doc comment for why that can happen).
+## ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🦀️component.rs:317 thread_local! {
+313:     pub graph: MathematicalGraph,
+314:     pub geometry: MathematicalGeometry,
+315: }
+316: 
+317: thread_local! {
+318:     static MATH_SCRATCH: RefCell<HashMap<String, MathematicalWorkingScene>> = RefCell::new(HashMap::new());
+319: }
+320: 
+321: async fn mathematical_scene_id(graph: &MathematicalGraph, geometry: &MathematicalGeometry) -> String {
+322:     use std::hash::{Hash, Hasher};
+323:     let content_json = serde_json::to_string(&(graph, geometry)).unwrap_or_default();
+324:     let mut hasher = std::collections::hash_map::DefaultHasher::new();
+325:     content_json.hash(&mut hasher);
+326:     format!("mathematical-scene-{:016x}", hasher.finish())
+327: }
+328: 
+329: /// 🏗️ Mints all three composed-child handles for a `(graph, geometry)` pair AND seeds the scratch
+## ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:288 OnceLock<std::sync::Mutex<
+284:     maximum_controls: usize,
+285: }
+286: 
+287: fn procedural2d_publication_leases() -> &'static std::sync::Mutex<[Option<Procedural2dPublicationLease>; PROCEDURAL2D_PUBLICATION_SLOTS]> {
+288:     static LEASES: std::sync::OnceLock<std::sync::Mutex<[Option<Procedural2dPublicationLease>; PROCEDURAL2D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
+289:     LEASES.get_or_init(|| std::sync::Mutex::new([None; PROCEDURAL2D_PUBLICATION_SLOTS]))
+290: }
+291: 
+292: #[cfg(test)]
+293: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+294: pub enum Procedural2dPublicationHostile {
+295:     Missing,
+296:     WrongOperation,
+297:     WrongGeneration,
+298:     WrongBase,
+299:     WrongParent,
+300: }
+## ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:312 OnceLock<std::sync::Mutex<
+308: }
+309: 
+310: #[cfg(test)]
+311: fn procedural2d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Procedural2dPublicationHostileLease>; PROCEDURAL2D_PUBLICATION_SLOTS]> {
+312:     static HOSTILES: std::sync::OnceLock<std::sync::Mutex<[Option<Procedural2dPublicationHostileLease>; PROCEDURAL2D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
+313:     HOSTILES.get_or_init(|| std::sync::Mutex::new([None; PROCEDURAL2D_PUBLICATION_SLOTS]))
+314: }
+315: 
+316: #[cfg(test)]
+317: pub fn procedural2d_arm_publication_hostile(operation: semio_framework_job::OperationId, hostile: Procedural2dPublicationHostile) {
+318:     let mut hostiles = procedural2d_publication_hostiles().try_lock().expect("Procedural2d hostile publication authority is uncontended");
+319:     let slot = hostiles.iter_mut().find(|slot| slot.is_none()).expect("Procedural2d hostile publication authority has a fixed slot");
+320:     *slot = Some(Procedural2dPublicationHostileLease { operation: operation.0, hostile, observed: None });
+321: }
+322: 
+323: #[cfg(test)]
+324: pub fn procedural2d_take_publication_hostile_observed(operation: semio_framework_job::OperationId) -> Option<&'static str> {
+## ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:298 OnceLock<std::sync::Mutex<
+294:     maximum_controls: usize,
+295: }
+296: 
+297: fn procedural3d_publication_leases() -> &'static std::sync::Mutex<[Option<Procedural3dPublicationLease>; PROCEDURAL3D_PUBLICATION_SLOTS]> {
+298:     static LEASES: std::sync::OnceLock<std::sync::Mutex<[Option<Procedural3dPublicationLease>; PROCEDURAL3D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
+299:     LEASES.get_or_init(|| std::sync::Mutex::new([None; PROCEDURAL3D_PUBLICATION_SLOTS]))
+300: }
+301: 
+302: #[cfg(test)]
+303: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+304: pub enum Procedural3dPublicationHostile {
+305:     Missing,
+306:     WrongOperation,
+307:     WrongGeneration,
+308:     WrongBase,
+309:     WrongParent,
+310: }
+## ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:322 OnceLock<std::sync::Mutex<
+318: }
+319: 
+320: #[cfg(test)]
+321: fn procedural3d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Procedural3dPublicationHostileLease>; PROCEDURAL3D_PUBLICATION_SLOTS]> {
+322:     static HOSTILES: std::sync::OnceLock<std::sync::Mutex<[Option<Procedural3dPublicationHostileLease>; PROCEDURAL3D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
+323:     HOSTILES.get_or_init(|| std::sync::Mutex::new([None; PROCEDURAL3D_PUBLICATION_SLOTS]))
+324: }
+325: 
+326: #[cfg(test)]
+327: pub fn procedural3d_arm_publication_hostile(operation: semio_framework_job::OperationId, hostile: Procedural3dPublicationHostile) {
+328:     let mut hostiles = procedural3d_publication_hostiles().try_lock().expect("Procedural3d hostile publication authority is uncontended");
+329:     let slot = hostiles.iter_mut().find(|slot| slot.is_none()).expect("Procedural3d hostile publication authority has a fixed slot");
+330:     *slot = Some(Procedural3dPublicationHostileLease { operation: operation.0, hostile, observed: None });
+331: }
+332: 
+333: #[cfg(test)]
+334: pub fn procedural3d_take_publication_hostile_observed(operation: semio_framework_job::OperationId) -> Option<&'static str> {
+## ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️component.rs:177 thread_local! {
+173:     pub synapses: Vec<SynapseSpec>,
+174:     pub layout: BTreeMap<String, WidgetLayout>,
+175: }
+176: 
+177: thread_local! {
+178:     static FLOW_SCRATCH: RefCell<HashMap<String, FlowWorkingScene>> = RefCell::new(HashMap::new());
+179: }
+180: 
+181: /// 📝 Seeds the scratch cache for a handle — call whenever new widgets/synapses/layout content is
+182: /// about to become a document's `content` field (every mutation-diff/fixture builder in this plugin
+183: /// does, via [`flow_content_child_handle_and_cache`]).
+184: pub async fn cache_flow_content(child_id: &str, widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: BTreeMap<String, WidgetLayout>) {
+185:     FLOW_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), FlowWorkingScene { widgets, synapses, layout }));
+186: }
+187: 
+188: #[cfg(test)]
+189: pub async fn clear_flow_process_state() {
+## ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️component.rs:291 thread_local! {
+287:         Self::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
+288:     }
+289: }
+290: 
+291: thread_local! {
+292:     static ENTROPY_SEED: Cell<u64> = const { Cell::new(0) };
+293: }
+294: 
+295: fn number_dictionary(value: f64) -> Dictionary {
+296:     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
+297: }
+298: 
+299: fn xyz_dictionary(schema: &str, value: Vec3) -> Dictionary {
+300:     Dictionary::with_schema(schema).insert("x", Value::Atom(Atom::Decimal(value.x))).insert("y", Value::Atom(Atom::Decimal(value.y))).insert("z", Value::Atom(Atom::Decimal(value.z)))
+301: }
+302: 
+303: fn add_items(items: &Dictionary) -> Result<Dictionary, EvalError> {
+## ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs:518 thread_local! {
+514:     }
+515:     out
+516: }
+517: 
+518: thread_local! {
+519:     /// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
+520:     /// `child_id` — the `EngineRep`-shaped bridge every wave-4 exemplar uses since no `LinkResolver`/
+521:     /// child-dispatch seam reaches `ArtifactApp::handle` yet (checked directly against
+522:     /// `🔌️plugin/🦀️component.rs`, W1-owned, read-only for this wave). Populated only by
+523:     /// `shooting_set_emblem_from_base64` (the sole place this migration ever has literal emblem bytes in
+524:     /// hand — no mutation triad touches the emblem, see this region's own module doc comment), read by
+525:     /// `shooting_emblem_image`/`shooting_emblem_bytes`. Degrades to an honest `None`/empty on a cache
+526:     /// miss (a fresh process loading a persisted document, or a handle surviving a store-level undo/redo
+527:     /// that bypasses `ArtifactApp::handle`) — never fabricates data, matching every other exemplar's
+528:     /// documented staleness gap.
+529:     static SHOOTING_EMBLEM_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
+530: }
+## ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:325 thread_local! {
+321:     _message: AbiMessage,
+322:     bytes: Vec<u8>,
+323: }
+324: 
+325: thread_local! {
+326:     static BRIDGE: RefCell<SequenceBridge<SequenceDomainAdapter>> = RefCell::new(SequenceBridge::new(SequenceDomainAdapter::default));
+327:     static RETAINED: RefCell<Option<RetainedMessage>> = const { RefCell::new(None) };
+328: }
+329: 
+330: #[unsafe(no_mangle)]
+331: pub extern "C" fn sequence_bridge_allocate(length: usize) -> *mut u8 {
+332:     if length == 0 {
+333:         return std::ptr::null_mut();
+334:     }
+335:     let mut bytes = Vec::<u8>::with_capacity(length);
+336:     let pointer = bytes.as_mut_ptr();
+337:     std::mem::forget(bytes);
+## ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️component.rs:255 thread_local! {
+251:     pub steps: Vec<SequenceStep>,
+252:     pub edges: Vec<SequenceEdge>,
+253: }
+254: 
+255: thread_local! {
+256:     static SEQUENCE_SCRATCH: RefCell<HashMap<String, SequenceWorkingScene>> = RefCell::new(HashMap::new());
+257: }
+258: 
+259: /// 📝 Seeds the scratch cache for a handle — call whenever new steps/edges content is about to
+260: /// become a document's `content` field (every mutation-diff/fixture builder in this plugin does,
+261: /// via [`sequence_content_child_handle_and_cache`]).
+262: pub async fn cache_sequence_content(child_id: &str, steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) {
+263:     SEQUENCE_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), SequenceWorkingScene { steps, edges }));
+264: }
+265: 
+266: /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
+267: /// nothing has cached it yet (see this region's module doc comment for why that can happen).
+## ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs:2116 thread_local! {
+2112:         true
+2113:     }
+2114: }
+2115: 
+2116: thread_local! {
+2117:     static MOUNTED: RefCell<MountedRegistry> = RefCell::new(MountedRegistry::new());
+2118: }
+2119: //#endregion 🧰️FixedArena
+2120: 
+2121: //#region 💼️JobBridge
+2122: struct MountedBoundedJob {
+2123:     shell: Rc<RefCell<Option<MountedState>>>,
+2124:     identity: MountedIdentity,
+2125: }
+2126: 
+2127: impl BoundedJob for MountedBoundedJob {
+2128:     fn step(&mut self, budget: JobBudget) -> JobStep {
+## ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs:2048 thread_local! {
+2044:         Self { owners: [const { None }; FEM3D_RECOVERED_BACKING_CAPACITY] }
+2045:     }
+2046: }
+2047: 
+2048: thread_local! {
+2049:     static FEM3D_BACKING_RECOVERY: RefCell<Fem3dBackingRecovery> = const { RefCell::new(Fem3dBackingRecovery::new()) };
+2050: }
+2051: 
+2052: fn recover_fem3d_backing(owner: Fem3dRecoveredBacking) -> bool {
+2053:     FEM3D_BACKING_RECOVERY.with(|recovery| {
+2054:         let Ok(mut recovery) = recovery.try_borrow_mut() else { return false };
+2055:         let Some(slot) = recovery.owners.iter_mut().find(|slot| slot.is_none()) else { return false };
+2056:         *slot = Some(owner);
+2057:         true
+2058:     })
+2059: }
+2060: 
+## ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs:3371 thread_local! {
+3367:         true
+3368:     }
+3369: }
+3370: 
+3371: thread_local! {
+3372:     static MOUNTED: RefCell<Registry> = RefCell::new(Registry::new());
+3373: }
+3374: 
+3375: struct MountedJob {
+3376:     shell: Rc<RefCell<Option<MountedState>>>,
+3377:     recovery: Rc<MountedRecoverySlot>,
+3378:     identity: Identity,
+3379:     completed: bool,
+3380: }
+3381: 
+3382: impl BoundedJob for MountedJob {
+3383:     fn step(&mut self, budget: JobBudget) -> JobStep {
+## ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs:73 thread_local! {
+69: }
+70: //#endregion 🔖️Converters
+71: 
+72: //#region 🔖️WorkingScene
+73: thread_local! {
+74:     /// 🌱 Ephemeral, session-side cache of the live `benchmarks` rows behind a composed-child handle —
+75:     /// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
+76:     /// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
+77:     /// (checked directly, W1-owned, read-only), so this is the only way a persisted content-addressed
+78:     /// handle round-trips to the real rows within one process — mirrors `➗️mathematical`'s
+79:     /// `MATH_SCRATCH`/`📕️norm`'s `EN1990_QK_SCRATCH`.
+80:     ///
+81:     /// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
+82:     /// undo/redo past this session's history, or a genuinely reloaded persisted `.architect` document)
+83:     /// sees a `benchmarks` handle whose cache entry was never populated — `program_benchmarks` fails
+84:     /// soft to an EMPTY list rather than panicking. Every register-panel/report/mutation-diff call path
+85:     /// already routes through `program_benchmarks`, so the gap is visibly empty, not
+## ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs:160 thread_local! {
+156: }
+157: //#endregion 🔖️Converters
+158: 
+159: //#region 🔖️WorkingScene
+160: thread_local! {
+161:     static PROGRAM_KNOWLEDGE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<KnowledgeRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
+162: }
+163: 
+164: async fn program_knowledge_scene_id(records: &[KnowledgeRecord]) -> String {
+165:     use std::hash::{Hash, Hasher};
+166:     let content_json = serde_json::to_string(records).unwrap_or_default();
+167:     let mut hasher = std::collections::hash_map::DefaultHasher::new();
+168:     content_json.hash(&mut hasher);
+169:     format!("architect-knowledge-{:016x}", hasher.finish())
+170: }
+171: 
+172: async fn program_knowledge_target() -> store::os_io::ArtifactRef {
+## ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:227 OnceLock<std::sync::Mutex<
+223:     maximum_controls: usize,
+224: }
+225: 
+226: fn process3d_publication_leases() -> &'static std::sync::Mutex<[Option<Process3dPublicationLease>; PROCESS3D_PUBLICATION_SLOTS]> {
+227:     static LEASES: std::sync::OnceLock<std::sync::Mutex<[Option<Process3dPublicationLease>; PROCESS3D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
+228:     LEASES.get_or_init(|| std::sync::Mutex::new([None; PROCESS3D_PUBLICATION_SLOTS]))
+229: }
+230: 
+231: #[cfg(test)]
+232: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+233: pub enum Process3dPublicationHostile {
+234:     Missing,
+235:     WrongOperation,
+236:     WrongGeneration,
+237:     WrongBase,
+238:     WrongParent,
+239: }
+## ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:251 OnceLock<std::sync::Mutex<
+247: }
+248: 
+249: #[cfg(test)]
+250: fn process3d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Process3dPublicationHostileLease>; PROCESS3D_PUBLICATION_SLOTS]> {
+251:     static HOSTILES: std::sync::OnceLock<std::sync::Mutex<[Option<Process3dPublicationHostileLease>; PROCESS3D_PUBLICATION_SLOTS]>> = std::sync::OnceLock::new();
+252:     HOSTILES.get_or_init(|| std::sync::Mutex::new([None; PROCESS3D_PUBLICATION_SLOTS]))
+253: }
+254: 
+255: #[cfg(test)]
+256: pub fn process3d_arm_publication_hostile(operation: semio_framework_job::OperationId, hostile: Process3dPublicationHostile) {
+257:     let mut hostiles = process3d_publication_hostiles().try_lock().expect("Process3d hostile publication authority is uncontended");
+258:     let slot = hostiles.iter_mut().find(|slot| slot.is_none()).expect("Process3d hostile publication authority has a fixed slot");
+259:     *slot = Some(Process3dPublicationHostileLease { operation: operation.0, hostile, observed: None });
+260: }
+261: 
+262: #[cfg(test)]
+263: pub fn process3d_take_publication_hostile_observed(operation: semio_framework_job::OperationId) -> Option<&'static str> {
+## ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:153 thread_local! {
+149: }
+150: //#endregion 🔖️Io
+151: 
+152: //#region 🔖️ScratchSlot
+153: thread_local! {
+154:     /// 🖌️ Mid-gesture scratch survives across `ArtifactApp::handle` calls (associated fn has no `&mut self`).
+155:     /// Host-owned session scratch lands with CHANNEL_VERSION 5; until then one TLS slot per thread.
+156:     static LOWPOLY_SCRATCH: std::cell::RefCell<LowpolyScratch> = std::cell::RefCell::new(LowpolyScratch::default());
+157: }
+158: //#endregion 🔖️ScratchSlot
+159: 
+160: //#region 🔖️SharedMeasures
+161: /// 🎛️ Collects every window-chrome measure from the app-level `🛠️options/*` shared by both windows
+162: /// (Model + UV expose an identical set — see this file's top-level doc comment).
+163: pub async fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
+164:     use crate::editor::lowpoly::options;
+165:     vec![
+## ✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs:209 thread_local! {
+205:     pub nodes: Vec<DslValue>,
+206:     pub edges: Vec<DslValue>,
+207: }
+208: 
+209: thread_local! {
+210:     static WIRES_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, WiresWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
+211: }
+212: 
+213: /// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to become
+214: /// a document's `content` field (every mutation-diff/fixture/codec builder in this plugin does, via
+215: /// [`wires_content_child_handle_and_cache`]).
+216: pub async fn cache_wires_content(child_id: &str, nodes: Vec<DslValue>, edges: Vec<DslValue>) {
+217:     WIRES_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), WiresWorkingScene { nodes, edges }));
+218: }
+219: 
+220: /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
+221: /// nothing has cached it yet.
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs:37 OnceLock<Mutex<
+33:     chunks: BTreeMap<u64, Arc<str>>,
+34:     next_index: u64,
+35: }
+36: 
+37: static TRY_VALUE_BLOBS: OnceLock<Mutex<BTreeMap<String, TryValueBlob>>> = OnceLock::new();
+38: 
+39: #[derive(Default)]
+40: struct TryValuesBatch {
+41:     values: FormsTryValues,
+42:     staged_entries: u64,
+43: }
+44: 
+45: static TRY_VALUES_BATCHES: OnceLock<Mutex<BTreeMap<String, TryValuesBatch>>> = OnceLock::new();
+46: 
+47: fn try_value_blobs() -> &'static Mutex<BTreeMap<String, TryValueBlob>> {
+48:     TRY_VALUE_BLOBS.get_or_init(|| Mutex::new(BTreeMap::new()))
+49: }
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs:45 OnceLock<Mutex<
+41:     values: FormsTryValues,
+42:     staged_entries: u64,
+43: }
+44: 
+45: static TRY_VALUES_BATCHES: OnceLock<Mutex<BTreeMap<String, TryValuesBatch>>> = OnceLock::new();
+46: 
+47: fn try_value_blobs() -> &'static Mutex<BTreeMap<String, TryValueBlob>> {
+48:     TRY_VALUE_BLOBS.get_or_init(|| Mutex::new(BTreeMap::new()))
+49: }
+50: 
+51: fn try_values_batches() -> &'static Mutex<BTreeMap<String, TryValuesBatch>> {
+52:     TRY_VALUES_BATCHES.get_or_init(|| Mutex::new(BTreeMap::new()))
+53: }
+54: 
+55: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+56: pub enum FormsStageError {
+57:     Invalid,
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs:147 OnceLock<Mutex<
+143:     operation_id: String,
+144:     generation: u64,
+145: }
+146: 
+147: static TRY_VALUE_SESSIONS: OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>> = OnceLock::new();
+148: static ACTIVE_TRY_VALUE_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), u64>>> = OnceLock::new();
+149: static NEXT_TRY_VALUE_REQUEST: AtomicU64 = AtomicU64::new(20_000);
+150: 
+151: fn sessions() -> &'static Mutex<BTreeMap<FormsJobKey, TryValueSession>> {
+152:     TRY_VALUE_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+153: }
+154: 
+155: fn active_generations() -> &'static Mutex<BTreeMap<(String, String, String), u64>> {
+156:     ACTIVE_TRY_VALUE_GENERATIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+157: }
+158: 
+159: pub(crate) fn cancel_pending_generations(operation: &semio_framework_plugin::AppOperationContext) -> Vec<FormsConfigMutation> {
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs:148 OnceLock<Mutex<
+144:     generation: u64,
+145: }
+146: 
+147: static TRY_VALUE_SESSIONS: OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>> = OnceLock::new();
+148: static ACTIVE_TRY_VALUE_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), u64>>> = OnceLock::new();
+149: static NEXT_TRY_VALUE_REQUEST: AtomicU64 = AtomicU64::new(20_000);
+150: 
+151: fn sessions() -> &'static Mutex<BTreeMap<FormsJobKey, TryValueSession>> {
+152:     TRY_VALUE_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+153: }
+154: 
+155: fn active_generations() -> &'static Mutex<BTreeMap<(String, String, String), u64>> {
+156:     ACTIVE_TRY_VALUE_GENERATIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+157: }
+158: 
+159: pub(crate) fn cancel_pending_generations(operation: &semio_framework_plugin::AppOperationContext) -> Vec<FormsConfigMutation> {
+160:     cancel_command_inputs(operation.app_instance_id, &operation.parent_document_id);
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs:350 OnceLock<Mutex<
+346:     active: BTreeMap<(u32, String, String), FormsInputKey>,
+347:     tick: u64,
+348: }
+349: 
+350: static FORMS_INPUT_REGISTRY: OnceLock<Mutex<FormsInputRegistry>> = OnceLock::new();
+351: 
+352: pub(crate) fn input_registry() -> &'static Mutex<FormsInputRegistry> {
+353:     FORMS_INPUT_REGISTRY.get_or_init(|| Mutex::new(FormsInputRegistry::default()))
+354: }
+355: 
+356: fn cancel_command_inputs(app_instance_id: u32, document_id: &str) {
+357:     let mut registry = input_registry().lock().expect("forms input registry lock");
+358:     for operation_id in ["setTryValue", "setTryValues"] {
+359:         let scope = (app_instance_id, document_id.to_string(), operation_id.to_string());
+360:         let Some(key) = registry.active.remove(&scope) else { continue };
+361:         if let Some(blob) = registry.blobs.remove(&key) {
+362:             registry.expiry.remove(&blob.last_touch);
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs:17 OnceLock<Mutex<
+13: 
+14: //#region 🔖️BulkSession
+15: const MAX_BULK_KEY_BYTES: usize = 4_096;
+16: const MAX_LIVE_BULK_SESSIONS: usize = 64;
+17: static ACTIVE_BULK_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), u64>>> = OnceLock::new();
+18: static NEXT_BULK_REQUEST: AtomicU64 = AtomicU64::new(40_000);
+19: #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+20: struct BulkJobKey {
+21:     app_id: String,
+22:     document_id: String,
+23:     operation_id: String,
+24:     base_revision: String,
+25:     generation: u64,
+26: }
+27: 
+28: static BULK_SESSIONS: OnceLock<Mutex<BTreeMap<BulkJobKey, BulkSession>>> = OnceLock::new();
+29: 
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs:28 OnceLock<Mutex<
+24:     base_revision: String,
+25:     generation: u64,
+26: }
+27: 
+28: static BULK_SESSIONS: OnceLock<Mutex<BTreeMap<BulkJobKey, BulkSession>>> = OnceLock::new();
+29: 
+30: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+31: enum BulkPhase {
+32:     Object,
+33:     Key,
+34:     Colon,
+35:     Value,
+36:     Stage,
+37:     Entry,
+38:     Commit,
+39: }
+40: 
+## ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️component.rs:382 thread_local! {
+378: pub struct FormsWorkingScene {
+379:     pub steps: Vec<FormStep>,
+380: }
+381: 
+382: thread_local! {
+383:     static FORMS_SCRATCH: RefCell<HashMap<String, FormsWorkingScene>> = RefCell::new(HashMap::new());
+384: }
+385: 
+386: async fn forms_scene_id(steps: &[FormStep]) -> String {
+387:     use std::hash::{Hash, Hasher};
+388:     let content_json = serde_json::to_string(steps).unwrap_or_default();
+389:     let mut hasher = std::collections::hash_map::DefaultHasher::new();
+390:     content_json.hash(&mut hasher);
+391:     format!("forms-scene-{:016x}", hasher.finish())
+392: }
+393: 
+394: /// 📝 Seeds the scratch cache for a handle — the id-keyed twin of [`forms_children_from_steps`],
+## ✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:56 thread_local! {
+52:         ClosingRejected { rejected: WorkerJobSessionAdmissionRejected<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot> },
+53:         ClosingSession { session: WorkerJobSession<LayoutExportJob>, snapshot_owner: Arc<LayoutSnapshot> },
+54:     }
+55: 
+56:     thread_local! {
+57:         static LAYOUT_EXPORT_REJECTIONS: RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]> = RefCell::new(std::array::from_fn(|_| LayoutExportRejectionSlot::Empty));
+58:     }
+59: 
+60:     fn pump_layout_export_rejections() {
+61:         LAYOUT_EXPORT_REJECTIONS.with(|registry| {
+62:             for slot in registry.borrow_mut().iter_mut() {
+63:                 match slot {
+64:                     LayoutExportRejectionSlot::ClosingRejected { rejected, .. } => {
+65:                         rejected.begin_close();
+66:                         let _ = rejected.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+67:                         if rejected.terminal_is_empty() {
+68:                             *slot = LayoutExportRejectionSlot::Empty;
+## ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs:67 thread_local! {
+63: }
+64: //#endregion 🔖️Converters
+65: 
+66: //#region 🔖️WorkingScene
+67: thread_local! {
+68:     /// 🌱 Ephemeral, session-side cache of the live `q_k` entries behind a composed-child handle —
+69:     /// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
+70:     /// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
+71:     /// (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only — same standing gap
+72:     /// every prior wave's report documents), so this is the only way a persisted content-addressed
+73:     /// handle round-trips to the real entries within one process — mirrors `➗️mathematical`'s
+74:     /// `MATH_SCRATCH`/`✒️writer`'s `WRITER_SCRATCH`.
+75:     ///
+76:     /// ⚠️ Same documented staleness gap as every prior exemplar, called out honestly rather than
+77:     /// hidden: a fresh process (a store-level undo/redo past this session's history, or a genuinely
+78:     /// reloaded persisted `.en1990` document) sees a `q_k` handle whose cache entry was never
+79:     /// populated — `en1990_qk` fails soft to an EMPTY table rather than panicking. For a compliance
+## ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs:95 thread_local! {
+91: }
+92: //#endregion 🔖️Converters
+93: 
+94: //#region 🔖️WorkingScene
+95: thread_local! {
+96:     /// 🌱 Ephemeral, session-side cache of the live `climate` data behind a composed-child handle —
+97:     /// NEVER persisted (matches the `EngineRep` contract). No `LinkResolver`/child-dispatch seam exists
+98:     /// in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
+99:     /// read-only — same standing gap every prior wave's report documents), so this is the only way a
+100:     /// persisted content-addressed handle round-trips to the real climate data within one process —
+101:     /// mirrors `➗️mathematical`'s `MATH_SCRATCH`/en1990's `EN1990_QK_SCRATCH`.
+102:     ///
+103:     /// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
+104:     /// undo/redo past this session's history, or a genuinely reloaded persisted `.din18599` document)
+105:     /// sees a `climate` handle whose cache entry was never populated — `din18599_climate` fails soft to
+106:     /// an all-zero `MonthlyClimate` rather than panicking. Every energy-balance calculation this
+107:     /// artifact performs already routes through `din18599_climate`, so the gap is visibly zeroed, not
+## ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️component.rs:217 thread_local! {
+213: pub struct PlaybookWorkingScene {
+214:     pub steps: Vec<PlaybookStep>,
+215: }
+216: 
+217: thread_local! {
+218:     static PLAYBOOK_SCRATCH: RefCell<HashMap<String, Vec<PlaybookStep>>> = RefCell::new(HashMap::new());
+219: }
+220: 
+221: /// 📝 Seeds the scratch cache for the `flow` child's handle — call whenever new step content is
+222: /// about to become a document's `flow`/`document` field pair (every mutation-diff/fixture builder in
+223: /// this plugin does, via [`playbook_content_handles_and_cache`]).
+224: pub async fn cache_playbook_steps(flow_child_id: &str, steps: Vec<PlaybookStep>) {
+225:     PLAYBOOK_SCRATCH.with(|cache| cache.borrow_mut().insert(flow_child_id.to_string(), steps));
+226: }
+227: 
+228: /// 🔎 Reads the cached live steps for a `flow` child handle — an empty scene (never a panic) when
+229: /// nothing has cached it yet (see this region's module doc comment for why that can happen).
+## ✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🦀️component.rs:202 thread_local! {
+198:     pub path: Path,
+199:     pub seed: BTreeMap<String, Value>,
+200: }
+201: 
+202: thread_local! {
+203:     static IMPERATIVE_FLOW_SCRATCH: RefCell<HashMap<String, Path>> = RefCell::new(HashMap::new());
+204:     static IMPERATIVE_SEED_SCRATCH: RefCell<HashMap<String, BTreeMap<String, Value>>> = RefCell::new(HashMap::new());
+205: }
+206: 
+207: /// 📝 Seeds the `flow` scratch cache for a handle — call whenever new `Path` content is about to
+208: /// become a document's `flow` field (every mutation-diff/fixture builder in this plugin does, via
+209: /// [`imperative_flow_child_handle_and_cache`]).
+210: pub fn cache_imperative_flow(child_id: &str, path: &Path) {
+211:     IMPERATIVE_FLOW_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), path.clone()));
+212: }
+213: 
+214: /// 📝 `seed`-side twin of [`cache_imperative_flow`].
+## ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️run-reconstruction/🦀️component.rs:347 OnceLock<Mutex<
+343:         Ok(removed)
+344:     }
+345: }
+346: 
+347: static RECONSTRUCTION_SESSIONS: OnceLock<Mutex<ReconstructionSessions>> = OnceLock::new();
+348: static NEXT_RECONSTRUCTION_GENERATION: AtomicU64 = AtomicU64::new(1);
+349: static NEXT_RECONSTRUCTION_REQUEST: AtomicU64 = AtomicU64::new(10_000);
+350: 
+351: fn sessions() -> &'static Mutex<ReconstructionSessions> {
+352:     RECONSTRUCTION_SESSIONS.get_or_init(|| Mutex::new(ReconstructionSessions::default()))
+353: }
+354: 
+355: fn take_session(generation: u64) -> Option<ReconstructionSession> {
+356:     sessions().lock().expect("remodel reconstruction sessions lock").live.remove(&generation)
+357: }
+358: 
+359: fn admit_session(generation: u64, job_id: &str) -> bool {
+## ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs:421 OnceLock<Mutex<
+417: fn content_digest_id(prefix: &str, digest: [u64; 4], digest_len: u64) -> String {
+418:     format!("{prefix}-{:016x}{:016x}{:016x}{:016x}-{digest_len:016x}", digest[0], digest[1], digest[2], digest[3])
+419: }
+420: 
+421: static REMODEL_PRIVATE_ASSET_STAGING: OnceLock<Mutex<BTreeMap<String, RemodelAssetBlob>>> = OnceLock::new();
+422: 
+423: fn remodel_asset_content() -> &'static Mutex<BTreeMap<String, RemodelAssetBlob>> {
+424:     REMODEL_PRIVATE_ASSET_STAGING.get_or_init(|| Mutex::new(BTreeMap::new()))
+425: }
+426: 
+427: pub fn stage_remodel_asset_chunk(staging_id: &str, kind: RemodelAssetContentKind, index: u64, encoded: &str) -> Result<(), RemodelStagingFault> {
+428:     let Some(bytes) = decode_remodel_durable_chunk(encoded) else { return Err(RemodelStagingFault::Invalid) };
+429:     let next_count = index.checked_add(1).ok_or(RemodelStagingFault::Busy)?;
+430:     let mut content = remodel_asset_content().lock().expect("remodel asset content lock");
+431:     if !content.contains_key(staging_id) && content.len() >= REMODEL_MAX_STAGED_BLOBS {
+432:         return Err(RemodelStagingFault::Busy);
+433:     }
+## ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs:552 OnceLock<Mutex<
+548:         format!("remodel-mesh-{:016x}{:016x}{:016x}{:016x}-{:016x}", self.digest[0], self.digest[1], self.digest[2], self.digest[3], self.digest_len)
+549:     }
+550: }
+551: 
+552: static REMODEL_PRIVATE_MESH_STAGING: OnceLock<Mutex<BTreeMap<String, RemodelMeshBlob>>> = OnceLock::new();
+553: 
+554: fn remodel_mesh_blobs() -> &'static Mutex<BTreeMap<String, RemodelMeshBlob>> {
+555:     REMODEL_PRIVATE_MESH_STAGING.get_or_init(|| Mutex::new(BTreeMap::new()))
+556: }
+557: 
+558: fn apply_mesh_chunk(mesh: &mut MeshData, last_field: Option<u8>, bytes: &[u8]) -> bool {
+559:     let Some((&field, values)) = bytes.split_first() else { return false };
+560:     if field > 11 || last_field.is_some_and(|previous| field < previous) {
+561:         return false;
+562:     }
+563:     let component_count = values.len() / 4;
+564:     match field {
+## ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs:817 OnceLock<Mutex<
+813:     }
+814: }
+815: 
+816: #[cfg(test)]
+817: static REMODEL_TEST_MESHES: OnceLock<Mutex<BTreeMap<String, MeshData>>> = OnceLock::new();
+818: 
+819: #[cfg(test)]
+820: fn remodel_test_meshes() -> &'static Mutex<BTreeMap<String, MeshData>> {
+821:     REMODEL_TEST_MESHES.get_or_init(|| Mutex::new(BTreeMap::new()))
+822: }
+823: 
+824: #[cfg(test)]
+825: pub fn mint_and_stash_mesh(mesh: MeshData) -> RemodelMeshChild {
+826:     let bytes = serde_json::to_vec(&mesh).unwrap_or_default();
+827:     let child_id = mesh_digest_bytes([bytes.as_slice()]);
+828:     remodel_test_meshes().lock().expect("remodel test mesh lock").insert(child_id.clone(), mesh);
+829:     mesh_child_handle(child_id, "remodel-mesh".into())
+## ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️component.rs:1708 thread_local! {
+1704:         Ok(Some(identity))
+1705:     }
+1706: }
+1707: 
+1708: thread_local! {
+1709:     static REGISTRY: RefCell<Registry> = RefCell::new(Registry::new());
+1710:     static RECOVERY: RefCell<[Option<RecoveryRecord>; SHELL_SLOTS]> = RefCell::new([None; SHELL_SLOTS]);
+1711: }
+1712: //#endregion 🧰️FixedArena
+1713: 
+1714: //#region 💼️ProcessBridge
+1715: struct EnergyMountedBoundedJob {
+1716:     shell_index: u16,
+1717:     shell: Rc<RefCell<Option<MountedState>>>,
+1718:     identity: MountedIdentity,
+1719: }
+1720: 
+## ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️component.rs:303 thread_local! {
+299:     pub nodes: Vec<Node>,
+300:     pub edges: Vec<Edge>,
+301: }
+302: 
+303: thread_local! {
+304:     static JACK_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, JackWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
+305: }
+306: 
+307: /// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to become
+308: /// a document's `content` field (every mutation-diff/fixture builder in this plugin does, via
+309: /// [`jack_content_child_handle_and_cache`]).
+310: pub async fn cache_jack_content(child_id: &str, nodes: Vec<Node>, edges: Vec<Edge>) {
+311:     JACK_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), JackWorkingScene { nodes, edges }));
+312: }
+313: 
+314: /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
+315: /// nothing has cached it yet.
+## ✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️component.rs:152 thread_local! {
+148:     pub nodes: Vec<DagNodeSpec>,
+149:     pub edges: Vec<DagFixtureEdge>,
+150: }
+151: 
+152: thread_local! {
+153:     static DAG_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, DagWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
+154: }
+155: 
+156: /// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to
+157: /// become a document's `content` field (every mutation-diff/fixture builder in this plugin does, via
+158: /// [`dag_content_child_handle_and_cache`]).
+159: pub async fn cache_dag_content(child_id: &str, nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) {
+160:     DAG_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), DagWorkingScene { nodes, edges }));
+161: }
+162: 
+163: /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
+164: /// nothing has cached it yet (see this region's module doc comment for why that can happen).
+## ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs:608 OnceLock<Mutex<
+604:     generation: u64,
+605:     base_revision: String,
+606: }
+607: 
+608: static TRACE_POINTER_JOBS: OnceLock<Mutex<BTreeMap<TracePointerJobKey, TracePointerJob>>> = OnceLock::new();
+609: static ACTIVE_TRACE_POINTER_JOBS: OnceLock<Mutex<BTreeMap<(u32, String, u64), TracePointerJobKey>>> = OnceLock::new();
+610: 
+611: fn trace_pointer_jobs() -> &'static Mutex<BTreeMap<TracePointerJobKey, TracePointerJob>> {
+612:     TRACE_POINTER_JOBS.get_or_init(|| Mutex::new(BTreeMap::new()))
+613: }
+614: 
+615: fn active_trace_pointer_jobs() -> &'static Mutex<BTreeMap<(u32, String, u64), TracePointerJobKey>> {
+616:     ACTIVE_TRACE_POINTER_JOBS.get_or_init(|| Mutex::new(BTreeMap::new()))
+617: }
+618: 
+619: fn trace_job_key(job: &TracePointerJob) -> TracePointerJobKey {
+620:     TracePointerJobKey { app_instance_id: job.app_instance_id, document_id: job.document_id.clone(), operation_id: job.operation_id, generation: job.generation, base_revision: job.base_revision.clone() }
+## ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs:609 OnceLock<Mutex<
+605:     base_revision: String,
+606: }
+607: 
+608: static TRACE_POINTER_JOBS: OnceLock<Mutex<BTreeMap<TracePointerJobKey, TracePointerJob>>> = OnceLock::new();
+609: static ACTIVE_TRACE_POINTER_JOBS: OnceLock<Mutex<BTreeMap<(u32, String, u64), TracePointerJobKey>>> = OnceLock::new();
+610: 
+611: fn trace_pointer_jobs() -> &'static Mutex<BTreeMap<TracePointerJobKey, TracePointerJob>> {
+612:     TRACE_POINTER_JOBS.get_or_init(|| Mutex::new(BTreeMap::new()))
+613: }
+614: 
+615: fn active_trace_pointer_jobs() -> &'static Mutex<BTreeMap<(u32, String, u64), TracePointerJobKey>> {
+616:     ACTIVE_TRACE_POINTER_JOBS.get_or_init(|| Mutex::new(BTreeMap::new()))
+617: }
+618: 
+619: fn trace_job_key(job: &TracePointerJob) -> TracePointerJobKey {
+620:     TracePointerJobKey { app_instance_id: job.app_instance_id, document_id: job.document_id.clone(), operation_id: job.operation_id, generation: job.generation, base_revision: job.base_revision.clone() }
+621: }
+## ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:174 OnceLock<Mutex<
+170:     generation: u64,
+171:     base_revision: String,
+172: }
+173: 
+174: static DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<DrawSessionKey, DrawSession>>> = OnceLock::new();
+175: static ACTIVE_DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>>> = OnceLock::new();
+176: const MAX_LIVE_DRAW_SESSIONS: usize = 64;
+177: 
+178: fn draw_sessions() -> &'static Mutex<BTreeMap<DrawSessionKey, DrawSession>> {
+179:     DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+180: }
+181: 
+182: fn active_draw_sessions() -> &'static Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>> {
+183:     ACTIVE_DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+184: }
+185: 
+186: fn checkpoint_from_config(config: &DrawConfig) -> Option<DrawGestureCheckpoint> {
+## ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:175 OnceLock<Mutex<
+171:     base_revision: String,
+172: }
+173: 
+174: static DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<DrawSessionKey, DrawSession>>> = OnceLock::new();
+175: static ACTIVE_DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>>> = OnceLock::new();
+176: const MAX_LIVE_DRAW_SESSIONS: usize = 64;
+177: 
+178: fn draw_sessions() -> &'static Mutex<BTreeMap<DrawSessionKey, DrawSession>> {
+179:     DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+180: }
+181: 
+182: fn active_draw_sessions() -> &'static Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>> {
+183:     ACTIVE_DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+184: }
+185: 
+186: fn checkpoint_from_config(config: &DrawConfig) -> Option<DrawGestureCheckpoint> {
+187:     if config.gesture_checkpoint_json.len() > 4_096 {
+## ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs:1092 OnceLock<std::sync::Mutex<
+1088:     Retiring(DrawMutationArenaPoolBootstrap),
+1089:     Fault(&'static str),
+1090: }
+1091: 
+1092: static DRAW_MUTATION_ARENA_POOL: std::sync::OnceLock<std::sync::Mutex<DrawMutationArenaProcessState>> = std::sync::OnceLock::new();
+1093: static DRAW_MUTATION_ARENA_BOOTSTRAP_REQUESTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+1094: 
+1095: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+1096: pub enum DrawMutationArenaPoolAvailability {
+1097:     Ready,
+1098:     NotReady,
+1099:     Contended,
+1100:     Fault(&'static str),
+1101: }
+1102: 
+1103: #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+1104: enum DrawMutationArenaBorrowError {
+## ✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs:588 thread_local! {
+584:     <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image).hash(&mut hasher);
+585:     mint_asset_child_handle(asset_id, hasher.finish())
+586: }
+587: 
+588: thread_local! {
+589:     /// 🩹️ Ephemeral working-scene cache (`EngineRep` contract): no `LinkResolver`/child-dispatch seam
+590:     /// exists in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
+591:     /// read-only), so the app layer cannot resolve a `RasterAssetChild` handle back to its real decoded
+592:     /// `SemioImageSnapshot` content through the framework. This `thread_local!` bridges that gap — matches
+593:     /// `➗️mathematical`'s `MATH_SCRATCH`/`🌊️flow`'s `FLOW_SCRATCH` pattern exactly: keyed by `child_id`
+594:     /// (content-addressed, so identical bytes always land in the identical slot), populated at
+595:     /// mutation-diff-build time (`mint_and_stash_asset`, called from every `assets` diff-apply site) and at
+596:     /// fixture-construction time (`semio_fixture_snapshot`/`empty_raster_document`), read through the ONE
+597:     /// `raster_asset` accessor every render/export/inference call site funnels through. **Staleness gap,
+598:     /// documented honestly**: store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a live
+599:     /// session's cache can go stale relative to a snapshot's `assets` handles across an undo/redo spanning a
+600:     /// process boundary; every read fails soft (`None`) on a cache miss, never panics — the same gap every
+## ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs:355 OnceLock<Mutex<
+351:     }
+352: }
+353: 
+354: fn fill_envelope_registry() -> &'static Mutex<FillEnvelopeRegistry> {
+355:     static REGISTRY: OnceLock<Mutex<FillEnvelopeRegistry>> = OnceLock::new();
+356:     REGISTRY.get_or_init(|| Mutex::new(FillEnvelopeRegistry::default()))
+357: }
+358: 
+359: fn fill_envelope_token(request: &FillJobRequest) -> [u8; FILL_ENVELOPE_TOKEN_BYTES] {
+360:     let mut token = [0_u8; FILL_ENVELOPE_TOKEN_BYTES];
+361:     token[..8].copy_from_slice(&FILL_ENVELOPE_MAGIC);
+362:     token[8] = request.slot;
+363:     token[16..24].copy_from_slice(&request.registry_generation.to_le_bytes());
+364:     token[24..32].copy_from_slice(&request.job.to_le_bytes());
+365:     token[32..40].copy_from_slice(&request.operation.to_le_bytes());
+366:     token[40..48].copy_from_slice(&request.generation.to_le_bytes());
+367:     token[48..56].copy_from_slice(&request.base_revision.to_le_bytes());

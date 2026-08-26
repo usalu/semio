@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_h_ed_kn::mutation::ChangeHEdKn;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeHEdKn, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeHEdKn, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_h_ed_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Design horizontal load H_Ed [kN] must be a finite number, got {}.", payload.new_h_ed_kn), Vec::<String>::new());
     }

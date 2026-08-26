@@ -1,8 +1,15 @@
 {
   "schema": "stdio.pdf",
-  "page": {
-    "width": 612.0,
-    "height": 792.0,
-    "text": "Draft"
-  }
+  "pages": [
+    {
+      "width": 612.0,
+      "height": 792.0,
+      "text": "Draft"
+    },
+    {
+      "width": 612.0,
+      "height": 792.0,
+      "text": "Appendix"
+    }
+  ]
 }

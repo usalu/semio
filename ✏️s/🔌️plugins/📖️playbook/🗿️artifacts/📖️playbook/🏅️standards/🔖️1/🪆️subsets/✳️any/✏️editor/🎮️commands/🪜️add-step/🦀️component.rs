@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 pub struct AddStep {}
 
 pub async fn handle(_payload: &AddStep, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
-    let step_id = format!("step-{}", doc.snapshot.steps().len() + 1);
-    Ok(Emit::mutations(vec![add_step_operation(doc.snapshot, step_id)]))
+    let operation_id = doc.operation()?.operation_id;
+    Ok(Emit::mutations(vec![add_step_operation(format!("step-op-{operation_id}"), format!("Step {operation_id}"))]))
 }
 
 //#region 🧪️Tests

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "feature": "editing",
+  "operation": 2305,
+  "requestId": "2",
+  "generation": 1,
+  "session": { "slot": 1, "generation": 1 },
+  "input": { "kind": "math.add", "x": 1, "y": 2, "picked": null },
+  "semantic": "step-101"
+}

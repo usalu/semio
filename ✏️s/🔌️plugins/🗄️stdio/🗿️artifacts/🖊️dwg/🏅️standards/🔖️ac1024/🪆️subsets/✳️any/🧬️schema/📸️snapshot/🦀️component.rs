@@ -4020,6 +4020,39 @@ fn parse_version_header_fields(bytes: &[u8]) -> Result<(u8, u16), String> {
     Ok((maintenance_version, u16::from_le_bytes([codepage[0], codepage[1]])))
 }
 
+/// 📏️ The plain file-header PREAMBLE every AC1015+ DWG shares — `0x00`..=`0x15`: six ASCII version
+/// characters, the application maintenance-release byte at `0x12`, the codepage `RS` at
+/// `0x13`-`0x14`. A document that is EXACTLY this and nothing else is this artifact's canonical
+/// EMPTY DWG, and it is not a hypothetical: `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` is committed
+/// as those 22 bytes (`AC1024` followed by sixteen zeros).
+const DWG_PREAMBLE_LEN: usize = 0x16;
+
+/// 🫙️ Whether `snapshot` carries the empty document — the preamble triple and nothing else. Compared
+/// against a freshly defaulted snapshot wearing the same triple rather than by inspecting fields one
+/// at a time, so a field added to `DwgSnapshot` later cannot quietly fall out of the question.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_preamble_only_document(snapshot: &DwgSnapshot) -> bool {
+    let bare = DwgSnapshot {
+        schema: snapshot.schema.clone(),
+        version: snapshot.version.clone(),
+        maintenance_version: snapshot.maintenance_version,
+        codepage: snapshot.codepage,
+        ..DwgSnapshot::default()
+    };
+    *snapshot == bare
+}
+
+/// 🖨️ The empty document's bytes: the preamble region, version stamp and preamble triple written in,
+/// every other byte zero — byte for byte what the committed demo example already is.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_preamble_only_document(snapshot: &DwgSnapshot) -> Vec<u8> {
+    let mut bytes = vec![0u8; DWG_PREAMBLE_LEN];
+    bytes[0..6].copy_from_slice(snapshot.version.as_bytes());
+    bytes[0x12] = snapshot.maintenance_version;
+    bytes[0x13..0x15].copy_from_slice(&snapshot.codepage.to_le_bytes());
+    bytes
+}
+
 /// 🗺️ Materializes section pages only while deserializing and projects their standard objects.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
@@ -4030,6 +4063,13 @@ fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
 pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
     let version = dwg_version_sentinel(bytes)?;
     let (maintenance_version, codepage) = parse_version_header_fields(bytes)?;
+    // 🫙️ The empty document. A stream that stops at the end of the preamble carries no section map,
+    // no page map and no encrypted file header, so there is nothing behind it to decode — and the
+    // R2004 reader's "file too short for encrypted header" is the wrong answer to give about a
+    // document this artifact itself writes and commits as an example.
+    if bytes.len() == DWG_PREAMBLE_LEN {
+        return Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version, maintenance_version, codepage, ..Default::default() });
+    }
     if version == "AC1015" {
         let drawing = DwgLogicalDrawing::from_native(&dwg_engine::dwg_from_bytes(bytes)?)?;
         return Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version, maintenance_version, codepage, drawing, ..Default::default() });
@@ -4114,7 +4154,12 @@ pub fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
     if snapshot.schema != STDIO_DWG_DOCUMENT_SCHEMA {
         return Err(DwgExportError::InvalidLogical("schema identity changed".into()));
     }
-    let bytes = if snapshot.version == "AC1015" {
+    // 🫙️ The empty document is written as the preamble and nothing else — the inverse of the read
+    // above, and the only representation an R2004 container HAS for a snapshot that carries no
+    // Header, no Classes and no object sections to build one from.
+    let bytes = if is_preamble_only_document(snapshot) {
+        encode_preamble_only_document(snapshot)
+    } else if snapshot.version == "AC1015" {
         dwg_engine::dwg_to_bytes(&snapshot.drawing.to_native().map_err(DwgExportError::InvalidLogical)?).map_err(DwgExportError::Writer)?
     } else {
         dwg_engine::encode_r2004_snapshot(snapshot).map_err(DwgExportError::Writer)?

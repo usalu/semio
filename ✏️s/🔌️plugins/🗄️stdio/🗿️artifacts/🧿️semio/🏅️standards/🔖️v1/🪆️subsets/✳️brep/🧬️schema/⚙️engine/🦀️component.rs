@@ -1874,25 +1874,25 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn native_box_volume() {
         let mut k = Brep::new();
-        let solid = block_on(k.box_prim(1.0, 1.0, 1.0)).unwrap();
-        let v = block_on(k.volume(&solid)).unwrap();
+        let solid = k.box_prim(1.0, 1.0, 1.0).unwrap();
+        let v = k.volume(&solid).unwrap();
         assert!((v - 1.0).abs() < 1e-3, "volume {v}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn native_fuse_disjoint() {
         let mut k = Brep::new();
-        let a = block_on(k.box_prim(1.0, 1.0, 1.0)).unwrap();
-        let b = block_on(k.convex_hull(&[[2.0, 0.0, 0.0], [3.0, 0.0, 0.0], [3.0, 1.0, 0.0], [2.0, 1.0, 0.0], [2.0, 0.0, 1.0], [3.0, 0.0, 1.0], [3.0, 1.0, 1.0], [2.0, 1.0, 1.0]])).unwrap();
-        let u = block_on(k.fuse(&a, &b)).unwrap();
-        let v = block_on(k.volume(&u)).unwrap();
+        let a = k.box_prim(1.0, 1.0, 1.0).unwrap();
+        let b = k.convex_hull(&[[2.0, 0.0, 0.0], [3.0, 0.0, 0.0], [3.0, 1.0, 0.0], [2.0, 1.0, 0.0], [2.0, 0.0, 1.0], [3.0, 0.0, 1.0], [3.0, 1.0, 1.0], [2.0, 1.0, 1.0]]).unwrap();
+        let u = k.fuse(&a, &b).unwrap();
+        let v = k.volume(&u).unwrap();
         assert!((v - 2.0).abs() < 1e-2, "volume {v}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn wire_tessellate_preserves_edge_positions() {
         let mut k = Brep::new();
-        let wire = block_on(k.rectangle_wire(2.0, 1.5)).expect("wire");
+        let wire = k.rectangle_wire(2.0, 1.5).expect("wire");
         let transfer = k.tessellate_sync(&wire, 0.1).expect("tessellate");
         let data = mesh_data_from_mesh_transfer(&transfer);
         assert!(data.edge_positions.len() >= 24, "edge_positions {}", data.edge_positions.len());
@@ -1902,9 +1902,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn box_shell_produces_positive_volume() {
         let mut k = Brep::new();
-        let box_h = block_on(k.box_prim(2.0, 2.0, 2.0)).expect("box");
-        let shelled = block_on(k.shell(&box_h, 0.2, &[])).expect("shell");
-        let vol = block_on(k.volume(&shelled)).expect("shell volume");
+        let box_h = k.box_prim(2.0, 2.0, 2.0).expect("box");
+        let shelled = k.shell(&box_h, 0.2, &[]).expect("shell");
+        let vol = k.volume(&shelled).expect("shell volume");
         assert!(vol > 0.0, "shelled volume {vol}");
         let mesh = k.tessellate_sync(&shelled, 0.1).expect("tessellate shell");
         assert!(!mesh.position.is_empty() || !mesh.edges.is_empty());
@@ -1913,13 +1913,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sphere_torus_cut_produces_preview_mesh() {
         let mut k2 = Brep::new();
-        let sphere = block_on(k2.sphere_prim(2.2)).expect("sphere");
-        let torus = block_on(k2.torus_prim(2.0, 0.5)).expect("torus");
-        let tv = block_on(k2.volume(&torus)).expect("torus volume");
+        let sphere = k2.sphere_prim(2.2).expect("sphere");
+        let torus = k2.torus_prim(2.0, 0.5).expect("torus");
+        let tv = k2.volume(&torus).expect("torus volume");
         assert!(tv > 0.5, "torus volume too small: {tv}");
         let tmesh = k2.tessellate_sync(&torus, 0.15).expect("tessellate torus");
         assert!(tmesh.position.len() >= 9 && tmesh.index.len() >= 3, "torus mesh empty");
-        let cut = block_on(k2.cut(&sphere, &torus)).expect("cut");
+        let cut = k2.cut(&sphere, &torus).expect("cut");
         let mesh = k2.tessellate_sync(&cut, 0.15).expect("tessellate cut");
         assert!(mesh.position.len() >= 9 && mesh.index.len() >= 3, "cut mesh empty: pos={} idx={}", mesh.position.len(), mesh.index.len());
     }

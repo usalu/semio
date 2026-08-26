@@ -1,0 +1,435 @@
+warning: fields `operation` and `generation` are never read
+   --> 🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️component.rs:274:5
+    |
+273 | struct JobPayloadOperationLedger {
+    |        ------------------------- fields in this struct
+274 |     operation: OperationId,
+    |     ^^^^^^^^^
+275 |     generation: Generation,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-job` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:149:51
+    |
+149 |         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+149 -         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+149 +         self.backing.as_ref().map_or(0, |backing| size_of_val(backing.as_ref()))
+    |
+
+warning: method `push` is never used
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:142:8
+    |
+109 | impl<T> MutationDagFixedSlots<T> {
+    | -------------------------------- method in this implementation
+...
+142 |     fn push(&mut self, value: T) -> Result<(), T> {
+    |        ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-replication` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-replication` to apply 1 suggestion)
+warning: fields `header_len` and `stored_len` are never read
+   --> 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:178:5
+    |
+176 | struct EncodedSegment {
+    |        -------------- fields in this struct
+177 |     bytes: Vec<u8>,
+178 |     header_len: usize,
+    |     ^^^^^^^^^^
+179 |     stored_len: usize,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-pack` (lib) generated 1 warning
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: method `terminal_is_empty` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️math.rs:527:8
+    |
+440 | impl Mesh3dOwner {
+    | ---------------- method in this implementation
+...
+527 |     fn terminal_is_empty(&self) -> bool {
+    |        ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-ui-scene` (lib) generated 1 warning
+warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:958:14
+    |
+958 | ...   .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(...
+    |        ^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+help: replace the use of the deprecated method
+    |
+958 -             .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+958 +             .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+    |
+
+warning: `semio-framework-actor` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-actor` to apply 1 suggestion)
+warning: constant `SURFACE_RECONCILE_FIXED_OPS` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:32:7
+   |
+32 | const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `take_all` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:96:8
+   |
+48 | impl<T, const N: usize> SurfaceFixedVec<T, N> {
+   | --------------------------------------------- method in this implementation
+...
+96 |     fn take_all(&mut self) -> Self {
+   |        ^^^^^^^^
+
+warning: methods `values` and `clear` are never used
+   --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:162:8
+    |
+132 | impl<K: Eq, V, const N: usize> SurfaceLinearMap<K, V, N> {
+    | -------------------------------------------------------- methods in this implementation
+...
+162 |     fn values(&self) -> impl Iterator<Item = &V> {
+    |        ^^^^^^
+...
+166 |     fn clear(&mut self) {
+    |        ^^^^^
+
+warning: methods `iter`, `remove`, and `is_empty` are never used
+   --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:198:8
+    |
+190 | impl<T: Eq, const N: usize> SurfaceLinearSet<T, N> {
+    | -------------------------------------------------- methods in this implementation
+...
+198 |     fn iter(&self) -> impl Iterator<Item = &T> {
+    |        ^^^^
+...
+202 |     fn remove(&mut self, value: &T) -> bool {
+    |        ^^^^^^
+...
+211 |     fn is_empty(&self) -> bool {
+    |        ^^^^^^^^
+
+warning: associated function `new` is never used
+    --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:1139:19
+     |
+1138 | impl SurfaceReconcileCursor {
+     | --------------------------- associated function in this implementation
+1139 |     pub(crate) fn new(tree: crate::ComponentTree, current: &SurfaceReconciler) -> Self {
+     |                   ^^^
+
+warning: function `estimate_record_bytes` is never used
+    --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:2957:4
+     |
+2957 | fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-ui-runtime` (lib) generated 6 warnings
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1765:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1770:119: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5064:49: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5068:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5153:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5154:23: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5172:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5173:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5367:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5368:23: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5369:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5387:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5388:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5389:29: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5607:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5608:23: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5617:29: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5833:12: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5851:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7223:12: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7233:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11154:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11155:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11156:71: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11157:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11712:6: warning: unnecessary qualification
+warning: `semio-framework-os-kernel` (lib) generated 26 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 26 suggestions)
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:11:44: warning: unused import: `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️component.rs:6:5: warning: unused import: `ComponentTree`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:54:24: warning: unused import: `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12430:5: warning: unused doc comment
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:242:47: warning: unused import: `PresentCx`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:250:9: warning: unused import: `std::sync::Arc`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:271:9: warning: unused import: `ui_wgpu::wgpu::UiMenuRef`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:278:67: warning: unused imports: `ContextMenuPoint` and `ContextMenuResponse`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:297:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:304:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:440:49: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:442:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5819:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5872:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5969:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5994:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6009:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6024:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6040:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6043:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6055:23: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6259:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6260:23: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7771:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7805:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7816:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10756:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10770:34: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10830:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10833:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10839:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12724:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13311:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13312:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13315:19: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13324:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13333:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13334:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13346:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13347:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13356:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13357:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13396:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13397:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13449:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13450:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15732:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15733:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15752:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15753:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15772:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15773:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15931:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15932:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:17774:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20980:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21122:66: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21242:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21279:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21524:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21525:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21527:43: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21530:43: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21535:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21537:41: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21542:34: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21611:35: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21614:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21648:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21683:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21719:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21723:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24112:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24113:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24114:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24126:39: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24127:38: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24128:35: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:31859:13: warning: ambiguous glob re-exports: the name `ActionId` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:31862:13: warning: ambiguous glob re-exports: the name `tree_item` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:31862:13: warning: ambiguous glob re-exports: the name `PeerMark` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25342:17: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25730:17: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25749:17: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26774:37: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26854:41: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26904:29: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26938:29: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:27120:29: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:27144:17: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26601:13: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26603:13: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25297:22: warning: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14529:41: warning: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13644:43: warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:242:38: warning: unused import: `Present`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26668:22: warning: unused variable: `envelope_seq`: help: if this is intentional, prefix it with an underscore: `_envelope_seq`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16242:17: warning: unused variable: `parent_document_id`: help: if this is intentional, prefix it with an underscore: `_parent_document_id`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10006:26: warning: unused variable: `actor`: help: if this is intentional, prefix it with an underscore: `_actor`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:109:5: warning: field `key` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:117:7: warning: constant `REACTOR_TASK_KEY_BYTES` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:118:7: warning: constant `REACTOR_TASK_LABEL_BYTES` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:119:7: warning: constant `REACTOR_TASK_RESTART_BYTES` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:122:8: warning: struct `JobRenderBinding` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:128:8: warning: struct `JobRenderBindingRegistry` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:135:14: warning: associated items `new`, `bind`, `accepted`, `complete`, and `close_instance` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:257:8: warning: methods `get_mut`, `insert_admitted`, and `take` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:309:8: warning: multiple associated items are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:355:8: warning: struct `ReactorCloseState` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:23908:9: warning: field `preview_sequence` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:367:8: warning: struct `ReactorCloseRegistry` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:23926:12: warning: associated function `new` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:372:8: warning: associated items `new`, `index`, `insert`, `take_at`, and `put_at` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:397:7: warning: constant `REACTOR_TIMER_SLOTS` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:401:5: warning: fields `instance` and `previous` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:409:5: warning: fields `tail` and `allocation_admitted` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3195:119: warning: call to `.clone()` on a reference in this situation does nothing: help: remove this redundant call
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3229:119: warning: call to `.clone()` on a reference in this situation does nothing: help: remove this redundant call
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:421:8: warning: associated items `index`, `insert`, `remove`, `first`, `contains`, and `cancel_instance_step` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:513:5: warning: field `quota` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:542:8: warning: methods `get` and `remove` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:567:5: warning: variants `Emit` and `Fault` are never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:577:5: warning: field `instance` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:637:8: warning: methods `push_admitted`, `pop`, `is_empty`, `begin_cancel_instance`, and `cancel_instance_step` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:679:10: warning: function `instance_task_quota` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:800:15: warning: function `cancel_instance_tasks_step` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:23984:12: warning: methods `entry_mut`, `insert`, `get_mut`, and `is_empty` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24884:9: warning: field `instance_id` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:824:4: warning: function `begin_reactor_close` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:837:4: warning: function `abort_reactor_close` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9656:12: warning: method `len` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9834:9: warning: fields `seq`, `generation`, and `cancel` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:847:4: warning: function `step_reactor_close` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:961:4: warning: function `advance_command_cursor` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:967:4: warning: function `terminal_command_ingress` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9844:9: warning: field `seq` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧵️executor/🦀️component.rs:353:5: warning: field `reserved` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:291:5: warning: variant `Running` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:321:7: warning: constant `SLICE_MAX_ITERATIONS` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10927:9: warning: field `run` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10956:29: warning: method `into_parts` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13178:12: warning: method `handle_encoding` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13189:18: warning: fields `0` and `1` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:41:5: warning: variants `Checkpoint` and `Commit` are never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:46:8: warning: method `byte_len` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20: warning: associated function `new` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:57:5: warning: variant `Saturated` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:73:5: warning: fields `lossless`, `lossless_len`, and `lossless_bytes` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:104:8: warning: methods `publish_lossless` and `take_lossless` are never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📮️requests/🦀️component.rs:117:8: warning: method `insert` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/📖️body/🦀️component.rs:17:7: warning: constant `DIRECT_READ_CHUNK` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13969:20: warning: associated function `new` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14207:12: warning: struct `FrameworkConfigurationBinaryJobFactory` is never constructed
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14213:12: warning: associated function `new` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14250:8: warning: function `register_framework_reserved_factories` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14798:12: warning: method `insert` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15092:9: warning: multiple fields are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10178:9: warning: type `PeerPresenceRoot` is more private than the item `InteractionView::peers`: field `InteractionView::peers` is reachable at visibility `pub(crate)`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15705:17: warning: calls to `std::mem::drop` with a value that implements `Copy` does nothing
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16098:9: warning: type `ChildMemberRegistry<M>` is more private than the item `component::app::VcsArtifactApp::children`: field `component::app::VcsArtifactApp::children` is reachable at visibility `pub(crate)`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20755:13: warning: unused `Result` that must be used
+warning: `semio-framework-plugin` (lib) generated 174 warnings (13 duplicates) (run `cargo fix --lib -p semio-framework-plugin` to apply 96 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🗜️dynamic/🦀️component.rs:663:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:598:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:23:148: warning: unused import: `DocxOpcCtEntriesDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:20:96: warning: unused imports: `NamedTripleDiff`, `PptxOpcContentTypesDiff`, and `PptxOpcCtEntriesDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:22:47: warning: unused imports: `xml_document_from_text` and `xml_document_to_text`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🧬️mutations/🦀️component.rs:23:218: warning: unused imports: `XlsxOpcRelDiff` and `XlsxOpcRelListDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:23:218: warning: unused imports: `XlsxOpcRelDiff` and `XlsxOpcRelListDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:1325:1: warning: unused doc comment
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:53:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:54:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:55:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:56:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:57:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:58:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:59:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:60:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:61:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:62:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:63:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:64:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:65:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:66:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:67:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:68:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:69:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:70:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:71:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️component.rs:27:48: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/💥delete-shell/↩️inverse/🦀️component.rs:25:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🕳️delete-solid/↩️inverse/🦀️component.rs:24:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🚮delete-face/↩️inverse/🦀️component.rs:26:48: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:91:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:91:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:64:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:64:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🦀️component.rs:21:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:48:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:49:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:50:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:50:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:51:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:52:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:47:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:49:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:78:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:78:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:61:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:61:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🦀️component.rs:13:5: warning: unused import: `semio_framework_ui_contract::Buildable`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35: warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:46:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:47:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:47:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:49:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:50:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:50:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:39:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:39:9: warning: unused import: `semio_framework_plugin::Component`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs:202:33: warning: unused variable: `snapshot`: help: try ignoring the field: `snapshot: _`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs:203:34: warning: unused variable: `title`: help: try ignoring the field: `title: _`
+warningerror: could not compile `semio-s-plugin-stdio` (lib test); 97 warnings emitted
+
+Caused by:
+EXIT=101

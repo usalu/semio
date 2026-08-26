@@ -1,0 +1,12 @@
+case	before-fixture	before-bytes	after-fixture	after-bytes	scenarios
+mutate-xml-1-0-valid	shared://📰️macos-uttype-plist.xml	631	shared://📰️reuse-marketplaces-plist.xml	40440	19
+mutate-semio-text	asset://…/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio	203	local://🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio	70816	22
+mutate-semio-audio	asset://…/✳️any/📚️examples/🎵️tone/🖼️assets/🗣️example.dsl.semio	226	local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio	72341	31
+mutate-semio-kit	asset://…/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio	734	local://🗣️nakagin-capsule-tower.dsl.semio	78066	46
+mutate-semio-brep	asset://…/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio	443	local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio	90063	40
+mutate-xml-1-0	shared://📰️ooxml-word-document.xml	747	shared://📰️ooxml-readme-document.xml	92873	17
+mutate-gif-87a	shared://🖼️dancing-87a.gif	2936	shared://🖼️dancing-87a-large.gif	117704	25
+mutate-semio-graph	asset://…/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio	297	local://🗣️nakagin-capsule-tower.dsl.semio	131964	34
+mutate-svg-1-1-basic	shared://mouse.svg	1463	shared://🎨️semio-brand-and-onboarding.svg	138219	23
+mutate-semio-video	asset://…/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio	172	local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio	220106	28
+mutate-rewrite-1	local://♻️nakagin-ground-floor.snapshot.json	2454	local://♻️nakagin-capsule-tower.snapshot.json	246269	22

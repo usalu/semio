@@ -1,547 +1,276 @@
-//! 🦀️ Semio BREP exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
-//! REFACTOR. Recorded no-oracle decision `semio-brep-mutation-semantics` (`../../🏅️standards/
-//! 🔖️v1/🪆️subsets/✳️brep/🧪️oracle/🔣️component.json`): `s.stdio.semio.brep` is a semio-NATIVE
-//! format with no third-party reader or writer, so the evidence rests entirely on the committed,
-//! independently handcrafted per-kind specification fixtures under `../../🏅️standards/🔖️v1/
-//! 🪆️subsets/✳️brep/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`.
+//! 🦀️ Semio BREP exhaustive mutation case — Rust SUBJECT adapter. Ticket 26/08/23/END-TO-END-
+//! TESTING-REFACTOR.
 //!
-//! BOTH roles read those fixtures directly, through `Context::fixture_json`: each scenario's
-//! `Given` step names its `before`/`mutation`/`after` files as `asset://` URIs resolved against
-//! this artifact's own root, and the planner digest-pins every one before a host sees it. Nothing
-//! about a fixture is transcribed into this file — an earlier draft hand-transcribed the before-
-//! snapshots and mutation payloads into Rust literals (the generated test host links only
-//! `semio-repo-test-host` and, behind `sut`, this subset's own crate, so `serde_json` is not
-//! available to parse them), but a literal can silently stop matching the fixture it claims to
-//! mirror, which is exactly the drift a specification-vector substitute cannot afford. The typed
-//! values the production entry point needs are instead decoded from the committed JSON by the
-//! hand-rolled, dependency-free `Decode` region below, mirroring this subset's own serde shape
-//! (camelCase snapshot fields, `"kind"`-tagged `BrepCurve`/`BrepSurface`, externally tagged
-//! mutation variants with snake_case payload fields).
+//! This file is the subject half only. The oracle is `🐍️component.py` beside it: an independent
+//! Python implementation of the same carrier and the same thirteen-verb vocabulary, written from the
+//! committed grammar, protocol and JSON schema, registered as `semio-brep-python-independent` in
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧪️oracle/🔣️component.json`. Registering oracle handlers
+//! here as well would put this repository's answer on both sides of the comparison, which is the
+//! exact failure the platform exists to prevent — so it registers none.
 //!
-//! `oracle` returns the committed snapshot literally — no recomputation, no reimplementation of mutation
-//! semantics. `subject` drives this repository's own `apply_semio_brep_mutation`, the entry point this
-//! ticket added, over the full 13-kind `SemioBrepMutation` vocabulary, then projects the result back to
-//! structural JSON for `ordered-json-v1` to compare. The subject half is gated behind the generated
-//! host's `sut` feature so the oracle-only run never compiles the local implementation (fleet brief
-//! §5.3); the Rust SUBJECT phase RUNS. The os-kernel blocker earlier waves recorded here was cleared on
-//! 2026-08-24 — `cargo check -p semio-framework-os-kernel --lib` exits 0 and `semio-s-plugin-stdio`
-//! builds — so `bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case mutate-semio-brep` really
-//! executes every scenario below. The gate keeps the two BUILDS apart; it has never been a reason the
-//! subject half goes unmeasured, and for this recorded no-oracle case the subject phase is the only phase
-//! that runs at all.
+//! Every input this file reads comes from the PLAN: the real concrete-forest structure through
+//! `local://` and the tiny committed solid through `asset://`, the `prepare` list and the mutation
+//! payload from the scenario's doc string, and the specification-vector paths from the step text. The feature is the single place any of
+//! them is written down, so neither implementation can hold a transcription that drifts from what
+//! the other one read.
 //!
-//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
-//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
-//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
-//! the written statement of the reference answer rather than a second running party. Every law this
-//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
-//! printed. A handler that merely ran the mutation and returned would report a pass having checked
-//! nothing.
+//! `s.stdio.semio.brep` is the id-keyed topology graph — vertices, edges, loops, faces, shells and
+//! solids — and the one subset in this artifact whose records embed data-carrying TAGGED UNIONS:
+//! `BrepCurve` has four arms and `BrepSurface` six, each with its own field list. `create-loop` and
+//! `delete-loop` are deliberately absent from the vocabulary; `delete-vertex` is the only verb that
+//! cascades, into every edge incident on the vertex it removes.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_repo_test_host::Adapter;
+#[cfg(feature = "sut")]
+use semio_repo_test_host::{Context, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioBrepMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
-/// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
-/// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
-/// the enum.
+/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because registration happens before the
+/// subject crate is necessarily linked. `kinds_match_the_enum_and_the_catalog` in that production
+/// file keeps the list honest against the enum, and the contract's mutation-coverage gate keeps it
+/// honest against the catalog and this feature.
 const KINDS: &[&str] = &["create-vertex", "delete-vertex", "create-edge", "delete-edge", "create-face", "delete-face", "create-shell", "delete-shell", "create-solid", "delete-solid", "replace-curve", "replace-surface", "move-vertex"];
+
+/// 🌲️ The document every mutation row runs on: the real "hexagonal cut concrete forest" structure,
+/// 167 vertices / 270 B-spline edges / 127 loops / 127 planar faces / 12 shells / 12 solids, derived
+/// ONCE from the real committed Rhino BIM export
+/// `♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/📐️hexagonal-cut-concrete-forest-left-bim.stp` by
+/// `🐍️derive-brep-fixture.py` in the ticket folder. Every semio id carries the STEP entity number it
+/// came from.
+#[cfg(feature = "sut")]
+const FOREST_DSL: &str = "local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio";
+/// 🎒️ The same structure in its binary envelope, written by the PYTHON implementation — so this
+/// codec reproducing it is a cross-language byte agreement, not a codec agreeing with itself.
+#[cfg(feature = "sut")]
+const FOREST_PACK: &str = "local://🎒️hexagonal-cut-concrete-forest-left.pack.semio";
+/// 🧊️ The tiny committed solid — the one that carries a line, a circle, a rational NURBS curve and
+/// a NURBS surface at once. It is committed under `✳️any`'s example set, because `✳️brep` commits no
+/// example of its own, and it is kept for the BYTE half of the identity law: its two files were
+/// written by THIS codec, so the Python side reproducing them is the other direction of the same
+/// cross-language agreement.
+#[cfg(feature = "sut")]
+const SOLID_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio";
+/// 🎒️ The same solid in its binary envelope, written by a separate codec from the DSL text.
+#[cfg(feature = "sut")]
+const SOLID_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio";
 //#endregion 🔖️Kinds
 
-//#region 🔖️FixtureBinding
-/// 🧫️ The `asset://` URI the scenario's own `Given` table binds to one role (`before`, `mutation`
-/// or `after`). The feature file is the single source of truth for which fixture each kind uses —
-/// this adapter never spells a fixture path itself, so a renamed or re-pointed fixture is a
-/// one-file edit that both roles pick up together.
-fn fixture_uri(ctx: &Context, role: &str) -> Result<String, String> {
-    let table = ctx.data_table()?;
-    let header = table.first().ok_or_else(|| format!("scenario {} has an empty fixture table", ctx.scenario.id))?;
-    let role_column = header.iter().position(|cell| cell == "role").ok_or_else(|| format!("scenario {}'s fixture table has no 'role' column", ctx.scenario.id))?;
-    let fixture_column = header.iter().position(|cell| cell == "fixture").ok_or_else(|| format!("scenario {}'s fixture table has no 'fixture' column", ctx.scenario.id))?;
-    for row in table.iter().skip(1) {
-        if row.get(role_column).map(String::as_str) == Some(role) {
-            return row.get(fixture_column).cloned().ok_or_else(|| format!("scenario {}'s {role:?} row carries no fixture URI", ctx.scenario.id));
+//#region 🔖️Plan
+/// 🧫️ Every `asset://` URI the scenario's steps name, in step order — the specification-vector
+/// paths live in the feature, never in this file.
+#[cfg(feature = "sut")]
+fn step_assets(ctx: &Context) -> Vec<String> {
+    let mut found = Vec::new();
+    for (_, text) in &ctx.scenario.steps {
+        for candidate in text.split_whitespace() {
+            if candidate.starts_with("asset://") {
+                found.push(candidate.to_string());
+            }
         }
     }
-    Err(format!("scenario {} binds no {role:?} fixture", ctx.scenario.id))
-}
-//#endregion 🔖️FixtureBinding
-
-//#region 🔖️Oracle
-/// 🔮️ The reference answer for either direction, read literally from the committed fixture the
-/// scenario names: the AFTER snapshot for `mutate-*`, the BEFORE snapshot for `inverse-*` (undoing
-/// a mutation must return to exactly where the specification vector started).
-fn snapshot_oracle_for(role: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |ctx: &Context| {
-        let uri = fixture_uri(ctx, role)?;
-        let raw = ctx.fixture_bytes(&uri)?;
-        let projection = ctx.fixture_json(&uri)?;
-        Ok(Outcome::with_raw(raw, projection))
-    }
+    found
 }
 
-/// 🧊️ This subset's own committed real artifact, in both of its committed encodings — the byte
-/// carriers `identity-round-trip` measures.
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio";
-const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio";
-
-/// 🔮️ The round-trip reference answer, stated the only way a role that must not link the subject
-/// crate can state it: the committed text artifact, verbatim. A recorded no-oracle case dispatches
-/// no oracle role, so this is the written statement of the expected answer rather than a second
-/// running party — the assertion itself lives in `subject::round_trip`.
-fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let raw = ctx.fixture_bytes(DSL_ASSET)?;
-    Ok(Outcome::with_raw(raw.clone(), Json::String(String::from_utf8_lossy(&raw).into_owned())))
+/// 📜️ The scenario's `{"prepare": [...], "mutation": {…}}` doc string, split into its two halves.
+#[cfg(feature = "sut")]
+fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
+    let document = ctx.doc_json()?;
+    let mutation = document.get("mutation").cloned().ok_or_else(|| format!("scenario {} carries no `mutation` in its doc string", ctx.scenario.id))?;
+    Ok((document.array("prepare"), mutation))
 }
-//#endregion 🔖️Oracle
+//#endregion 🔖️Plan
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::fixture_uri;
-    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{
-        apply_semio_brep_mutation, inverse_semio_brep_mutation, create_edge, create_face, create_shell, create_solid, create_vertex, delete_edge, delete_face, delete_shell, delete_solid, delete_vertex, move_vertex, replace_curve, replace_surface, SemioBrepMutation,
-    };
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
-        decode_semio_brep_pack, encode_semio_brep_pack, parse_semio_brep_dsl, print_semio_brep_dsl, BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid,
-        BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot,
-    };
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{apply_semio_brep_mutation, decode_semio_brep_mutation_json, inverse_semio_brep_mutation, SemioBrepMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_pack, decode_semio_brep_snapshot_json, encode_semio_brep_pack, encode_semio_brep_snapshot_json, parse_semio_brep_dsl, print_semio_brep_dsl, SemioBrepSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
 
-    //#region 🔖️Decode
-    /// 🔎️ Strict accessors over the framework's own dependency-free `Json`. Every one of them
-    /// fails loudly rather than defaulting, so a fixture that stops carrying a field this subset's
-    /// schema requires surfaces as an error instead of a silently wrong value.
-    fn field<'j>(value: &'j Json, key: &str) -> Result<&'j Json, String> {
-        value.get(key).ok_or_else(|| format!("fixture object is missing the {key:?} field"))
-    }
-    fn as_str(value: &Json) -> Result<String, String> {
-        match value {
-            Json::String(text) => Ok(text.clone()),
-            other => Err(format!("expected a JSON string, got {other:?}")),
-        }
-    }
-    fn as_f64(value: &Json) -> Result<f64, String> {
-        match value {
-            Json::Number(number) => Ok(*number),
-            other => Err(format!("expected a JSON number, got {other:?}")),
-        }
-    }
-    fn as_u32(value: &Json) -> Result<u32, String> {
-        Ok(as_f64(value)? as u32)
-    }
-    fn as_bool(value: &Json) -> Result<bool, String> {
-        match value {
-            Json::Bool(flag) => Ok(*flag),
-            other => Err(format!("expected a JSON bool, got {other:?}")),
-        }
-    }
-    fn as_array(value: &Json) -> Result<&Vec<Json>, String> {
-        match value {
-            Json::Array(items) => Ok(items),
-            other => Err(format!("expected a JSON array, got {other:?}")),
-        }
-    }
-    /// 🔎️ A `#[serde(default)]` collection: absent means empty, present must still be an array.
-    fn optional_list<T>(value: &Json, key: &str, decode: impl Fn(&Json) -> Result<T, String>) -> Result<Vec<T>, String> {
-        match value.get(key) {
-            None | Some(Json::Null) => Ok(Vec::new()),
-            Some(present) => as_array(present)?.iter().map(decode).collect(),
-        }
-    }
-    fn list<T>(value: &Json, key: &str, decode: impl Fn(&Json) -> Result<T, String>) -> Result<Vec<T>, String> {
-        as_array(field(value, key)?)?.iter().map(decode).collect()
+    //#region 🔖️Bridges
+    /// 🦠️ One planned mutation payload, decoded through this subset's own JSON bridge.
+    fn mutation_of(value: &Json, scenario: &str) -> Result<SemioBrepMutation, String> {
+        decode_semio_brep_mutation_json(&value.to_string()).map_err(|error| format!("{scenario}: the planned mutation payload must decode: {error}"))
     }
 
-    fn point_of(value: &Json) -> Result<SemioPoint3, String> {
-        Ok(SemioPoint3 { x: as_f64(field(value, "x")?)?, y: as_f64(field(value, "y")?)?, z: as_f64(field(value, "z")?)? })
-    }
-    /// 📈️ `BrepCurve`'s `#[serde(tag = "kind", rename_all = "camelCase")]` wire shape.
-    fn curve_of(value: &Json) -> Result<BrepCurve, String> {
-        match as_str(field(value, "kind")?)?.as_str() {
-            "line" => Ok(BrepCurve::Line { origin: point_of(field(value, "origin")?)?, direction: point_of(field(value, "direction")?)? }),
-            "circle" => Ok(BrepCurve::Circle { center: point_of(field(value, "center")?)?, axis: point_of(field(value, "axis")?)?, radius: as_f64(field(value, "radius")?)? }),
-            "ellipse" => Ok(BrepCurve::Ellipse {
-                center: point_of(field(value, "center")?)?,
-                axis: point_of(field(value, "axis")?)?,
-                radius_major: as_f64(field(value, "radiusMajor")?)?,
-                radius_minor: as_f64(field(value, "radiusMinor")?)?,
-            }),
-            "nurbs" => Ok(BrepCurve::Nurbs {
-                control_points: list(value, "controlPoints", point_of)?,
-                weights: list(value, "weights", as_f64)?,
-                degree: as_u32(field(value, "degree")?)?,
-                knots: list(value, "knots", as_f64)?,
-            }),
-            other => Err(format!("curve: unknown kind {other:?}")),
+    /// 🧬️ Applies one mutation, turning a refusal into a failure rather than a silent no-op.
+    fn apply(snapshot: &mut SemioBrepSnapshot, mutation: &SemioBrepMutation, scenario: &str) -> Result<(), String> {
+        let outcome = apply_semio_brep_mutation(snapshot, mutation);
+        let refusals = semio_mutation_refusals(&outcome);
+        if refusals.is_empty() {
+            return Ok(());
         }
-    }
-    /// 🗺️ `BrepSurface`'s `#[serde(tag = "kind", rename_all = "camelCase")]` wire shape.
-    fn surface_of(value: &Json) -> Result<BrepSurface, String> {
-        match as_str(field(value, "kind")?)?.as_str() {
-            "plane" => Ok(BrepSurface::Plane { origin: point_of(field(value, "origin")?)?, normal: point_of(field(value, "normal")?)? }),
-            "cylinder" => Ok(BrepSurface::Cylinder { origin: point_of(field(value, "origin")?)?, axis: point_of(field(value, "axis")?)?, radius: as_f64(field(value, "radius")?)? }),
-            "cone" => Ok(BrepSurface::Cone {
-                origin: point_of(field(value, "origin")?)?,
-                axis: point_of(field(value, "axis")?)?,
-                radius: as_f64(field(value, "radius")?)?,
-                half_angle: as_f64(field(value, "halfAngle")?)?,
-            }),
-            "sphere" => Ok(BrepSurface::Sphere { center: point_of(field(value, "center")?)?, radius: as_f64(field(value, "radius")?)? }),
-            "torus" => Ok(BrepSurface::Torus {
-                center: point_of(field(value, "center")?)?,
-                axis: point_of(field(value, "axis")?)?,
-                major_radius: as_f64(field(value, "majorRadius")?)?,
-                minor_radius: as_f64(field(value, "minorRadius")?)?,
-            }),
-            "nurbs" => Ok(BrepSurface::Nurbs {
-                control_points: list(value, "controlPoints", point_of)?,
-                weights: list(value, "weights", as_f64)?,
-                u_count: as_u32(field(value, "uCount")?)?,
-                v_count: as_u32(field(value, "vCount")?)?,
-                degree_u: as_u32(field(value, "degreeU")?)?,
-                degree_v: as_u32(field(value, "degreeV")?)?,
-                knots_u: list(value, "knotsU", as_f64)?,
-                knots_v: list(value, "knotsV", as_f64)?,
-            }),
-            other => Err(format!("surface: unknown kind {other:?}")),
-        }
-    }
-    fn vertex_of(value: &Json) -> Result<BrepVertex, String> {
-        Ok(BrepVertex { id: as_str(field(value, "id")?)?, point: point_of(field(value, "point")?)? })
-    }
-    fn edge_of(value: &Json) -> Result<BrepEdge, String> {
-        Ok(BrepEdge { id: as_str(field(value, "id")?)?, start_vertex: as_str(field(value, "startVertex")?)?, end_vertex: as_str(field(value, "endVertex")?)?, curve: curve_of(field(value, "curve")?)? })
-    }
-    fn loop_edge_of(value: &Json) -> Result<BrepLoopEdge, String> {
-        Ok(BrepLoopEdge { edge: as_str(field(value, "edge")?)?, orientation: as_bool(field(value, "orientation")?)? })
-    }
-    fn loop_of(value: &Json) -> Result<BrepLoop, String> {
-        Ok(BrepLoop { id: as_str(field(value, "id")?)?, edges: optional_list(value, "edges", loop_edge_of)? })
-    }
-    fn face_of(value: &Json) -> Result<BrepFace, String> {
-        Ok(BrepFace {
-            id: as_str(field(value, "id")?)?,
-            outer_loop: as_str(field(value, "outerLoop")?)?,
-            inner_loops: optional_list(value, "innerLoops", as_str)?,
-            surface: surface_of(field(value, "surface")?)?,
-            orientation: as_bool(field(value, "orientation")?)?,
-        })
-    }
-    fn shell_face_of(value: &Json) -> Result<BrepShellFace, String> {
-        Ok(BrepShellFace { face: as_str(field(value, "face")?)?, orientation: as_bool(field(value, "orientation")?)? })
-    }
-    fn shell_of(value: &Json) -> Result<BrepShell, String> {
-        Ok(BrepShell { id: as_str(field(value, "id")?)?, faces: optional_list(value, "faces", shell_face_of)? })
-    }
-    fn solid_shell_of(value: &Json) -> Result<BrepSolidShell, String> {
-        Ok(BrepSolidShell { shell: as_str(field(value, "shell")?)?, is_void: as_bool(field(value, "isVoid")?)? })
-    }
-    fn solid_of(value: &Json) -> Result<BrepSolid, String> {
-        Ok(BrepSolid { id: as_str(field(value, "id")?)?, shells: optional_list(value, "shells", solid_shell_of)? })
-    }
-    /// 📸️ `SemioBrepSnapshot`'s `#[serde(rename_all = "camelCase")]` wire shape — the six id-keyed
-    /// collections all carry `#[serde(default)]`, so an absent collection decodes as empty.
-    fn snapshot_of(value: &Json) -> Result<SemioBrepSnapshot, String> {
-        Ok(SemioBrepSnapshot {
-            schema: as_str(field(value, "schema")?)?,
-            vertices: optional_list(value, "vertices", vertex_of)?,
-            edges: optional_list(value, "edges", edge_of)?,
-            loops: optional_list(value, "loops", loop_of)?,
-            faces: optional_list(value, "faces", face_of)?,
-            shells: optional_list(value, "shells", shell_of)?,
-            solids: optional_list(value, "solids", solid_of)?,
-        })
-    }
-    /// 🦠️ `SemioBrepMutation`'s externally tagged wire shape: one `{"VariantName": {payload}}`
-    /// member, whose payload struct fields are plain snake_case (the payload structs carry no
-    /// `rename_all`), while nested snapshot value types keep their own camelCase spelling.
-    fn mutation_of(value: &Json) -> Result<SemioBrepMutation, String> {
-        let (variant, payload) = match value {
-            Json::Object(entries) => entries.first().ok_or_else(|| "mutation fixture is an empty object".to_string())?,
-            other => return Err(format!("mutation fixture must be an object, got {other:?}")),
-        };
-        match variant.as_str() {
-            "CreateVertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: as_str(field(payload, "id")?)?, point: point_of(field(payload, "point")?)? })),
-            "DeleteVertex" => Ok(SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: as_str(field(payload, "id")?)? })),
-            "CreateEdge" => Ok(SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge {
-                id: as_str(field(payload, "id")?)?,
-                start_vertex: as_str(field(payload, "start_vertex")?)?,
-                end_vertex: as_str(field(payload, "end_vertex")?)?,
-                curve: curve_of(field(payload, "curve")?)?,
-            })),
-            "DeleteEdge" => Ok(SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: as_str(field(payload, "id")?)? })),
-            "CreateFace" => Ok(SemioBrepMutation::CreateFace(create_face::mutation::CreateFace {
-                id: as_str(field(payload, "id")?)?,
-                outer_loop: as_str(field(payload, "outer_loop")?)?,
-                inner_loops: optional_list(payload, "inner_loops", as_str)?,
-                surface: surface_of(field(payload, "surface")?)?,
-                orientation: as_bool(field(payload, "orientation")?)?,
-            })),
-            "DeleteFace" => Ok(SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: as_str(field(payload, "id")?)? })),
-            "CreateShell" => Ok(SemioBrepMutation::CreateShell(create_shell::mutation::CreateShell { id: as_str(field(payload, "id")?)?, faces: optional_list(payload, "faces", shell_face_of)? })),
-            "DeleteShell" => Ok(SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: as_str(field(payload, "id")?)? })),
-            "CreateSolid" => Ok(SemioBrepMutation::CreateSolid(create_solid::mutation::CreateSolid { id: as_str(field(payload, "id")?)?, shells: optional_list(payload, "shells", solid_shell_of)? })),
-            "DeleteSolid" => Ok(SemioBrepMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: as_str(field(payload, "id")?)? })),
-            "ReplaceCurve" => Ok(SemioBrepMutation::ReplaceCurve(replace_curve::mutation::ReplaceCurve { edge_id: as_str(field(payload, "edge_id")?)?, new_curve: curve_of(field(payload, "new_curve")?)? })),
-            "ReplaceSurface" => Ok(SemioBrepMutation::ReplaceSurface(replace_surface::mutation::ReplaceSurface { face_id: as_str(field(payload, "face_id")?)?, new_surface: surface_of(field(payload, "new_surface")?)? })),
-            "MoveVertex" => Ok(SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: as_str(field(payload, "vertex_id")?)?, new_point: point_of(field(payload, "new_point")?)? })),
-            other => Err(format!("mutation: unknown variant {other:?}")),
-        }
+        Err(format!("{scenario}: the mutation was rejected: {refusals:?}"))
     }
 
-    /// 🧫️ The committed `(before, mutation, after)` triple the scenario binds, decoded into the
-    /// typed values `apply_semio_brep_mutation` consumes and the typed answer the applied result has
-    /// to equal.
-    fn fixture_for(ctx: &Context) -> Result<(SemioBrepSnapshot, SemioBrepMutation, SemioBrepSnapshot), String> {
-        let before = snapshot_of(&ctx.fixture_json(&fixture_uri(ctx, "before")?)?)?;
-        let mutation = mutation_of(&ctx.fixture_json(&fixture_uri(ctx, "mutation")?)?)?;
-        let after = snapshot_of(&ctx.fixture_json(&fixture_uri(ctx, "after")?)?)?;
-        Ok((before, mutation, after))
+    /// 🌲️ The real concrete-forest structure, put into the state the scenario's verb is aimed at by
+    /// the doc string's own `prepare` list.
+    fn prepared(ctx: &Context) -> Result<(SemioBrepSnapshot, SemioBrepMutation), String> {
+        let (prepare, mutation) = super::plan_mutations(ctx)?;
+        let text = String::from_utf8(ctx.fixture_bytes(super::FOREST_DSL)?).map_err(|error| format!("the concrete-forest artifact is not UTF-8: {error}"))?;
+        let mut snapshot = parse_semio_brep_dsl(&text)?;
+        for step in &prepare {
+            let step = mutation_of(step, &ctx.scenario.id)?;
+            apply(&mut snapshot, &step, &ctx.scenario.id)?;
+        }
+        Ok((snapshot, mutation_of(&mutation, &ctx.scenario.id)?))
     }
 
-    /// 🚨️ A failure message that names WHAT disagreed, in the same structural JSON the committed
-    /// fixtures are written in, so a red scenario is readable without re-running anything.
+    fn projection(snapshot: &SemioBrepSnapshot) -> Result<Json, String> {
+        parse_json(&encode_semio_brep_snapshot_json(snapshot))
+    }
+
+    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both sides project, so a red
+    /// scenario is readable without re-running anything.
     fn disagreement(what: &str, got: &SemioBrepSnapshot, expected: &SemioBrepSnapshot) -> String {
-        format!("{what}\n     got: {}\nexpected: {}", snapshot_json(got).to_string(), snapshot_json(expected).to_string())
+        format!("{what}\n     got: {}\nexpected: {}", encode_semio_brep_snapshot_json(got), encode_semio_brep_snapshot_json(expected))
     }
-    //#endregion 🔖️Decode
-
-    //#region 🔖️Projection
-    fn point_json(p: &SemioPoint3) -> Json {
-        Json::Object(vec![("x".to_string(), Json::Number(p.x)), ("y".to_string(), Json::Number(p.y)), ("z".to_string(), Json::Number(p.z))])
-    }
-    fn curve_json(c: &BrepCurve) -> Json {
-        match c {
-            BrepCurve::Line { origin, direction } => Json::Object(vec![("kind".to_string(), Json::String("line".to_string())), ("origin".to_string(), point_json(origin)), ("direction".to_string(), point_json(direction))]),
-            BrepCurve::Circle { center, axis, radius } => Json::Object(vec![
-                ("kind".to_string(), Json::String("circle".to_string())),
-                ("center".to_string(), point_json(center)),
-                ("axis".to_string(), point_json(axis)),
-                ("radius".to_string(), Json::Number(*radius)),
-            ]),
-            BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => Json::Object(vec![
-                ("kind".to_string(), Json::String("ellipse".to_string())),
-                ("center".to_string(), point_json(center)),
-                ("axis".to_string(), point_json(axis)),
-                ("radiusMajor".to_string(), Json::Number(*radius_major)),
-                ("radiusMinor".to_string(), Json::Number(*radius_minor)),
-            ]),
-            BrepCurve::Nurbs { control_points, weights, degree, knots } => Json::Object(vec![
-                ("kind".to_string(), Json::String("nurbs".to_string())),
-                ("controlPoints".to_string(), Json::Array(control_points.iter().map(point_json).collect())),
-                ("weights".to_string(), Json::Array(weights.iter().map(|w| Json::Number(*w)).collect())),
-                ("degree".to_string(), Json::Number(*degree as f64)),
-                ("knots".to_string(), Json::Array(knots.iter().map(|k| Json::Number(*k)).collect())),
-            ]),
-        }
-    }
-    fn surface_json(s: &BrepSurface) -> Json {
-        match s {
-            BrepSurface::Plane { origin, normal } => Json::Object(vec![("kind".to_string(), Json::String("plane".to_string())), ("origin".to_string(), point_json(origin)), ("normal".to_string(), point_json(normal))]),
-            BrepSurface::Cylinder { origin, axis, radius } => Json::Object(vec![
-                ("kind".to_string(), Json::String("cylinder".to_string())),
-                ("origin".to_string(), point_json(origin)),
-                ("axis".to_string(), point_json(axis)),
-                ("radius".to_string(), Json::Number(*radius)),
-            ]),
-            BrepSurface::Cone { origin, axis, radius, half_angle } => Json::Object(vec![
-                ("kind".to_string(), Json::String("cone".to_string())),
-                ("origin".to_string(), point_json(origin)),
-                ("axis".to_string(), point_json(axis)),
-                ("radius".to_string(), Json::Number(*radius)),
-                ("halfAngle".to_string(), Json::Number(*half_angle)),
-            ]),
-            BrepSurface::Sphere { center, radius } => Json::Object(vec![("kind".to_string(), Json::String("sphere".to_string())), ("center".to_string(), point_json(center)), ("radius".to_string(), Json::Number(*radius))]),
-            BrepSurface::Torus { center, axis, major_radius, minor_radius } => Json::Object(vec![
-                ("kind".to_string(), Json::String("torus".to_string())),
-                ("center".to_string(), point_json(center)),
-                ("axis".to_string(), point_json(axis)),
-                ("majorRadius".to_string(), Json::Number(*major_radius)),
-                ("minorRadius".to_string(), Json::Number(*minor_radius)),
-            ]),
-            BrepSurface::Nurbs { control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v } => Json::Object(vec![
-                ("kind".to_string(), Json::String("nurbs".to_string())),
-                ("controlPoints".to_string(), Json::Array(control_points.iter().map(point_json).collect())),
-                ("weights".to_string(), Json::Array(weights.iter().map(|w| Json::Number(*w)).collect())),
-                ("uCount".to_string(), Json::Number(*u_count as f64)),
-                ("vCount".to_string(), Json::Number(*v_count as f64)),
-                ("degreeU".to_string(), Json::Number(*degree_u as f64)),
-                ("degreeV".to_string(), Json::Number(*degree_v as f64)),
-                ("knotsU".to_string(), Json::Array(knots_u.iter().map(|k| Json::Number(*k)).collect())),
-                ("knotsV".to_string(), Json::Array(knots_v.iter().map(|k| Json::Number(*k)).collect())),
-            ]),
-        }
-    }
-    fn vertex_json(v: &BrepVertex) -> Json {
-        Json::Object(vec![("id".to_string(), Json::String(v.id.clone())), ("point".to_string(), point_json(&v.point))])
-    }
-    fn edge_json(e: &BrepEdge) -> Json {
-        Json::Object(vec![
-            ("id".to_string(), Json::String(e.id.clone())),
-            ("startVertex".to_string(), Json::String(e.start_vertex.clone())),
-            ("endVertex".to_string(), Json::String(e.end_vertex.clone())),
-            ("curve".to_string(), curve_json(&e.curve)),
-        ])
-    }
-    fn loop_edge_json(le: &BrepLoopEdge) -> Json {
-        Json::Object(vec![("edge".to_string(), Json::String(le.edge.clone())), ("orientation".to_string(), Json::Bool(le.orientation))])
-    }
-    fn loop_json(l: &BrepLoop) -> Json {
-        Json::Object(vec![("id".to_string(), Json::String(l.id.clone())), ("edges".to_string(), Json::Array(l.edges.iter().map(loop_edge_json).collect()))])
-    }
-    fn face_json(f: &BrepFace) -> Json {
-        Json::Object(vec![
-            ("id".to_string(), Json::String(f.id.clone())),
-            ("outerLoop".to_string(), Json::String(f.outer_loop.clone())),
-            ("innerLoops".to_string(), Json::Array(f.inner_loops.iter().map(|s| Json::String(s.clone())).collect())),
-            ("surface".to_string(), surface_json(&f.surface)),
-            ("orientation".to_string(), Json::Bool(f.orientation)),
-        ])
-    }
-    fn shell_face_json(sf: &BrepShellFace) -> Json {
-        Json::Object(vec![("face".to_string(), Json::String(sf.face.clone())), ("orientation".to_string(), Json::Bool(sf.orientation))])
-    }
-    fn shell_json(sh: &BrepShell) -> Json {
-        Json::Object(vec![("id".to_string(), Json::String(sh.id.clone())), ("faces".to_string(), Json::Array(sh.faces.iter().map(shell_face_json).collect()))])
-    }
-    fn solid_shell_json(ss: &BrepSolidShell) -> Json {
-        Json::Object(vec![("shell".to_string(), Json::String(ss.shell.clone())), ("isVoid".to_string(), Json::Bool(ss.is_void))])
-    }
-    fn solid_json(so: &BrepSolid) -> Json {
-        Json::Object(vec![("id".to_string(), Json::String(so.id.clone())), ("shells".to_string(), Json::Array(so.shells.iter().map(solid_shell_json).collect()))])
-    }
-    /// 🎯️ The projection every scenario compares under `ordered-json-v1`: the snapshot's own
-    /// structural JSON shape, matching the committed fixtures field for field (camelCase keys,
-    /// matching `SemioBrepSnapshot`'s own `#[serde(rename_all = "camelCase")]`). This is the exact
-    /// inverse of the `Decode` region above, so a fixture that round-trips through both is proof the
-    /// two agree.
-    fn snapshot_json(snapshot: &SemioBrepSnapshot) -> Json {
-        Json::Object(vec![
-            ("schema".to_string(), Json::String(snapshot.schema.clone())),
-            ("vertices".to_string(), Json::Array(snapshot.vertices.iter().map(vertex_json).collect())),
-            ("edges".to_string(), Json::Array(snapshot.edges.iter().map(edge_json).collect())),
-            ("loops".to_string(), Json::Array(snapshot.loops.iter().map(loop_json).collect())),
-            ("faces".to_string(), Json::Array(snapshot.faces.iter().map(face_json).collect())),
-            ("shells".to_string(), Json::Array(snapshot.shells.iter().map(shell_json).collect())),
-            ("solids".to_string(), Json::Array(snapshot.solids.iter().map(solid_json).collect())),
-        ])
-    }
-    //#endregion 🔖️Projection
+    //#endregion 🔖️Bridges
 
     //#region 🔖️Handlers
-    /// 🎯️ Applies the bound kind to the committed before-snapshot and asserts the result IS the
-    /// committed after-snapshot — the whole topology, so a `delete-face` that removed the face but
-    /// left its loop referencing a severed edge fails here rather than passing quietly. The
-    /// assertion lives in the handler because a recorded no-oracle case runs no oracle role: one
-    /// that merely returned `Ok` would report a pass having checked nothing.
+    /// 🎯️ One verb applied to the real committed solid. The projection is the whole resulting
+    /// snapshot, so a `delete-vertex` that severed the wrong edges — or a `replace-surface` that
+    /// dropped a sphere's radius — diverges from the oracle here rather than passing quietly.
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let (mut current, mutation, expected) = fixture_for(ctx)?;
-        let outcome = apply_semio_brep_mutation(&mut current, &mutation);
-        let refusals = semio_mutation_refusals(&outcome);
-        if !refusals.is_empty() {
-            return Err(format!("{}: mutation rejected: {refusals:?}", ctx.scenario.id));
+        let (mut snapshot, mutation) = prepared(ctx)?;
+        apply(&mut snapshot, &mutation, &ctx.scenario.id)?;
+        let projection = projection(&snapshot)?;
+        Ok(Outcome::with_raw(print_semio_brep_dsl(&snapshot).into_bytes(), projection))
+    }
+
+    /// ↩️ The metamorphic inverse law, asserted in role: applying the verb and then its OWN computed
+    /// inverse must restore the prepared solid exactly — for `delete-vertex` that means the vertex
+    /// AND both incident edges with their curves, in the order they were in. The projection carries
+    /// the mutated snapshot too, so the thirteen rows do not all project the same value and the
+    /// comparison cannot go vacuous.
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let (base, mutation) = prepared(ctx)?;
+        let mut current = base.clone();
+        apply(&mut current, &mutation, &ctx.scenario.id)?;
+        let mutated = projection(&current)?;
+        for step in inverse_semio_brep_mutation(&mutation, &base) {
+            apply(&mut current, &step, &ctx.scenario.id)?;
         }
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the prepared solid", ctx.scenario.id), &current, &base));
+        }
+        Ok(Outcome::projection(Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), projection(&current)?)])))
+    }
+
+    /// 🧫️ The committed handcrafted `(before, mutation, after)` vector for one kind, applied and
+    /// checked against the committed after-snapshot in role — a THIRD statement of what the verb
+    /// means, independent of both implementations, kept from the case this one replaces.
+    pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
+        let assets = super::step_assets(ctx);
+        if assets.len() < 3 {
+            return Err(format!("{}: expected three committed vector assets, found {}", ctx.scenario.id, assets.len()));
+        }
+        let before = String::from_utf8(ctx.fixture_bytes(&assets[0])?).map_err(|error| error.to_string())?;
+        let payload = String::from_utf8(ctx.fixture_bytes(&assets[1])?).map_err(|error| error.to_string())?;
+        let after = String::from_utf8(ctx.fixture_bytes(&assets[2])?).map_err(|error| error.to_string())?;
+        let mut current = decode_semio_brep_snapshot_json(&before).map_err(|error| format!("{}: the committed before-snapshot must decode: {error}", ctx.scenario.id))?;
+        let expected = decode_semio_brep_snapshot_json(&after).map_err(|error| format!("{}: the committed after-snapshot must decode: {error}", ctx.scenario.id))?;
+        let mutation = decode_semio_brep_mutation_json(&payload).map_err(|error| format!("{}: the committed mutation payload must decode: {error}", ctx.scenario.id))?;
+        apply(&mut current, &mutation, &ctx.scenario.id)?;
         if current != expected {
             return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
         }
-        let projection = snapshot_json(&current);
-        let bytes = projection.to_string().into_bytes();
-        Ok(Outcome::with_raw(bytes, projection))
+        projection(&current).map(Outcome::projection)
     }
 
-    /// ↩️ The metamorphic inverse law: applying the bound kind and then its OWN computed inverse
-    /// must restore the committed before-snapshot exactly — a deleted solid's shells and every
-    /// loop/edge/vertex beneath them, in their original order, not merely a solid of the same id.
-    /// The inverse is reached through this subset's own `inverse_semio_brep_mutation`, because
-    /// `protocol::Mutation` is a private extern-crate item of the plugin and cannot be imported
-    /// from a test host that links only the plugin itself.
-    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let (base, mutation, _expected) = fixture_for(ctx)?;
-        let mut current = base.clone();
-        let outcome = apply_semio_brep_mutation(&mut current, &mutation);
-        let refusals = semio_mutation_refusals(&outcome);
-        if !refusals.is_empty() {
-            return Err(format!("{}: forward mutation rejected: {refusals:?}", ctx.scenario.id));
-        }
-        for step in &inverse_semio_brep_mutation(&mutation, &base) {
-            let step_outcome = apply_semio_brep_mutation(&mut current, step);
-            let step_refusals = semio_mutation_refusals(&step_outcome);
-            if !step_refusals.is_empty() {
-                return Err(format!("{}: inverse step rejected: {step_refusals:?}", ctx.scenario.id));
-            }
-        }
-        if current != base {
-            return Err(disagreement(&format!("{}: undoing the mutation did not restore the before-snapshot", ctx.scenario.id), &current, &base));
-        }
-        let projection = snapshot_json(&current);
-        let bytes = projection.to_string().into_bytes();
-        Ok(Outcome::with_raw(bytes, projection))
-    }
-
-    /// 🔁️ The real committed solid through both of its committed encodings, with the BYTE half of
-    /// the identity law asserted as `carrier_is_exact`. `.dsl.semio` is a fixed-layout record
-    /// grammar and `.pack.semio` its binary twin, and both committed files were produced by these
-    /// very codecs, so reproducing them byte for byte is the CORRECT answer here and
-    /// `law::reparsed_not_copied` would be exactly backwards — the same reading `mutate-dag-1`
-    /// records for `.dag.dsl.semio`. Until this scenario existed the case asserted the mutation
-    /// algebra over committed JSON vectors and never moved a single artifact byte in either
-    /// direction; the two carriers also cross-check each other, since the pack must decode to the
-    /// same solid the text does and no single codec can arrange that on its own.
-    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed solid artifact is not UTF-8: {error}"))?;
+    /// 🔁️ One document's two encodings, each re-emitted from the parsed document and required back
+    /// byte for byte. Byte-identical re-emission IS expected here — `.dsl.semio` is a fixed-layout
+    /// record grammar and `.pack.semio` is its binary twin — so the wave's "output must not equal
+    /// input" tripwire would be exactly backwards and its MIRROR law is asserted in its place through
+    /// `law::carrier_is_exact`, which fails with the offset of the first differing byte.
+    fn carrier_pair(ctx: &Context, dsl_uri: &str, pack_uri: &str, what: &str) -> Result<(SemioBrepSnapshot, Json), String> {
+        let dsl_bytes = ctx.fixture_bytes(dsl_uri)?;
+        let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: {what} is not UTF-8: {error}"))?;
         let parsed = parse_semio_brep_dsl(&text)?;
-        if parsed.solids.len() != 1 || parsed.shells.is_empty() || parsed.faces.is_empty() {
-            return Err(format!(
-                "identity-round-trip: the committed solid is the one-solid fixture this case describes, but parsed {} solid(s), {} shell(s) and {} face(s)",
-                parsed.solids.len(),
-                parsed.shells.len(),
-                parsed.faces.len()
-            ));
-        }
         let printed = print_semio_brep_dsl(&parsed);
-        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
+        carrier_is_exact(printed.as_bytes(), &dsl_bytes)?;
         let reparsed = parse_semio_brep_dsl(&printed)?;
         if reparsed != parsed {
-            return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
+            return Err(disagreement(&format!("identity-round-trip: printing {what} back to DSL and reparsing it lost content"), &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(super::PACK_ASSET)?;
+        let pack_bytes = ctx.fixture_bytes(pack_uri)?;
         let unpacked = decode_semio_brep_pack(&pack_bytes)?;
         if unpacked != parsed {
-            return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different solid than the committed text artifact", &unpacked, &parsed));
+            return Err(disagreement(&format!("identity-round-trip: the binary twin of {what} decodes to a different document than its text"), &unpacked, &parsed));
         }
         let repacked_bytes = encode_semio_brep_pack(&parsed);
         carrier_is_exact(&repacked_bytes, &pack_bytes)?;
         let repacked = decode_semio_brep_pack(&repacked_bytes)?;
         if repacked != parsed {
-            return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &parsed));
+            return Err(disagreement(&format!("identity-round-trip: encoding {what} to a pack and decoding it back lost content"), &repacked, &parsed));
         }
-        let projection = snapshot_json(&parsed);
-        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+        let report = Json::Object(vec![
+            ("document".to_string(), projection(&parsed)?),
+            ("dslDigest".to_string(), Json::String(semio_repo_test_host::protocol::digest(printed.as_bytes()))),
+            ("packDigest".to_string(), Json::String(semio_repo_test_host::protocol::digest(&repacked_bytes))),
+            ("dslLength".to_string(), Json::Number(printed.as_bytes().len() as f64)),
+            ("packLength".to_string(), Json::Number(repacked_bytes.len() as f64)),
+        ]);
+        Ok((parsed, report))
+    }
+
+    /// 🔁️ Both documents, in both encodings — four files, all four reproduced byte for byte. The
+    /// committed solid's two files are this codec's own output and the Python implementation
+    /// reproduces them from the grammar and the protocol alone; the concrete forest's two files are
+    /// the PYTHON implementation's output and this codec has to reproduce THOSE, 2 466 real `f64`
+    /// among them, 98 of which have no exponent-free shortest lexeme and are written positionally.
+    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let (solid, solid_report) = carrier_pair(ctx, super::SOLID_DSL, super::SOLID_PACK, "the committed solid")?;
+        if solid.vertices.len() != 3 || solid.edges.len() != 3 || solid.faces.len() != 1 || solid.solids.len() != 1 {
+            return Err(format!(
+                "identity-round-trip: the committed solid is the three-vertex three-edge one-face one-solid artifact this case describes, but decoded as {}/{}/{}/{}",
+                solid.vertices.len(),
+                solid.edges.len(),
+                solid.faces.len(),
+                solid.solids.len()
+            ));
+        }
+        let (forest, forest_report) = carrier_pair(ctx, super::FOREST_DSL, super::FOREST_PACK, "the concrete forest")?;
+        if forest.vertices.len() != 167 || forest.edges.len() != 270 || forest.loops.len() != 127 || forest.faces.len() != 127 || forest.shells.len() != 12 || forest.solids.len() != 12 {
+            return Err(format!(
+                "identity-round-trip: the concrete forest is the 167/270/127/127/12/12 structure this case describes, but decoded as {}/{}/{}/{}/{}/{}",
+                forest.vertices.len(),
+                forest.edges.len(),
+                forest.loops.len(),
+                forest.faces.len(),
+                forest.shells.len(),
+                forest.solids.len()
+            ));
+        }
+        Ok(Outcome::projection(Json::Object(vec![("solid".to_string(), solid_report), ("forest".to_string(), forest_report)])))
     }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls.
+/// 🧭️ Registration entry point the generated host calls, by FULL expanded scenario id — the loop
+/// mirrors the feature's `Examples` tables exactly. Subject only: the reference answer comes from
+/// the Python adapter, in the oracle role, and nothing here may answer for it.
 pub fn adapter() -> Adapter {
+    #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), snapshot_oracle_for("after")).oracle(&format!("inverse-{kind}"), snapshot_oracle_for("before"));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
-        }
-    }
-    built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
+        for kind in KINDS {
+            built = built
+                .subject(&format!("mutate-{kind}"), subject::mutate)
+                .subject(&format!("inverse-{kind}"), subject::inverse)
+                .subject(&format!("spec-vector-{kind}"), subject::spec_vector);
+        }
         built = built.subject("identity-round-trip", subject::round_trip);
+    }
+    #[cfg(not(feature = "sut"))]
+    {
+        let _ = KINDS;
     }
     built
 }

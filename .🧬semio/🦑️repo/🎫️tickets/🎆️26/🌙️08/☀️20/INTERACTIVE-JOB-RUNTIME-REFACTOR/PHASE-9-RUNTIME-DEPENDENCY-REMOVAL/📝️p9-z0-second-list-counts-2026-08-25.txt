@@ -1,4 +1,0 @@
-all-raw	230	{"go":60,"js":70,"python":15,"rust":85}
-all-literal	212	{"go":58,"js":69,"rust":85}
-js-raw	70	{"js":70}
-js-literal	69	{"js":69}

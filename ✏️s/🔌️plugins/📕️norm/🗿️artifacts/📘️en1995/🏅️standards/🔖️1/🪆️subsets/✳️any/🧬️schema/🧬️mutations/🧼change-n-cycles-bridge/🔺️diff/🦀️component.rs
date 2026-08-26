@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_n_cycles_bridge::mutation::Chang
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeNCyclesBridge, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub fn diff(payload: &ChangeNCyclesBridge, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if !payload.new_n_cycles_bridge.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "N cycles bridge must be a finite number.", Vec::<String>::new());
     }

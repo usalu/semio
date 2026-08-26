@@ -1,0 +1,7 @@
+name	operation	session_slot	session_generation	request_generation	base_revision	parent_revision	units	page	terminal
+checkpoint	2501	1	1	1	0	0	begin_checkpoint,poll,preview,take_page,resume_page,retry_page,acknowledge_page,poll,close_operation_step,close_retired_step	leased-acknowledged	success-empty
+fault	2502	1	1	2	1	0	begin_checkpoint,poll,fault,close_operation_step,close_retired_step	none	failed-empty
+retry_checkpoint	2503	1	1	3	1	0	begin_checkpoint,poll,preview,take_page,resume_page,retry_page,acknowledge_page,poll,close_operation_step,close_retired_step	leased-acknowledged	success-empty
+cancel	2501	1	1	4	1	0	begin_checkpoint,cancel,close_operation_step,close_retired_step	none	cancelled-empty
+stale_authority	2501	1	1	5	0	0	preflight	none	rejected-exact-handback
+wrong_session	2501	1	2	6	1	0	preflight	none	rejected-exact-handback

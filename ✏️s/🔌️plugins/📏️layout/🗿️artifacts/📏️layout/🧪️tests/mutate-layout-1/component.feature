@@ -4,11 +4,27 @@
 @mutations-layout-1-any
 Feature: Apply every typed layout-document mutation to its committed specification vector
   `s.layout.layout` is a semio-NATIVE artifact: no third party reads or writes
-  `.dsl.semio`/`.pack.semio`, so there is no reference implementation to register as an oracle. That
-  is recorded as the `layout-mutation-semantics` no-oracle decision in
+  `.dsl.semio`/`.pack.semio`, so no reference LIBRARY is registered. That is recorded as the
+  `layout-mutation-semantics` no-oracle decision in
   `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and its substitutes are the
   committed per-kind specification vectors plus the inverse law. This case re-exercises those SAME
   committed bytes end-to-end through `apply_layout_mutation_json`/`undo_layout_mutation_json`.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-note-1` and `mutate-program-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
+  snapshot text grammar is the generic `family-scene` canvas grammar, and the committed artifact
+  carries no `layers` block at all.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   What distinguishes this subset from every sibling is that a layout document is FOUR pools at TWO
   nesting depths, joined by reference. Three scalars sit at the document root (`name`, `printTarget`,

@@ -18,7 +18,7 @@ pub struct EngagementSubmit {
 /// engagement-input text (or the config's own in-progress `engagement_input` if the caller doesn't
 /// pass one) — the one `Config`-only row that actually mutates the document, mirroring the
 /// pre-migration behaviour exactly.
-pub async fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let config = cfg.snapshot;
     let value = payload.value.clone().unwrap_or_else(|| config.engagement_input.clone());
     let value = value.trim();

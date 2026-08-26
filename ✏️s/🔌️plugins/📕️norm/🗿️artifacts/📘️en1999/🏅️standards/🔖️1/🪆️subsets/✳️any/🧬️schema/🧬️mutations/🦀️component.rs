@@ -122,7 +122,7 @@ impl En1999Mutation {
     /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
     /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
-    pub async fn from_snapshot(snapshot: &En1999Snapshot) -> Vec<En1999Mutation> {
+    pub fn from_snapshot(snapshot: &En1999Snapshot) -> Vec<En1999Mutation> {
         let mut mutations = Vec::with_capacity(26);
         mutations.push(En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
         mutations.push(En1999Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
@@ -164,7 +164,7 @@ mod tests {
 
     /// ⚖️ One value per `En1999Mutation` variant — the closed set the semantics/round-trip
     /// tests iterate.
-    async fn every_mutation() -> Vec<En1999Mutation> {
+    fn every_mutation() -> Vec<En1999Mutation> {
         vec![
             En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 }),
             En1999Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 5.0 }),
@@ -195,7 +195,7 @@ mod tests {
         ]
     }
 
-    async fn round_trip(base: &En1999Snapshot, mutation: &En1999Mutation) -> En1999Snapshot {
+    fn round_trip(base: &En1999Snapshot, mutation: &En1999Mutation) -> En1999Snapshot {
         let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
@@ -206,7 +206,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_registers_an_approved_semantic_descriptor() {
+    fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_round_trips_via_inverse() {
+    fn every_variant_round_trips_via_inverse() {
         let base = En1999Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn from_snapshot_round_trips_via_full_document_replacement() {
+    fn from_snapshot_round_trips_via_full_document_replacement() {
         let base = En1999Snapshot::default();
         let mut target = En1999Snapshot::default();
         let _ = &mut target;
@@ -239,7 +239,7 @@ mod tests {
     /// (reachable here as `protocol::os_spr::testkit`), exercised against three structurally distinct
     /// variants.
     #[semio_framework_async_macros::async_test]
-    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -248,7 +248,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_n_ed_kn_satisfies_the_inverse_and_absorb_laws() {
+    fn change_n_ed_kn_satisfies_the_inverse_and_absorb_laws() {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -257,7 +257,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_alloy_satisfies_the_inverse_and_absorb_laws() {
+    fn change_alloy_satisfies_the_inverse_and_absorb_laws() {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeAlloy(change_alloy::mutation::ChangeAlloy { new_alloy: "aw6082t6".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);

@@ -825,8 +825,8 @@ export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionI
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime
-import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, serializeCommandIngressForActor, serializePerActor } from "../../../../🧱️elements/PluginRuntime/🟦️component.tsx";
-export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, serializeCommandIngressForActor, serializePerActor };
+import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../../../🧱️elements/PluginRuntime/🟦️component.tsx";
+export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor };
 export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 
@@ -1004,6 +1004,7 @@ import {
   type FlowCatalogueItem,
   type FlowCatalogueSection,
   FlowGraphCanvasHost,
+  flowSurfaceRenderAllowed,
   flowRankCatalogueSuggestions,
   flowSpotlightSuggestionListScrollClass,
   GraphSliderOverlays,
@@ -1048,6 +1049,7 @@ export {
   type FlowCatalogueItem,
   type FlowCatalogueSection,
   FlowGraphCanvasHost,
+  flowSurfaceRenderAllowed,
   flowRankCatalogueSuggestions,
   flowSpotlightSuggestionListScrollClass,
   GraphSliderOverlays,

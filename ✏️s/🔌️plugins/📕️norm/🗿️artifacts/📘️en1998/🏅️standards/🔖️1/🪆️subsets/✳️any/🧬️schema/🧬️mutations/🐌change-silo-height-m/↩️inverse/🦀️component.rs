@@ -6,7 +6,7 @@ use crate::artifacts::en1998::mutations::En1998Mutation;
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeSiloHeightM, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+pub fn inverse(_payload: &ChangeSiloHeightM, base: &En1998Snapshot) -> Vec<En1998Mutation> {
     vec![En1998Mutation::ChangeSiloHeightM(ChangeSiloHeightM { new_silo_height_m: base.silo_height_m.clone() })]
 }
 //#endregion 🔖️Inverse

@@ -23,10 +23,10 @@ pub enum TrinityRewriteViewCommand {
 }
 
 impl protocol::OpBinary for TrinityRewriteViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(TrinityRewriteViewCommand::Noop)
     }
 }
@@ -39,7 +39,7 @@ pub struct TrinityRewriteViewer;
 /// 👁️ Read-only initial rule state — the empty/default snapshot (no pattern, no bound parameters, no
 /// working fixture), distinct from the editor's `default_rule_state()` (Nakagin fixture + seeded
 /// `label-core` demo rule): a fresh viewer session has no editor-authored rule to show yet.
-async fn empty_rule_state() -> RewriteSnapshot {
+fn empty_rule_state() -> RewriteSnapshot {
     RewriteSnapshot::default()
 }
 
@@ -57,7 +57,7 @@ impl ArtifactViewer for TrinityRewriteViewer {
     const DIALECT: Dialect = TRINITY_REWRITE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    async fn initial_snapshot() -> RewriteSnapshot {
+    fn initial_snapshot() -> RewriteSnapshot {
         empty_rule_state()
     }
 
@@ -65,7 +65,7 @@ impl ArtifactViewer for TrinityRewriteViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no
     /// dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action is
     /// a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -75,7 +75,7 @@ impl ArtifactViewer for TrinityRewriteViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             rule::BODY_KEY => rule::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),

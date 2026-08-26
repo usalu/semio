@@ -4,15 +4,17 @@
 //! checked against its own reading.
 //!
 //! **What this subset's vocabulary is, and why it shares no kind with its sibling.** PDF 1.4's
-//! retained snapshot is a bare `PageDoc { width, height, text }` — no object graph — and this
-//! subset's own `check_pdf_x_conformance` (`../🧬️schema/🦀️component.rs`) raises exactly TWO
-//! diagnostics: `stdio.pdf.x.degenerate-page-size` when the page's width or height is not strictly
-//! positive, and `stdio.pdf.x.schema-gap-unverifiable`, which fires unconditionally and records that
-//! full ISO 15930 conformance cannot be checked from this schema at all. The one movable axis is
-//! therefore PAGE GEOMETRY, and this vocabulary is that axis and nothing else.
+//! retained snapshot is the document's page TREE — `PageDoc { width, height, text }` per page, with
+//! no object graph — and this subset's own `check_pdf_x_conformance` (`../🧬️schema/🦀️component.rs`)
+//! raises exactly TWO diagnostics: `stdio.pdf.x.degenerate-page-size` when the FIRST page's width
+//! or height is not strictly positive, and `stdio.pdf.x.schema-gap-unverifiable`, which fires
+//! unconditionally and records that full ISO 15930 conformance cannot be checked from this schema
+//! at all. The one movable axis is therefore page 1's GEOMETRY, and this vocabulary is that axis
+//! and nothing else: the page count and every other page's box come through untouched, which is
+//! what the projection's `pageCount` anchor is there to prove.
 //!
-//! That is the whole distance between this subset and `1.4/✳️a`, whose checker reads `page.text` and
-//! never looks at the geometry, and whose vocabulary is the text axis and nothing else. Two subsets
+//! That is the whole distance between this subset and `1.4/✳️a`, whose checker reads page 1's text
+//! and never looks at the geometry, and whose vocabulary is the text axis and nothing else. Two subsets
 //! of one standard over one snapshot type, sharing not a single kind, because their checkers read
 //! different fields of it. Neither shares anything with `1.7/✳️x`, whose object graph lets it police
 //! `/TrimBox` per page, output intents, encryption and font embedding — none of which PDF 1.4's
@@ -141,11 +143,13 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 /// unconditionally on every PDF 1.4 document, so recording it is honest bookkeeping of an axis no
 /// mutation can move, not a field pretending to carry evidence.
 ///
-/// ⚠️ The width and height here are the document's TRUE `/MediaBox` extents, read from the bytes. The
-/// `✳️any` subset's own `decode_pdf` hardcodes 612×792 for every input and never reads a real page's
-/// geometry (that subset's oracle module documents it), so this projection is the first thing in the
-/// artifact that measures PDF 1.4 page geometry at all — and it is the axis on which a subject
-/// running against this case would be expected to fail until `decode_pdf` reads a real `/MediaBox`.
+/// 📐️ The width and height here are the document's TRUE `/MediaBox` extents, read from the bytes.
+/// That is what this axis measured against until the first full differential run of ticket
+/// 26/08/23/END-TO-END-TESTING-REFACTOR: the `✳️any` subset's `decode_pdf` hardcoded `612×792` for
+/// every input and never read a real page's box, so this case scored 0 of 9 on a document typeset
+/// at A4. It reads the real page tree now, and `pageCount` is here for the other half of the same
+/// defect — the old codec returned a ONE-page snapshot for the committed 65-page thesis, so a
+/// producer that silently drops pages fails this projection on its first field.
 #[cfg(feature = "oracles")]
 pub fn project_conformance(input: &[u8]) -> Result<Json, String> {
     let (width, height) = oracles::read_media_box(input)?;
@@ -250,7 +254,7 @@ mod tests {
     /// 📐️ The committed thesis really is typeset at A4, which is what makes the A5 row of the
     /// feature's Examples table an observable change rather than a coincidence.
     #[test]
-    fn the_real_fixture_is_a4_not_the_letter_size_decode_pdf_hardcodes() {
+    fn the_real_fixture_is_a4_and_the_projection_reads_its_true_box() {
         let projection = project_conformance(&fixture()).expect("the fixture projects");
         let value = |key: &str| match projection.get(key) {
             Some(Json::Number(number)) => *number,
@@ -258,7 +262,8 @@ mod tests {
         };
         assert!((value("width") - 595.276).abs() < DIMENSION_TOLERANCE, "width was {}", value("width"));
         assert!((value("height") - 841.89).abs() < DIMENSION_TOLERANCE, "height was {}", value("height"));
-        assert_ne!(value("width"), 612.0, "the ✳️any subset's decode_pdf hardcodes 612×792 for every input; this projection reads the real box");
+        assert_ne!(value("width"), 612.0, "A4 is not US Letter — a projection reporting 612 would be reading a default rather than this document's own /MediaBox");
+        assert_eq!(value("pageCount"), 65.0, "the committed thesis is 65 pages, and this axis anchors every scenario against a producer that silently drops pages");
     }
 
     #[test]

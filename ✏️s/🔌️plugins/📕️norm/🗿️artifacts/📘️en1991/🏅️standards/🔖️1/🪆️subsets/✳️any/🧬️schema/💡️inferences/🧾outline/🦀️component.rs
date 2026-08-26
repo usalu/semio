@@ -53,7 +53,7 @@ pub struct En1991Outline {
 }
 
 impl En1991Outline {
-    pub async fn compute(_snapshot: &En1991Snapshot) -> Self {
+    pub fn compute(_snapshot: &En1991Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = 0;
@@ -74,13 +74,13 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn outline_field_count_matches_section_outline_length() {
+    fn outline_field_count_matches_section_outline_length() {
         let outline = En1991Outline::compute(&En1991Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn outline_is_deterministic() {
+    fn outline_is_deterministic() {
         let snapshot = En1991Snapshot::default();
         assert_eq!(En1991Outline::compute(&snapshot), En1991Outline::compute(&snapshot));
     }

@@ -10,12 +10,12 @@ pub const TRINITY_JACK_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::jack::create_trinity_jack_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: TRINITY_JACK_MODE_EDIT.into(), label: LocalizedLabel::native("Explore", "Erkunden"), icon_id: "focus".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One quadrant of the layout: a stack holding a single window kind.
-async fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
+fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
         size,
@@ -25,7 +25,7 @@ async fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> W
 }
 
 /// @emoji 🪟️ Nakagin graph left (60%), Jack query over Results stacked right (40%).
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "row".into(),

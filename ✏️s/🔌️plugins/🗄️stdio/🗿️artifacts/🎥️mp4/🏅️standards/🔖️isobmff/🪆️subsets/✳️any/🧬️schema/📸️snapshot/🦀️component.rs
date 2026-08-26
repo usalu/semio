@@ -342,7 +342,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn json_pack_round_trips_via_real_mp4_bytes() {
-        let snap = sample_snapshot();
+        let snap = sample_snapshot().await;
         let bytes = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
@@ -350,7 +350,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_text_round_trips_via_real_mp4_bytes() {
-        let snap = sample_snapshot();
+        let snap = sample_snapshot().await;
         let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
@@ -366,7 +366,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn logical_snapshot_and_facets_have_no_shadow_state() {
-        let model = format!("{:?}", sample_snapshot());
+        let model = format!("{:?}", sample_snapshot().await);
         for forbidden in ["unknownBoxes", "physical", "sourceBytes", "nativeArchive", "\"raw\""] {
             assert!(!model.contains(forbidden), "snapshot contains forbidden shadow field {forbidden}");
         }

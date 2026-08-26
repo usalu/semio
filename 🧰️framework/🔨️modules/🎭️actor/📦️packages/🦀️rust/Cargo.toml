@@ -31,8 +31,8 @@ semio-framework-job = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+semio-framework-async = { workspace = true }
 wasm-bindgen = "0.2.106"
-wasm-bindgen-futures = "0.4.56"
 
 [dev-dependencies]
 # 🧪️ terra-shard-grants: proves the Part A serde-shape fix by actually serializing to bytes and

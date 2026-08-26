@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_cooling_reference_kwh::mutatio
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeCoolingReferenceKwh, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeCoolingReferenceKwh, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_cooling_reference_kwh.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Cooling energy reference must be a finite number, got {}.", payload.new_cooling_reference_kwh), Vec::<String>::new());
     }

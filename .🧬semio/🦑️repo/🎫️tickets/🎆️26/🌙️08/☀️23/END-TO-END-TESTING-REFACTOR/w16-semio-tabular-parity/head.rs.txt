@@ -1,0 +1,66 @@
+//! 🦀️ Semio MODEL exhaustive mutation case — Rust SUBJECT adapter. Ticket 26/08/23/END-TO-END-
+//! TESTING-REFACTOR.
+//!
+//! **This file no longer serves the oracle role.** The reference for `semio-v1-model-mutate` is the
+//! registered oracle `semio-model-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️model/
+//! 🧪️oracle/🔣️component.json`) — an independent Python implementation of the semio model carrier and
+//! its eleven verbs, written from the committed grammar, protocol and specification vectors, living
+//! beside this file as `🐍️component.py`. The runner dispatches the oracle role to that adapter and
+//! the subject role here, and compares the two projections under `@comparison-ordered-json-v1`.
+//! Registering oracle handlers here as well would put this repository's own answer on both sides of
+//! that comparison, which is the precise failure the platform exists to prevent.
+//!
+//! **What the handlers assert in role.** Parity across the two implementations is the primary
+//! evidence, but each side still states its own law so a scenario can fail for the right reason with
+//! a readable message: `inverse-<kind>` requires the mutation's OWN computed inverse to restore the
+//! capsule tower, `spec-vector-<kind>` requires the applied snapshot to be the committed
+//! after-snapshot AND the undone one to be the before-snapshot, and `identity-round-trip` requires
+//! all four committed encodings to be reproduced byte for byte through `law::carrier_is_exact`.
+//!
+//! **How the fixtures reach typed values.** The generated test host links only `semio-repo-test-host`
+//! and, behind `sut`, this subset's own crate — no `serde`, no `serde_json`, and this subset exports
+//! no JSON bridge for its snapshot or its mutation — so the subject module below carries its own
+//! small, forward-only, structural decoder over the framework's dependency-free `Json`. It decodes
+//! JSON STRUCTURE only, field by field, mirroring each committed payload's own declared shape; it
+//! never invents or reimplements any mutation SEMANTICS, which still run through the real
+//! `apply_semio_model_mutation`/`semio_model_mutation_inverse`. Every input is read from a fixture
+//! the FEATURE declares — the mutation parameters from the scenario's doc string, the specification
+//! vectors from the `local://` URIs its data table names — so neither adapter holds a transcription
+//! that could drift away from what the other one read.
+
+use semio_repo_test_host::Adapter;
+
+//#region 🔖️Kinds
+/// 🏷️ Mirrors `SemioModelMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/
+/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
+/// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
+/// it honest against the enum.
+#[cfg(feature = "sut")]
+const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "insert-spatial-node",
+    "remove-spatial-node",
+    "set-spatial-node",
+    "insert-element",
+    "remove-element",
+    "set-element",
+    "insert-relation",
+    "remove-relation",
+    "set-relation",
+];
+//#endregion 🔖️Kinds
+
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use semio_repo_test_host::{digest, Context, Json, Outcome};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::mutations::{apply_semio_model_mutation, semio_model_mutation_inverse, SemioModelMutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{
+        decode_semio_model_pack, encode_semio_model_pack, parse_semio_model_dsl, print_semio_model_dsl, ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode,
+    };
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+

@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_nu::mutation::ChangeNu;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeNu, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeNu, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_nu.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Poisson's ratio nu must be a finite number, got {}.", payload.new_nu), Vec::<String>::new());
     }

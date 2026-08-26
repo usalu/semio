@@ -1002,8 +1002,8 @@ mod codec_tests {
         assert!(matches!(err, ZipError::Crc32Mismatch { .. }));
     }
 
-    #[test]
-    fn deterministic_logical_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn deterministic_logical_round_trip() {
         use crate::artifacts::zip::{ZipDiff, ZipMutation};
         use protocol::{DiffAlgebra, DiffCodec, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
@@ -1045,10 +1045,10 @@ mod codec_tests {
         crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
         assert_eq!(from_binary_op, logical);
 
-        let analysis = crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
+        let analysis = crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]).await;
         assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
         let dialect = <crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
+        let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).await.expect("compose native OPC ZIP");
         assert_eq!(composition.snapshot, logical);
 
         for routed in [&from_dsl, &from_pack, &from_text_op, &from_binary_op, &composition.snapshot] {

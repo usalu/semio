@@ -237,7 +237,7 @@ impl Din16798Mutation {
     /// field — the closed-vocabulary replacement for the banned whole-document-replace variant, used
     /// by `import_media`'s `"model:in"` port and the `set-snapshot` app command to bundle a bulk
     /// document replacement into a single atomic `Emit::commit`.
-    pub async fn from_snapshot(snapshot: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    pub fn from_snapshot(snapshot: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         let mut mutations = Vec::with_capacity(62);
         mutations.push(Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
         mutations.push(Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: snapshot.occupancy.clone() }));
@@ -315,7 +315,7 @@ mod tests {
 
     /// ⚖️ One value per `Din16798Mutation` variant — the closed set the semantics/round-trip tests
     /// iterate, mirroring `process3d`'s own `every_mutation()` fixture.
-    async fn every_mutation() -> Vec<Din16798Mutation> {
+    fn every_mutation() -> Vec<Din16798Mutation> {
         vec![
             Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
             Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }),
@@ -382,7 +382,7 @@ mod tests {
         ]
     }
 
-    async fn round_trip(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Din16798Snapshot {
+    fn round_trip(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Din16798Snapshot {
         let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
@@ -393,7 +393,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_registers_an_approved_semantic_descriptor() {
+    fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -402,7 +402,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_round_trips_via_inverse() {
+    fn every_variant_round_trips_via_inverse() {
         let base = Din16798Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -416,7 +416,7 @@ mod tests {
     /// (`change-t-op-c`), and a `String` scalar (`change-occupancy`).
 
     #[semio_framework_async_macros::async_test]
-    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -425,7 +425,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_t_op_c_satisfies_the_inverse_and_absorb_laws() {
+    fn change_t_op_c_satisfies_the_inverse_and_absorb_laws() {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: 24.5 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -434,7 +434,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_occupancy_satisfies_the_inverse_and_absorb_laws() {
+    fn change_occupancy_satisfies_the_inverse_and_absorb_laws() {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);

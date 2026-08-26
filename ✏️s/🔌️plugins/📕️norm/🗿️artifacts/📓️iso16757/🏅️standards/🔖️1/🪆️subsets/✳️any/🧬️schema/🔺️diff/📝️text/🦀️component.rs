@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl Iso16757Diff {
-    pub async fn apply_to_artifact(&self, artifact: &Iso16757Artifact) -> protocol::MutationApplyResult<Iso16757Artifact> {
+    pub fn apply_to_artifact(&self, artifact: &Iso16757Artifact) -> protocol::MutationApplyResult<Iso16757Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -52,7 +52,7 @@ impl Iso16757Diff {
 }
 
 impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
-    async fn apply(&self, snapshot: &Iso16757Snapshot) -> protocol::MutationApplyResult<Iso16757Snapshot> {
+    fn apply(&self, snapshot: &Iso16757Snapshot) -> protocol::MutationApplyResult<Iso16757Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -85,7 +85,7 @@ impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -111,7 +111,7 @@ impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub async fn diff_set_snapshot(snapshot: &Iso16757Snapshot) -> Iso16757Diff {
+pub fn diff_set_snapshot(snapshot: &Iso16757Snapshot) -> Iso16757Diff {
     Iso16757Diff { artifact: Some(Box::new(Iso16757Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers

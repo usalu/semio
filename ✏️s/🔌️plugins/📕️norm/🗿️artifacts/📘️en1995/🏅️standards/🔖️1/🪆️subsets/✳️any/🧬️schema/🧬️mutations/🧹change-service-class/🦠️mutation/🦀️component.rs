@@ -15,15 +15,15 @@ pub struct ChangeServiceClass {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeServiceClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "service-class", kind: "change-service-class", record: "ChangedServiceClass" };
 
-    async fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_service_class::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
+    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
         crate::artifacts::en1995::mutations::change_service_class::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change service class to {:?}", self.new_service_class)
     }
 }

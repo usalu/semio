@@ -1,0 +1,13 @@
+===== mutate-tiff-6-0-baseline  start 21:48:16
+[test] level=exhaustive cases=1 executed=19 passed=19 failed=0 errored=0 parity=0/0
+===== mutate-tiff-6-0-baseline  exit=0 end 21:50:51
+===== mutate-docx-ecma-376-strict  start 21:50:51
+[test] level=exhaustive cases=1 executed=42 passed=42 failed=0 errored=0 parity=21/21
+===== mutate-docx-ecma-376-strict  exit=0 end 21:53:26
+===== mutate-docx-ecma-376  start 21:53:26
+[test] level=exhaustive cases=1 executed=54 passed=54 failed=0 errored=0 parity=27/27
+===== mutate-docx-ecma-376  exit=0 end 21:57:20
+===== mutate-docx-ecma-376-transitional  start 21:57:20
+[test] level=exhaustive cases=1 executed=26 passed=26 failed=0 errored=0 parity=13/13
+===== mutate-docx-ecma-376-transitional  exit=0 end 22:02:18
+ALLDONE 22:02:18

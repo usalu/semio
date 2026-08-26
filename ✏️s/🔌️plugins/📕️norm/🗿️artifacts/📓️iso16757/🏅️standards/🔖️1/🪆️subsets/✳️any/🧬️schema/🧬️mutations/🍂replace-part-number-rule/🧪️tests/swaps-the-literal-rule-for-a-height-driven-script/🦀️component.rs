@@ -35,7 +35,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// `part_number_inputs` supplies — but the oracle does not resolve inputs, so nothing about that binding is
 /// checked here.
 #[semio_framework_async_macros::async_test]
-async fn swaps_the_literal_rule_for_a_height_driven_script() {
+fn swaps_the_literal_rule_for_a_height_driven_script() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("replace-part-number-rule applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the applied state differs from the committed after-snapshot");
     assert!(matches!(applied.part_number_rule, crate::artifacts::iso16757::part_5::PartNumberRule::Script { .. }), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the rule must land on the Script variant");
@@ -46,7 +46,7 @@ async fn swaps_the_literal_rule_for_a_height_driven_script() {
 /// ↩️ `replace-part-number-rule`'s inverse clones the OLD rule out of BASE, so replaying it puts the `Literal {
 /// value: "PR-600" }` variant back.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_literal_rule_restores_before() {
+fn restoring_the_literal_rule_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward replace-part-number-rule applies");
@@ -64,7 +64,7 @@ async fn restoring_the_literal_rule_restores_before() {
 /// {"kind": "script", "function_id": …}}}` — `PartNumberRule` is internally tagged on `kind` with camelCase
 /// VARIANTS, but its struct-variant FIELDS keep snake_case.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -79,7 +79,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The `Script` rule is not equal to the committed `Literal` rule, so the whole-enum equality guard does not
 /// raise `mutation.no-op`.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -95,7 +95,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only
 /// `partNumberRule` is rewritten and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced replace-part-number-rule diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -104,7 +104,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the replacement part-
 /// number rule and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed replace-part-number-rule diff decodes");
     let rule = decoded.part_number_rule.as_ref().expect("the committed replace-part-number-rule diff carries the rule");
     assert!(matches!(rule, crate::artifacts::iso16757::part_5::PartNumberRule::Script { .. }), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the diff must carry the Script variant");
@@ -121,7 +121,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the part-number rule replacement, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed replace-part-number-rule diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the committed diff did not carry before to after");

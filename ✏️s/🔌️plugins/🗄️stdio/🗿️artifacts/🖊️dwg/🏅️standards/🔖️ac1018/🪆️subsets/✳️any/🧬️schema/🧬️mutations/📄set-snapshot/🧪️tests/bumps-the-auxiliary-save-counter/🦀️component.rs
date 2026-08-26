@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
     let outcome = apply_dwg_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "dwg-ac1018/set-snapshot: a genuinely changed drawing must not raise any message");
     assert_eq!(snapshot.auxiliary_header.total_saves, 8, "dwg-ac1018/set-snapshot: the save counter must advance");
-    assert_eq!(snapshot.auxiliary_header.save_generation, snapshot.auxiliary_header.terminal_save_generation, "dwg-ac1018/set-snapshot: the terminal save generation must track the current one");
+    assert_eq!(snapshot.auxiliary_header.save_generation, u32::from(snapshot.auxiliary_header.terminal_save_generation), "dwg-ac1018/set-snapshot: the terminal save generation must track the current one");
     assert_eq!(snapshot.revision_history.revisions, vec![7], "dwg-ac1018/set-snapshot: the revision history is a separate block and must not follow the save counter");
     assert_eq!(snapshot, expected_after(), "dwg-ac1018/set-snapshot: applied state differs from the committed after-snapshot");
 }

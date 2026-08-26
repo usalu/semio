@@ -15,15 +15,15 @@ pub struct ChangeTowerIsChimney {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerIsChimney {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "tower-is-chimney", kind: "change-tower-is-chimney", record: "ChangedTowerIsChimney" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_tower_is_chimney::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_tower_is_chimney::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change tower-is-chimney flag to {}", self.new_tower_is_chimney)
     }
 }

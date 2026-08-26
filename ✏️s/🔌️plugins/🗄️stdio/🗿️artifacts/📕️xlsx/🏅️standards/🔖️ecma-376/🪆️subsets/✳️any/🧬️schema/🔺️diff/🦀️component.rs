@@ -1996,12 +1996,12 @@ mod handcrafted_diff_codec_tests {
         ];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = XlsxDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = XlsxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = XlsxDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = XlsxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
@@ -2018,7 +2018,7 @@ mod result_apply_tests {
         let diff =
             XlsxDiff { workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { modified: vec![NamedModified { key: "missing".into(), diff: XlsxSheetDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
         let result = diff.apply(&base);
-        assert_eq!(result.await.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
         assert_eq!(base, XlsxSnapshot::default());
     }
 }

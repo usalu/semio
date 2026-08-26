@@ -1,7 +1,7 @@
-//! 🧾 `outline` — one named inference: this single-page PDF 1.4 document's own text structure.
-//! `pageCount` is always `1` (this subset's `PageDoc` models exactly one page — not fabricated,
-//! it's the honest shape of the snapshot itself); `wordCount`/`charCount` are a whitespace-split
-//! word count and character count over `page.text`.
+//! 🧾 `outline` — one named inference: this PDF 1.4 document's own page/text structure.
+//! `pageCount` is `pages.len()` verbatim — the real page tree this standard's codec reads, not a
+//! constant; `wordCount`/`charCount` are a whitespace-split word count and a character count
+//! summed over every page's shown text.
 
 use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,11 @@ pub struct PdfOutline {
 impl PdfOutline {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &PdfSnapshot) -> Self {
-        Self { page_count: 1, word_count: snapshot.page.text.split_whitespace().count() as u32, char_count: snapshot.page.text.chars().count() as u32 }
+        Self {
+            page_count: snapshot.pages.len() as u32,
+            word_count: snapshot.pages.iter().map(|page| page.text.split_whitespace().count() as u32).sum(),
+            char_count: snapshot.pages.iter().map(|page| page.text.chars().count() as u32).sum(),
+        }
     }
 }
 //#endregion 🔖️Outline
@@ -31,12 +35,12 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PageDoc;
 
     #[semio_framework_async_macros::async_test]
-    async fn counts_words_and_chars_in_page_text() {
-        let snapshot = PdfSnapshot { schema: "stdio.pdf".into(), page: PageDoc { width: 612.0, height: 792.0, text: "hello world".into() } };
+    async fn counts_pages_words_and_chars_across_the_page_tree() {
+        let snapshot = PdfSnapshot { schema: "stdio.pdf".into(), pages: vec![PageDoc { width: 612.0, height: 792.0, text: "hello world".into() }, PageDoc { width: 612.0, height: 792.0, text: "and a second page".into() }] };
         let outline = PdfOutline::compute(&snapshot);
-        assert_eq!(outline.page_count, 1);
-        assert_eq!(outline.word_count, 2);
-        assert_eq!(outline.char_count, "hello world".chars().count() as u32);
+        assert_eq!(outline.page_count, 2, "every page of the real page tree is counted, never a constant");
+        assert_eq!(outline.word_count, 6);
+        assert_eq!(outline.char_count, ("hello world".chars().count() + "and a second page".chars().count()) as u32);
     }
 
     #[semio_framework_async_macros::async_test]

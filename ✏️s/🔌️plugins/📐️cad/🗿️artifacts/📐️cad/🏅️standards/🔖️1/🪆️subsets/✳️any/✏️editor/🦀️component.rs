@@ -1172,6 +1172,12 @@ impl ArtifactEditor for CadPlayApp {
         cad_command_from_action(action, args)
     }
 
+    fn host_configuration_mutation(action: &str, args: Option<&Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions {
+            json: args.and_then(|value| value.get("json")).and_then(Value::as_str).unwrap_or("[]").to_string(),
+        }))
+    }
+
     async fn handle(
         command: &CadCommand,
         doc: &ArtifactView<'_, CadSnapshot>,
@@ -1632,6 +1638,15 @@ mod tests {
         let contributions = <CadPlayApp as ArtifactEditor>::command_from_action("setContributions", Some(&json!({ "json": "[{\"id\":\"cad\"}]" }))).expect("declared host command");
         assert!(matches!(contributions, CadCommand::SetContributions(set_contributions::SetContributions { json }) if json == "[{\"id\":\"cad\"}]"));
         assert!(<CadPlayApp as ArtifactEditor>::command_from_action("notACadAction", None).is_err());
+    }
+
+    #[test]
+    fn host_contributions_resolve_to_the_event_sourced_config_lane() {
+        let mutation = <CadPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&json!({ "json": "[{\"id\":\"cad\"}]" })))
+            .expect("host configuration")
+            .expect("CAD contribution mutation");
+        assert_eq!(mutation, CadConfigMutation::SetContributions { json: "[{\"id\":\"cad\"}]".into() });
+        assert_eq!(<CadPlayApp as ArtifactEditor>::host_configuration_mutation("setActiveExample", None).expect("non-host action"), None);
     }
 
     /// ⚖️ LAW: the one-action spot check above is not enough — this is the framework's own harness,

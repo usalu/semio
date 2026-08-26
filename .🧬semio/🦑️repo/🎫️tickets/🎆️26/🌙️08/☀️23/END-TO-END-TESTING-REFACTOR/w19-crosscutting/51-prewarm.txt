@@ -1,0 +1,23 @@
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:317:34
+    |
+317 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/../../📰markup/🦀️component.rs:396:34
+    |
+396 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+
+warning: constant `RELS_CONTENT_TYPE` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:192:11
+    |
+192 |     const RELS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+EXIT=0

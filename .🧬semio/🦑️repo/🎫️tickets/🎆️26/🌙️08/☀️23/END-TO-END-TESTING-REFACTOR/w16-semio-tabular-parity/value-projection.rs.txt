@@ -1,0 +1,44 @@
+    //#region 🔖️Projection
+    fn tagged(kind: &str, rest: Vec<(String, Json)>) -> Json {
+        let mut entries = vec![("kind".to_string(), Json::String(kind.to_string()))];
+        entries.extend(rest);
+        Json::Object(entries)
+    }
+    fn bytes_json(bytes: &[u8]) -> Json {
+        Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
+    }
+    fn id_json(id: &ValueId) -> Json {
+        Json::Object(vec![("value".to_string(), Json::String(id.value.clone()))])
+    }
+    /// 🎯️ Mirrors `SemioValue`'s internally-tagged (`tag = "kind"`, camelCase) serde shape variant
+    /// for variant, recursing through `list` and `map` exactly as the type does.
+    fn value_json(value: &SemioValue) -> Json {
+        match value {
+            SemioValue::Null => tagged("null", Vec::new()),
+            SemioValue::Bool { value } => tagged("bool", vec![("value".to_string(), Json::Bool(*value))]),
+            SemioValue::Int { lexeme } => tagged("int", vec![("lexeme".to_string(), Json::String(lexeme.clone()))]),
+            SemioValue::Float { lexeme } => tagged("float", vec![("lexeme".to_string(), Json::String(lexeme.clone()))]),
+            SemioValue::Str { value } => tagged("str", vec![("value".to_string(), Json::String(value.clone()))]),
+            SemioValue::Bytes { value } => tagged("bytes", vec![("value".to_string(), bytes_json(value))]),
+            SemioValue::List { items } => tagged("list", vec![("items".to_string(), Json::Array(items.iter().map(value_json).collect()))]),
+            SemioValue::Map { entries } => tagged("map", vec![("entries".to_string(), Json::Array(entries.iter().map(entry_json).collect()))]),
+            SemioValue::Ref { id } => tagged("ref", vec![("id".to_string(), id_json(id))]),
+        }
+    }
+    fn entry_json(entry: &SemioValueEntry) -> Json {
+        Json::Object(vec![("key".to_string(), Json::String(entry.key.clone())), ("value".to_string(), value_json(&entry.value))])
+    }
+    fn node_json(node: &SemioValueNode) -> Json {
+        Json::Object(vec![("id".to_string(), id_json(&node.id)), ("value".to_string(), value_json(&node.value))])
+    }
+    /// 🎯️ The projection every scenario compares under `ordered-json-v1` — array order is
+    /// significant there, which is exactly what makes the `remove-map-entry` inverse's
+    /// position-restoring multi-step undo checkable.
+    fn snapshot_json(snapshot: &SemioValueSnapshot) -> Json {
+        Json::Object(vec![
+            ("schema".to_string(), Json::String(snapshot.schema.clone())),
+            ("root".to_string(), value_json(&snapshot.root)),
+            ("nodes".to_string(), Json::Array(snapshot.nodes.iter().map(node_json).collect())),
+        ])
+    }
+    //#endregion 🔖️Projection

@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// from the catalogue's own metadata — so the catalogue title must be visibly unaffected. That distinction is
 /// what this case pins.
 #[semio_framework_async_macros::async_test]
-async fn adds_the_ag_suffix_to_the_manufacturer() {
+fn adds_the_ag_suffix_to_the_manufacturer() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("rename-manufacturer applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "rename-manufacturer/adds-the-ag-suffix-to-the-manufacturer: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.catalogue.manufacturer.names.preferred.text, "Fixture Heating Works AG", "rename-manufacturer/adds-the-ag-suffix-to-the-manufacturer: the manufacturer name must gain the AG suffix");
@@ -45,7 +45,7 @@ async fn adds_the_ag_suffix_to_the_manufacturer() {
 /// ↩️ `rename-manufacturer`'s inverse reads the OLD manufacturer text out of BASE, so replaying it puts "Fixture
 /// Heating Works" back.
 #[semio_framework_async_macros::async_test]
-async fn dropping_the_ag_suffix_restores_before() {
+fn dropping_the_ag_suffix_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward rename-manufacturer applies");
@@ -62,7 +62,7 @@ async fn dropping_the_ag_suffix_restores_before() {
 /// encode is a fixed point. The committed payload is spelled `{"RenameManufacturer": {"new_name": …}}` —
 /// externally tagged, snake_case payload key.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ "Fixture Heating Works AG" differs from the committed "Fixture Heating Works", so the equality guard on
 /// the MANUFACTURER's preferred text stays shut.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "rename-manufacturer/adds-the-ag-suffix-to-the-manufacturer: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
 /// of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `catalogue` is rewritten
 /// and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced rename-manufacturer diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "rename-manufacturer/adds-the-ag-suffix-to-the-manufacturer: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten
 /// catalogue and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed rename-manufacturer diff decodes");
     let catalogue = decoded.catalogue.as_ref().expect("the committed rename-manufacturer diff carries the catalogue");
     assert_eq!(catalogue.manufacturer.names.preferred.text, "Fixture Heating Works AG", "rename-manufacturer/adds-the-ag-suffix-to-the-manufacturer: the diff must carry the new manufacturer name");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the manufacturer rename, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed rename-manufacturer diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-manufacturer/adds-the-ag-suffix-to-the-manufacturer: the committed diff did not carry before to after");

@@ -1,0 +1,33 @@
+{
+  "schema": "semio.phase8.retained-mounted-laws/v1",
+  "artifact": "s.procedural.procedural3d@1/*",
+  "discriminator": "P3D3",
+  "forbiddenDiscriminators": ["P2D2"],
+  "route": ["source", "anchor", "segment", "raw-deflate", "catalog", "value", "typed-procedural3d-owner"],
+  "interaction": {
+    "smallFeature": "retained-procedural3d-envelope-load",
+    "persistentStateMachine": true,
+    "monolithicCompatibilityWrapper": false,
+    "boundedStep": "one-byte-or-one-owner-opportunity",
+    "previewProducing": true,
+    "cancellable": true
+  },
+  "credits": {
+    "dimensions": ["operations", "pages", "items", "bytes", "outputs", "controls"],
+    "cases": ["zero", "maximum", "maximum-plus-one", "insufficient-fuel", "expired-deadline"],
+    "repeatedRejectedControlsDoNotConsumeCredits": true,
+    "producerConstructedOnlyAfterPreflight": true,
+    "exactHandback": true
+  },
+  "lifecycle": ["begin", "preflight", "admit", "seal", "poll", "take", "resume", "retry", "acknowledge-output", "acknowledge-load", "cancel", "close-step"],
+  "publication": ["operation-live", "generation-live", "base-live", "parent-live", "atomic-validation-immediately-before-swap", "stale-aba-retired", "last-valid-visible"],
+  "outputs": {
+    "boundedLatestWins": ["progress", "checkpoint", "preview"],
+    "lossless": ["terminal"],
+    "cases": ["complete-before-ack", "lease-loss", "resume", "retry", "explicit-output-ack", "explicit-load-ack"]
+  },
+  "hostileHandles": ["stale-operation", "wrong-operation", "wrong-generation", "aba-generation", "lost-output-lease"],
+  "terminal": ["cancel", "fault", "panic", "handle-loss", "interrupted-close", "terminal-empty", "terminal-empty-idempotent", "no-populated-ordinary-drop"],
+  "principalSnapshotProof": ["semantically-valid-non-empty-widget", "semantically-valid-non-empty-synapse", "semantically-valid-non-empty-layout", "exact-synapse-row-count", "exact-synapse-row-equality", "field-delimited-synapse-digest", "full-typed-snapshot-equality"],
+  "productionPayload": ["unchanged-canonical-spk-after-p3d3", "all-fourteen-mutations", "delete-widget-position-3d-only", "non-empty-recursive-neural-dictionary", "cluster-tree-flow", "nested-generation-json", "direct-history-replay", "validated-swap", "explicit-ack", "incremental-displaced-close"]
+}

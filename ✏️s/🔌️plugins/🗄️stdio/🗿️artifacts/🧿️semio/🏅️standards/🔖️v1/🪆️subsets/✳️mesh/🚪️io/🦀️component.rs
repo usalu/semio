@@ -222,7 +222,7 @@ pub mod derived_composition {
         async fn validator_decodes_and_runs_the_referential_checks_end_to_end() {
             let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }], ..Default::default() };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let diagnostics = SemioMeshValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioMeshValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_mesh.dangling-material-ref"), "got {diagnostics:?}");
         }
 

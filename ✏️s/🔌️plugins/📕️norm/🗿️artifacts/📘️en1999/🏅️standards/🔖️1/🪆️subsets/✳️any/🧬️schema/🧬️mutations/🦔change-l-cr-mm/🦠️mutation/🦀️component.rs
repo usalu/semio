@@ -15,15 +15,15 @@ pub struct ChangeLCrMm {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeLCrMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "l-cr-mm", kind: "change-l-cr-mm", record: "ChangedLCrMm" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_l_cr_mm::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_l_cr_mm::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change buckling length L_cr [mm] to {}", self.new_l_cr_mm)
     }
 }

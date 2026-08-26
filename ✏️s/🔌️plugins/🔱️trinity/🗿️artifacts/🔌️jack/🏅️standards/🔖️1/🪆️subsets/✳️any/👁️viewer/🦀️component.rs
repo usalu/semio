@@ -22,10 +22,10 @@ pub enum TrinityJackViewCommand {
 }
 
 impl protocol::OpBinary for TrinityJackViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(TrinityJackViewCommand::Noop)
     }
 }
@@ -49,7 +49,7 @@ impl ArtifactViewer for TrinityJackViewer {
     const DIALECT: Dialect = TRINITY_JACK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
-    async fn initial_snapshot() -> JackSnapshot {
+    fn initial_snapshot() -> JackSnapshot {
         empty_trinity_graph_fixture()
     }
 
@@ -57,7 +57,7 @@ impl ArtifactViewer for TrinityJackViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no
     /// dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action is
     /// a pure addition here, never a signature change.
-    async fn handle(
+    fn handle(
         _command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
@@ -67,7 +67,7 @@ impl ArtifactViewer for TrinityJackViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             graph::BODY_KEY => graph::render(doc.snapshot),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),

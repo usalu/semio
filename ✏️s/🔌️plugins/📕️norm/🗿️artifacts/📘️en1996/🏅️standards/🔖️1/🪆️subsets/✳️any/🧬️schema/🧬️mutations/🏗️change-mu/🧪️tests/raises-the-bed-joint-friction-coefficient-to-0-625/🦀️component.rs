@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// ▶️ Raising µ from 0.5 to 0.625 rewrites `mu` alone — the axial force it multiplies in the §6.2.4 sliding
 /// resistance is left as committed.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_bed_joint_friction_coefficient_to_0_625() {
+fn raises_the_bed_joint_friction_coefficient_to_0_625() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-mu applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.mu, 0.625, "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: mu must read 0.625 once the change lands");
@@ -43,7 +43,7 @@ async fn raises_the_bed_joint_friction_coefficient_to_0_625() {
 /// ↩️ `change-mu`'s inverse reads the OLD 0.5 out of BASE, so replaying it puts the 0.5 friction coefficient
 /// back on `mu`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_0_5_restores_before() {
+fn restoring_0_5_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-mu applies");
@@ -61,7 +61,7 @@ async fn restoring_0_5_restores_before() {
 /// fixed point, so `newMu` (serde camelCase over `new_mu`) is spelled here exactly as this artifact's own
 /// serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 0.625 is finite and differs from the committed 0.5, so `change-mu` returns a bare
 /// `MutationOutcome::new` with no messages.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `mu` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-mu diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the friction coefficient and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-mu diff decodes");
     assert_eq!(decoded.mu, Some(0.625), "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: the committed diff must carry mu = 0.625");
     assert!(decoded.n_ed_kn.is_none(), "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: change-mu writes mu and must leave `n_ed_kn` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the friction-coefficient change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-mu diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-mu/raises-the-bed-joint-friction-coefficient-to-0-625: the committed diff did not carry before to after");

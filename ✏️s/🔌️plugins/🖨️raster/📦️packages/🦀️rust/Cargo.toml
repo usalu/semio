@@ -31,6 +31,9 @@ semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+# 🧵️ The generated `🧬️mutations/💾️binary` decoders yield through `semio_framework_job::StepOutcome`,
+# so the job crate has to be linked here the same way `🌍️gis` links it.
+semio-framework-job = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust" }

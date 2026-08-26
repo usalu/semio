@@ -265,6 +265,14 @@ pub fn apply_json_i_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonIJ
         Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// ↩️ This subset's own inverse algebra as a free function, so a caller that legitimately drives the
+/// vocabulary from outside the crate — an owner-root test adapter, for one — can reach it without
+/// naming the `protocol::Mutation` trait, which it has no reason to link.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_json_i_json_mutation(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
+    Mutation::inverse(mutation, base)
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait

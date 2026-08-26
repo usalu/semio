@@ -1,36 +1,69 @@
 @capability-lowpoly-1-mutate
-@no-oracle-lowpoly-mutation-semantics
+@oracle-lowpoly-python-independent
 @comparison-ordered-json-v1
 @mutations-lowpoly-1-any
-Feature: Replay every typed Lowpoly 1 mutation against its committed specification vector
-  `s.lowpoly.lowpoly@1/*` is a semio-NATIVE document, carried as `.dsl.semio`/`.pack.semio`. No third party
-  reads those, and none is authoritative over `LowpolyMutation`, so this case rests on the recorded
-  `lowpoly-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) and its two named substitutes: the
-  committed specification vectors, and the metamorphic laws below.
+Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.lowpoly.lowpoly` document and all seventeen typed mutations, written
+  in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from rules 2,
+  3 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the seventeen committed quintets. It imports nothing from this repository's Rust.
 
-  What distinguishes this subset is how SHALLOW its document is and how deep its addressing has to be. The
-  snapshot has exactly two top-level fields — `schema` and `objects` — so every one of the seventeen kinds
-  lands in the SAME field and the footprint law can say almost nothing here; the observability law carries
-  the weight instead. The real structure is one level down: each object owns an INDEX-keyed, anonymous
-  `paintLayers` sub-collection, so `insert-paint-layer` and `remove-paint-layer` address by POSITION while
-  every object-level kind addresses by id. A layer removal that shifted the wrong way is invisible to an
-  id-keyed reading, which is why the committed vectors name the index they touch
-  (`drops-the-detail-layer-at-index-1`) rather than a layer id.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. This case used to argue that its two-level addressing — an id-keyed object list whose members
+  each carry an INDEX-keyed, anonymous paint stack — "is this subset's own specification, not a fact
+  an external mesh or scene library could confirm or refute". `mutate-fem3d-1` and
+  `mutate-gisterrain-1` refuted that in this same wave by taking Python second implementations over
+  this same carrier. Two levels of addressing are not an obstacle to a second implementation; they are
+  something a second implementation must model. A third-party library was nonetheless declined and the
+  reason is concrete: no mesh or scene format models a paint stack addressed by index inside an object
+  addressed by id, and none of them reads this carrier.
 
-  This subset also serializes its mutations EXTERNALLY tagged — `{"CreateObject": {…}}`, the Rust variant
-  name as the sole object key — where the `🧩️puzzle`, `🧱️block` and `📐️cad` vocabularies use an internal
-  `"mutation"` discriminant in camelCase. The adapter checks the encoding this subset actually uses, so a
-  vector filed under the wrong leaf fails instead of passing.
+  Three things only the committed vectors state, and both implementations take them from there. First,
+  this subset tags its mutations EXTERNALLY: a payload is `{"MoveObject": {…}}`, a PascalCase variant
+  name as the single key, where every sibling subset in this repository tags INTERNALLY with a
+  `"mutation"` member. A reference that assumed the house convention would fail on all seventeen rows,
+  which is why the reference checks the arm rather than a member. Second, `edit-paint-layer` splices
+  base64 RUNS into the layer's pixel buffer at byte offsets, overwriting in place and never resizing
+  it — the reference decodes and re-encodes those buffers itself, and inverts an edit by capturing the
+  same byte ranges out of the pre-mutation buffer, which is exact precisely because the verb cannot
+  resize. Third, `create-mesh` carries a `meshWorkspace` argument the snapshot does not hold at all.
 
-  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same
-  bytes the production crate's own fixture tests beside each leaf assert against — end to end through
-  the test platform. The vector each row names is written out in full in the row itself, so the
-  provenance of every input is readable here and pinned by digest at plan time.
+  ✅️ ALL SEVENTEEN KINDS ARE ADJUDICATED AND NONE IS REFUSED: the mesh child handle carries the
+  caller's own `childId`, so unlike `mutate-block-3d-1`'s `catalog` or `mutate-program-1`'s
+  `knowledge`/`benchmarks`, nothing here depends on a content-addressing function no specification
+  states.
+
+  📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
+  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  crate and replays the committed vectors, so today the comparison establishes that an independent
+  implementation of the specification computes the committed after-snapshots — a real check of the
+  vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec
+  against a second producer. A `lowpoly_mutation_report_json` bridge beside the mutation enum closes
+  it; it was not added here for two reasons, and neither is that
+  the verb is hard: it is PRODUCTION code in a crate this test-side pass deliberately does not
+  touch, and it could not be verified end to end today anyway.
+  `parity` was not measured for any case in this pass: the single-case probe
+  `parity exhaustive --owner 🗒️note --case mutate-note-1` was killed at the runner's OWN 900 s
+  per-case budget while still COMPILING the generated subject host — the runner's message names the
+  cause, shared cargo target-dir lock contention from a concurrent session — and then threw
+  `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all.
+  `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import
+  component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated
+  host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so
+  rather than repeating it as fact. This subset's own plugin crate compiles clean at
+  `cargo check --lib`. Second, this case reads no real-world
+  artifact: all 85 of its fixtures are handcrafted specification vectors.
+
+  The committed specification vectors were KEPT, not replaced, and the reference asserts more against
+  them than the subject half can: it applies each verb, requires the committed after-snapshot member
+  by member, applies its OWN computed inverse and requires the committed before-snapshot back — the
+  full inverse law, where the subject half asserts only the weaker footprint precondition.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: The committed <id> vector declares its own kind and moves the document
     Given the committed specification vector for the <id> kind
       """
@@ -67,7 +100,7 @@ Feature: Replay every typed Lowpoly 1 mutation against its committed specificati
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: The committed <id> vector changes only what its diff declares
     Given the committed specification vector for the <id> kind
       """

@@ -209,7 +209,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// via the plugin root's own narrowed `.setup()`: it registers the `TrinityRewritePlayApp`
 /// CONFIG/PRESENCE schema, an app-scope concern neither the old nor the new declaration type has a
 /// field for.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[

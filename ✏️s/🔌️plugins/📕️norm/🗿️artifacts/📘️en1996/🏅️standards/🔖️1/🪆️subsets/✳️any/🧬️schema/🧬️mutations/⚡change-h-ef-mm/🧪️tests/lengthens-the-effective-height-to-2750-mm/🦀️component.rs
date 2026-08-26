@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// climbs from 10.42 to 11.46 — still well inside the EN 1996-3 limit of 27 — but t_ef is the denominator and
 /// stays as committed.
 #[semio_framework_async_macros::async_test]
-async fn lengthens_the_effective_height_to_2750_mm() {
+fn lengthens_the_effective_height_to_2750_mm() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-h-ef-mm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-h-ef-mm/lengthens-the-effective-height-to-2750-mm: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.h_ef_mm, 2750.0, "change-h-ef-mm/lengthens-the-effective-height-to-2750-mm: h_ef_mm must read 2750.0 mm once the change lands");
@@ -44,7 +44,7 @@ async fn lengthens_the_effective_height_to_2750_mm() {
 /// ↩️ `change-h-ef-mm`'s inverse reads the OLD 2500.0 mm out of BASE, so replaying it puts the 2500.0 mm
 /// effective height back on `h_ef_mm`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_2500_mm_restores_before() {
+fn restoring_2500_mm_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-h-ef-mm applies");
@@ -62,7 +62,7 @@ async fn restoring_2500_mm_restores_before() {
 /// is a fixed point, so `newHEfMm` (serde camelCase over `new_h_ef_mm`) is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 2750.0 mm is finite and differs from the committed 2500.0 mm, so `change-h-ef-mm` emits
 /// no message. The slenderness ceiling of 27 is enforced by `part_3::is_applicable`, not here.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-h-ef-mm/lengthens-the-effective-height-to-2750-mm: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `hEfMm` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-h-ef-mm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-h-ef-mm/lengthens-the-effective-height-to-2750-mm: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the effective height and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-h-ef-mm diff decodes");
     assert_eq!(decoded.h_ef_mm, Some(2750.0), "change-h-ef-mm/lengthens-the-effective-height-to-2750-mm: the committed diff must carry hEfMm = 2750.0 mm");
     assert!(decoded.t_ef_mm.is_none(), "change-h-ef-mm/lengthens-the-effective-height-to-2750-mm: change-h-ef-mm writes hEfMm and must leave `t_ef_mm` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the effective-height change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-h-ef-mm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-h-ef-mm/lengthens-the-effective-height-to-2750-mm: the committed diff did not carry before to after");

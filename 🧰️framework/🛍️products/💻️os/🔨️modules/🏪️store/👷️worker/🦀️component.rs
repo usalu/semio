@@ -47,7 +47,7 @@ impl BackboneWorkerHost {
                 let mut events = self.host.subscribe(&document_id);
                 let cmd_tx = channels.cmd_tx.clone();
                 self.documents.insert(document_id.clone(), DocumentEntry { cmd_tx });
-                wasm_bindgen_futures::spawn_local(async move {
+                semio_framework_async::browser::spawn_local(async move {
                     loop {
                         match events.recv().await {
                             Ok(event) => {

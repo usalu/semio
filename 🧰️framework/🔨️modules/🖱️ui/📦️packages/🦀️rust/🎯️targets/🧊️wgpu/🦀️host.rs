@@ -207,12 +207,12 @@ pub async fn clipboard_write_text(text: &str) {
 
 /** 📋️ The wasm mirror of `clipboard_read_text` above — `async` because the browser's Clipboard API
  * is Promise-based with no synchronous escape hatch; a caller drives this from a
- * `wasm_bindgen_futures::spawn_local` task (see `report-w3-clipboard-dnd.md`), since the OS
+ * owned browser-local task (see `report-w3-clipboard-dnd.md`), since the OS
  * clipboard permission prompt/read can't resolve within one synchronous per-frame call. */
 #[cfg(target_arch = "wasm32")]
 pub async fn clipboard_read_text() -> Option<String> {
     let promise = web_sys::window()?.navigator().clipboard().read_text();
-    wasm_bindgen_futures::JsFuture::from(promise).await.ok()?.as_string()
+    semio_framework_async::browser::JsFuture::from(promise).await.ok()?.as_string()
 }
 //#endregion 🔖️ClipboardHost
 // #endregion host

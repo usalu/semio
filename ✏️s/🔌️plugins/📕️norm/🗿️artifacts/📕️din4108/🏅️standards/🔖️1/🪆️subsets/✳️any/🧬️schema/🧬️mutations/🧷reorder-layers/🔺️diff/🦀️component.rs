@@ -6,7 +6,7 @@ use crate::artifacts::din4108::diff::Din4108LayerList;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ReorderLayers, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+pub fn diff(payload: &ReorderLayers, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if payload.from >= base.layers.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer #{} does not exist.", payload.from), [payload.from.to_string()]);
     }

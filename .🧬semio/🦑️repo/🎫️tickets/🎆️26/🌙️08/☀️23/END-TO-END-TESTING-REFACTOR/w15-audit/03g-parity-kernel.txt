@@ -1,0 +1,2 @@
+[test] level=exhaustive cases=2 executed=7 passed=7 failed=0 errored=0 parity=3/3
+PARITY_KERNEL_EXIT=0

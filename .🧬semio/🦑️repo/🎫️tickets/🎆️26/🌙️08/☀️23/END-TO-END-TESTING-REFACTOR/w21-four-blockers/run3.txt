@@ -1,0 +1,92 @@
+[gate] attempt 1 rc=0 errors=0 20:52:32
+GATE-GREEN 20:52:32
+===== create-and-read-jpeg  start 20:52:33
+[test] level=exhaustive cases=1 executed=4 passed=4 failed=0 errored=0 parity=2/2
+===== create-and-read-jpeg  exit=0 end 20:57:05
+===== create-and-round-trip-stl  start 20:57:05
+[test] level=exhaustive cases=1 executed=4 passed=4 failed=0 errored=0 parity=2/2
+===== create-and-round-trip-stl  exit=0 end 21:00:12
+===== mutate-json-rfc8259-i-json  start 21:00:12
+[test] level=exhaustive cases=1 executed=44 passed=44 failed=0 errored=0 parity=22/22
+===== mutate-json-rfc8259-i-json  exit=0 end 21:02:45
+===== mutate-docx-ecma-376-strict  start 21:02:45
+[test] level=exhaustive cases=1 executed=42 passed=42 failed=0 errored=0 parity=19/21
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx::mutate-docx-ecma-376-strict::mutate-set-snapshot::rust::subject (3 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx::mutate-docx-ecma-376-strict::mutate-set-relationship-base::rust::subject (3 differences)
+===== mutate-docx-ecma-376-strict  exit=1 end 21:08:19
+===== mutate-xlsx-ecma-376-strict  start 21:08:19
+1810 | export function markRunComplete(absDir: string): void {
+1811 |   // 🏁️A run can legitimately finish without the directory existing — a case whose scenarios were all
+1812 |   // filtered out at this level never writes anything into its work directory. Crashing the whole
+1813 |   // sweep at the finish line for that is a worse failure than the empty directory it complains about.
+1814 |   mkdirSync(absDir, { recursive: true });
+1815 |   writeFileSync(join(absDir, "🏁️done"), "");
+         ^
+ENOSPC: no space left on device, open '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-xlsx-fd8cc3-mutate-xlsx-ecma-376-strict-subject-rust/🏁️done'
+    path: "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-xlsx-fd8cc3-mutate-xlsx-ecma-376-strict-subject-rust/🏁️done",
+ syscall: "open",
+   errno: -28,
+    code: "ENOSPC"
+
+      at markRunComplete (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts:1815:3)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:539:3)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:593:25)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1037:71)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1067:16)
+
+Bun v1.3.14 (macOS arm64)
+===== mutate-xlsx-ecma-376-strict  exit=1 end 21:12:05
+===== mutate-jpg-jfif-1-01-baseline  start 21:12:05
+===== mutate-jpg-jfif-1-01-baseline  exit=1 end 21:12:18
+===== mutate-tiff-6-0-baseline  start 21:12:18
+===== mutate-tiff-6-0-baseline  exit=1 end 21:12:23
+===== mutate-dwg-ac1018  start 21:12:23
+1810 | export function markRunComplete(absDir: string): void {
+1811 |   // 🏁️A run can legitimately finish without the directory existing — a case whose scenarios were all
+1812 |   // filtered out at this level never writes anything into its work directory. Crashing the whole
+1813 |   // sweep at the finish line for that is a worse failure than the empty directory it complains about.
+1814 |   mkdirSync(absDir, { recursive: true });
+1815 |   writeFileSync(join(absDir, "🏁️done"), "");
+       ^
+ENOSPC: no space left on device, open '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-dwg-bd1e74-mutate-dwg-ac1018-subject-rust/🏁️done'
+    path: "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-dwg-bd1e74-mutate-dwg-ac1018-subject-rust/🏁️done",
+ syscall: "open",
+   errno: -28,
+    code: "ENOSPC"
+
+      at writeFileSync (unknown:1:1)
+      at markRunComplete (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts:1815:3)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:748:21)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:809:1)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1443:68)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1491:16)
+
+Bun v1.3.14 (macOS arm64)
+===== mutate-dwg-ac1018  exit=1 end 21:12:26
+===== mutate-dwg-ac1024  start 21:12:26
+1810 | export function markRunComplete(absDir: string): void {
+1811 |   // 🏁️A run can legitimately finish without the directory existing — a case whose scenarios were all
+1812 |   // filtered out at this level never writes anything into its work directory. Crashing the whole
+1813 |   // sweep at the finish line for that is a worse failure than the empty directory it complains about.
+1814 |   mkdirSync(absDir, { recursive: true });
+1815 |   writeFileSync(join(absDir, "🏁️done"), "");
+       ^
+ENOSPC: no space left on device, open '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-dwg-bd1e74-mutate-dwg-ac1024-subject-rust/🏁️done'
+    path: "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-dwg-bd1e74-mutate-dwg-ac1024-subject-rust/🏁️done",
+ syscall: "open",
+   errno: -28,
+    code: "ENOSPC"
+
+      at writeFileSync (unknown:1:1)
+      at markRunComplete (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts:1815:3)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:748:21)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:809:1)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1443:68)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1491:16)
+
+Bun v1.3.14 (macOS arm64)
+===== mutate-dwg-ac1024  exit=1 end 21:12:30
+ALLDONE 21:12:30

@@ -80,7 +80,7 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real point cloud
     Given the real input point cloud shared://🧊️pattern-sphere.las
     When the <id> mutation is applied with its parameters

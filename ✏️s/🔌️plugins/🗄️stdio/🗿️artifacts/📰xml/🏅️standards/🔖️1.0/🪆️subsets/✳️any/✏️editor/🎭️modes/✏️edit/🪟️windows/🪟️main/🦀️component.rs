@@ -81,11 +81,12 @@ mod tests {
                 prolog: Vec::new(),
             },
         };
-        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
-        let root = &node.sections[0].items[0];
-        assert_eq!(root.id, "");
-        let child = &root.items.as_ref().unwrap()[0];
-        assert_eq!(child.id, "0");
+        let node = render(&document).expect("render");
+        let section = node.children.get(0).expect("tree section");
+        let root = section.children.get(0).expect("tree root");
+        assert_eq!(root.key.as_str(), "");
+        let child = root.children.get(0).expect("child");
+        assert_eq!(child.key.as_str(), "0");
     }
 }
 //#endregion 🧪️Tests

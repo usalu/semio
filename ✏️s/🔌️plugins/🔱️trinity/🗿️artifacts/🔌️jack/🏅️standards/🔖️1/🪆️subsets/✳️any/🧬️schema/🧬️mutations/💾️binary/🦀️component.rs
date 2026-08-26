@@ -104,7 +104,7 @@ enum TrinityGraphOperationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for TrinityGraphOperationDsl {
-    async fn parse_op(line: &str) -> Result<Self, TextError> {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -115,7 +115,7 @@ impl OpText for TrinityGraphOperationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -124,16 +124,16 @@ impl OpText for TrinityGraphOperationDsl {
 }
 
 impl OpBinary for TrinityGraphOperationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
+fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
     match operation {
         TrinityGraphMutation::CreateNode(payload) => {
             let node = &payload.node;
@@ -152,7 +152,7 @@ async fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> Tri
     }
 }
 
-async fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
+fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
     match operation {
         TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => {
             create_node(Node { id, kind, name, x, y, width, height, properties: crate::artifacts::jack::PropertyBag::new(), ports: ports.into_iter().map(port_dsl_to_port).collect() })
@@ -172,11 +172,11 @@ async fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -
 /// ⚡️ One-line textual notation for [`TrinityGraphMutation`] (`protocol::OpText`), delegating to the
 /// derive-generated `TrinityGraphOperationDsl` mirror.
 impl OpText for TrinityGraphMutation {
-    async fn parse_op(line: &str) -> Result<Self, TextError> {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
         <TrinityGraphOperationDsl as OpText>::parse_op(line).map(trinity_graph_operation_from_dsl)
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         <TrinityGraphOperationDsl as OpText>::print_op(&trinity_graph_operation_to_dsl(self))
     }
 }
@@ -184,23 +184,23 @@ impl OpText for TrinityGraphMutation {
 /// ⚡️ Binary mirror of the `OpText` impl above — `TrinityGraphOperationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl OpBinary for TrinityGraphMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         trinity_graph_operation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         TrinityGraphOperationDsl::decode_op(bytes).map(trinity_graph_operation_from_dsl)
     }
 }
 //#endregion 🔖️OpText
 
 /// 📦️ Encodes a Trinity graph `Mutation` to its binary command form.
-pub async fn encode_op(operation: &TrinityGraphMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &TrinityGraphMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a Trinity graph `Mutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<TrinityGraphMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<TrinityGraphMutation, protocol::ProtocolError> {
     TrinityGraphMutation::decode_op(bytes)
 }
 
@@ -1800,7 +1800,7 @@ mod tests {
         ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
     }
 
-    async fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
+    fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
         create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::schema::empty_jack_document(), None)
     }
     use store::create_document_envelope;

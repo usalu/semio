@@ -15,15 +15,15 @@ pub struct ChangeBetaW {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeBetaW {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beta-w", kind: "change-beta-w", record: "ChangedBetaW" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_beta_w::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_beta_w::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change correlation factor beta_w to {}", self.new_beta_w)
     }
 }

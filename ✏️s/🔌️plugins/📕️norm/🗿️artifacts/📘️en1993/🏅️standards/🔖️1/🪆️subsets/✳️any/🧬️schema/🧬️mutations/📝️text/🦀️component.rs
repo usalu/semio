@@ -25,18 +25,18 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️ScalarCodec
 /// 🧬️ Every payload field already derives `Serialize`/`Deserialize` — a quoted JSON string reuses
 /// that losslessly instead of a per-type handcrafted grammar.
-async fn enc_json<T: serde::Serialize>(value: &T) -> String {
+fn enc_json<T: serde::Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("en1993 mutation payload field always serializes"))
 }
-async fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
+fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 /// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, so every
 /// other scalar's JSON text form stays tokenizable by [`tokenize_args`].
-async fn enc_str(s: &str) -> String {
+fn enc_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
-async fn dec_str(s: &str) -> Result<String, String> {
+fn dec_str(s: &str) -> Result<String, String> {
     let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars();
@@ -59,7 +59,7 @@ async fn dec_str(s: &str) -> Result<String, String> {
 //#region 🔖️Tokenizer
 /// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value — every
 /// value here is itself a JSON string, which may legitimately contain spaces (e.g. `weld_steel_grade`).
-async fn tokenize_args(rest: &str) -> Vec<String> {
+fn tokenize_args(rest: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -89,13 +89,13 @@ async fn tokenize_args(rest: &str) -> Vec<String> {
     }
     tokens
 }
-async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
+fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
     tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
 }
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️OpText
-async fn print_en1993_mutation(mutation: &En1993Mutation) -> String {
+fn print_en1993_mutation(mutation: &En1993Mutation) -> String {
     match mutation {
         En1993Mutation::ChangeAnnex(p) => format!("change-annex annex={}", enc_json(&p.new_annex)),
         En1993Mutation::UpdateMemberProperties(p) => format!(
@@ -189,7 +189,7 @@ async fn print_en1993_mutation(mutation: &En1993Mutation) -> String {
     }
 }
 
-async fn parse_en1993_mutation(line: &str) -> Result<En1993Mutation, String> {
+fn parse_en1993_mutation(line: &str) -> Result<En1993Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
     let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("en1993 mutation: missing arg '{k}' for '{keyword}'"));
@@ -293,10 +293,10 @@ async fn parse_en1993_mutation(line: &str) -> Result<En1993Mutation, String> {
 }
 
 impl protocol::OpText for En1993Mutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         print_en1993_mutation(self)
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_en1993_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
     }
 }
@@ -305,7 +305,7 @@ impl protocol::OpText for En1993Mutation {
 //#region 🔖️DemoCases
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<En1993Mutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<En1993Mutation> {
     vec![
         En1993Mutation::ChangeAnnex(ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         En1993Mutation::UpdateMemberProperties(UpdateMemberProperties {
@@ -358,7 +358,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     #[semio_framework_async_macros::async_test]
-    async fn op_text_binary_roundtrip_law() {
+    fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

@@ -99,7 +99,7 @@ import {
   type UiTrigger,
   type UiValue,
 } from "@semio-tech/framework";
-import { decodePackValue, decodeScenePackField } from "@semio-tech/framework-os";
+import { decodeScenePackField, decodeScenePackValue } from "@semio-tech/framework-os";
 import { shellLabel } from "../ShellHelpers/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 import { ShellFaultBoundary } from "../Shell/🟦️component.tsx";
@@ -390,10 +390,7 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
   }
   let decoded: Record<string, unknown> | undefined;
   try {
-    // 🧭️ `SurfaceDoc.bytes` is `Vec<u8>` — owned schema exporter renders it as a plain `number[]`, not a `Uint8Array`
-    // or the old `"pk:"`-prefixed string `decodeScenePackField` (used by `parseSceneJsonField` below
-    // for still-string-shaped scene sub-fields) expects. Raw bytes decode via `decodePackValue`.
-    decoded = props.doc.bytes.length > 0 ? (decodePackValue(new Uint8Array(props.doc.bytes)) as Record<string, unknown>) : undefined;
+    decoded = props.doc.bytes.length > 0 ? (decodeScenePackValue(new Uint8Array(props.doc.bytes)) as Record<string, unknown>) : undefined;
   } catch (error) {
     console.error("[Interpreter] failed to decode Component::Surface doc bytes", { nodeId: record.id, kind: props.kind, docSchema: props.docSchema, error });
     return null;
@@ -428,7 +425,6 @@ function renderComponentSceneHost(record: UiNodeRecord, props: SurfaceProps, onA
   }
   const Host = resolveComponentSceneHost(props.kind as ComponentKind);
   if (!Host) {
-    console.log("[DEBUG] resolveComponentSceneHost miss", props.kind);
     return (
       <p className="text-muted-foreground text-xs">
         {interpLabel("ui.common.unknownComponent")}: {props.kind}

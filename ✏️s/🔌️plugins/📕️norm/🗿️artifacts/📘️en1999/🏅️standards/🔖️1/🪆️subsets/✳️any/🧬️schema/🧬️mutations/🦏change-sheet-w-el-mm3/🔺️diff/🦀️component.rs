@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_sheet_w_el_mm3::mutation::Change
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSheetWElMm3, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeSheetWElMm3, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_sheet_w_el_mm3.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sheet elastic section modulus [mm3] must be a finite number, got {}.", payload.new_sheet_w_el_mm3), Vec::<String>::new());
     }

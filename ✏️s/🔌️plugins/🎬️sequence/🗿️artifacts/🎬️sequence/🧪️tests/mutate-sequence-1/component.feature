@@ -3,16 +3,27 @@
 @comparison-ordered-json-v1
 @mutations-sequence-1-any
 Feature: Apply every typed SEQUENCE mutation to the real committed step graph
-  `s.sequence.sequence` is a semio-NATIVE artifact — the `sequence.sequence.dsl` envelope is defined by
-  this repository alone and no package in any ecosystem reads it — so this case carries a recorded
+  `s.sequence.sequence` is a semio-NATIVE artifact — the `sequence.sequence.dsl` envelope is defined
+  by this repository alone and no package in any ecosystem reads it — so this case carries a recorded
   no-oracle decision (`sequence-step-graph-mutation-semantics`, in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) rather than a registered reference
-  library. That decision surveys and DECLINES the BPMN and Graphviz readers by name, on the substantive
-  ground that neither models this graph. ⚠️ Consequence, stated plainly: the runner dispatches NO oracle
-  role for a recorded no-oracle case, so every scenario below carries its evidence in the SUBJECT role or
-  carries none at all. A handler that merely applied the mutation and returned would report a pass having
-  checked nothing, which is why each one asserts its law through the shared
-  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module before it returns.
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) whose survey names and DECLINES
+  the BPMN and Graphviz readers on the substantive ground that neither models this graph.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
+  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
+  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   📄️ The base document is real and committed. `asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio` is
   parsed by production's own `parse_dsl` and supplies the document skeleton every scenario starts from.

@@ -1072,7 +1072,7 @@ pub mod ooxml {
 #[cfg(feature = "oracles")]
 pub mod pdf_conformance {
     use lopdf::{Dictionary, Document, Object, ObjectId, Stream};
-    use semio_repo_test_host::Json;
+    use semio_repo_test_host::{digest, Json};
 
     //#region 🔖️Profile
     /// 🏅️ One subset's conformance coordinates: which marker its OutputIntent axis demands, whether
@@ -1083,6 +1083,12 @@ pub mod pdf_conformance {
         pub subset: &'static str,
         pub output_intent_subtype: &'static str,
         pub output_intent_dest_profile: bool,
+        /// 📇️ The `/Info /Title` a class stamp writes, spelled with the conformance class's OWN name
+        /// — `A PDF/UA-1 conformant document`, not a mechanical `A UA conformant document`. A stamp
+        /// text is a shared VOCABULARY constant, not an observation, so it must be carried here
+        /// verbatim next to the subset's own `CONFORMANT_TITLE`; deriving it from `subset` made
+        /// `set-snapshot` a different mutation on each side and diverged `✳️h` and `✳️ua`.
+        pub conformant_title: &'static str,
         pub axes: &'static [&'static str],
     }
     //#endregion 🔖️Profile
@@ -1274,14 +1280,29 @@ pub mod pdf_conformance {
     }
 
     /// 🔤️ The embedded font program a descriptor points at: which of the three keys carries it, the
-    /// object it references, and that object's stream length.
-    fn font_program(document: &Document, descriptor: ObjectId) -> Option<(String, ObjectId, usize)> {
+    /// object it references, and the DECODED program — its length and its digest.
+    ///
+    /// 🔓️ Why decoded and not `stream.content.len()`. The normative object here is the font program,
+    /// not the stream that carries it. `/FontFile*` streams are almost always `/FlateDecode`, and
+    /// deflate output length is ENCODER FREEDOM: two conformant writers may compress a
+    /// byte-identical program to byte counts that differ by a byte or two, which is exactly what the
+    /// first full differential run of the six PDF 1.7 conformance classes observed — all 23 embedded
+    /// programs of the real thesis decoded byte-identically while five of their compressed streams
+    /// differed by 1–2 bytes, failing 188 comparisons including `no-mutation`. The `✳️any` subset's
+    /// `semantic-pdf-v1` profile already committed to that reading by listing `streamLength` as
+    /// writer freedom. Measuring the decoded program restores what the profile description always
+    /// claimed to measure — "how many bytes that program is" — and the digest makes the axis
+    /// STRICTER than the compressed length ever was: a program whose bytes change is now caught even
+    /// when its length does not. A stream whose filter chain will not decode falls back to its
+    /// STORED bytes rather than to nothing: an undecodable program is still evidence, and erasing it
+    /// to an empty digest would make two unreadable programs compare equal.
+    fn font_program(document: &Document, descriptor: ObjectId) -> Option<(String, ObjectId, usize, String)> {
         let dict = document.get_dictionary(descriptor).ok()?;
         for key in FONT_PROGRAM_KEYS {
             if let Ok(value) = dict.get(key.as_bytes()) {
                 let id = value.as_reference().ok()?;
-                let size = document.get_object(id).ok().and_then(|object| object.as_stream().ok()).map(|stream| stream.content.len()).unwrap_or(0);
-                return Some((key.to_string(), id, size));
+                let program = document.get_object(id).ok().and_then(|object| object.as_stream().ok()).map(|stream| stream.get_plain_content().unwrap_or_else(|_| stream.content.clone())).unwrap_or_default();
+                return Some((key.to_string(), id, program.len(), digest(&program)));
             }
         }
         None
@@ -1290,7 +1311,7 @@ pub mod pdf_conformance {
     /// 🔤️ Every distinct font-program object currently referenced by any descriptor, in
     /// object-number order — the ordinal space `embed-font-file` names its donor program in.
     fn font_programs(document: &Document) -> Vec<ObjectId> {
-        let mut ids: Vec<ObjectId> = font_descriptors(document).into_iter().filter_map(|descriptor| font_program(document, descriptor).map(|(_, id, _)| id)).collect();
+        let mut ids: Vec<ObjectId> = font_descriptors(document).into_iter().filter_map(|descriptor| font_program(document, descriptor).map(|(_, id, _, _)| id)).collect();
         ids.sort();
         ids.dedup();
         ids
@@ -1616,7 +1637,7 @@ pub mod pdf_conformance {
                 let descriptor_ordinal = ordinal(params, "descriptorOrdinal")?;
                 let descriptors = font_descriptors(document);
                 let descriptor = *descriptors.get(descriptor_ordinal).ok_or_else(|| format!("remove-font-file: descriptor ordinal {descriptor_ordinal} is out of range ({} descriptors)", descriptors.len()))?;
-                let (key, _, _) = font_program(document, descriptor).ok_or_else(|| format!("remove-font-file: descriptor ordinal {descriptor_ordinal} carries no embedded font program"))?;
+                let (key, _, _, _) = font_program(document, descriptor).ok_or_else(|| format!("remove-font-file: descriptor ordinal {descriptor_ordinal} carries no embedded font program"))?;
                 let dict = document.get_dictionary_mut(descriptor).map_err(|error| format!("remove-font-file: {error}"))?;
                 dict.remove(key.as_bytes());
                 Ok(())
@@ -1863,7 +1884,7 @@ pub mod pdf_conformance {
                     }
                 }
                 "infoTitle" => {
-                    let title = if stamped { format!("A {} conformant document", profile.subset.to_uppercase()) } else { String::new() };
+                    let title = if stamped { profile.conformant_title.to_string() } else { String::new() };
                     set_info_entry(document, "Title", &title)?;
                 }
                 "infoAuthor" => {
@@ -2001,7 +2022,7 @@ pub mod pdf_conformance {
                 let index = ordinal(&params, "descriptorOrdinal")?;
                 let descriptors = font_descriptors(&document);
                 let descriptor = *descriptors.get(index).ok_or_else(|| format!("remove-font-file has no inverse: descriptor ordinal {index} is out of range"))?;
-                let (key, program, _) = font_program(&document, descriptor).ok_or_else(|| format!("remove-font-file has no inverse: descriptor ordinal {index} carries no embedded font program in the base"))?;
+                let (key, program, _, _) = font_program(&document, descriptor).ok_or_else(|| format!("remove-font-file has no inverse: descriptor ordinal {index} carries no embedded font program in the base"))?;
                 kind_spec(
                     "embed-font-file",
                     vec![
@@ -2103,8 +2124,8 @@ pub mod pdf_conformance {
                     font_descriptors(&document)
                         .into_iter()
                         .map(|descriptor| match font_program(&document, descriptor) {
-                            Some((key, _, size)) => json_object(vec![("key", Json::String(key)), ("programBytes", Json::Number(size as f64))]),
-                            None => json_object(vec![("key", Json::Null), ("programBytes", Json::Null)]),
+                            Some((key, _, size, sum)) => json_object(vec![("key", Json::String(key)), ("programBytes", Json::Number(size as f64)), ("programDigest", Json::String(sum))]),
+                            None => json_object(vec![("key", Json::Null), ("programBytes", Json::Null), ("programDigest", Json::Null)]),
                         })
                         .collect(),
                 ),

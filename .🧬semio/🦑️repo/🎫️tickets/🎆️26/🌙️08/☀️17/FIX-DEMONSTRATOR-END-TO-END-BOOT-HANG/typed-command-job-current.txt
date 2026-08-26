@@ -1,0 +1,1321 @@
+        .await
+    }
+
+    /// 🧾️ Compares a retained fixed-page payload without materializing a whole-buffer adapter.
+    fn retained_payload_eq_slice(payload: &semio_framework_job::RetainedJobPayload, expected: &[u8]) -> bool {
+        if payload.len() != expected.len() {
+            return false;
+        }
+        let mut cursor = 0usize;
+        let mut reader = payload.reader();
+        while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            let end = cursor.saturating_add(page.len());
+            if expected.get(cursor..end) != Some(page) {
+                return false;
+            }
+            cursor = end;
+        }
+        reader.terminal_is_empty() && cursor == expected.len()
+    }
+
+    struct AdmittedToolCommand {
+        verb: String,
+        proof: QualifiedToolProof,
+        decoded_items: usize,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum MountedTypedCommandFullOperationStage {
+        Worker,
+        Retiring,
+    }
+
+    struct MountedTypedCommandFullOperation<A: ArtifactApp> {
+        verb: String,
+        meta: ActionMeta,
+        operation: semio_framework_job::Operation,
+        contract: semio_framework::ToolExecutionContract,
+        session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
+        session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
+        completion: ArtifactToolCompletion<A>,
+        output_chunks: ArtifactOutputChunks,
+        cancellation_lease: ToolCancellationLease,
+        terminal_outcome: Option<semio_framework_job::StepOutcome>,
+        terminal_seen: bool,
+        stage: MountedTypedCommandFullOperationStage,
+    }
+
+    impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
+        fn drive_worker_step(&mut self, pool: &semio_framework_async::WorkerPool) -> Result<PluginCloseStep, Fault> {
+            if self.stage == MountedTypedCommandFullOperationStage::Retiring {
+                return Ok(PluginCloseStep::Blocked { reason: "typed command awaits its bounded revision-validated publication turn" });
+            }
+            if let Some(rejected) = self.session_rejected.as_mut() {
+                let step = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if rejected.terminal_is_empty() {
+                    self.session_rejected = None;
+                    self.stage = MountedTypedCommandFullOperationStage::Retiring;
+                }
+                return Ok(match step {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "typed operation rejected-session close is blocked" },
+                    semio_framework_job::InteractiveJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                });
+            }
+            if let Some(outcome) = self.terminal_outcome.as_mut() {
+                let step = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if !outcome.terminal_is_empty() {
+                    return Ok(match step {
+                        semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                        semio_framework_job::JobPayloadCloseStep::Complete => PluginCloseStep::Blocked { reason: "typed command retained outcome reported false terminal" },
+                    });
+                }
+                self.terminal_outcome = None;
+                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-session"), "typed operation lost its persistent mounted session during outcome handback"))?;
+                if self.terminal_seen {
+                    session.begin_close();
+                } else if session.resume().is_err() {
+                    return Ok(PluginCloseStep::Blocked { reason: "typed operation outcome handback is contended" });
+                }
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-session"), "typed operation lost its persistent worker session before publication"))?;
+            if self.terminal_seen {
+                let step = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if session.terminal_is_empty() {
+                    self.session = None;
+                    self.stage = MountedTypedCommandFullOperationStage::Retiring;
+                }
+                return Ok(match step {
+                    semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    semio_framework_job::WorkerJobCloseStep::Blocked => PluginCloseStep::Blocked { reason: "typed operation mounted session close is blocked" },
+                    semio_framework_job::WorkerJobCloseStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                });
+            }
+            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                    let terminal = session.checked_out_outcome().is_some_and(semio_framework_job::StepOutcome::is_terminal);
+                    let Some(outcome) = session.take_checked_out_outcome() else {
+                        return Ok(PluginCloseStep::Blocked { reason: "typed operation checked-out outcome changed during one mounted turn" });
+                    };
+                    self.terminal_seen = terminal;
+                    self.terminal_outcome = Some(outcome);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Rejected) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                Ok(_) | Err(_) => Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker is quiet or contended" }),
+            }
+        }
+    }
+
+    fn bounded_json_items(value: Option<&Value>, maximum: usize) -> Result<usize, Fault> {
+        let mut count = 1usize;
+        let mut pending = value.into_iter().collect::<Vec<_>>();
+        while let Some(value) = pending.pop() {
+            count = count.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.decoded-limit"), "decoded item count overflowed"))?;
+            if count > maximum {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.decoded-limit"), format!("decoded command contains {count} items; maximum is {maximum}")));
+            }
+            match value {
+                Value::Array(values) => pending.extend(values),
+                Value::Object(values) => {
+                    count = count.checked_add(values.len()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.decoded-limit"), "decoded item count overflowed"))?;
+                    if count > maximum {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.decoded-limit"), format!("decoded command contains {count} items; maximum is {maximum}")));
+                    }
+                    pending.extend(values.values());
+                }
+                _ => {}
+            }
+        }
+        Ok(count)
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum TypedCommandFullOperationPhase {
+        Prepare,
+        Reducer,
+        OutputValidation,
+        Ephemeral,
+        Emit,
+        Expose,
+        FaultEncoding,
+        Complete,
+        Fault,
+    }
+
+    const TYPED_COMMAND_FAULT_DETAIL_BYTES: usize = 256;
+
+    struct TypedCommandFullOperationJob<A: ArtifactApp> {
+        operation: Option<semio_framework_job::Operation>,
+        app_instance_id: u32,
+        parent_document_id: Option<String>,
+        canonical_base_revision: [u8; 32],
+        command: Option<std::sync::Arc<A::Command>>,
+        snapshot: Option<std::sync::Arc<A::Snapshot>>,
+        config: Option<std::sync::Arc<A::Config>>,
+        history: Option<std::sync::Arc<HistoryView>>,
+        children: Option<std::sync::Arc<ChildContentView>>,
+        draft: Option<std::sync::Arc<A::Draft>>,
+        interaction_state: Option<std::sync::Arc<protocol::InteractionState>>,
+        interaction_hover: Option<std::sync::Arc<InteractionHoverState>>,
+        peer_presence: Option<std::sync::Arc<PeerPresenceRoot>>,
+        presence_local: Option<std::sync::Arc<A::Presence>>,
+        presence_peers: Option<std::sync::Arc<store::PresencePeersRoot<A::Presence>>>,
+        transient: Option<std::sync::Arc<A::Transient>>,
+        contract: semio_framework::ToolExecutionContract,
+        decoded_items: usize,
+        phase: TypedCommandFullOperationPhase,
+        prepare_cursor: u8,
+        reducer_cursor: u8,
+        output_lane_cursor: u8,
+        output_item_cursor: usize,
+        output_byte_cursor: usize,
+        exact_output_bytes: usize,
+        ephemeral_lane_cursor: u8,
+        ephemeral_item_cursor: usize,
+        emit_lane_cursor: u8,
+        emit_item_cursor: usize,
+        emit: Option<Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault>>,
+        ephemeral: Option<EphemeralEmit<A>>,
+        exposure_revision: Option<semio_framework_job::RevisionId>,
+        exposure_generation: Option<semio_framework_job::Generation>,
+        output: Option<ArtifactToolCompletion<A>>,
+        fault_message: Option<String>,
+        fault_message_cursor: usize,
+        fault_detail: [u8; TYPED_COMMAND_FAULT_DETAIL_BYTES],
+        fault_detail_len: usize,
+        closing: bool,
+    }
+
+    impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
+        fn checkpoint(&self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
+            let state = [self.phase as u8, self.prepare_cursor, self.reducer_cursor, self.output_lane_cursor, self.ephemeral_lane_cursor, self.emit_lane_cursor];
+            semio_framework_job::Checkpoint {
+                state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state),
+                applied_progress: u64::from(self.prepare_cursor)
+                    .saturating_add(u64::from(self.reducer_cursor))
+                    .saturating_add(u64::from(self.output_lane_cursor))
+                    .saturating_add(self.output_item_cursor as u64)
+                    .saturating_add(self.output_byte_cursor as u64)
+                    .saturating_add(u64::from(self.ephemeral_lane_cursor))
+                    .saturating_add(self.ephemeral_item_cursor as u64)
+                    .saturating_add(u64::from(self.emit_lane_cursor))
+                    .saturating_add(self.emit_item_cursor as u64),
+            }
+        }
+
+        fn fault(&mut self, cx: &mut semio_framework_job::StepContext<'_>, message: &[u8]) -> semio_framework_job::StepOutcome {
+            self.phase = TypedCommandFullOperationPhase::Fault;
+            semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, message) })
+        }
+
+        fn begin_fault_encoding(&mut self, cx: &mut semio_framework_job::StepContext<'_>, message: String) -> semio_framework_job::StepOutcome {
+            self.fault_message = Some(message);
+            self.fault_message_cursor = 0;
+            self.fault_detail_len = 0;
+            self.phase = TypedCommandFullOperationPhase::FaultEncoding;
+            semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
+        }
+
+        fn encode_fault_unit(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            let Some(message) = self.fault_message.as_ref() else { return self.fault(cx, b"typed command fault detail owner was lost") };
+            if let Some(scalar) = message.get(self.fault_message_cursor..).and_then(|remaining| remaining.chars().next()) {
+                let scalar_bytes = scalar.len_utf8();
+                if self.fault_detail_len.saturating_add(scalar_bytes) <= self.fault_detail.len() {
+                    let source_end = self.fault_message_cursor.saturating_add(scalar_bytes);
+                    let target_end = self.fault_detail_len.saturating_add(scalar_bytes);
+                    self.fault_detail[self.fault_detail_len..target_end].copy_from_slice(&message.as_bytes()[self.fault_message_cursor..source_end]);
+                    self.fault_message_cursor = source_end;
+                    self.fault_detail_len = target_end;
+                    return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                }
+            }
+            self.fault_message = None;
+            self.phase = TypedCommandFullOperationPhase::Fault;
+            semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, &self.fault_detail[..self.fault_detail_len]) })
+        }
+
+        fn census_byte(&mut self) -> Result<(), ()> {
+            self.exact_output_bytes = self.exact_output_bytes.checked_add(1).filter(|bytes| *bytes <= self.contract.max_output_bytes).ok_or(())?;
+            self.output_byte_cursor = self.output_byte_cursor.saturating_add(1);
+            Ok(())
+        }
+
+        fn admit_exposure_freshness(&mut self, revision: semio_framework_job::RevisionId, generation: semio_framework_job::Generation) -> Result<(), Fault> {
+            if self.phase != TypedCommandFullOperationPhase::Expose || self.exposure_revision.is_some() || self.exposure_generation.is_some() {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-exposure-state"), "typed command freshness can be admitted exactly once at exposure"));
+            }
+            self.exposure_revision = Some(revision);
+            self.exposure_generation = Some(generation);
+            Ok(())
+        }
+    }
+
+    impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            if cx.is_cancelled() {
+                return semio_framework_job::StepOutcome::Cancelled;
+            }
+            if cx.should_yield() || cx.fuel_remaining() == 0 {
+                return semio_framework_job::StepOutcome::Yield;
+            }
+            if self.decoded_items > self.contract.max_decoded_items || self.contract.max_work_units_per_step == 0 || self.contract.max_output_bytes == 0 {
+                return self.fault(cx, b"typed command admission exceeds its fixed item, work, or output cap");
+            }
+            cx.consume_fuel(1);
+            let operation = self.operation.expect("tool job factory assigns operation identity");
+            debug_assert_eq!(operation.operation, cx.operation());
+            match self.phase {
+                TypedCommandFullOperationPhase::Prepare => {
+                    cx.set_stage("typed-command-prepare");
+                    let present = match self.prepare_cursor {
+                        0 => self.parent_document_id.is_some(),
+                        1 => self.command.is_some(),
+                        2 => self.snapshot.is_some(),
+                        3 => self.config.is_some(),
+                        4 => self.history.is_some(),
+                        5 => self.children.is_some(),
+                        6 => self.draft.is_some(),
+                        7 => self.interaction_state.is_some(),
+                        8 => self.interaction_hover.is_some(),
+                        9 => self.peer_presence.is_some(),
+                        10 => self.presence_local.is_some(),
+                        11 => self.presence_peers.is_some(),
+                        12 => self.transient.is_some(),
+                        _ => {
+                            self.phase = TypedCommandFullOperationPhase::Reducer;
+                            return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                        }
+                    };
+                    if !present {
+                        return self.fault(cx, b"typed command preparation root is absent");
+                    }
+                    self.prepare_cursor = self.prepare_cursor.saturating_add(1);
+                    if self.prepare_cursor == 1 {
+                        semio_framework_job::StepOutcome::PreviewReady(retained_job_payload(cx, semio_framework_job::JobPayloadStream::Preview, b"typed-command-prepare"))
+                    } else {
+                        semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
+                    }
+                }
+                TypedCommandFullOperationPhase::Reducer => {
+                    cx.set_stage("typed-command-reducer");
+                    self.reducer_cursor = self.reducer_cursor.saturating_add(1);
+                    self.fault(cx, b"generic bounded proof has no resumable app-owned reducer job")
+                }
+                TypedCommandFullOperationPhase::OutputValidation => {
+                    cx.set_stage("typed-command-output-validation");
+                    if self.emit.as_ref().is_some_and(Result::is_err) {
+                        let fault = match self.emit.take() {
+                            Some(Err(fault)) => fault,
+                            _ => unreachable!("checked typed command reducer fault"),
+                        };
+                        return self.begin_fault_encoding(cx, fault.message);
+                    }
+                    let Some(emit) = self.emit.as_ref().and_then(|emit| emit.as_ref().ok()) else { return self.fault(cx, b"typed command reducer output is absent") };
+                    let Some(ephemeral) = self.ephemeral.as_ref() else { return self.fault(cx, b"typed command ephemeral output is absent") };
+                    match self.output_lane_cursor {
+                        0 if !emit.tasks.is_empty() => return self.fault(cx, b"typed command task output lacks a retained nested producer"),
+                        1 if !emit.artifact_mutations.is_empty() => return self.fault(cx, b"typed artifact mutation output lacks an owned item codec cursor"),
+                        2 if !emit.config_mutations.is_empty() => return self.fault(cx, b"typed config mutation output lacks an owned item codec cursor"),
+                        3 if !emit.draft_mutations.is_empty() => return self.fault(cx, b"typed draft mutation output lacks an owned item codec cursor"),
+                        4 if !ephemeral.presence.is_empty() => return self.fault(cx, b"typed presence output lacks an owned item codec cursor"),
+                        5 if !ephemeral.transient.is_empty() => return self.fault(cx, b"typed transient output lacks an owned item codec cursor"),
+                        6 => {
+                            let bytes = emit.description.as_ref().map_or(&[][..], |value| value.as_bytes());
+                            if self.output_byte_cursor < bytes.len() {
+                                if self.census_byte().is_err() {
+                                    return self.fault(cx, b"typed command description exceeds its exact output cap");
+                                }
+                                return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                            }
+                            self.output_byte_cursor = 0;
+                        }
+                        7 => {
+                            let bytes = emit.coalesce_key.as_ref().map_or(&[][..], |value| value.as_bytes());
+                            if self.output_byte_cursor < bytes.len() {
+                                if self.census_byte().is_err() {
+                                    return self.fault(cx, b"typed command coalesce key exceeds its exact output cap");
+                                }
+                                return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                            }
+                            self.output_byte_cursor = 0;
+                        }
+                        8 if !emit.effects.is_empty() => return self.fault(cx, b"typed effect output lacks an owned field cursor"),
+                        9 if !emit.events.is_empty() => return self.fault(cx, b"typed event output lacks an owned field cursor"),
+                        10 if !emit.child_emits.is_empty() => return self.fault(cx, b"typed child output lacks a retained nested producer"),
+                        11 => {
+                            if self.census_byte().is_err() {
+                                return self.fault(cx, b"typed UI scope exceeds its exact output cap");
+                            }
+                        }
+                        12 => {
+                            self.phase = TypedCommandFullOperationPhase::Ephemeral;
+                            return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                        }
+                        _ => {}
+                    }
+                    self.output_lane_cursor = self.output_lane_cursor.saturating_add(1);
+                    self.output_item_cursor = 0;
+                    semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
+                }
+                TypedCommandFullOperationPhase::Ephemeral => {
+                    cx.set_stage("typed-command-ephemeral");
+                    if self.ephemeral_lane_cursor < 2 {
+                        self.ephemeral_lane_cursor = self.ephemeral_lane_cursor.saturating_add(1);
+                        return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                    }
+                    self.phase = TypedCommandFullOperationPhase::Emit;
+                    semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
+                }
+                TypedCommandFullOperationPhase::Emit => {
+                    cx.set_stage("typed-command-emit");
+                    if self.emit_lane_cursor < 10 {
+                        self.emit_lane_cursor = self.emit_lane_cursor.saturating_add(1);
+                        return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                    }
+                    self.phase = TypedCommandFullOperationPhase::Expose;
+                    semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
+                }
+                TypedCommandFullOperationPhase::Expose => {
+                    cx.set_stage("typed-command-expose");
+                    let (Some(base_revision), Some(generation)) = (self.exposure_revision, self.exposure_generation) else {
+                        return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
+                    };
+                    if !matches!(semio_framework_job::validate_commit(&operation, base_revision, generation), semio_framework_job::CommitValidation::Accepted) {
+                        return self.fault(cx, b"typed command exposure rejected a stale revision or generation");
+                    }
+                    let Some(output) = self.output.as_ref() else { return self.fault(cx, b"typed command exposure port was lost") };
+                    let Some(emit) = self.emit.take() else { return self.fault(cx, b"typed command emit owner was lost") };
+                    let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"typed command ephemeral owner was lost") };
+                    if let Err(fault) = output.complete(emit, ephemeral) {
+                        return self.begin_fault_encoding(cx, fault.message);
+                    }
+                    self.phase = TypedCommandFullOperationPhase::Complete;
+                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                        state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                    })
+                }
+                TypedCommandFullOperationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+                }),
+                TypedCommandFullOperationPhase::FaultEncoding => self.encode_fault_unit(cx),
+                TypedCommandFullOperationPhase::Fault => self.fault(cx, b"typed command remains faulted"),
+            }
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.closing = true;
+            if let Some(parent) = self.parent_document_id.as_ref() {
+                if maximum_items == 0 || maximum_bytes < parent.capacity() {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let released_bytes = parent.capacity();
+                drop(self.parent_document_id.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            if let Some(message) = self.fault_message.as_mut().filter(|message| !message.is_empty()) {
+                let released_bytes = message.chars().next_back().map(char::len_utf8).expect("nonempty typed command fault message");
+                if maximum_bytes < released_bytes {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                message.pop();
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
+            }
+            if self.fault_message.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.fault_message.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if let Some(emit) = self.emit.as_mut().and_then(|emit| emit.as_mut().ok()) {
+                if let Some(description) = emit.description.as_mut().filter(|value| !value.is_empty()) {
+                    let released_bytes = description.chars().next_back().map(char::len_utf8).expect("nonempty typed command description");
+                    if maximum_bytes < released_bytes {
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    description.pop();
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
+                }
+                if let Some(key) = emit.coalesce_key.as_mut().filter(|value| !value.is_empty()) {
+                    let released_bytes = key.chars().next_back().map(char::len_utf8).expect("nonempty typed command coalesce key");
+                    if maximum_bytes < released_bytes {
+                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    key.pop();
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
+                }
+            }
+            if self.emit.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.emit.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.ephemeral.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.ephemeral.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.command.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.command.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.snapshot.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.snapshot.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.config.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.config.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.history.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.history.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.children.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.children.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.draft.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.draft.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.interaction_state.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.interaction_state.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.interaction_hover.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.interaction_hover.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.peer_presence.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.peer_presence.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.presence_local.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.presence_local.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.presence_peers.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.presence_peers.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.transient.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.transient.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if self.output.is_some() {
+                if maximum_items == 0 {
+                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(self.output.take());
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            self.operation = None;
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing
+                && self.parent_document_id.is_none()
+                && self.command.is_none()
+                && self.snapshot.is_none()
+                && self.config.is_none()
+                && self.history.is_none()
+                && self.children.is_none()
+                && self.draft.is_none()
+                && self.interaction_state.is_none()
+                && self.interaction_hover.is_none()
+                && self.peer_presence.is_none()
+                && self.presence_local.is_none()
+                && self.presence_peers.is_none()
+                && self.transient.is_none()
+                && self.emit.is_none()
+                && self.ephemeral.is_none()
+                && self.output.is_none()
+                && self.fault_message.is_none()
+                && self.operation.is_none()
+        }
+    }
+
+    struct TypedCommandFullOperationJobFactory<A: ArtifactApp> {
+        keys: Vec<semio_framework::ToolFactoryKey>,
+        payload_schema_id: String,
+        proof: QualifiedBoundedFirstStepProof,
+        marker: std::marker::PhantomData<fn() -> A>,
+    }
+
+    impl<A: ArtifactApp> TypedCommandFullOperationJobFactory<A> {
+        fn from_proof(proof: QualifiedBoundedFirstStepProof) -> Option<Self> {
+            if proof.owner != ToolOwnerWitness::of::<A>() || proof.row.owner != proof.owner {
+                return None;
+            }
+            let keys = vec![proof.key()];
+            let payload_schema_id = proof.schema_id();
+            Some(Self { keys, payload_schema_id, proof, marker: std::marker::PhantomData })
+        }
+    }
+
+    impl<A: ArtifactApp> semio_framework::ToolJobFactory for TypedCommandFullOperationJobFactory<A> {
+        type Payload = TypedCommandFullOperationJob<A>;
+        type Job = TypedCommandFullOperationJob<A>;
+
+        fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+            &self.keys
+        }
+
+        fn payload_schema_id(&self) -> &str {
+            &self.payload_schema_id
+        }
+
+        fn classification(&self) -> semio_framework::InteractiveJobClassification {
+            semio_framework::InteractiveJobClassification::Migrated
+        }
+
+        fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+            self.proof.contract()
+        }
+
+        fn create_job(&mut self, operation: semio_framework_job::Operation, mut payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+            payload.operation = Some(operation);
+            Ok(payload)
+        }
+    }
+
+    #[cfg(test)]
+    mod typed_command_full_operation_tests {
+        use super::*;
+
+        const FIXTURE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️shared-typed-command-full-operation-v1.json"));
+
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        struct TypedCommandCensusDecision {
+            bytes: usize,
+            accepted: bool,
+        }
+
+        trait TypedCommandCensusOracle {
+            fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision;
+        }
+
+        struct OwnedTypedCommandCensus;
+
+        impl TypedCommandCensusOracle for OwnedTypedCommandCensus {
+            fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision {
+                let mut bytes = 0usize;
+                let mut accepted = true;
+                for _ in description.as_bytes() {
+                    accepted &= bytes.checked_add(1).is_some_and(|next| {
+                        bytes = next;
+                        next <= maximum
+                    });
+                }
+                for _ in coalesce_key.as_bytes() {
+                    accepted &= bytes.checked_add(1).is_some_and(|next| {
+                        bytes = next;
+                        next <= maximum
+                    });
+                }
+                accepted &= bytes.checked_add(1).is_some_and(|next| {
+                    bytes = next;
+                    next <= maximum
+                });
+                TypedCommandCensusDecision { bytes, accepted }
+            }
+        }
+
+        struct SerdeJsonTypedCommandCensus;
+
+        impl TypedCommandCensusOracle for SerdeJsonTypedCommandCensus {
+            fn decide(&self, description: &str, coalesce_key: &str, maximum: usize) -> TypedCommandCensusDecision {
+                let value = serde_json::json!({ "coalesceKey": coalesce_key, "description": description, "uiScopeFields": 1 });
+                let bytes =
+                    value["description"].as_str().expect("oracle description").as_bytes().len() + value["coalesceKey"].as_str().expect("oracle coalesce key").as_bytes().len() + value["uiScopeFields"].as_u64().expect("oracle UI scope") as usize;
+                TypedCommandCensusDecision { bytes, accepted: bytes <= maximum }
+            }
+        }
+
+        #[test]
+        fn language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle() {
+            let fixture: serde_json::Value = serde_json::from_str(FIXTURE).expect("language-neutral typed-command fixture");
+            let maximum = fixture["capacities"]["maxOutputBytes"].as_u64().expect("maximum output bytes") as usize;
+            let owned = OwnedTypedCommandCensus;
+            let oracle = SerdeJsonTypedCommandCensus;
+            for case in fixture["cases"].as_array().expect("fixture cases") {
+                let description = case["description"].as_str().expect("fixture description");
+                let coalesce_key = case["coalesceKey"].as_str().expect("fixture coalesce key");
+                let expected = TypedCommandCensusDecision { bytes: case["expectedBytes"].as_u64().expect("fixture expected bytes") as usize, accepted: case["accepted"].as_bool().expect("fixture acceptance") };
+                assert_eq!(owned.decide(description, coalesce_key, maximum), expected);
+                assert_eq!(oracle.decide(description, coalesce_key, maximum), expected);
+            }
+        }
+
+        #[test]
+        fn language_neutral_grant_freshness_admission_publication_and_close_laws_are_exact() {
+            let fixture: serde_json::Value = serde_json::from_str(FIXTURE).expect("language-neutral typed-command fixture");
+            assert_eq!(fixture["capacities"]["maxFaultBytes"].as_u64(), Some(TYPED_COMMAND_FAULT_DETAIL_BYTES as u64));
+            assert_eq!(fixture["grantLaws"].as_array().expect("grant laws").len(), 4);
+            assert_eq!(fixture["freshnessLaws"].as_array().expect("freshness laws").len(), 3);
+            assert_eq!(fixture["admissionLaws"].as_array().expect("admission laws").len(), 4);
+            assert_eq!(fixture["publicationLaws"].as_array().expect("publication laws").len(), 3);
+            assert_eq!(fixture["closeLaws"].as_array().expect("close laws").len(), 4);
+
+            for law in fixture["freshnessLaws"].as_array().expect("freshness laws") {
+                let accepted = law["operationRevision"] == law["liveRevision"] && law["operationGeneration"] == law["liveGeneration"];
+                assert_eq!(accepted, law["accepted"].as_bool().expect("freshness acceptance"));
+            }
+            for law in fixture["admissionLaws"].as_array().expect("admission laws") {
+                let accepted = match law["id"].as_str().expect("admission id") {
+                    "missing-root" => law["roots"].as_u64() == law["requiredRoots"].as_u64(),
+                    _ => law["occupied"].as_u64().expect("occupied") < law["capacity"].as_u64().expect("capacity"),
+                };
+                assert_eq!(accepted, law["accepted"].as_bool().expect("admission acceptance"));
+            }
+            let cancelled_phases = fixture["grantLaws"].as_array().expect("grant laws").iter().find(|law| law["id"] == "cancelled-every-phase").and_then(|law| law["phases"].as_array()).expect("cancelled phases");
+            assert_eq!(cancelled_phases, fixture["stages"].as_array().expect("stages"));
+
+            for law in fixture["closeLaws"].as_array().expect("close laws").iter().filter(|law| law["value"].is_string()) {
+                let mut value = law["value"].as_str().expect("close value").to_string();
+                let credit = law["maximumBytes"].as_u64().expect("close credit") as usize;
+                let scalar_bytes = value.chars().next_back().map(char::len_utf8).unwrap_or(0);
+                let released_bytes = if scalar_bytes != 0 && credit >= scalar_bytes {
+                    value.pop();
+                    scalar_bytes
+                } else {
+                    0
+                };
+                assert_eq!(released_bytes, law["releasedBytes"].as_u64().expect("released bytes") as usize);
+                assert_eq!(value, law["remaining"].as_str().expect("remaining value"));
+            }
+        }
+
+        #[test]
+        fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
+            let source = include_str!("🦀️component.rs");
+            let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
+            let end = source[start..].find("struct TypedCommandFullOperationJobFactory").map(|offset| start + offset).expect("typed full-operation factory");
+            let job = &source[start..end];
+            for stage in ["typed-command-prepare", "typed-command-reducer", "typed-command-output-validation", "typed-command-ephemeral", "typed-command-emit", "typed-command-expose"] {
+                assert!(job.contains(stage));
+            }
+            for forbidden in ["A::handle", "A::ephemeral", "bounded_command_output_bytes", "serde_json::to_vec", "fault.message.as_bytes().to_vec()", "for child in emit.child_emits", "ActiveToolCommand", "BoundedFirstStepCommandJob"] {
+                assert!(!job.contains(forbidden), "forbidden typed-command shortcut returned: {forbidden}");
+            }
+            let route = source.rfind("async fn dispatch_typed_command_inner").expect("typed command route");
+            let gate = source[route..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("fail-closed full-operation gate");
+            let refresh = source[route..].find("self.refresh_cache().await").expect("deferred legacy preparation census");
+            assert!(source[..route].contains("interactive-job.full-operation-pending"));
+            assert!(gate < refresh, "incomplete typed command must fail before legacy preparation");
+            for decoder in ["let command = Box::new(A::command_from_action(action, args).await?)", "let command = A::command_from_action(command_id, Some(&args)).await", "let command = Box::new(A::command_from_intent(intent).await?)"] {
+                let decoder = source.find(decoder).expect("typed route decoder");
+                let gate = source[..decoder].rfind("self.require_complete_tool_operation_pipeline(&admission)?").expect("typed route pre-decoder gate");
+                assert!(gate < decoder, "generic command construction must remain behind full-operation admission");
+            }
+        }
+    }
+    //#endregion 🎯️ToolCommandJobs
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct ArtifactEnvelopeDecodeOperationHandle {
+        pub operation: semio_framework_job::OperationId,
+        pub generation: semio_framework_job::Generation,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ArtifactEnvelopeDecodeOperationPoll {
+        Pending,
+        Progress,
+        Ready,
+        Cancelled,
+        Fault,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ActiveArtifactEnvelopeDecodeState {
+        Active,
+        Ready,
+        ClosingCancelled,
+        ClosingFault,
+        Complete,
+    }
+
+    struct ActiveArtifactEnvelopeDecode<P: Send + 'static, Mutation: Send + 'static> {
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        cancel: semio_framework_job::CancelToken,
+        session: std::mem::ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<store::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
+        session_rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<store::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
+        retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
+        terminal_state: Option<ActiveArtifactEnvelopeDecodeState>,
+        rejected: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+        completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>,
+        completed_close_requested: bool,
+        state: ActiveArtifactEnvelopeDecodeState,
+    }
+
+    impl<P, Mutation> ActiveArtifactEnvelopeDecode<P, Mutation>
+    where
+        P: Send + 'static,
+        Mutation: Send + 'static,
+    {
+        fn admitted(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, decode: store::ArtifactEnvelopeDecodeAuthority<P, Mutation>, completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>) -> Self {
+            let cancel = semio_framework_job::CancelToken::root_now();
+            let params = semio_framework_job::BatchJobParams {
+                operation,
+                generation,
+                cancel: cancel.clone(),
+                config: semio_framework_job::BatchDriveConfig { site: "artifact_envelope_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(decode, params) {
+                Ok(session) => (Some(session), None),
+                Err(rejected) => (None, Some(rejected)),
+            };
+            Self {
+                operation,
+                generation,
+                cancel,
+                session: std::mem::ManuallyDrop::new(session),
+                session_rejected: std::mem::ManuallyDrop::new(session_rejected),
+                retained_outcome: std::mem::ManuallyDrop::new(None),
+                terminal_state: None,
+                rejected: std::mem::ManuallyDrop::new(None),
+                completion,
+                completed_close_requested: false,
+                state: ActiveArtifactEnvelopeDecodeState::Active,
+            }
+        }
+
+        fn rejected(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, rejected: Box<dyn store::ErasedSnapshotRetirement>, completion: std::sync::Arc<store::ArtifactEnvelopeDecodeCompletion>) -> Self {
+            Self {
+                operation,
+                generation,
+                cancel: semio_framework_job::CancelToken::root_now(),
+                session: std::mem::ManuallyDrop::new(None),
+                session_rejected: std::mem::ManuallyDrop::new(None),
+                retained_outcome: std::mem::ManuallyDrop::new(None),
+                terminal_state: None,
+                rejected: std::mem::ManuallyDrop::new(Some(rejected)),
+                completion,
+                completed_close_requested: false,
+                state: ActiveArtifactEnvelopeDecodeState::ClosingFault,
+            }
+        }
+
+        fn request_completed_close(&mut self, completed: &store::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>) -> Result<bool, Fault> {
+            let Some(ticket) = self.completion.ticket() else { return Ok(true) };
+            if !self.completed_close_requested {
+                match completed.try_request_close(ticket) {
+                    Ok(()) => self.completed_close_requested = true,
+                    Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => return Ok(false),
+                    Err(store::ArtifactEnvelopeCompletedRecordFault::Stale) if completed.ticket_reclaimed(ticket) => return Ok(true),
+                    Err(_) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-close"), "completed envelope result lost its exact close authority")),
+                }
+            }
+            Ok(completed.ticket_reclaimed(ticket))
+        }
+
+        fn drive(
+            &mut self,
+            pool: &semio_framework_async::WorkerPool,
+            live_generation: semio_framework_job::Generation,
+            completed: &store::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>,
+            maximum_items: usize,
+            maximum_bytes: usize,
+        ) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(rejected) = self.session_rejected.as_mut() {
+                return match rejected.close_step(maximum_items.min(1), maximum_bytes) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "envelope worker admission rejection is temporarily blocked" }),
+                    semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+                        drop(self.session_rejected.take());
+                        self.state = ActiveArtifactEnvelopeDecodeState::ClosingFault;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-rejected-false-terminal"), "rejected envelope worker session reported Complete without terminal-empty authority"))
+                    }
+                };
+            }
+            if let Some(rejected) = self.rejected.as_mut() {
+                let step = rejected.close_step(maximum_items.min(1), maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).map_err(plugin_sdk_fault)?;
+                return match step {
+                    store::SnapshotRetirementStep::Complete if rejected.terminal_is_empty() => {
+                        drop(self.rejected.take());
+                        self.state = ActiveArtifactEnvelopeDecodeState::Complete;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    store::SnapshotRetirementStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.rejected-false-terminal"), "rejected envelope owner reported Complete without terminal-empty authority")),
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "rejected envelope owner is temporarily blocked" }),
+                };
+            }
+            if live_generation != self.generation && self.state == ActiveArtifactEnvelopeDecodeState::Active {
+                self.cancel.cancel_now();
+            }
+            if self.state == ActiveArtifactEnvelopeDecodeState::Ready && self.cancel.is_cancelled_now() {
+                self.state = ActiveArtifactEnvelopeDecodeState::ClosingCancelled;
+            }
+            if matches!(self.state, ActiveArtifactEnvelopeDecodeState::ClosingCancelled | ActiveArtifactEnvelopeDecodeState::ClosingFault) {
+                if self.request_completed_close(completed)? {
+                    self.state = ActiveArtifactEnvelopeDecodeState::Complete;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                return Ok(PluginCloseStep::Blocked { reason: "cancelled envelope output awaits the completed-record close pump" });
+            }
+            if matches!(self.state, ActiveArtifactEnvelopeDecodeState::Ready | ActiveArtifactEnvelopeDecodeState::Complete) {
+                return Ok(if self.state == ActiveArtifactEnvelopeDecodeState::Complete { PluginCloseStep::Complete } else { PluginCloseStep::Blocked { reason: "decoded envelope awaits exact consumer publication" } });
+            }
+            if let Some(outcome) = self.retained_outcome.as_mut() {
+                return match outcome.close_step(maximum_items.min(1), maximum_bytes) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
+                        drop(self.retained_outcome.take());
+                        if self.terminal_state.is_none() {
+                            self.session
+                                .as_mut()
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?
+                                .resume()
+                                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.resume"), "envelope worker outcome lost its exact resume authority"))?;
+                        }
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::JobPayloadCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-false-terminal"), "envelope worker outcome reported Complete without terminal-empty payload")),
+                };
+            }
+            if let Some(target) = self.terminal_state {
+                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "terminal envelope decode lost its retained worker session"))?;
+                session.begin_close();
+                return match session.close_step(maximum_items.min(1), maximum_bytes) {
+                    semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::WorkerJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "terminal envelope worker close is temporarily blocked" }),
+                    semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
+                        drop(self.session.take());
+                        self.terminal_state = None;
+                        self.state = target;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::WorkerJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-false-terminal"), "terminal envelope worker session reported Complete without terminal-empty authority"))
+                    }
+                };
+            }
+            let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.session-missing"), "live envelope decode lost its retained worker session"))?;
+            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                    let outcome = session.take_checked_out_outcome().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.outcome-missing"), "envelope worker checkout lost its exact outcome"))?;
+                    self.terminal_state = match &outcome {
+                        semio_framework_job::StepOutcome::Complete(_) if self.completion.ticket().is_some() => Some(ActiveArtifactEnvelopeDecodeState::Ready),
+                        semio_framework_job::StepOutcome::Cancelled => Some(ActiveArtifactEnvelopeDecodeState::ClosingCancelled),
+                        semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Complete(_) => Some(ActiveArtifactEnvelopeDecodeState::ClosingFault),
+                        _ => None,
+                    };
+                    *self.retained_outcome = Some(outcome);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Idle) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                Ok(_) => Ok(PluginCloseStep::Blocked { reason: "envelope worker awaits its mounted wake" }),
+                Err(_) => Ok(PluginCloseStep::Blocked { reason: "envelope worker lane is saturated or contended" }),
+            }
+        }
+
+        fn poll(&self) -> ArtifactEnvelopeDecodeOperationPoll {
+            match self.state {
+                ActiveArtifactEnvelopeDecodeState::Active => ArtifactEnvelopeDecodeOperationPoll::Pending,
+                ActiveArtifactEnvelopeDecodeState::Ready => ArtifactEnvelopeDecodeOperationPoll::Ready,
+                ActiveArtifactEnvelopeDecodeState::ClosingCancelled => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
+                ActiveArtifactEnvelopeDecodeState::ClosingFault => ArtifactEnvelopeDecodeOperationPoll::Fault,
+                ActiveArtifactEnvelopeDecodeState::Complete if self.cancel.is_cancelled_now() => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
+                ActiveArtifactEnvelopeDecodeState::Complete => ArtifactEnvelopeDecodeOperationPoll::Fault,
+            }
+        }
+
+        fn terminal_is_empty(&self, completed: &store::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>) -> bool {
+            let output_terminal = self.completion.ticket().is_none_or(|ticket| completed.ticket_reclaimed(ticket));
+            self.state == ActiveArtifactEnvelopeDecodeState::Complete && self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.rejected.is_none() && output_terminal
+        }
+    }
+
+    impl<P: Send + 'static, Mutation: Send + 'static> Drop for ActiveArtifactEnvelopeDecode<P, Mutation> {
+        fn drop(&mut self) {
+            assert!(
+                self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.rejected.is_none() && self.state == ActiveArtifactEnvelopeDecodeState::Complete,
+                "active envelope decode reached Drop before its worker and rejected owner were terminal empty"
+            );
+        }
+    }
+
+    struct ActiveArtifactEnvelopeIngress {
+        pages: std::mem::ManuallyDrop<Option<store::OwnedSchemaDecodePages>>,
+        closing: bool,
+    }
+
+    impl ActiveArtifactEnvelopeIngress {
+        fn new(pages: store::OwnedSchemaDecodePages) -> Self {
+            Self { pages: std::mem::ManuallyDrop::new(Some(pages)), closing: false }
+        }
+
+        fn take_pages(&mut self) -> Option<store::OwnedSchemaDecodePages> {
+            self.pages.take()
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+            let Some(pages) = self.pages.as_mut() else { return PluginCloseStep::Complete };
+            if maximum_items == 0 {
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            if let Some(page) = pages.close_take_page() {
+                let released_bytes = page.len();
+                if released_bytes > maximum_bytes {
+                    pages.admit_page(page).expect("an exact ingress page returns to its pre-admitted slot when the close byte grant is insufficient");
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                drop(page);
+                return PluginCloseStep::Pending { released_items: 1, released_bytes };
+            }
+            let pages = self.pages.take().expect("terminal ingress pages remain retained");
+            assert!(pages.terminal_is_empty());
+            drop(pages);
+            PluginCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.pages.is_none()
+        }
+    }
+
+    impl Drop for ActiveArtifactEnvelopeIngress {
+        fn drop(&mut self) {
+            assert!(self.terminal_is_empty(), "artifact envelope ingress reached Drop before every admitted page was transferred or bounded-closed");
+        }
+    }
+
+    /// 🔐️ Performs the sole document-store swap only inside its fresh authority decision.
+    pub fn publish_document_store_candidate_if_authoritative<P, Mutation>(
+        live: &mut ArtifactStore<P, Mutation>,
+        candidate: ArtifactStore<P, Mutation>,
+        validate: impl FnOnce() -> Result<(), Fault>,
+    ) -> Result<ArtifactStore<P, Mutation>, (Fault, ArtifactStore<P, Mutation>)>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        if let Err(fault) = validate() {
+            return Err((fault, candidate));
+        }
+        Ok(std::mem::replace(live, candidate))
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ActiveArtifactStoreReplacementState {
+        Initializing,
+        CandidateReady,
+        RetiringCommittedStore,
+        RetiringRejectedCandidate,
+        Complete,
+    }
+
+    struct ActiveArtifactStoreReplacement<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        cancel: semio_framework_job::CancelToken,
+        cancel_signal: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        session: std::mem::ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
+        session_rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ArtifactStoreInitializationJob<P, Mutation>>>>,
+        retained_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>,
+        terminal_target: Option<ActiveArtifactStoreReplacementState>,
+        retained_store: std::mem::ManuallyDrop<Option<ArtifactStore<P, Mutation>>>,
+        retained_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<P, Mutation>>>>>,
+        committed: bool,
+        faulted: bool,
+        state: ActiveArtifactStoreReplacementState,
+    }
+
+    impl<P, Mutation> ActiveArtifactStoreReplacement<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, job: ArtifactStoreInitializationJob<P, Mutation>) -> Self {
+            let cancel = semio_framework_job::CancelToken::root_now();
+            let cancel_signal = job.cancel_signal();
+            let params = semio_framework_job::BatchJobParams {
+                operation,
+                generation,
+                cancel: semio_framework_job::CancelToken::root_now(),
+                config: semio_framework_job::BatchDriveConfig { site: "artifact_store_replacement", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_ms: semio_framework_job::INTERACTIVE_LANE_WALL_MS },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
+                Ok(session) => (Some(session), None),
+                Err(rejected) => (None, Some(rejected)),
+            };
+            Self {
+                operation,
+                generation,
+                cancel,
+                cancel_signal,
+                session: std::mem::ManuallyDrop::new(session),
+                session_rejected: std::mem::ManuallyDrop::new(session_rejected),
+                retained_outcome: std::mem::ManuallyDrop::new(None),
+                terminal_target: None,
+                retained_store: std::mem::ManuallyDrop::new(None),
+                retained_disposer: std::mem::ManuallyDrop::new(None),
+                committed: false,
+                faulted: false,
+                state: ActiveArtifactStoreReplacementState::Initializing,
+            }
+        }
+
+        fn request_cancel(&self) {
+            self.cancel.cancel_now();
+            self.cancel_signal.store(true, std::sync::atomic::Ordering::Release);
+        }
+
+        fn drive_initializer(&mut self, pool: &semio_framework_async::WorkerPool) -> Result<PluginCloseStep, Fault> {
+            if self.state != ActiveArtifactStoreReplacementState::Initializing {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(rejected) = self.session_rejected.as_mut() {
+                return match rejected.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer admission rejection is temporarily blocked" }),
+                    semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+                        drop(self.session_rejected.take());
+                        self.faulted = true;
+                        self.state = ActiveArtifactStoreReplacementState::Complete;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::InteractiveJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-rejected-false-terminal"), "store initializer rejection reported Complete without terminal-empty authority"))
+                    }
+                };
+            }
+            if let Some(outcome) = self.retained_outcome.as_mut() {
+                return match outcome.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
+                        drop(self.retained_outcome.take());
+                        if self.terminal_target.is_none() {
+                            self.session
+                                .as_mut()
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before resume"))?
+                                .resume()
+                                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-resume"), "store initializer lost its exact resume authority"))?;
+                        }
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::JobPayloadCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-false-terminal"), "store initializer outcome reported Complete without terminal-empty payload"))
+                    }
+                };
+            }
+            if let Some(target) = self.terminal_target {
+                let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "terminal store initializer lost its retained session"))?;
+                session.begin_close();
+                return match session.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                    semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    semio_framework_job::WorkerJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "terminal store initializer close is temporarily blocked" }),
+                    semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
+                        drop(self.session.take());
+                        self.terminal_target = None;
+                        self.state = target;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                    semio_framework_job::WorkerJobCloseStep::Complete => {
+                        Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-false-terminal"), "store initializer session reported Complete without terminal-empty authority"))
+                    }
+                };
+            }
+            let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
+            match session.pump_one(pool, semio_framework_async::Lane::Interactive) {
+                Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                    let terminal_kind = session
+                        .checked_out_outcome()
+                        .map(|outcome| match outcome {
+                            semio_framework_job::StepOutcome::Complete(_) => 1,
+                            semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => 2,
+                            _ => 0,
+                        })
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome"))?;
+                    if terminal_kind == 1 {
+                        let candidate = session
+                            .checked_out_job_mut()
+                            .and_then(ArtifactStoreInitializationJob::take_candidate)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-candidate-missing"), "completed store initializer lost its exact candidate"))?;
+                        *self.retained_store = Some(candidate);
+                        self.terminal_target = Some(ActiveArtifactStoreReplacementState::CandidateReady);
+                    } else if terminal_kind == 2 {
+                        let released = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::release_terminal_failure);
+                        if !released {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority"));
+                        }
+                        self.faulted = true;
+                        self.terminal_target = Some(if self.retained_store.is_some() { ActiveArtifactStoreReplacementState::CandidateReady } else { ActiveArtifactStoreReplacementState::Complete });
+                    }
+                    *self.retained_outcome = session.take_checked_out_outcome();
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Idle) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                Ok(_) => Ok(PluginCloseStep::Blocked { reason: "store initializer awaits its mounted wake" }),
+                Err(_) => Ok(PluginCloseStep::Blocked { reason: "store initializer worker lane is saturated or contended" }),
+            }
+        }
+
+        fn drive_retained_store(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            let Some(store) = self.retained_store.as_mut() else {
+                self.state = ActiveArtifactStoreReplacementState::Complete;
+                return Ok(PluginCloseStep::Complete);
+            };
+            let Some(disposer) = self.retained_disposer.as_mut() else {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-disposer-missing"), "retained replacement store lost its exact disposer"));
+            };
+            match disposer.close_step(store, maximum_items.min(1), maximum_bytes)? {
+                PluginCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                PluginCloseStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-close-over-budget"), "retained replacement store exceeded its exact close grant")),
+                step @ PluginCloseStep::Blocked { .. } => Ok(step),
+                PluginCloseStep::Complete if disposer.terminal_is_empty(store) => {
+                    drop(self.retained_disposer.take());
+                    let store = self.retained_store.take().expect("terminal replacement store remains retained");
+                    drop(store);
+                    self.state = ActiveArtifactStoreReplacementState::Complete;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                PluginCloseStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.replacement-false-terminal"), "retained replacement store disposer reported Complete without terminal-empty ownership")),
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none()
+        }
+    }
+
+    impl<P, Mutation> Drop for ActiveArtifactStoreReplacement<P, Mutation>
+    where
+        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn drop(&mut self) {
+            assert!(
+                self.state == ActiveArtifactStoreReplacementState::Complete && self.session.is_none() && self.session_rejected.is_none() && self.retained_outcome.is_none() && self.retained_store.is_none() && self.retained_disposer.is_none(),
+                "artifact store replacement reached Drop before initializer/candidate/displaced-store ownership was terminal empty"
+            );
+        }
+    }
+
+    struct ArtifactStoreReplacementAdmissionTarget<'a, A: ArtifactApp> {
+        jobs: &'a mut ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation>>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        marker: std::marker::PhantomData<fn() -> A>,
+    }
+
+    impl<A: ArtifactApp> store::ArtifactEnvelopeCompletedRecordTarget<A::Snapshot, A::Mutation> for ArtifactStoreReplacementAdmissionTarget<'_, A> {
+        fn try_adopt_completed(&mut self, envelope: ArtifactEnvelope<A::Snapshot, A::Mutation>) -> Result<(), ArtifactEnvelope<A::Snapshot, A::Mutation>> {
+            if !self.jobs.can_insert(self.operation.0) {
+                return Err(envelope);
+            }
+            let job = A::build_document_store_initialization_job(envelope, self.operation, self.generation)?;
+            self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job));
+            Ok(())
+        }
+    }
+
+    /// 🚫️async: `M` (`SpaceMember + MemberFactory`, default `store::NoMembers`) types this app's
+    /// composed CHILDREN only — the STORE-side dedyn shape (see `📓️terra-store-dedyn-report.md`),
+    /// threaded through `children`/`register_child`/`open_child`/`absorb_created_children` below.
+    /// It deliberately does NOT reach `self.store` (the PARENT's own `ArtifactStore<A::Snapshot,
+    /// A::Mutation>`, a different, per-`A` concrete type) or `ChildContentView` (function-generic
+    /// over `M`, not struct-generic — see its own doc comment): both of those are fixed by
+    /// constraints outside this file's reach, documented in
+    /// `📓️terra-dedyn-fw-os-spacemember-report.md`.
+    pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMembers> {
+        app: A,
+        pub(crate) store: ArtifactStore<A::Snapshot, A::Mutation>,
+        pub(crate) config_store: ConfigStore<A::Config, A::ConfigMutation>,
+        /// @emoji 📝️ Volatile draft lane — never checkpoints; prune via `ArtifactCommand::PruneDrafts`.
+        /// Moves to host `ArtifactSession` when CHANNEL_VERSION 5 exchange lands.
+        pub(crate) draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
+        /// @emoji 👥️ Ephemeral SHARED lane — a last-writer-wins peer roster, not an event log. Holds
+        /// this actor's own presence plus whatever peers last broadcast; never persisted, never
+        /// checkpointed, never undoable.
+        pub(crate) presence_store: store::PresenceStore<A::Presence, A::PresenceMutation>,
+        /// @emoji 🎨️ This actor's hub-assigned palette index, adopted from the last
+        /// `AppCommand::Presence` (contract-freeze §C7.6) — `None` for a folder-only session with no
+        /// hub, or before the first presence push.
+        pub(crate) own_color: Option<u8>,
+        /// @emoji 👥️ Every OTHER peer's last-adopted color/surface/interaction, keyed by actor —
+        /// the ARTIFACT+APP-scope roster `InteractionView::peers_selecting`/`peers_hovering` and the
+        /// UI-tree stamping pass read from; upserted/pruned atomically with `presence_store`'s own
+        /// peer map by `adopt_presence`.
+        peer_presence: std::mem::ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>,
+        peer_presence_generation: u64,
+        peer_roster_admission_generation: u64,
+        peer_roster_processed_generation: u64,
+        peer_roster_outcome_generation: u64,
+        peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS],
+        peer_roster_scope: semio_framework_job::CancelToken,
+        peer_roster_publications: ArtifactFixedRegistry<PeerRosterPublication<A>>,
+        peer_roster_outcomes: ArtifactFixedRegistry<PresenceRosterOutcome>,
+        peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>,
+        presence_peer_retirements: ArtifactFixedRegistry<store::PresencePeersRetirement<A::Presence>>,
+        /// @emoji 🫧️ Ephemeral LOCAL-ONLY lane — typed UI state that never leaves this client and
+        /// never becomes document content. The typed home for what used to live in plugin
+        /// `thread_local!`s.
+        pub(crate) transient_store: store::TransientStore<A::Transient, A::TransientMutation>,
+        /// 🧾 Last Emit op packs produced by `dispatch_emit` — consumed by `AppCommand::PureCommand`.
+        last_emit_wire: Option<(Vec<u8>, Vec<u8>, Vec<u8>)>,

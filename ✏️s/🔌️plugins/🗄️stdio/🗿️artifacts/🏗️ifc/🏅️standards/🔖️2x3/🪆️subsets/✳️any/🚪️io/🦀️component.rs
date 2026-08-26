@@ -154,7 +154,7 @@ mod tests {
     }
 
     async fn assert_exact(label: &str, actual: &[u8]) {
-        let expected = exact_fixture_bytes();
+        let expected = exact_fixture_bytes().await;
         let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
         assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
     }
@@ -206,39 +206,39 @@ mod tests {
         use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Analyzer;
         use crate::artifacts::txt::TxtSnapshot;
 
-        let original = exact_fixture_bytes();
+        let original = exact_fixture_bytes().await;
         let imported = decode_ifc2x3(original).expect("direct IFC2X3 import");
         assert_eq!(imported.document.instances.len(), 409_102, "fixture entity count changed");
-        assert_exact("direct engine export", &encode_ifc2x3(&imported).expect("direct engine export"));
+        assert_exact("direct engine export", &encode_ifc2x3(&imported).expect("direct engine export")).await;
 
         let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: original.to_vec() };
         let binary_snapshot = binary_import::deserialize(&binary).expect("raw binary deserialize");
         let binary_output = binary_export::serialize(&binary_snapshot).expect("raw binary serialize");
-        assert_exact("raw binary route", &binary_output.bytes);
+        assert_exact("raw binary route", &binary_output.bytes).await;
 
         let text = std::str::from_utf8(original).expect("fixture UTF-8");
         let txt = TxtSnapshot::from_body(text);
         let text_snapshot = text_import::deserialize(&txt).expect("raw text deserialize");
         let text_output = text_export::serialize(&text_snapshot).expect("raw text serialize");
-        assert_exact("raw text route", text_output.to_body().as_bytes());
+        assert_exact("raw text route", text_output.to_body().as_bytes()).await;
 
-        let text_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Text(text)]);
+        let text_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Text(text)]).await;
         assert!(text_analysis.diagnostics.is_empty(), "text analyzer diagnostics: {:?}", text_analysis.diagnostics);
-        assert_exact("text analyzer export", &encode_ifc2x3(&text_analysis.parts.snapshot.expect("text analyzer snapshot")).expect("text analyzer export"));
+        assert_exact("text analyzer export", &encode_ifc2x3(&text_analysis.parts.snapshot.expect("text analyzer snapshot")).expect("text analyzer export")).await;
 
         let pack = store::ArtifactPack::encode_pack(&imported);
-        let pack_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&pack)]);
+        let pack_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&pack)]).await;
         assert!(pack_analysis.diagnostics.is_empty(), "pack analyzer diagnostics: {:?}", pack_analysis.diagnostics);
-        assert_exact("pack analyzer export", &encode_ifc2x3(&pack_analysis.parts.snapshot.expect("pack analyzer snapshot")).expect("pack analyzer export"));
+        assert_exact("pack analyzer export", &encode_ifc2x3(&pack_analysis.parts.snapshot.expect("pack analyzer snapshot")).expect("pack analyzer export")).await;
 
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
         let text_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Text(text) }];
-        let text_composition = Ifc2x3ComposerComposition::compose(&text_sources).expect("compose native IFC2X3 text");
-        assert_exact("text composer export", &encode_ifc2x3(&text_composition.snapshot).expect("text composer export"));
+        let text_composition = Ifc2x3ComposerComposition::compose(&text_sources).await.expect("compose native IFC2X3 text");
+        assert_exact("text composer export", &encode_ifc2x3(&text_composition.snapshot).expect("text composer export")).await;
 
         let pack_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&pack) }];
-        let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).expect("compose IFC2X3 pack");
-        assert_exact("pack composer export", &encode_ifc2x3(&pack_composition.snapshot).expect("pack composer export"));
+        let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).await.expect("compose IFC2X3 pack");
+        assert_exact("pack composer export", &encode_ifc2x3(&pack_composition.snapshot).expect("pack composer export")).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -344,14 +344,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -366,11 +366,11 @@ mod tests {
 
             let demo = demo_ifc2x3_snapshot();
 
-            let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+            let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_ifc2x3_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ifc2x3_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+            let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ifc2x3_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ifc2x3_snapshot()) drifted from the shipped .pack.semio fixture");
         }

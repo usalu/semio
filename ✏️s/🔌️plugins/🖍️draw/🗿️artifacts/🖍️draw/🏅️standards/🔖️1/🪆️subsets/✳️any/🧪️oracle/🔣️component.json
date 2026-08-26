@@ -6,16 +6,36 @@
   "noOracleDecisions": [
     {
       "id": "draw-mutation-semantics",
-      "capabilities": ["draw-1-mutate"],
-      "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `DrawMutation`. The vocabulary is not a generic tree-edit list either: it is derived from `DrawSnapshot`'s RECURSIVE layer tree, where a layer is one of several node kinds (group, path, trace, …) sharing a `base` record, so `update-layer-trace-params` exists only for the trace node kind while `set-layer-boolean-operation`, `replace-layer-fill` and `replace-layer-stroke` reach into the shared `attributes` record, and `create-layer`/`duplicate-layer`/`reorder-layer` address a PARENT plus an index rather than a flat position. Layer ids are content-addressed, which is why `create-layer` with an existing node is a hard rejection rather than a duplicate. Confidence comes from the committed per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate — plus the inverse law as a metamorphic property: applying a kind and then its own computed inverse must restore the exact pre-mutation document, POSITION in the tree included. The `mutate-draw-1` case re-exercises those SAME committed bytes end-to-end through `apply_draw_mutation`/`inverse_draw_mutation`, and crosses the real committed `Semio Emblem` drawing through both of its codecs for the identity law.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "capabilities": [
+        "draw-1-mutate"
+      ],
+      "rationale": "No third-party library reads or writes this subset's carriers. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-note-1`, whose document is a z-ordered tree of six differently-shaped typed blocks, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️component.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-note-1`: a z-ordered canvas of typed elements whose inverses restore position.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar describes a DIFFERENT DOCUMENT: it is the generic `family-scene` canvas grammar — `doc-body = schema-line layers-block`, `layer = shape-layer | path-layer | text-layer` — and the committed artifact carries no `layers` block at all. `📖️playbook` and `📋️forms` carry byte-identical copies of the same canvas grammar over two more unrelated documents.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
     }
   ],
   "mutationCatalogs": [
     {
       "id": "draw-1-any",
       "capability": "draw-1-mutate",
-      "kinds": ["set-layer-visible", "set-layer-locked", "set-layer-opacity", "set-layer-blend-mode", "rename-layer", "update-layer-transform", "replace-layer-fill", "replace-layer-stroke", "set-layer-boolean-operation", "update-layer-trace-params", "create-layer", "duplicate-layer", "delete-layer", "reorder-layer"]
+      "kinds": [
+        "set-layer-visible",
+        "set-layer-locked",
+        "set-layer-opacity",
+        "set-layer-blend-mode",
+        "rename-layer",
+        "update-layer-transform",
+        "replace-layer-fill",
+        "replace-layer-stroke",
+        "set-layer-boolean-operation",
+        "update-layer-trace-params",
+        "create-layer",
+        "duplicate-layer",
+        "delete-layer",
+        "reorder-layer"
+      ]
     }
   ]
 }

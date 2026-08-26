@@ -10,45 +10,13 @@ use crate::artifact::*;
 use crate::host::*;
 
 // #region 🔖️EvalBridge
-#[cfg(target_arch = "wasm32")]
-pub(crate) fn parse_bridge_dictionary_json(result_json: &str) -> Result<Dictionary, EvalError> {
-    if let Ok(dict) = serde_json::from_str::<Dictionary>(result_json) {
-        return Ok(dict);
-    }
-    if let Ok(value) = serde_json::from_str::<serde_json::Value>(result_json) {
-        if let Some(err) = value.get("error").and_then(|v| v.as_str()) {
-            return Err(EvalError::InvalidInput(err.into()));
-        }
-    }
-    Err(EvalError::InvalidInput("invalid bridge response".into()))
-}
-
-#[cfg(target_arch = "wasm32")]
-pub(crate) struct EvalBridge {
-    pub(crate) cb: js_sys::Function,
-}
-
-#[cfg(target_arch = "wasm32")]
-impl EvalBridge {
-    pub(crate) fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
-        use wasm_bindgen::JsValue;
-        let input_json = serde_json::to_string(input).map_err(|e| EvalError::InvalidInput(e.to_string()))?;
-        let result = self.cb.call2(&JsValue::NULL, &JsValue::from_str(kind_id), &JsValue::from_str(&input_json)).map_err(|_| EvalError::InvalidInput("bridge call failed".into()))?;
-        let result_json = result.as_string().ok_or_else(|| EvalError::InvalidInput("bridge did not return string".into()))?;
-        parse_bridge_dictionary_json(&result_json)
-    }
-}
-
 /// 🔌️ Native eval-bridge callback: operator kind id + input dictionary in, evaluated dictionary or `EvalError` out.
-#[cfg(not(target_arch = "wasm32"))]
 pub(crate) type EvalBridgeFn = dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Send;
 
-#[cfg(not(target_arch = "wasm32"))]
 pub(crate) struct EvalBridge {
     pub(crate) cb: Box<EvalBridgeFn>,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl EvalBridge {
     pub(crate) fn evaluate(&self, kind_id: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {
         (self.cb)(kind_id, input)

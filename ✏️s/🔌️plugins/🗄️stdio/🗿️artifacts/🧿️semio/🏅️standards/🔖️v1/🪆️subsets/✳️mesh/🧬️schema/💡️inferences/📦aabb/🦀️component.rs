@@ -154,7 +154,7 @@ mod tests {
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_primitive_snapshot();
         let pure = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&snapshot, None);
-        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
+        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
         let via_disabled = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&snapshot, Some(&mut disabled));
         assert_eq!(pure, via_disabled);
     }
@@ -163,27 +163,27 @@ mod tests {
     //#region 🧪️IncrementalityLaw
     #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_primitive_snapshot();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.stats().await;
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
         assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
         assert_eq!(after.hits - before.hits, 2, "both primitives must be cache hits");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn changing_one_primitives_positions_misses_only_that_primitives_cache_entry() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_primitive_snapshot();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.meshes[0].primitives[0].positions[0] = SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 };
-        let before = cache.stats();
+        let before = cache.stats().await;
         let values = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 1, "only prim-1's own entry may miss when its own positions change");
         assert_eq!(values.get(&aabb_key("mesh-a", "prim-2")), Some(&SemioAabb { min: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }, max: SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 } }), "prim-2's aabb must be untouched");
@@ -191,15 +191,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn changing_an_unrelated_field_on_the_same_primitive_does_not_miss() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_primitive_snapshot();
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.meshes[0].primitives[0].material_id = Some("some-material".into());
-        let before = cache.stats();
+        let before = cache.stats().await;
         let _ = store::infer_field::<SemioMeshSnapshot, MeshAabb>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
         assert_eq!(after.misses, before.misses, "material_id has no bearing on the aabb dep chain");
     }
     //#endregion 🧪️IncrementalityLaw

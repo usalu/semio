@@ -4,7 +4,7 @@ use super::mutation::ChangeDeltaSigmaMpa;
 use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeDeltaSigmaMpa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
+pub fn diff(payload: &ChangeDeltaSigmaMpa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_delta_sigma_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Delta sigma mpa must be a finite number.", Vec::<String>::new());
     }

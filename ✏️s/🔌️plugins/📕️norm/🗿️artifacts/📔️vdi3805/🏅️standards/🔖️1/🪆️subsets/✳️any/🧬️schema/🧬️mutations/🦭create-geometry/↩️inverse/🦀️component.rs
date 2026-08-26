@@ -6,7 +6,7 @@ use crate::artifacts::vdi3805::mutations::delete_geometry;
 use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &CreateGeometry, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &CreateGeometry, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
     if base.geometry.contains_key(&payload.geometry.id) {
         return Vec::new();
     }

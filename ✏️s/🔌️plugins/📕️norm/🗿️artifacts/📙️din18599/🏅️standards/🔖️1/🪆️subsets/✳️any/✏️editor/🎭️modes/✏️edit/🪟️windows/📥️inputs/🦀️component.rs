@@ -10,13 +10,13 @@ pub const BODY_INPUTS: &str = "norm.din18599.play.inputs";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::din18599::create_din18599_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     crate::app_surface::window_definition(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, "download")
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &Din18599Snapshot) -> UiNode {
+pub fn render(document: &Din18599Snapshot) -> UiNode {
     crate::app_surface::render_document_json(document)
 }
 //#endregion 🔖️Render
@@ -28,13 +28,13 @@ mod tests {
     use crate::editor::din18599::testkit;
 
     #[semio_framework_async_macros::async_test]
-    async fn definition_declares_this_windows_body_key() {
+    fn definition_declares_this_windows_body_key() {
         assert_eq!(definition().body_key, BODY_INPUTS);
         assert_eq!(definition().id, WINDOW_INPUTS);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn renders_the_document_as_json() {
+    fn renders_the_document_as_json() {
         let mut app = testkit::new_app();
         assert!(testkit::render(&mut app, BODY_INPUTS).contains(':'), "the inputs body renders the document json");
     }

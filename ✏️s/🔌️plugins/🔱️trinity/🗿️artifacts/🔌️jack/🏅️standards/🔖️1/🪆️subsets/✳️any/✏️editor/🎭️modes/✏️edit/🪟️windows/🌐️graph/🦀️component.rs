@@ -7,11 +7,11 @@ use serde_json::json;
 
 pub(crate) const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 
-async fn trinity_lod_tier_rows() -> Vec<serde_json::Value> {
+fn trinity_lod_tier_rows() -> Vec<serde_json::Value> {
     serde_json::from_str(&crate::editor::rewrite::world::trinity_lod_scale_json()).unwrap_or_default()
 }
 
-pub(crate) async fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
     let mut items = vec![MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
     items.extend(trinity_lod_tier_rows().into_iter().filter_map(|row| {
         let id = row.get("id")?.as_str()?.to_string();
@@ -21,7 +21,7 @@ pub(crate) async fn trinity_lod_measure(window_id: &str, current_mode: &str, jac
     WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: jack_action("setLodMode", Some(json!({ "windowId": window_id }))) }
 }
 
-pub(crate) async fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> Option<String> {
+pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> Option<String> {
     let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
         Some(json!({ "automatic": true }).to_string())
@@ -36,7 +36,7 @@ pub(crate) async fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &st
 /// `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host reads
 /// domain "ast"'s `DomainSelection`/`DomainHover` directly (`GraphHost::sync_interaction`), so the
 /// interactive surface stays correct even though this snapshot doesn't carry it.
-pub(crate) async fn render(surface_id: &str, controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiNode {
+pub(crate) fn render(surface_id: &str, controller_id: &str, window_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiNode {
     let (nodes, edges, _) = crate::editor::jack::fixture_to_workflow(fixture);
     let viewport = NodeGraphViewport { x: cfg.camera.x, y: cfg.camera.y, zoom: cfg.camera.zoom };
     build_node_graph_scene(surface_id, controller_id, NodeGraphScene { lod_json: trinity_lod_json_for_window(cfg, window_id), ..NodeGraphScene::base(nodes, edges, viewport) })

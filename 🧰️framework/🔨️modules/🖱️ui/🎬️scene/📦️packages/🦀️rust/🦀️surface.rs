@@ -89,6 +89,13 @@ mod tests {
         let scene = TableScene::base("[{\"id\":\"name\"}]", "[]");
         let props = encode(SurfaceKind::Table, &scene).expect("bounded fixture");
         assert_eq!(props.doc_schema.as_str(), "table@1");
+        assert_eq!(
+            props.doc.bytes.as_slice(),
+            &[
+                13, 2, 6, 11, 99, 111, 108, 117, 109, 110, 115, 74, 115, 111, 110, 6, 15, 91, 123, 34, 105, 100, 34, 58, 34, 110, 97, 109, 101, 34, 125, 93, 6, 8, 114, 111, 119, 115, 74, 115, 111, 110, 6, 2, 91, 93,
+            ],
+            "the language-neutral scene packet keeps its camelCase field names so every renderer can decode it without a Rust schema mirror",
+        );
         let back: TableScene = decode(&props).expect("decode");
         assert_eq!(scene, back);
     }

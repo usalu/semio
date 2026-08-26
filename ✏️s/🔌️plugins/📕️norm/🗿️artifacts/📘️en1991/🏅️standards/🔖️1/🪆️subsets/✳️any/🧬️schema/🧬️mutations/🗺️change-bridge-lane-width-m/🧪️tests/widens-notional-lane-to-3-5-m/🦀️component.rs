@@ -26,7 +26,7 @@ fn mutation() -> En1991Mutation {
 
 /// ▶️ `change-bridge-lane-width-m` carries `bridge_lane_width_m` from 3.0 to 3.5 and lands on the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = outcome.diff().apply(&base).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: mutation applies to its committed before-snapshot");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ The inverse re-states the pre-edit `bridge_lane_width_m` (3.0) and restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let outcome = forward.diff(&base);
@@ -52,7 +52,7 @@ async fn inverse_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1991Snapshot = serde_json::from_str(text).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: snapshot encodes");
@@ -66,7 +66,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared `applied` outcome holds — a clean 3.0→3.5 edit of `bridge_lane_width_m` raises no diagnostic.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: this fixture declares an applied outcome");
     let base = before();
@@ -77,7 +77,7 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ The sparse delta is exactly the committed diff: `bridgeLaneWidthM` set, every other field left null.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert_eq!(outcome.diff().bridge_lane_width_m, Some(3.5), "change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: the diff must carry `bridge_lane_width_m` = 3.5");
@@ -89,7 +89,7 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff is canonical and decodes to `En1991Diff`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: committed diff decodes");
     assert_eq!(decoded.bridge_lane_width_m, Some(3.5), "change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: the committed diff must name `bridge_lane_width_m` = 3.5");
     let reencoded = serde_json::to_value(&decoded).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: diff re-encodes");
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff to `before` yields `after` — the 3.5 `bridge_lane_width_m` edit is complete on its own.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: committed diff decodes");
     let produced = decoded.apply(&base).expect("change-bridge-lane-width-m/widens-notional-lane-to-3-5-m: committed diff applies to the before-snapshot");

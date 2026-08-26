@@ -6,7 +6,7 @@ use crate::artifacts::draw::schema::{find_draw_layer, find_draw_layer_location};
 use crate::artifacts::draw::DrawSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::DeleteLayer, base: &DrawSnapshot) -> Vec<DrawMutation> {
+pub fn inverse(payload: &super::mutation::DeleteLayer, base: &DrawSnapshot) -> Vec<DrawMutation> {
     let (Some(layer), Some(location)) = (find_draw_layer(base, &payload.layer_id), find_draw_layer_location(base, &payload.layer_id)) else {
         return Vec::new();
     };

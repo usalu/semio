@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// value is 0.0, which makes it the fixture that pins that `change-c-kpa`'s no-op guard compares against the
 /// base value and not against a falsy zero.
 #[semio_framework_async_macros::async_test]
-async fn gives_the_drained_sand_12_5_kpa_of_effective_cohesion() {
+fn gives_the_drained_sand_12_5_kpa_of_effective_cohesion() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-c-kpa applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.c_kpa, 12.5, "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: c_kpa must read 12.5 kPa once the change lands");
@@ -44,7 +44,7 @@ async fn gives_the_drained_sand_12_5_kpa_of_effective_cohesion() {
 /// ↩️ `change-c-kpa`'s inverse reads the OLD 0.0 kPa out of BASE, so replaying it puts the cohesionless 0.0 kPa
 /// back on `c_kpa`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_cohesionless_0_kpa_restores_before() {
+fn restoring_the_cohesionless_0_kpa_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-c-kpa applies");
@@ -62,7 +62,7 @@ async fn restoring_the_cohesionless_0_kpa_restores_before() {
 /// is a fixed point, so `newCKpa` (serde camelCase over `new_c_kpa`) is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 12.5 kPa is finite and differs from the committed 0.0 kPa. `change-c-kpa`'s guard is a plain
 /// `base.c_kpa == payload.new_c_kpa` equality test, so a zero base is not special-cased.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `cKpa` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-c-kpa diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the effective cohesion and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-c-kpa diff decodes");
     assert_eq!(decoded.c_kpa, Some(12.5), "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: the committed diff must carry cKpa = 12.5 kPa");
     assert!(decoded.phi_deg.is_none(), "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: change-c-kpa writes cKpa and must leave `phi_deg` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the cohesion change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-c-kpa diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-c-kpa/gives-the-drained-sand-12-5-kpa-of-effective-cohesion: the committed diff did not carry before to after");

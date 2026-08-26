@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_duct_leakage_m3_s_m2::mutation
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeDuctLeakageM3SM2, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeDuctLeakageM3SM2, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_duct_leakage_m3_s_m2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Duct leakage rate must be a finite number, got {}.", payload.new_duct_leakage_m3_s_m2), Vec::<String>::new());
     }

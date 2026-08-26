@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
-async fn layer_id(layer: &DrawLayerNode) -> &str {
+fn layer_id(layer: &DrawLayerNode) -> &str {
     match layer {
         DrawLayerNode::Shape(body) => &body.base.id,
         DrawLayerNode::Path(body) => &body.base.id,
@@ -27,7 +27,7 @@ async fn layer_id(layer: &DrawLayerNode) -> &str {
     }
 }
 
-async fn walk(layers: &[DrawLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+fn walk(layers: &[DrawLayerNode], level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for layer in layers {
         let id = layer_id(layer).to_string();
         topo_order.push(id.clone());
@@ -49,7 +49,7 @@ pub struct DrawTopology {
 }
 
 /// 🧮️ Computes [`DrawTopology`] via a pre-order walk of `layers`' `Group.children` nesting.
-pub async fn compute_draw_topology(snapshot: &DrawSnapshot) -> DrawTopology {
+pub fn compute_draw_topology(snapshot: &DrawSnapshot) -> DrawTopology {
     let mut topo_order = Vec::new();
     let mut depth = BTreeMap::new();
     walk(&snapshot.layers, 0, &mut topo_order, &mut depth);
@@ -64,15 +64,15 @@ mod tests {
     use super::*;
     use crate::artifacts::draw::{DrawAttributes, DrawGroupBody, DrawLayerBase, DrawPathBody};
 
-    async fn base(id: &str) -> DrawLayerBase {
+    fn base(id: &str) -> DrawLayerBase {
         DrawLayerBase { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: crate::artifacts::draw::default_draw_transform(), attributes: DrawAttributes::default() }
     }
 
-    async fn path_layer(id: &str) -> DrawLayerNode {
+    fn path_layer(id: &str) -> DrawLayerNode {
         DrawLayerNode::Path(DrawPathBody { base: base(id), segments: Vec::new() })
     }
 
-    async fn group_layer(id: &str, children: Vec<DrawLayerNode>) -> DrawLayerNode {
+    fn group_layer(id: &str, children: Vec<DrawLayerNode>) -> DrawLayerNode {
         DrawLayerNode::Group(DrawGroupBody { base: base(id), children })
     }
 

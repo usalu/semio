@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_years_since_inspection::mutati
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeYearsSinceInspection, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeYearsSinceInspection, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if base.years_since_inspection == payload.new_years_since_inspection {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Years since last inspection is already {}.", payload.new_years_since_inspection));
     }

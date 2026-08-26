@@ -20,7 +20,7 @@ pub struct Vdi3805Outline {
 }
 
 impl Vdi3805Outline {
-    pub async fn compute(snapshot: &Vdi3805Snapshot) -> Self {
+    pub fn compute(snapshot: &Vdi3805Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = (snapshot.edition_profile.len() + snapshot.geometry.len() + snapshot.curves.len()) as u32;
@@ -41,13 +41,13 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn outline_field_count_matches_section_outline_length() {
+    fn outline_field_count_matches_section_outline_length() {
         let outline = Vdi3805Outline::compute(&Vdi3805Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn outline_is_deterministic() {
+    fn outline_is_deterministic() {
         let snapshot = Vdi3805Snapshot::default();
         assert_eq!(Vdi3805Outline::compute(&snapshot), Vdi3805Outline::compute(&snapshot));
     }

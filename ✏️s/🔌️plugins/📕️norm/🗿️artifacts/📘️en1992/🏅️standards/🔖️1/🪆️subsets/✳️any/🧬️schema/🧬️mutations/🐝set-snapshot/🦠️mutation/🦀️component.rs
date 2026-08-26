@@ -20,15 +20,15 @@ pub struct ChangeAnnex {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnnex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annex", kind: "change-annex", record: "ChangedAnnex" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::set_snapshot::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::set_snapshot::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change national annex to {:?}", self.new_annex)
     }
 }

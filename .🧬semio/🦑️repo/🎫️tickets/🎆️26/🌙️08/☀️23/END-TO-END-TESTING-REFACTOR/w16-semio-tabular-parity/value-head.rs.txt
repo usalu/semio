@@ -1,0 +1,56 @@
+//! 🦀️ Semio VALUE exhaustive mutation case — Rust SUBJECT adapter. Ticket 26/08/23/END-TO-END-
+//! TESTING-REFACTOR.
+//!
+//! **This file no longer serves the oracle role.** The reference for `semio-v1-value-mutate` is the
+//! registered oracle `semio-value-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️value/
+//! 🧪️oracle/🔣️component.json`) — an independent Python implementation of the semio value carrier and
+//! its nine verbs, written from the committed grammar, protocol and specification vectors, living
+//! beside this file as `🐍️component.py`. The runner dispatches the oracle role to that adapter and
+//! the subject role here, and compares the two projections under `@comparison-ordered-json-v1`.
+//! Registering oracle handlers here as well would put this repository's own answer on both sides of
+//! that comparison, which is the precise failure the platform exists to prevent.
+//!
+//! **What the handlers assert in role.** Parity across the two implementations is the primary
+//! evidence, but each side still states its own law so a scenario can fail for the right reason with
+//! a readable message: `inverse-<kind>` requires the mutation's OWN computed inverse to restore the
+//! building model, `spec-vector-<kind>` requires the applied snapshot to be the committed
+//! after-snapshot AND the undone one to be the before-snapshot, `payload-fidelity` requires the
+//! derived document to still carry exactly what this repository's own RFC 8259 reader finds in the
+//! committed source, and `identity-round-trip` requires all four committed encodings to be
+//! reproduced byte for byte through `law::carrier_is_exact`.
+//!
+//! **How the fixtures reach typed values.** The generated test host links only `semio-repo-test-host`
+//! and, behind `sut`, this subset's own crate — no `serde`, no `serde_json` — so the subject module
+//! below carries its own small, forward-only, structural decoder over the framework's dependency-free
+//! `Json`. It decodes JSON STRUCTURE only, field by field, mirroring each committed payload's own
+//! declared serde shape; it never invents or reimplements any mutation SEMANTICS, which still run
+//! through the real `apply_semio_value_mutation`/`inverse_semio_value_mutation`. The DSL and pack
+//! bridges this case's byte law needs — `parse_semio_value_dsl`, `print_semio_value_dsl`,
+//! `encode_semio_value_pack`, `decode_semio_value_pack` — were added to the subset's own
+//! `📸️snapshot/🦀️component.rs` for this wave, mirroring the ones `✳️table`, `✳️flow` and `✳️text`
+//! already exported; before them this case could make no byte claim at all.
+
+use semio_repo_test_host::Adapter;
+
+//#region 🔖️Kinds
+/// 🏷️ Mirrors `SemioValueMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/
+/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the generated host builds this
+/// file with and without the subject crate. The contract's mutation-coverage gate keeps this list
+/// honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps
+/// it honest against the enum.
+#[cfg(feature = "sut")]
+const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"];
+//#endregion 🔖️Kinds
+
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
+    use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{parse_json_text, JsonMember, JsonValue};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::mutations::{apply_semio_value_mutation, inverse_semio_value_mutation, SemioValueMutation, SemioValuePath, SemioValuePathSegment};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{
+        decode_semio_value_pack, decode_semio_value_snapshot_json, encode_semio_value_pack, encode_semio_value_snapshot_json, parse_semio_value_dsl, print_semio_value_dsl, SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId,
+    };
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
+

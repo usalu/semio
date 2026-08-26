@@ -1,6 +1,6 @@
 # Final end-to-end audit of `26/08/23/END-TO-END-TESTING-REFACTOR`
 
-Date 2026-08-25. Run window 05:25–14:40 CEST. Head at start
+Date 2026-08-25. Run window 05:25–16:50 CEST. Head at start
 `18adc8cce3d223c1898c7543fa461928a81fe38f` (2026-08-25 01:06:10 +0200) with a dirty tree (164
 tracked files modified by concurrent sessions); head moved to `9ed590cd8749af38dab141723300f9f91120cfad`
 (2026-08-25 09:16:05 +0200) **during** the run, which forced a mid-run rebuild — recorded here rather
@@ -19,7 +19,8 @@ stdout; every exit code was read from the tool's own exit status, never through 
 implementations are correct. The first full differential run says otherwise: 265 of 1,277
 oracle-versus-subject comparisons DISAGREE, and 51 scenarios fail or error outright.**
 
-The same 101 stdio cases, the same tree, two commands, ten minutes apart:
+The same 101 stdio cases, the same tree, the same afternoon — `parity` finished 09:25, the
+repo-wide `oracle` run 12:36:
 
 ```
 [test] level=exhaustive cases=164 executed=1331 passed=1331 failed=0 errored=0 parity=0/0 not-exercised=85
@@ -92,18 +93,29 @@ Preceded by exactly 85 `[test] not-exercised …` lines. Identical to wave 12's 
 
 ### 3. `bun ./📜️script.ts subject exhaustive --owner 🗄️stdio`
 
-**This command did not complete, twice, and the reason is worth reporting rather than hiding.** The
-first attempt (11:55) died at `mutate-tiff-6-0`:
+**This command did not complete, in three separate attempts, always the same way, and that is itself
+a finding.** Attempt 1 (11:55) died at `mutate-tiff-6-0`; attempt 2 was killed at 13:13 while
+crawling at one case per five to nine minutes; attempt 3 (16:50) died at `mutate-pdf-1-7-vt`:
 
 ```
-[budget] cargo run --quiet --manifest-path …/mutate-tiff-6-0-subject-rust/Cargo.toml --features sut … exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
+[budget] cargo run --quiet --manifest-path …/mutate-pdf-1-7-vt-subject-rust/Cargo.toml --features sut -- --plan … exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
 error: spawnSync cargo ETIMEDOUT
+      path: "cargo"
+   syscall: "spawnSync cargo"
+      code: "ETIMEDOUT"
 ```
 
-A concurrent session's commit at 09:16 invalidated the shared `cargo-test-hosts` target directory
-mid-run; a second attempt was still crawling at one case per five to nine minutes hours later. **The
-subject-phase numbers below are therefore taken from the `parity` run, which executes the identical
-subject phase**, read out of its own result stream (`w15-audit/parity-report/📤️results.jsonl`):
+Exit 1, no `[test] level=…` line at all. Two things are true here and both belong in the record.
+First, another session was rebuilding the workspace throughout (head moved at 09:16, and stdio
+`oracle`/`subject` result directories were being written by a process that is not mine). Second —
+and this is ours — **a per-case 900 s budget overrun aborts the WHOLE run**: `runProbe` throws out of
+`executeOne`, `runPhases` never reaches its summary, and the ninety cases that already passed are
+discarded with no partial report. A per-case timeout should fail that case and continue.
+
+**The subject-phase numbers below are therefore taken from the `parity` run, which executes the
+identical subject phase**, read out of its own result stream before the shared cache was rotated (per-case table in
+`w15-audit/parity-per-case.txt`, failure list in `w15-audit/failed-errored-51.txt`, run report in
+`w15-audit/parity-report/`):
 
 | subject-role results | count |
 |---|---|
@@ -124,7 +136,7 @@ The 44 scenarios with no subject result are the four cases whose rust host does 
 ```
 
 **This is the headline number of the entire ticket.** Full run report snapshotted to
-`w15-audit/parity-report/`; the run's own metrics file:
+`w15-audit/parity-report/` (`📈️metrics.json`, `📊️summary.json`); the run's own metrics file:
 
 ```json
 "parityCoverage": {
@@ -231,7 +243,7 @@ is an identity-level divergence, and it is why all 188 comparisons in the family
 I did not take the obvious reading on trust. `font_program`
 (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📄️document/🦀️component.rs:1283`) measures `stream.content.len()` —
 the **FlateDecode-compressed** stream, not the font program. Decompressing every `/FontFile*` object
-out of both sides' raw output:
+out of both sides' raw output (probe recorded at `w15-audit/pdf-font-program-probe.txt`):
 
 ```
 oracle font-file objects: 23   subject: 23   same object numbers: True
@@ -715,3 +727,8 @@ Neither fix is among the 265 parity divergences or the 51 failures.
 9. **Re-word every "the os-kernel blocker was cleared" claim to name the feature set** (§5), and give
    `🪐️space` — whose own code is clean — the ten-error `sync` fix that is the cheapest plugin in the
    fleet to unblock.
+10. **Make a per-case budget overrun fail that case, not the whole run** (`📜️script.ts:499`,
+    `runProbe`). Three attempts at `subject exhaustive --owner 🗄️stdio` were thrown away at case 90-odd
+    of 101 by one slow case under a peer session's cargo lock (§1.3). Combined with item 2 the runner
+    has two ways to lose a result: silently (host will not build) and catastrophically (one case runs
+    long).

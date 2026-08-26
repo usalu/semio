@@ -668,8 +668,9 @@ pub mod types {
     impl Drop for IconPaintCache {
         fn drop(&mut self) {
             let terminal = self.terminal_is_empty();
-            debug_assert!(terminal, "IconPaintCache must reach terminal-empty through close_step before release");
-            if terminal {
+            let never_admitted = self.cache.get_mut().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none());
+            debug_assert!(terminal || never_admitted, "IconPaintCache with admitted resources must reach terminal-empty through close_step before release");
+            if terminal || never_admitted {
                 unsafe { ManuallyDrop::drop(self.cache.get_mut()) };
             }
         }
@@ -1787,6 +1788,14 @@ mod quadrant_tests {
         assert!(cache.faulted());
         assert_eq!(cache.occupied_slots(), 0);
         while !cache.close_step() {}
+    }
+
+    /// 🪶️ A cache that never admitted an icon owns nothing requiring incremental retirement.
+    #[test]
+    fn empty_icon_cache_releases_without_entering_close() {
+        let cache = IconPaintCache::new();
+        assert_eq!(cache.occupied_slots(), 0);
+        drop(cache);
     }
 
     #[test]

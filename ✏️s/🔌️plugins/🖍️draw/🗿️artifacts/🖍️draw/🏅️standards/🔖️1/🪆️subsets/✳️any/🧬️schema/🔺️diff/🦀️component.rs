@@ -116,7 +116,7 @@ pub struct DrawLayerPatch {
 //#region 🔖️Apply
 impl DrawDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &DrawArtifact) -> protocol::MutationApplyResult<DrawArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &DrawArtifact) -> protocol::MutationApplyResult<DrawArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -170,7 +170,7 @@ impl DrawDiff {
 }
 
 /// 🧩 Applies an identified-collection delta to a layer tree (root + nested removes/patches).
-pub async fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> protocol::MutationApplyResult<Vec<DrawLayerNode>> {
+pub fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> protocol::MutationApplyResult<Vec<DrawLayerNode>> {
     for (index, id) in delta.removed.iter().enumerate() {
         if !contains_layer(layers, id) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist").at(["removed".to_string(), index.to_string()]));
@@ -223,12 +223,12 @@ pub async fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelt
     Ok(next)
 }
 
-async fn contains_layer(layers: &[DrawLayerNode], id: &str) -> bool {
+fn contains_layer(layers: &[DrawLayerNode], id: &str) -> bool {
     layers.iter().any(|layer| crate::artifacts::draw::schema::layer_id(layer) == id || matches!(layer, DrawLayerNode::Group(group) if contains_layer(&group.children, id)))
 }
 
-async fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::MutationApplyResult<()> {
-    async fn visit<'a>(layers: &'a [DrawLayerNode], ids: &mut std::collections::BTreeSet<&'a str>) -> bool {
+fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::MutationApplyResult<()> {
+    fn visit<'a>(layers: &'a [DrawLayerNode], ids: &mut std::collections::BTreeSet<&'a str>) -> bool {
         for layer in layers {
             if !ids.insert(crate::artifacts::draw::schema::layer_id(layer)) {
                 return false;
@@ -247,7 +247,7 @@ async fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::Mutati
     Ok(())
 }
 
-async fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) -> Option<usize> {
+fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) -> Option<usize> {
     match parent_id {
         None => Some(layers.len()),
         Some(parent_id) => layers.iter().find_map(|layer| match layer {
@@ -258,7 +258,7 @@ async fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) 
     }
 }
 
-async fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLayerPatchEntry) -> protocol::MutationApplyResult<()> {
+fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLayerPatchEntry) -> protocol::MutationApplyResult<()> {
     let mut result = Ok(());
     if !update_layer_in_tree(layers, &entry.id, &mut |layer| {
         result = apply_layer_patch(layer, &entry.patch);
@@ -268,7 +268,7 @@ async fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLa
     result
 }
 
-async fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) -> protocol::MutationApplyResult<()> {
+fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) -> protocol::MutationApplyResult<()> {
     if let Some(layer_json) = &patch.layer_json {
         let replacement = serde_json::from_str::<DrawLayerNode>(layer_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
         if crate::artifacts::draw::schema::layer_id(&replacement) != crate::artifacts::draw::schema::layer_id(layer) {
@@ -319,7 +319,7 @@ async fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) ->
 
 /// 🩹 Merges an incoming `DrawLayerPatch` into an existing one, field by field — `incoming` wins
 /// wherever it sets a field, matching `DrawDiff::absorb`'s own `take!` semantics.
-async fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
+fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
     macro_rules! take {
         ($field:ident) => {
             if src.$field.is_some() {
@@ -340,7 +340,7 @@ async fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
     take!(layer_json);
 }
 
-async fn apply_assets_delta(assets: &mut BTreeMap<String, DrawImageAsset>, delta: &DrawAssetsDelta) -> protocol::MutationApplyResult<()> {
+fn apply_assets_delta(assets: &mut BTreeMap<String, DrawImageAsset>, delta: &DrawAssetsDelta) -> protocol::MutationApplyResult<()> {
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
@@ -362,7 +362,7 @@ async fn apply_assets_delta(assets: &mut BTreeMap<String, DrawImageAsset>, delta
 }
 
 impl MutationDiff<DrawSnapshot> for DrawDiff {
-    async fn apply(&self, snapshot: &DrawSnapshot) -> protocol::MutationApplyResult<DrawSnapshot> {
+    fn apply(&self, snapshot: &DrawSnapshot) -> protocol::MutationApplyResult<DrawSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -389,7 +389,7 @@ impl MutationDiff<DrawSnapshot> for DrawDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -450,96 +450,96 @@ impl MutationDiff<DrawSnapshot> for DrawDiff {
 
 //#region 🔖️Builders
 /// 🖼️ Whole-artifact replacement from a snapshot (UI fields defaulted).
-pub async fn diff_set_snapshot(snapshot: &DrawSnapshot) -> DrawDiff {
+pub fn diff_set_snapshot(snapshot: &DrawSnapshot) -> DrawDiff {
     DrawDiff { artifact: Some(Box::new(DrawArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 /// 🩹 Layer visibility patch.
-pub async fn diff_set_layer_visible(layer_id: &str, visible: bool) -> DrawDiff {
+pub fn diff_set_layer_visible(layer_id: &str, visible: bool) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { visible: Some(visible), ..Default::default() })
 }
 
 /// 🔒️ Layer locked patch.
-pub async fn diff_set_layer_locked(layer_id: &str, locked: bool) -> DrawDiff {
+pub fn diff_set_layer_locked(layer_id: &str, locked: bool) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { locked: Some(locked), ..Default::default() })
 }
 
 /// 🏷️ Layer name patch.
-pub async fn diff_set_layer_name(layer_id: &str, name: &str) -> DrawDiff {
+pub fn diff_set_layer_name(layer_id: &str, name: &str) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { name: Some(name.to_string()), ..Default::default() })
 }
 
 /// 🌫️ Layer opacity patch.
-pub async fn diff_set_layer_opacity(layer_id: &str, opacity: f64) -> DrawDiff {
+pub fn diff_set_layer_opacity(layer_id: &str, opacity: f64) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { opacity: Some(opacity), ..Default::default() })
 }
 
 /// 🖌️ Layer blend-mode patch.
-pub async fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawDiff {
+pub fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { blend_mode: Some(blend_mode.to_string()), ..Default::default() })
 }
 
 /// ↔️ Layer transform patch.
-pub async fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) -> DrawDiff {
+pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::draw::DrawTransform) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { transform_json: Some(serde_json::to_string(transform).unwrap_or_default()), ..Default::default() })
 }
 
 /// 🎨 Layer fill patch.
-pub async fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
+pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { fill_json: Some(serde_json::to_string(fill).unwrap_or_else(|_| "null".into())), ..Default::default() })
 }
 
 /// ✏️ Layer stroke patch.
-pub async fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff {
+pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { stroke_json: Some(serde_json::to_string(stroke).unwrap_or_else(|_| "null".into())), ..Default::default() })
 }
 
 /// 🔀 Boolean operation patch.
-pub async fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> DrawDiff {
+pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { boolean_operation: Some(boolean_operation.to_string()), ..Default::default() })
 }
 
 /// 🖼️ Trace params patch.
-pub async fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) -> DrawDiff {
+pub fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::draw::DrawTraceParams) -> DrawDiff {
     layer_base_patch(layer_id, DrawLayerPatch { trace_params_json: Some(serde_json::to_string(params).unwrap_or_default()), ..Default::default() })
 }
 
 /// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.
-pub async fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
+pub fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
     DrawDiff { layers: Some(DrawLayersDelta { added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🔃 Move an existing layer to a new (parent, index) address — remove-then-insert, both sparse.
-pub async fn diff_reorder_layer(layer_id: &str, parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
+pub fn diff_reorder_layer(layer_id: &str, parent_id: Option<&str>, index: usize, layer: DrawLayerNode) -> DrawDiff {
     DrawDiff { layers: Some(DrawLayersDelta { removed: vec![layer_id.to_string()], added: vec![DrawLayerAddition { parent_id: parent_id.map(str::to_string), index, layer }], ..Default::default() }), ..Default::default() }
 }
 
 /// ➖️ Layer remove.
-pub async fn diff_remove_layer(layer_id: &str) -> DrawDiff {
+pub fn diff_remove_layer(layer_id: &str) -> DrawDiff {
     DrawDiff { layers: Some(DrawLayersDelta { removed: vec![layer_id.to_string()], ..Default::default() }), ..Default::default() }
 }
 
 /// 🔃 Root reorder by id list.
-pub async fn diff_reorder_layers(order: Vec<String>) -> DrawDiff {
+pub fn diff_reorder_layers(order: Vec<String>) -> DrawDiff {
     DrawDiff { layers: Some(DrawLayersDelta { reordered: Some(order), ..Default::default() }), ..Default::default() }
 }
 
-async fn layer_base_patch(layer_id: &str, patch: DrawLayerPatch) -> DrawDiff {
+fn layer_base_patch(layer_id: &str, patch: DrawLayerPatch) -> DrawDiff {
     DrawDiff { layers: Some(DrawLayersDelta { patched: vec![DrawLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 
 /// 🧬️ Whole-snapshot replacement when a sparse delta cannot express a tree edit.
-pub async fn diff_from_snapshot(snapshot: DrawSnapshot) -> DrawDiff {
+pub fn diff_from_snapshot(snapshot: DrawSnapshot) -> DrawDiff {
     diff_set_snapshot(&snapshot)
 }
 
 /// 📋 Selected-ids UI delta helper.
-pub async fn diff_selected_ids(ids: Vec<String>) -> DrawDiff {
+pub fn diff_selected_ids(ids: Vec<String>) -> DrawDiff {
     DrawDiff { selected_ids: Some(DrawStringList { values: ids }), ..Default::default() }
 }
 
 /// 🗂️ Assets delta helper.
-pub async fn diff_assets(entries: DrawAssetsDelta) -> DrawDiff {
+pub fn diff_assets(entries: DrawAssetsDelta) -> DrawDiff {
     DrawDiff { assets: Some(entries), ..Default::default() }
 }
 //#endregion 🔖️Builders

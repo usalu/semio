@@ -5,7 +5,7 @@ use crate::artifacts::din18599::mutations::change_reference_q_p_kwh::mutation::C
 use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeReferenceQPKwh, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+pub fn diff(payload: &ChangeReferenceQPKwh, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
     if !payload.new_reference_q_p_kwh.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Reference qp kwh must be a finite number.", Vec::<String>::new());
     }

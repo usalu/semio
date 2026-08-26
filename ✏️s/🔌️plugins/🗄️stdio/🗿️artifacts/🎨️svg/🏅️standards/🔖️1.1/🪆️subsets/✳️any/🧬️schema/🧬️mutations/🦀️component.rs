@@ -1237,7 +1237,7 @@ mod tests {
         assert_eq!(text_op, mutation);
         assert_eq!(binary_op, mutation);
         let set_snapshot_outcome = Mutation::diff(&binary_op, &projection);
-        let applied = MutationDiff::apply(&set_snapshot_outcome.diff(), &projection).unwrap();
+        let applied = MutationDiff::apply(set_snapshot_outcome.diff(), &projection).unwrap();
         assert_eq!(applied, imported);
         assert_eq!(applied.export_utf8().expect("set snapshot export"), original);
     }

@@ -34,7 +34,7 @@ pub enum DrawMutation {
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
 /// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
 /// `None` for an unknown field or a field that doesn't apply to `layer`'s kind.
-pub async fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
+pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawMutation> {
     let layer = find_draw_layer(doc, layer_id)?;
     let operation = match field {
         "name" => rename_layer(layer_id.into(), value.as_str().unwrap_or("").into()),
@@ -84,7 +84,7 @@ pub async fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: 
 
 /// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
 /// value itself (`draw_op_for_layer_field` is the undoable/command-facing entry point).
-pub async fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> protocol::MutationApplyResult<DrawSnapshot> {
+pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> protocol::MutationApplyResult<DrawSnapshot> {
     use protocol::{Mutation, MutationDiff};
     match draw_op_for_layer_field(doc, layer_id, field, value) {
         Some(operation) => operation.diff(doc).diff().apply(doc).map_err(|error| error.under(["layers", layer_id])),
@@ -113,7 +113,7 @@ pub use super::update_layer_transform::mutation::{update_layer_transform, Update
 /// point (mirrors dag's `apply_dag_mutation`/puzzle5d's `apply_puzzle5d_mutation`). A rejecting
 /// diff carries an empty `DrawDiff`, so the snapshot is left untouched and `Ok(())` is still
 /// returned; read [`protocol::MutationOutcome::messages`] to distinguish the two.
-pub async fn apply_draw_mutation(snapshot: &mut DrawSnapshot, mutation: &DrawMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_draw_mutation(snapshot: &mut DrawSnapshot, mutation: &DrawMutation) -> protocol::MutationApplyResult<()> {
     use store::MutationDiff;
     let next = <DrawMutation as protocol::Mutation<DrawSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
     *snapshot = next;
@@ -121,7 +121,7 @@ pub async fn apply_draw_mutation(snapshot: &mut DrawSnapshot, mutation: &DrawMut
 }
 
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
-pub async fn inverse_draw_mutation(snapshot: &DrawSnapshot, mutation: &DrawMutation) -> Vec<DrawMutation> {
+pub fn inverse_draw_mutation(snapshot: &DrawSnapshot, mutation: &DrawMutation) -> Vec<DrawMutation> {
     <DrawMutation as protocol::Mutation<DrawSnapshot>>::inverse(mutation, snapshot)
 }
 //#endregion 🔖️Apply
@@ -134,7 +134,7 @@ mod tests {
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    async fn base_document() -> DrawSnapshot {
+    fn base_document() -> DrawSnapshot {
         let mut doc = default_draw_document("mutations-test", None);
         doc.layers.push(create_draw_shape_layer_rect("Rect"));
         doc

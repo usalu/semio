@@ -1,0 +1,4450 @@
+[
+ {
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly",
+  "case": "mutate-assembly-1",
+  "featurePath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🧪️tests/mutate-assembly-1/component.feature",
+  "scenarios": 19,
+  "oracle": "assembly-python-independent",
+  "noOracle": null,
+  "vectors": 45,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+  "case": "mutate-block-3d-1",
+  "featurePath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🧪️tests/mutate-block-3d-1/component.feature",
+  "scenarios": 75,
+  "oracle": "block-3d-python-independent",
+  "noOracle": null,
+  "vectors": 185,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+  "case": "mutate-block-5d-1",
+  "featurePath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🧪️tests/mutate-block-5d-1/component.feature",
+  "scenarios": 83,
+  "oracle": "block-5d-python-independent",
+  "noOracle": null,
+  "vectors": 205,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad",
+  "case": "mutate-cad-1",
+  "featurePath": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧪️tests/mutate-cad-1/component.feature",
+  "scenarios": 41,
+  "oracle": "cad-python-independent",
+  "noOracle": null,
+  "vectors": 100,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly",
+  "case": "mutate-lowpoly-1",
+  "featurePath": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🧪️tests/mutate-lowpoly-1/component.feature",
+  "scenarios": 35,
+  "oracle": "lowpoly-python-independent",
+  "noOracle": null,
+  "vectors": 85,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host",
+  "case": "mutate-os-config-opening",
+  "featurePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/mutate-os-config-opening/component.feature",
+  "scenarios": 5,
+  "oracle": null,
+  "noOracle": "os-config-opening-preferences-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d",
+  "case": "mutate-procedural-2d-1",
+  "featurePath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🧪️tests/mutate-procedural-2d-1/component.feature",
+  "scenarios": 29,
+  "oracle": "procedural-2d-python-independent",
+  "noOracle": null,
+  "vectors": 70,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d",
+  "case": "mutate-procedural-3d-1",
+  "featurePath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🧪️tests/mutate-procedural-3d-1/component.feature",
+  "scenarios": 29,
+  "oracle": "procedural-3d-python-independent",
+  "noOracle": null,
+  "vectors": 70,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d",
+  "case": "mutate-puzzle-2d-1",
+  "featurePath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🧪️tests/mutate-puzzle-2d-1/component.feature",
+  "scenarios": 53,
+  "oracle": "puzzle-2d-python-independent",
+  "noOracle": null,
+  "vectors": 130,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+  "case": "mutate-puzzle-3d-1",
+  "featurePath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🧪️tests/mutate-puzzle-3d-1/component.feature",
+  "scenarios": 71,
+  "oracle": "puzzle-3d-python-independent",
+  "noOracle": null,
+  "vectors": 175,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+  "case": "mutate-puzzle-5d-1",
+  "featurePath": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🧪️tests/mutate-puzzle-5d-1/component.feature",
+  "scenarios": 57,
+  "oracle": "puzzle-5d-python-independent",
+  "noOracle": null,
+  "vectors": 140,
+  "artifacts": [],
+  "maxArtifact": 0,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+  "case": "mutate-s-home-1",
+  "featurePath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🧪️tests/mutate-s-home-1/component.feature",
+  "scenarios": 3,
+  "oracle": null,
+  "noOracle": "s-home-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 40,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 40,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground",
+  "case": "mutate-playground-1",
+  "featurePath": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🧪️tests/mutate-playground-1/component.feature",
+  "scenarios": 3,
+  "oracle": null,
+  "noOracle": "playground-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 64,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 64,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+  "case": "mutate-vcs-1",
+  "featurePath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🧪️tests/mutate-vcs-1/component.feature",
+  "scenarios": 13,
+  "oracle": null,
+  "noOracle": "vcs-1-checkpoint-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 115,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 115,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space",
+  "case": "mutate-s-space-1",
+  "featurePath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🧪️tests/mutate-s-space-1/component.feature",
+  "scenarios": 9,
+  "oracle": null,
+  "noOracle": "s-space-index-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 199,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 199,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990",
+  "case": "mutate-en1990-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1/component.feature",
+  "scenarios": 21,
+  "oracle": "en1990-1-python-independent",
+  "noOracle": null,
+  "vectors": 40,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️high-consequence-office/🖼️assets/🗣️high-consequence-office.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️high-consequence-office/🖼️assets/🗣️high-consequence-office.dsl.semio",
+    "bytes": 215,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 215,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer",
+  "case": "mutate-writer-1",
+  "featurePath": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🧪️tests/mutate-writer-1/component.feature",
+  "scenarios": 9,
+  "oracle": "writer-python-independent",
+  "noOracle": null,
+  "vectors": 16,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 269,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 269,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-any",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-any/component.feature",
+  "scenarios": 43,
+  "oracle": null,
+  "noOracle": "semio-envelope-routing",
+  "vectors": 3,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio",
+    "bytes": 205,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 286,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 286,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995",
+  "case": "mutate-en1995-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1/component.feature",
+  "scenarios": 41,
+  "oracle": "en1995-1-python-independent",
+  "noOracle": null,
+  "vectors": 80,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio",
+    "bytes": 302,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 302,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997",
+  "case": "mutate-en1997-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1/component.feature",
+  "scenarios": 45,
+  "oracle": "en1997-1-python-independent",
+  "noOracle": null,
+  "vectors": 88,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 330,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 330,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994",
+  "case": "mutate-en1994-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1/component.feature",
+  "scenarios": 45,
+  "oracle": "en1994-1-python-independent",
+  "noOracle": null,
+  "vectors": 88,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️composite-bridge-girder/🖼️assets/🗣️composite-bridge-girder.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️composite-bridge-girder/🖼️assets/🗣️composite-bridge-girder.dsl.semio",
+    "bytes": 359,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 359,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+  "case": "mutate-energy-model-1",
+  "featurePath": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/mutate-energy-model-1/component.feature",
+  "scenarios": 3,
+  "oracle": null,
+  "noOracle": "energy-model-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 363,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 363,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996",
+  "case": "mutate-en1996-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1/component.feature",
+  "scenarios": 45,
+  "oracle": "en1996-1-python-independent",
+  "noOracle": null,
+  "vectors": 88,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🖼️assets/🗣️loadbearing-wall.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🖼️assets/🗣️loadbearing-wall.dsl.semio",
+    "bytes": 368,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 368,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-object",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object/component.feature",
+  "scenarios": 28,
+  "oracle": "semio-object-python-independent",
+  "noOracle": null,
+  "vectors": 27,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio",
+    "bytes": 267,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 380,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 380,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999",
+  "case": "mutate-en1999-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1/component.feature",
+  "scenarios": 53,
+  "oracle": "en1999-1-python-independent",
+  "noOracle": null,
+  "vectors": 104,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🖼️assets/🗣️aluminium-roof-purlin.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️aluminium-roof-purlin/🖼️assets/🗣️aluminium-roof-purlin.dsl.semio",
+    "bytes": 411,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 411,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook",
+  "case": "mutate-playbook-1",
+  "featurePath": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🧪️tests/mutate-playbook-1/component.feature",
+  "scenarios": 19,
+  "oracle": "playbook-python-independent",
+  "noOracle": null,
+  "vectors": 36,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 417,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 417,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599",
+  "case": "mutate-din18599-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1/component.feature",
+  "scenarios": 27,
+  "oracle": "din18599-1-python-independent",
+  "noOracle": null,
+  "vectors": 52,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 430,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 430,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
+  "case": "mutate-imperative-1",
+  "featurePath": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🧪️tests/mutate-imperative-1/component.feature",
+  "scenarios": 9,
+  "oracle": null,
+  "noOracle": "imperative-1-nested-step-list-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 443,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 443,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108",
+  "case": "mutate-din4108-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1/component.feature",
+  "scenarios": 45,
+  "oracle": "din4108-1-python-independent",
+  "noOracle": null,
+  "vectors": 88,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 455,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 455,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain",
+  "case": "mutate-gisterrain-1",
+  "featurePath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🧪️tests/mutate-gisterrain-1/component.feature",
+  "scenarios": 7,
+  "oracle": "gisterrain-python-independent",
+  "noOracle": null,
+  "vectors": 6,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 421,
+    "vector": false
+   },
+   {
+    "uri": "local://🏔️liege-terrain.snapshot.json",
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🧪️tests/mutate-gisterrain-1/🧫️fixtures/🏔️liege-terrain.snapshot.json",
+    "bytes": 490,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 490,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note",
+  "case": "mutate-note-1",
+  "featurePath": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️tests/mutate-note-1/component.feature",
+  "scenarios": 67,
+  "oracle": "note-python-independent",
+  "noOracle": null,
+  "vectors": 132,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 545,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 545,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992",
+  "case": "mutate-en1992-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1/component.feature",
+  "scenarios": 71,
+  "oracle": "en1992-1-python-independent",
+  "noOracle": null,
+  "vectors": 140,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🗣️liquid-retaining-fem-anchor.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🗣️liquid-retaining-fem-anchor.dsl.semio",
+    "bytes": 598,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 598,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991",
+  "case": "mutate-en1991-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1/component.feature",
+  "scenarios": 65,
+  "oracle": "en1991-1-python-independent",
+  "noOracle": null,
+  "vectors": 128,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️retail-hydrocarbon-fire/🖼️assets/🗣️retail-hydrocarbon-fire.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️retail-hydrocarbon-fire/🖼️assets/🗣️retail-hydrocarbon-fire.dsl.semio",
+    "bytes": 648,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 648,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
+  "case": "mutate-mathematical-1",
+  "featurePath": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🧪️tests/mutate-mathematical-1/component.feature",
+  "scenarios": 31,
+  "oracle": null,
+  "noOracle": "mathematical-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 685,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 685,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+  "case": "mutate-wires-1",
+  "featurePath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/mutate-wires-1/component.feature",
+  "scenarios": 21,
+  "oracle": null,
+  "noOracle": "wires-1-argument-board-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 736,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 736,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+  "case": "mutate-shooting-1",
+  "featurePath": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🧪️tests/mutate-shooting-1/component.feature",
+  "scenarios": 63,
+  "oracle": null,
+  "noOracle": "shooting-render-scene-mutation-semantics",
+  "vectors": 1,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 844,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 844,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998",
+  "case": "mutate-en1998-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1/component.feature",
+  "scenarios": 99,
+  "oracle": "en1998-1-python-independent",
+  "noOracle": null,
+  "vectors": 196,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️seismic-rc-frame/🖼️assets/🗣️seismic-rc-frame.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️seismic-rc-frame/🖼️assets/🗣️seismic-rc-frame.dsl.semio",
+    "bytes": 931,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 931,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798",
+  "case": "mutate-din16798-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1/component.feature",
+  "scenarios": 125,
+  "oracle": "din16798-1-python-independent",
+  "noOracle": null,
+  "vectors": 248,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 1224,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1224,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993",
+  "case": "mutate-en1993-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1/component.feature",
+  "scenarios": 35,
+  "oracle": "en1993-1-python-independent",
+  "noOracle": null,
+  "vectors": 68,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️high-strength-connection/🖼️assets/🗣️high-strength-connection.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️high-strength-connection/🖼️assets/🗣️high-strength-connection.dsl.semio",
+    "bytes": 1356,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1356,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
+  "case": "mutate-present-1",
+  "featurePath": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🧪️tests/mutate-present-1/component.feature",
+  "scenarios": 19,
+  "oracle": null,
+  "noOracle": "present-figure-deck-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 448,
+    "vector": false
+   },
+   {
+    "uri": "local://🎞️base-tiles.json",
+    "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🧪️tests/mutate-present-1/🧫️fixtures/🎞️base-tiles.json",
+    "bytes": 1588,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1588,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+  "case": "mutate-sequence-1",
+  "featurePath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/mutate-sequence-1/component.feature",
+  "scenarios": 17,
+  "oracle": null,
+  "noOracle": "sequence-step-graph-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 227,
+    "vector": false
+   },
+   {
+    "uri": "local://🎬️base-scene.json",
+    "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/mutate-sequence-1/🧫️fixtures/🎬️base-scene.json",
+    "bytes": 1909,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1909,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805",
+  "case": "mutate-vdi3805-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1/component.feature",
+  "scenarios": 39,
+  "oracle": "vdi3805-1-python-independent",
+  "noOracle": null,
+  "vectors": 76,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 1961,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1961,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms",
+  "case": "mutate-forms-1",
+  "featurePath": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/mutate-forms-1/component.feature",
+  "scenarios": 21,
+  "oracle": "forms-python-independent",
+  "noOracle": null,
+  "vectors": 40,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 1997,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1997,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster",
+  "case": "mutate-raster-1",
+  "featurePath": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🧪️tests/mutate-raster-1/component.feature",
+  "scenarios": 37,
+  "oracle": "raster-python-independent",
+  "noOracle": null,
+  "vectors": 36,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 610,
+    "vector": false
+   },
+   {
+    "uri": "local://🖨️semio-demo-board.snapshot.json",
+    "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🧪️tests/mutate-raster-1/🧫️fixtures/🖨️semio-demo-board.snapshot.json",
+    "bytes": 2014,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 2014,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+  "case": "mutate-flow-1",
+  "featurePath": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/mutate-flow-1/component.feature",
+  "scenarios": 21,
+  "oracle": null,
+  "noOracle": "flow-widget-graph-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 361,
+    "vector": false
+   },
+   {
+    "uri": "local://🌊️base-scene.json",
+    "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/mutate-flow-1/🧫️fixtures/🌊️base-scene.json",
+    "bytes": 2144,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 2144,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag",
+  "case": "mutate-dag-1",
+  "featurePath": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/mutate-dag-1/component.feature",
+  "scenarios": 29,
+  "oracle": null,
+  "noOracle": "dag-1-port-directed-graph-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 2663,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 2663,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap",
+  "case": "mutate-gismap-1",
+  "featurePath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/mutate-gismap-1/component.feature",
+  "scenarios": 37,
+  "oracle": "gismap-python-independent",
+  "noOracle": null,
+  "vectors": 36,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 1721,
+    "vector": false
+   },
+   {
+    "uri": "local://🗺️liege-with-derived-regions.dsl.semio",
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/mutate-gismap-1/🧫️fixtures/🗺️liege-with-derived-regions.dsl.semio",
+    "bytes": 2929,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 2929,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d",
+  "case": "mutate-block-2d-1",
+  "featurePath": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🧪️tests/mutate-block-2d-1/component.feature",
+  "scenarios": 79,
+  "oracle": "block-2d-python-independent",
+  "noOracle": null,
+  "vectors": 78,
+  "artifacts": [
+   {
+    "uri": "local://🧱️hexagonal-cut-concrete-forest-left.snapshot.json",
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🧪️tests/mutate-block-2d-1/🧫️fixtures/🧱️hexagonal-cut-concrete-forest-left.snapshot.json",
+    "bytes": 3176,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 3176,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate",
+  "case": "mutate-curate-1",
+  "featurePath": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🧪️tests/mutate-curate-1/component.feature",
+  "scenarios": 10,
+  "oracle": "curate-python-independent",
+  "noOracle": null,
+  "vectors": 9,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 1351,
+    "vector": false
+   },
+   {
+    "uri": "local://🗂️timber-kit.snapshot.json",
+    "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🧪️tests/mutate-curate-1/🧫️fixtures/🗂️timber-kit.snapshot.json",
+    "bytes": 3666,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 3666,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757",
+  "case": "mutate-iso16757-1",
+  "featurePath": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1/component.feature",
+  "scenarios": 43,
+  "oracle": "iso16757-1-python-independent",
+  "noOracle": null,
+  "vectors": 84,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 4128,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 4128,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+  "case": "mutate-layout-1",
+  "featurePath": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🧪️tests/mutate-layout-1/component.feature",
+  "scenarios": 51,
+  "oracle": null,
+  "noOracle": "layout-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 4625,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 4625,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-animation",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/component.feature",
+  "scenarios": 40,
+  "oracle": "semio-animation-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 278,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-channel.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️insert-channel.json",
+    "bytes": 5919,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-keyframe.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️insert-keyframe.json",
+    "bytes": 5480,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-timeline.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️insert-timeline.json",
+    "bytes": 5119,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 4965,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-channel.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️remove-channel.json",
+    "bytes": 4220,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-keyframe.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️remove-keyframe.json",
+    "bytes": 4766,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-timeline.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️remove-timeline.json",
+    "bytes": 2606,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-channel-interpolation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️set-channel-interpolation.json",
+    "bytes": 5048,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-channel-target.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️set-channel-target.json",
+    "bytes": 5110,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-keyframe-time.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️set-keyframe-time.json",
+    "bytes": 5054,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-keyframe-value.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️set-keyframe-value.json",
+    "bytes": 5153,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 3927,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-timeline-name.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation/🧫️fixtures/🦠️set-timeline-name.json",
+    "bytes": 5005,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 5919,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw",
+  "case": "mutate-epw-energyplus",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🧪️tests/mutate-epw-energyplus/component.feature",
+  "scenarios": 27,
+  "oracle": "csv-epw-energyplus-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🌦️example.epw",
+    "bytes": 6124,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6124,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d",
+  "case": "mutate-fem2d-1",
+  "featurePath": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧪️tests/mutate-fem2d-1/component.feature",
+  "scenarios": 76,
+  "oracle": "fem2d-python-independent",
+  "noOracle": null,
+  "vectors": 75,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 2108,
+    "vector": false
+   },
+   {
+    "uri": "local://🏗️timber-portal-frame.snapshot.json",
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧪️tests/mutate-fem2d-1/🧫️fixtures/🏗️timber-portal-frame.snapshot.json",
+    "bytes": 6225,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6225,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+  "case": "mutate-remodel-1",
+  "featurePath": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🧪️tests/mutate-remodel-1/component.feature",
+  "scenarios": 71,
+  "oracle": null,
+  "noOracle": "remodel-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 2011,
+    "vector": false
+   },
+   {
+    "uri": "local://commit-reconstruction-after.json",
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🧪️tests/mutate-remodel-1/🧫️fixtures/commit-reconstruction-after.json",
+    "bytes": 7102,
+    "vector": false
+   },
+   {
+    "uri": "local://commit-reconstruction-before.json",
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🧪️tests/mutate-remodel-1/🧫️fixtures/commit-reconstruction-before.json",
+    "bytes": 7102,
+    "vector": false
+   },
+   {
+    "uri": "local://commit-reconstruction-mutation.json",
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🧪️tests/mutate-remodel-1/🧫️fixtures/commit-reconstruction-mutation.json",
+    "bytes": 749,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 7102,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d",
+  "case": "mutate-fem3d-1",
+  "featurePath": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧪️tests/mutate-fem3d-1/component.feature",
+  "scenarios": 76,
+  "oracle": "fem3d-python-independent",
+  "noOracle": null,
+  "vectors": 75,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 2873,
+    "vector": false
+   },
+   {
+    "uri": "local://🧊️steel-frame.snapshot.json",
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧪️tests/mutate-fem3d-1/🧫️fixtures/🧊️steel-frame.snapshot.json",
+    "bytes": 8635,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 8635,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf",
+  "case": "mutate-dxf-r12",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🧪️tests/mutate-dxf-r12/component.feature",
+  "scenarios": 39,
+  "oracle": "dxf-crate-r12-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️r12/🪆️subsets/✳️any/📚️examples/🚏️bus-shelter/🖼️assets/🖊️bus-shelter-r12.dxf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/📚️examples/🚏️bus-shelter/🖼️assets/🖊️bus-shelter-r12.dxf",
+    "bytes": 9358,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 9358,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx",
+  "case": "mutate-xlsx-ecma-376",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376/component.feature",
+  "scenarios": 21,
+  "oracle": "xlsx-ecma-376-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📕️reuse-marketplaces.xlsx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧫️fixtures/📕️reuse-marketplaces.xlsx",
+    "bytes": 10433,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 10433,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx",
+  "case": "mutate-xlsx-ecma-376-strict",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376-strict/component.feature",
+  "scenarios": 19,
+  "oracle": "xlsx-ecma-376-strict-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📕️reuse-marketplaces.xlsx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧫️fixtures/📕️reuse-marketplaces.xlsx",
+    "bytes": 10433,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 10433,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx",
+  "case": "mutate-xlsx-ecma-376-transitional",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376-transitional/component.feature",
+  "scenarios": 15,
+  "oracle": "xlsx-ecma-376-transitional-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📕️reuse-marketplaces.xlsx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧫️fixtures/📕️reuse-marketplaces.xlsx",
+    "bytes": 10433,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 10433,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+  "case": "mutate-jack-1",
+  "featurePath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/mutate-jack-1/component.feature",
+  "scenarios": 25,
+  "oracle": "jack-python-independent",
+  "noOracle": null,
+  "vectors": 24,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 10742,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 10742,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-cad",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/component.feature",
+  "scenarios": 49,
+  "oracle": "semio-cad-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🎒️example.pack.semio",
+    "bytes": 560,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 479,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️add-block-entity.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️add-block-entity.json",
+    "bytes": 7692,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️add-block.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️add-block.json",
+    "bytes": 7988,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️add-entity.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️add-entity.json",
+    "bytes": 7517,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️add-layer.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️add-layer.json",
+    "bytes": 7326,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 7087,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-block-entity.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️remove-block-entity.json",
+    "bytes": 6816,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-block.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️remove-block.json",
+    "bytes": 6635,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-entity.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️remove-entity.json",
+    "bytes": 6763,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-layer.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️remove-layer.json",
+    "bytes": 6989,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-block-base-point.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️set-block-base-point.json",
+    "bytes": 7183,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-block-entity-geometry.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️set-block-entity-geometry.json",
+    "bytes": 7348,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-block-entity-layer.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️set-block-entity-layer.json",
+    "bytes": 7176,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-entity-geometry.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️set-entity-geometry.json",
+    "bytes": 7251,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-entity-layer.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️set-entity-layer.json",
+    "bytes": 7138,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-layer.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️set-layer.json",
+    "bytes": 7122,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 10960,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 10960,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-document",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/component.feature",
+  "scenarios": 55,
+  "oracle": "semio-document-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio",
+    "bytes": 271,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 610,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-block.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️insert-block.json",
+    "bytes": 8199,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-image.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️insert-image.json",
+    "bytes": 7394,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-style.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️insert-style.json",
+    "bytes": 7312,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 7117,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-block.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️remove-block.json",
+    "bytes": 7134,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-image.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️remove-image.json",
+    "bytes": 6998,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-style.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️remove-style.json",
+    "bytes": 7037,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-block-content.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-block-content.json",
+    "bytes": 7574,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-heading-level.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-heading-level.json",
+    "bytes": 7204,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-image-block.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-image-block.json",
+    "bytes": 7277,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-image-bytes.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-image-bytes.json",
+    "bytes": 7221,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-list-ordered.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-list-ordered.json",
+    "bytes": 7209,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-paragraph-style.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-paragraph-style.json",
+    "bytes": 7226,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-run-style.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-run-style.json",
+    "bytes": 7386,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-run-text.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-run-text.json",
+    "bytes": 7303,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 10965,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-style-based-on.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-style-based-on.json",
+    "bytes": 7169,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-style-name.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document/🧫️fixtures/🦠️set-style-name.json",
+    "bytes": 7177,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 10965,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv",
+  "case": "mutate-tsv-iana",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🧪️tests/mutate-tsv-iana/component.feature",
+  "scenarios": 15,
+  "oracle": "tsv-iana-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://reuse-marketplaces.tsv",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🧫️fixtures/reuse-marketplaces.tsv",
+    "bytes": 11484,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 11484,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv",
+  "case": "mutate-csv-rfc4180",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🧪️tests/mutate-csv-rfc4180/component.feature",
+  "scenarios": 13,
+  "oracle": "csv-rfc4180-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📊️reuse-marketplaces.csv",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🧫️fixtures/📊️reuse-marketplaces.csv",
+    "bytes": 11827,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 11827,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+  "case": "mutate-process3d-1",
+  "featurePath": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/mutate-process3d-1/component.feature",
+  "scenarios": 33,
+  "oracle": null,
+  "noOracle": "process3d-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 12438,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 12438,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx",
+  "case": "mutate-docx-ecma-376",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376/component.feature",
+  "scenarios": 27,
+  "oracle": "zip-quick-xml-docx-ecma-376-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📜️example-readme.docx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧫️fixtures/📜️example-readme.docx",
+    "bytes": 17024,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 17024,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx",
+  "case": "mutate-docx-ecma-376-strict",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376-strict/component.feature",
+  "scenarios": 21,
+  "oracle": "docx-ecma-376-strict-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📜️example-readme.docx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧫️fixtures/📜️example-readme.docx",
+    "bytes": 17024,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 17024,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx",
+  "case": "mutate-docx-ecma-376-transitional",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376-transitional/component.feature",
+  "scenarios": 13,
+  "oracle": "docx-ecma-376-transitional-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📜️example-readme.docx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧫️fixtures/📜️example-readme.docx",
+    "bytes": 17024,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 17024,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate",
+  "case": "mutate-deflate-rfc1950",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🧪️tests/mutate-deflate-rfc1950/component.feature",
+  "scenarios": 11,
+  "oracle": "flate2-deflate-rfc1950-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📄️readme-level1.zz",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🧫️fixtures/📄️readme-level1.zz",
+    "bytes": 17741,
+    "vector": false
+   },
+   {
+    "uri": "shared://📄️readme-level9.zz",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🧫️fixtures/📄️readme-level9.zz",
+    "bytes": 15701,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 17741,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-table",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/component.feature",
+  "scenarios": 26,
+  "oracle": "semio-table-python-independent",
+  "noOracle": null,
+  "vectors": 24,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio",
+    "bytes": 132,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/📚️examples/📃️sheet/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 240,
+    "vector": false
+   },
+   {
+    "uri": "local://📊️reuse-marketplaces.csv",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/🧫️fixtures/📊️reuse-marketplaces.csv",
+    "bytes": 11827,
+    "vector": false
+   },
+   {
+    "uri": "local://📊️reuse-marketplaces.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/🧫️fixtures/📊️reuse-marketplaces.dsl.semio",
+    "bytes": 24399,
+    "vector": false
+   },
+   {
+    "uri": "local://📊️reuse-marketplaces.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table/🧫️fixtures/📊️reuse-marketplaces.pack.semio",
+    "bytes": 12212,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 24399,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt",
+  "case": "mutate-txt-utf-8",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧪️tests/mutate-txt-utf-8/component.feature",
+  "scenarios": 24,
+  "oracle": null,
+  "noOracle": "txt-utf-8-line-structure",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📄️interview-transkript.tex",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧫️fixtures/📄️interview-transkript.tex",
+    "bytes": 24875,
+    "vector": false
+   },
+   {
+    "uri": "shared://📓️hub-boot-log.txt",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧫️fixtures/📓️hub-boot-log.txt",
+    "bytes": 27471,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 27471,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+  "case": "mutate-program-1",
+  "featurePath": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧪️tests/mutate-program-1/component.feature",
+  "scenarios": 533,
+  "oracle": "architect-program-python-independent",
+  "noOracle": null,
+  "vectors": 1064,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 28538,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 28538,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
+  "case": "mutate-draw-1",
+  "featurePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧪️tests/mutate-draw-1/component.feature",
+  "scenarios": 29,
+  "oracle": null,
+  "noOracle": "draw-mutation-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 31179,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 31179,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml",
+  "case": "mutate-xml-1-0-valid",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧪️tests/mutate-xml-1-0-valid/component.feature",
+  "scenarios": 19,
+  "oracle": "quick-xml-xml-1-0-valid-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📰️macos-uttype-plist.xml",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧫️fixtures/📰️macos-uttype-plist.xml",
+    "bytes": 631,
+    "vector": false
+   },
+   {
+    "uri": "shared://📰️reuse-marketplaces-plist.xml",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧫️fixtures/📰️reuse-marketplaces-plist.xml",
+    "bytes": 40440,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 40440,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md",
+  "case": "mutate-md-commonmark",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🧪️tests/mutate-md-commonmark/component.feature",
+  "scenarios": 13,
+  "oracle": "comrak-md-commonmark-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📄️readme.md",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🧫️fixtures/📄️readme.md",
+    "bytes": 47607,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 47607,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-text",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text/component.feature",
+  "scenarios": 22,
+  "oracle": "semio-text-python-independent",
+  "noOracle": null,
+  "vectors": 21,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🎒️example.pack.semio",
+    "bytes": 118,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/📚️examples/📃️note/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 203,
+    "vector": false
+   },
+   {
+    "uri": "local://🎒️zukunft-bau-entwerfen-mit-bestand.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text/🧫️fixtures/🎒️zukunft-bau-entwerfen-mit-bestand.pack.semio",
+    "bytes": 35241,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text/🧫️fixtures/🗣️zukunft-bau-entwerfen-mit-bestand.dsl.semio",
+    "bytes": 70816,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 70816,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-audio",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/component.feature",
+  "scenarios": 31,
+  "oracle": "semio-audio-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 226,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🗣️bauen-mit-bestand-ausschnitt.dsl.semio",
+    "bytes": 72341,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-channel.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️insert-channel.json",
+    "bytes": 1145,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-tag.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️insert-tag.json",
+    "bytes": 1053,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 903,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-channel.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️remove-channel.json",
+    "bytes": 815,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-tag.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️remove-tag.json",
+    "bytes": 846,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-channel-samples.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️set-channel-samples.json",
+    "bytes": 999,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-format.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️set-format.json",
+    "bytes": 929,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-sample-rate.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️set-sample-rate.json",
+    "bytes": 934,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 1098,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-tag-value.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio/🧫️fixtures/🦠️set-tag-value.json",
+    "bytes": 959,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 72341,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg",
+  "case": "mutate-svg-1-1",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1/component.feature",
+  "scenarios": 23,
+  "oracle": "quick-xml-svg-1-1-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://qr-code.svg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧫️fixtures/qr-code.svg",
+    "bytes": 76603,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 76603,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg",
+  "case": "mutate-svg-1-1-tiny",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-tiny/component.feature",
+  "scenarios": 21,
+  "oracle": "quick-xml-svg-1-1-tiny-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://qr-code.svg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧫️fixtures/qr-code.svg",
+    "bytes": 76603,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 76603,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-kit",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-kit/component.feature",
+  "scenarios": 46,
+  "oracle": "semio-kit-python-independent",
+  "noOracle": null,
+  "vectors": 45,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🎒️example.pack.semio",
+    "bytes": 498,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/📚️examples/🪑️furniture/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 734,
+    "vector": false
+   },
+   {
+    "uri": "local://🎒️nakagin-capsule-tower.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-kit/🧫️fixtures/🎒️nakagin-capsule-tower.pack.semio",
+    "bytes": 50019,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️nakagin-capsule-tower.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-kit/🧫️fixtures/🗣️nakagin-capsule-tower.dsl.semio",
+    "bytes": 78066,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 78066,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+  "case": "mutate-step-ap214",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214/component.feature",
+  "scenarios": 23,
+  "oracle": "ruststep-step-ap214-any-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "bytes": 79984,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 79984,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+  "case": "mutate-step-ap214-cc1",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1/component.feature",
+  "scenarios": 11,
+  "oracle": "ruststep-step-ap214-cc1-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "bytes": 79984,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 79984,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+  "case": "mutate-step-ap214-cc2",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2/component.feature",
+  "scenarios": 13,
+  "oracle": "ruststep-step-ap214-cc2-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "bytes": 79984,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 79984,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+  "case": "mutate-step-ap214-cc3",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3/component.feature",
+  "scenarios": 13,
+  "oracle": "ruststep-step-ap214-cc3-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "bytes": 79984,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 79984,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+  "case": "mutate-step-ap214-cc4",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4/component.feature",
+  "scenarios": 13,
+  "oracle": "ruststep-step-ap214-cc4-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "bytes": 79984,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 79984,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+  "case": "mutate-step-ap214-cc5",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5/component.feature",
+  "scenarios": 13,
+  "oracle": "ruststep-step-ap214-cc5-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "bytes": 79984,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 79984,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+  "case": "mutate-step-ap214-cc6",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6/component.feature",
+  "scenarios": 11,
+  "oracle": "ruststep-step-ap214-cc6-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧫️fixtures/📐️hexagonal-cut-concrete-forest-left-ap214.stp",
+    "bytes": 79984,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 79984,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-drawing",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/component.feature",
+  "scenarios": 52,
+  "oracle": "semio-drawing-python-independent",
+  "noOracle": null,
+  "vectors": 51,
+  "artifacts": [
+   {
+    "uri": "local://🎒️artifact.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🎒️artifact.pack.semio",
+    "bytes": 85791,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️artifact.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🗣️artifact.dsl.semio",
+    "bytes": 56205,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️change-stroke-color.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️change-stroke-color.json",
+    "bytes": 116,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️change-stroke-width.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️change-stroke-width.json",
+    "bytes": 87,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️create-layer.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️create-layer.json",
+    "bytes": 384,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️create-node.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️create-node.json",
+    "bytes": 370,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️delete-layer.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️delete-layer.json",
+    "bytes": 39,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️delete-node.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️delete-node.json",
+    "bytes": 45,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️drag-nodes.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️drag-nodes.json",
+    "bytes": 103,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️flatten.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️flatten.json",
+    "bytes": 41,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️group.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️group.json",
+    "bytes": 195,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️move-node.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️move-node.json",
+    "bytes": 82,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️reorder-nodes.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️reorder-nodes.json",
+    "bytes": 68,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️replace-fill.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️replace-fill.json",
+    "bytes": 111,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️replace-path.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️replace-path.json",
+    "bytes": 430,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️rotate.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️rotate.json",
+    "bytes": 92,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️scale.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️scale.json",
+    "bytes": 80,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️unflatten.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️unflatten.json",
+    "bytes": 316,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️ungroup.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing/🧫️fixtures/🦠️ungroup.json",
+    "bytes": 44,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 85791,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-brep",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/component.feature",
+  "scenarios": 40,
+  "oracle": "semio-brep-python-independent",
+  "noOracle": null,
+  "vectors": 39,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🎒️example.pack.semio",
+    "bytes": 537,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 443,
+    "vector": false
+   },
+   {
+    "uri": "local://🎒️hexagonal-cut-concrete-forest-left.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/🧫️fixtures/🎒️hexagonal-cut-concrete-forest-left.pack.semio",
+    "bytes": 56627,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️hexagonal-cut-concrete-forest-left.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/🧫️fixtures/🗣️hexagonal-cut-concrete-forest-left.dsl.semio",
+    "bytes": 90063,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 90063,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml",
+  "case": "mutate-xml-1-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧪️tests/mutate-xml-1-0/component.feature",
+  "scenarios": 17,
+  "oracle": "quick-xml-1-0-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📰️ooxml-readme-document.xml",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧫️fixtures/📰️ooxml-readme-document.xml",
+    "bytes": 92873,
+    "vector": false
+   },
+   {
+    "uri": "shared://📰️ooxml-word-document.xml",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧫️fixtures/📰️ooxml-word-document.xml",
+    "bytes": 747,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 92873,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx",
+  "case": "mutate-pptx-ecma-376",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376/component.feature",
+  "scenarios": 19,
+  "oracle": "pptx-ecma-376-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🎞️semio-talk.pptx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧫️fixtures/🎞️semio-talk.pptx",
+    "bytes": 112526,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 112526,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx",
+  "case": "mutate-pptx-ecma-376-strict",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376-strict/component.feature",
+  "scenarios": 23,
+  "oracle": "pptx-ecma-376-strict-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🎞️semio-talk.pptx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧫️fixtures/🎞️semio-talk.pptx",
+    "bytes": 112526,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 112526,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx",
+  "case": "mutate-pptx-ecma-376-transitional",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376-transitional/component.feature",
+  "scenarios": 15,
+  "oracle": "pptx-ecma-376-transitional-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🎞️semio-talk.pptx",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧫️fixtures/🎞️semio-talk.pptx",
+    "bytes": 112526,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 112526,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif",
+  "case": "mutate-gif-87a",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/mutate-gif-87a/component.feature",
+  "scenarios": 25,
+  "oracle": "gif-87a-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🖼️dancing-87a-large.gif",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧫️fixtures/🖼️dancing-87a-large.gif",
+    "bytes": 117704,
+    "vector": false
+   },
+   {
+    "uri": "shared://🖼️dancing-87a.gif",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧫️fixtures/🖼️dancing-87a.gif",
+    "bytes": 2936,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 117704,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-model",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/component.feature",
+  "scenarios": 34,
+  "oracle": "semio-model-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🎒️example.pack.semio",
+    "bytes": 476,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 544,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-element/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-element/➡️after.json",
+    "bytes": 2775,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-element/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-element/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-element/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-element/🦠️mutation.json",
+    "bytes": 497,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-relation/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-relation/➡️after.json",
+    "bytes": 2400,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-relation/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-relation/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-relation/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-relation/🦠️mutation.json",
+    "bytes": 166,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-spatial-node/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-spatial-node/➡️after.json",
+    "bytes": 2704,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-spatial-node/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-spatial-node/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-spatial-node/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/insert-spatial-node/🦠️mutation.json",
+    "bytes": 437,
+    "vector": false
+   },
+   {
+    "uri": "local://no-mutation/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/no-mutation/➡️after.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://no-mutation/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/no-mutation/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://no-mutation/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/no-mutation/🦠️mutation.json",
+    "bytes": 31,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-element/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-element/➡️after.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-element/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-element/⬅️before.json",
+    "bytes": 2775,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-element/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-element/🦠️mutation.json",
+    "bytes": 52,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-relation/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-relation/➡️after.json",
+    "bytes": 2127,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-relation/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-relation/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-relation/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-relation/🦠️mutation.json",
+    "bytes": 52,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-spatial-node/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-spatial-node/➡️after.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-spatial-node/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-spatial-node/⬅️before.json",
+    "bytes": 2704,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-spatial-node/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/remove-spatial-node/🦠️mutation.json",
+    "bytes": 57,
+    "vector": false
+   },
+   {
+    "uri": "local://set-element/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-element/➡️after.json",
+    "bytes": 2087,
+    "vector": false
+   },
+   {
+    "uri": "local://set-element/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-element/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://set-element/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-element/🦠️mutation.json",
+    "bytes": 716,
+    "vector": false
+   },
+   {
+    "uri": "local://set-relation/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-relation/➡️after.json",
+    "bytes": 2264,
+    "vector": false
+   },
+   {
+    "uri": "local://set-relation/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-relation/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://set-relation/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-relation/🦠️mutation.json",
+    "bytes": 121,
+    "vector": false
+   },
+   {
+    "uri": "local://set-snapshot/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-snapshot/➡️after.json",
+    "bytes": 2264,
+    "vector": false
+   },
+   {
+    "uri": "local://set-snapshot/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-snapshot/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://set-snapshot/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-snapshot/🦠️mutation.json",
+    "bytes": 2553,
+    "vector": false
+   },
+   {
+    "uri": "local://set-spatial-node/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-spatial-node/➡️after.json",
+    "bytes": 2264,
+    "vector": false
+   },
+   {
+    "uri": "local://set-spatial-node/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-spatial-node/⬅️before.json",
+    "bytes": 2265,
+    "vector": false
+   },
+   {
+    "uri": "local://set-spatial-node/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/set-spatial-node/🦠️mutation.json",
+    "bytes": 349,
+    "vector": false
+   },
+   {
+    "uri": "local://🏗️nakagin-capsule-tower.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/🏗️nakagin-capsule-tower.dsl.semio",
+    "bytes": 119066,
+    "vector": false
+   },
+   {
+    "uri": "local://🏗️nakagin-capsule-tower.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model/🧫️fixtures/🏗️nakagin-capsule-tower.pack.semio",
+    "bytes": 69388,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 119066,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-flow",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/component.feature",
+  "scenarios": 40,
+  "oracle": "semio-flow-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🎒️example.pack.semio",
+    "bytes": 160,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 249,
+    "vector": false
+   },
+   {
+    "uri": "local://🏗️nakagin-capsule-tower.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🏗️nakagin-capsule-tower.dsl.semio",
+    "bytes": 131252,
+    "vector": false
+   },
+   {
+    "uri": "local://🏗️nakagin-capsule-tower.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🏗️nakagin-capsule-tower.pack.semio",
+    "bytes": 67184,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-edge.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️insert-edge.json",
+    "bytes": 2169,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-node.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️insert-node.json",
+    "bytes": 2295,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 1755,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-edge.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️remove-edge.json",
+    "bytes": 1556,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-node-param.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️remove-node-param.json",
+    "bytes": 1720,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-node.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️remove-node.json",
+    "bytes": 1587,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-edge-endpoints.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️set-edge-endpoints.json",
+    "bytes": 1903,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-edge-kind.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️set-edge-kind.json",
+    "bytes": 1800,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-node-kind.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️set-node-kind.json",
+    "bytes": 1802,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-node-label.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️set-node-label.json",
+    "bytes": 1799,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-node-param.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️set-node-param.json",
+    "bytes": 1814,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-node-position.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️set-node-position.json",
+    "bytes": 1839,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 2702,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 131252,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-graph",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-graph/component.feature",
+  "scenarios": 34,
+  "oracle": "semio-graph-python-independent",
+  "noOracle": null,
+  "vectors": 33,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🎒️example.pack.semio",
+    "bytes": 183,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/📚️examples/🕸️wires/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 297,
+    "vector": false
+   },
+   {
+    "uri": "local://🎒️nakagin-capsule-tower.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-graph/🧫️fixtures/🎒️nakagin-capsule-tower.pack.semio",
+    "bytes": 67124,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️nakagin-capsule-tower.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-graph/🧫️fixtures/🗣️nakagin-capsule-tower.dsl.semio",
+    "bytes": 131964,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 131964,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg",
+  "case": "mutate-svg-1-1-basic",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-basic/component.feature",
+  "scenarios": 23,
+  "oracle": "quick-xml-svg-1-1-basic-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://mouse.svg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧫️fixtures/mouse.svg",
+    "bytes": 1463,
+    "vector": false
+   },
+   {
+    "uri": "shared://🎨️semio-brand-and-onboarding.svg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧫️fixtures/🎨️semio-brand-and-onboarding.svg",
+    "bytes": 138219,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 138219,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+  "case": "mutate-dwg-ac1018",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1018/component.feature",
+  "scenarios": 7,
+  "oracle": null,
+  "noOracle": "dwg-ac1018-proprietary-container",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg",
+    "bytes": 148638,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 148638,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+  "case": "mutate-dwg-ac1024",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1024/component.feature",
+  "scenarios": 7,
+  "oracle": null,
+  "noOracle": "dwg-ac1024-proprietary-container",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg",
+    "bytes": 148638,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 148638,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html",
+  "case": "mutate-html-5",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🧪️tests/mutate-html-5/component.feature",
+  "scenarios": 21,
+  "oracle": "html5ever-html-5-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🌐️zukunft-bau-entwerfen-mit-bestand.html",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🧫️fixtures/🌐️zukunft-bau-entwerfen-mit-bestand.html",
+    "bytes": 150565,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 150565,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las",
+  "case": "mutate-las-1-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🧪️tests/mutate-las-1-0/component.feature",
+  "scenarios": 31,
+  "oracle": "las-1-0-any-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🧊️pattern-sphere.las",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🧫️fixtures/🧊️pattern-sphere.las",
+    "bytes": 169468,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 169468,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-mesh",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/component.feature",
+  "scenarios": 52,
+  "oracle": "semio-mesh-typescript-three-independent",
+  "noOracle": null,
+  "vectors": 51,
+  "artifacts": [
+   {
+    "uri": "local://🎒️artifact.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🎒️artifact.pack.semio",
+    "bytes": 106590,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️artifact.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🗣️artifact.dsl.semio",
+    "bytes": 188746,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️change-material-base-color.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️change-material-base-color.json",
+    "bytes": 103,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️change-material-metallic.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️change-material-metallic.json",
+    "bytes": 68,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️change-material-roughness.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️change-material-roughness.json",
+    "bytes": 71,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️change-texture-mime.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️change-texture-mime.json",
+    "bytes": 76,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️create-material.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️create-material.json",
+    "bytes": 138,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️create-mesh.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️create-mesh.json",
+    "bytes": 639,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️create-primitive.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️create-primitive.json",
+    "bytes": 281,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️create-texture.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️create-texture.json",
+    "bytes": 6879,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️delete-material.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️delete-material.json",
+    "bytes": 39,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️delete-mesh.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️delete-mesh.json",
+    "bytes": 33,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️delete-primitive.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️delete-primitive.json",
+    "bytes": 76,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️delete-texture.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️delete-texture.json",
+    "bytes": 47,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️move-vertex.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️move-vertex.json",
+    "bytes": 130,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️replace-primitive-geometry.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️replace-primitive-geometry.json",
+    "bytes": 707,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️replace-texture-bytes.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️replace-texture-bytes.json",
+    "bytes": 6858,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-primitive-material.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️set-primitive-material.json",
+    "bytes": 108,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-primitive-topology.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh/🧫️fixtures/🦠️set-primitive-topology.json",
+    "bytes": 100,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 188746,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav",
+  "case": "mutate-wav-riff-pcm",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🧪️tests/mutate-wav-riff-pcm/component.feature",
+  "scenarios": 11,
+  "oracle": "hound-wav-riff-pcm-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🔊️bauen-mit-bestand-ausschnitt.wav",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🧫️fixtures/🔊️bauen-mit-bestand-ausschnitt.wav",
+    "bytes": 192044,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 192044,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3",
+  "case": "mutate-mp3-mpeg1-layer3",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🧪️tests/mutate-mp3-mpeg1-layer3/component.feature",
+  "scenarios": 11,
+  "oracle": "id3-mpeg1-layer3-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🎵️bauen-mit-bestand-ausschnitt.mp3",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🧫️fixtures/🎵️bauen-mit-bestand-ausschnitt.mp3",
+    "bytes": 193275,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 193275,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+  "case": "mutate-ifc-2x3",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3/component.feature",
+  "scenarios": 11,
+  "oracle": "ruststep-ifc-2x3-any-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🏗️wellness-center-sama-street-level.ifc",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️wellness-center-sama-street-level.ifc",
+    "bytes": 193915,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 193915,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+  "case": "mutate-ifc-2x3-cobie",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cobie/component.feature",
+  "scenarios": 15,
+  "oracle": "ruststep-ifc-2x3-cobie-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🏗️wellness-center-sama-street-level.ifc",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️wellness-center-sama-street-level.ifc",
+    "bytes": 193915,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 193915,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+  "case": "mutate-ifc-2x3-cv20",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cv20/component.feature",
+  "scenarios": 13,
+  "oracle": "ruststep-ifc-2x3-cv20-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🏗️wellness-center-sama-street-level.ifc",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️wellness-center-sama-street-level.ifc",
+    "bytes": 193915,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 193915,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+  "case": "mutate-ifc-2x3-sav",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-sav/component.feature",
+  "scenarios": 13,
+  "oracle": "ruststep-ifc-2x3-sav-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🏗️wellness-center-sama-structural-seed.ifc",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️wellness-center-sama-structural-seed.ifc",
+    "bytes": 194862,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 194862,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-video",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/component.feature",
+  "scenarios": 28,
+  "oracle": "semio-video-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 172,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🗣️bauen-mit-bestand-ausschnitt.dsl.semio",
+    "bytes": 220106,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-sample.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️insert-sample.json",
+    "bytes": 1639,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-stream.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️insert-stream.json",
+    "bytes": 1815,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 1421,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-sample.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️remove-sample.json",
+    "bytes": 1360,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-stream.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️remove-stream.json",
+    "bytes": 1241,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-sample-data.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️set-sample-data.json",
+    "bytes": 1485,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-sample-flags.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️set-sample-flags.json",
+    "bytes": 1503,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 1545,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-stream-meta.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video/🧫️fixtures/🦠️set-stream-meta.json",
+    "bytes": 1569,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 220106,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite",
+  "case": "mutate-rewrite-1",
+  "featurePath": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🧪️tests/mutate-rewrite-1/component.feature",
+  "scenarios": 22,
+  "oracle": "rewrite-python-independent",
+  "noOracle": null,
+  "vectors": 21,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 2342,
+    "vector": false
+   },
+   {
+    "uri": "local://♻️nakagin-capsule-tower.snapshot.json",
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🧪️tests/mutate-rewrite-1/🧫️fixtures/♻️nakagin-capsule-tower.snapshot.json",
+    "bytes": 246269,
+    "vector": false
+   },
+   {
+    "uri": "local://♻️nakagin-ground-floor.snapshot.json",
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🧪️tests/mutate-rewrite-1/🧫️fixtures/♻️nakagin-ground-floor.snapshot.json",
+    "bytes": 2454,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 246269,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf",
+  "case": "mutate-bcf-2-1",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🧪️tests/mutate-bcf-2-1/component.feature",
+  "scenarios": 29,
+  "oracle": "zip-quick-xml-bcf-2-1-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://wellness-center-coordination-review.bcf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🧫️fixtures/wellness-center-coordination-review.bcf",
+    "bytes": 248124,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 248124,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png",
+  "case": "mutate-png-1-2",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/mutate-png-1-2/component.feature",
+  "scenarios": 35,
+  "oracle": "png-png-1-2-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🖼️rathaus-ahlen-grundriss.png",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧫️fixtures/🖼️rathaus-ahlen-grundriss.png",
+    "bytes": 249632,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 249632,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl",
+  "case": "mutate-stl-ascii",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🧪️tests/mutate-stl-ascii/component.feature",
+  "scenarios": 15,
+  "oracle": "stl-io-ascii-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🧊️hexagonal-cut-concrete-forest-left.stl",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🧫️fixtures/🧊️hexagonal-cut-concrete-forest-left.stl",
+    "bytes": 277735,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 277735,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf",
+  "case": "mutate-gltf-2-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/mutate-gltf-2-0/component.feature",
+  "scenarios": 15,
+  "oracle": "json-rust-gltf-2-0-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🖼️assets/🧊️base.glb",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🖼️assets/🧊️base.glb",
+    "bytes": 284436,
+    "vector": false
+   },
+   {
+    "uri": "local://🧊️base-with-nested-node.glb",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/mutate-gltf-2-0/🧫️fixtures/🧊️base-with-nested-node.glb",
+    "bytes": 284452,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 284452,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-presentation",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/component.feature",
+  "scenarios": 46,
+  "oracle": "semio-presentation-python-independent",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio",
+    "bytes": 516,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 826,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-layout/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-layout/➡️after.json",
+    "bytes": 4349,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-layout/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-layout/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-layout/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-layout/🦠️mutation.json",
+    "bytes": 383,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-master/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-master/➡️after.json",
+    "bytes": 4321,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-master/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-master/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-master/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-master/🦠️mutation.json",
+    "bytes": 357,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-shape/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-shape/➡️after.json",
+    "bytes": 4735,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-shape/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-shape/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-shape/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-shape/🦠️mutation.json",
+    "bytes": 661,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-slide/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-slide/➡️after.json",
+    "bytes": 4071,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-slide/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-slide/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-slide/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/insert-slide/🦠️mutation.json",
+    "bytes": 145,
+    "vector": false
+   },
+   {
+    "uri": "local://no-mutation/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/no-mutation/➡️after.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://no-mutation/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/no-mutation/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://no-mutation/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/no-mutation/🦠️mutation.json",
+    "bytes": 31,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-layout/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-layout/➡️after.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-layout/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-layout/⬅️before.json",
+    "bytes": 4349,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-layout/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-layout/🦠️mutation.json",
+    "bytes": 48,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-master/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-master/➡️after.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-master/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-master/⬅️before.json",
+    "bytes": 4321,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-master/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-master/🦠️mutation.json",
+    "bytes": 48,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-shape/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-shape/➡️after.json",
+    "bytes": 3556,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-shape/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-shape/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-shape/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-shape/🦠️mutation.json",
+    "bytes": 72,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-slide/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-slide/➡️after.json",
+    "bytes": 842,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-slide/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-slide/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-slide/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/remove-slide/🦠️mutation.json",
+    "bytes": 46,
+    "vector": false
+   },
+   {
+    "uri": "local://set-layout-master/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-layout-master/➡️after.json",
+    "bytes": 4317,
+    "vector": false
+   },
+   {
+    "uri": "local://set-layout-master/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-layout-master/⬅️before.json",
+    "bytes": 4321,
+    "vector": false
+   },
+   {
+    "uri": "local://set-layout-master/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-layout-master/🦠️mutation.json",
+    "bytes": 77,
+    "vector": false
+   },
+   {
+    "uri": "local://set-shape-frame/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-shape-frame/➡️after.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://set-shape-frame/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-shape-frame/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://set-shape-frame/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-shape-frame/🦠️mutation.json",
+    "bytes": 184,
+    "vector": false
+   },
+   {
+    "uri": "local://set-slide-layout/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-slide-layout/➡️after.json",
+    "bytes": 3964,
+    "vector": false
+   },
+   {
+    "uri": "local://set-slide-layout/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-slide-layout/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://set-slide-layout/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-slide-layout/🦠️mutation.json",
+    "bytes": 70,
+    "vector": false
+   },
+   {
+    "uri": "local://set-slide-notes/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-slide-notes/➡️after.json",
+    "bytes": 3976,
+    "vector": false
+   },
+   {
+    "uri": "local://set-slide-notes/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-slide-notes/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://set-slide-notes/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-slide-notes/🦠️mutation.json",
+    "bytes": 440,
+    "vector": false
+   },
+   {
+    "uri": "local://set-snapshot/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-snapshot/➡️after.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://set-snapshot/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-snapshot/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://set-snapshot/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-snapshot/🦠️mutation.json",
+    "bytes": 4372,
+    "vector": false
+   },
+   {
+    "uri": "local://set-textbox-blocks/➡️after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-textbox-blocks/➡️after.json",
+    "bytes": 4482,
+    "vector": false
+   },
+   {
+    "uri": "local://set-textbox-blocks/⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-textbox-blocks/⬅️before.json",
+    "bytes": 3969,
+    "vector": false
+   },
+   {
+    "uri": "local://set-textbox-blocks/🦠️mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/set-textbox-blocks/🦠️mutation.json",
+    "bytes": 830,
+    "vector": false
+   },
+   {
+    "uri": "local://🎒️talk.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🎒️talk.pack.semio",
+    "bytes": 97849,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️talk.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🗣️talk.dsl.semio",
+    "bytes": 183293,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-layout.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️insert-layout.json",
+    "bytes": 256,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-master.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️insert-master.json",
+    "bytes": 202,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-shape.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️insert-shape.json",
+    "bytes": 938,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-slide.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️insert-slide.json",
+    "bytes": 1474,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 26,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-layout.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️remove-layout.json",
+    "bytes": 49,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-master.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️remove-master.json",
+    "bytes": 48,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-shape.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️remove-shape.json",
+    "bytes": 59,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-slide.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️remove-slide.json",
+    "bytes": 37,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-layout-master.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️set-layout-master.json",
+    "bytes": 83,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-shape-frame.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️set-shape-frame.json",
+    "bytes": 145,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-slide-layout.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️set-slide-layout.json",
+    "bytes": 57,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-slide-notes.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️set-slide-notes.json",
+    "bytes": 632,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 285127,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-textbox-blocks.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation/🧫️fixtures/🦠️set-textbox-blocks.json",
+    "bytes": 415,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 285127,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json",
+  "case": "mutate-json-rfc8259",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧪️tests/mutate-json-rfc8259/component.feature",
+  "scenarios": 15,
+  "oracle": "json-rust-rfc8259-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🔣️hexagonal-cut-concrete-forest-left.model.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧫️fixtures/🔣️hexagonal-cut-concrete-forest-left.model.json",
+    "bytes": 424392,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 424392,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json",
+  "case": "mutate-json-rfc8259-i-json",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧪️tests/mutate-json-rfc8259-i-json/component.feature",
+  "scenarios": 22,
+  "oracle": "simplejson-json-rfc8259-i-json-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🔣️hexagonal-cut-concrete-forest-left.model.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧫️fixtures/🔣️hexagonal-cut-concrete-forest-left.model.json",
+    "bytes": 424392,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 424392,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-value",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/component.feature",
+  "scenarios": 29,
+  "oracle": "semio-value-python-independent",
+  "noOracle": null,
+  "vectors": 3,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio",
+    "bytes": 217,
+    "vector": false
+   },
+   {
+    "uri": "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️example.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🖼️assets/🗣️example.dsl.semio",
+    "bytes": 211,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-list-item.after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/insert-list-item.after.json",
+    "bytes": 1330,
+    "vector": false
+   },
+   {
+    "uri": "local://insert-list-item.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/insert-list-item.mutation.json",
+    "bytes": 176,
+    "vector": false
+   },
+   {
+    "uri": "local://no-mutation.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/no-mutation.mutation.json",
+    "bytes": 31,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-list-item.after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/remove-list-item.after.json",
+    "bytes": 1153,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-list-item.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/remove-list-item.mutation.json",
+    "bytes": 119,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-map-entry.after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/remove-map-entry.after.json",
+    "bytes": 1122,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-map-entry.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/remove-map-entry.mutation.json",
+    "bytes": 67,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-node.after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/remove-node.after.json",
+    "bytes": 1045,
+    "vector": false
+   },
+   {
+    "uri": "local://remove-node.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/remove-node.mutation.json",
+    "bytes": 65,
+    "vector": false
+   },
+   {
+    "uri": "local://set-map-entry.after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/set-map-entry.after.json",
+    "bytes": 1366,
+    "vector": false
+   },
+   {
+    "uri": "local://set-map-entry.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/set-map-entry.mutation.json",
+    "bytes": 124,
+    "vector": false
+   },
+   {
+    "uri": "local://set-node.after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/set-node.after.json",
+    "bytes": 1242,
+    "vector": false
+   },
+   {
+    "uri": "local://set-node.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/set-node.mutation.json",
+    "bytes": 120,
+    "vector": false
+   },
+   {
+    "uri": "local://set-value.after.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/set-value.after.json",
+    "bytes": 1246,
+    "vector": false
+   },
+   {
+    "uri": "local://set-value.mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/set-value.mutation.json",
+    "bytes": 160,
+    "vector": false
+   },
+   {
+    "uri": "local://⬅️before.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/⬅️before.json",
+    "bytes": 1242,
+    "vector": false
+   },
+   {
+    "uri": "local://🌲️hexagonal-cut-concrete-forest-left.model.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left.model.json",
+    "bytes": 424392,
+    "vector": false
+   },
+   {
+    "uri": "local://🌲️hexagonal-cut-concrete-forest.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/🌲️hexagonal-cut-concrete-forest.dsl.semio",
+    "bytes": 433262,
+    "vector": false
+   },
+   {
+    "uri": "local://🌲️hexagonal-cut-concrete-forest.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value/🧫️fixtures/🌲️hexagonal-cut-concrete-forest.pack.semio",
+    "bytes": 433268,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 433268,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary",
+  "case": "mutate-binary-raw",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧪️tests/mutate-binary-raw/component.feature",
+  "scenarios": 20,
+  "oracle": null,
+  "noOracle": "raw-buffer-no-format",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.jpg",
+    "bytes": 483496,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 483496,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg",
+  "case": "mutate-jpg-jfif-1-01",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01/component.feature",
+  "scenarios": 25,
+  "oracle": "image-jpeg-jfif-1-01-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.jpg",
+    "bytes": 483496,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 483496,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg",
+  "case": "mutate-jpg-jfif-1-01-baseline",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01-baseline/component.feature",
+  "scenarios": 21,
+  "oracle": null,
+  "noOracle": "jpg-jfif-1-01-baseline-conformance-class-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.jpg",
+    "bytes": 483496,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 483496,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+  "case": "mutate-semio-image",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/component.feature",
+  "scenarios": 40,
+  "oracle": "semio-image-python-pillow-independent",
+  "noOracle": null,
+  "vectors": 36,
+  "artifacts": [
+   {
+    "uri": "local://🎒️artifact.pack.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🎒️artifact.pack.semio",
+    "bytes": 195860,
+    "vector": false
+   },
+   {
+    "uri": "local://🗣️artifact.dsl.semio",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🗣️artifact.dsl.semio",
+    "bytes": 391703,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️insert-frame.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️insert-frame.json",
+    "bytes": 215139,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️move-frame.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️move-frame.json",
+    "bytes": 41,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️no-mutation.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️no-mutation.json",
+    "bytes": 26,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-frame.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️remove-frame.json",
+    "bytes": 37,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️remove-metadata-entry.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️remove-metadata-entry.json",
+    "bytes": 56,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-bit-depth.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-bit-depth.json",
+    "bytes": 41,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-colorspace.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-colorspace.json",
+    "bytes": 49,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-dimensions.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-dimensions.json",
+    "bytes": 53,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-frame-delay.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-frame-delay.json",
+    "bytes": 54,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-frame-pixels.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-frame-pixels.json",
+    "bytes": 215722,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-icc.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-icc.json",
+    "bytes": 1586,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-metadata-entry.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-metadata-entry.json",
+    "bytes": 85,
+    "vector": false
+   },
+   {
+    "uri": "local://🦠️set-snapshot.json",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🧫️fixtures/🦠️set-snapshot.json",
+    "bytes": 649771,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 649771,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi",
+  "case": "mutate-avi-1-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🧪️tests/mutate-avi-1-0/component.feature",
+  "scenarios": 27,
+  "oracle": "riff-avi-1-0-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://📼️bauen-mit-bestand-mjpeg.avi",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🧫️fixtures/📼️bauen-mit-bestand-mjpeg.avi",
+    "bytes": 766968,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 766968,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply",
+  "case": "mutate-ply-1-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🧪️tests/mutate-ply-1-0/component.feature",
+  "scenarios": 21,
+  "oracle": "ply-rs-ply-1-0-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🧊️pattern-sphere.ply",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🧫️fixtures/🧊️pattern-sphere.ply",
+    "bytes": 873734,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 873734,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj",
+  "case": "mutate-obj-3-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🧪️tests/mutate-obj-3-0/component.feature",
+  "scenarios": 45,
+  "oracle": "tobj-obj-3-0-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🧊️pattern-sphere.obj",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🧫️fixtures/🧊️pattern-sphere.obj",
+    "bytes": 1412596,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1412596,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip",
+  "case": "mutate-zip-2-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/mutate-zip-2-0/component.feature",
+  "scenarios": 15,
+  "oracle": "zip-2-0-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🎒️zwischenbericht-projekte.zip",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧫️fixtures/🎒️zwischenbericht-projekte.zip",
+    "bytes": 1605927,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1605927,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip",
+  "case": "mutate-zip-2-0-iso21320",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/mutate-zip-2-0-iso21320/component.feature",
+  "scenarios": 17,
+  "oracle": "zip-2-0-iso21320-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🎒️zwischenbericht-projekte.zip",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧫️fixtures/🎒️zwischenbericht-projekte.zip",
+    "bytes": 1605927,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 1605927,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+  "case": "mutate-ifc-4",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-4/component.feature",
+  "scenarios": 23,
+  "oracle": "ruststep-ifc-4-any-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🏗️nakagin-capsule-tower.ifc",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧫️fixtures/🏗️nakagin-capsule-tower.ifc",
+    "bytes": 2496437,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 2496437,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4",
+  "case": "mutate-mp4-isobmff",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff/component.feature",
+  "scenarios": 21,
+  "oracle": "mp4-isobmff-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🎥️bauen-mit-bestand-ausschnitt.mp4",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧫️fixtures/🎥️bauen-mit-bestand-ausschnitt.mp4",
+    "bytes": 2719031,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 2719031,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif",
+  "case": "mutate-gif-89a",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/mutate-gif-89a/component.feature",
+  "scenarios": 43,
+  "oracle": "gif-89a-any-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🖼️assets/🖼️dancing.gif",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🖼️assets/🖼️dancing.gif",
+    "bytes": 4433936,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 4433936,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp",
+  "case": "mutate-bmp-v3",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🧪️tests/mutate-bmp-v3/component.feature",
+  "scenarios": 15,
+  "oracle": "image-bmp-3-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🖼️rathaus-ahlen-grundriss.bmp",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🧫️fixtures/🖼️rathaus-ahlen-grundriss.bmp",
+    "bytes": 5981174,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 5981174,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-4",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4/component.feature",
+  "scenarios": 5,
+  "oracle": "lopdf-pdf-1-4-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-4-a",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-a/component.feature",
+  "scenarios": 9,
+  "oracle": "lopdf-pdf-1-4-a-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-4-x",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-x/component.feature",
+  "scenarios": 9,
+  "oracle": "lopdf-pdf-1-4-x-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-7",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7/component.feature",
+  "scenarios": 37,
+  "oracle": "lopdf-pdf-1-7-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-7-a",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a/component.feature",
+  "scenarios": 33,
+  "oracle": "lopdf-pdf-1-7-a-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-7-e",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e/component.feature",
+  "scenarios": 29,
+  "oracle": "lopdf-pdf-1-7-e-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-7-h",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h/component.feature",
+  "scenarios": 25,
+  "oracle": "lopdf-pdf-1-7-h-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-7-ua",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua/component.feature",
+  "scenarios": 27,
+  "oracle": "lopdf-pdf-1-7-ua-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-7-vt",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt/component.feature",
+  "scenarios": 41,
+  "oracle": "lopdf-pdf-1-7-vt-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf",
+  "case": "mutate-pdf-1-7-x",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x/component.feature",
+  "scenarios": 33,
+  "oracle": "lopdf-pdf-1-7-x-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf",
+    "bytes": 6346331,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 6346331,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff",
+  "case": "mutate-tiff-6-0-baseline",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0-baseline/component.feature",
+  "scenarios": 19,
+  "oracle": null,
+  "noOracle": "tiff-6-0-baseline-conformance-class-semantics",
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.tiff",
+    "bytes": 17473180,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 17473180,
+  "missing": []
+ },
+ {
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff",
+  "case": "mutate-tiff-6-0",
+  "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0/component.feature",
+  "scenarios": 17,
+  "oracle": "image-tiff-6-0-mutate",
+  "noOracle": null,
+  "vectors": 0,
+  "artifacts": [
+   {
+    "uri": "local://🔄️flipped-scan.rgba",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0/🧫️fixtures/🔄️flipped-scan.rgba",
+    "bytes": 23296000,
+    "vector": false
+   },
+   {
+    "uri": "shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff",
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.tiff",
+    "bytes": 17473180,
+    "vector": false
+   }
+  ],
+  "maxArtifact": 23296000,
+  "missing": []
+ }
+]

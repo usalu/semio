@@ -1,45 +1,65 @@
 @capability-note-1-mutate
-@no-oracle-note-document-mutation-semantics
+@oracle-note-python-independent
 @comparison-ordered-json-v1
 @mutations-note-1-any
-Feature: Apply every typed note document mutation to its committed specification vectors
-  `s.note.note` is a semio-NATIVE artifact: it is persisted as `.dsl.semio` text and `.pack.semio`
-  binary through this subset's own codecs, and no third party reads or writes either. There is
-  therefore no reference implementation to register as an oracle — recorded as the
-  `note-document-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, whose substitutes are the
-  committed specification vectors and the inverse law. Because that decision is recorded, the runner
-  dispatches NO oracle role for this case: every assertion below lives inside the subject handler,
-  and a handler that merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed note document mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.note.note` document and all thirty-three typed mutations, written in
+  Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from rules 1, 2,
+  3, 5 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the thirty-three committed vectors. It imports nothing from this repository's Rust.
 
-  What distinguishes this subset is its SHAPE. Of the five artifacts covered in this wave, note is
-  the only one whose document is a nested, positional tree: blocks are id-keyed, their order is the
-  z-order the canvas paints in, and a `group` block contains other blocks. The 33 kinds fall into
-  three tiers that behave nothing like each other — 9 document-root scalars (the title plus the
-  eight grid, snap and tool settings), 3 id-keyed image-asset kinds over a flat pool, and 21 kinds
-  over that tree. The tree tier is what an implementation gets wrong: `move-block-to-container`
-  REPARENTS across the hierarchy, `drag-blocks` translates a whole subtree, `duplicate-blocks`
-  copies several blocks at once with indices that shift as each copy lands, `delete-blocks` removes
-  several at once, and four kinds — `edit-block-text`, `edit-block-math`, `edit-block-ink-stroke`
-  and the four table row/column kinds — reach INSIDE one block's typed content rather than moving
-  the block at all. An inverse that restores membership but not position passes nothing here.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. This case used to say that because `s.note.note` is persisted through this subset's own
+  codecs and no third party reads them, "there is no reference implementation to register as an
+  oracle". `mutate-semio-drawing`, `mutate-semio-mesh` and the fifteen `📕️norm` references refuted
+  that in this same wave by taking Python second implementations over this same carrier. A third-party
+  library was nonetheless declined and the reason is concrete: no canvas or whiteboard format models
+  a Z-ORDERED tree whose leaves are six differently-shaped typed blocks — text, stroke, table, math,
+  image, group — reached by different verbs, and none of them reads this carrier.
 
-  The vectors are chosen against exactly that. `duplicate-blocks` copies ink and table together so
-  the shifting-index case is real rather than incidental; `drag-blocks` nudges an ink block AND a
-  whole group subtree in the same mutation; `move-block-to-container` reparents ink into a callout
-  group; the table kinds each act on the TRAILING row or column, so an implementation that removed
-  by position-from-the-start passes nothing.
+  What distinguishes this subset is its SHAPE, and the reference is written against exactly that.
+  Blocks are id-keyed but their ORDER is the z-order the canvas paints in, so every tree inverse here
+  restores POSITION and not merely membership: `delete-blocks` puts its blocks back in ASCENDING index
+  order so each lands where it was, and `move-block-to-container` inverts to a re-parent back to the
+  original container AT the original index. `drag-blocks` translates a named block and its whole
+  SUBTREE. Four kinds reach INSIDE one block's typed content — the math tex, the ink polyline, the
+  table's rows and columns — rather than moving the block at all.
 
-  📌️ All 33 committed vectors move the document — this is the only artifact of the five in this
-  wave for which that is true, and it is why `GUARD_VECTORS` in the adapter is EMPTY: every one of
-  the 33 `mutate-<kind>` scenarios is held to the observability law with no exemption at all.
+  📌️ A FINDING THE REFERENCE MADE WHILE IT WAS BEING WRITTEN. `duplicate-blocks` computes each copy's
+  insertion index against the PRE-MUTATION list and does not re-base it as earlier copies land. Its
+  committed vector duplicates `blk-ink` (root index 1) and `blk-table` (root index 2) in one mutation,
+  and the committed after-snapshot orders the root
+  `blk-text, blk-ink, blk-ink-copy, blk-table-COPY, blk-table, …` — the second copy lands BEFORE its
+  own source, where the singular `duplicate-block` places its copy after. Both implementations
+  reproduce the committed order; naming it here is what keeps it from passing as intended behaviour.
 
-  Every scenario reads the committed vectors where the domain already keeps them, through
-  `asset://`, and never writes to them.
+  🚧️ THREE SCENARIOS THE REFERENCE REFUSES BY CLAUSE, and reports rather than works around. First,
+  `edit-block-text` in both roles. A text block does not hold its paragraphs: it holds a COMPOSED
+  CHILD HANDLE `{childId, target}` into an `s.stdio.semio@v1/text` document, and the committed
+  vector's whole observable effect is that handle's `childId` moving from
+  `note-text-eea42a3b80b1052b` to `note-text-938222b3522927c6` — a content address of the child AFTER
+  the new paragraphs are written, computed by a function no document in this repository states. Every
+  OTHER verb over that same block is implemented. `mutate-program-1` reports the identical blocker
+  over `knowledge`/`benchmarks`, `mutate-block-3d-1` over `catalog`, and `mutate-en1990-1`'s two red
+  scenarios are the same finding again. Second, `identity-round-trip`. Unlike its `✒️writer`, `🌿️vcs`
+  and `🔌️wires` siblings this subset commits a REAL grammar rather than the repository-wide
+  `payload = OCTET+` placeholder — which is what makes the gap citable. Grammar and artifact disagree
+  on three points: `block = text-block | image-block | shape-block` covers three of the SIX declared
+  block kinds, leaving stroke, table, math and group with no production at all; `block-field` names
+  `paragraphs` and `asset-id` while the committed artifact writes neither and writes
+  `content=child_id=… target="…"`, a flattened nested record nothing bounds; and
+  `artifact-mark = "note.note"` is contradicted by the artifact's own first line
+  `semio note.note.dsl v1`.
+
+  📌️ All 33 committed vectors move the document — this is the only artifact of the five in this wave
+  for which that is true, and it is why the reference holds every applied vector to the observability
+  law with no exemption at all.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json
@@ -88,7 +108,7 @@ Feature: Apply every typed note document mutation to its committed specification
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json

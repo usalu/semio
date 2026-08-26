@@ -30,7 +30,7 @@ fn mutation() -> Din4108Mutation {
 
 /// ▶️ `remove-layer` carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let (snapshot, _) = protocol::apply_mutation(&before(), &mutation()).expect("remove-layer applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "remove-layer/removes-the-load-bearing-masonry-layer: applied state differs from committed after-snapshot");
     let base = before();
@@ -41,7 +41,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ Applying `remove-layer` and then its own inverse restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::inverse(&mutation, &base);
@@ -58,7 +58,7 @@ async fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots and this leaf's committed mutation payload are already canonical:
 /// decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Din4108Snapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -73,7 +73,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome — status AND every diagnostic `remove-layer`'s own diff builder
 /// raises for this payload — matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
@@ -111,7 +111,7 @@ async fn declared_outcome_holds() {
 /// load-bearing assertion in the fixture: it pins WHICH fields of `Din4108Snapshot` this leaf is
 /// allowed to touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let base = before();
     let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(&mutation(), &base);
     let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
@@ -128,7 +128,7 @@ async fn produces_committed_diff() {
 /// `Some(None)` across a JSON round trip — `remove-layer` never writes it, so the committed
 /// `null` is unambiguously `None` here and the fixed point holds.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Din4108Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert!(decoded.selected_check_index.is_none(), "remove-layer/removes-the-load-bearing-masonry-layer: remove-layer is an artifact-lane edit and must never carry the presence-lane selectedCheckIndex");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
@@ -139,7 +139,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of what `remove-layer` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Din4108Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-layer/removes-the-load-bearing-masonry-layer: committed diff did not carry before to after");

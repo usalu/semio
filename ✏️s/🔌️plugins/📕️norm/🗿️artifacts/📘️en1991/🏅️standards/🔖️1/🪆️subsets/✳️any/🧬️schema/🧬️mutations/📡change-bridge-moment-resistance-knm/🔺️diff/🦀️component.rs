@@ -4,7 +4,7 @@ use super::mutation::ChangeBridgeMomentResistanceKnm;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeBridgeMomentResistanceKnm, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub fn diff(payload: &ChangeBridgeMomentResistanceKnm, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_bridge_moment_resistance_knm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Bridge moment resistance knm must be a finite number.", Vec::<String>::new());
     }

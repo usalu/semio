@@ -1,0 +1,1911 @@
+########## mutate-pdf-1-4-a ##########
+[test] level=exhaustive cases=1 executed=18 passed=18 failed=0 errored=0 parity=9/9
+##### mutate-pdf-1-4-a exit=0 #####
+########## mutate-pdf-1-4-x ##########
+[budget] cargo run --quiet --manifest-path /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-pdf-fc3e39-mutate-pdf-1-4-x-subject-rust/Cargo.toml --features sut -- --plan /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-pdf-fc3e39-mutate-pdf-1-4-x-subject-rust/📋️plan.json --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-pdf-fc3e39-mutate-pdf-1-4-x-subject-rust/📤️results.jsonl exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
+1694 | }
+1695 | 
+1696 | /** 🔍️Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
+1697 | export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
+1698 |   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
+1699 |   const result = spawnSync(cmd, args, {
+                        ^
+error: spawnSync cargo ETIMEDOUT
+      path: "cargo",
+   syscall: "spawnSync cargo",
+     errno: -60,
+ spawnargs: [
+  "run", "--quiet", "--manifest-path", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-pdf-fc3e39-mutate-pdf-1-4-x-subject-rust/Cargo.toml",
+  "--features", "sut", "--", "--plan", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-pdf-fc3e39-mutate-pdf-1-4-x-subject-rust/📋️plan.json",
+  "--out", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-pdf-fc3e39-mutate-pdf-1-4-x-subject-rust/📤️results.jsonl"
+],
+      code: "ETIMEDOUT"
+
+      at spawnSync (node:child_process:254:35)
+      at runProbe (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1699:18)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:735:45)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:809:1)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1443:68)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1491:16)
+
+Bun v1.3.14 (macOS arm64)
+##### mutate-pdf-1-4-x exit=1 #####
+########## mutate-pdf-1-4 ##########
+[test] level=exhaustive cases=1 executed=5 passed=5 failed=0 errored=0 parity=0/0
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4: rust subject host exited 101 without emitting results
+[test] warning: fields `operation` and `generation` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️component.rs:274:5
+    |
+273 | struct JobPayloadOperationLedger {
+    |        ------------------------- fields in this struct
+274 |     operation: OperationId,
+    |     ^^^^^^^^^
+275 |     generation: Generation,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:149:51
+    |
+149 |         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+149 -         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+149 +         self.backing.as_ref().map_or(0, |backing| size_of_val(backing.as_ref()))
+    |
+
+warning: method `push` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:142:8
+    |
+109 | impl<T> MutationDagFixedSlots<T> {
+    | -------------------------------- method in this implementation
+...
+142 |     fn push(&mut self, value: T) -> Result<(), T> {
+    |        ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `header_len` and `stored_len` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:178:5
+    |
+176 | struct EncodedSegment {
+    |        -------------- fields in this struct
+177 |     bytes: Vec<u8>,
+178 |     header_len: usize,
+    |     ^^^^^^^^^^
+179 |     stored_len: usize,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `terminal_is_empty` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️math.rs:527:8
+    |
+440 | impl Mesh3dOwner {
+    | ---------------- method in this implementation
+...
+527 |     fn terminal_is_empty(&self) -> bool {
+    |        ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:958:14
+    |
+958 | ...   .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(...
+    |        ^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+help: replace the use of the deprecated method
+    |
+958 -             .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+958 +             .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+    |
+
+warning: constant `SURFACE_RECONCILE_FIXED_OPS` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:32:7
+   |
+32 | const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `take_all` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:96:8
+   |
+48 | impl<T, const N: usize> SurfaceFixedVec<T, N> {
+   | --------------------------------------------- method in this implementation
+...
+96 |     fn take_all(&mut self) -> Self {
+   |        ^^^^^^^^
+
+warning: methods `values` and `clear` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:162:8
+    |
+132 | impl<K: Eq, V, const N: usize> SurfaceLinearMap<K, V, N> {
+    | -------------------------------------------------------- methods in this implementation
+...
+162 |     fn values(&self) -> impl Iterator<Item = &V> {
+    |        ^^^^^^
+...
+166 |     fn clear(&mut self) {
+    |        ^^^^^
+
+warning: methods `iter`, `remove`, and `is_empty` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:198:8
+    |
+190 | impl<T: Eq, const N: usize> SurfaceLinearSet<T, N> {
+    | -------------------------------------------------- methods in this implementation
+...
+198 |     fn iter(&self) -> impl Iterator<Item = &T> {
+    |        ^^^^
+...
+202 |     fn remove(&mut self, value: &T) -> bool {
+    |        ^^^^^^
+...
+211 |     fn is_empty(&self) -> bool {
+    |        ^^^^^^^^
+
+warning: associated function `new` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:1139:19
+     |
+1138 | impl SurfaceReconcileCursor {
+     | --------------------------- associated function in this implementation
+1139 |     pub(crate) fn new(tree: crate::ComponentTree, current: &SurfaceReconciler) -> Self {
+     |                   ^^^
+
+warning: function `estimate_record_bytes` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:2957:4
+     |
+2957 | fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/../../📰markup/🦀️component.rs:396:34
+    |
+396 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:317:34
+    |
+317 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+
+warning: constant `RELS_CONTENT_TYPE` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:192:11
+    |
+192 |     const RELS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1765:13
+     |
+1765 |     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1765 -     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+1765 +     marker: PhantomData<fn() -> (P, Mutation)>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1770:119
+     |
+1770 | ...active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1770 -         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+1770 +         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5064:49
+     |
+5064 | struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5064 - struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+5064 + struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<T>);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5068:14
+     |
+5068 |         Self(std::marker::PhantomData)
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5068 -         Self(std::marker::PhantomData)
+5068 +         Self(PhantomData)
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5153:14
+     |
+5153 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5153 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5153 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5154:23
+     |
+5154 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5154 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5154 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5172:18
+     |
+5172 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5172 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5172 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5173:27
+     |
+5173 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5173 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5173 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5367:14
+     |
+5367 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5367 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5367 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5368:23
+     |
+5368 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5368 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5368 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5369:25
+     |
+5369 |     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5369 -     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5369 +     retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5387:18
+     |
+5387 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5387 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5387 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5388:27
+     |
+5388 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5388 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5388 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5389:29
+     |
+5389 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5389 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5389 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5607:14
+     |
+5607 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5607 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5607 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5608:23
+     |
+5608 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5608 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5608 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5617:29
+     |
+5617 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5617 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5617 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5833:12
+     |
+5833 |     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5833 -     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+5833 +     state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5851:20
+     |
+5851 | ...   state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECO...
+     |              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5851 -             state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+5851 +             state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7223:12
+     |
+7223 |     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7223 -     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+7223 +     state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7233:32
+     |
+7233 | ...   Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_...
+     |                              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7233 -         Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+7233 +         Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+     |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11149:26
+      |
+11149 |             .checked_mul(std::mem::size_of::<String>())?
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11149 -             .checked_mul(std::mem::size_of::<String>())?
+11149 +             .checked_mul(size_of::<String>())?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11150:68
+      |
+11150 |             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11150 -             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+11150 +             .checked_add(self.redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11151:71
+      |
+11151 |             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+      |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11151 -             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+11151 +             .checked_add(self.applied_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11152:68
+      |
+11152 |             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11152 -             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+11152 +             .checked_add(self.redo_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11707:6
+      |
+11707 | impl serde::Serialize for ArtifactEditMessageLedger {
+      |      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11707 - impl serde::Serialize for ArtifactEditMessageLedger {
+11707 + impl Serialize for ArtifactEditMessageLedger {
+      |
+
+error: future cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8295:13
+      |
+ 8295 | / ...   Box::pin(async move {
+ 8296 | | ...       let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(dsl, ops).await.map_err(|error| VcsError::Deseriali...
+ 8297 | | ...       let pack_files = print_document_pack(&parsed.envelope).await?;
+ 8298 | | ...       let dsl_mirror = parsed.envelope.vcs.initial_snapshot.print_dsl();
+ 8299 | | ...       Ok((pack_files, dsl_mirror))
+ 8300 | | ...   })
+      | |________^ future created by async block is not `Send`
+      |
+note: future is not `Send` as this value is used across an await
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10154:61
+      |
+10153 | ...   for operation in &edit.forwards {
+      |                        -------------- has type `std::slice::Iter<'_, Mutation>` which is not `Send`
+10154 | ...       snapshot = apply_mutation(&snapshot, operation).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1,...
+      |                                                           ^^^^^ await occurs here, with `&edit.forwards` maybe used later
+      = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(..., ...), ...>> + Send>>`
+      = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-9496791265478019648.txt'
+      = note: consider using `--verbose` to print the full type name to the console
+help: consider further restricting type parameter `Mutation` with trait `Sync`
+      |
+ 8293 |             Mutation: OpText + OpBinary + self::Mutation<P> + Send + std::marker::Sync,
+      |                                                                    +++++++++++++++++++
+
+error: future cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8295:13
+     |
+8295 | / ...   Box::pin(async move {
+8296 | | ...       let parsed: ParsedDocumentText<P, Mutation> = parse_document_text(dsl, ops).await.map_err(|error| VcsError::Deserializ...
+8297 | | ...       let pack_files = print_document_pack(&parsed.envelope).await?;
+8298 | | ...       let dsl_mirror = parsed.envelope.vcs.initial_snapshot.print_dsl();
+8299 | | ...       Ok((pack_files, dsl_mirror))
+8300 | | ...   })
+     | |________^ future created by async block is not `Send`
+     |
+     = help: the trait `Sync` is not implemented for `dyn for<'a> Fn(&'a str) -> std::option::Option<u64>`
+note: future is not `Send` as this value is used across an await
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:891:63
+     |
+ 868 |     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+     |         --------------- has type `&dyn for<'a> Fn(&'a str) -> std::option::Option<u64>` which is not `Send`
+...
+ 891 |     write_id_field(&mut out, &edit.id, dict, &|_: &str| None).await?;
+     |                                                               ^^^^^ await occurs here, with `edit_ordinal_of` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(..., ...), ...>> + Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-9496791265478019648.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8309:13
+     |
+8309 | / ...   Box::pin(async move {
+8310 | | ...       let parsed: ParsedDocumentText<P, Mutation> = parse_document_pack(pack, spr).await.map_err(|error| VcsError::Deseriali...
+8311 | | ...       print_document_text(&parsed.envelope).await
+8312 | | ...   })
+     | |________^ future created by async block is not `Send`
+     |
+note: future is not `Send` as this value is used across an await
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9863:61
+     |
+9862 | ...   for operation in &forwards {
+     |                        --------- has type `std::slice::Iter<'_, Mutation>` which is not `Send`
+9863 | ...       snapshot = apply_mutation(&snapshot, operation).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, ...
+     |                                                           ^^^^^ await occurs here, with `&forwards` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<ArtifactTextFiles, VcsError>> + Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-5881871611395914341.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+help: consider further restricting type parameter `Mutation` with trait `Sync`
+     |
+8307 |             Mutation: OpText + OpBinary + self::Mutation<P> + Send + std::marker::Sync,
+     |                                                                    +++++++++++++++++++
+
+error: future cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8309:13
+     |
+8309 | / ...   Box::pin(async move {
+8310 | | ...       let parsed: ParsedDocumentText<P, Mutation> = parse_document_pack(pack, spr).await.map_err(|error| VcsError::Deseriali...
+8311 | | ...       print_document_text(&parsed.envelope).await
+8312 | | ...   })
+     | |________^ future created by async block is not `Send`
+     |
+     = help: the trait `Sync` is not implemented for `dyn Fn(u64) -> Result<&str, protocol::ProtocolError>`
+note: future is not `Send` as this value is used across an await
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:949:86
+     |
+ 931 |     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+     |         ------------- has type `&dyn Fn(u64) -> Result<&str, protocol::ProtocolError>` which is not `Send`
+...
+ 949 |     let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+     |                                                                                      ^^^^^ await occurs here, with `ordinal_to_id` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<ArtifactTextFiles, VcsError>> + Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-5881871611395914341.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8321:13
+     |
+8321 | /             Box::pin(async move {
+8322 | |                 if ops_vec.is_empty() {
+8323 | |                     if pack.is_empty() && spr.is_empty() {
+8324 | |                         return Ok((Vec::new(), Vec::new(), String::new()));
+...    |
+8350 | |                 Ok((files.pack, files.spr, files.ops))
+8351 | |             })
+     | |______________^ future created by async block is not `Send`
+     |
+note: future is not `Send` as this value is used across an await
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9863:61
+     |
+9862 | ...   for operation in &forwards {
+     |                        --------- has type `std::slice::Iter<'_, Mutation>` which is not `Send`
+9863 | ...       snapshot = apply_mutation(&snapshot, operation).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, ...
+     |                                                           ^^^^^ await occurs here, with `&forwards` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(Vec<u8>, ..., ...), ...>> + Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-2573077205007834154.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+help: consider further restricting type parameter `Mutation` with trait `Sync`
+     |
+8319 |             Mutation: OpText + OpBinary + self::Mutation<P> + Send + 'static + std::marker::Sync,
+     |                                                                              +++++++++++++++++++
+
+error: future cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8321:13
+      |
+ 8321 | /             Box::pin(async move {
+ 8322 | |                 if ops_vec.is_empty() {
+ 8323 | |                     if pack.is_empty() && spr.is_empty() {
+ 8324 | |                         return Ok((Vec::new(), Vec::new(), String::new()));
+...     |
+ 8350 | |                 Ok((files.pack, files.spr, files.ops))
+ 8351 | |             })
+      | |______________^ future created by async block is not `Send`
+      |
+      = help: the trait `Sync` is not implemented for `(dyn ArtifactStoreOwnedDisposer<P, Mutation> + 'static)`
+note: captured value is not `Send` because `&` references cannot be sent unless their referent is `Sync`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12350:27
+      |
+12350 |     pub async fn envelope(&self) -> &ArtifactEnvelope<P, Mutation> {
+      |                           ^^^^^ has type `&os_store::component::ArtifactStore<P, Mutation>` which is not `Send`, because `os_store::component::ArtifactStore<P, Mutation>` is not `Sync`
+      = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(Vec<u8>, ..., ...), ...>> + Send>>`
+      = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-2573077205007834154.txt'
+      = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8321:13
+     |
+8321 | /             Box::pin(async move {
+8322 | |                 if ops_vec.is_empty() {
+8323 | |                     if pack.is_empty() && spr.is_empty() {
+8324 | |                         return Ok((Vec::new(), Vec::new(), String::new()));
+...    |
+8350 | |                 Ok((files.pack, files.spr, files.ops))
+8351 | |             })
+     | |______________^ future created by async block is not `Send`
+     |
+     = help: the trait `Sync` is not implemented for `dyn for<'a> Fn(&'a str) -> std::option::Option<u64>`
+note: future is not `Send` as this value is used across an await
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:891:63
+     |
+ 868 |     let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+     |         --------------- has type `&dyn for<'a> Fn(&'a str) -> std::option::Option<u64>` which is not `Send`
+...
+ 891 |     write_id_field(&mut out, &edit.id, dict, &|_: &str| None).await?;
+     |                                                               ^^^^^ await occurs here, with `edit_ordinal_of` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(Vec<u8>, ..., ...), ...>> + Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-2573077205007834154.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8321:13
+      |
+ 8321 | /             Box::pin(async move {
+ 8322 | |                 if ops_vec.is_empty() {
+ 8323 | |                     if pack.is_empty() && spr.is_empty() {
+ 8324 | |                         return Ok((Vec::new(), Vec::new(), String::new()));
+...     |
+ 8350 | |                 Ok((files.pack, files.spr, files.ops))
+ 8351 | |             })
+      | |______________^ future created by async block is not `Send`
+      |
+      = help: the trait `Sync` is not implemented for `(dyn ErasedSnapshotRetirement + 'static)`
+note: captured value is not `Send` because `&` references cannot be sent unless their referent is `Sync`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12350:27
+      |
+12350 |     pub async fn envelope(&self) -> &ArtifactEnvelope<P, Mutation> {
+      |                           ^^^^^ has type `&os_store::component::ArtifactStore<P, Mutation>` which is not `Send`, because `os_store::component::ArtifactStore<P, Mutation>` is not `Sync`
+      = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(Vec<u8>, ..., ...), ...>> + Send>>`
+      = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-2573077205007834154.txt'
+      = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8321:13
+     |
+8321 | /             Box::pin(async move {
+8322 | |                 if ops_vec.is_empty() {
+8323 | |                     if pack.is_empty() && spr.is_empty() {
+8324 | |                         return Ok((Vec::new(), Vec::new(), String::new()));
+...    |
+8350 | |                 Ok((files.pack, files.spr, files.ops))
+8351 | |             })
+     | |______________^ future created by async block is not `Send`
+     |
+     = help: the trait `Sync` is not implemented for `dyn Fn(u64) -> Result<&str, protocol::ProtocolError>`
+note: future is not `Send` as this value is used across an await
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:949:86
+     |
+ 931 |     let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+     |         ------------- has type `&dyn Fn(u64) -> Result<&str, protocol::ProtocolError>` which is not `Send`
+...
+ 949 |     let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+     |                                                                                      ^^^^^ await occurs here, with `ordinal_to_id` maybe used later
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(Vec<u8>, ..., ...), ...>> + Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-2573077205007834154.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: `Mutation` cannot be shared between threads safely
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8359:13
+     |
+8359 | /             Box::pin(async move {
+8360 | |                 let edit = edit_from_operation_envelope::<Mutation>(envelope).await?;
+8361 | |                 print_edit_lines(&edit).await
+8362 | |             })
+     | |______________^ `Mutation` cannot be shared between threads safely
+     |
+note: required because it appears within the type `PhantomData<Mutation>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/marker.rs:811:12
+     |
+ 811 | pub struct PhantomData<T: PointeeSized>;
+     |            ^^^^^^^^^^^
+note: required because it appears within the type `alloc::raw_vec::RawVec<Mutation>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/raw_vec/mod.rs:73:19
+     |
+  73 | pub(crate) struct RawVec<T, A: Allocator = Global> {
+     |                   ^^^^^^
+note: required because it appears within the type `Vec<Mutation>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:436:12
+     |
+ 436 | pub struct Vec<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global> {
+     |            ^^^
+note: required because it appears within the type `protocol::Edit<Mutation>`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:470:12
+     |
+ 470 | pub struct Edit<Op> {
+     |            ^^^^
+     = note: required for `&protocol::Edit<Mutation>` to implement `Send`
+note: required because it's used within this `async` fn body
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9098:100
+     |
+9098 |   pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result<String, VcsError> {
+     |  ____________________________________________________________________________________________________^
+9099 | |     let header = OpsHeaderLine::Edit {
+9100 | |         id: edit.id.clone(),
+9101 | |         sequence: edit.sequence_number,
+...    |
+9119 | |     Ok(out)
+9120 | | }
+     | |_^
+note: required because it's used within this `async` block
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8359:22
+     |
+8359 |             Box::pin(async move {
+     |                      ^^^^^^^^^^
+     = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<std::string::String, VcsError>> + Send>>`
+     = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-5659553173168438514.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+help: consider further restricting type parameter `Mutation` with trait `Sync`
+     |
+8357 |             Mutation: OpText + OpBinary + Send + std::marker::Sync,
+     |                                                +++++++++++++++++++
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-os-kernel` (lib) due to 10 previous errors; 26 warnings emitted
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4: no result stream at /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-pdf-fc3e39-mutate-pdf-1-4-subject-rust/📤️results.jsonl
+##### mutate-pdf-1-4 exit=1 #####
+########## extract-text-pdf-1-4 ##########
+[test] no-subject-implementation ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/extract-text-pdf-1-4 (adapters python host references only; this repository ships no implementation of the owner in any of those languages)
+[test] level=exhaustive cases=1 executed=2 passed=2 failed=0 errored=0 parity=0/0
+##### extract-text-pdf-1-4 exit=0 #####
+########## mutate-step-ap214-cc1 ##########
+[test] level=exhaustive cases=1 executed=22 passed=22 failed=0 errored=0 parity=11/11
+##### mutate-step-ap214-cc1 exit=0 #####
+########## mutate-step-ap214-cc2 ##########
+[test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2: rust subject host exited 101 without emitting results
+[test] warning: fields `operation` and `generation` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️component.rs:274:5
+    |
+273 | struct JobPayloadOperationLedger {
+    |        ------------------------- fields in this struct
+274 |     operation: OperationId,
+    |     ^^^^^^^^^
+275 |     generation: Generation,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:149:51
+    |
+149 |         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+149 -         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+149 +         self.backing.as_ref().map_or(0, |backing| size_of_val(backing.as_ref()))
+    |
+
+warning: method `push` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:142:8
+    |
+109 | impl<T> MutationDagFixedSlots<T> {
+    | -------------------------------- method in this implementation
+...
+142 |     fn push(&mut self, value: T) -> Result<(), T> {
+    |        ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `header_len` and `stored_len` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:178:5
+    |
+176 | struct EncodedSegment {
+    |        -------------- fields in this struct
+177 |     bytes: Vec<u8>,
+178 |     header_len: usize,
+    |     ^^^^^^^^^^
+179 |     stored_len: usize,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `terminal_is_empty` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️math.rs:527:8
+    |
+440 | impl Mesh3dOwner {
+    | ---------------- method in this implementation
+...
+527 |     fn terminal_is_empty(&self) -> bool {
+    |        ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:958:14
+    |
+958 | ...   .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(...
+    |        ^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+help: replace the use of the deprecated method
+    |
+958 -             .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+958 +             .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+    |
+
+warning: constant `SURFACE_RECONCILE_FIXED_OPS` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:32:7
+   |
+32 | const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `take_all` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:96:8
+   |
+48 | impl<T, const N: usize> SurfaceFixedVec<T, N> {
+   | --------------------------------------------- method in this implementation
+...
+96 |     fn take_all(&mut self) -> Self {
+   |        ^^^^^^^^
+
+warning: methods `values` and `clear` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:162:8
+    |
+132 | impl<K: Eq, V, const N: usize> SurfaceLinearMap<K, V, N> {
+    | -------------------------------------------------------- methods in this implementation
+...
+162 |     fn values(&self) -> impl Iterator<Item = &V> {
+    |        ^^^^^^
+...
+166 |     fn clear(&mut self) {
+    |        ^^^^^
+
+warning: methods `iter`, `remove`, and `is_empty` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:198:8
+    |
+190 | impl<T: Eq, const N: usize> SurfaceLinearSet<T, N> {
+    | -------------------------------------------------- methods in this implementation
+...
+198 |     fn iter(&self) -> impl Iterator<Item = &T> {
+    |        ^^^^
+...
+202 |     fn remove(&mut self, value: &T) -> bool {
+    |        ^^^^^^
+...
+211 |     fn is_empty(&self) -> bool {
+    |        ^^^^^^^^
+
+warning: associated function `new` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:1139:19
+     |
+1138 | impl SurfaceReconcileCursor {
+     | --------------------------- associated function in this implementation
+1139 |     pub(crate) fn new(tree: crate::ComponentTree, current: &SurfaceReconciler) -> Self {
+     |                   ^^^
+
+warning: function `estimate_record_bytes` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:2957:4
+     |
+2957 | fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:317:34
+    |
+317 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/../../📰markup/🦀️component.rs:396:34
+    |
+396 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+
+warning: constant `RELS_CONTENT_TYPE` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:192:11
+    |
+192 |     const RELS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1765:13
+     |
+1765 |     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1765 -     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+1765 +     marker: PhantomData<fn() -> (P, Mutation)>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1770:119
+     |
+1770 | ...active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1770 -         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+1770 +         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5064:49
+     |
+5064 | struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5064 - struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+5064 + struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<T>);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5068:14
+     |
+5068 |         Self(std::marker::PhantomData)
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5068 -         Self(std::marker::PhantomData)
+5068 +         Self(PhantomData)
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5153:14
+     |
+5153 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5153 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5153 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5154:23
+     |
+5154 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5154 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5154 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5172:18
+     |
+5172 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5172 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5172 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5173:27
+     |
+5173 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5173 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5173 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5367:14
+     |
+5367 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5367 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5367 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5368:23
+     |
+5368 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5368 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5368 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5369:25
+     |
+5369 |     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5369 -     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5369 +     retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5387:18
+     |
+5387 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5387 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5387 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5388:27
+     |
+5388 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5388 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5388 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5389:29
+     |
+5389 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5389 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5389 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5607:14
+     |
+5607 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5607 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5607 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5608:23
+     |
+5608 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5608 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5608 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5617:29
+     |
+5617 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5617 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5617 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5833:12
+     |
+5833 |     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5833 -     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+5833 +     state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5851:20
+     |
+5851 | ...   state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECO...
+     |              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5851 -             state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+5851 +             state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7223:12
+     |
+7223 |     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7223 -     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+7223 +     state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7233:32
+     |
+7233 | ...   Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_...
+     |                              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7233 -         Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+7233 +         Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+     |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11149:26
+      |
+11149 |             .checked_mul(std::mem::size_of::<String>())?
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11149 -             .checked_mul(std::mem::size_of::<String>())?
+11149 +             .checked_mul(size_of::<String>())?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11150:68
+      |
+11150 |             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11150 -             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+11150 +             .checked_add(self.redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11151:71
+      |
+11151 |             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+      |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11151 -             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+11151 +             .checked_add(self.applied_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11152:68
+      |
+11152 |             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11152 -             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+11152 +             .checked_add(self.redo_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11707:6
+      |
+11707 | impl serde::Serialize for ArtifactEditMessageLedger {
+      |      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11707 - impl serde::Serialize for ArtifactEditMessageLedger {
+11707 + impl Serialize for ArtifactEditMessageLedger {
+      |
+
+error[E0308]: mismatched types
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1258:40
+     |
+1258 |         Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?))
+     |             -------------              ^^^^ expected trait `Fn(u64) -> Result<&str, protocol::ProtocolError> + Send + Sync`, found trait `Fn(u64) -> Result<&'r str, protocol::ProtocolError>`
+     |             |
+     |             arguments to this function are incorrect
+     |
+     = note: expected reference `&dyn Fn(u64) -> Result<&str, protocol::ProtocolError> + Send + Sync`
+                found reference `&dyn Fn(u64) -> Result<&'r str, protocol::ProtocolError>`
+note: function defined here
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:628:4
+     |
+ 628 | fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -...
+     |    ^^^^^^^^^^^^^                                                       -----------------------------------------------------------------------------
+
+error[E0308]: mismatched types
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1258:75
+     |
+1258 |         Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?))
+     |                                                -------------              ^^^^ expected trait `Fn(u64) -> Result<&str, protocol::ProtocolError> + Send + Sync`, found trait `Fn(u64) -> Result<&'r str, protocol::ProtocolError>`
+     |                                                |
+     |                                                arguments to this function are incorrect
+     |
+     = note: expected reference `&dyn Fn(u64) -> Result<&str, protocol::ProtocolError> + Send + Sync`
+                found reference `&dyn Fn(u64) -> Result<&'r str, protocol::ProtocolError>`
+note: function defined here
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:628:4
+     |
+ 628 | fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -...
+     |    ^^^^^^^^^^^^^                                                       -----------------------------------------------------------------------------
+
+error[E0308]: mismatched types
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1258:110
+     |
+1258 |         Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?))
+     |                                                                                   -------------              ^^^^ expected trait `Fn(u64) -> Result<&str, protocol::ProtocolError> + Send + Sync`, found trait `Fn(u64) -> Result<&'r str, protocol::ProtocolError>`
+     |                                                                                   |
+     |                                                                                   arguments to this function are incorrect
+     |
+     = note: expected reference `&dyn Fn(u64) -> Result<&str, protocol::ProtocolError> + Send + Sync`
+                found reference `&dyn Fn(u64) -> Result<&'r str, protocol::ProtocolError>`
+note: function defined here
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:628:4
+     |
+ 628 | fn read_id_field<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync)) -...
+     |    ^^^^^^^^^^^^^                                                       -----------------------------------------------------------------------------
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `semio-framework-os-kernel` (lib) due to 3 previous errors; 26 warnings emitted
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2: no result stream at /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc2-subject-rust/📤️results.jsonl
+##### mutate-step-ap214-cc2 exit=1 #####
+########## mutate-step-ap214-cc3 ##########
+[test] level=exhaustive cases=1 executed=13 passed=13 failed=0 errored=0 parity=0/0
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3: rust subject host exited 101 without emitting results
+[test] warning: fields `operation` and `generation` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️component.rs:274:5
+    |
+273 | struct JobPayloadOperationLedger {
+    |        ------------------------- fields in this struct
+274 |     operation: OperationId,
+    |     ^^^^^^^^^
+275 |     generation: Generation,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:149:51
+    |
+149 |         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+149 -         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+149 +         self.backing.as_ref().map_or(0, |backing| size_of_val(backing.as_ref()))
+    |
+
+warning: method `push` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:142:8
+    |
+109 | impl<T> MutationDagFixedSlots<T> {
+    | -------------------------------- method in this implementation
+...
+142 |     fn push(&mut self, value: T) -> Result<(), T> {
+    |        ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `header_len` and `stored_len` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:178:5
+    |
+176 | struct EncodedSegment {
+    |        -------------- fields in this struct
+177 |     bytes: Vec<u8>,
+178 |     header_len: usize,
+    |     ^^^^^^^^^^
+179 |     stored_len: usize,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `terminal_is_empty` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️math.rs:527:8
+    |
+440 | impl Mesh3dOwner {
+    | ---------------- method in this implementation
+...
+527 |     fn terminal_is_empty(&self) -> bool {
+    |        ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:958:14
+    |
+958 | ...   .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(...
+    |        ^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+help: replace the use of the deprecated method
+    |
+958 -             .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+958 +             .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+    |
+
+warning: constant `SURFACE_RECONCILE_FIXED_OPS` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:32:7
+   |
+32 | const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `take_all` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:96:8
+   |
+48 | impl<T, const N: usize> SurfaceFixedVec<T, N> {
+   | --------------------------------------------- method in this implementation
+...
+96 |     fn take_all(&mut self) -> Self {
+   |        ^^^^^^^^
+
+warning: methods `values` and `clear` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:162:8
+    |
+132 | impl<K: Eq, V, const N: usize> SurfaceLinearMap<K, V, N> {
+    | -------------------------------------------------------- methods in this implementation
+...
+162 |     fn values(&self) -> impl Iterator<Item = &V> {
+    |        ^^^^^^
+...
+166 |     fn clear(&mut self) {
+    |        ^^^^^
+
+warning: methods `iter`, `remove`, and `is_empty` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:198:8
+    |
+190 | impl<T: Eq, const N: usize> SurfaceLinearSet<T, N> {
+    | -------------------------------------------------- methods in this implementation
+...
+198 |     fn iter(&self) -> impl Iterator<Item = &T> {
+    |        ^^^^
+...
+202 |     fn remove(&mut self, value: &T) -> bool {
+    |        ^^^^^^
+...
+211 |     fn is_empty(&self) -> bool {
+    |        ^^^^^^^^
+
+warning: associated function `new` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:1139:19
+     |
+1138 | impl SurfaceReconcileCursor {
+     | --------------------------- associated function in this implementation
+1139 |     pub(crate) fn new(tree: crate::ComponentTree, current: &SurfaceReconciler) -> Self {
+     |                   ^^^
+
+warning: function `estimate_record_bytes` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:2957:4
+     |
+2957 | fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:317:34
+    |
+317 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/../../📰markup/🦀️component.rs:396:34
+    |
+396 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+
+warning: constant `RELS_CONTENT_TYPE` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:192:11
+    |
+192 |     const RELS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1765:13
+     |
+1765 |     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1765 -     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+1765 +     marker: PhantomData<fn() -> (P, Mutation)>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1770:119
+     |
+1770 | ...active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1770 -         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+1770 +         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5064:49
+     |
+5064 | struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5064 - struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+5064 + struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<T>);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5068:14
+     |
+5068 |         Self(std::marker::PhantomData)
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5068 -         Self(std::marker::PhantomData)
+5068 +         Self(PhantomData)
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5153:14
+     |
+5153 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5153 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5153 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5154:23
+     |
+5154 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5154 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5154 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5172:18
+     |
+5172 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5172 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5172 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5173:27
+     |
+5173 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5173 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5173 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5367:14
+     |
+5367 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5367 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5367 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5368:23
+     |
+5368 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5368 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5368 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5369:25
+     |
+5369 |     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5369 -     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5369 +     retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5387:18
+     |
+5387 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5387 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5387 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5388:27
+     |
+5388 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5388 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5388 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5389:29
+     |
+5389 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5389 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5389 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5607:14
+     |
+5607 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5607 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5607 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5608:23
+     |
+5608 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5608 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5608 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5617:29
+     |
+5617 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5617 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5617 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5833:12
+     |
+5833 |     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5833 -     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+5833 +     state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5851:20
+     |
+5851 | ...   state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECO...
+     |              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5851 -             state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+5851 +             state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7223:12
+     |
+7223 |     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7223 -     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+7223 +     state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7233:32
+     |
+7233 | ...   Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_...
+     |                              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7233 -         Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+7233 +         Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+     |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11154:26
+      |
+11154 |             .checked_mul(std::mem::size_of::<String>())?
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11154 -             .checked_mul(std::mem::size_of::<String>())?
+11154 +             .checked_mul(size_of::<String>())?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11155:68
+      |
+11155 |             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11155 -             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+11155 +             .checked_add(self.redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11156:71
+      |
+11156 |             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+      |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11156 -             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+11156 +             .checked_add(self.applied_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11157:68
+      |
+11157 |             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11157 -             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+11157 +             .checked_add(self.redo_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11712:6
+      |
+11712 | impl serde::Serialize for ArtifactEditMessageLedger {
+      |      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11712 - impl serde::Serialize for ArtifactEditMessageLedger {
+11712 + impl Serialize for ArtifactEditMessageLedger {
+      |
+
+error: future cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8321:13
+      |
+ 8321 | /             Box::pin(async move {
+ 8322 | |                 if ops_vec.is_empty() {
+ 8323 | |                     if pack.is_empty() && spr.is_empty() {
+ 8324 | |                         return Ok((Vec::new(), Vec::new(), String::new()));
+...     |
+ 8355 | |                 Ok((files.pack, files.spr, files.ops))
+ 8356 | |             })
+      | |______________^ future created by async block is not `Send`
+      |
+      = help: the trait `Sync` is not implemented for `(dyn ArtifactStoreOwnedDisposer<P, Mutation> + 'static)`
+note: captured value is not `Send` because `&` references cannot be sent unless their referent is `Sync`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12275:29
+      |
+12275 |     pub async fn generation(&self) -> u64 {
+      |                             ^^^^^ has type `&os_store::component::ArtifactStore<P, Mutation>` which is not `Send`, because `os_store::component::ArtifactStore<P, Mutation>` is not `Sync`
+      = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(Vec<u8>, ..., ...), ...>> + Send>>`
+      = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-3071629407999941797.txt'
+      = note: consider using `--verbose` to print the full type name to the console
+
+error: future cannot be sent between threads safely
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:8321:13
+      |
+ 8321 | /             Box::pin(async move {
+ 8322 | |                 if ops_vec.is_empty() {
+ 8323 | |                     if pack.is_empty() && spr.is_empty() {
+ 8324 | |                         return Ok((Vec::new(), Vec::new(), String::new()));
+...     |
+ 8355 | |                 Ok((files.pack, files.spr, files.ops))
+ 8356 | |             })
+      | |______________^ future created by async block is not `Send`
+      |
+      = help: the trait `Sync` is not implemented for `(dyn ErasedSnapshotRetirement + 'static)`
+note: captured value is not `Send` because `&` references cannot be sent unless their referent is `Sync`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12275:29
+      |
+12275 |     pub async fn generation(&self) -> u64 {
+      |                             ^^^^^ has type `&os_store::component::ArtifactStore<P, Mutation>` which is not `Send`, because `os_store::component::ArtifactStore<P, Mutation>` is not `Sync`
+      = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(Vec<u8>, ..., ...), ...>> + Send>>`
+      = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/semio_framework_os_kernel.long-type-3071629407999941797.txt'
+      = note: consider using `--verbose` to print the full type name to the console
+
+error: could not compile `semio-framework-os-kernel` (lib) due to 2 previous errors; 26 warnings emitted
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3: no result stream at /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc3-subject-rust/📤️results.jsonl
+##### mutate-step-ap214-cc3 exit=1 #####
+########## mutate-step-ap214-cc4 ##########
+[budget] cargo run --quiet --manifest-path /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-subject-rust/Cargo.toml --features sut -- --plan /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-subject-rust/📋️plan.json --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-subject-rust/📤️results.jsonl exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
+1694 | }
+1695 | 
+1696 | /** 🔍️Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
+1697 | export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
+1698 |   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
+1699 |   const result = spawnSync(cmd, args, {
+                        ^
+error: spawnSync cargo ETIMEDOUT
+      path: "cargo",
+   syscall: "spawnSync cargo",
+     errno: -60,
+ spawnargs: [
+  "run", "--quiet", "--manifest-path", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-subject-rust/Cargo.toml",
+  "--features", "sut", "--", "--plan", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-subject-rust/📋️plan.json",
+  "--out", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-subject-rust/📤️results.jsonl"
+],
+      code: "ETIMEDOUT"
+
+      at spawnSync (node:child_process:254:20)
+      at runProbe (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1699:18)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:529:17)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:593:25)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1037:71)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1067:16)
+
+Bun v1.3.14 (macOS arm64)
+##### mutate-step-ap214-cc4 exit=1 #####
+########## mutate-step-ap214-cc5 ##########
+[budget] cargo run --quiet --manifest-path /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc5-oracle-rust/Cargo.toml -- --plan /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc5-oracle-rust/📋️plan.json --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc5-oracle-rust/📤️results.jsonl exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
+1694 | }
+1695 | 
+1696 | /** 🔍️Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
+1697 | export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
+1698 |   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
+1699 |   const result = spawnSync(cmd, args, {
+                        ^
+error: spawnSync cargo ETIMEDOUT
+      path: "cargo",
+   syscall: "spawnSync cargo",
+     errno: -60,
+ spawnargs: [ "run", "--quiet", "--manifest-path", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc5-oracle-rust/Cargo.toml",
+  "--", "--plan", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc5-oracle-rust/📋️plan.json",
+  "--out", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc5-oracle-rust/📤️results.jsonl"
+],
+      code: "ETIMEDOUT"
+
+      at spawnSync (node:child_process:254:20)
+      at runProbe (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1699:18)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:529:17)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:579:23)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1037:71)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1067:16)
+
+Bun v1.3.14 (macOS arm64)
+##### mutate-step-ap214-cc5 exit=1 #####
+########## mutate-step-ap214-cc6 ##########
+[budget] cargo run --quiet --manifest-path /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc6-oracle-rust/Cargo.toml -- --plan /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc6-oracle-rust/📋️plan.json --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc6-oracle-rust/📤️results.jsonl exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
+1694 | }
+1695 | 
+1696 | /** 🔍️Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
+1697 | export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
+1698 |   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
+1699 |   const result = spawnSync(cmd, args, {
+                        ^
+error: spawnSync cargo ETIMEDOUT
+      path: "cargo",
+   syscall: "spawnSync cargo",
+     errno: -60,
+ spawnargs: [ "run", "--quiet", "--manifest-path", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc6-oracle-rust/Cargo.toml",
+  "--", "--plan", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc6-oracle-rust/📋️plan.json",
+  "--out", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc6-oracle-rust/📤️results.jsonl"
+],
+      code: "ETIMEDOUT"
+
+      at spawnSync (node:child_process:254:35)
+      at runProbe (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1699:18)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:735:45)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:797:21)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1443:68)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1491:16)
+
+Bun v1.3.14 (macOS arm64)
+##### mutate-step-ap214-cc6 exit=1 #####
+ALLDONE

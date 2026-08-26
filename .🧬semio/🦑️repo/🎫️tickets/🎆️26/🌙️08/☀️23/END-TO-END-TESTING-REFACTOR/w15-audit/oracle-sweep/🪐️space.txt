@@ -1,0 +1,4 @@
+[test] not-exercised ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🧪️tests/mutate-s-home-1 (recorded no-oracle decision s-home-mutation-semantics — its evidence is discharged by the subject phase)
+[test] not-exercised ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🧪️tests/mutate-s-space-1 (recorded no-oracle decision s-space-index-mutation-semantics — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=2 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=2
+EXIT=0

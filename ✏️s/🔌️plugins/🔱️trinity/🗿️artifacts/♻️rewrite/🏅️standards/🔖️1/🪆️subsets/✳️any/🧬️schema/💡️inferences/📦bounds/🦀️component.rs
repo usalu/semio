@@ -27,7 +27,7 @@ pub struct RewriteBounds {
 }
 
 /// 📐️ Computes `bounds` directly from `rule_layout` — an empty layout yields `RewriteBounds::default()`.
-pub async fn compute_bounds(snapshot: &RewriteSnapshot) -> RewriteBounds {
+pub fn compute_bounds(snapshot: &RewriteSnapshot) -> RewriteBounds {
     let node_count = snapshot.rule_layout.len() as u32;
     if snapshot.rule_layout.is_empty() {
         return RewriteBounds::default();

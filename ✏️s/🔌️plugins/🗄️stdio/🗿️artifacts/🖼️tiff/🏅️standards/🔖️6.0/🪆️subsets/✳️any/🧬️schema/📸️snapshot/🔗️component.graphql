@@ -43,6 +43,8 @@ type TiffTag {
 "One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order)."
 type TiffIfd {
   entries: [TiffTag!]!
+  "This directory's own raster as RAW STRIP BYTES; empty for IFD 0 and for a metadata-only directory."
+  pixels: [Int!]!
 }
 
 """

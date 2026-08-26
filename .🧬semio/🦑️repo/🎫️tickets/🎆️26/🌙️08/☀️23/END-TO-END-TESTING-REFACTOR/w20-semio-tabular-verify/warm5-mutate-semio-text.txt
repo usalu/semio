@@ -1,0 +1,1 @@
+error: manifest path `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-semio-97645a-mutate-semio-text-subject-rust/Cargo.toml` does not exist

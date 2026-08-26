@@ -15,23 +15,23 @@ pub struct DeleteLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_layer(layer_id: String) -> DrawMutation {
+pub fn delete_layer(layer_id: String) -> DrawMutation {
     DrawMutation::DeleteLayer(DeleteLayer { layer_id })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for DeleteLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "layer", kind: "delete-layer", record: "DeletedLayer" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete layer \"{}\"", self.layer_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

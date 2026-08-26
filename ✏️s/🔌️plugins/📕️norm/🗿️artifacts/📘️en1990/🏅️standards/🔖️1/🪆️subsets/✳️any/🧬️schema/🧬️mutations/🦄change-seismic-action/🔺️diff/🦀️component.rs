@@ -5,7 +5,7 @@ use super::mutation::ChangeSeismicAction;
 use crate::artifacts::en1990::{En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSeismicAction, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
+pub fn diff(payload: &ChangeSeismicAction, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
     if !payload.new_seismic_a_ed_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Seismic action A_Ed must be a finite number.", Vec::<String>::new());
     }

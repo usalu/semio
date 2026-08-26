@@ -15,15 +15,15 @@ pub struct ChangeHEfMm {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeHEfMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "h-ef-mm", kind: "change-h-ef-mm", record: "ChangedHEfMm" };
 
-    async fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_h_ef_mm::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         crate::artifacts::en1996::mutations::change_h_ef_mm::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change effective height h_ef [mm] to {}", self.new_h_ef_mm)
     }
 }

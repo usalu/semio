@@ -15,15 +15,15 @@ pub struct ChangeChi {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeChi {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "chi", kind: "change-chi", record: "ChangedChi" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_chi::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_chi::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change buckling reduction factor chi to {}", self.new_chi)
     }
 }

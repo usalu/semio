@@ -30,12 +30,20 @@
         "added": { "type": "array", "items": { "$ref": "#/$defs/TiffTagAdded" } }
       }
     },
+    "TiffIfdDiff": {
+      "type": "object",
+      "description": "One IFD's own delta: the recursive tag triple plus a whole-value slot for that directory's raw strip payload.",
+      "properties": {
+        "entries": { "$ref": "#/$defs/TiffTagsDiff" },
+        "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+      }
+    },
     "TiffIfdModified": {
       "type": "object",
       "required": ["index", "diff"],
       "properties": {
         "index": { "type": "integer", "minimum": 0 },
-        "diff": { "$ref": "#/$defs/TiffTagsDiff" }
+        "diff": { "$ref": "#/$defs/TiffIfdDiff" }
       }
     },
     "TiffIfdAdded": {

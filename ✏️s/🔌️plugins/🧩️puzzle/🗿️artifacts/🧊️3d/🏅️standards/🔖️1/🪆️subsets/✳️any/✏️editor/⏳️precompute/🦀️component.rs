@@ -27,9 +27,9 @@ use crate::artifacts::puzzle3d::Puzzle3dError;
 use crate::editor::puzzle3d::precompute::brush::{
     brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
 };
-use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillJobStage, FillPreparationRoots, PlacedCollisionEntry};
+use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillJobStage, FillPreparationRoots, FillPreviewJsonStep, PlacedCollisionEntry};
 use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult, FIXED_OWNER_SLOTS};
-use semio_framework_job::{default_now_ms, drive_step, root_cancel_token, CancelToken, Generation, InteractiveStage, Operation, RevisionId, StepBudget, StepOutcome};
+use semio_framework_job::{default_now_ms, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::future::Future;
@@ -166,6 +166,62 @@ struct FillJobSlice {
 
 type SharedFillBuilder = Arc<Mutex<FillBuilder>>;
 
+struct SharedFillWorkerJob {
+    fill: Option<SharedFillBuilder>,
+}
+
+impl SharedFillWorkerJob {
+    fn new(fill: SharedFillBuilder) -> Self {
+        Self { fill: Some(fill) }
+    }
+}
+
+impl InteractiveJob for SharedFillWorkerJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> StepOutcome {
+        let Some(fill) = &self.fill else { return StepOutcome::Yield };
+        let Ok(mut fill) = fill.try_lock() else { return StepOutcome::Yield };
+        fill.step(cx)
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if self.fill.is_none() {
+            return InteractiveJobCloseStep::Complete;
+        }
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        self.fill.take();
+        InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.fill.is_none()
+    }
+}
+
+type MountedFillWorker = semio_framework_job::MountedWorkerJobSession<SharedFillWorkerJob>;
+type RejectedFillWorker = semio_framework_job::WorkerJobSessionAdmissionRejected<SharedFillWorkerJob>;
+
+fn mount_fill_worker(fill: SharedFillBuilder, operation: Operation, cancel: CancelToken) -> Result<MountedFillWorker, RejectedFillWorker> {
+    semio_framework_job::MountedWorkerJobSession::try_new(
+        SharedFillWorkerJob::new(fill),
+        semio_framework_job::BatchJobParams {
+            operation: operation.operation,
+            generation: operation.generation,
+            cancel,
+            config: semio_framework_job::BatchDriveConfig { site: "puzzle3d.fill.mounted", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 2 },
+            now_ms: default_now_ms,
+        },
+    )
+}
+
+fn fill_worker_pool() -> semio_framework_async::WorkerPool {
+    let workers = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, workers))
+}
+
 struct FillEnvelopeAdmissionCursor {
     request: FillJobRequest,
     census: FillBuilderOwnerCensusCursor,
@@ -260,6 +316,9 @@ enum FillEnvelopePhase {
 struct FillEnvelopeAuthority {
     request: FillJobRequest,
     fill: Option<SharedFillBuilder>,
+    worker: Option<MountedFillWorker>,
+    worker_outcome: Option<StepOutcome>,
+    worker_terminal: bool,
     fill_retirement: Option<FillBuilderRetirementCursor>,
     cancel: Option<CancelToken>,
     steps_remaining: usize,
@@ -272,6 +331,11 @@ struct FillEnvelopeAuthority {
     close_cursor: usize,
     reserved_items: usize,
     reserved_bytes: usize,
+}
+
+struct FillEnvelopeMeasurementOwners {
+    fill: SharedFillBuilder,
+    worker: MountedFillWorker,
 }
 
 struct FillEnvelopeRegistry {
@@ -310,19 +374,32 @@ fn decode_fill_envelope_token(bytes: &[u8]) -> Option<FillJobRequest> {
 }
 
 impl FillEnvelopeRegistry {
-    fn begin_measurement(&mut self, job: u64, operation: Operation, fill: SharedFillBuilder, cancel: CancelToken, steps_remaining: usize, preview_sequence: u64, observation: FillObservation) -> Result<FillJobRequest, SharedFillBuilder> {
+    fn begin_measurement(
+        &mut self,
+        job: u64,
+        operation: Operation,
+        fill: SharedFillBuilder,
+        worker: MountedFillWorker,
+        cancel: CancelToken,
+        steps_remaining: usize,
+        preview_sequence: u64,
+        observation: FillObservation,
+    ) -> Result<FillJobRequest, FillEnvelopeMeasurementOwners> {
         let candidates = [self.next_slot, (self.next_slot + 1) % FILL_ENVELOPE_MAX_OPERATIONS, (self.next_slot + 2) % FILL_ENVELOPE_MAX_OPERATIONS, (self.next_slot + 3) % FILL_ENVELOPE_MAX_OPERATIONS];
         let Some(slot) = candidates.into_iter().find(|slot| self.slots[*slot].is_none() && self.generations[*slot] != u64::MAX) else {
-            return Err(fill);
+            return Err(FillEnvelopeMeasurementOwners { fill, worker });
         };
         let Some(registry_generation) = self.generations[slot].checked_add(1).filter(|generation| *generation != u64::MAX) else {
-            return Err(fill);
+            return Err(FillEnvelopeMeasurementOwners { fill, worker });
         };
         self.generations[slot] = registry_generation;
         let request = FillJobRequest { job, operation: operation.operation.0, generation: operation.generation.0, base_revision: operation.base_revision.0, slot: slot as u8, registry_generation };
         self.slots[slot] = Some(FillEnvelopeAuthority {
             request: request.clone(),
             fill: Some(fill),
+            worker: Some(worker),
+            worker_outcome: None,
+            worker_terminal: false,
             fill_retirement: None,
             cancel: Some(cancel),
             steps_remaining,
@@ -386,13 +463,24 @@ impl FillEnvelopeRegistry {
         preview_sequence: u64,
         observation: FillObservation,
     ) -> Result<(FillJobRequest, Vec<u8>), SharedFillBuilder> {
-        let request = self.begin_measurement(job, operation, fill, cancel, steps_remaining, preview_sequence, observation)?;
+        let worker = match mount_fill_worker(Arc::clone(&fill), operation, cancel.clone()) {
+            Ok(worker) => worker,
+            Err(mut rejected) => {
+                rejected.begin_close();
+                let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                return Err(fill);
+            }
+        };
+        let request = self.begin_measurement(job, operation, fill, worker, cancel, steps_remaining, preview_sequence, observation).map_err(|owners| owners.fill)?;
         match self.finish_measurement(&request, requested_items, requested_bytes) {
             Some(token) => Ok((request, token)),
             None => {
                 let slot = usize::from(request.slot);
                 let authority = self.slots[slot].take().expect("fresh measurement authority");
                 release_fill_envelope_terminal_intent(&request);
+                if let Some(mut worker) = authority.worker {
+                    worker.begin_close();
+                }
                 Err(authority.fill.expect("measurement retained exact fill"))
             }
         }
@@ -505,55 +593,107 @@ fn drive_fill_envelope(request: &FillJobRequest) -> FillEnvelopeDrive {
         return FillEnvelopeDrive::Blocked;
     };
     if cancel.is_cancelled_now() {
+        if let Some(worker) = authority.worker.as_mut() {
+            worker.begin_close();
+        }
         authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled);
         authority.observation.done = true;
         return FillEnvelopeDrive::Advanced(FillJobSlice { progress: Some(authority.observation), done: true });
     }
-    let Some(fill_owner) = authority.fill.clone() else {
+    let Some(fill_owner) = authority.fill.as_ref() else {
         return FillEnvelopeDrive::Blocked;
     };
-    let Ok(mut fill) = fill_owner.try_lock() else {
-        return FillEnvelopeDrive::Blocked;
-    };
-    if fill.operation.operation.0 != request.operation || fill.operation.generation.0 != request.generation || fill.operation.base_revision.0 != request.base_revision {
-        authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
-        authority.observation.done = true;
-        return FillEnvelopeDrive::Stale;
+    {
+        let Ok(fill) = fill_owner.try_lock() else {
+            return FillEnvelopeDrive::Blocked;
+        };
+        if fill.operation.operation.0 != request.operation || fill.operation.generation.0 != request.generation || fill.operation.base_revision.0 != request.base_revision {
+            if let Some(worker) = authority.worker.as_mut() {
+                worker.begin_close();
+            }
+            authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
+            authority.observation.done = true;
+            return FillEnvelopeDrive::Stale;
+        }
     }
     let previous = authority.observation;
-    let operation = fill.operation;
-    let outcome = drive_step(
-        &mut *fill,
-        "puzzle3d.fill.envelope-step",
-        operation.operation,
-        operation.generation,
-        InteractiveStage::BackgroundStep,
-        StepBudget::new(32, default_now_ms().saturating_add(2)),
-        cancel,
-        default_now_ms,
-        &mut authority.preview_sequence,
-    );
-    match outcome {
-        StepOutcome::CheckpointReady(_) => authority.steps_remaining = authority.steps_remaining.saturating_sub(1),
-        StepOutcome::Complete(_) => {
-            authority.steps_remaining = 0;
-            authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete);
+    if let Some(outcome) = authority.worker_outcome.as_mut() {
+        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        if !outcome.terminal_is_empty() {
+            return FillEnvelopeDrive::Advanced(FillJobSlice { progress: None, done: false });
         }
-        StepOutcome::Cancelled => {
-            authority.steps_remaining = 0;
-            authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled);
-        }
-        StepOutcome::Fault(_) => {
-            authority.steps_remaining = 0;
+        authority.worker_outcome.take();
+        if authority.worker_terminal {
+            if let Some(worker) = authority.worker.as_mut() {
+                worker.begin_close();
+            }
+        } else if authority.worker.as_mut().is_none_or(|worker| worker.resume().is_err()) {
+            authority.worker_terminal = true;
             authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
+            authority.observation.done = true;
         }
-        StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
+    } else {
+        let Some(worker) = authority.worker.as_mut() else {
+            authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
+            authority.observation.done = true;
+            return FillEnvelopeDrive::Stale;
+        };
+        match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background) {
+            Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                let Some(outcome) = worker.take_checked_out_outcome() else {
+                    authority.worker_terminal = true;
+                    authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
+                    authority.observation.done = true;
+                    return FillEnvelopeDrive::Stale;
+                };
+                match &outcome {
+                    StepOutcome::CheckpointReady(_) => authority.steps_remaining = authority.steps_remaining.saturating_sub(1),
+                    StepOutcome::Complete(_) => {
+                        authority.steps_remaining = 0;
+                        authority.worker_terminal = true;
+                        authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete);
+                    }
+                    StepOutcome::Cancelled => {
+                        authority.steps_remaining = 0;
+                        authority.worker_terminal = true;
+                        authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Cancelled);
+                    }
+                    StepOutcome::Fault(_) => {
+                        authority.steps_remaining = 0;
+                        authority.worker_terminal = true;
+                        authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
+                    }
+                    StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
+                }
+                authority.worker_outcome = Some(outcome);
+            }
+            Ok(
+                semio_framework_job::WorkerJobPoll::Idle
+                | semio_framework_job::WorkerJobPoll::Submitted
+                | semio_framework_job::WorkerJobPoll::Rejected
+                | semio_framework_job::WorkerJobPoll::CheckedOut
+                | semio_framework_job::WorkerJobPoll::Closing
+                | semio_framework_job::WorkerJobPoll::TerminalEmpty,
+            ) => {}
+            Err(_) => {
+                authority.worker_terminal = true;
+                authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Fault);
+                authority.observation.done = true;
+            }
+        }
     }
-    let done = authority.steps_remaining == 0 || fill.stalled || fill.sequence.len() >= fill.max_count;
+    let Some((generation, sequence, available, fill_done)) = authority.fill.as_ref().and_then(|fill| {
+        let fill = fill.try_lock().ok()?;
+        Some((fill.preview.generation, fill.preview.sequence, fill.sequence.len() as u32, fill.stalled || fill.sequence.len() >= fill.max_count))
+    }) else {
+        return FillEnvelopeDrive::Advanced(FillJobSlice { progress: None, done: authority.observation.done });
+    };
+    let done = authority.steps_remaining == 0 || fill_done;
     if done && matches!(authority.phase, FillEnvelopePhase::Admitted) {
         authority.phase = FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Complete);
+        authority.worker_terminal = true;
     }
-    authority.observation = FillObservation { generation: fill.preview.generation, sequence: fill.preview.sequence, available: fill.sequence.len() as u32, done };
+    authority.observation = FillObservation { generation, sequence, available, done };
     let progress = (authority.observation != previous).then_some(authority.observation);
     FillEnvelopeDrive::Advanced(FillJobSlice { progress, done })
 }
@@ -617,9 +757,33 @@ impl FillEnvelopeTerminalHandle {
         authority.phase = FillEnvelopePhase::Closing;
         match authority.close_cursor {
             0 => {
+                let Some(outcome) = authority.worker_outcome.as_mut() else {
+                    authority.close_cursor = 1;
+                    return FillEnvelopeCloseStep::Pending;
+                };
+                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if outcome.terminal_is_empty() {
+                    authority.worker_outcome.take();
+                    authority.close_cursor = 1;
+                }
+                return FillEnvelopeCloseStep::Pending;
+            }
+            1 => {
+                let Some(worker) = authority.worker.as_mut() else {
+                    authority.close_cursor = 2;
+                    return FillEnvelopeCloseStep::Pending;
+                };
+                worker.begin_close();
+                if matches!(worker.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::WorkerJobCloseStep::Complete) && worker.terminal_is_empty() {
+                    authority.worker.take();
+                    authority.close_cursor = 2;
+                }
+                return FillEnvelopeCloseStep::Pending;
+            }
+            2 => {
                 if authority.fill_retirement.is_none() {
                     let Some(fill) = authority.fill.take() else {
-                        authority.close_cursor = 1;
+                        authority.close_cursor = 3;
                         return FillEnvelopeCloseStep::Pending;
                     };
                     let fill = match Arc::try_unwrap(fill) {
@@ -636,24 +800,24 @@ impl FillEnvelopeTerminalHandle {
                 let retired = authority.fill_retirement.as_mut().is_some_and(FillBuilderRetirementCursor::retire_one);
                 if retired {
                     authority.fill_retirement.take();
-                    authority.close_cursor = 1;
+                    authority.close_cursor = 3;
                 }
                 return FillEnvelopeCloseStep::Pending;
             }
-            1 => {
+            3 => {
                 authority.cancel.take();
-                authority.close_cursor = 2;
+                authority.close_cursor = 4;
                 return FillEnvelopeCloseStep::Pending;
             }
-            2 => {
+            4 => {
                 authority.token_page.take();
                 authority.token_len = 0;
-                authority.close_cursor = 3;
+                authority.close_cursor = 5;
                 return FillEnvelopeCloseStep::Pending;
             }
-            3 => {
+            5 => {
                 authority.reserved_items = 0;
-                authority.close_cursor = 4;
+                authority.close_cursor = 6;
                 return FillEnvelopeCloseStep::Pending;
             }
             _ => {}
@@ -730,6 +894,10 @@ pub(crate) struct Puzzle3dCollision {
     brush_queue_preparing: bool,
     fill_steps_remaining: usize,
     pub(crate) fill: Option<SharedFillBuilder>,
+    fill_worker: Option<MountedFillWorker>,
+    fill_rejected_worker: Option<RejectedFillWorker>,
+    fill_worker_outcome: Option<StepOutcome>,
+    fill_worker_terminal: bool,
     fill_cancel: CancelToken,
     fill_revision: u64,
     fill_generation: u64,
@@ -751,6 +919,10 @@ impl Puzzle3dCollision {
             brush_queue_preparing: false,
             fill_steps_remaining: 0,
             fill: None,
+            fill_worker: None,
+            fill_rejected_worker: None,
+            fill_worker_outcome: None,
+            fill_worker_terminal: false,
             fill_cancel: root_cancel_token(),
             fill_revision: 0,
             fill_generation: 0,
@@ -824,8 +996,23 @@ impl Puzzle3dCollision {
             let operation = Operation::new(semio_framework_job::allocate_operation_id(), revision, generation, scene.seed as u64);
             let fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, self.meshes.clone()), operation);
             self.fill = Some(Arc::new(Mutex::new(fill)));
+            let fill = Arc::clone(self.fill.as_ref().expect("fresh fill owner"));
+            match mount_fill_worker(fill, operation, self.fill_cancel.clone()) {
+                Ok(worker) => self.fill_worker = Some(worker),
+                Err(mut rejected) => {
+                    rejected.begin_close();
+                    self.fill_rejected_worker = Some(rejected);
+                    self.fill_steps_remaining = 0;
+                }
+            }
+            self.fill_worker_outcome = None;
+            self.fill_worker_terminal = false;
         } else {
             self.fill = None;
+            self.fill_worker = None;
+            self.fill_rejected_worker = None;
+            self.fill_worker_outcome = None;
+            self.fill_worker_terminal = false;
         }
     }
 
@@ -1170,29 +1357,41 @@ impl Puzzle3dCollision {
                     if self.fill_steps_remaining == 0 {
                         break;
                     }
-                    let Some(fill) = &self.fill else {
+                    if let Some(rejected) = self.fill_rejected_worker.as_mut() {
+                        rejected.begin_close();
+                        if matches!(rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Complete) && rejected.terminal_is_empty() {
+                            self.fill_rejected_worker.take();
+                            self.fill_steps_remaining = 0;
+                        }
+                    } else if let Some(outcome) = self.fill_worker_outcome.as_mut() {
+                        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                        if outcome.terminal_is_empty() {
+                            self.fill_worker_outcome.take();
+                            if self.fill_worker_terminal {
+                                self.fill_steps_remaining = 0;
+                            } else if self.fill_worker.as_mut().is_none_or(|worker| worker.resume().is_err()) {
+                                self.fill_steps_remaining = 0;
+                            }
+                        }
+                    } else if let Some(worker) = self.fill_worker.as_mut() {
+                        match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background) {
+                            Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                                let Some(outcome) = worker.take_checked_out_outcome() else {
+                                    self.fill_steps_remaining = 0;
+                                    break;
+                                };
+                                match &outcome {
+                                    StepOutcome::CheckpointReady(_) => self.fill_steps_remaining = self.fill_steps_remaining.saturating_sub(1),
+                                    StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => self.fill_worker_terminal = true,
+                                    StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
+                                }
+                                self.fill_worker_outcome = Some(outcome);
+                            }
+                            Ok(semio_framework_job::WorkerJobPoll::Idle | semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Rejected) => {}
+                            Ok(semio_framework_job::WorkerJobPoll::CheckedOut | semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) | Err(_) => self.fill_steps_remaining = 0,
+                        }
+                    } else {
                         self.fill_steps_remaining = 0;
-                        break;
-                    };
-                    let Ok(mut fill) = fill.try_lock() else {
-                        break;
-                    };
-                    let operation = fill.operation;
-                    let outcome = drive_step(
-                        &mut *fill,
-                        "puzzle3d.fill.step",
-                        operation.operation,
-                        operation.generation,
-                        InteractiveStage::BackgroundStep,
-                        StepBudget::new(32, default_now_ms().saturating_add(2)),
-                        self.fill_cancel.clone(),
-                        default_now_ms,
-                        &mut self.fill_preview_sequence,
-                    );
-                    match outcome {
-                        StepOutcome::CheckpointReady(_) => self.fill_steps_remaining = self.fill_steps_remaining.saturating_sub(1),
-                        StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => self.fill_steps_remaining = 0,
-                        StepOutcome::Yield | StepOutcome::PreviewReady(_) => {}
                     }
                 }
             }
@@ -1344,6 +1543,17 @@ impl Puzzle3dPrecomputeSession {
         Some(read(&fill))
     }
 
+    fn write_fill<R>(&self, write: impl FnOnce(&mut FillBuilder) -> R) -> Option<R> {
+        if let Some(request) = &self.fill_job {
+            let registry = fill_envelope_registry().try_lock().ok()?;
+            let authority = registry.slots.get(usize::from(request.slot))?.as_ref().filter(|authority| authority.request == *request)?;
+            let mut fill = authority.fill.as_ref()?.try_lock().ok()?;
+            return Some(write(&mut fill));
+        }
+        let mut fill = self.engine.fill.as_ref()?.try_lock().ok()?;
+        Some(write(&mut fill))
+    }
+
     fn supersede_admitted_fill(&mut self) {
         let Some(request) = &self.fill_job else { return };
         self.engine.fill_cancel.cancel_now();
@@ -1419,6 +1629,31 @@ impl Puzzle3dPrecomputeSession {
     pub fn fill_progress_summary(&self) -> FillProgressSummary {
         self.read_fill(|fill| FillProgressSummary { count: fill.sequence.len(), applied_count: (self.fill_applied_count as usize).min(fill.sequence.len()), max_count: fill.max_count, done: fill.stalled || fill.sequence.len() >= fill.max_count })
             .unwrap_or(FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true })
+    }
+
+    /// 🔭️ Advances a fixed number of one-unit preview JSON grants and returns the retained last
+    /// valid page while a newer generation is still being censused or encoded.
+    pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String> {
+        const GRANTS_PER_FRAME: usize = 256;
+        let deadline = default_now_ms().saturating_add(2);
+        let cancelled = self.engine.fill_cancel.is_cancelled_now();
+        self.write_fill(|fill| {
+            if fill.preview.stage == "complete" {
+                return None;
+            }
+            for _ in 0..GRANTS_PER_FRAME {
+                let mut fuel = 1;
+                let step = fill.preview_json_step(color, status_label, &mut fuel, cancelled, default_now_ms() >= deadline);
+                if matches!(step, FillPreviewJsonStep::Ready | FillPreviewJsonStep::Rejected | FillPreviewJsonStep::Cancelled | FillPreviewJsonStep::Terminal) {
+                    break;
+                }
+            }
+            fill.preview_json_ready().map(ToOwned::to_owned)
+        })?
+    }
+
+    pub fn fill_preview_object_kind(&self) -> Option<String> {
+        self.read_fill(|fill| fill.preview.candidate_ghost.as_ref().map(|ghost| ghost.object_kind_id.clone()))?
     }
 
     /// 🪣️ O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` round
@@ -1528,13 +1763,23 @@ impl Puzzle3dPrecomputeSession {
                 self.engine.fill = Some(fill);
                 return None;
             };
-            let request = match registry.begin_measurement(job, operation, fill, self.engine.fill_cancel.clone(), self.engine.fill_steps_remaining, self.engine.fill_preview_sequence, observation) {
+            if self.engine.fill_worker_outcome.is_some() || self.engine.fill_rejected_worker.is_some() {
+                self.engine.fill = Some(fill);
+                return None;
+            }
+            let Some(worker) = self.engine.fill_worker.take() else {
+                self.engine.fill = Some(fill);
+                return None;
+            };
+            let request = match registry.begin_measurement(job, operation, fill, worker, self.engine.fill_cancel.clone(), self.engine.fill_steps_remaining, self.engine.fill_preview_sequence, observation) {
                 Ok(request) => request,
-                Err(fill) => {
-                    self.engine.fill = Some(fill);
+                Err(owners) => {
+                    self.engine.fill_worker = Some(owners.worker);
+                    self.engine.fill = Some(owners.fill);
                     return None;
                 }
             };
+            self.engine.fill_worker_terminal = false;
             if let Some(fill) = registry.authority_mut(&request).and_then(|authority| authority.fill.as_ref()) {
                 if let Ok(mut fill) = fill.try_lock() {
                     fill.preview.registry_generation = request.registry_generation;

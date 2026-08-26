@@ -1,0 +1,17 @@
+# 🤖️ Ticket-local probe — not part of any workspace, never shipped.
+[workspace]
+
+[package]
+name = "w18-pdf14-probe"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "probe"
+path = "src/main.rs"
+
+[dependencies]
+semio-repo-test-host = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+semio-s-plugin-stdio-test-oracle = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust", features = ["oracles"] }
+store = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-s-plugin-stdio = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }

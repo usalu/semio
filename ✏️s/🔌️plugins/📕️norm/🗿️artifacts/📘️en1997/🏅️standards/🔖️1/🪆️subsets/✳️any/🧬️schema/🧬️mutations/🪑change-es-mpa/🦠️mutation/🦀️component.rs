@@ -15,15 +15,15 @@ pub struct ChangeESMpa {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeESMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "es-mpa", kind: "change-es-mpa", record: "ChangedESMpa" };
 
-    async fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_e_s_mpa::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
+    fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         crate::artifacts::en1997::mutations::change_e_s_mpa::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change soil modulus E_s [MPa] to {}", self.new_e_s_mpa)
     }
 }

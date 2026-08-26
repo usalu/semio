@@ -1,5 +1,0 @@
-[run r13-tq30bffc] crate=semio-framework-plugin dryRun=false target=(host) excludePath=(none)
-[run r13-tq30bffc] iteration 1: total errors=4, async-class=4
-[run r13-tq30bffc] iteration 1: planned 4 edits (0 residue)
-[run r13-tq30bffc] iteration 2: total errors=0, async-class=0
-[run r13-tq30bffc] no async-class diagnostics remain (total errors=0, presumably other bug classes or zero). Stopping.

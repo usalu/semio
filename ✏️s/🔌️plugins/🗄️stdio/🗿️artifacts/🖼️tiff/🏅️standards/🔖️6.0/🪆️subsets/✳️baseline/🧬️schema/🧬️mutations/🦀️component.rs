@@ -65,7 +65,7 @@
 //! @see ../🦀️component.rs — this subset's conformance check, one axis per variant below.
 //! @see ../../✳️any/🧬️schema/🧬️mutations/🦀️component.rs — the DOCUMENT vocabulary this one is disjoint from.
 
-use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::diff::{TiffDiff, TiffIfdModified, TiffIfdsDiff, TiffTagAdded, TiffTagModified, TiffTagsDiff};
+use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::diff::{TiffDiff, TiffIfdDiff, TiffIfdModified, TiffIfdsDiff, TiffTagAdded, TiffTagModified, TiffTagsDiff};
 use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffFieldType, TiffSnapshot, TiffTag, TiffValues, TAG_BITS_PER_SAMPLE, TAG_COMPRESSION, TAG_PHOTOMETRIC, TAG_STRIP_OFFSETS, TAG_TILE_LENGTH, TAG_TILE_WIDTH};
 use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
@@ -210,7 +210,14 @@ fn ifd0_diff(added: Vec<TiffTagAdded>, modified: Vec<TiffTagModified>, removed: 
     if added.is_empty() && modified.is_empty() && removed.is_empty() {
         return TiffDiff::default();
     }
-    TiffDiff { ifds: Some(TiffIfdsDiff { removed: Vec::new(), modified: vec![TiffIfdModified { index: 0, diff: TiffTagsDiff { removed, modified, added } }], added: Vec::new() }), ..Default::default() }
+    TiffDiff {
+        ifds: Some(TiffIfdsDiff {
+            removed: Vec::new(),
+            modified: vec![TiffIfdModified { index: 0, diff: TiffIfdDiff { entries: TiffTagsDiff { removed, modified, added }, pixels: None } }],
+            added: Vec::new(),
+        }),
+        ..Default::default()
+    }
 }
 
 /// ✏️ Creates-or-updates one IFD-0 tag, and produces the empty diff when the value is already what
@@ -361,7 +368,7 @@ mod tests {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
-            ifds: vec![TiffIfd {
+            ifds: vec![TiffIfd { pixels: Vec::new(),
                 entries: vec![
                     tag(256, TiffFieldType::Long, TiffValues::Long(vec![4])),
                     tag(257, TiffFieldType::Long, TiffValues::Long(vec![2])),

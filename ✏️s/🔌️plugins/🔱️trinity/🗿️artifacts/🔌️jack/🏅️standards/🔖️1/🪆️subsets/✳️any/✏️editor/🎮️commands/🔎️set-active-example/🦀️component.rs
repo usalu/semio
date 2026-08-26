@@ -10,7 +10,7 @@ use store::ArtifactDsl;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
 /// failure yields an error result and no operations (no document mutation).
-pub(crate) async fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Vec<TrinityGraphMutation>) {
+pub(crate) fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Vec<TrinityGraphMutation>) {
     let graph = match crate::artifacts::jack::Graph::from_fixture(fixture.clone()) {
         Ok(graph) => graph,
         Err(error) => return (error_result_json(&error.to_string()), Vec::new()),
@@ -25,17 +25,17 @@ pub(crate) async fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (Stri
     }
 }
 
-pub(crate) async fn preset_query(preset_id: &str) -> &'static str {
+pub(crate) fn preset_query(preset_id: &str) -> &'static str {
     match preset_id {
         "branch-chain" => "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b",
         _ => crate::editor::jack::TRINITY_JACK_DEFAULT_QUERY,
     }
 }
 
-async fn error_result_json(message: &str) -> String {
+fn error_result_json(message: &str) -> String {
     json!({ "error": message }).to_string()
 }
-async fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
+fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
     match preset_id {
         "nakagin" | "nakagin-capsule-tower" => Some(crate::editor::jack::NAKAGIN_FIXTURE_DSL),
         "branch-chain" => Some(crate::editor::jack::BRANCH_FIXTURE_DSL),
@@ -43,7 +43,7 @@ async fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
     }
 }
 
-pub(crate) async fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     match fixture_dsl_for_preset(example_id).and_then(|dsl| JackSnapshot::parse_dsl(dsl).ok()) {
         Some(next) => {
             let query = preset_query(example_id).to_string();

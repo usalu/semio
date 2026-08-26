@@ -215,12 +215,12 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn validator_decodes_pack_payload_and_runs_referential_checks() {
             let bytes = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&valid_snapshot());
-            assert!(SemioBrepValidator::validate(&IoPayload::Binary(bytes)).is_empty());
+            assert!(SemioBrepValidator::validate(&IoPayload::Binary(bytes)).await.is_empty());
 
             let mut broken = valid_snapshot();
             broken.edges[0].end_vertex = "v-missing".into();
             let broken_bytes = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&broken);
-            let diagnostics = SemioBrepValidator::validate(&IoPayload::Binary(broken_bytes));
+            let diagnostics = SemioBrepValidator::validate(&IoPayload::Binary(broken_bytes)).await;
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_brep.dangling-edge-end-vertex"));
         }
 

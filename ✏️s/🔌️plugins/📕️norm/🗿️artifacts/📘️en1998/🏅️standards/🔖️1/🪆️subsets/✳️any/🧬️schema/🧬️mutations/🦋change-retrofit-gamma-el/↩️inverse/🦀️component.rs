@@ -6,7 +6,7 @@ use crate::artifacts::en1998::mutations::En1998Mutation;
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeRetrofitGammaEl, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+pub fn inverse(_payload: &ChangeRetrofitGammaEl, base: &En1998Snapshot) -> Vec<En1998Mutation> {
     vec![En1998Mutation::ChangeRetrofitGammaEl(ChangeRetrofitGammaEl { new_retrofit_gamma_el: base.retrofit_gamma_el.clone() })]
 }
 //#endregion 🔖️Inverse

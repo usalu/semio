@@ -15,15 +15,15 @@ pub struct ChangeMultipleResistingSystems {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMultipleResistingSystems {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "multiple-resisting-systems", kind: "change-multiple-resisting-systems", record: "ChangedMultipleResistingSystems" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_multiple_resisting_systems::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_multiple_resisting_systems::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change multiple resisting systems flag to {}", self.new_multiple_resisting_systems)
     }
 }

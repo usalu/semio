@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_alpha_s::mutation::ChangeAlphaS;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeAlphaS, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeAlphaS, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_alpha_s.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Shaft resistance factor alpha_s must be a finite number, got {}.", payload.new_alpha_s), Vec::<String>::new());
     }

@@ -1,0 +1,96 @@
+{
+  "schema": "raster.document",
+  "id": "semio-demo",
+  "title": "Semio Raster Demo",
+  "layers": [
+    {
+      "kind": "group",
+      "id": "artwork",
+      "name": "Artwork",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "mask": null,
+      "children": [
+        {
+          "kind": "pixel",
+          "id": "sketch",
+          "name": "Sketch",
+          "visible": true,
+          "opacity": 1.0,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.0,
+            "y": 0.0,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "rotation": 0.0
+          },
+          "mask": null,
+          "width": 512,
+          "height": 512,
+          "imageKey": null
+        }
+      ]
+    },
+    {
+      "kind": "pixel",
+      "id": "backdrop",
+      "name": "Backdrop",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "mask": null,
+      "width": 1024,
+      "height": 1024,
+      "imageKey": "semio-emblem"
+    },
+    {
+      "kind": "adjustment",
+      "id": "brighten",
+      "name": "Brighten",
+      "visible": true,
+      "opacity": 1.0,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0
+      },
+      "adjustmentKind": "brightnessContrast",
+      "params": {
+        "brightness": 0.12,
+        "contrast": 0.08
+      }
+    }
+  ],
+  "assets": {
+    "semio-emblem": {
+      "childId": "raster-asset-81e1564e819d209c",
+      "target": {
+        "artifactId": "semio-emblem-image",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image"
+        }
+      }
+    }
+  }
+}

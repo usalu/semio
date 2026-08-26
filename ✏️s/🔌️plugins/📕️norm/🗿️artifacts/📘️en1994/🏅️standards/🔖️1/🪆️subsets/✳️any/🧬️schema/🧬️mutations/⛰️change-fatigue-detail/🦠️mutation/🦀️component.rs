@@ -12,13 +12,13 @@ pub struct ChangeFatigueDetail {
 impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFatigueDetail {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fatigue-detail", kind: "change-fatigue-detail", record: "ChangedFatigueDetail" };
 
-    async fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
+    fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change fatigue detail to \"{}\"", self.new_fatigue_detail)
     }
 }

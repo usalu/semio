@@ -12,13 +12,13 @@ pub struct ChangeTIntC {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeTIntC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "t-int-c", kind: "change-t-int-c", record: "ChangedTIntC" };
 
-    async fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change t int c to {}", self.new_t_int_c)
     }
 }

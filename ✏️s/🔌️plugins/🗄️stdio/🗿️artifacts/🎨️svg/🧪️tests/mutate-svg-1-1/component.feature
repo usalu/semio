@@ -91,7 +91,7 @@ Feature: Apply every typed SVG 1.1 mutation to a real-world document
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document shared://qr-code.svg
     When the <id> mutation is applied and then undone

@@ -3,7 +3,7 @@
 //! never reimplemented here: it is reused from the shared `crate::artifacts::zip::opc` layer and,
 //! transitively, `crate::artifacts::zip::engine` + `crate::artifacts::xml::schema::snapshot`.
 
-use super::super::super::{DocxError, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STYLES_PART};
+use super::super::super::{DocxError, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES, STYLES_PART};
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlAttr, XmlDocument, XmlNode};
@@ -160,7 +160,7 @@ pub fn document_from_xml(doc: &XmlDocument) -> Result<Vec<DocxBlock>, DocxError>
 
 //#region 🔖️StylesMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
+pub fn styles_from_xml(doc: &XmlDocument) -> Result<Vec<DocxStyle>, DocxError> {
     let bad = |detail: &str| DocxError::Xml { part: STYLES_PART.into(), detail: detail.into() };
     let Some(root) = doc.root.as_ref() else { return Ok(Vec::new()) };
     let XmlNode::Element { name, children, .. } = root else { return Err(bad("root is not an element")) };
@@ -200,7 +200,14 @@ pub fn decode_docx(data: &[u8]) -> Result<DocxSnapshot, DocxError> {
     let xml = xml_document_from_text(&text).map_err(|e| DocxError::Xml { part: main_path.clone(), detail: e })?;
     let body = document_from_xml(&xml)?;
 
-    let styles = match opc.resolve_relationship(&main_path, REL_TYPE_STYLES).and_then(|p| opc.part_bytes(&p).map(|b| (p, b.to_vec()))) {
+    // 🏅️ Both conformance classes, exactly as the `officeDocument` lookup above: a Strict package
+    // types its styles relationship `http://purl.oclc.org/ooxml/…/styles`, and resolving only the
+    // transitional type silently decoded such a package with NO styles at all.
+    let styles = match opc
+        .resolve_relationship(&main_path, REL_TYPE_STYLES)
+        .or_else(|| opc.resolve_relationship(&main_path, STRICT_REL_TYPE_STYLES))
+        .and_then(|p| opc.part_bytes(&p).map(|b| (p, b.to_vec())))
+    {
         Some((styles_path, styles_bytes)) => {
             let text = String::from_utf8(styles_bytes).map_err(|_| DocxError::Xml { part: styles_path.clone(), detail: "not valid utf-8".into() })?;
             let xml = xml_document_from_text(&text).map_err(|e| DocxError::Xml { part: styles_path.clone(), detail: e })?;

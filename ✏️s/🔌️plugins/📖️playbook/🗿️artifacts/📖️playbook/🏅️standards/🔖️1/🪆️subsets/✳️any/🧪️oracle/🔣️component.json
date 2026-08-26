@@ -2,20 +2,24 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
   "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.playbook.playbook` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "oracles": [
     {
-      "id": "playbook-document-mutation-semantics",
+      "id": "playbook-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
       "capabilities": [
         "playbook-1-mutate"
       ],
-      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `PlaybookMutation`: the 9 kinds are this subset's own step/block flow-authoring verbs. What stands in its place is the committed, independently handcrafted specification vector under each of the 9 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves, plus the inverse law as a metamorphic property. ⚠️ Recorded honestly, because it bounds what those vectors prove: eight of the nine pin a REJECTION or NO-OP branch rather than an effect, for the same structural reason forms records — `PlaybookSnapshot` keeps its step flow in a composed `s.stdio.semio.flow` CHILD handle that a successful mutation re-mints content-addressed, so the effect branch's `➡️after` cannot be hand-authored. The case therefore asserts each vector's declared status, diagnostic code and target rather than pretending they are effect vectors.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.playbook.playbook` document and all nine typed mutations, in Python, at `../../../../../🧪️tests/mutate-playbook-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the snapshot's members), rules 1, 2 and 3 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and the nine committed `(before, mutation, after, outcome)` vectors together with the `scene` array each scenario carries in its own doc string — which is what makes this case adjudicable at all, because the scene is the child's content and without it no reader could tell whether the addressed step exists. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `playbook-document-mutation-semantics` no-oracle decision, whose argument was refuted in this same wave by the fifteen `📕️norm` and nineteen `🧿️semio` references, all of which took Python second implementations over this same carrier. A THIRD-PARTY library was declined, not merely absent: no form or checklist format models a programme whose content is a CHILD ARTIFACT addressed by content, and none of them reads this carrier. WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated plainly rather than implied: 8 of the nine committed vectors leave the snapshot BYTE-IDENTICAL, because 8 of the nine kinds address records that live in the child scene and not in this document. What each of those vectors really pins is a DIAGNOSTIC, and the reference DERIVES that diagnostic from the scene rather than reading it off the committed outcome — status, code and path — which is the only way the comparison says anything at all. So this case's evidence is one applied mutation and 8 diagnostics, and no committed vector in it exercises a add/remove/move/replace that SUCCEEDS. That is a real gap in the case's fixtures, visible here rather than papered over. A CROSS-CASE DIVERGENCE THE REFERENCE SURFACED: `s.forms.form` is the same shape with the same verbs, and the two subsets answer the same situation differently — a duplicate step id is an APPLIED `mutation.no-op` here (`add-step`) and a REJECTED `mutation.duplicate-id` there (`create-step`); a block added to a step that does not exist is `mutation.target-missing` here (`add-block`) and `mutation.invariant` there (`create-block`). Neither divergence is stated anywhere; both are visible only because one reference was written against both surfaces. A SIBLING NOTE, because the count of second implementations must not be overstated: this reference and `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🧪️tests/mutate-forms-1/🐍️component.py` are ONE implementation instantiated twice, differing in the verb names, the diagnostic each situation raises and the handle members; that the two instantiations DISAGREE on two situations is the finding above. ONE OF THE NINETEEN SCENARIOS IS REFUSED BY CLAUSE: `identity-round-trip`, because the committed grammar `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` describes a DIFFERENT DOCUMENT — it is the generic `family-scene` canvas grammar with `layers { shape { … } }` and `id`/`x`/`y`/`fill`/`stroke`/`opacity` fields — while the committed artifact carries no `layers` block at all and instead five HEX-ENCODED scalars and two `[hex,hex]` child-handle pairs the grammar never mentions. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "playbook-1-any",

@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-annex` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `annex` from de to en, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_annex_applies_to_committed_after() {
+fn change_annex_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-annex applies to its committed before-snapshot");
     assert_eq!(applied.annex, "en", "change-annex/switches-annex-to-en: annex must read en after the change");
     assert_eq!(applied, expected_after(), "change-annex/switches-annex-to-en: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_annex_applies_to_committed_after() {
 /// ↩️ `change-annex` is its own inverse partner: the inverse step restores `annex` to its pre-change
 /// de and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_annex_inverse_restores_before() {
+fn change_annex_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-annex applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_annex_inverse_restores_before() {
 /// decode then encode is a fixed point, so `annex` and `newAnnex` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_annex_committed_json_is_canonical() {
+fn change_annex_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-annex snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-annex snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_annex_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-annex` at en is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_annex_declared_outcome_holds() {
+fn change_annex_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-annex outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-annex/switches-annex-to-en: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_annex_declared_outcome_holds() {
 /// assertion: it pins that only `annex` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `enAGr`.
 #[semio_framework_async_macros::async_test]
-async fn change_annex_produces_committed_diff() {
+fn change_annex_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().annex.as_deref(), Some("en"), "change-annex/switches-annex-to-en: the diff must set annex to en");
     assert!(outcome.diff().artifact.is_none(), "change-annex/switches-annex-to-en: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_annex_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-annex`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_annex_committed_diff_is_canonical() {
+fn change_annex_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-annex committed diff decodes");
     assert_eq!(decoded.annex.as_deref(), Some("en"), "change-annex/switches-annex-to-en: the committed diff must carry annex at en");
     assert!(decoded.selected_check_index.is_none(), "change-annex/switches-annex-to-en: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_annex_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the de to en delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_annex_committed_diff_applies_to_after() {
+fn change_annex_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-annex committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-annex committed diff applies to the before-snapshot");
     assert_eq!(produced.annex, "en", "change-annex/switches-annex-to-en: the committed diff must leave annex reading en");

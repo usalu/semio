@@ -1,0 +1,48 @@
+[test] level=exhaustive cases=1 executed=15 passed=15 failed=0 errored=0 parity=0/0
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/mutate-zip-2-0: rust oracle host exited 101 without emitting results
+[test] warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:317:34
+    |
+317 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/../../📰markup/🦀️component.rs:396:34
+    |
+396 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+
+warning: constant `RELS_CONTENT_TYPE` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:192:11
+    |
+192 |     const RELS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+error: could not compile `semio-test-host-mutate-zip-2-0` (bin "host")
+
+Caused by:
+  could not execute process `sccache /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/rustc --crate-name host --edition=2021 src/main.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("sut"))' -C metadata=0ad4f99fbaba713b -C extra-filename=-4d31d1544e92fa5d --out-dir '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps' -C 'incremental=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/incremental' -L 'dependency=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps' --extern 'semio_repo_test_host=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/libsemio_repo_test_host-40f6ca8ac45e25a6.rlib' --extern 'semio_repo_test_host=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/libsemio_repo_test_host-40f6ca8ac45e25a6.rmeta' --extern 'semio_s_plugin_stdio_test_oracle=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/libsemio_s_plugin_stdio_test_oracle-8880b518fc38f62c.rlib' --extern 'semio_s_plugin_stdio_test_oracle=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/deps/libsemio_s_plugin_stdio_test_oracle-8880b518fc38f62c.rmeta' -Z threads=8 -L 'native=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/agents/local/cargo-test-hosts/debug/build/onig_sys-68d65bfd7fa1f850/out'` (never executed)
+
+Caused by:
+  No such file or directory (os error 2)
+[test] ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/mutate-zip-2-0: no result stream at /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-stdio-artifacts-zip-c00596-mutate-zip-2-0-oracle-rust/📤️results.jsonl
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::mutate-no-mutation::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::mutate-set-snapshot::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::mutate-set-archive-comment::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::mutate-add-entry::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::mutate-remove-entry::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::mutate-rename-entry::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::mutate-set-entry-data::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::inverse-no-mutation::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::inverse-set-snapshot::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::inverse-set-archive-comment::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::inverse-add-entry::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::inverse-remove-entry::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::inverse-rename-entry::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::inverse-set-entry-data::rust::subject
+[test] no oracle result to compare against: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip::mutate-zip-2-0::identity-round-trip::rust::subject
+PARITY_ZIP_EXIT=1

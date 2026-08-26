@@ -225,7 +225,7 @@ pub mod derived_composition {
         async fn subset_validator_recheck_agrees_with_direct_invariant_check() {
             let snap = clean_snapshot();
             let bytes = <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(&snap);
-            let diagnostics = SemioVideoValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioVideoValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.is_empty(), "wire recheck must agree with the direct check for a clean snapshot: {diagnostics:?}");
         }
 

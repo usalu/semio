@@ -12,13 +12,13 @@ pub struct RenameManufacturer {
 impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RenameManufacturer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "manufacturer", kind: "rename-manufacturer", record: "RenamedManufacturer" };
 
-    async fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename manufacturer to \"{}\"", self.new_name)
     }
 }

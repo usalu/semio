@@ -1,0 +1,111 @@
+{
+  "schema": "semio.puzzle3d.fill-preview-json.v1",
+  "limits": {
+    "maximumBytes": 4096,
+    "maximumColorBytes": 128,
+    "maximumStatusLabelBytes": 256,
+    "maximumSourceVortexIndex": 9007199254740991,
+    "maximumDiagnosticInteger": 9007199254740991,
+    "candidateItems": 8
+  },
+  "boundaryLaws": {
+    "sourceVortexIndex": [
+      { "name": "safe-maximum", "value": 9007199254740991, "admitted": true },
+      { "name": "safe-maximum-plus-one", "value": 9007199254740992, "admitted": false }
+    ],
+    "color": [
+      { "name": "ascii-maximum", "unit": "x", "repeat": 128, "utf8Bytes": 128, "admitted": true },
+      { "name": "ascii-maximum-plus-one", "unit": "x", "repeat": 129, "utf8Bytes": 129, "admitted": false },
+      { "name": "multibyte-maximum", "unit": "ü", "repeat": 64, "utf8Bytes": 128, "admitted": true },
+      { "name": "multibyte-maximum-plus-one", "unit": "ü", "repeat": 65, "utf8Bytes": 130, "admitted": false }
+    ],
+    "statusLabel": [
+      { "name": "ascii-maximum", "unit": "x", "repeat": 256, "utf8Bytes": 256, "admitted": true },
+      { "name": "ascii-maximum-plus-one", "unit": "x", "repeat": 257, "utf8Bytes": 257, "admitted": false },
+      { "name": "multibyte-maximum", "unit": "ü", "repeat": 128, "utf8Bytes": 256, "admitted": true },
+      { "name": "multibyte-maximum-plus-one", "unit": "ü", "repeat": 129, "utf8Bytes": 258, "admitted": false }
+    ],
+    "fullWire": [
+      { "name": "maximum", "sourceField": "stage", "utf8Bytes": 4096, "admitted": true, "oracle": "serde_json" },
+      {
+        "name": "maximum-plus-one",
+        "sourceField": "stage",
+        "utf8Bytes": 4097,
+        "admitted": false,
+        "preserves": ["fuel", "checkpoint", "phase", "ready", "readyIdentity", "colorOwner", "statusLabelOwner", "transientOwners"]
+      }
+    ],
+    "aggregateSourceStrings": [
+      "stage",
+      "targetVortexFullId",
+      "candidateObjectKindId",
+      "candidateGhost.targetVortexFullId",
+      "candidateGhost.objectKindId",
+      "candidateGhost.meshUrl",
+      "currentPairObjectId",
+      "candidatePage[0]",
+      "rejectionReason",
+      "color",
+      "statusLabel"
+    ]
+  },
+  "diagnosticNumericFields": [
+    { "field": "operation", "minimum": 1 },
+    { "field": "baseRevision", "minimum": 1 },
+    { "field": "registryGeneration", "minimum": 1 },
+    { "field": "sequence", "minimum": 0 },
+    { "field": "generation", "minimum": 1 },
+    { "field": "collisionCount", "minimum": 0 },
+    { "field": "sampleCursor", "minimum": 0 },
+    { "field": "insideBoth", "minimum": 0 },
+    { "field": "targetCursor", "minimum": 0 },
+    { "field": "candidateCursor", "minimum": 0 },
+    { "field": "acceptedCount", "minimum": 0 },
+    { "field": "totalCount", "minimum": 0 },
+    { "field": "searchCount", "minimum": 0 },
+    { "field": "rejectedCount", "minimum": 0 }
+  ],
+  "color": "#38bdf8",
+  "preview": {
+    "operation": 41,
+    "baseRevision": 7,
+    "registryGeneration": 11,
+    "sequence": 5,
+    "generation": 3,
+    "stage": "test-collision",
+    "targetVortexFullId": "host:v0",
+    "candidateObjectKindId": "candidate",
+    "candidateGhost": {
+      "targetVortexFullId": "host:v0",
+      "objectKindId": "candidate",
+      "sourceVortexIndex": 2,
+      "meshUrl": "/candidate.glb",
+      "origin": [1.0, 2.0, 3.0],
+      "orientation": [0.0, 0.0, 0.0, 1.0]
+    },
+    "currentPairObjectId": "obstacle-1",
+    "collisionCount": 1,
+    "sampleCursor": 4,
+    "insideBoth": 2,
+    "lastSample": [0.25, -0.5, 1.0],
+    "candidatePage": ["a", "b", null, null, null, null, null, null],
+    "truncated": false,
+    "rejectionReason": "solid-overlap",
+    "targetCursor": 6,
+    "candidateCursor": 7,
+    "acceptedCount": 8,
+    "totalCount": 1000,
+    "searchCount": 23,
+    "rejectedCount": 4
+  },
+  "locales": {
+    "en": {
+      "statusLabel": "Fill progress",
+      "expected": "{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0],\"color\":\"#38bdf8\",\"opacity\":0.35,\"fillBuildPreview\":{\"operation\":41,\"baseRevision\":7,\"registryGeneration\":11,\"sequence\":5,\"generation\":3,\"stage\":\"test-collision\",\"statusLabel\":\"Fill progress\",\"targetVortexFullId\":\"host:v0\",\"candidateObjectKindId\":\"candidate\",\"candidateGhost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0]},\"currentPairObjectId\":\"obstacle-1\",\"collisionCount\":1,\"sampleCursor\":4,\"insideBoth\":2,\"lastSample\":[0.25,-0.5,1.0],\"candidatePage\":[\"a\",\"b\",null,null,null,null,null,null],\"truncated\":false,\"rejectionReason\":\"solid-overlap\",\"targetCursor\":6,\"candidateCursor\":7,\"acceptedCount\":8,\"totalCount\":1000,\"searchCount\":23,\"rejectedCount\":4}}"
+    },
+    "de": {
+      "statusLabel": "Füllfortschritt",
+      "expected": "{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0],\"color\":\"#38bdf8\",\"opacity\":0.35,\"fillBuildPreview\":{\"operation\":41,\"baseRevision\":7,\"registryGeneration\":11,\"sequence\":5,\"generation\":3,\"stage\":\"test-collision\",\"statusLabel\":\"Füllfortschritt\",\"targetVortexFullId\":\"host:v0\",\"candidateObjectKindId\":\"candidate\",\"candidateGhost\":{\"targetVortexFullId\":\"host:v0\",\"objectKindId\":\"candidate\",\"sourceVortexIndex\":2,\"meshUrl\":\"/candidate.glb\",\"origin\":[1.0,2.0,3.0],\"orientation\":[0.0,0.0,0.0,1.0]},\"currentPairObjectId\":\"obstacle-1\",\"collisionCount\":1,\"sampleCursor\":4,\"insideBoth\":2,\"lastSample\":[0.25,-0.5,1.0],\"candidatePage\":[\"a\",\"b\",null,null,null,null,null,null],\"truncated\":false,\"rejectionReason\":\"solid-overlap\",\"targetCursor\":6,\"candidateCursor\":7,\"acceptedCount\":8,\"totalCount\":1000,\"searchCount\":23,\"rejectedCount\":4}}"
+    }
+  }
+}

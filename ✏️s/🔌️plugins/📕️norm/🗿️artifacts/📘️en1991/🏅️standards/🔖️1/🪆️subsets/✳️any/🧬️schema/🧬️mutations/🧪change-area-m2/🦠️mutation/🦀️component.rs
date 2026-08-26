@@ -12,13 +12,13 @@ pub struct ChangeAreaM2 {
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAreaM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "area-m2", kind: "change-area-m2", record: "ChangedAreaM2" };
 
-    async fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
+    fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change area to {:?}", self.new_area_m2)
     }
 }

@@ -7,7 +7,7 @@ use super::mutation::ChangeVariableActionCategory;
 use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeVariableActionCategory, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
+pub fn diff(payload: &ChangeVariableActionCategory, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
     let mut q_k = en1990_qk(base);
     let Some(entry) = q_k.get_mut(payload.index) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Variable action #{} does not exist.", payload.index), [payload.index.to_string()]);

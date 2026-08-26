@@ -26,7 +26,7 @@ fn mutation() -> En1999Mutation {
 
 /// ▶️ `change-it-mm4` carries `i_t_mm4` from 6400.0 to 10240.0 and lands on the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = outcome.diff().apply(&base).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: mutation applies to its committed before-snapshot");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ The inverse re-states the pre-edit `i_t_mm4` (6400.0) and restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let outcome = forward.diff(&base);
@@ -52,7 +52,7 @@ async fn inverse_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1999Snapshot = serde_json::from_str(text).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: snapshot encodes");
@@ -66,7 +66,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared `applied` outcome holds — a clean 6400.0→10240.0 edit of `i_t_mm4` raises no diagnostic.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-it-mm4/raises-torsion-constant-to-10240-mm4: this fixture declares an applied outcome");
     let base = before();
@@ -77,7 +77,7 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ The sparse delta is exactly the committed diff: `iTMm4` set, every other field left null.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert_eq!(outcome.diff().i_t_mm4, Some(10240.0), "change-it-mm4/raises-torsion-constant-to-10240-mm4: the diff must carry `i_t_mm4` = 10240.0");
@@ -89,7 +89,7 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff is canonical and decodes to `En1999Diff`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1999Diff = serde_json::from_str(DIFF).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: committed diff decodes");
     assert_eq!(decoded.i_t_mm4, Some(10240.0), "change-it-mm4/raises-torsion-constant-to-10240-mm4: the committed diff must name `i_t_mm4` = 10240.0");
     let reencoded = serde_json::to_value(&decoded).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: diff re-encodes");
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff to `before` yields `after` — the 10240.0 `i_t_mm4` edit is complete on its own.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: En1999Diff = serde_json::from_str(DIFF).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: committed diff decodes");
     let produced = decoded.apply(&base).expect("change-it-mm4/raises-torsion-constant-to-10240-mm4: committed diff applies to the before-snapshot");

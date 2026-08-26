@@ -31,7 +31,7 @@ pub type En1990QkChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::s
 /// 🌉 REAL bidirectional converter: `q_k` variable-action entries <-> `table` rows — two columns
 /// (`category: Str`, `value: Float`), one row per entry in list order (positionally aligned, no
 /// stable id on either side).
-pub async fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+pub fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
@@ -44,16 +44,16 @@ pub async fn en1990_qk_table_from_entries(entries: &[En1990QkEntry]) -> semio_s_
 /// 🌉 Inverse of the converter above — real reconstruction, not a stub. A short/missing cell
 /// degrades honestly (empty category, `0.0` value) rather than panicking, since an
 /// externally-composed mismatch is possible in principle.
-pub async fn en1990_qk_entries_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<En1990QkEntry> {
+pub fn en1990_qk_entries_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> Vec<En1990QkEntry> {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-    async fn cell_str(row: &SemioTableRow, index: usize) -> String {
+    fn cell_str(row: &SemioTableRow, index: usize) -> String {
         match row.cells.get(index) {
             Some(SemioValue::Str { value }) => value.clone(),
             _ => String::new(),
         }
     }
-    async fn cell_f64(row: &SemioTableRow, index: usize) -> f64 {
+    fn cell_f64(row: &SemioTableRow, index: usize) -> f64 {
         match row.cells.get(index) {
             Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
             _ => 0.0,
@@ -84,7 +84,7 @@ thread_local! {
     static EN1990_QK_SCRATCH: RefCell<HashMap<String, Vec<En1990QkEntry>>> = RefCell::new(HashMap::new());
 }
 
-async fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
+fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(entries).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -92,7 +92,7 @@ async fn en1990_qk_scene_id(entries: &[En1990QkEntry]) -> String {
     format!("en1990-qk-{:016x}", hasher.finish())
 }
 
-async fn en1990_qk_target() -> store::os_io::ArtifactRef {
+fn en1990_qk_target() -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: "en1990-qk".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
@@ -100,7 +100,7 @@ async fn en1990_qk_target() -> store::os_io::ArtifactRef {
 /// call — the standard way every mutation-diff/fixture builder in this artifact creates `q_k`
 /// field values; never construct this handle without also caching, or `en1990_qk` will read back
 /// empty.
-pub async fn en1990_qk_child_from_entries(entries: &[En1990QkEntry]) -> En1990QkChild {
+pub fn en1990_qk_child_from_entries(entries: &[En1990QkEntry]) -> En1990QkChild {
     let scene_id = en1990_qk_scene_id(entries);
     EN1990_QK_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(scene_id.clone(), entries.to_vec());
@@ -111,7 +111,7 @@ pub async fn en1990_qk_child_from_entries(entries: &[En1990QkEntry]) -> En1990Qk
 /// 🔎 The live `q_k` entries behind a snapshot's composed child — the single read call site every
 /// combination/compliance/inference/mutation-diff call path in this artifact now uses instead of
 /// the old `.q_k` field. Empty (never a panic) on a cache miss, per this region's own doc comment.
-pub async fn en1990_qk(snapshot: &En1990Snapshot) -> Vec<En1990QkEntry> {
+pub fn en1990_qk(snapshot: &En1990Snapshot) -> Vec<En1990QkEntry> {
     EN1990_QK_SCRATCH.with(|cache| cache.borrow().get(&snapshot.q_k.child_id).cloned()).unwrap_or_default()
 }
 //#endregion 🔖️WorkingScene
@@ -119,7 +119,7 @@ pub async fn en1990_qk(snapshot: &En1990Snapshot) -> Vec<En1990QkEntry> {
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("en1990", "EN 1990")
 }
 //#endregion 🔖️ArtifactKind
@@ -135,7 +135,7 @@ pub const EN1990_DOCUMENT_SCHEMA: &str = "semio.norm.en1990/v1";
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use crate::artifacts::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
     const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1990" }];
     const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.en1990.inference" }];
@@ -161,7 +161,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     crate::artifacts::definition::assemble_definition("s.en1990", CAPABILITIES)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::en1990::schema::en1990_artifact_schema_descriptor())
         .inferences([crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::en1990_artifact_inference_descriptor()])
@@ -174,7 +174,7 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

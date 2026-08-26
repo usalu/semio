@@ -7,7 +7,7 @@ use crate::artifacts::vdi3805::mutations::extract_dn;
 use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ReplaceProductConfiguration, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub fn diff(payload: &ReplaceProductConfiguration, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     let Some(product) = base.catalog.products.iter().find(|p| p.identity.article_number == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Product \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

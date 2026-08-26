@@ -15,15 +15,15 @@ pub struct ChangeSheetKSigma {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetKSigma {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sheet-k-sigma", kind: "change-sheet-k-sigma", record: "ChangedSheetKSigma" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_sheet_k_sigma::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_sheet_k_sigma::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change sheet plate buckling factor k_sigma to {}", self.new_sheet_k_sigma)
     }
 }

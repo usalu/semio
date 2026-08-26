@@ -12,13 +12,13 @@ pub struct ChangeFCkMpa {
 impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFCkMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "f-ck-mpa", kind: "change-f-ck-mpa", record: "ChangedFCkMpa" };
 
-    async fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
+    fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change concrete strength f_ck to {}", self.new_f_ck_mpa)
     }
 }

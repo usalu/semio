@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_rh_percent::mutation::ChangeRh
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeRhPercent, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeRhPercent, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_rh_percent.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Relative humidity must be a finite number, got {}.", payload.new_rh_percent), Vec::<String>::new());
     }

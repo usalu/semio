@@ -88,7 +88,8 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn pass_through_build_never_fails_on_conformance_grounds() {
             let snapshot = PdfXBuilderConstruction::empty().await.build().await.expect("no hard check exists at this schema; build must succeed");
-            assert_eq!(snapshot.page.width, 612.0);
+            assert_eq!(snapshot.pages.len(), 1, "an empty PDF 1.4 document is one blank page, never a document with no page tree");
+            assert_eq!(snapshot.first_page().expect("page 1").width, 612.0);
         }
     }
 }
@@ -120,10 +121,11 @@ pub mod derived_analysis {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn check_pdf_x_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
-        if !(snapshot.page.width > 0.0 && snapshot.page.height > 0.0) {
+        let page = snapshot.first_page().cloned().unwrap_or_default();
+        if !(page.width > 0.0 && page.height > 0.0) {
             out.push(soft(
                 CODE_DEGENERATE_PAGE_SIZE,
-                format!("page dimensions are degenerate ({}x{}) -- a print-ready PDF/X page needs a positive MediaBox; a weak signal, but a real one given PageDoc has no other checkable field", snapshot.page.width, snapshot.page.height),
+                format!("page 1's dimensions are degenerate ({}x{}) -- a print-ready PDF/X page needs a positive MediaBox; a weak signal, but a real one given PageDoc has no other checkable field", page.width, page.height),
             ));
         }
         out.push(soft(
@@ -165,14 +167,14 @@ pub mod derived_analysis {
 
         #[semio_framework_async_macros::async_test]
         async fn schema_gap_diagnostic_always_fires() {
-            let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "hello".into() }, ..PdfSnapshot::default() };
+            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "hello".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
             let diagnostics = check_pdf_x_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn degenerate_page_size_is_flagged_soft() {
-            let snapshot = PdfSnapshot { page: PageDoc { width: 0.0, height: 792.0, text: "x".into() }, ..PdfSnapshot::default() };
+            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 0.0, height: 792.0, text: "x".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
             let diagnostics = check_pdf_x_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_DEGENERATE_PAGE_SIZE && d.severity == Severity::Warning), "got {diagnostics:?}");
             assert_eq!(diagnostics.len(), 2, "expected degenerate-page-size + schema-gap, got {diagnostics:?}");
@@ -180,7 +182,7 @@ pub mod derived_analysis {
 
         #[semio_framework_async_macros::async_test]
         async fn positive_dimensions_skip_the_page_size_check() {
-            let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "x".into() }, ..PdfSnapshot::default() };
+            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "x".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
             let diagnostics = check_pdf_x_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_DEGENERATE_PAGE_SIZE), "got {diagnostics:?}");
             assert_eq!(diagnostics.len(), 1, "expected only schema-gap, got {diagnostics:?}");

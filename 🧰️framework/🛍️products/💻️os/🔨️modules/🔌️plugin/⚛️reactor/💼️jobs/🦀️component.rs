@@ -448,7 +448,7 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
         jobs.borrow().get(&job).map(|slot| {
             let running = match &slot.body {
                 JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::ExplicitStateMachineRequired | JobBody::Bounded(_) => None,
-                JobBody::Running { task, state } => Some((*task, state.clone())),
+                JobBody::Running { task, state } => Some((super::executor::TaskId::clone(task), state.clone())),
             };
             (slot.kind.clone(), running)
         })

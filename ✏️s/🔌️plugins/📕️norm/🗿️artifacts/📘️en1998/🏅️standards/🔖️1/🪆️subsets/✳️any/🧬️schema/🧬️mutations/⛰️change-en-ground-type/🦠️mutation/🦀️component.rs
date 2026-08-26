@@ -15,15 +15,15 @@ pub struct ChangeEnGroundType {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeEnGroundType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "en-ground-type", kind: "change-en-ground-type", record: "ChangedEnGroundType" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_en_ground_type::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_en_ground_type::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change EN ground type to \"{}\"", self.new_en_ground_type)
     }
 }

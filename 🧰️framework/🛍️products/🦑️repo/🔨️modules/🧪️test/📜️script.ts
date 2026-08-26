@@ -221,6 +221,36 @@ function hostDirFor(repoRoot: string, discovered: DiscoveredCase, role: TestRole
   return dir;
 }
 
+/**
+ * 🔬️ Whether this repository actually SHIPS an implementation of the case's owner in
+ * `implementation`'s language — the owner root, or the nearest ancestor of it, carrying a package
+ * directory for that language.
+ *
+ * The subject role means "this repository's own implementation, on the same inputs". An adapter file
+ * in a language the owner ships no package in exists to HOST a reference library (that is what every
+ * `🐍️component.py` in this repository is), so there is no subject there to dispatch — and asking for
+ * one produces an `adapter has no subject registration` error for every scenario of the case, which
+ * then enters the parity ratio as a null projection and drags a fully-passing case to zero. That is
+ * not evidence of anything; it is the coordinator asking a question the taxonomy already answers.
+ *
+ * This is deliberately NOT "skip an implementation whose adapter registers no subject handlers":
+ * an owner that ships a package in a language and whose adapter then forgets a subject registration
+ * must still fail, loudly, per scenario. The language dir names come from the taxonomy's own
+ * `testImplementationIds`, so no language is named here.
+ */
+function ownerShipsImplementation(repoRoot: string, discovered: DiscoveredCase, implementation: Implementation): boolean {
+  const languageDir = Object.entries(testTaxonomy(repoRoot).testImplementationIds).find(([, id]) => id === implementation)?.[0];
+  if (languageDir === undefined) return false;
+  let dir = discovered.owner;
+  for (let depth = 0; depth < 16; depth += 1) {
+    if (existsSync(join(repoRoot, dir, "📦️packages", languageDir))) return true;
+    const parent = dir.split("/").slice(0, -1).join("/");
+    if (parent === "" || parent === dir) break;
+    dir = parent;
+  }
+  return false;
+}
+
 /** 🦀️ The owner's own Rust package, discovered by walking up from the owner root — the subject under test. */
 function rustSutCrate(repoRoot: string, discovered: DiscoveredCase): { name: string; path: string } | null {
   let dir = discovered.owner;
@@ -551,7 +581,15 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
       problems.push(...outcome.problems);
     }
     if (phases.includes("subject")) {
-      for (const implementation of selectImplementations(discovered, rest)) {
+      // 🔬️Only the languages this repository actually implements the owner in are dispatched as
+      // subjects; see `ownerShipsImplementation`.
+      const subjects = selectImplementations(discovered, rest).filter((candidate) => ownerShipsImplementation(repoRoot, discovered, candidate));
+      // 🚫️A case every one of whose adapters is a reference HOST has no subject half at all. That is
+      // a real gap and it must stay visible — reported the same way `not-exercised` is, rather than
+      // as a per-scenario `errored` result whose null projection would enter the parity ratio and
+      // read as a subject that ran and disagreed.
+      if (subjects.length === 0 && selectImplementations(discovered, rest).length > 0) console.error(`[test] no-subject-implementation ${discovered.caseDir} (adapters ${Object.keys(discovered.adapters).join(", ")} host references only; this repository ships no implementation of the owner in any of those languages)`);
+      for (const implementation of subjects) {
         const outcome = executeOne(repoRoot, discovered, level, "subject", implementation);
         caseResults.push(...outcome.results);
         problems.push(...outcome.problems);

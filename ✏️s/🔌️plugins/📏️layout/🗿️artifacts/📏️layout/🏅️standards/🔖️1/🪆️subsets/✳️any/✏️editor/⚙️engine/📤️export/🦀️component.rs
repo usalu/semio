@@ -3,7 +3,7 @@
 use crate::artifacts::layout::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
 use crate::editor::layout::config::LayoutConfigMutation;
 use crate::editor::layout::LayoutPlayApp;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework::{InteractiveJobClassification, RetainedToolWireInput, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{
     BatchDriveConfig, BatchJobParams, Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter,
     RevisionId, StepContext, StepOutcome,
@@ -25,6 +25,7 @@ pub const LAYOUT_MEDIA_EXPORT_TOOL_ID: &str = "export-media:layout:out";
 pub const LAYOUT_MEDIA_EXPORT_SCHEMA: &str = "2d.layout";
 pub const LAYOUT_PREFLIGHT_REPORT_SCHEMA: &str = "layout.preflight-report.array.v1";
 pub const MAX_LAYOUT_EXPORT_RAW_BYTES: usize = 2 << 20;
+pub const MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES: usize = 4_096;
 pub const MAX_LAYOUT_EXPORT_PAGES: usize = 64;
 pub const MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE: usize = 8;
 pub const MAX_LAYOUT_EXPORT_TOTAL_FRAMES: usize = 1_024;
@@ -2289,17 +2290,141 @@ pub struct LayoutExportToolPayload {
     pub completion: Option<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct LayoutExportWireCommand {
+    #[serde(default)]
+    page_id: Option<String>,
+}
+
 pub struct LayoutExportToolJob {
-    inner: LayoutExportJob,
+    inner: Option<LayoutExportJob>,
+    pending_operation: Option<Operation>,
+    pending_request: Option<LayoutExportRequest>,
+    pending_output_chunks: Option<ArtifactOutputChunks>,
     completion: Option<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>,
     kind: LayoutExportKind,
     name: String,
+    raw_input: Option<RetainedToolWireInput>,
+    raw_bytes: Vec<u8>,
+    raw_page_cursor: usize,
+    raw_scan_cursor: usize,
+    raw_stack: [u8; 64],
+    raw_stack_len: usize,
+    raw_in_string: bool,
+    raw_escape: bool,
+    raw_invalid: bool,
+    raw_validated: bool,
     completed: bool,
+}
+
+impl LayoutExportToolJob {
+    fn materialize_decoded_job(&mut self) -> bool {
+        if self.inner.is_some() {
+            return true;
+        }
+        let (Some(operation), Some(request), Some(output_chunks)) = (self.pending_operation.take(), self.pending_request.take(), self.pending_output_chunks.take()) else {
+            return false;
+        };
+        self.name = output_name(&request);
+        self.inner = LayoutExportJob::new(operation, request).ok().map(|job| job.with_output_chunks(output_chunks));
+        self.inner.is_some()
+    }
+
+    fn scan_raw_byte(&mut self, byte: u8) {
+        if self.raw_in_string {
+            if self.raw_escape {
+                self.raw_escape = false;
+            } else if byte == b'\\' {
+                self.raw_escape = true;
+            } else if byte == b'"' {
+                self.raw_in_string = false;
+            } else if byte < 0x20 {
+                self.raw_invalid = true;
+            }
+            return;
+        }
+        match byte {
+            b'"' => self.raw_in_string = true,
+            b'[' | b'{' if self.raw_stack_len < self.raw_stack.len() => {
+                self.raw_stack[self.raw_stack_len] = if byte == b'[' { b']' } else { b'}' };
+                self.raw_stack_len += 1;
+            }
+            b'[' | b'{' => self.raw_invalid = true,
+            b']' | b'}' if self.raw_stack_len != 0 && self.raw_stack[self.raw_stack_len - 1] == byte => self.raw_stack_len -= 1,
+            b']' | b'}' => self.raw_invalid = true,
+            _ => {}
+        }
+    }
+
+    fn decoded_wire_command_matches(&self) -> bool {
+        let Ok((verb, command)) = serde_json::from_slice::<(String, Option<LayoutExportWireCommand>)>(&self.raw_bytes) else { return false };
+        if verb != self.kind.tool_id() {
+            return false;
+        }
+        let page_id = command.and_then(|command| command.page_id);
+        match self.kind {
+            LayoutExportKind::Package => page_id.is_none(),
+            _ => page_id.as_ref().is_none_or(|page_id| self.pending_request.as_ref().and_then(|request| request.page_id.as_ref()) == Some(page_id)),
+        }
+    }
 }
 
 impl InteractiveJob for LayoutExportToolJob {
     fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
-        match self.inner.step(context) {
+        if !self.raw_validated {
+            if context.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+            if context.should_yield() || context.fuel_remaining() == 0 {
+                return StepOutcome::Yield;
+            }
+            context.set_stage("layout-export-retained-wire-decode");
+            let Some(input) = self.raw_input.as_ref() else {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            };
+            if let Some(page) = input.page(self.raw_page_cursor) {
+                self.raw_bytes.extend_from_slice(page);
+                self.raw_page_cursor = self.raw_page_cursor.saturating_add(1);
+                context.consume_fuel(1);
+                let cursor = (self.raw_page_cursor as u64).to_le_bytes();
+                let state = context.payload_from_bytes(JobPayloadStream::CheckpointState, &cursor).unwrap_or_else(|rejected| {
+                    drop(rejected.into_source());
+                    RetainedJobPayload::empty(JobPayloadStream::CheckpointState)
+                });
+                return StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.raw_bytes.len() as u64 });
+            }
+            if self.raw_scan_cursor < self.raw_bytes.len() {
+                let byte = self.raw_bytes[self.raw_scan_cursor];
+                self.scan_raw_byte(byte);
+                self.raw_scan_cursor += 1;
+                context.consume_fuel(1);
+                let cursor = (self.raw_scan_cursor as u64).to_le_bytes();
+                let state = context.payload_from_bytes(JobPayloadStream::CheckpointState, &cursor).unwrap_or_else(|rejected| {
+                    drop(rejected.into_source());
+                    RetainedJobPayload::empty(JobPayloadStream::CheckpointState)
+                });
+                return StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.raw_bytes.len().saturating_add(self.raw_scan_cursor) as u64 });
+            }
+            if self.raw_invalid || self.raw_in_string || self.raw_escape || self.raw_stack_len != 0 || !self.decoded_wire_command_matches() {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            }
+            if !self.materialize_decoded_job() {
+                return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+            }
+            self.raw_validated = true;
+            context.consume_fuel(1);
+            let cursor = (self.raw_page_cursor as u64).to_le_bytes();
+            let state = context.payload_from_bytes(JobPayloadStream::CheckpointState, &cursor).unwrap_or_else(|rejected| {
+                drop(rejected.into_source());
+                RetainedJobPayload::empty(JobPayloadStream::CheckpointState)
+            });
+            return StepOutcome::CheckpointReady(Checkpoint { state, applied_progress: self.raw_bytes.len().saturating_add(1) as u64 });
+        }
+        let Some(inner) = self.inner.as_mut() else {
+            return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
+        };
+        match inner.step(context) {
             StepOutcome::Complete(candidate) => {
                 if self.completed {
                     return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
@@ -2308,7 +2433,7 @@ impl InteractiveJob for LayoutExportToolJob {
                     self.completed = true;
                     return StepOutcome::Complete(candidate);
                 }
-                let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), self.inner.output_chunks.clone());
+                let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), inner.output_chunks.clone());
                 if let Some(completion) = &self.completion {
                     if let Err(error) = completion.complete_download(download, EphemeralEmit::<EditorApp<LayoutPlayApp>>::default()) {
                         let _ = error;
@@ -2323,13 +2448,37 @@ impl InteractiveJob for LayoutExportToolJob {
     }
 
     fn begin_close(&mut self) {
-        self.inner.begin_close();
+        if let Some(input) = self.raw_input.as_mut() {
+            input.begin_close();
+        }
+        let _ = self.materialize_decoded_job();
+        if let Some(inner) = self.inner.as_mut() {
+            inner.begin_close();
+        }
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
-        match InteractiveJob::close_step(&mut self.inner, maximum_items, maximum_bytes) {
-            InteractiveJobCloseStep::Complete => {}
-            step => return step,
+        self.begin_close();
+        if let Some(inner) = self.inner.as_mut() {
+            match InteractiveJob::close_step(inner, maximum_items, maximum_bytes) {
+                InteractiveJobCloseStep::Complete => self.inner = None,
+                step => return step,
+            }
+        }
+        if !self.raw_bytes.is_empty() {
+            if maximum_bytes == 0 {
+                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            let released_bytes = self.raw_bytes.len().min(maximum_bytes);
+            self.raw_bytes.truncate(self.raw_bytes.len() - released_bytes);
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
+        }
+        if let Some(input) = self.raw_input.as_mut() {
+            let step = input.close_step(maximum_items.min(1), maximum_bytes);
+            if input.terminal_is_empty() {
+                self.raw_input = None;
+            }
+            return step;
         }
         if !self.name.is_empty() {
             if maximum_items == 0 || maximum_bytes < self.name.len() {
@@ -2350,7 +2499,7 @@ impl InteractiveJob for LayoutExportToolJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.name.is_empty() && self.completion.is_none() && self.inner.terminal_is_empty()
+        self.name.is_empty() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
     }
 }
 
@@ -2511,14 +2660,72 @@ impl ToolJobFactory for LayoutExportJobFactory {
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
-        ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
+        ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
     }
 
     fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         let kind = payload.request.kind;
         let name = output_name(&payload.request);
         let inner = LayoutExportJob::new(operation, payload.request).map_err(ToolJobFactoryError::new)?.with_output_chunks(payload.output_chunks);
-        Ok(LayoutExportToolJob { inner, completion: payload.completion, kind, name, completed: false })
+        Ok(LayoutExportToolJob {
+            inner: Some(inner),
+            pending_operation: None,
+            pending_request: None,
+            pending_output_chunks: None,
+            completion: payload.completion,
+            kind,
+            name,
+            raw_input: None,
+            raw_bytes: Vec::new(),
+            raw_page_cursor: 0,
+            raw_scan_cursor: 0,
+            raw_stack: [0; 64],
+            raw_stack_len: 0,
+            raw_in_string: false,
+            raw_escape: false,
+            raw_invalid: false,
+            raw_validated: true,
+            completed: false,
+        })
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        operation: Operation,
+        payload: Self::Payload,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+        if checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("layout export retained ingress does not accept an unvalidated checkpoint owner"), input, checkpoint));
+        }
+        let declared_bytes = input.declared_bytes();
+        let kind = payload.request.kind;
+        let mut job = LayoutExportToolJob {
+            inner: None,
+            pending_operation: Some(operation),
+            pending_request: Some(payload.request),
+            pending_output_chunks: Some(payload.output_chunks),
+            completion: payload.completion,
+            kind,
+            name: String::new(),
+            raw_input: None,
+            raw_bytes: Vec::new(),
+            raw_page_cursor: 0,
+            raw_scan_cursor: 0,
+            raw_stack: [0; 64],
+            raw_stack_len: 0,
+            raw_in_string: false,
+            raw_escape: false,
+            raw_invalid: false,
+            raw_validated: false,
+            completed: false,
+        };
+        if job.raw_bytes.try_reserve_exact(declared_bytes).is_err() {
+            return Err((ToolJobFactoryError::new("layout export retained decoder capacity was not admitted"), input, None));
+        }
+        job.raw_input = Some(input);
+        Ok(job)
     }
 }
 
@@ -4231,6 +4438,39 @@ mod tests {
             }
             assert!(outputs.windows(2).all(|pair| pair[0] == pair[1]), "{kind:?} bytes diverged across real worker pools");
         }
+    }
+
+    #[test]
+    fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fault_and_success_owners() {
+        fn dispatch(raw_verb: &str, kind: LayoutExportKind) -> semio_framework::ToolJobDispatch {
+            let operation = operation();
+            let bus = semio_framework::ActionBus::new();
+            bus.register(LayoutExportJobFactory::new("layout-retained-test")).expect("retained factory registration");
+            assert!(bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES + 1).is_err());
+            let (admission, mut input) = bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES).expect("maximum extent before encoding");
+            let raw = serde_json::to_vec(&(raw_verb, serde_json::json!({ "pageId": null }))).expect("fixture wire");
+            for bytes in raw.chunks(semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES) {
+                input.admit_page(semio_framework::action_bus::ToolWirePage::try_copy_from(bytes).expect("bounded raw page")).expect("preadmitted page");
+            }
+            input.seal_admitted_prefix().expect("truthful encoded prefix");
+            let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
+            let payload = LayoutExportToolPayload { request: request(kind), output_chunks, completion: None };
+            let spec = semio_framework::ToolOperationSpec::new("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, payload, operation);
+            bus.dispatch_wire_retained_with_spec(admission, input, None, spec).unwrap_or_else(|_| panic!("retained production dispatch"))
+        }
+
+        let params = |cancel: semio_framework_job::CancelToken| BatchJobParams {
+            operation: operation().operation,
+            generation: operation().generation,
+            cancel,
+            config: BatchDriveConfig { site: "layout.retained-wire.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_ms: 1 },
+            now_ms: semio_framework_job::default_now_ms,
+        };
+        assert!(matches!(drive_test_job(dispatch("exportSvg", LayoutExportKind::Svg).job, params(semio_framework_job::root_cancel_token())), StepOutcome::Complete(_)));
+        assert!(matches!(drive_test_job(dispatch("exportPdf", LayoutExportKind::Svg).job, params(semio_framework_job::root_cancel_token())), StepOutcome::Fault(_)));
+        let cancel = semio_framework_job::root_cancel_token();
+        cancel.cancel_now();
+        assert!(matches!(drive_test_job(dispatch("exportSvg", LayoutExportKind::Svg).job, params(cancel)), StepOutcome::Cancelled));
     }
 
     #[test]

@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_sheet_k_sigma::mutation::ChangeS
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSheetKSigma, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeSheetKSigma, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_sheet_k_sigma.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sheet plate buckling factor k_sigma must be a finite number, got {}.", payload.new_sheet_k_sigma), Vec::<String>::new());
     }

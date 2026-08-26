@@ -1,0 +1,4 @@
+cases 164 scenarios 4910 oracleEntries 122 noOracleDecisions 44
+@oracle- cases 121 scenarios 3191
+@no-oracle- cases 43 scenarios 1719
+Counter({('rust', True): 74, ('python', False): 41, ('javascript', True): 3, ('python', True): 2, ('javascript', False): 1})

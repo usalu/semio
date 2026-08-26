@@ -191,12 +191,32 @@ pub struct TiffTag {
 
 //#region Ifd
 /// 🗂️ One Image File Directory — tag-id-keyed `entries` (TIFF requires ascending-tag-order
-/// within an IFD; codecs/mutations both maintain that invariant, see `⚙️engine`/`🔺️diff`).
+/// within an IFD; codecs/mutations both maintain that invariant, see `⚙️engine`/`🔺️diff`) plus
+/// `pixels`, this directory's OWN raster payload.
+///
+/// 🖼️ `pixels` is RAW STRIP BYTES — the exact sample layout this directory's own
+/// `BitsPerSample`/`SamplesPerPixel`/`PhotometricInterpretation`/`Compression` entries declare —
+/// NOT the canonical 8-bit RGBA [`TiffSnapshot::pixels`] carries. Raw is the honest shape here:
+/// strip bytes are lossless and layout-agnostic, so a secondary directory whose photometric
+/// layout this codec does not decode (palette, CMYK, tiled) still round-trips byte-for-byte,
+/// where a decode-to-RGBA field would have to fail or fabricate.
+///
+/// 🥇 IFD 0 is the exception, and it is a definitional one rather than an omission: the primary
+/// directory's raster IS the document's image, is decoded to canonical RGBA into
+/// [`TiffSnapshot::pixels`], and is the field `SetPixels` addresses. `ifds[0].pixels` is therefore
+/// always empty — decode leaves it so, the encoder ignores it, and there is exactly one authority
+/// for the primary raster at all times. Every directory beyond the first carries its strip bytes
+/// here, which is what lets the encoder emit that directory's REQUIRED
+/// `StripOffsets`/`RowsPerStrip`/`StripByteCounts` (TIFF6 §Baseline) backed by real payload rather
+/// than omit them (the pre-2026-08-25 behaviour, which silently discarded a multi-page file's
+/// later pages on every round trip).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct TiffIfd {
     #[serde(default)]
     pub entries: Vec<TiffTag>,
+    #[serde(default)]
+    pub pixels: Vec<u8>,
 }
 //#endregion Ifd
 

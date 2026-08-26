@@ -315,6 +315,13 @@ fn diff_conformance_attribute(base: &XlsxSnapshot, value: Option<&str>) -> XlsxD
     opc_diff(parts_diff(vec![(part.path.clone(), XlsxOpcPartDiff { content_type: None, bytes: Some(serialize(&document)) })], Vec::new(), Vec::new()), None, None)
 }
 
+/// 🧩️ The canonical legacy-VML part body this vocabulary inserts — real VML, so the namespace the
+/// ✳️strict check scans a part for is genuinely present.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn vml_markup() -> String {
+    format!("<xml xmlns:v=\"{VML_NS}\"><v:shape id=\"legacyShape\" type=\"#_x0000_t202\"/></xml>")
+}
+
 /// 🔺️ The diff of adding a legacy VML drawing part together with its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_insert_vml_part(base: &XlsxSnapshot, path: &str, markup: &str) -> XlsxDiff {

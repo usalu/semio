@@ -73,9 +73,10 @@ mod tests {
             schema: "stdio.xml".into(),
             doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() },
         };
-        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
-        let root = &node.sections[0].items[0];
-        assert_eq!(root.id, "");
+        let node = render(&document).expect("render");
+        let section = node.children.get(0).expect("tree section");
+        let root = section.children.get(0).expect("tree root");
+        assert_eq!(root.key.as_str(), "");
     }
 }
 //#endregion 🧪️Tests

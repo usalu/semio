@@ -67,29 +67,29 @@ impl ArtifactEditor for Iso16757PlayApp {
     const DIALECT: Dialect = crate::artifacts::iso16757::ISO16757_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.iso16757/v1";
 
-    async fn config_schema() -> &'static str {
+    fn config_schema() -> &'static str {
         CONFIG_SCHEMA
     }
 
     /// 📎️ All fifteen norm apps share NormConfig (see crate::config::schema doc) — one
     /// AppSchemaDescriptor for all fifteen, registered idempotently by whichever app binds first.
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> Iso16757Snapshot {
+    fn initial_snapshot() -> Iso16757Snapshot {
         Iso16757Snapshot::default()
     }
 
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
-    async fn command_id(command: &Iso16757Command) -> &'static str {
+    fn command_id(command: &Iso16757Command) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &Iso16757Command,
         doc: &ArtifactView<'_, Iso16757Snapshot>,
         cfg: &ConfigView<'_, NormConfig>,
@@ -100,7 +100,7 @@ impl ArtifactEditor for Iso16757PlayApp {
         command.dispatch(doc, cfg)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Iso16757Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Iso16757Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
         let host = NormHost::<Iso16757Family>::from_document(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot),
@@ -116,12 +116,12 @@ impl ArtifactEditor for Iso16757PlayApp {
     /// ðï¸ `"report:out"`/`"document:out"` â see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
     /// re-implemented there rather than left unreachable).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, Iso16757Snapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Iso16757Snapshot>) -> Result<Media, MediaError> {
         crate::app_surface::export_media::<Iso16757Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
     /// ðï¸ `"model:in"`/`"document:in"` â see `crate::app_surface::import_media`.
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Iso16757Snapshot>) -> Result<Emit<Iso16757Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Iso16757Snapshot>) -> Result<Emit<Iso16757Mutation, NormConfigMutation, Self::DraftMutation>, MediaError> {
         let base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media, move |snapshot: Iso16757Snapshot| Iso16757Mutation::from_snapshot(&base, &snapshot))
     }
@@ -139,11 +139,11 @@ impl crate::document::NormFamily for Iso16757Family {
     type Document = Iso16757Snapshot;
     type Mutation = Iso16757Mutation;
 
-    async fn family_id() -> crate::document::NormFamilyId {
+    fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::Iso16757
     }
 
-    async fn evaluate(document: &Iso16757Snapshot) -> crate::document::CheckReport {
+    fn evaluate(document: &Iso16757Snapshot) -> crate::document::CheckReport {
         crate::artifacts::iso16757::standards::v1::subsets::any::schema::inferences::evaluate(document)
     }
 }
@@ -152,7 +152,7 @@ pub type Host = NormHost<Iso16757Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest
-pub async fn create_iso16757_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_iso16757_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::iso16757::ISO16757_DIALECT)
             .document(["semio", "norm", VARIANT])
             .artifact_kind(crate::artifacts::iso16757::artifact_kind())
@@ -189,26 +189,26 @@ pub(crate) mod testkit {
     /// ✏️ Adapts `create_iso16757_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::new_app_with_registry` still expects (framework testkit gap,
     /// see w0-f-report.md gap 3 — swap for the canonical helper once it lands).
-    pub async fn iso16757_manifest_for_testkit() -> semio_framework_plugin::App {
+    pub fn iso16757_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_iso16757_app(), examples: Vec::new() }
     }
 
     pub type NormApp = VcsArtifactApp<EditorApp<Iso16757PlayApp>>;
 
-    pub async fn new_app() -> NormApp {
+    pub fn new_app() -> NormApp {
         sdk_new_app::<EditorApp<Iso16757PlayApp>>()
     }
 
     /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub async fn app_with_registry() -> NormApp {
+    pub fn app_with_registry() -> NormApp {
         new_app_with_registry::<EditorApp<Iso16757PlayApp>>(iso16757_manifest_for_testkit)
     }
 
-    pub async fn dispatch(app: &mut NormApp, command: Iso16757Command) -> InvocationResult {
+    pub fn dispatch(app: &mut NormApp, command: Iso16757Command) -> InvocationResult {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub async fn render(app: &mut NormApp, body_key: &str) -> String {
+    pub fn render(app: &mut NormApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
     }
 }
@@ -223,7 +223,7 @@ mod tests {
     //#region ðï¸CommandSurface
     /// ð¯ï¸ One value per `Iso16757Command` row â the whole-command-surface laws below iterate it, so a new row
     /// that is not listed here fails `command_ids_cover_every_row`.
-    async fn every_command() -> Vec<Iso16757Command> {
+    fn every_command() -> Vec<Iso16757Command> {
         vec![
             Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() }),
             Iso16757Command::Evaluate(evaluate::Evaluate {}),
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn command_ids_cover_every_row_and_are_unique() {
+    fn command_ids_cover_every_row_and_are_unique() {
         let commands = every_command();
         let ids: Vec<&str> = commands.iter().map(Iso16757Command::command_id).collect();
         let mut sorted = ids.clone();
@@ -245,7 +245,7 @@ mod tests {
     /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
     /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
     #[semio_framework_async_macros::async_test]
-    async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
+    fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
         let keywords = ["set-snapshot", "evaluate", "selected-check"];
         for (command, keyword) in every_command().into_iter().zip(keywords) {
             store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -260,7 +260,7 @@ mod tests {
     /// `ð§ªï¸wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
     /// of the three payload shapes involves the per-standard `Iso16757Snapshot`.
     #[semio_framework_async_macros::async_test]
-    async fn optional_field_rows_keep_their_pre_migration_bytes() {
+    fn optional_field_rows_keep_their_pre_migration_bytes() {
         let hex = |command: &Iso16757Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hex(&Iso16757Command::Evaluate(evaluate::Evaluate {})), "01010000");
         assert_eq!(hex(&Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01020001000402");
@@ -270,7 +270,7 @@ mod tests {
 
     //#region ðï¸Manifest
     #[semio_framework_async_macros::async_test]
-    async fn the_manifest_stitches_every_taxonomy_node() {
+    fn the_manifest_stitches_every_taxonomy_node() {
         let definition = create_iso16757_app().definition;
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 2);
@@ -283,7 +283,7 @@ mod tests {
     /// ðï¸ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
     /// ports, and `report:out` is pinned to this family's already-declared artifact kind.
     #[semio_framework_async_macros::async_test]
-    async fn declares_model_in_and_report_out_ports() {
+    fn declares_model_in_and_report_out_ports() {
         let ports = create_iso16757_app().definition.io.ports;
         assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
         let report_out = ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
@@ -291,13 +291,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn an_unknown_body_key_falls_back_to_a_text_node() {
+    fn an_unknown_body_key_falls_back_to_a_text_node() {
         let mut app = testkit::new_app();
         assert!(testkit::render(&mut app, "norm.iso16757.play.nope").contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_declared_body_key_renders() {
+    fn every_declared_body_key_renders() {
         let mut app = testkit::new_app();
         for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_DOCUMENT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
             assert!(!testkit::render(&mut app, body_key).contains("Unknown body"), "{body_key} must render its own node");
@@ -307,7 +307,7 @@ mod tests {
 
     //#region ðï¸Behavior
     #[semio_framework_async_macros::async_test]
-    async fn set_snapshot_commits_a_host_backed_report() {
+    fn set_snapshot_commits_a_host_backed_report() {
         let mut app = testkit::new_app();
         testkit::dispatch(&mut app, Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() }));
         let host = NormHost::<Iso16757Family>::from_document(app.snapshot().expect("projection"));
@@ -317,7 +317,7 @@ mod tests {
     /// ð§©ï¸ The `NormFamily` binding lives here now (it was in the constitutional `op` crate) it
     /// names `evaluate`, so it belongs beside the compute it binds.
     #[semio_framework_async_macros::async_test]
-    async fn norm_family_evaluate_matches_host() {
+    fn norm_family_evaluate_matches_host() {
         let doc = Iso16757Snapshot::default();
         let host = Host::from_document(doc);
         assert!(!host.report().checks.is_empty());
@@ -325,7 +325,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn evaluate_recommits_the_current_projection_without_changing_it() {
+    fn evaluate_recommits_the_current_projection_without_changing_it() {
         let mut app = testkit::new_app();
         let before = app.snapshot().expect("projection");
         testkit::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {}));
@@ -334,7 +334,7 @@ mod tests {
 
     /// ð§®ï¸ `setSelectedCheckIndex` is config-only â it must dispatch cleanly and never touch the document.
     #[semio_framework_async_macros::async_test]
-    async fn selected_check_index_is_a_config_only_edit() {
+    fn selected_check_index_is_a_config_only_edit() {
         let mut app = testkit::new_app();
         let before = app.snapshot().expect("projection");
         let result = testkit::dispatch(&mut app, Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }));
@@ -345,14 +345,14 @@ mod tests {
     /// ð§¬ï¸ Kind-discipline wrapper: the real registry enforces that View actions never emit document
     /// operations.
     #[semio_framework_async_macros::async_test]
-    async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
+    fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         let mut app = testkit::app_with_registry();
         let result = testkit::dispatch(&mut app, Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) }));
         assert!(result.mutations.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn undo_redo_round_trips_through_the_wrapper() {
+    fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app();
         testkit::dispatch(&mut app, Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() }));
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
@@ -362,7 +362,7 @@ mod tests {
 
     /// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
     #[semio_framework_async_macros::async_test]
-    async fn report_out_exports_the_computed_check_report() {
+    fn report_out_exports_the_computed_check_report() {
         let mut app = testkit::new_app();
         let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
         let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };

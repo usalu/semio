@@ -15,15 +15,15 @@ pub struct ChangeReferenceQPKwh {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeReferenceQPKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "reference-qp-kwh", kind: "change-reference-qp-kwh", record: "ChangedReferenceQPKwh" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_reference_q_p_kwh::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_reference_q_p_kwh::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change reference primary energy demand Q_p [kWh] to {}", self.new_reference_q_p_kwh)
     }
 }

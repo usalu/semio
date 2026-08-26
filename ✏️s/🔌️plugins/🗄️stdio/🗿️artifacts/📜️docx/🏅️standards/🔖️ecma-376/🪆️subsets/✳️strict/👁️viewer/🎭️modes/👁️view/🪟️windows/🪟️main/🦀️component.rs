@@ -57,7 +57,7 @@ mod tests {
     async fn render_emits_one_page_per_top_level_block() {
         let mut document = DocxSnapshot::default();
         document.document.body.push(DocxBlock::paragraph("only"));
-        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        let stack = render(&document).expect("render");
         assert_eq!(stack.children.len(), 1);
     }
 }

@@ -196,6 +196,60 @@ impl store::ArtifactPack for SemioValueSnapshot {
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
 
+//#region 🌉️ExternalCodecBridge
+/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// `stdio.semio.value` — the shape `mutate-semio-value` compares under `ordered-json-v1`, derived
+/// from the snapshot type itself rather than hand-written a second time in the adapter, where it
+/// could drift away from the type it claims to project. A thin `serde_json` wrapper (already a
+/// direct dependency of this crate, used behind this interface per CLAUDE.md's "external libraries
+/// behind an interface" rule, never a new one). Mirrors `✳️table`'s and `✳️flow`'s own bridges.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_value_snapshot_json(snapshot: &SemioValueSnapshot) -> String {
+    serde_json::to_string(snapshot).expect("SemioValueSnapshot serialization is infallible")
+}
+
+/// 📥️ The `serde_json` inverse of [`encode_semio_value_snapshot_json`] — decodes a committed
+/// `(before, mutation, after)` specification vector into a real [`SemioValueSnapshot`], so the case
+/// adapter reads the committed fixture instead of re-declaring it as a Rust literal beside it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_value_snapshot_json(text: &str) -> Result<SemioValueSnapshot, String> {
+    serde_json::from_str(text).map_err(|error| error.to_string())
+}
+//#endregion 🌉️ExternalCodecBridge
+
+//#region 🔖️Wire
+/// 📝️ Parses `stdio.semio.value` DSL text into a [`SemioValueSnapshot`] — a named pass-through of
+/// this snapshot's own `store::ArtifactDsl` impl above, whose trait and error type are both
+/// unnameable outside this crate, so `mutate-semio-value`'s `identity-round-trip` scenario reaches
+/// the real committed artifact (`../../../../✳️any/📚️examples/🕸️graph/🖼️assets/🗣️example.dsl.semio`)
+/// through this instead.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn parse_semio_value_dsl(text: &str) -> Result<SemioValueSnapshot, String> {
+    <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+}
+
+/// 📝️ Renders a [`SemioValueSnapshot`] back as `stdio.semio.value` DSL text — the inverse of
+/// [`parse_semio_value_dsl`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn print_semio_value_dsl(snapshot: &SemioValueSnapshot) -> String {
+    store::ArtifactDsl::print_dsl(snapshot)
+}
+
+/// 📦️ Encodes a [`SemioValueSnapshot`] as a semio pack envelope — the binary twin of the DSL text.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn encode_semio_value_pack(snapshot: &SemioValueSnapshot) -> Vec<u8> {
+    store::ArtifactPack::encode_pack(snapshot)
+}
+
+/// 📦️ Decodes a semio pack envelope into a [`SemioValueSnapshot`] — the inverse of
+/// [`encode_semio_value_pack`], reading
+/// `../../../../✳️any/📚️examples/🕸️graph/🖼️assets/🎒️example.pack.semio`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn decode_semio_value_pack(bytes: &[u8]) -> Result<SemioValueSnapshot, String> {
+    <SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+}
+//#endregion 🔖️Wire
+
 //#region 🔖️Demo
 /// 📄️ The demo `stdio.semio.value` snapshot — exercises every `SemioValue` variant (`Null`/
 /// `Bool`/`Int`/`Float`/`Str`/`Bytes`/`List`/`Map`/`Ref`) at least once, plus a real `Ref` into

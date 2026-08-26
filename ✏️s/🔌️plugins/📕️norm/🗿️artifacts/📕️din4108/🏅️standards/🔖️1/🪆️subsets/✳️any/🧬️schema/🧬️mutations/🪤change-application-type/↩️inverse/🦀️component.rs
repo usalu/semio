@@ -4,7 +4,7 @@ use super::mutation::ChangeApplicationType;
 use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeApplicationType, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+pub fn inverse(_payload: &ChangeApplicationType, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
     vec![Din4108Mutation::ChangeApplicationType(ChangeApplicationType { new_application_type: base.application_type.clone() })]
 }
 //#endregion 🔖️Inverse

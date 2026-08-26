@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// to 750.0 while the sibling `length` entry rides through byte-identical — this is an insert-over-clone, not
 /// a map replacement.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_height_part_number_input_to_750() {
+fn raises_the_height_part_number_input_to_750() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-part-number-input applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-part-number-input/raises-the-height-part-number-input-to-750: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.part_number_inputs.get("height"), Some(&crate::artifacts::iso16757::CatalogueValue::Decimal { value: 750.0 }), "change-part-number-input/raises-the-height-part-number-input-to-750: the addressed key must hold 750.0");
@@ -46,7 +46,7 @@ async fn raises_the_height_part_number_input_to_750() {
 /// yields one `ChangePartNumberInput` carrying the OLD 600.0 — not the `RemovePartNumberInput` it would emit
 /// for a fresh key.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_600_height_input_restores_before() {
+fn restoring_the_600_height_input_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-part-number-input applies");
@@ -64,7 +64,7 @@ async fn restoring_the_600_height_input_restores_before() {
 /// "new_value": {"kind": "decimal", …}}}` — externally tagged variant, snake_case payload keys, and an
 /// internally `kind`-tagged CatalogueValue.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -79,7 +79,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The committed `height` input is 600.0, so the `Some(&payload.new_value)` equality guard does not match
 /// 750.0 and no `mutation.no-op` warning is raised.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-part-number-input/raises-the-height-part-number-input-to-750: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -91,7 +91,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only
 /// `partNumberInputs` is rewritten and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-part-number-input diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-part-number-input/raises-the-height-part-number-input-to-750: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -100,7 +100,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten part-
 /// number input map and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-part-number-input diff decodes");
     let inputs = decoded.part_number_inputs.as_ref().expect("the committed change-part-number-input diff carries the input map");
     assert_eq!(inputs.len(), 2, "change-part-number-input/raises-the-height-part-number-input-to-750: the diff carries BOTH inputs, because this container delta is a whole-map replacement");
@@ -118,7 +118,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the part-number input change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-part-number-input diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-part-number-input/raises-the-height-part-number-input-to-750: the committed diff did not carry before to after");

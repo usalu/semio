@@ -6,7 +6,7 @@ use crate::artifacts::en1992::mutations::En1992Mutation;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeBridgeDeltaSigmaSMpa, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+pub fn inverse(_payload: &ChangeBridgeDeltaSigmaSMpa, base: &En1992Snapshot) -> Vec<En1992Mutation> {
     vec![En1992Mutation::ChangeBridgeDeltaSigmaSMpa(ChangeBridgeDeltaSigmaSMpa { new_bridge_delta_sigma_s_mpa: base.bridge_delta_sigma_s_mpa.clone() })]
 }
 //#endregion 🔖️Inverse

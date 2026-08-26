@@ -6,7 +6,7 @@ use crate::artifacts::vdi3805::mutations::create_geometry;
 use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &DeleteGeometry, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &DeleteGeometry, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
     match base.geometry.get(&payload.id) {
         Some(geometry) => vec![Vdi3805Mutation::CreateGeometry(create_geometry::mutation::CreateGeometry { geometry: geometry.clone() })],
         None => Vec::new(),

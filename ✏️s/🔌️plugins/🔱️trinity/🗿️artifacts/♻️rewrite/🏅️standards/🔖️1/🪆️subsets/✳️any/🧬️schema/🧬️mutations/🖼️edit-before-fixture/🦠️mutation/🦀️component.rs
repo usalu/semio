@@ -15,20 +15,20 @@ pub struct EditBeforeFixture {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn edit_before_fixture(new_before_fixture_json: String) -> RewriteRuleMutation {
+pub fn edit_before_fixture(new_before_fixture_json: String) -> RewriteRuleMutation {
     RewriteRuleMutation::EditBeforeFixture(EditBeforeFixture { new_before_fixture_json })
 }
 
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for EditBeforeFixture {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "before-fixture", kind: "edit-before-fixture", record: "EditedBeforeFixture" };
 
-    async fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+    fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Edit before-fixture".to_string()
     }
 }

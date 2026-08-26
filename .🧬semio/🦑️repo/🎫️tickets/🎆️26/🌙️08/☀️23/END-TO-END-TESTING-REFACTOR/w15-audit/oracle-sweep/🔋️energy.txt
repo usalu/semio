@@ -1,0 +1,3 @@
+[test] not-exercised ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/mutate-energy-model-1 (recorded no-oracle decision energy-model-mutation-semantics — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+EXIT=0

@@ -4,19 +4,28 @@
 @mutations-shooting-1-any
 Feature: Apply every typed SHOOTING mutation to the vocabulary's own committed render scene
   `s.shooting.shooting` is a semio-NATIVE artifact — the `shooting.shooting.dsl` grammar, with its typed
-  table columns and its `deg`-suffixed angle literals, is defined by this repository alone — so this case
+  table columns and its `deg`-suffixed angle literals, is defined by this repository alone. This case
   carries a recorded no-oracle decision (`shooting-render-scene-mutation-semantics`, in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) rather than a registered reference
-  library. That decision does not rest on absence: it surveys glTF 2.0, USD and Collada by name, which
-  really do model an asset list, a transform, a camera and a punctual light — and rejects them on the one
-  structural point that matters here, that none of them models a SHOT. A shot is a render request
-  (width, height, output format, mask shape, background, saved-camera reference) and ELEVEN of the
-  thirty-one kinds address it, so a glTF reader asked to judge `change-shot-format` would have nothing to
-  read and would report agreement about a field it does not carry. ⚠️ Consequence, stated plainly: the
-  runner dispatches NO oracle role for a recorded no-oracle case, so every scenario below carries its
-  evidence in the SUBJECT role or carries none at all. A handler that merely applied the mutation and
-  returned would report a pass having checked nothing, which is why each one asserts its law through the
-  shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` module before it returns.
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) whose third-party survey is
+  argued rather than assumed: glTF 2.0, USD and Collada are named, and declined on the one structural
+  point that matters here — none of them models a SHOT, and eleven of the thirty-one kinds address
+  one.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
+  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
+  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   📄️ The base document is real, committed, and is not this case's invention in any part. All thirty-one
   of this vocabulary's per-kind leaf fixtures under

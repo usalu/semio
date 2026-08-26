@@ -1,21 +1,25 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.architect.program` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here. `s.architect.program` is a semio-NATIVE artifact and no third party reads its carriers, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas, its derivation rules and its 266 specification vectors.",
+  "oracles": [
     {
-      "id": "architect-program-mutation-semantics",
+      "id": "architect-program-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
       "capabilities": [
         "program-1-mutate"
       ],
-      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over an architectural BRIEF vocabulary in the first place: the 266 kinds are mechanically derived from this subset's own 66 registers by `📓️derivation-rules.md` — every header-shaped id-keyed register yields create/delete/rename/replace (rule 2), the two edge-shaped registers (`adjacencies`, `traces`) yield connect/disconnect instead (rule 4), and the three document-level scalar facets (`meta`, `project`, `governance`) yield rename/replace (rule 1). That derivation is a specification, not a fact an external library could confirm or refute. What stands in its place is the committed, independently handcrafted `(before, mutation, after, diff, outcome)` specification vector under each of the 266 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves — 260 of which move the document — plus the inverse law as a metamorphic property: applying a kind and then its OWN computed inverse must restore the exact pre-mutation vector.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.architect.program` architectural-brief document and all 266 typed mutations, in Python, at `../../../../../🧪️tests/mutate-program-1/🐍️component.py`. Written from `../🧬️schema/🧬️mutations/🔣️component.json` (the 266 payload shapes: 66 `{id}`, 64 `{id,newName}`, 66 whole-record and six facet payloads), from `../🧬️schema/📸️snapshot/🔣️component.json` (the register list and its order), from rules 1, 2 and 4 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and from the 266 committed `(before, mutation, after, outcome)` specification vectors — which are the only statement of three facts: that a `connect-` verb NORMALISES the edge it appends, that an absent id is `mutation.target-missing` with the id as its path rather than a no-op, and that the 47th register is serialized `artifacts` although the committed JSON Schema requires `documents`. It imports nothing from this repository and transliterates none of its Rust; no file under `../🧬️schema/🧬️mutations/<slug>/{🦠️mutation,↩️inverse,🔺️diff}/🦀️component.rs` was read. This registration SUPERSEDES the `architect-program-mutation-semantics` no-oracle decision, whose argument — that a vocabulary derived by `📓️derivation-rules.md` is a specification no external implementation could confirm or refute — was refuted by the fifteen `📕️norm` references, which were written from that same document. A third-party library was declined, not merely absent: IFC and its property sets carry a built model rather than the brief that precedes it, requirements-management schemas (ReqIF, SysML) carry requirement records but no 66-register brief and no closed 266-verb algebra over it, and none of them reads this carrier. The reference REFUSES three of the case's scenarios by clause rather than adjudicating them, and says so in role: `create-knowledge-record` and `create-benchmark-record`, whose whole observable effect is a content address of a composed `s.stdio.semio@v1/table` child that no document in this repository defines; and `identity-round-trip`, whose `.dsl.semio` carrier has only the repository-wide placeholder grammar `payload = OCTET+` while the notation flattens nested records into `key=key=value` and every record `$def` in the committed JSON Schema is an empty `{\"type\": \"object\", \"additionalProperties\": true}` stub. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "program-1-any",

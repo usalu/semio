@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_hr_savings_reference_kwh::muta
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeHrSavingsReferenceKwh, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeHrSavingsReferenceKwh, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_hr_savings_reference_kwh.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Heat recovery savings reference must be a finite number, got {}.", payload.new_hr_savings_reference_kwh), Vec::<String>::new());
     }

@@ -7,13 +7,13 @@ pub const DRAW_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::draw::create_draw_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: DRAW_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     create_default_layout(&[canvas::DRAW_PLAY_WINDOW_CANVAS.into()], "row", Some(&[100.0]), Some(&["Canvas".into()]))
 }
 //#endregion 🔖️Definition

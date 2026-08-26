@@ -211,7 +211,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn validator_validate_runs_the_same_checks_through_the_io_payload_boundary() {
             let bytes = <SemioModelSnapshot as store::ArtifactPack>::encode_pack(&clean_snapshot());
-            let diagnostics = SemioModelValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioModelValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.is_empty(), "clean snapshot must validate through the wire boundary too: {diagnostics:?}");
         }
 

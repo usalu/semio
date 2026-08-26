@@ -15,15 +15,15 @@ pub struct ChangeOccupants {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeOccupants {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "occupants", kind: "change-occupants", record: "ChangedOccupants" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_occupants::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_occupants::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change number of occupants to {}", self.new_occupants)
     }
 }

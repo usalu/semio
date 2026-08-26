@@ -106,13 +106,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_has_no_office_document_relationship_and_fails_build() {
-            let err = PptxStrictBuilderConstruction::empty().build().expect_err("an empty package has no officeDocument relationship, must fail build()");
+            let err = PptxStrictBuilderConstruction::empty().await.build().await.expect_err("an empty package has no officeDocument relationship, must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::CODE_MAIN_NS));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_strict_snapshot_builds_clean() {
-            let snapshot = PptxStrictBuilderConstruction::from_snapshot(strict_snapshot()).build().expect("conforming Strict snapshot must build");
+            let snapshot = PptxStrictBuilderConstruction::from_snapshot(strict_snapshot()).await.build().await.expect("conforming Strict snapshot must build");
             assert!(snapshot.opc.part_bytes("ppt/presentation.xml").is_some());
         }
 
@@ -120,8 +120,8 @@ pub mod derived_construction {
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut violating = strict_snapshot();
             violating.opc.set_part("ppt/slides/slide1.xml", "application/vnd.openxmlformats-officedocument.presentationml.slide+xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
-            let (mutated, _diff) = PptxStrictBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot { snapshot: violating });
-            let err = mutated.build().expect_err("VML markup must fail build()");
+            let (mutated, _diff) = PptxStrictBuilderConstruction::from_snapshot(PptxSnapshot::default()).await.mutate(PptxMutation::SetSnapshot { snapshot: violating }).await;
+            let err = mutated.build().await.expect_err("VML markup must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pptx::standards::v_ecma_376::subsets::strict::schema::CODE_VML_PRESENT));
         }
     }

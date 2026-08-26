@@ -60,7 +60,7 @@ mod tests {
         let mut document = DocxSnapshot::default();
         document.document.body.push(DocxBlock::paragraph("first"));
         document.document.body.push(DocxBlock::paragraph("second"));
-        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        let stack = render(&document).expect("render");
         assert_eq!(stack.children.len(), 2);
     }
 }

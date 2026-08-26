@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-ground-type` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `ground_type` from b to c, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_ground_type_applies_to_committed_after() {
+fn change_ground_type_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-ground-type applies to its committed before-snapshot");
     assert_eq!(applied.ground_type, "c", "change-ground-type/switches-ground-type-to-c: ground_type must read c after the change");
     assert_eq!(applied, expected_after(), "change-ground-type/switches-ground-type-to-c: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_ground_type_applies_to_committed_after() {
 /// ↩️ `change-ground-type` is its own inverse partner: the inverse step restores `ground_type` to its pre-change
 /// b and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_ground_type_inverse_restores_before() {
+fn change_ground_type_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-ground-type applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_ground_type_inverse_restores_before() {
 /// decode then encode is a fixed point, so `groundType` and `newGroundType` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_ground_type_committed_json_is_canonical() {
+fn change_ground_type_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-ground-type snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-ground-type snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_ground_type_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-ground-type` at c is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_ground_type_declared_outcome_holds() {
+fn change_ground_type_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-ground-type outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-ground-type/switches-ground-type-to-c: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_ground_type_declared_outcome_holds() {
 /// assertion: it pins that only `groundType` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `importanceClass`.
 #[semio_framework_async_macros::async_test]
-async fn change_ground_type_produces_committed_diff() {
+fn change_ground_type_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().ground_type.as_deref(), Some("c"), "change-ground-type/switches-ground-type-to-c: the diff must set ground_type to c");
     assert!(outcome.diff().artifact.is_none(), "change-ground-type/switches-ground-type-to-c: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_ground_type_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-ground-type`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_ground_type_committed_diff_is_canonical() {
+fn change_ground_type_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-ground-type committed diff decodes");
     assert_eq!(decoded.ground_type.as_deref(), Some("c"), "change-ground-type/switches-ground-type-to-c: the committed diff must carry ground_type at c");
     assert!(decoded.selected_check_index.is_none(), "change-ground-type/switches-ground-type-to-c: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_ground_type_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the b to c delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_ground_type_committed_diff_applies_to_after() {
+fn change_ground_type_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-ground-type committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-ground-type committed diff applies to the before-snapshot");
     assert_eq!(produced.ground_type, "c", "change-ground-type/switches-ground-type-to-c: the committed diff must leave ground_type reading c");

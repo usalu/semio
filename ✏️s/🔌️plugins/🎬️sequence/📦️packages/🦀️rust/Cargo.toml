@@ -42,9 +42,3 @@ semio-s-plugin-imperative-math = { path = "../../../📜️imperative/🧩️ext
 semio-s-plugin-imperative-text = { path = "../../../📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-text" }
 semio-s-plugin-imperative-effect = { path = "../../../📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-effect" }
 semio-s-plugin-imperative-control = { path = "../../../📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust", package = "semio-s-plugin-imperative-control" }
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.106"
-wasm-bindgen-futures = "0.4.71"
-web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
-js-sys = "0.3.83"

@@ -15,15 +15,15 @@ pub struct ChangeInternalGainsWM2 {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeInternalGainsWM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "internal-gains-wm2", kind: "change-internal-gains-wm2", record: "ChangedInternalGainsWM2" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_internal_gains_w_m2::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_internal_gains_w_m2::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change internal heat gains [W/m2] to {}", self.new_internal_gains_w_m2)
     }
 }

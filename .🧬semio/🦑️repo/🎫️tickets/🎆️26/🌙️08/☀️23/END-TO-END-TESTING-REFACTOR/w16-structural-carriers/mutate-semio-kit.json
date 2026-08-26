@@ -1,0 +1,372 @@
+{
+ "rows": {
+  "create-object": {
+   "prepare": [],
+   "mutation": {
+    "CreateObject": {
+     "child_id": "obj-02",
+     "target": {
+      "artifactId": "stool-instance",
+      "dialect": {
+       "artifactKind": "s.stdio.semio",
+       "standard": "v1",
+       "subset": "object"
+      }
+     }
+    }
+   }
+  },
+  "delete-object": {
+   "prepare": [],
+   "mutation": {
+    "DeleteObject": {
+     "child_id": "obj-01"
+    }
+   }
+  },
+  "create-model": {
+   "prepare": [],
+   "mutation": {
+    "CreateModel": {
+     "child_id": "model-02",
+     "target": {
+      "artifactId": "stool-bim",
+      "dialect": {
+       "artifactKind": "s.stdio.semio",
+       "standard": "v1",
+       "subset": "model"
+      }
+     }
+    }
+   }
+  },
+  "delete-model": {
+   "prepare": [],
+   "mutation": {
+    "DeleteModel": {
+     "child_id": "model-01"
+    }
+   }
+  },
+  "create-properties": {
+   "prepare": [
+    {
+     "DeleteProperties": {}
+    }
+   ],
+   "mutation": {
+    "CreateProperties": {
+     "child_id": "props-02",
+     "target": {
+      "artifactId": "kit-props-metric",
+      "dialect": {
+       "artifactKind": "s.stdio.semio",
+       "standard": "v1",
+       "subset": "value"
+      }
+     }
+    }
+   }
+  },
+  "delete-properties": {
+   "prepare": [],
+   "mutation": {
+    "DeleteProperties": {}
+   }
+  },
+  "bind-representation": {
+   "prepare": [],
+   "mutation": {
+    "BindRepresentation": {
+     "target": {
+      "artifactId": "chair-plan",
+      "dialect": {
+       "artifactKind": "s.stdio.semio",
+       "standard": "v1",
+       "subset": "drawing"
+      }
+     },
+     "pin": {
+      "kind": "checkpoint",
+      "id": "v7"
+     },
+     "role": "chair"
+    }
+   }
+  },
+  "unbind-representation": {
+   "prepare": [],
+   "mutation": {
+    "UnbindRepresentation": {
+     "index": 0
+    }
+   }
+  },
+  "change-representation-pin": {
+   "prepare": [],
+   "mutation": {
+    "ChangeRepresentationPin": {
+     "index": 0,
+     "pin": {
+      "kind": "checkpoint",
+      "id": "v3"
+     }
+    }
+   }
+  },
+  "add-type": {
+   "prepare": [],
+   "mutation": {
+    "AddType": {
+     "id": "table",
+     "name": "Tisch",
+     "category": "furniture"
+    }
+   }
+  },
+  "remove-type": {
+   "prepare": [
+    {
+     "AddType": {
+      "id": "table",
+      "name": "Tisch",
+      "category": "furniture"
+     }
+    }
+   ],
+   "mutation": {
+    "RemoveType": {
+     "id": "table"
+    }
+   }
+  },
+  "rename-type": {
+   "prepare": [],
+   "mutation": {
+    "RenameType": {
+     "id": "chair",
+     "new_name": "Stuhl"
+    }
+   }
+  },
+  "add-design": {
+   "prepare": [],
+   "mutation": {
+    "AddDesign": {
+     "id": "dining-room",
+     "name": "Dining Room"
+    }
+   }
+  },
+  "remove-design": {
+   "prepare": [],
+   "mutation": {
+    "RemoveDesign": {
+     "id": "living-room"
+    }
+   }
+  },
+  "edit-design": {
+   "prepare": [],
+   "mutation": {
+    "EditDesign": {
+     "id": "living-room",
+     "pieces": [
+      {
+       "id": "piece-1",
+       "typeId": "chair",
+       "transform": {
+        "translation": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0
+        },
+        "rotation": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "w": 1.0
+        },
+        "scale": {
+         "x": 1.0,
+         "y": 1.0,
+         "z": 1.0
+        }
+       }
+      },
+      {
+       "id": "piece-3",
+       "typeId": "chair",
+       "transform": {
+        "translation": {
+         "x": 1.5,
+         "y": 0.0,
+         "z": -2.25
+        },
+        "rotation": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1.0,
+         "w": 0.0
+        },
+        "scale": {
+         "x": 1.0,
+         "y": 2.0,
+         "z": 1.0
+        }
+       }
+      }
+     ],
+     "connections": [
+      {
+       "id": "conn-2",
+       "connectingPieceId": "piece-1",
+       "connectingPort": "back",
+       "connectedPieceId": "piece-3",
+       "connectedPort": "front"
+      }
+     ]
+    }
+   }
+  }
+ },
+ "vectors": {
+  "create-object": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏗️create-object/🧪️tests/attaches-a-second-object-child/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏗️create-object/🧪️tests/attaches-a-second-object-child/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏗️create-object/🧪️tests/attaches-a-second-object-child/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-object": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🪓delete-object/🧪️tests/detaches-the-only-object-child-and-keeps-the-model-child/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🪓delete-object/🧪️tests/detaches-the-only-object-child-and-keeps-the-model-child/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🪓delete-object/🧪️tests/detaches-the-only-object-child-and-keeps-the-model-child/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-model": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏛️create-model/🧪️tests/attaches-a-second-model-child/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏛️create-model/🧪️tests/attaches-a-second-model-child/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏛️create-model/🧪️tests/attaches-a-second-model-child/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-model": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/💣delete-model/🧪️tests/detaches-the-only-model-child-and-keeps-the-object-child/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/💣delete-model/🧪️tests/detaches-the-only-model-child-and-keeps-the-object-child/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/💣delete-model/🧪️tests/detaches-the-only-model-child-and-keeps-the-object-child/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-properties": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-a-kit-that-has-none/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-a-kit-that-has-none/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-a-kit-that-has-none/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-properties": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-every-other-collection-alone/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-every-other-collection-alone/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-every-other-collection-alone/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "bind-representation": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🔗bind-representation/🧪️tests/binds-a-second-representation-to-an-existing-type/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🔗bind-representation/🧪️tests/binds-a-second-representation-to-an-existing-type/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🔗bind-representation/🧪️tests/binds-a-second-representation-to-an-existing-type/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "unbind-representation": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/✂️unbind-representation/🧪️tests/unbinds-the-leading-representation-and-keeps-the-trailing-one/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/✂️unbind-representation/🧪️tests/unbinds-the-leading-representation-and-keeps-the-trailing-one/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/✂️unbind-representation/🧪️tests/unbinds-the-leading-representation-and-keeps-the-trailing-one/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "change-representation-pin": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/📌change-representation-pin/🧪️tests/repins-the-representation-from-head-to-a-checkpoint/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/📌change-representation-pin/🧪️tests/repins-the-representation-from-head-to-a-checkpoint/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/📌change-representation-pin/🧪️tests/repins-the-representation-from-head-to-a-checkpoint/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "add-type": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/➕add-type/🧪️tests/appends-a-slab-type-to-the-catalogue/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/➕add-type/🧪️tests/appends-a-slab-type-to-the-catalogue/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/➕add-type/🧪️tests/appends-a-slab-type-to-the-catalogue/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "remove-type": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/➖remove-type/🧪️tests/removes-the-column-type-and-keeps-the-beam-type/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/➖remove-type/🧪️tests/removes-the-column-type-and-keeps-the-beam-type/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/➖remove-type/🧪️tests/removes-the-column-type-and-keeps-the-beam-type/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "rename-type": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/✏️rename-type/🧪️tests/renames-the-beam-type-without-recategorising-it/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/✏️rename-type/🧪️tests/renames-the-beam-type-without-recategorising-it/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/✏️rename-type/🧪️tests/renames-the-beam-type-without-recategorising-it/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "add-design": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🆕add-design/🧪️tests/adds-an-empty-roof-design/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🆕add-design/🧪️tests/adds-an-empty-roof-design/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🆕add-design/🧪️tests/adds-an-empty-roof-design/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "remove-design": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🗑️remove-design/🧪️tests/removes-the-only-design-together-with-its-pieces/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🗑️remove-design/🧪️tests/removes-the-only-design-together-with-its-pieces/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🗑️remove-design/🧪️tests/removes-the-only-design-together-with-its-pieces/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "edit-design": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🖊️edit-design/🧪️tests/replaces-the-designs-pieces-and-connections-in-one-step/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🖊️edit-design/🧪️tests/replaces-the-designs-pieces-and-connections-in-one-step/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🧬️mutations/🖊️edit-design/🧪️tests/replaces-the-designs-pieces-and-connections-in-one-step/📸️snapshot/➡️after/🔣️component.json"
+  ]
+ },
+ "dirs": {
+  "create-object": [
+   "🏗️create-object",
+   "attaches-a-second-object-child"
+  ],
+  "delete-object": [
+   "🪓delete-object",
+   "detaches-the-only-object-child-and-keeps-the-model-child"
+  ],
+  "create-model": [
+   "🏛️create-model",
+   "attaches-a-second-model-child"
+  ],
+  "delete-model": [
+   "💣delete-model",
+   "detaches-the-only-model-child-and-keeps-the-object-child"
+  ],
+  "create-properties": [
+   "🏷️create-properties",
+   "attaches-a-properties-child-to-a-kit-that-has-none"
+  ],
+  "delete-properties": [
+   "🚫delete-properties",
+   "detaches-the-properties-child-and-leaves-every-other-collection-alone"
+  ],
+  "bind-representation": [
+   "🔗bind-representation",
+   "binds-a-second-representation-to-an-existing-type"
+  ],
+  "unbind-representation": [
+   "✂️unbind-representation",
+   "unbinds-the-leading-representation-and-keeps-the-trailing-one"
+  ],
+  "change-representation-pin": [
+   "📌change-representation-pin",
+   "repins-the-representation-from-head-to-a-checkpoint"
+  ],
+  "add-type": [
+   "➕add-type",
+   "appends-a-slab-type-to-the-catalogue"
+  ],
+  "remove-type": [
+   "➖remove-type",
+   "removes-the-column-type-and-keeps-the-beam-type"
+  ],
+  "rename-type": [
+   "✏️rename-type",
+   "renames-the-beam-type-without-recategorising-it"
+  ],
+  "add-design": [
+   "🆕add-design",
+   "adds-an-empty-roof-design"
+  ],
+  "remove-design": [
+   "🗑️remove-design",
+   "removes-the-only-design-together-with-its-pieces"
+  ],
+  "edit-design": [
+   "🖊️edit-design",
+   "replaces-the-designs-pieces-and-connections-in-one-step"
+  ]
+ }
+}

@@ -1,0 +1,1276 @@
+{
+  "initial": {
+    "schema": "flow.oracle.🌊️",
+    "camera": {
+      "x": 1.5,
+      "y": -2.25,
+      "zoom": 1.25
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "α",
+        "text": "eins"
+      },
+      {
+        "kind": "inputNote",
+        "id": "β",
+        "text": "zwei"
+      },
+      {
+        "kind": "inputNote",
+        "id": "γ",
+        "text": "drei"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "s-a",
+        "from": "α",
+        "to": "β",
+        "fromPort": "text",
+        "toPort": "in"
+      },
+      {
+        "id": "s-b",
+        "from": "β",
+        "to": "γ",
+        "fromPort": "text",
+        "toPort": "in"
+      },
+      {
+        "id": "s-c",
+        "from": "γ",
+        "to": "α",
+        "fromPort": "text",
+        "toPort": "in"
+      }
+    ],
+    "layout": {
+      "α": {
+        "x": 1,
+        "y": 2
+      },
+      "β": {
+        "x": 3,
+        "y": 4
+      },
+      "γ": {
+        "x": 5,
+        "y": 6
+      }
+    }
+  },
+  "documents": {
+    "initial": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "γ",
+          "text": "drei"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-c",
+          "from": "γ",
+          "to": "α",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterAddWidget": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "Grüße 🌊️"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "γ",
+          "text": "drei"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-c",
+          "from": "γ",
+          "to": "α",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterRemoveWidget": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "Grüße 🌊️"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-c",
+          "from": "γ",
+          "to": "α",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterMoveWidget": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "Grüße 🌊️"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-c",
+          "from": "γ",
+          "to": "α",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterPatchWidget": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-c",
+          "from": "γ",
+          "to": "α",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterAddSynapse": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "通道-ß",
+          "from": "α",
+          "to": "节点-ä",
+          "fromPort": "文本",
+          "toPort": "入口"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-c",
+          "from": "γ",
+          "to": "α",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterRemoveSynapse": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "通道-ß",
+          "from": "α",
+          "to": "节点-ä",
+          "fromPort": "文本",
+          "toPort": "入口"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterMoveSynapse": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "通道-ß",
+          "from": "α",
+          "to": "节点-ä",
+          "fromPort": "文本",
+          "toPort": "入口"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterPatchSynapse": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "通道-ß",
+          "from": "β",
+          "to": "节点-ä",
+          "fromPort": " geändert ",
+          "toPort": "入口"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "afterSetLayout": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "通道-ß",
+          "from": "β",
+          "to": "节点-ä",
+          "fromPort": " geändert ",
+          "toPort": "入口"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        },
+        "节点-ä": {
+          "x": 12.5,
+          "y": -8.25
+        }
+      }
+    },
+    "afterReplaceDocument": {
+      "schema": "flow.replacement.多",
+      "camera": {
+        "x": -1,
+        "y": 7.5,
+        "zoom": 2
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "替代",
+          "text": "শেষ"
+        }
+      ],
+      "synapses": [],
+      "layout": {
+        "替代": {
+          "x": 9,
+          "y": 10
+        }
+      }
+    },
+    "beforeReplacement": {
+      "schema": "flow.oracle.🌊️",
+      "camera": {
+        "x": 1.5,
+        "y": -2.25,
+        "zoom": 1.25
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "α",
+          "text": "eins"
+        },
+        {
+          "kind": "inputNote",
+          "id": "β",
+          "text": "zwei"
+        },
+        {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      ],
+      "synapses": [
+        {
+          "id": "s-a",
+          "from": "α",
+          "to": "β",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "s-b",
+          "from": "β",
+          "to": "γ",
+          "fromPort": "text",
+          "toPort": "in"
+        },
+        {
+          "id": "通道-ß",
+          "from": "β",
+          "to": "节点-ä",
+          "fromPort": " geändert ",
+          "toPort": "入口"
+        }
+      ],
+      "layout": {
+        "α": {
+          "x": 1,
+          "y": 2
+        },
+        "β": {
+          "x": 3,
+          "y": 4
+        },
+        "γ": {
+          "x": 5,
+          "y": 6
+        },
+        "节点-ä": {
+          "x": 12.5,
+          "y": -8.25
+        }
+      }
+    },
+    "replacement": {
+      "schema": "flow.replacement.多",
+      "camera": {
+        "x": -1,
+        "y": 7.5,
+        "zoom": 2
+      },
+      "widgets": [
+        {
+          "kind": "inputNote",
+          "id": "替代",
+          "text": "শেষ"
+        }
+      ],
+      "synapses": [],
+      "layout": {
+        "替代": {
+          "x": 9,
+          "y": 10
+        }
+      }
+    }
+  },
+  "operations": [
+    {
+      "feature": "addWidget",
+      "input": {
+        "index": 1,
+        "widget": {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "Grüße 🌊️"
+        }
+      },
+      "expected": {
+        "document": "afterAddWidget",
+        "page": {
+          "sequence": 1,
+          "operation": 1,
+          "sessionGeneration": 77,
+          "revision": 2,
+          "parentRevision": 1,
+          "documentGeneration": 2,
+          "widgetCount": 4,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "6021474653593222275"
+        },
+        "history": {
+          "undoOwners": 1,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "removeWidget",
+      "input": {
+        "id": "γ"
+      },
+      "expected": {
+        "document": "afterRemoveWidget",
+        "page": {
+          "sequence": 2,
+          "operation": 2,
+          "sessionGeneration": 77,
+          "revision": 3,
+          "parentRevision": 2,
+          "documentGeneration": 3,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "1326709136873122801"
+        },
+        "history": {
+          "undoOwners": 2,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "moveWidget",
+      "input": {
+        "id": "节点-ä",
+        "index": 2
+      },
+      "expected": {
+        "document": "afterMoveWidget",
+        "page": {
+          "sequence": 3,
+          "operation": 3,
+          "sessionGeneration": 77,
+          "revision": 4,
+          "parentRevision": 3,
+          "documentGeneration": 4,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "3268989849158820809"
+        },
+        "history": {
+          "undoOwners": 3,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "patchWidget",
+      "input": {
+        "id": "节点-ä",
+        "widget": {
+          "kind": "inputNote",
+          "id": "节点-ä",
+          "text": "改訂 текст"
+        }
+      },
+      "expected": {
+        "document": "afterPatchWidget",
+        "page": {
+          "sequence": 4,
+          "operation": 4,
+          "sessionGeneration": 77,
+          "revision": 5,
+          "parentRevision": 4,
+          "documentGeneration": 5,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "13339193358111679534"
+        },
+        "history": {
+          "undoOwners": 4,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "addSynapse",
+      "input": {
+        "index": 1,
+        "synapse": {
+          "id": "通道-ß",
+          "from": "α",
+          "to": "节点-ä",
+          "fromPort": "文本",
+          "toPort": "入口"
+        }
+      },
+      "expected": {
+        "document": "afterAddSynapse",
+        "page": {
+          "sequence": 5,
+          "operation": 5,
+          "sessionGeneration": 77,
+          "revision": 6,
+          "parentRevision": 5,
+          "documentGeneration": 6,
+          "widgetCount": 3,
+          "synapseCount": 4,
+          "layoutCount": 3,
+          "semanticDigest": "14606841067594438309"
+        },
+        "history": {
+          "undoOwners": 5,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "removeSynapse",
+      "input": {
+        "id": "s-c"
+      },
+      "expected": {
+        "document": "afterRemoveSynapse",
+        "page": {
+          "sequence": 6,
+          "operation": 6,
+          "sessionGeneration": 77,
+          "revision": 7,
+          "parentRevision": 6,
+          "documentGeneration": 7,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "13659963654023592145"
+        },
+        "history": {
+          "undoOwners": 6,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "moveSynapse",
+      "input": {
+        "id": "通道-ß",
+        "index": 2
+      },
+      "expected": {
+        "document": "afterMoveSynapse",
+        "page": {
+          "sequence": 7,
+          "operation": 7,
+          "sessionGeneration": 77,
+          "revision": 8,
+          "parentRevision": 7,
+          "documentGeneration": 8,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "4472702638590015034"
+        },
+        "history": {
+          "undoOwners": 7,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "patchSynapse",
+      "input": {
+        "id": "通道-ß",
+        "synapse": {
+          "id": "通道-ß",
+          "from": "β",
+          "to": "节点-ä",
+          "fromPort": " geändert ",
+          "toPort": "入口"
+        }
+      },
+      "expected": {
+        "document": "afterPatchSynapse",
+        "page": {
+          "sequence": 8,
+          "operation": 8,
+          "sessionGeneration": 77,
+          "revision": 9,
+          "parentRevision": 8,
+          "documentGeneration": 9,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 3,
+          "semanticDigest": "5146284943843870283"
+        },
+        "history": {
+          "undoOwners": 8,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "setLayout",
+      "input": {
+        "id": "节点-ä",
+        "layout": {
+          "x": 12.5,
+          "y": -8.25
+        }
+      },
+      "expected": {
+        "document": "afterSetLayout",
+        "page": {
+          "sequence": 9,
+          "operation": 9,
+          "sessionGeneration": 77,
+          "revision": 10,
+          "parentRevision": 9,
+          "documentGeneration": 10,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 4,
+          "semanticDigest": "7556051544807795047"
+        },
+        "history": {
+          "undoOwners": 9,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 1,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "replaceDocument",
+      "input": {
+        "document": {
+          "schema": "flow.replacement.多",
+          "camera": {
+            "x": -1,
+            "y": 7.5,
+            "zoom": 2
+          },
+          "widgets": [
+            {
+              "kind": "inputNote",
+              "id": "替代",
+              "text": "শেষ"
+            }
+          ],
+          "synapses": [],
+          "layout": {
+            "替代": {
+              "x": 9,
+              "y": 10
+            }
+          }
+        }
+      },
+      "expected": {
+        "document": "afterReplaceDocument",
+        "page": {
+          "sequence": 10,
+          "operation": 10,
+          "sessionGeneration": 77,
+          "revision": 11,
+          "parentRevision": 10,
+          "documentGeneration": 11,
+          "widgetCount": 1,
+          "synapseCount": 0,
+          "layoutCount": 1,
+          "semanticDigest": "10347887769374485905"
+        },
+        "history": {
+          "undoOwners": 10,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 2,
+          "activeDocumentVersion": 1
+        }
+      }
+    },
+    {
+      "feature": "undo",
+      "input": {},
+      "expected": {
+        "document": "beforeReplacement",
+        "page": {
+          "sequence": 11,
+          "operation": 11,
+          "sessionGeneration": 77,
+          "revision": 12,
+          "parentRevision": 11,
+          "documentGeneration": 12,
+          "widgetCount": 3,
+          "synapseCount": 3,
+          "layoutCount": 4,
+          "semanticDigest": "7107588018251509887"
+        },
+        "history": {
+          "undoOwners": 9,
+          "redoOwners": 1
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 2,
+          "activeDocumentVersion": 0
+        }
+      }
+    },
+    {
+      "feature": "redo",
+      "input": {},
+      "expected": {
+        "document": "replacement",
+        "page": {
+          "sequence": 12,
+          "operation": 12,
+          "sessionGeneration": 77,
+          "revision": 13,
+          "parentRevision": 12,
+          "documentGeneration": 13,
+          "widgetCount": 1,
+          "synapseCount": 0,
+          "layoutCount": 1,
+          "semanticDigest": "7436748889560968408"
+        },
+        "history": {
+          "undoOwners": 10,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 2,
+          "activeDocumentVersion": 1
+        }
+      }
+    },
+    {
+      "feature": "checkpoint",
+      "input": {},
+      "expected": {
+        "document": "replacement",
+        "page": {
+          "sequence": 13,
+          "operation": 13,
+          "sessionGeneration": 77,
+          "revision": 14,
+          "parentRevision": 13,
+          "documentGeneration": 14,
+          "widgetCount": 1,
+          "synapseCount": 0,
+          "layoutCount": 1,
+          "semanticDigest": "10697971893976894569"
+        },
+        "history": {
+          "undoOwners": 10,
+          "redoOwners": 0
+        },
+        "handback": {
+          "fingerprint": "ackCloseExact",
+          "documentVersions": 2,
+          "activeDocumentVersion": 1
+        }
+      }
+    }
+  ],
+  "terminalFingerprints": {
+    "ackCloseExact": {
+      "credits": {
+        "operations": 0,
+        "pages": 0,
+        "items": 0,
+        "bytes": 0,
+        "outputs": 0,
+        "events": 0,
+        "controls": 0
+      },
+      "activeOperations": 0,
+      "leasedPages": 0,
+      "retiredActionOwners": 0,
+      "retiredSurfaceOwners": 0,
+      "editOwner": null,
+      "documentRetained": true,
+      "closing": false
+    }
+  },
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only",
+    "ownedInterface": "FlowSemanticOracle",
+    "runtimeDependency": false,
+    "actualSource": "retainedSessionAfterAcknowledgeAndClose"
+  }
+}

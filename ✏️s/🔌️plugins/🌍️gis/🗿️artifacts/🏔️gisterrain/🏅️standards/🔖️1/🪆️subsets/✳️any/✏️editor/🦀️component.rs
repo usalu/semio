@@ -281,6 +281,7 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+shift+z", "redo")
             .config(semio_framework_plugin::resolve_ready(Gis3dPlayApp::config_spec()))
             .io(gis3d_io())
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
             // `.workflow(...)` — the old `"reuse-terrain"` app-level example registration and the
             // no-op `.workflow("gis3d", …)` call are dropped here (not silently: reported in the
@@ -398,6 +399,7 @@ mod tests {
         let definition = create_gis3d_app().definition;
         assert_eq!(definition.modes.len(), 1);
         assert_eq!(definition.window_kinds.len(), 1);
+        assert!(definition.actions.iter().all(|action| action.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated));
         // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
         assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "2d.map"));

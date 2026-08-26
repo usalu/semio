@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_bearing_d_rd_mm::mutation::Chang
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeBearingDRdMm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeBearingDRdMm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_bearing_d_rd_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Bearing design displacement capacity D_Rd [mm] must be a finite number, got {}.", payload.new_bearing_d_rd_mm), Vec::<String>::new());
     }

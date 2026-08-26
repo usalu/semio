@@ -55,7 +55,7 @@ async fn the_undo_replace_surface_restores_the_original_plane() {
     assert_eq!(current, base, "replace-surface/swaps-the-faces-plane-for-a-cylinder: the undo did not restore the before-snapshot");
 }
 
-/// 🔣️ Snapshots and the payload are canonical — `BrepSurface` is internally tagged on `kind` with camelCase VARIANTS but snake_case FIELDS (`half_angle`, `major_radius`, `u_count`).
+/// 🔣️ Snapshots and the payload are canonical — `BrepSurface` is internally tagged on `kind` and carries `rename_all_fields`, so both its VARIANTS and its members are camelCase (`halfAngle`, `majorRadius`, `uCount`), the spelling `📸️snapshot/🔣️component.json` declares. This vector's `cylinder` arm has only single-word members, so it reads the same either way; the mismatch the missing `rename_all_fields` used to cause was invisible here and was found by the cross-language differential in `🧪️tests/mutate-semio-brep`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

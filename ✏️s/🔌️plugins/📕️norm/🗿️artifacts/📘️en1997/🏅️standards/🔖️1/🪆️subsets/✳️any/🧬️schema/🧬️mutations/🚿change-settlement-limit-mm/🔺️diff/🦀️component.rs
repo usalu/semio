@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_settlement_limit_mm::mutation::C
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSettlementLimitMm, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeSettlementLimitMm, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_settlement_limit_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Settlement limit [mm] must be a finite number, got {}.", payload.new_settlement_limit_mm), Vec::<String>::new());
     }

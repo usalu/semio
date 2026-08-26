@@ -15,15 +15,15 @@ pub struct ChangeAnchorCracked {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorCracked {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "anchor-cracked", kind: "change-anchor-cracked", record: "ChangedAnchorCracked" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_anchor_cracked::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_anchor_cracked::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change anchor cracked to {:?}", self.new_anchor_cracked)
     }
 }

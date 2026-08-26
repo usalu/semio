@@ -1,55 +1,837 @@
-//! 🕸️ Procedural3d play app — the `wasm32` JS bridge (`Procedural3dSnapshotVcs`).
+//! 🌉️ Procedural3d retained document-load bridge.
 
-#![cfg(target_arch = "wasm32")]
+use crate::artifacts::procedural3d::op::Procedural3dMutation;
+use crate::artifacts::procedural3d::Procedural3dSnapshot;
+use store::{ArtifactEnvelope, ArtifactStore};
 
-use crate::artifacts::procedural3d::mutations::{Procedural3dEnvelope, Procedural3dStore};
-use crate::artifacts::procedural3d::schema::empty_procedural3d_snapshot;
-use crate::artifacts::procedural3d::PROCEDURAL_3D_SCHEMA;
-use std::cell::RefCell;
-use store::create_document_envelope;
-use wasm_bindgen::prelude::*;
+//#region 🔖️Store
+pub type Procedural3dEnvelope = ArtifactEnvelope<Procedural3dSnapshot, Procedural3dMutation>;
+pub type Procedural3dStore = ArtifactStore<Procedural3dSnapshot, Procedural3dMutation>;
+//#endregion 🔖️Store
 
-#[wasm_bindgen]
-pub struct Procedural3dSnapshotVcs {
-    store: RefCell<Procedural3dStore>,
+//#region 🔖️MountedRegistry
+const PROCEDURAL3D_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
+const PROCEDURAL3D_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+const PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS: usize = 8_192;
+const PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS: usize = 4;
+const PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS: usize = 1;
+const PROCEDURAL3D_ENVELOPE_OPERATION_SLOTS: usize = 4;
+const PROCEDURAL3D_OUTPUT_PAGE_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
+enum Procedural3dOutputKind {
+    Progress = 0,
+    Checkpoint = 1,
+    Preview = 2,
+    Terminal = 3,
 }
 
-#[wasm_bindgen]
-impl Procedural3dSnapshotVcs {
-    #[wasm_bindgen(constructor)]
-    pub async fn new(envelope_json: Option<String>) -> Result<Procedural3dSnapshotVcs, JsValue> {
-        let store = match envelope_json {
-            Some(json) => {
-                let envelope: Procedural3dEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                Procedural3dStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
+impl Procedural3dOutputKind {
+    fn from_u8(value: u8) -> Option<Self> {
+        match value {
+            0 => Some(Self::Progress),
+            1 => Some(Self::Checkpoint),
+            2 => Some(Self::Preview),
+            3 => Some(Self::Terminal),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Procedural3dOutputPage {
+    operation: u64,
+    generation: u64,
+    sequence: u64,
+    kind: Procedural3dOutputKind,
+    len: usize,
+    bytes: [u8; PROCEDURAL3D_OUTPUT_PAGE_BYTES],
+}
+
+impl Procedural3dOutputPage {
+    fn new(operation: u64, generation: u64, sequence: u64, kind: Procedural3dOutputKind, status: u8, admitted_pages: usize, admitted_bytes: usize) -> Self {
+        let mut bytes = [0; PROCEDURAL3D_OUTPUT_PAGE_BYTES];
+        bytes[..4].copy_from_slice(b"P3DO");
+        bytes[4] = 1;
+        bytes[5] = kind as u8;
+        bytes[6] = status;
+        bytes[8..16].copy_from_slice(&operation.to_le_bytes());
+        bytes[16..24].copy_from_slice(&generation.to_le_bytes());
+        bytes[24..32].copy_from_slice(&sequence.to_le_bytes());
+        bytes[32..40].copy_from_slice(&(admitted_pages as u64).to_le_bytes());
+        bytes[40..48].copy_from_slice(&(admitted_bytes as u64).to_le_bytes());
+        Self { operation, generation, sequence, kind, len: 48, bytes }
+    }
+}
+
+struct Procedural3dOutputSlot {
+    page: Option<Procedural3dOutputPage>,
+    lease: Option<std::sync::Arc<std::sync::atomic::AtomicU8>>,
+    acknowledged: bool,
+}
+
+impl Procedural3dOutputSlot {
+    fn empty() -> Self {
+        Self { page: None, lease: None, acknowledged: false }
+    }
+
+    fn reclaim_lost_lease(&mut self) {
+        if self.lease.as_ref().is_some_and(|lease| lease.load(std::sync::atomic::Ordering::Acquire) == 2) {
+            self.lease = None;
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct Procedural3dIngressCredits {
+    maximum_pages: usize,
+    maximum_bytes: usize,
+    maximum_items: usize,
+    maximum_output_pages: usize,
+    maximum_controls: usize,
+}
+
+impl Procedural3dIngressCredits {
+    fn try_new(maximum_pages: usize, maximum_bytes: usize, maximum_items: usize, maximum_output_pages: usize, maximum_controls: usize) -> Result<Self, &'static str> {
+        if maximum_pages == 0 || maximum_pages > PROCEDURAL3D_ENVELOPE_MAXIMUM_PAGES {
+            return Err("procedural3d-envelope.page-credits");
+        }
+        if maximum_bytes == 0 || maximum_bytes > PROCEDURAL3D_ENVELOPE_MAXIMUM_BYTES {
+            return Err("procedural3d-envelope.byte-credits");
+        }
+        if maximum_items == 0 || maximum_items > PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS {
+            return Err("procedural3d-envelope.item-credits");
+        }
+        if maximum_output_pages != PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS {
+            return Err("procedural3d-envelope.output-credits");
+        }
+        if maximum_controls != PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS {
+            return Err("procedural3d-envelope.control-credits");
+        }
+        Ok(Self { maximum_pages, maximum_bytes, maximum_items, maximum_output_pages, maximum_controls })
+    }
+}
+
+struct Procedural3dMountedOperation {
+    operation: u64,
+    generation: u64,
+    base_revision: u64,
+    parent_revision: u64,
+    credits: Procedural3dIngressCredits,
+    admitted_pages: usize,
+    admitted_bytes: usize,
+    sequence: u64,
+    outputs: [Procedural3dOutputSlot; PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS],
+}
+
+impl Procedural3dMountedOperation {
+    fn matches(&self, operation: u64, generation: u64) -> bool {
+        self.operation == operation && self.generation == generation
+    }
+
+    fn preflight_page(&self, bytes: usize) -> Result<(), &'static str> {
+        let pages = self.admitted_pages.checked_add(1).ok_or("procedural3d-envelope.page-overflow")?;
+        let total_bytes = self.admitted_bytes.checked_add(bytes).ok_or("procedural3d-envelope.byte-overflow")?;
+        if bytes > PROCEDURAL3D_OUTPUT_PAGE_BYTES || pages > self.credits.maximum_pages || total_bytes > self.credits.maximum_bytes {
+            return Err("procedural3d-envelope.page-handback");
+        }
+        Ok(())
+    }
+
+    fn publish(&mut self, kind: Procedural3dOutputKind, status: u8) {
+        let slot = &mut self.outputs[kind as usize];
+        slot.reclaim_lost_lease();
+        if kind == Procedural3dOutputKind::Terminal && (slot.page.is_some() || slot.acknowledged) {
+            return;
+        }
+        self.sequence = self.sequence.saturating_add(1);
+        slot.page = Some(Procedural3dOutputPage::new(self.operation, self.generation, self.sequence, kind, status, self.admitted_pages, self.admitted_bytes));
+        slot.acknowledged = false;
+    }
+}
+
+struct Procedural3dOutputLease {
+    page: Procedural3dOutputPage,
+    signal: std::sync::Arc<std::sync::atomic::AtomicU8>,
+    consumed: bool,
+}
+
+impl Drop for Procedural3dOutputLease {
+    fn drop(&mut self) {
+        if !self.consumed {
+            self.signal.store(2, std::sync::atomic::Ordering::Release);
+        }
+    }
+}
+
+struct Procedural3dMountedRegistry {
+    operations: [Option<Procedural3dMountedOperation>; PROCEDURAL3D_ENVELOPE_OPERATION_SLOTS],
+}
+
+impl Procedural3dMountedRegistry {
+    fn new() -> Self {
+        Self { operations: std::array::from_fn(|_| None) }
+    }
+
+    fn can_insert(&self) -> bool {
+        self.operations.iter().any(Option::is_none)
+    }
+
+    fn insert(&mut self, operation: u64, generation: u64, base_revision: u64, parent_revision: u64, credits: Procedural3dIngressCredits) -> Result<(), &'static str> {
+        if self.operations.iter().flatten().any(|entry| entry.operation == operation) {
+            return Err("procedural3d-envelope.operation-duplicate");
+        }
+        let slot = self.operations.iter_mut().find(|slot| slot.is_none()).ok_or("procedural3d-envelope.operation-capacity")?;
+        *slot = Some(Procedural3dMountedOperation { operation, generation, base_revision, parent_revision, credits, admitted_pages: 0, admitted_bytes: 0, sequence: 0, outputs: std::array::from_fn(|_| Procedural3dOutputSlot::empty()) });
+        Ok(())
+    }
+
+    fn operation_mut(&mut self, operation: u64, generation: u64) -> Result<&mut Procedural3dMountedOperation, &'static str> {
+        self.operations.iter_mut().flatten().find(|entry| entry.matches(operation, generation)).ok_or("procedural3d-envelope.stale-registry-handle")
+    }
+
+    fn operation(&self, operation: u64, generation: u64) -> Result<&Procedural3dMountedOperation, &'static str> {
+        self.operations.iter().flatten().find(|entry| entry.matches(operation, generation)).ok_or("procedural3d-envelope.stale-registry-handle")
+    }
+
+    fn admit_page(&mut self, operation: u64, generation: u64, bytes: usize) -> Result<(), &'static str> {
+        let entry = self.operation_mut(operation, generation)?;
+        entry.preflight_page(bytes)?;
+        entry.admitted_pages += 1;
+        entry.admitted_bytes += bytes;
+        Ok(())
+    }
+
+    fn publish(&mut self, operation: u64, generation: u64, kind: Procedural3dOutputKind, status: u8) -> Result<(), &'static str> {
+        self.operation_mut(operation, generation)?.publish(kind, status);
+        Ok(())
+    }
+
+    fn take(&mut self, operation: u64, generation: u64, kind: Procedural3dOutputKind) -> Result<Option<Procedural3dOutputLease>, &'static str> {
+        let slot = &mut self.operation_mut(operation, generation)?.outputs[kind as usize];
+        slot.reclaim_lost_lease();
+        let Some(page) = slot.page.as_ref() else { return Ok(None) };
+        if slot.lease.is_some() {
+            return Ok(None);
+        }
+        let signal = std::sync::Arc::new(std::sync::atomic::AtomicU8::new(0));
+        slot.lease = Some(std::sync::Arc::clone(&signal));
+        Ok(Some(Procedural3dOutputLease { page: *page, signal, consumed: false }))
+    }
+
+    fn resume(&mut self, lease: &mut Procedural3dOutputLease) -> Result<(), &'static str> {
+        let slot = &mut self.operation_mut(lease.page.operation, lease.page.generation)?.outputs[lease.page.kind as usize];
+        if !slot.lease.as_ref().is_some_and(|signal| std::sync::Arc::ptr_eq(signal, &lease.signal)) {
+            return Err("procedural3d-envelope.output-resume-stale");
+        }
+        lease.signal.store(1, std::sync::atomic::Ordering::Release);
+        lease.consumed = true;
+        slot.lease = None;
+        Ok(())
+    }
+
+    fn acknowledge_output(&mut self, lease: &mut Procedural3dOutputLease) -> Result<(), &'static str> {
+        let slot = &mut self.operation_mut(lease.page.operation, lease.page.generation)?.outputs[lease.page.kind as usize];
+        let same_page = slot.page.as_ref().is_some_and(|page| page.sequence == lease.page.sequence && page.bytes[..page.len] == lease.page.bytes[..lease.page.len]);
+        if !same_page || !slot.lease.as_ref().is_some_and(|signal| std::sync::Arc::ptr_eq(signal, &lease.signal)) {
+            return Err("procedural3d-envelope.output-ack-stale");
+        }
+        lease.signal.store(3, std::sync::atomic::Ordering::Release);
+        lease.consumed = true;
+        slot.lease = None;
+        slot.page = None;
+        slot.acknowledged = true;
+        Ok(())
+    }
+
+    fn terminal_acknowledged(&mut self, operation: u64, generation: u64) -> Result<bool, &'static str> {
+        let slot = &mut self.operation_mut(operation, generation)?.outputs[Procedural3dOutputKind::Terminal as usize];
+        slot.reclaim_lost_lease();
+        Ok(slot.acknowledged && slot.page.is_none() && slot.lease.is_none())
+    }
+
+    fn prepare_load_acknowledgement(&mut self, operation: u64, generation: u64) -> Result<bool, &'static str> {
+        if !self.terminal_acknowledged(operation, generation)? {
+            return Ok(false);
+        }
+        let entry = self.operation_mut(operation, generation)?;
+        for output in &mut entry.outputs[..Procedural3dOutputKind::Terminal as usize] {
+            output.reclaim_lost_lease();
+            if output.lease.is_some() {
+                return Ok(false);
             }
-            None => Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,
-        };
-        Ok(Self { store: RefCell::new(store) })
+        }
+        for output in &mut entry.outputs[..Procedural3dOutputKind::Terminal as usize] {
+            output.page = None;
+            output.acknowledged = true;
+        }
+        Ok(true)
     }
 
-    #[wasm_bindgen(js_name = dispatchText)]
-    pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-        self.store.borrow_mut().dispatch_text(command_text).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+    fn remove(&mut self, operation: u64, generation: u64) -> Result<(), &'static str> {
+        let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation, generation))).ok_or("procedural3d-envelope.remove-stale")?;
+        if slot.as_ref().is_some_and(|entry| entry.outputs.iter().any(|output| output.page.is_some() || output.lease.is_some())) {
+            return Err("procedural3d-envelope.remove-populated");
+        }
+        *slot = None;
+        Ok(())
     }
 
-    #[wasm_bindgen(js_name = dispatchBinary)]
-    pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-        self.store.borrow_mut().dispatch_binary(command_bytes).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+    fn close_step(&mut self) -> bool {
+        let Some(operation) = self.operations.iter_mut().flatten().next() else { return true };
+        for output in &mut operation.outputs {
+            output.reclaim_lost_lease();
+            if output.lease.is_some() {
+                return false;
+            }
+            if output.page.take().is_some() {
+                output.acknowledged = true;
+                return false;
+            }
+        }
+        let operation_id = operation.operation;
+        let generation = operation.generation;
+        let _ = crate::artifacts::procedural3d::spr::procedural3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
+        let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation_id, generation))).expect("Procedural3d close operation remains retained");
+        *slot = None;
+        self.operations.iter().all(Option::is_none)
     }
 
-    #[wasm_bindgen(js_name = snapshotJson)]
-    pub async fn snapshot_json(&self) -> Result<String, JsValue> {
-        self.store.borrow().snapshot_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = envelopeJson)]
-    pub async fn envelope_json(&self) -> Result<String, JsValue> {
-        self.store.borrow().envelope_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = generation)]
-    pub async fn generation(&self) -> u32 {
-        self.store.borrow().generation().await as u32
+    fn terminal_is_empty(&self) -> bool {
+        self.operations.iter().all(Option::is_none)
     }
 }
+
+impl Drop for Procedural3dMountedRegistry {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "Procedural3d mounted registry reached Drop before terminal-empty close");
+    }
+}
+//#endregion 🔖️MountedRegistry
+
+//#region 🔖️WasmBridge
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+mod wasm_bridge {
+    use std::cell::RefCell;
+
+    use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
+    use wasm_bindgen::prelude::*;
+
+    use crate::editor::procedural3d::Procedural3dPlayApp;
+
+    use super::{Procedural3dIngressCredits, Procedural3dMountedRegistry, Procedural3dOutputKind, Procedural3dOutputLease};
+
+    type Procedural3dApp = VcsArtifactApp<EditorApp<Procedural3dPlayApp>>;
+
+    fn js_fault(error: impl ToString) -> JsValue {
+        JsValue::from_str(&error.to_string())
+    }
+
+    #[wasm_bindgen]
+    pub struct Procedural3dEnvelopeLoadHandle {
+        operation: u64,
+        generation: u64,
+        base_revision: u64,
+        parent_revision: u64,
+    }
+
+    impl Procedural3dEnvelopeLoadHandle {
+        fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle {
+            ArtifactEnvelopeDecodeOperationHandle { operation: semio_framework_job::OperationId(self.operation), generation: semio_framework_job::Generation(self.generation) }
+        }
+    }
+
+    #[wasm_bindgen]
+    impl Procedural3dEnvelopeLoadHandle {
+        #[wasm_bindgen(getter)]
+        pub fn operation(&self) -> u64 {
+            self.operation
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn generation(&self) -> u64 {
+            self.generation
+        }
+
+        #[wasm_bindgen(getter, js_name = baseRevision)]
+        pub fn base_revision(&self) -> u64 {
+            self.base_revision
+        }
+
+        #[wasm_bindgen(getter, js_name = parentRevision)]
+        pub fn parent_revision(&self) -> u64 {
+            self.parent_revision
+        }
+    }
+
+    #[wasm_bindgen]
+    pub struct Procedural3dEnvelopeOutputPage {
+        lease: Option<Procedural3dOutputLease>,
+    }
+
+    #[wasm_bindgen]
+    impl Procedural3dEnvelopeOutputPage {
+        #[wasm_bindgen(getter)]
+        pub fn operation(&self) -> u64 {
+            self.lease.as_ref().map_or(0, |lease| lease.page.operation)
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn generation(&self) -> u64 {
+            self.lease.as_ref().map_or(0, |lease| lease.page.generation)
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn sequence(&self) -> u64 {
+            self.lease.as_ref().map_or(0, |lease| lease.page.sequence)
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn kind(&self) -> u8 {
+            self.lease.as_ref().map_or(u8::MAX, |lease| lease.page.kind as u8)
+        }
+
+        pub fn bytes(&self) -> js_sys::Uint8Array {
+            self.lease.as_ref().map_or_else(|| js_sys::Uint8Array::new_with_length(0), |lease| js_sys::Uint8Array::from(&lease.page.bytes[..lease.page.len]))
+        }
+    }
+
+    #[wasm_bindgen]
+    pub struct Procedural3dSnapshotVcs {
+        app: RefCell<Procedural3dApp>,
+        mounted: RefCell<Procedural3dMountedRegistry>,
+    }
+
+    #[wasm_bindgen]
+    impl Procedural3dSnapshotVcs {
+        #[wasm_bindgen(constructor)]
+        pub async fn new() -> Result<Procedural3dSnapshotVcs, JsValue> {
+            let app = VcsArtifactApp::new(EditorApp::<Procedural3dPlayApp>::default()).await;
+            Ok(Self { app: RefCell::new(app), mounted: RefCell::new(Procedural3dMountedRegistry::new()) })
+        }
+
+        #[wasm_bindgen(js_name = beginEnvelopeLoad)]
+        pub fn begin_envelope_load(
+            &self,
+            maximum_pages: usize,
+            maximum_bytes: usize,
+            maximum_items: usize,
+            maximum_output_pages: usize,
+            maximum_controls: usize,
+            base_revision: u64,
+            parent_revision: u64,
+        ) -> Result<Procedural3dEnvelopeLoadHandle, JsValue> {
+            let credits = Procedural3dIngressCredits::try_new(maximum_pages, maximum_bytes, maximum_items, maximum_output_pages, maximum_controls).map_err(js_fault)?;
+            if !self.mounted.borrow().can_insert() {
+                return Err(js_fault("procedural3d-envelope.operation-capacity"));
+            }
+            let mut app = self.app.borrow_mut();
+            let live_revision = app.artifact_generation_now().0;
+            if base_revision != live_revision || parent_revision != base_revision {
+                return Err(js_fault("procedural3d-envelope.initial-revision-stale"));
+            }
+            let handle = app.begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(js_fault)?;
+            if let Err(error) = crate::artifacts::procedural3d::spr::procedural3d_admit_publication_authority(handle.operation, handle.generation, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls) {
+                let _ = app.cancel_artifact_envelope_load(handle);
+                return Err(js_fault(error));
+            }
+            if let Err(error) = self.mounted.borrow_mut().insert(handle.operation.0, handle.generation.0, base_revision, parent_revision, credits) {
+                let _ = app.cancel_artifact_envelope_load(handle);
+                let _ = crate::artifacts::procedural3d::spr::procedural3d_release_publication_authority(handle.operation, handle.generation);
+                return Err(js_fault(error));
+            }
+            Ok(Procedural3dEnvelopeLoadHandle { operation: handle.operation.0, generation: handle.generation.0, base_revision, parent_revision })
+        }
+
+        #[wasm_bindgen(js_name = admitEnvelopePage)]
+        pub fn admit_envelope_page(&self, handle: &Procedural3dEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> Result<(), JsValue> {
+            let len = usize::try_from(source.length()).map_err(js_fault)?;
+            if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                return Err(js_fault("procedural3d-envelope.page-too-large"));
+            }
+            self.mounted.borrow().operation(handle.operation, handle.generation).and_then(|operation| operation.preflight_page(len)).map_err(js_fault)?;
+            let mut app = self.app.borrow_mut();
+            app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(js_fault)?;
+            app.construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
+                let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+                source.copy_to(&mut bytes[..len]);
+                store::ArtifactEnvelopeDecodePage::try_from_array(bytes, len).expect("preflighted Procedural3d page length is fixed")
+            })
+            .map_err(js_fault)?;
+            self.mounted.borrow_mut().admit_page(handle.operation, handle.generation, len).map_err(js_fault)
+        }
+
+        #[wasm_bindgen(js_name = sealEnvelopeLoad)]
+        pub fn seal_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<bool, JsValue> {
+            let sealed = self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(js_fault)?;
+            if sealed {
+                self.mounted.borrow_mut().publish(handle.operation, handle.generation, Procedural3dOutputKind::Checkpoint, 0).map_err(js_fault)?;
+            }
+            Ok(sealed)
+        }
+
+        #[wasm_bindgen(js_name = pollEnvelopeLoad)]
+        pub fn poll_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<u8, JsValue> {
+            let mut app = self.app.borrow_mut();
+            let live_revision = app.artifact_generation_now().0;
+            let operation = self.mounted.borrow().operation(handle.operation, handle.generation).map_err(js_fault)?;
+            if operation.base_revision != handle.base_revision || operation.parent_revision != handle.parent_revision {
+                return Err(js_fault("procedural3d-envelope.authoritative-owner-mismatch"));
+            }
+            crate::artifacts::procedural3d::spr::procedural3d_refresh_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation, live_revision).map_err(js_fault)?;
+            crate::artifacts::procedural3d::spr::procedural3d_validate_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation).map_err(js_fault)?;
+            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?;
+            let status = match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)? {
+                ArtifactEnvelopeDecodeOperationPoll::Pending => 0,
+                ArtifactEnvelopeDecodeOperationPoll::Progress => 1,
+                ArtifactEnvelopeDecodeOperationPoll::Ready => 2,
+                ArtifactEnvelopeDecodeOperationPoll::Cancelled => 3,
+                ArtifactEnvelopeDecodeOperationPoll::Fault => 4,
+            };
+            let mut mounted = self.mounted.borrow_mut();
+            mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Progress, status).map_err(js_fault)?;
+            mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Preview, status).map_err(js_fault)?;
+            if status >= 2 {
+                mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Checkpoint, status).map_err(js_fault)?;
+                mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Terminal, status).map_err(js_fault)?;
+            }
+            Ok(status)
+        }
+
+        #[wasm_bindgen(js_name = takeEnvelopeOutputPage)]
+        pub fn take_envelope_output_page(&self, handle: &Procedural3dEnvelopeLoadHandle, kind: u8) -> Result<Option<Procedural3dEnvelopeOutputPage>, JsValue> {
+            let kind = Procedural3dOutputKind::from_u8(kind).ok_or_else(|| js_fault("procedural3d-envelope.output-kind"))?;
+            Ok(self.mounted.borrow_mut().take(handle.operation, handle.generation, kind).map_err(js_fault)?.map(|lease| Procedural3dEnvelopeOutputPage { lease: Some(lease) }))
+        }
+
+        #[wasm_bindgen(js_name = resumeEnvelopeOutputPage)]
+        pub fn resume_envelope_output_page(&self, mut output: Procedural3dEnvelopeOutputPage) -> Result<(), JsValue> {
+            let lease = output.lease.as_mut().ok_or_else(|| js_fault("procedural3d-envelope.output-consumed"))?;
+            self.mounted.borrow_mut().resume(lease).map_err(js_fault)?;
+            drop(output.lease.take());
+            Ok(())
+        }
+
+        #[wasm_bindgen(js_name = retryEnvelopeOutputPage)]
+        pub fn retry_envelope_output_page(&self, output: Procedural3dEnvelopeOutputPage) -> Result<(), JsValue> {
+            self.resume_envelope_output_page(output)
+        }
+
+        #[wasm_bindgen(js_name = acknowledgeEnvelopeOutputPage)]
+        pub fn acknowledge_envelope_output_page(&self, mut output: Procedural3dEnvelopeOutputPage) -> Result<(), JsValue> {
+            let lease = output.lease.as_mut().ok_or_else(|| js_fault("procedural3d-envelope.output-consumed"))?;
+            self.mounted.borrow_mut().acknowledge_output(lease).map_err(js_fault)?;
+            drop(output.lease.take());
+            Ok(())
+        }
+
+        #[wasm_bindgen(js_name = acknowledgeEnvelopeLoad)]
+        pub fn acknowledge_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<bool, JsValue> {
+            if !self.mounted.borrow_mut().prepare_load_acknowledgement(handle.operation, handle.generation).map_err(js_fault)? {
+                return Ok(false);
+            }
+            let acknowledged = self.app.borrow_mut().acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
+            if acknowledged {
+                self.mounted.borrow_mut().remove(handle.operation, handle.generation).map_err(js_fault)?;
+                if !crate::artifacts::procedural3d::spr::procedural3d_release_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation) {
+                    return Err(js_fault("procedural3d-envelope.publication-release"));
+                }
+            }
+            Ok(acknowledged)
+        }
+
+        #[wasm_bindgen(js_name = cancelEnvelopeLoad)]
+        pub fn cancel_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<(), JsValue> {
+            self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)
+        }
+
+        #[wasm_bindgen(js_name = closeStep)]
+        pub fn close_step(&self) -> Result<bool, JsValue> {
+            let app_complete = matches!(self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?, semio_framework_plugin::PluginCloseStep::Complete);
+            let registry_complete = self.mounted.borrow_mut().close_step();
+            Ok(app_complete && registry_complete)
+        }
+    }
+}
+//#endregion 🔖️WasmBridge
+
+//#region 🧪️MountedLaws
+#[cfg(test)]
+mod mounted_laws {
+    use std::cell::Cell;
+
+    use super::*;
+
+    fn exact_credits(maximum_pages: usize, maximum_bytes: usize) -> Procedural3dIngressCredits {
+        Procedural3dIngressCredits::try_new(maximum_pages, maximum_bytes, PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS, PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS, PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS).expect("exact Procedural3d mounted credits")
+    }
+
+    fn insert(registry: &mut Procedural3dMountedRegistry, operation: u64, generation: u64, credits: Procedural3dIngressCredits) {
+        registry.insert(operation, generation, generation, generation, credits).expect("Procedural3d mounted operation admission");
+    }
+
+    #[test]
+    fn every_credit_rejects_zero_and_maximum_plus_one_before_operation_construction() {
+        let valid = (PROCEDURAL3D_ENVELOPE_MAXIMUM_PAGES, PROCEDURAL3D_ENVELOPE_MAXIMUM_BYTES, PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS, PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS, PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS);
+        assert!(Procedural3dIngressCredits::try_new(0, valid.1, valid.2, valid.3, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0 + 1, valid.1, valid.2, valid.3, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, 0, valid.2, valid.3, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1 + 1, valid.2, valid.3, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, 0, valid.3, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2 + 1, valid.3, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2, 0, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2, valid.3 + 1, valid.4).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2, valid.3, 0).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2, valid.3, valid.4 + 1).is_err());
+        assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2, valid.3, valid.4).is_ok());
+    }
+
+    #[test]
+    fn repeated_rejected_controls_do_not_consume_operation_credits() {
+        let valid = (PROCEDURAL3D_ENVELOPE_MAXIMUM_PAGES, PROCEDURAL3D_ENVELOPE_MAXIMUM_BYTES, PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS, PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS, PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS);
+        for _ in 0..64 {
+            assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2, valid.3, 0).is_err());
+            assert!(Procedural3dIngressCredits::try_new(valid.0, valid.1, valid.2, valid.3, valid.4 + 1).is_err());
+        }
+        let mut registry = Procedural3dMountedRegistry::new();
+        let credits = exact_credits(1, PROCEDURAL3D_OUTPUT_PAGE_BYTES);
+        for operation in 1..=PROCEDURAL3D_ENVELOPE_OPERATION_SLOTS as u64 {
+            insert(&mut registry, operation, 70, credits);
+        }
+        for operation in 1..=PROCEDURAL3D_ENVELOPE_OPERATION_SLOTS as u64 {
+            registry.remove(operation, 70).expect("rejected controls preserved every operation credit");
+        }
+        assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn operation_and_page_maximum_plus_one_leave_producers_unconstructed() {
+        let mut registry = Procedural3dMountedRegistry::new();
+        let credits = exact_credits(1, PROCEDURAL3D_OUTPUT_PAGE_BYTES);
+        for operation in 1..=PROCEDURAL3D_ENVELOPE_OPERATION_SLOTS as u64 {
+            insert(&mut registry, operation, 7, credits);
+        }
+        assert_eq!(registry.insert(99, 7, 7, 7, credits), Err("procedural3d-envelope.operation-capacity"));
+        assert!(registry.operation(1, 8).is_err(), "stale generation handle rejected");
+        assert!(registry.operation(99, 7).is_err(), "wrong operation handle rejected");
+        assert_eq!(registry.insert(1, 8, 8, 8, credits), Err("procedural3d-envelope.operation-duplicate"));
+
+        let producer_calls = Cell::new(0);
+        registry.operation(1, 7).expect("first operation").preflight_page(PROCEDURAL3D_OUTPUT_PAGE_BYTES).expect("exact page");
+        producer_calls.set(producer_calls.get() + 1);
+        registry.admit_page(1, 7, PROCEDURAL3D_OUTPUT_PAGE_BYTES).expect("exact page handoff");
+        assert_eq!(registry.operation(1, 7).expect("first operation").preflight_page(1), Err("procedural3d-envelope.page-handback"));
+        assert_eq!(producer_calls.get(), 1, "maximum-plus-one page never enters the producer");
+
+        for operation in 1..=PROCEDURAL3D_ENVELOPE_OPERATION_SLOTS as u64 {
+            registry.remove(operation, 7).expect("empty operation retirement");
+        }
+    }
+
+    #[test]
+    fn outputs_are_bounded_latest_wins_with_lossless_terminal_take_resume_and_ack() {
+        let mut registry = Procedural3dMountedRegistry::new();
+        insert(&mut registry, 21, 8, exact_credits(1, PROCEDURAL3D_OUTPUT_PAGE_BYTES));
+
+        registry.publish(21, 8, Procedural3dOutputKind::Progress, 0).expect("initial progress");
+        let first = registry.operation(21, 8).expect("operation").outputs[Procedural3dOutputKind::Progress as usize].page.as_ref().expect("progress").sequence;
+        registry.publish(21, 8, Procedural3dOutputKind::Progress, 1).expect("latest progress");
+        let latest = registry.operation(21, 8).expect("operation").outputs[Procedural3dOutputKind::Progress as usize].page.as_ref().expect("progress").sequence;
+        assert!(latest > first);
+
+        let mut progress = registry.take(21, 8, Procedural3dOutputKind::Progress).expect("take").expect("progress lease");
+        let leased_progress = progress.page.sequence;
+        registry.publish(21, 8, Procedural3dOutputKind::Progress, 2).expect("latest progress while leased");
+        registry.resume(&mut progress).expect("resume");
+        drop(progress);
+        let mut progress = registry.take(21, 8, Procedural3dOutputKind::Progress).expect("retake").expect("progress lease");
+        assert!(progress.page.sequence > leased_progress);
+        registry.acknowledge_output(&mut progress).expect("progress ACK");
+        drop(progress);
+
+        registry.publish(21, 8, Procedural3dOutputKind::Checkpoint, 1).expect("checkpoint");
+        let mut checkpoint = registry.take(21, 8, Procedural3dOutputKind::Checkpoint).expect("take").expect("checkpoint lease");
+        let checkpoint_sequence = checkpoint.page.sequence;
+        registry.resume(&mut checkpoint).expect("checkpoint resume");
+        drop(checkpoint);
+        let mut checkpoint = registry.take(21, 8, Procedural3dOutputKind::Checkpoint).expect("retake").expect("checkpoint lease");
+        assert_eq!(checkpoint.page.sequence, checkpoint_sequence);
+        registry.acknowledge_output(&mut checkpoint).expect("checkpoint ACK");
+        drop(checkpoint);
+
+        registry.publish(21, 8, Procedural3dOutputKind::Terminal, 2).expect("terminal");
+        let terminal_sequence = registry.operation(21, 8).expect("operation").outputs[Procedural3dOutputKind::Terminal as usize].page.as_ref().expect("terminal").sequence;
+        registry.publish(21, 8, Procedural3dOutputKind::Terminal, 4).expect("lossless terminal retry");
+        assert_eq!(registry.operation(21, 8).expect("operation").outputs[Procedural3dOutputKind::Terminal as usize].page.as_ref().expect("terminal").sequence, terminal_sequence,);
+        drop(registry.take(21, 8, Procedural3dOutputKind::Terminal).expect("take").expect("lost terminal lease"));
+        let mut terminal = registry.take(21, 8, Procedural3dOutputKind::Terminal).expect("retake").expect("terminal retained after handle loss");
+        assert!(!registry.terminal_acknowledged(21, 8).expect("terminal state"));
+        registry.acknowledge_output(&mut terminal).expect("terminal ACK");
+        drop(terminal);
+        registry.publish(21, 8, Procedural3dOutputKind::Terminal, 4).expect("terminal remains acknowledged");
+        assert!(registry.operation(21, 8).expect("operation").outputs[Procedural3dOutputKind::Terminal as usize].page.is_none());
+        assert!(registry.prepare_load_acknowledgement(21, 8).expect("load ACK preflight"));
+        registry.remove(21, 8).expect("terminal-empty removal");
+    }
+
+    #[test]
+    fn complete_before_ack_and_interrupted_close_retain_owners() {
+        let credits = exact_credits(1, PROCEDURAL3D_OUTPUT_PAGE_BYTES);
+        let mut registry = Procedural3dMountedRegistry::new();
+        insert(&mut registry, 31, 9, credits);
+        registry.publish(31, 9, Procedural3dOutputKind::Terminal, 2).expect("terminal");
+        assert_eq!(registry.remove(31, 9), Err("procedural3d-envelope.remove-populated"));
+        assert!(!registry.prepare_load_acknowledgement(31, 9).expect("complete remains unacknowledged"));
+        let mut terminal = registry.take(31, 9, Procedural3dOutputKind::Terminal).expect("take").expect("terminal");
+        registry.acknowledge_output(&mut terminal).expect("terminal ACK");
+        drop(terminal);
+        assert!(registry.prepare_load_acknowledgement(31, 9).expect("load ACK ready"));
+        registry.remove(31, 9).expect("complete operation removal");
+
+        insert(&mut registry, 32, 9, credits);
+        for kind in [Procedural3dOutputKind::Progress, Procedural3dOutputKind::Checkpoint, Procedural3dOutputKind::Preview, Procedural3dOutputKind::Terminal] {
+            registry.publish(32, 9, kind, 3).expect("close fixture output");
+        }
+        assert!(!registry.close_step(), "close releases at most one retained owner per call");
+        for _ in 0..PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS + 2 {
+            if registry.close_step() {
+                break;
+            }
+        }
+        assert!(registry.terminal_is_empty());
+        assert!(registry.close_step(), "terminal-empty close is idempotent");
+        assert!(registry.close_step(), "repeated terminal-empty close is idempotent");
+    }
+
+    #[test]
+    fn populated_ordinary_drop_panics_until_hostile_close_drains() {
+        let dropped = std::panic::catch_unwind(|| {
+            let mut registry = Procedural3dMountedRegistry::new();
+            insert(&mut registry, 33, 10, exact_credits(1, PROCEDURAL3D_OUTPUT_PAGE_BYTES));
+            registry.publish(33, 10, Procedural3dOutputKind::Terminal, 4).expect("fault terminal");
+        });
+        assert!(dropped.is_err(), "populated ordinary drop must remain fail-loud");
+
+        let mut registry = Procedural3dMountedRegistry::new();
+        insert(&mut registry, 34, 10, exact_credits(1, PROCEDURAL3D_OUTPUT_PAGE_BYTES));
+        registry.publish(34, 10, Procedural3dOutputKind::Terminal, 3).expect("cancel terminal");
+        for _ in 0..PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS + 2 {
+            if registry.close_step() {
+                break;
+            }
+        }
+        assert!(registry.terminal_is_empty());
+        assert!(registry.close_step());
+    }
+
+    #[test]
+    fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
+        use semio_framework_job::{Generation, OperationId};
+
+        let operation = OperationId(u64::MAX - 71);
+        assert_eq!(
+            crate::artifacts::procedural3d::spr::procedural3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS, PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS, PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS),
+            Err("procedural3d-publication.initial-freshness")
+        );
+        assert!(crate::artifacts::procedural3d::spr::procedural3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS, PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS, PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS,)
+            .is_ok());
+        assert_eq!(crate::artifacts::procedural3d::spr::procedural3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
+        assert_eq!(crate::artifacts::procedural3d::spr::procedural3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("procedural3d-publication.wrong-operation"));
+        assert_eq!(crate::artifacts::procedural3d::spr::procedural3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("procedural3d-publication.wrong-generation"));
+        crate::artifacts::procedural3d::spr::procedural3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
+        assert_eq!(crate::artifacts::procedural3d::spr::procedural3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("procedural3d-publication.wrong-base"));
+        assert!(crate::artifacts::procedural3d::spr::procedural3d_release_publication_authority(operation, Generation(41)));
+
+        assert!(crate::artifacts::procedural3d::spr::procedural3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, PROCEDURAL3D_ENVELOPE_MAXIMUM_ITEMS, PROCEDURAL3D_ENVELOPE_OUTPUT_CHANNELS, PROCEDURAL3D_ENVELOPE_CONTROL_CREDITS,)
+            .is_ok());
+        assert!(crate::artifacts::procedural3d::spr::procedural3d_validate_publication_authority(operation, Generation(41)).is_err());
+        assert_eq!(crate::artifacts::procedural3d::spr::procedural3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
+        assert_eq!(crate::artifacts::procedural3d::spr::procedural3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
+        assert!(crate::artifacts::procedural3d::spr::procedural3d_release_publication_authority(operation, Generation(42)));
+    }
+
+    #[test]
+    fn domain_local_static_verifier_rejects_raw_routes_and_proves_three_dimensional_coverage() {
+        let bridge = include_str!("🦀️component.rs").split_once("//#region 🧪️MountedLaws").expect("mounted production bridge boundary").0;
+        let owner_source = include_str!("../../🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
+        let snapshot_source = include_str!("../../🧬️schema/📸️snapshot/💾️binary/🦀️component.rs");
+        let lifecycle_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-retained-mounted-laws.json");
+        let owner_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-owner-catalog-laws.json");
+        let oracle_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-third-party-oracle-laws.json");
+
+        for required in [
+            "beginEnvelopeLoad",
+            "admitEnvelopePage",
+            "sealEnvelopeLoad",
+            "pollEnvelopeLoad",
+            "takeEnvelopeOutputPage",
+            "resumeEnvelopeOutputPage",
+            "retryEnvelopeOutputPage",
+            "acknowledgeEnvelopeOutputPage",
+            "acknowledgeEnvelopeLoad",
+            "cancelEnvelopeLoad",
+            "closeStep",
+            "construct_and_admit_artifact_envelope_ingress_page",
+        ] {
+            assert!(bridge.contains(required), "missing mounted lifecycle boundary: {required}");
+        }
+        let forbidden_raw_routes =
+            [["reject_whole_buffer_", "artifact_envelope_ingress"].concat(), ["dispatch_", "text("].concat(), ["dispatch_", "binary("].concat(), ["snapshot_", "json("].concat(), ["envelope_", "json("].concat(), ["ArtifactStore", "::new"].concat()];
+        for forbidden in &forbidden_raw_routes {
+            assert!(!bridge.contains(forbidden), "raw Procedural3d route survived: {forbidden}");
+        }
+        assert!(owner_source.contains("mutation.delete-widget-position.3d-only"));
+        assert!(owner_source.contains("PROCEDURAL3D_RETAINED_SCHEMA_DISCRIMINATOR"));
+        let mounted_snapshot = snapshot_source.split_once("//#region 🔖️MountedCanonicalPackSession").expect("P3 mounted snapshot region").1.split_once("#[cfg(test)]\nmod retained_mounted_laws").expect("P3 mounted production boundary").0;
+        let forbidden_whole_routes = [
+            "OwnedSchemaHexAuthority",
+            "hex::decode",
+            "decode_hex",
+            "from_hex",
+            "ArtifactPack",
+            "Vec<u8>",
+            "collect::<Vec<u8>>",
+            "decode_pack",
+            "decode_document",
+            "RecordValue",
+            "serde_json::from_slice",
+            "serde_json::from_str",
+            "serde_json::from_value",
+            "ArtifactStore::new",
+            ".diff(",
+            "::diff(",
+            ".apply(",
+            "::apply(",
+            ".clone(",
+        ];
+        let mounted_field = owner_source.split_once("struct Procedural3dPackSnapshotAuthority").expect("P3 mounted envelope snapshot authority").1.split_once("enum Procedural3dMutationDecodeState").expect("P3 mounted snapshot authority boundary").0;
+        let mounted_mutation =
+            owner_source.split_once("struct Procedural3dMutationDecodeAuthority").expect("P3 mounted mutation authority").1.split_once("struct Procedural3dRejectedConflictAuthority").expect("P3 mounted mutation authority boundary").0;
+        for forbidden in forbidden_whole_routes {
+            assert!(!mounted_snapshot.contains(forbidden), "mounted P3 typed snapshot route regained a whole decoder edge: {forbidden}");
+            assert!(!mounted_field.contains(forbidden), "mounted P3 envelope authority regained a whole decode edge: {forbidden}");
+            assert!(!mounted_mutation.contains(forbidden), "mounted P3 mutation authority regained a whole decode edge: {forbidden}");
+        }
+        for required in ["RetainedPackSourceCursor", "RetainedPackAnchorCursor", "RetainedPackSegmentCursor", "RetainedPackCatalogCursor", "RetainedValueCursor"] {
+            assert!(mounted_snapshot.contains(required), "mounted P3 route lost retained canonical layer: {required}");
+        }
+        assert!(snapshot_source.contains("one scalar byte opportunity"));
+        assert!(owner_source.contains("PROCEDURAL3D_RETAINED_COMBINED_DEPTH: usize = 12"));
+        assert!(snapshot_source.contains("*b\"P3D3\""));
+        assert!(owner_source.contains("*b\"P2D2\""));
+        assert!(owner_source.contains("cx.should_yield()"));
+        assert!(owner_source.contains("cx.fuel_remaining() == 0"));
+        assert!(lifecycle_fixture.contains("complete-before-ack"));
+        assert!(lifecycle_fixture.contains("repeatedRejectedControlsDoNotConsumeCredits"));
+        assert!(lifecycle_fixture.contains("terminal-empty-idempotent"));
+        assert!(owner_fixture.contains("change-generation-value"));
+        assert!(owner_fixture.contains("\"combinedDepth\": 12"));
+        assert!(owner_fixture.contains("generic-clone"));
+        assert!(oracle_fixture.contains("serde_json"));
+        assert!(oracle_fixture.contains("Procedural3dSemanticOracle"));
+        assert!(oracle_fixture.contains("\"runtimeDependency\": false"));
+        assert!(crate::artifacts::procedural3d::spr::procedural3d_retained_catalog_is_complete());
+    }
+}
+//#endregion 🧪️MountedLaws

@@ -11,7 +11,7 @@ use crate::artifacts::deflate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_
 use crate::editor::deflate::modes::edit;
 use crate::editor::deflate::modes::edit::windows::main;
 #[cfg(test)]
-use semio_framework_plugin::UiNode;
+use semio_framework_plugin::Component;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
@@ -208,8 +208,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parse_header_summary_round_trips_a_rendered_snapshot() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
-        let UiNode::ComponentScene(node) = main::render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.text_editor.expect("text_editor scene");
+        let node = main::render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
+        let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
         let (method, window_bits, level_hint, dict_id) = parse_header_summary(&scene.buffer).expect("well-formed summary must parse");
         assert_eq!(method, 8);
         assert_eq!(window_bits, 9);

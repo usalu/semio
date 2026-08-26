@@ -1,0 +1,29 @@
+=== BUILD tiff-c9954e-mutate-tiff-6-0-subject-rust --features sut
+=== EXIT tiff-c9954e-mutate-tiff-6-0-subject-rust 0
+=== BUILD tiff-c9954e-mutate-tiff-6-0-oracle-rust 
+=== EXIT tiff-c9954e-mutate-tiff-6-0-oracle-rust 0
+=== BUILD xlsx-fd8cc3-mutate-xlsx-ecma-376-transitional-oracle-rust 
+=== EXIT xlsx-fd8cc3-mutate-xlsx-ecma-376-transitional-oracle-rust 0
+=== BUILD xlsx-fd8cc3-mutate-xlsx-ecma-376-transitional-subject-rust --features sut
+=== EXIT xlsx-fd8cc3-mutate-xlsx-ecma-376-transitional-subject-rust 0
+=== BUILD docx-6b0885-mutate-docx-ecma-376-transitional-oracle-rust 
+=== EXIT docx-6b0885-mutate-docx-ecma-376-transitional-oracle-rust 0
+=== BUILD docx-6b0885-mutate-docx-ecma-376-transitional-subject-rust --features sut
+=== EXIT docx-6b0885-mutate-docx-ecma-376-transitional-subject-rust 0
+=== BUILD md-b04ce8-mutate-md-commonmark-oracle-rust 
+=== EXIT md-b04ce8-mutate-md-commonmark-oracle-rust 0
+=== BUILD md-b04ce8-mutate-md-commonmark-subject-rust --features sut
+=== EXIT md-b04ce8-mutate-md-commonmark-subject-rust 0
+=== BUILD xlsx-fd8cc3-mutate-xlsx-ecma-376-oracle-rust 
+=== EXIT xlsx-fd8cc3-mutate-xlsx-ecma-376-oracle-rust 0
+=== BUILD xlsx-fd8cc3-mutate-xlsx-ecma-376-subject-rust --features sut
+=== EXIT xlsx-fd8cc3-mutate-xlsx-ecma-376-subject-rust 0
+=== BUILD docx-6b0885-mutate-docx-ecma-376-oracle-rust 
+=== EXIT docx-6b0885-mutate-docx-ecma-376-oracle-rust 0
+=== BUILD docx-6b0885-mutate-docx-ecma-376-subject-rust --features sut
+=== EXIT docx-6b0885-mutate-docx-ecma-376-subject-rust 0
+=== BUILD pptx-99b597-mutate-pptx-ecma-376-oracle-rust 
+=== EXIT pptx-99b597-mutate-pptx-ecma-376-oracle-rust 0
+=== BUILD pptx-99b597-mutate-pptx-ecma-376-subject-rust --features sut
+=== EXIT pptx-99b597-mutate-pptx-ecma-376-subject-rust 0
+ALLBUILT

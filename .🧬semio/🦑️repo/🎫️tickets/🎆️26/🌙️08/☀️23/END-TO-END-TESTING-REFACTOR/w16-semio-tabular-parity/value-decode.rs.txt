@@ -1,0 +1,77 @@
+    //#region 🔖️Decode
+    /// 🧫️ A small, forward-only, hand-written structural decoder — turns the fixture bytes
+    /// `Context::fixture_json` reads STRAIGHT from the committed file into real
+    /// `SemioValueSnapshot`/`SemioValueMutation` values. It decodes JSON STRUCTURE only, field by
+    /// field, mirroring each payload's own declared serde shape; it never invents or reimplements
+    /// any mutation SEMANTICS, which still run through the real entry points below.
+    fn usize_field(json: &Json, key: &str) -> usize {
+        match json.get(key) {
+            Some(Json::Number(value)) => *value as usize,
+            other => panic!("mutate-semio-value: expected a numeric field {key:?}, found {other:?}"),
+        }
+    }
+    fn bytes_field(json: &Json, key: &str) -> Vec<u8> {
+        json.array(key)
+            .iter()
+            .map(|entry| match entry {
+                Json::Number(value) => *value as u8,
+                other => panic!("mutate-semio-value: expected a byte number, found {other:?}"),
+            })
+            .collect()
+    }
+    fn decode_id(json: &Json) -> ValueId {
+        ValueId::new(json.str("value"))
+    }
+    /// 🌳 `SemioValue` is internally tagged on `kind` with camelCase variant names and is
+    /// recursive through `list`/`map`, so the decoder is too.
+    fn decode_value(json: &Json) -> SemioValue {
+        match json.str("kind").as_str() {
+            "null" => SemioValue::Null,
+            "bool" => SemioValue::Bool { value: matches!(json.get("value"), Some(Json::Bool(true))) },
+            "int" => SemioValue::Int { lexeme: json.str("lexeme") },
+            "float" => SemioValue::Float { lexeme: json.str("lexeme") },
+            "str" => SemioValue::Str { value: json.str("value") },
+            "bytes" => SemioValue::Bytes { value: bytes_field(json, "value") },
+            "list" => SemioValue::List { items: json.array("items").iter().map(decode_value).collect() },
+            "map" => SemioValue::Map { entries: json.array("entries").iter().map(decode_entry).collect() },
+            "ref" => SemioValue::Ref { id: decode_id(json.get("id").expect("mutate-semio-value: a ref value must carry an id")) },
+            other => panic!("mutate-semio-value: unknown value kind {other:?}"),
+        }
+    }
+    fn decode_entry(json: &Json) -> SemioValueEntry {
+        SemioValueEntry { key: json.str("key"), value: decode_value(json.get("value").expect("mutate-semio-value: a map entry must carry a value")) }
+    }
+    fn decode_node(json: &Json) -> SemioValueNode {
+        SemioValueNode { id: decode_id(json.get("id").expect("mutate-semio-value: a graph node must carry an id")), value: decode_value(json.get("value").expect("mutate-semio-value: a graph node must carry a value")) }
+    }
+    fn decode_snapshot(json: &Json) -> SemioValueSnapshot {
+        SemioValueSnapshot { schema: json.str("schema"), root: decode_value(json.get("root").expect("mutate-semio-value: a snapshot must carry a root")), nodes: json.array("nodes").iter().map(decode_node).collect() }
+    }
+    fn decode_path(json: &Json, key: &str) -> SemioValuePath {
+        json.array(key)
+            .iter()
+            .map(|segment| match segment.str("kind").as_str() {
+                "key" => SemioValuePathSegment::Key { key: segment.str("key") },
+                "index" => SemioValuePathSegment::Index { index: usize_field(segment, "index") },
+                other => panic!("mutate-semio-value: unknown path segment kind {other:?}"),
+            })
+            .collect()
+    }
+    fn payload_value(json: &Json, key: &str) -> SemioValue {
+        decode_value(json.get(key).unwrap_or_else(|| panic!("mutate-semio-value: mutation fixture must carry a {key:?} value")))
+    }
+    fn decode_mutation(json: &Json) -> SemioValueMutation {
+        match json.str("mutation").as_str() {
+            "noMutation" => SemioValueMutation::NoMutation,
+            "setSnapshot" => SemioValueMutation::SetSnapshot { snapshot: decode_snapshot(json.get("snapshot").expect("mutate-semio-value: setSnapshot fixture must carry a snapshot")) },
+            "setValue" => SemioValueMutation::SetValue { path: decode_path(json, "path"), value: payload_value(json, "value") },
+            "setMapEntry" => SemioValueMutation::SetMapEntry { path: decode_path(json, "path"), key: json.str("key"), value: payload_value(json, "value") },
+            "removeMapEntry" => SemioValueMutation::RemoveMapEntry { path: decode_path(json, "path"), key: json.str("key") },
+            "insertListItem" => SemioValueMutation::InsertListItem { path: decode_path(json, "path"), index: usize_field(json, "index"), value: payload_value(json, "value") },
+            "removeListItem" => SemioValueMutation::RemoveListItem { path: decode_path(json, "path"), index: usize_field(json, "index") },
+            "setNode" => SemioValueMutation::SetNode { id: decode_id(json.get("id").expect("mutate-semio-value: setNode fixture must carry an id")), value: payload_value(json, "value") },
+            "removeNode" => SemioValueMutation::RemoveNode { id: decode_id(json.get("id").expect("mutate-semio-value: removeNode fixture must carry an id")) },
+            other => panic!("mutate-semio-value: no decoder for mutation variant {other:?}"),
+        }
+    }
+    //#endregion 🔖️Decode

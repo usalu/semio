@@ -21,10 +21,10 @@ enum RuleClauseRef {
     RhsParameter(usize),
 }
 
-async fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
+fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
 }
-async fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::artifacts::rewrite::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
+fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::artifacts::rewrite::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
     let (Some(current), Some(edited)) = (parse_fixture_json(current_fixture_json), parse_fixture_json(edited_fixture_json)) else {
         return false;
     };
@@ -42,7 +42,7 @@ async fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap
     }
     changed
 }
-async fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
+fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
     if node_id == "lhs-where" {
         return Some(RuleClauseRef::LhsWhere);
     }
@@ -57,7 +57,7 @@ async fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
         _ => None,
     }
 }
-async fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
+fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     if index < items.len() {
         items.remove(index);
         true
@@ -65,7 +65,7 @@ async fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
         false
     }
 }
-async fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
+fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
@@ -102,7 +102,7 @@ async fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool 
     }
     changed
 }
-async fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
+fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
     let mut changed = false;
     for operation in operations {
         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
@@ -163,7 +163,7 @@ async fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, s
 /// deleting a selected id here is enough on its own: the framework re-validates/prunes the "graph"
 /// domain's selection against the fresh `interaction_topology` right after this document dispatch
 /// lands, so no explicit selection-clearing mutation is emitted anymore.
-pub(crate) async fn node_graph_edit(state: &RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn node_graph_edit(state: &RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
     let mut next = state.clone();
     let changed = apply_rewrite_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);

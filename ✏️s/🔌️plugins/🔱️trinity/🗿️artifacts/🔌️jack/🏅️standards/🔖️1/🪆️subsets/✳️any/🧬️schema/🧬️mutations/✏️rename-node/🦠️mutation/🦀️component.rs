@@ -13,23 +13,23 @@ pub struct RenameNode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn rename_node(id: String, new_name: String) -> TrinityGraphMutation {
+pub fn rename_node(id: String, new_name: String) -> TrinityGraphMutation {
     TrinityGraphMutation::RenameNode(RenameNode { id, new_name })
 }
 
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for RenameNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    async fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+    fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Rename node \"{}\" to \"{}\"", self.id, self.new_name)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -1,49 +1,49 @@
 @capability-writer-1-mutate
-@no-oracle-writer-document-mutation-semantics
+@oracle-writer-python-independent
 @comparison-ordered-json-v1
 @mutations-writer-1-any
-Feature: Apply every typed writer document mutation to its committed specification vectors
-  `s.writer.writer` is a semio-NATIVE artifact: it is persisted as `.dsl.semio` text and
-  `.pack.semio` binary through this subset's own codecs, and no third party reads or writes either.
-  There is therefore no reference implementation to register as an oracle — recorded as the
-  `writer-document-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, whose substitutes are the
-  committed specification vectors and the inverse law. Because that decision is recorded, the runner
-  dispatches NO oracle role for this case: every assertion below lives inside the subject handler,
-  and a handler that merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed writer document mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.writer.writer` document and its four typed mutations, written in
+  Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from rule 1 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the four committed vectors. It imports nothing from this repository's Rust.
 
-  What distinguishes this subset from every other mutation vocabulary in the repository is how
-  LITTLE state it has. `WriterSnapshot` carries exactly five persistent fields — `schema`, `id`,
-  `languageId`, `uri` and `document` — with no id-keyed collections, no ordered lists, no
-  relationships and no hierarchy, so `📓️derivation-rules.md` recipe §1 yields four document-level
-  scalar kinds and nothing else. `schema` is the fixed `WRITER_DOCUMENT_SCHEMA` constant rather than
-  authored content, which is exactly why the vocabulary is four kinds over five fields.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. This case used to say that because `s.writer.writer` is persisted through this subset's own
+  codecs and no third party reads them, there is no reference to register. The fifteen `📕️norm` and
+  nineteen `🧿️semio` references refuted that in this same wave over this same carrier. A third-party
+  library was nonetheless declined and the reason is concrete: this document holds NO PROSE. It is a
+  handle record — an id, a language id, a URI and a composed child handle into an
+  `s.stdio.semio@v1/document` — and nothing outside this repository models an editor document whose
+  body is a child artifact addressed by content.
 
-  The fifth field is the interesting one. `document` is not inline text: it is a composed
-  `s.stdio.semio.document` CHILD HANDLE — a `(childId, target)` pair whose id is content-addressed —
-  so `edit-text` is the only kind of the four that reaches outside the writer snapshot at all. Its
-  diff oracle compares the payload against the CURRENT body first and, on equality, raises
-  `mutation.no-op` and returns without re-minting the handle. The committed vector for `edit-text`
-  is deliberately that guard case (`warns-that-the-brief-body-is-unchanged`): before and after are
-  the same document by construction, because what it pins is that a save with no keystrokes behind
-  it must NOT rewrite the document's content address. It is therefore named in the adapter's
-  `GUARD_VECTORS` list and exempted from the observability law — and in exchange its `mutate` handler
-  asserts something the other three cannot: the committed `🎯️outcome` vector's `applied` status with
-  exactly one `mutation.no-op` warning, AND that `document.childId` is the identical handle
-  afterwards. The other three kinds — `rename-writer`, `change-uri`, `change-language` — are pure
-  scalar swaps over the same handcrafted `brief` document, and each must move the projection.
+  ✅️ WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS. Three of the four kinds are document-level scalar
+  setters and are fully adjudicated, with the reference additionally asserting in role what an
+  after-snapshot comparison cannot: that each writes exactly ONE of the five members and never the
+  composed child handle.
 
-  ⚠️ Reading of the fixture census: this subset commits exactly one specification vector per kind,
-  and three of the four move the document. That ratio is the best of the five artifacts covered in
-  this wave and it is still thin — one vector per kind means a kind is exercised at exactly one
-  point of its input space.
-
-  Every scenario reads the committed vectors where the domain already keeps them, through
-  `asset://`, and never writes to them.
+  🚧️ THREE OF THE NINE SCENARIOS ARE REFUSED BY CLAUSE, and reported rather than worked around.
+  First, `edit-text` in both roles. It is the only kind that reaches the document's actual CONTENT,
+  and the content is not here: the snapshot carries a child handle, not a body. The committed vector
+  pins `{status: applied, messages: [{level: warn, code: mutation.no-op}]}` — the verb decided the new
+  text was IDENTICAL to what the child already held — and neither the child's content nor the rule
+  that compares them is stated anywhere a second implementation can read. Nor is the other branch: no
+  committed vector shows what the handle becomes when the text really does change. Adding one vector
+  that carries the child body — the `scene` array the siblings `mutate-playbook-1` and
+  `mutate-forms-1` already put in their own doc strings — plus the child-addressing rule, closes it.
+  Second, `identity-round-trip`. The committed grammar is the repository-wide PLACEHOLDER: its whole
+  body is `payload = OCTET+` and its header production declares `"schema" SP "stdio.json"`, while the
+  committed artifact's first line is `semio writer.writer.dsl v1` and its body is four HEX-ENCODED
+  scalars plus a `[hex,hex]` child-handle pair. Nothing committed says the values are hex, that the
+  pair is `(childId, target)`, or how the second element's
+  `<artifactId>!<kind>@<standard>/<subset>` spelling is split. The sibling `mutate-note-1` shows a
+  real grammar exists for this family; `📖️playbook`, `📋️forms`, `🌿️vcs` and `🔌️wires` report the
+  same gap.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json
@@ -63,7 +63,7 @@ Feature: Apply every typed writer document mutation to its committed specificati
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json

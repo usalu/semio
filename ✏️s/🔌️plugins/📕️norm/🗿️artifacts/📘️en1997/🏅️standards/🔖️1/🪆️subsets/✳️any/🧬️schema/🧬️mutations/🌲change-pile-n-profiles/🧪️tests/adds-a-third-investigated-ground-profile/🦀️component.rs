@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// §7.6.2.3 correlation factors ξ₃/ξ₄, which fall as more profiles are available — but the investigated DEPTH
 /// is a different fact about the same campaign and does not change with the profile count.
 #[semio_framework_async_macros::async_test]
-async fn adds_a_third_investigated_ground_profile() {
+fn adds_a_third_investigated_ground_profile() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-pile-n-profiles applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-pile-n-profiles/adds-a-third-investigated-ground-profile: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.pile_n_profiles, 3, "change-pile-n-profiles/adds-a-third-investigated-ground-profile: pile_n_profiles must read 3 profiles once the change lands");
@@ -44,7 +44,7 @@ async fn adds_a_third_investigated_ground_profile() {
 /// ↩️ `change-pile-n-profiles`'s inverse reads the OLD 2 out of BASE, so replaying it puts the two-profile count
 /// back on `pile_n_profiles`.
 #[semio_framework_async_macros::async_test]
-async fn returning_to_two_profiles_restores_before() {
+fn returning_to_two_profiles_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-pile-n-profiles applies");
@@ -62,7 +62,7 @@ async fn returning_to_two_profiles_restores_before() {
 /// → encode is a fixed point, so `newPileNProfiles`, carrying a bare JSON integer because the field is a
 /// `u32` is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `change-pile-n-profiles` is en1997's only integer-valued leaf, so it carries no
 /// `mutation.invariant` guard; 3 differs from the committed 2, so `mutation.no-op` stays shut too.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-pile-n-profiles/adds-a-third-investigated-ground-profile: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `pileNProfiles` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-pile-n-profiles diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-pile-n-profiles/adds-a-third-investigated-ground-profile: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the investigated-profile
 /// count and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-pile-n-profiles diff decodes");
     assert_eq!(decoded.pile_n_profiles, Some(3), "change-pile-n-profiles/adds-a-third-investigated-ground-profile: the committed diff must carry pileNProfiles = 3 profiles");
     assert!(decoded.z_investigated_m.is_none(), "change-pile-n-profiles/adds-a-third-investigated-ground-profile: change-pile-n-profiles writes pileNProfiles and must leave `z_investigated_m` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the profile-count change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-pile-n-profiles diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-pile-n-profiles/adds-a-third-investigated-ground-profile: the committed diff did not carry before to after");

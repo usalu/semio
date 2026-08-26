@@ -32,7 +32,7 @@ pub fn warm_examples() {
     LazyLock::force(&NAKAGIN);
 }
 
-fn canonical_example_id(example_id: &str) -> &'static str {
+pub(crate) fn canonical_example_id(example_id: &str) -> &'static str {
     match example_id {
         PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID | "concrete" => PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
         PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID | "nakagin" => PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID,
@@ -40,7 +40,7 @@ fn canonical_example_id(example_id: &str) -> &'static str {
     }
 }
 
-fn target(example_id: &str) -> &'static Puzzle2dSnapshot {
+pub(crate) fn target(example_id: &str) -> &'static Puzzle2dSnapshot {
     match example_id {
         PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID => &CONCRETE_FOREST,
         PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID => &NAKAGIN,

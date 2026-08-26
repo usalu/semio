@@ -6,7 +6,7 @@ use crate::artifacts::iso16757::mutations::remove_part_number_input;
 use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ChangePartNumberInput, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &ChangePartNumberInput, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
     match base.part_number_inputs.get(&payload.key) {
         Some(old_value) => vec![Iso16757Mutation::ChangePartNumberInput(ChangePartNumberInput { key: payload.key.clone(), new_value: old_value.clone() })],
         None => vec![Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: payload.key.clone() })],

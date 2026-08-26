@@ -11,6 +11,8 @@
 //! ruling).
 
 extern crate infinite_canvas as infinite_board_port_directed_normal;
+#[cfg(target_arch = "wasm32")]
+extern crate semio_framework_async as wasm_bindgen_futures;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -22,6 +24,10 @@ extern crate semio_framework_schema as artifact_schema;
 // signatures the trait requires. `Fault` is a framework-owned error type; boxing it here would
 // diverge from the trait it must satisfy, and the lint does not fire on the trait impl itself (only
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
+#[allow(clippy::result_large_err)]
+#[path = "../../🎮️commands/🧵️retained/🦀️component.rs"]
+pub mod retained_command;
+
 #[allow(clippy::result_large_err)]
 //#region 🗿️Artifacts
 #[path = "."]

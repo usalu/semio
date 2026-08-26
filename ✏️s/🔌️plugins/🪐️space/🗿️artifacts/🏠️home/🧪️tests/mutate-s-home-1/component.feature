@@ -5,10 +5,26 @@
 Feature: Apply the one typed s.space.home mutation to its committed specification vector
 
   `s.space.home` is a semio-NATIVE artifact: nothing outside this repository reads `.shome.dsl.semio`
-  or its `.pack.semio` twin, so there is no reference implementation to register (recorded as the
+  or its `.pack.semio` twin, so no reference library is registered — recorded as the
   `s-home-mutation-semantics` no-oracle decision in
   `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why the candidate
-  category is empty rather than merely unexplored).
+  category is empty rather than merely unexplored.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-writer-1` and `mutate-playbook-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
+  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
+  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   What distinguishes this subset is how little of it is mutable. The launcher document persists two
   fields, `schema` and `catalog_generation`, of which only the second may ever be written by a

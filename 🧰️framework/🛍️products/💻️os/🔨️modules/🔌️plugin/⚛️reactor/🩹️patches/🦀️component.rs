@@ -439,8 +439,13 @@ impl PatchTracker {
 
     pub fn drive_one(&self) -> bool {
         let mut state = self.state.borrow_mut();
-        let index = state.drive_cursor;
-        state.drive_cursor = (state.drive_cursor + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
+        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .find(|index| state.slots[*index].as_ref().is_some_and(|slot| slot.producer.is_some() || slot.job.is_some()))
+        else {
+            return has_work(&state);
+        };
+        state.drive_cursor = (index + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
         let ready_index = state.ready.iter().position(Option::is_none);
         let ready_has_capacity = ready_index.is_some();
         let Some(mut slot) = state.slots[index].take() else { return has_work(&state) };
@@ -931,6 +936,21 @@ mod tests {
         assert!(tracker.take_ready_patch().is_none());
         let patch = finish(&tracker).expect("eventual patch");
         assert_eq!(patch.base_revision, ui_contract::UiRevision(0));
+    }
+
+    #[test]
+    fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps() {
+        let tracker = PatchTracker::new();
+        tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
+        let mut patch = None;
+        for _ in 0..32 {
+            tracker.drive_one();
+            if let Some(owner) = tracker.take_ready_patch() {
+                patch = owner.publish().expect("ready owner retains its patch").0.into();
+                break;
+            }
+        }
+        assert!(patch.is_some(), "one leaf surface must reconcile within 32 active steps");
     }
 
     #[test]

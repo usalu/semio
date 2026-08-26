@@ -33,10 +33,11 @@
     },
     "TiffIfd": {
       "type": "object",
-      "description": "One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order).",
-      "required": ["entries"],
+      "description": "One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order) plus this directory's own raster as RAW STRIP BYTES. Empty for IFD 0, whose raster is the snapshot's own canonical RGBA `pixels`, and for a metadata-only directory.",
+      "required": ["entries", "pixels"],
       "properties": {
-        "entries": { "type": "array", "items": { "$ref": "#/$defs/TiffTag" } }
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/TiffTag" } },
+        "pixels": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
       }
     }
   },

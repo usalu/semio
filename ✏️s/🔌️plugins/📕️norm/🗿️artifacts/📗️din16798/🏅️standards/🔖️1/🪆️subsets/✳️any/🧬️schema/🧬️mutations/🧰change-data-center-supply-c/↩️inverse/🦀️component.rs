@@ -6,7 +6,7 @@ use crate::artifacts::din16798::mutations::Din16798Mutation;
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeDataCenterSupplyC, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+pub fn inverse(_payload: &ChangeDataCenterSupplyC, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
     vec![Din16798Mutation::ChangeDataCenterSupplyC(ChangeDataCenterSupplyC { new_data_center_supply_c: base.data_center_supply_c.clone() })]
 }
 //#endregion 🔖️Inverse

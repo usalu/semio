@@ -1,0 +1,9 @@
+name	steps
+surface_attach	open,admitted,progress,checkpoint,attach-admitted,reply,surface-status,ack
+attach_close	open,attach-admitted,close,cancelled,terminal-empty
+cancel_gpu_create	open,attach-admitted,cancel,surface-cancelled,ack,terminal
+device_loss	open,surface-created,surface-lost,preview,last-valid
+paged_output	open,admitted,progress,checkpoint,output,page,ack,terminal
+stale_generation	open,close,reopen,old-handle-rejected
+rejected_controls	queue-max,reject-nine,drain,re-admit,no-leak
+terminal_empty	close,drain-events,drain-pages,empty,empty

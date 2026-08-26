@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// `subject.radiator` and the `clamped` flag stays false. The subject declares `parent_id:
 /// Some("subject.radiator")`, which the oracle stores verbatim without validating the parent.
 #[semio_framework_async_macros::async_test]
-async fn appends_a_towel_radiator_subject_under_the_radiator_parent() {
+fn appends_a_towel_radiator_subject_under_the_radiator_parent() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("create-subject applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.dictionary.subjects.len(), 2, "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the subject list must grow by exactly one");
@@ -45,7 +45,7 @@ async fn appends_a_towel_radiator_subject_under_the_radiator_parent() {
 /// ↩️ `create-subject`'s inverse is a `DeleteSubject` on the created id — but only when that id is ABSENT from
 /// BASE; the fixture's id is fresh, so exactly one delete step is produced.
 #[semio_framework_async_macros::async_test]
-async fn deleting_the_towel_radiator_subject_restores_before() {
+fn deleting_the_towel_radiator_subject_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward create-subject applies");
@@ -63,7 +63,7 @@ async fn deleting_the_towel_radiator_subject_restores_before() {
 /// `index` is an `Option<usize>` with no `skip_serializing_if`, so it is present as an explicit `null`, and
 /// `SubjectKind::ProductSpecialization` is spelled with its bare Rust variant name.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `subject.towel-radiator` is not among the committed subjects, so the fatal `mutation.duplicate-id` branch
 /// is not taken; and `index` is `None`, so the `mutation.clamped` warning is not raised either.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
 /// this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `dictionary` is rewritten
 /// and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced create-subject diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -99,7 +99,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten
 /// dictionary and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed create-subject diff decodes");
     let dictionary = decoded.dictionary.as_ref().expect("the committed create-subject diff carries the dictionary");
     assert_eq!(dictionary.subjects.len(), 2, "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the diff carries both subjects, because the dictionary delta is whole-container");
@@ -117,7 +117,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the subject creation, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed create-subject diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the committed diff did not carry before to after");

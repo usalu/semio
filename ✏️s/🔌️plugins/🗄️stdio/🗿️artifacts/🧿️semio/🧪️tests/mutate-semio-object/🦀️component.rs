@@ -1,264 +1,195 @@
-//! 🦀️ Semio OBJECT exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
-//! REFACTOR. Recorded no-oracle decision `semio-object-mutation-semantics` (`../../🏅️standards/
-//! 🔖️v1/🪆️subsets/✳️object/🧪️oracle/🔣️component.json`): `s.stdio.semio.object` is a semio-NATIVE
-//! format with no third-party reader or writer, so `oracle` here reads the committed, independently
-//! handcrafted per-kind specification fixtures (`../../🏅️standards/🔖️v1/🪆️subsets/✳️object/
-//! 🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`) literally — no recomputation, no
-//! reimplementation of mutation semantics. `subject` drives this repository's own
-//! `apply_semio_object_mutation` over the full 9-kind `SemioObjectMutation` vocabulary.
+//! 🦀️ Semio OBJECT exhaustive mutation case — Rust SUBJECT adapter. Ticket 26/08/23/END-TO-END-
+//! TESTING-REFACTOR.
 //!
-//! What distinguishes this subset is that it was the first COMPOSITE one: alongside the composite
-//! `transform` value field (`move`/`rotate`/`scale`) it carries three optional owned CHILD slots —
-//! `brep`, `mesh` and `properties` — each an `Option<store::ArtifactChild<S>>` holding a two-string
-//! handle (`child_id` plus an `ArtifactRef` naming an artifact id and its dialect), never embedded
-//! content. Attaching one is `create-<slot>`, detaching it is `delete-<slot>`, and a `delete` must
-//! leave the OTHER two slots untouched, which is exactly what the committed fixtures are arranged
-//! to catch: `delete-brep` runs against a snapshot carrying both a brep and a mesh child, and
-//! `delete-properties` against one carrying both a properties and a mesh child.
+//! This file is the subject half only. The oracle is `🐍️component.py` beside it: an independent
+//! Python implementation of the same carrier and the same nine-verb vocabulary, written from the
+//! committed grammar, protocol and JSON schema, registered as `semio-object-python-independent` in
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧪️oracle/🔣️component.json`. Registering oracle
+//! handlers here as well would put this repository's answer on both sides of the comparison, which
+//! is the exact failure the platform exists to prevent — so it registers none.
 //!
-//! **The `ArtifactRef` wall, and how it is gone.** An earlier draft of this adapter registered real
-//! handlers for only the 3 transform kinds and, for the other 6, a handler that returned a
-//! self-documenting `Err`: a `create-*` payload carries a `store::os_io::ArtifactRef` `target` and a
-//! `delete-*` before-snapshot carries a populated `store::ArtifactChild<S>`, and `store` is this
-//! crate's PRIVATE `extern crate semio_framework_os_kernel as store;` (`📦️glue.rs`), unnameable
-//! from a test host that links only `semio-repo-test-host` and this plugin. Constructing one by hand
-//! was impossible; DESERIALIZING one never needed a nameable path at all. This subset's own
-//! production code now exports `decode_semio_object_snapshot_json`/`encode_semio_object_snapshot_json`
-//! (`../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/📸️snapshot/🦀️component.rs`) and
-//! `decode_semio_object_mutation_json`/`inverse_semio_object_mutation` (`…/🧬️mutations/
-//! 🦀️component.rs`) — thin, permanent `serde_json`/`protocol::Mutation`-backed wrappers whose
-//! SIGNATURES name only `&str`/`String`/`Vec`/`SemioObjectSnapshot`/`SemioObjectMutation`, all
-//! reachable. The same fix `✳️kit` established for the same wall. All 9 kinds are therefore real
-//! here, and the transform kinds now run against the committed before-snapshot itself rather than an
-//! all-identity snapshot hand-built beside it.
+//! Every input this file reads comes from the PLAN: the real committed crate object through
+//! `asset://`, the `prepare` list and the mutation payload from the scenario's doc string, and the
+//! specification-vector paths from the scenario's step text. The feature is the single place any of
+//! them is written down, so neither implementation can hold a transcription that drifts from what
+//! the other one read.
 //!
-//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner resolves an
-//! oracle implementation from the feature's `@oracle-` tag and this feature has none, so the comparison
-//! profile never gets two sides to compare. Every law this case claims is therefore asserted INSIDE the
-//! subject handler. The subject half is gated behind the generated host's `sut` feature so the
-//! oracle-only run never compiles the local implementation; the Rust SUBJECT phase RUNS. The os-kernel
-//! blocker earlier waves recorded here was cleared on 2026-08-24 — `cargo check -p
-//! semio-framework-os-kernel --lib` exits 0 and `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts
-//! subject exhaustive --owner 🗄️stdio --case mutate-semio-object` really executes every scenario below.
-//! The gate keeps the two BUILDS apart; it has never been a reason the subject half goes unmeasured, and
-//! for this recorded no-oracle case the subject phase is the only phase that runs at all.
+//! `s.stdio.semio.object` was the first COMPOSITE subset: alongside the composite `transform` value
+//! field (`move`/`rotate`/`scale`) it carries three optional owned CHILD slots — `brep`, `mesh` and
+//! `properties` — each an `Option<store::ArtifactChild<S>>` holding a two-string handle, never
+//! embedded content. `store` is this crate's PRIVATE `extern crate semio_framework_os_kernel as
+//! store;`, unnameable from a test host, which is why every handle here is DESERIALIZED through this
+//! subset's own `decode_semio_object_snapshot_json`/`decode_semio_object_mutation_json` rather than
+//! constructed: those signatures name only `&str`/`SemioObjectSnapshot`/`SemioObjectMutation`.
 
-use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
+use semio_repo_test_host::Adapter;
+#[cfg(feature = "sut")]
+use semio_repo_test_host::{Context, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioObjectMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
-/// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
-/// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
-/// the enum.
+/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because registration happens before the
+/// subject crate is necessarily linked. `kinds_match_the_enum_and_the_catalog` in that production
+/// file keeps the list honest against the enum, and the contract's mutation-coverage gate keeps it
+/// honest against the catalog and this feature.
 const KINDS: &[&str] = &["move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"];
 
 /// 🗣️ The real committed crate object — a non-identity translation with ALL THREE child slots
-/// populated, which is the only committed document that exercises the `ArtifactChild` codec end to
-/// end rather than one slot at a time.
+/// populated, the only committed document that exercises the `ArtifactChild` codec three slots at a
+/// time rather than one at a time.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio";
+const CRATE_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🗣️example.dsl.semio";
 /// 🎒️ The same object in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const PACK_ASSET: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio";
+const CRATE_PACK: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️object/📚️examples/📦️crate/🖼️assets/🎒️example.pack.semio";
 //#endregion 🔖️Kinds
 
-//#region 🔖️Fixtures
-/// 🧫️ The committed `(before, mutation, after)` fixture TEXT for one kind, read literally via
-/// `include_str!` — this IS the independently handcrafted specification vector the no-oracle
-/// decision rests on, never recomputed. One `include_str!` per file for the whole adapter: `oracle`
-/// answers with `before`/`after`, `subject` decodes all three.
-fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
-    match kind {
-        "move-object" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "rotate-object" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "scale-object" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📏scale-object/🧪️tests/scales-the-object-non-uniformly/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📏scale-object/🧪️tests/scales-the-object-non-uniformly/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📏scale-object/🧪️tests/scales-the-object-non-uniformly/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "create-brep" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "delete-brep" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "create-mesh" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "delete-mesh" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "create-properties" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        "delete-properties" => (
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/📸️snapshot/⬅️before/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/🦠️mutation/🔣️component.json"),
-            include_str!("../../🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/📸️snapshot/➡️after/🔣️component.json"),
-        ),
-        other => panic!("mutate-semio-object: no fixture registered for kind {other:?}"),
+//#region 🔖️Plan
+/// 🧫️ Every `asset://` URI the scenario's steps name, in step order — the specification-vector
+/// paths live in the feature, never in this file.
+#[cfg(feature = "sut")]
+fn step_assets(ctx: &Context) -> Vec<String> {
+    let mut found = Vec::new();
+    for (_, text) in &ctx.scenario.steps {
+        for candidate in text.split_whitespace() {
+            if candidate.starts_with("asset://") {
+                found.push(candidate.to_string());
+            }
+        }
     }
+    found
 }
 
-/// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
-fn canonical(text: &str) -> Json {
-    parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
+/// 📜️ The scenario's `{"prepare": [...], "mutation": {…}}` doc string, split into its two halves.
+#[cfg(feature = "sut")]
+fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
+    let document = ctx.doc_json()?;
+    let mutation = document.get("mutation").cloned().ok_or_else(|| format!("scenario {} carries no `mutation` in its doc string", ctx.scenario.id))?;
+    Ok((document.array("prepare"), mutation))
 }
-//#endregion 🔖️Fixtures
-
-//#region 🔖️Oracle
-/// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally.
-fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |_ctx: &Context| {
-        let (_before, _mutation, after) = fixture_text(kind);
-        Ok(Outcome::with_raw(after.as_bytes().to_vec(), canonical(after)))
-    }
-}
-
-/// 🔮️ The inverse reference answer: the committed BEFORE snapshot — undoing any mutation must
-/// return to exactly where the specification vector started.
-fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |_ctx: &Context| {
-        let (before, _mutation, _after) = fixture_text(kind);
-        Ok(Outcome::with_raw(before.as_bytes().to_vec(), canonical(before)))
-    }
-}
-//#endregion 🔖️Oracle
+//#endregion 🔖️Plan
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::object::schema::mutations::{apply_semio_object_mutation, decode_semio_object_mutation_json, inverse_semio_object_mutation, SemioObjectMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::object::schema::snapshot::{decode_semio_object_pack, decode_semio_object_snapshot_json, encode_semio_object_pack, encode_semio_object_snapshot_json, parse_semio_object_dsl, print_semio_object_dsl, SemioObjectSnapshot};
+    use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
 
-    //#region 🔖️FixtureDecode
-    /// 🧫️ Decodes the SAME committed fixture text `../🦀️component.rs::fixture_text` embeds, through
-    /// this subset's own production JSON bridges — real deserialization of the committed bytes,
-    /// including the `store::ArtifactChild`/`ArtifactRef` handles no caller outside the plugin can
-    /// construct by hand.
-    fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<SemioObjectSnapshot, String> {
-        decode_semio_object_snapshot_json(text).map_err(|error| format!("mutate-semio-object: the committed {label}-snapshot for {kind:?} must decode: {error}"))
+    //#region 🔖️Bridges
+    /// 🦠️ One planned mutation payload, decoded through this subset's own JSON bridge.
+    fn mutation_of(value: &Json, scenario: &str) -> Result<SemioObjectMutation, String> {
+        decode_semio_object_mutation_json(&value.to_string()).map_err(|error| format!("{scenario}: the planned mutation payload must decode: {error}"))
     }
 
-    fn mutation_of(text: &str, kind: &str) -> Result<SemioObjectMutation, String> {
-        decode_semio_object_mutation_json(text).map_err(|error| format!("mutate-semio-object: the committed mutation payload for {kind:?} must decode: {error}"))
+    /// 🧬️ Applies one mutation, turning a refusal into a failure rather than a silent no-op.
+    fn apply(snapshot: &mut SemioObjectSnapshot, mutation: &SemioObjectMutation, scenario: &str) -> Result<(), String> {
+        let outcome = apply_semio_object_mutation(snapshot, mutation);
+        let refusals = semio_mutation_refusals(&outcome);
+        if refusals.is_empty() {
+            return Ok(());
+        }
+        Err(format!("{scenario}: the mutation was rejected: {refusals:?}"))
+    }
+
+    /// 📦️ The real committed crate object, put into the state the scenario's verb is defined for by
+    /// the doc string's own `prepare` list.
+    fn prepared(ctx: &Context) -> Result<(SemioObjectSnapshot, SemioObjectMutation), String> {
+        let (prepare, mutation) = super::plan_mutations(ctx)?;
+        let text = String::from_utf8(ctx.fixture_bytes(super::CRATE_DSL)?).map_err(|error| format!("the committed crate artifact is not UTF-8: {error}"))?;
+        let mut snapshot = parse_semio_object_dsl(&text)?;
+        for step in &prepare {
+            let step = mutation_of(step, &ctx.scenario.id)?;
+            apply(&mut snapshot, &step, &ctx.scenario.id)?;
+        }
+        Ok((snapshot, mutation_of(&mutation, &ctx.scenario.id)?))
     }
 
     fn projection(snapshot: &SemioObjectSnapshot) -> Result<Json, String> {
         parse_json(&encode_semio_object_snapshot_json(snapshot))
     }
 
-    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both fixtures are written
-    /// in, so a red scenario is readable without re-running anything.
+    /// 🚨️ A failure message that names WHAT disagreed, in the same JSON both sides project, so a red
+    /// scenario is readable without re-running anything.
     fn disagreement(what: &str, got: &SemioObjectSnapshot, expected: &SemioObjectSnapshot) -> String {
         format!("{what}\n     got: {}\nexpected: {}", encode_semio_object_snapshot_json(got), encode_semio_object_snapshot_json(expected))
     }
-    //#endregion 🔖️FixtureDecode
+    //#endregion 🔖️Bridges
 
     //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
-    /// after-snapshot — the two untouched child slots included, so a `delete-brep` that also cleared
-    /// the mesh handle fails here. The assertion lives in the handler because a recorded no-oracle
-    /// case runs no oracle role: one that merely returned `Ok` would report a pass having checked
-    /// nothing.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |_ctx: &Context| {
-            let (before, mutation, after) = super::fixture_text(kind);
-            let mut current = snapshot_of(before, "before", kind)?;
-            let expected = snapshot_of(after, "after", kind)?;
-            let mutation = mutation_of(mutation, kind)?;
-            let outcome = apply_semio_object_mutation(&mut current, &mutation);
-            if !semio_mutation_refusals(&outcome).is_empty() {
-                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
-            }
-            if current != expected {
-                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &current, &expected));
-            }
-            let projection = projection(&current)?;
-            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
-        }
+    /// 🎯️ One verb applied to the real committed crate object. The projection is the whole resulting
+    /// snapshot, so a `delete-<slot>` that also cleared a sibling handle diverges from the oracle
+    /// here rather than passing quietly.
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let (mut snapshot, mutation) = prepared(ctx)?;
+        apply(&mut snapshot, &mutation, &ctx.scenario.id)?;
+        let projection = projection(&snapshot)?;
+        Ok(Outcome::with_raw(print_semio_object_dsl(&snapshot).into_bytes(), projection))
     }
 
-    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
-    /// restore the committed before-snapshot exactly — a detached child's `child_id` AND the
+    /// ↩️ The metamorphic inverse law, asserted in role: applying the verb and then its OWN computed
+    /// inverse must restore the prepared object exactly — a re-attached child's `child_id` AND the
     /// artifact id and dialect its `ArtifactRef` named, not merely the slot becoming occupied again.
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |_ctx: &Context| {
-            let (before, mutation, _after) = super::fixture_text(kind);
-            let base = snapshot_of(before, "before", kind)?;
-            let mutation = mutation_of(mutation, kind)?;
-            let mut current = base.clone();
-            let outcome = apply_semio_object_mutation(&mut current, &mutation);
-            if !semio_mutation_refusals(&outcome).is_empty() {
-                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
-            }
-            for step in inverse_semio_object_mutation(&mutation, &base) {
-                let step_outcome = apply_semio_object_mutation(&mut current, &step);
-                if !semio_mutation_refusals(&step_outcome).is_empty() {
-                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", semio_mutation_refusals(&step_outcome)));
-                }
-            }
-            if current != base {
-                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
-            }
-            let projection = projection(&current)?;
-            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+    /// The projection carries the mutated snapshot too, so the seven rows do not all project the
+    /// same value and the comparison cannot go vacuous.
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let (base, mutation) = prepared(ctx)?;
+        let mut current = base.clone();
+        apply(&mut current, &mutation, &ctx.scenario.id)?;
+        let mutated = projection(&current)?;
+        for step in inverse_semio_object_mutation(&mutation, &base) {
+            apply(&mut current, &step, &ctx.scenario.id)?;
         }
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the prepared object", ctx.scenario.id), &current, &base));
+        }
+        Ok(Outcome::projection(Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), projection(&current)?)])))
     }
 
-    /// 🔁️ The real committed crate object through both of its committed encodings — the one
-    /// document that carries all three child handles at once, so a child codec that dropped a slot
-    /// shows up here rather than in a per-kind fixture that only ever populates one. The DSL text and
-    /// the pack envelope are separate committed files produced by separate codecs, so agreeing on one
-    /// snapshot cannot be achieved by smuggling bytes from either. Byte-identical re-emission IS
-    /// expected — the committed text is this codec's own output, not a foreign writer's — so the
-    /// wave's usual "output must not equal input" tripwire does not apply, and its MIRROR law is
-    /// asserted below in its place: `carrier_is_exact` on both committed files, with the text/binary
-    /// cross-check keeping that from being a self-comparison.
-    /// 🔒️ **The byte half of the identity law — asserted, and asserted as `carrier_is_exact`.**
-    /// `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin; the two
-    /// committed example artifacts this scenario reads were produced by these very codecs, so
-    /// reproducing them BYTE FOR BYTE is the correct answer here and `law::reparsed_not_copied`
-    /// would be exactly backwards — the same reading `mutate-dag-1` records for `.dag.dsl.semio`
-    /// and `mutate-bmp-v3` for its own reference-authored fixture. Saying so in prose alone would
-    /// leave the claim an excuse; asserting it makes it checkable, and it fails with the offset of
-    /// the first differing byte the moment the printer or the packer drifts. Nor is it a
-    /// self-comparison: one side is a file committed to the repository, the other is computed now.
+    /// 🧫️ The committed handcrafted `(before, mutation, after)` vector for one kind, applied and
+    /// checked against the committed after-snapshot in role — a THIRD statement of what the verb
+    /// means, independent of both implementations, kept from the case this one replaces.
+    pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
+        let assets = super::step_assets(ctx);
+        if assets.len() < 3 {
+            return Err(format!("{}: expected three committed vector assets, found {}", ctx.scenario.id, assets.len()));
+        }
+        let before = String::from_utf8(ctx.fixture_bytes(&assets[0])?).map_err(|error| error.to_string())?;
+        let payload = String::from_utf8(ctx.fixture_bytes(&assets[1])?).map_err(|error| error.to_string())?;
+        let after = String::from_utf8(ctx.fixture_bytes(&assets[2])?).map_err(|error| error.to_string())?;
+        let mut current = decode_semio_object_snapshot_json(&before).map_err(|error| format!("{}: the committed before-snapshot must decode: {error}", ctx.scenario.id))?;
+        let expected = decode_semio_object_snapshot_json(&after).map_err(|error| format!("{}: the committed after-snapshot must decode: {error}", ctx.scenario.id))?;
+        let mutation = decode_semio_object_mutation_json(&payload).map_err(|error| format!("{}: the committed mutation payload must decode: {error}", ctx.scenario.id))?;
+        apply(&mut current, &mutation, &ctx.scenario.id)?;
+        if current != expected {
+            return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
+        }
+        projection(&current).map(Outcome::projection)
+    }
+
+    /// 🔁️ Both committed encodings of the crate object, each re-emitted from the parsed document.
+    /// Byte-identical re-emission IS expected here — the committed files are this codec's own output,
+    /// not a foreign writer's — so the wave's "output must not equal input" tripwire would be exactly
+    /// backwards and its MIRROR law is asserted in its place through `law::carrier_is_exact`, which
+    /// fails with the offset of the first differing byte. What keeps that from being a codec agreeing
+    /// with itself is the oracle: the Python implementation reproduces the same two files from the
+    /// grammar and the protocol alone, and the digests of both sides' emitted bytes are compared.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed crate artifact is not UTF-8: {error}"))?;
+        let dsl_bytes = ctx.fixture_bytes(super::CRATE_DSL)?;
+        let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: the committed crate artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_object_dsl(&text)?;
         if parsed.brep.is_none() || parsed.mesh.is_none() || parsed.properties.is_none() {
-            return Err("identity-round-trip: the committed crate object is the all-three-children fixture this case describes, but at least one child slot decoded as absent".to_string());
+            return Err("identity-round-trip: the committed crate object is the all-three-children artifact this case describes, but at least one child slot decoded as absent".to_string());
         }
         let printed = print_semio_object_dsl(&parsed);
-        carrier_is_exact(printed.as_bytes(), text.as_bytes())?;
+        carrier_is_exact(printed.as_bytes(), &dsl_bytes)?;
         let reparsed = parse_semio_object_dsl(&printed)?;
         if reparsed != parsed {
             return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(super::PACK_ASSET)?;
+        let pack_bytes = ctx.fixture_bytes(super::CRATE_PACK)?;
         let unpacked = decode_semio_object_pack(&pack_bytes)?;
         if unpacked != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different object than the committed text artifact", &unpacked, &parsed));
@@ -269,32 +200,38 @@ mod subject {
         if repacked != parsed {
             return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &parsed));
         }
-        let projection = projection(&parsed)?;
-        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+        Ok(Outcome::projection(Json::Object(vec![
+            ("document".to_string(), projection(&parsed)?),
+            ("dslDigest".to_string(), Json::String(semio_repo_test_host::protocol::digest(printed.as_bytes()))),
+            ("packDigest".to_string(), Json::String(semio_repo_test_host::protocol::digest(&repacked_bytes))),
+            ("dslLength".to_string(), Json::Number(printed.as_bytes().len() as f64)),
+            ("packLength".to_string(), Json::Number(repacked_bytes.len() as f64)),
+        ])))
     }
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the loop mirrors the feature's `Examples` tables exactly. `identity-round-trip` is
-/// deliberately subject-only: the reference answer for the other scenarios is a committed JSON
-/// snapshot the oracle role can read literally, but the crate object is committed as DSL and pack
-/// bytes ONLY, and turning those into a snapshot needs this subset's own codec — which the
-/// oracle-only build must not link.
+/// 🧭️ Registration entry point the generated host calls, by FULL expanded scenario id — the loop
+/// mirrors the feature's `Examples` tables exactly. Subject only: the reference answer comes from
+/// the Python adapter, in the oracle role, and nothing here may answer for it.
 pub fn adapter() -> Adapter {
+    #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
-        }
-    }
     #[cfg(feature = "sut")]
     {
+        for kind in KINDS {
+            built = built
+                .subject(&format!("mutate-{kind}"), subject::mutate)
+                .subject(&format!("inverse-{kind}"), subject::inverse)
+                .subject(&format!("spec-vector-{kind}"), subject::spec_vector);
+        }
         built = built.subject("identity-round-trip", subject::round_trip);
+    }
+    #[cfg(not(feature = "sut"))]
+    {
+        let _ = KINDS;
     }
     built
 }

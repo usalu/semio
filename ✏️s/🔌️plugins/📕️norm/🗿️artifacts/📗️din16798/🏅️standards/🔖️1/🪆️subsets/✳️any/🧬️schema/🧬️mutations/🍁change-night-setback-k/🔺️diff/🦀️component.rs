@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_night_setback_k::mutation::Cha
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeNightSetbackK, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeNightSetbackK, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_night_setback_k.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Night setback temperature must be a finite number, got {}.", payload.new_night_setback_k), Vec::<String>::new());
     }

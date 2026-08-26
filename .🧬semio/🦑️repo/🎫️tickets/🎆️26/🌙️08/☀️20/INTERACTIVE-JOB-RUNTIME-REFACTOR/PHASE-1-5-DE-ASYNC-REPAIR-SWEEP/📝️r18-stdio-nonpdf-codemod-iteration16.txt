@@ -1,4 +1,0 @@
-[run r13-biib703l] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=artifacts/📄️pdf/
-[run r13-biib703l] iteration 1: total errors=99, async-class=98
-[run r13-biib703l] iteration 1: planned 94 edits (1 residue)
-[run r13-biib703l] reached max-iterations=1 without reaching a fixpoint.

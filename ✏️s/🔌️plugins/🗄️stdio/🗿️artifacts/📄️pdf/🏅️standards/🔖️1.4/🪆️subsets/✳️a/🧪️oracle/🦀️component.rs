@@ -3,15 +3,16 @@
 //! so the subject's own mutation has an independent result to be compared against instead of being
 //! checked against its own reading.
 //!
-//! **What this subset's vocabulary is, and why it is so small.** PDF 1.4's retained snapshot is a
-//! bare `PageDoc { width, height, text }` — no object graph — and this subset's own
-//! `check_pdf_a_conformance` (`../🧬️schema/🦀️component.rs`) says so in as many words: it raises
-//! exactly TWO diagnostics, `stdio.pdf.a.text-empty` when `page.text` is blank, and
-//! `stdio.pdf.a.schema-gap-unverifiable`, which fires unconditionally on every document and records
-//! that full ISO 19005-1 conformance cannot be checked from this schema at all. A vocabulary derived
-//! honestly from that checker therefore has exactly ONE movable axis — the extractable text — and
-//! the schema-gap axis is not movable by anything, because no mutation can give PDF 1.4's snapshot
-//! an object graph it does not have. Inventing PDF/A-1 kinds this subset cannot check (encryption,
+//! **What this subset's vocabulary is, and why it is so small.** PDF 1.4's retained snapshot is the
+//! document's page TREE — `PageDoc { width, height, text }` per page, with no object graph — and
+//! this subset's own `check_pdf_a_conformance` (`../🧬️schema/🦀️component.rs`) says so in as many
+//! words: it raises exactly TWO diagnostics, `stdio.pdf.a.text-empty` when the FIRST page's text is
+//! blank, and `stdio.pdf.a.schema-gap-unverifiable`, which fires unconditionally on every document
+//! and records that full ISO 19005-1 conformance cannot be checked from this schema at all. A
+//! vocabulary derived honestly from that checker therefore has exactly ONE movable axis — page 1's
+//! extractable text — and the schema-gap axis is not movable by anything, because no mutation can
+//! give PDF 1.4's snapshot an object graph it does not have. The page count and every other page
+//! come through untouched, which is what the projection's `pageCount` anchor is there to prove. Inventing PDF/A-1 kinds this subset cannot check (encryption,
 //! JavaScript, output intents, font embedding — everything the 1.7 `✳️a` subset legitimately
 //! declares) would be fabricating a vocabulary for a schema that cannot observe it.
 //!

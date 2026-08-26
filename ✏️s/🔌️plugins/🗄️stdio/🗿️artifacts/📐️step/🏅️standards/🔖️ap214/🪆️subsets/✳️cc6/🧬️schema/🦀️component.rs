@@ -97,7 +97,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_construction_builds() {
-            let snapshot = StepCc6BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
+            let snapshot = StepCc6BuilderConstruction::from_snapshot(conforming_snapshot()).await.build().await.expect("conforming construction must build");
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
         }
 
@@ -110,8 +110,8 @@ pub mod derived_construction {
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
-            let (mutated, _diff) = StepCc6BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot { snapshot });
-            mutated.build().expect("cc6 is the top of the ladder -- ADVANCED_BREP_SHAPE_REPRESENTATION is never a violation");
+            let (mutated, _diff) = StepCc6BuilderConstruction::from_snapshot(StepSnapshot::default()).await.mutate(StepMutation::SetSnapshot { snapshot }).await;
+            mutated.build().await.expect("cc6 is the top of the ladder -- ADVANCED_BREP_SHAPE_REPRESENTATION is never a violation");
         }
     }
 }

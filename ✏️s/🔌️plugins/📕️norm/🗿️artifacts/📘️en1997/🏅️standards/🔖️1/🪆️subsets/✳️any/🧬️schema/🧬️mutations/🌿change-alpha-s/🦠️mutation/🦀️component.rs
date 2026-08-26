@@ -15,15 +15,15 @@ pub struct ChangeAlphaS {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeAlphaS {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "alpha-s", kind: "change-alpha-s", record: "ChangedAlphaS" };
 
-    async fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_alpha_s::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
+    fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         crate::artifacts::en1997::mutations::change_alpha_s::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change shaft resistance factor alpha_s to {}", self.new_alpha_s)
     }
 }

@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// §6.3.3 lateral-torsional check compares it with is the beam's own buckling property and does not follow
 /// the action.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_design_bending_moment_to_32_knm() {
+fn raises_the_design_bending_moment_to_32_knm() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-m-ed-knm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-m-ed-knm/raises-the-design-bending-moment-to-32-knm: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.m_ed_knm, 32.0, "change-m-ed-knm/raises-the-design-bending-moment-to-32-knm: m_ed_knm must read 32.0 kNm once the change lands");
@@ -44,7 +44,7 @@ async fn raises_the_design_bending_moment_to_32_knm() {
 /// ↩️ `change-m-ed-knm`'s inverse reads the OLD 25.0 kNm out of BASE, so replaying it puts the 25.0 kNm back on
 /// `m_ed_knm`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_25_knm_restores_before() {
+fn restoring_25_knm_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-m-ed-knm applies");
@@ -62,7 +62,7 @@ async fn restoring_25_knm_restores_before() {
 /// encode is a fixed point, so `{"ChangeMEdKnm": {"newMEdKnm": 32.0}}` — externally tagged variant, camelCase
 /// payload key is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 32.0 kNm is finite and differs from the committed 25.0 kNm, so neither of
 /// `change-m-ed-knm`'s guards fires.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-m-ed-knm/raises-the-design-bending-moment-to-32-knm: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `mEdKnm` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-m-ed-knm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-m-ed-knm/raises-the-design-bending-moment-to-32-knm: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the design bending moment
 /// and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-m-ed-knm diff decodes");
     assert_eq!(decoded.m_ed_knm, Some(32.0), "change-m-ed-knm/raises-the-design-bending-moment-to-32-knm: the committed diff must carry mEdKnm = 32.0 kNm");
     assert!(decoded.m_crit_knm.is_none(), "change-m-ed-knm/raises-the-design-bending-moment-to-32-knm: change-m-ed-knm writes mEdKnm and must leave `m_crit_knm` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the moment change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-m-ed-knm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-m-ed-knm/raises-the-design-bending-moment-to-32-knm: the committed diff did not carry before to after");

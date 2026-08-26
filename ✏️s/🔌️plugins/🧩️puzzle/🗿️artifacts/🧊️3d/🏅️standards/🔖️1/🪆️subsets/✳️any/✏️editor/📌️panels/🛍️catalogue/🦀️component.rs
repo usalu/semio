@@ -29,18 +29,13 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Rows
 fn ui_text_value(value: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value)
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "fixed action text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "fixed action text admission failed"))
 }
 
 fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "fixed action map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "fixed action map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "fixed action map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "fixed action map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -48,9 +43,7 @@ fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_
 fn fixed_nodes(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
-        nodes
-            .try_push(value?)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
+        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
     }
     Ok(nodes)
 }
@@ -114,9 +107,7 @@ fn object_kind_item(entry: &Value) -> semio_framework_plugin::UiAssemblyResult<s
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.drag", "drag data admission failed"))?;
         builder = builder.draggable(true).drag_data(drag_data);
     }
-    builder
-        .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object row admission failed"))
+    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.object", "object row admission failed"))
 }
 
 fn catalog_kind_item(entry: &Value, icon_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -159,7 +150,7 @@ mod tests {
     #[test]
     fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
         let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
-        let labels = puzzle3d_labels(&Puzzle3dConfig::default());
+        let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
         let node = render(&envelope, labels);
         assert!(matches!(node.component, semio_framework_ui_contract::Component::Tree(_)));
         let objects = node.children.iter().find(|section| section.key == "puzzle3d-play-kinds.objects").expect("objects section");

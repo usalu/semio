@@ -58,7 +58,8 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   subject side the ONLY channel from input to output is decode_bmp → the DSL text codec → parse_dsl
   → encode_bmp, so a byte that survives did so by being modelled.
 
-  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-set-pixel-data` (parity 14/15, 2026-08-24). The row fills the
+  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-set-pixel-data` (this case's parity ratio is recorded in the
+  ticket, not here). The row fills the
   whole raster with rgb(200,40,40), a colour the committed 240-entry table has no entry for. The
   oracle answers by switching the document to 24-bit direct colour (`storage: direct`,
   `paletteEntries: 0`); `encode_bmp` answers with an Err, and

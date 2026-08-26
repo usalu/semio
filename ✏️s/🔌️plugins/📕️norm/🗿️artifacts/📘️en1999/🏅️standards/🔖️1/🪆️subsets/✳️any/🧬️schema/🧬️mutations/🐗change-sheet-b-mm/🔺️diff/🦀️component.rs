@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_sheet_b_mm::mutation::ChangeShee
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSheetBMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeSheetBMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_sheet_b_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Sheet width b [mm] must be a finite number, got {}.", payload.new_sheet_b_mm), Vec::<String>::new());
     }

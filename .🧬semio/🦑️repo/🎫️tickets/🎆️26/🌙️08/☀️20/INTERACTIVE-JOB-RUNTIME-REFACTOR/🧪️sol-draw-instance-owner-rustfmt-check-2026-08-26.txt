@@ -1,0 +1,909 @@
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:5:
+ //! diagnostics use a bounded ring. Inferences without an ActionBus route retain the synchronous
+ //! two-phase registry path.
+ 
+-use super::{run_two_phase, JobCtx};
++use super::{JobCtx, run_two_phase};
+ use semio_framework_job::{CommitCandidate, Generation, Operation, OperationId, RevisionId, StepOutcome};
+ use std::collections::VecDeque;
+ use std::future::Future;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🔀️migrate/🦀️component.rs:15:
+ //! decodes+validates `input` (parsing both dialect coordinates, reporting `"{from}->{to}"` as
+ //! progress) and checkpoints; slice 2 runs the real `migrate_document` re-encode.
+ 
+-use super::{run_two_phase, JobCtx};
++use super::{JobCtx, run_two_phase};
+ use std::future::Future;
+ use std::pin::Pin;
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️mutation-plan/🦀️component.rs:18:
+ //! return type already matches `JobFn`'s exactly — no fault-code translation needed here, unlike
+ //! `💡️infer`'s `ArtifactInferenceExecutionError` boundary.
+ 
+-use super::{run_two_phase, JobCtx};
++use super::{JobCtx, run_two_phase};
+ use std::future::Future;
+ use std::pin::Pin;
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️component.rs:11:
+ //! `grep -n "^pub enum Effect" 🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs` before this file was
+ //! written) — not a stand-in.
+ 
+-use semio_framework::kernel::{Effect, RequestId};
+ use semio_framework::Fault;
++use semio_framework::kernel::{Effect, RequestId};
+ use std::cell::RefCell;
+ use std::collections::VecDeque;
+ use std::future::Future;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:47:
+ /// `pub mod patches;` at this file's top.
+ use semio_framework_ui_runtime::PresenceHub;
+ #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+-use semio_framework_ui_runtime::{is_stale_intent, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch, DEFAULT_REVISION_TOLERANCE};
++use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, SurfaceReconcilePublishedPatch, SurfaceReconcileReadyPatch, is_stale_intent};
+ use std::cell::{Cell, RefCell};
+ // 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
+ // collections; all identity and close authority is held by fixed direct registries below.
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:334:
+ 
+     fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
+         let index = Self::index(id);
+-        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) {
+-            None
+-        } else {
+-            self.slots.take(index).map(|(_, record)| record)
+-        }
++        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) { None } else { self.slots.take(index).map(|(_, record)| record) }
+     }
+ 
+     fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:551:
+ 
+     fn remove(&mut self, instance: u32) -> Option<InstanceMetadata> {
+         let index = Self::index(instance);
+-        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) {
+-            self.slots.take(index)
+-        } else {
+-            None
+-        }
++        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) { self.slots.take(index) } else { None }
+     }
+ 
+     fn checkpoint_rows(&self) -> Vec<(u32, String)> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:984:
+ mod command_ingress_terminal_tests {
+     #[test]
+     fn accepted_final_page_completes_without_a_follow_up_turn() {
+-        let cursor = semio_framework::kernel::CommandPageCursor {
+-            owner: 7,
+-            generation: 11,
+-            command_index: 0,
+-            command_count: 1,
+-            instance: 13,
+-            seq: 17,
+-            kind: 19,
+-            page_index: 0,
+-            page_count: 1,
+-            item_count: 0,
+-            metadata: 0,
+-        };
++        let cursor = semio_framework::kernel::CommandPageCursor { owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13, seq: 17, kind: 19, page_index: 0, page_count: 1, item_count: 0, metadata: 0 };
+ 
+         assert!(matches!(
+             super::terminal_command_ingress(cursor, None),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:1007:
+ 
+     #[test]
+     fn accepted_final_page_preserves_a_terminal_fault() {
+-        let cursor = semio_framework::kernel::CommandPageCursor {
+-            owner: 7,
+-            generation: 11,
+-            command_index: 0,
+-            command_count: 1,
+-            instance: 13,
+-            seq: 17,
+-            kind: 19,
+-            page_index: 0,
+-            page_count: 1,
+-            item_count: 0,
+-            metadata: 0,
+-        };
++        let cursor = semio_framework::kernel::CommandPageCursor { owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13, seq: 17, kind: 19, page_index: 0, page_count: 1, item_count: 0, metadata: 0 };
+ 
+         assert!(matches!(
+             super::terminal_command_ingress(cursor, Some(b"rejected".to_vec())),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:1313:
+         let mut command_ingress = semio_framework::kernel::CommandIngressStatus::Idle;
+         let (mut retained, retained_slot) = COMMAND_INGRESS.with(|ingress| {
+             let mut ingress = ingress.borrow_mut();
+-            if ingress[0].is_some() {
+-                (ingress[0].take(), 0)
+-            } else {
+-                (ingress[1].take(), 1)
+-            }
++            if ingress[0].is_some() { (ingress[0].take(), 0) } else { (ingress[1].take(), 1) }
+         });
+         retained = match retained.take() {
+             Some(CommandIngressOwner::ReservedPresence { cursor, .. }) | Some(CommandIngressOwner::PendingPresencePage { cursor, .. }) if close_instances.contains(&cursor.instance) => {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:1746:
+ 
+     fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExchangeOutput, effects: &mut Vec<Effect>) {
+         if let Some(page) = output.typed_operation_result.as_ref() {
+-            effects.push(Effect::SendMessage {
+-                target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+-                payload: page.renderer_exchange_bytes(),
+-            });
++            effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: page.renderer_exchange_bytes() });
+         }
+         for frame_bytes in output.frames {
+             route_app_frame(instance, &frame_bytes, effects);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:2338:
+     fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
+         use crate::component::component::exports::semio::framework::reactor as wit;
+         let (instance, surface) = patch.surface.0.split_once(':').unwrap_or(("0", patch.surface.0.as_str()));
+-        wit::UiPatch { surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() }, revision: patch.revision.0, base_revision: patch.base_revision.0, ops: patch.ops.into_iter().map(kernel_patch_op_to_wit).collect() }
++        wit::UiPatch {
++            surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() },
++            revision: patch.revision.0,
++            base_revision: patch.base_revision.0,
++            ops: patch.ops.into_iter().map(kernel_patch_op_to_wit).collect(),
++        }
+     }
+ 
+     /// 🩹️ Packs any `Serialize` payload the same way `kernel_effect_to_wit`'s own `pack` helper does —
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️component.rs:252:
+                 inner.live = inner.live.saturating_sub(1);
+                 inner.free.push_back(index);
+                 *cursor += 1;
+-                if *cursor >= LOCAL_EXECUTOR_TASK_SLOTS {
+-                    ReactorTaskStep::Complete
+-                } else {
+-                    ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 }
+-                }
++                if *cursor >= LOCAL_EXECUTOR_TASK_SLOTS { ReactorTaskStep::Complete } else { ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 } }
+             }
+             ReactorTaskStep::Complete => {
+                 *slot.task = Some(task);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️component.rs:960:
+                 if budget.maximum_units == 0 || std::time::Instant::now() >= budget.deadline {
+                     return ReactorTaskStep::Pending { processed_units: 0, processed_bytes: 0 };
+                 }
+-                if self.items.pop().is_some() {
+-                    ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 }
+-                } else {
+-                    ReactorTaskStep::Complete
+-                }
++                if self.items.pop().is_some() { ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 } } else { ReactorTaskStep::Complete }
+             }
+ 
+             fn terminal_is_empty(&self) -> bool {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️component.rs:3:
+ use semio_framework_job::{CancelToken, Generation, OperationId, StepBudget, StepContext};
+ use semio_framework_ui_contract as ui_contract;
+ use semio_framework_ui_runtime::{
+-    ComponentTree, ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation,
+-    SurfaceReconcileTerminal, SurfaceReconciler, TreeNode, SURFACE_RECONCILE_ADMISSION_SLOTS,
++    ComponentTree, ComponentTreeProducer, ComponentTreeProducerStep, SURFACE_RECONCILE_ADMISSION_SLOTS, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected,
++    SurfaceReconcileReservation, SurfaceReconcileTerminal, SurfaceReconciler, TreeNode,
+ };
+ use std::cell::RefCell;
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️component.rs:439:
+ 
+     pub fn drive_one(&self) -> bool {
+         let mut state = self.state.borrow_mut();
+-        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS)
+-            .map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS)
+-            .find(|index| state.slots[*index].as_ref().is_some_and(|slot| slot.producer.is_some() || slot.job.is_some()))
++        let Some(index) =
++            (0..SURFACE_RECONCILE_ADMISSION_SLOTS).map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS).find(|index| state.slots[*index].as_ref().is_some_and(|slot| slot.producer.is_some() || slot.job.is_some()))
+         else {
+             return has_work(&state);
+         };
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/📖️body/🦀️component.rs:59:
+             #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
+             BodyReader::Direct(stream) => {
+                 let (status, buf) = stream.read(Vec::with_capacity(DIRECT_READ_CHUNK)).await;
+-                if buf.is_empty() && matches!(status, wit_bindgen::StreamResult::Dropped) {
+-                    None
+-                } else {
+-                    Some(buf)
+-                }
++                if buf.is_empty() && matches!(status, wit_bindgen::StreamResult::Dropped) { None } else { Some(buf) }
+             }
+         }
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs:1:
+ //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
+ 
+ use crate::app::{
+-    resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
+-    PluginCommandHandler,
++    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler,
++    resolve_ready,
+ };
+ use semio_framework::{
+-    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
+     AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
++    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
+ };
+ use std::collections::{BTreeMap, BTreeSet, HashMap};
+ use std::marker::PhantomData;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛂️describe/🦀️component.rs:13:
+ //! from E1's own placeholder.
+ 
+ use semio_framework::{
+-    io, kernel, AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
++    AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest, io, kernel,
+ };
+ 
+ /// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — every plugin's own IO `Dialect.artifact_kind`
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:293:
+ 
+     /// 🎬️ Encodes a typed product scene behind the semantic surface contract.
+     pub fn scene_surface<T: semio_framework_ui_scene::SceneDoc>(id: &str, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+-        let props = semio_framework_ui_scene::encode(kind, scene)
+-            .map_err(|error| PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at scene-surface.encode: {error}")))?;
++        let props = semio_framework_ui_scene::encode(kind, scene).map_err(|error| PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at scene-surface.encode: {error}")))?;
+         ui::surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:11904:
+         // implementer of this trait must follow; see `📓️recipe-plugin.md` in this ticket's folder.
+         async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
+         /// 🎭️ Renders against the same instance-retained operation owner used by typed jobs.
+-        async fn render_with_instance_operation_owner(
+-            owner: &ArtifactInstanceOperationOwnerHandle,
+-            body_key: &str,
+-            doc: &ArtifactView<'_, Self::Snapshot>,
+-            cfg: &ConfigView<'_, Self::Config>,
+-        ) -> UiAssemblyResult<ComponentTree> {
++        async fn render_with_instance_operation_owner(owner: &ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
+             let _ = owner;
+             Self::render(body_key, doc, cfg).await
+         }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:12554:
+ 
+         /// 🧺 Proves that every catalog row and nested catalog owner was retired.
+         fn terminal_is_empty(&self) -> bool {
+-            self.actions.is_empty()
+-                && self.window_actions.is_empty()
+-                && self.app_commands.is_empty()
+-                && self.mode_commands.is_empty()
+-                && self.controller_id.is_empty()
+-                && self.interactions.is_empty()
++            self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty() && self.controller_id.is_empty() && self.interactions.is_empty()
+         }
+ 
+         async fn get(&self, id: &str) -> Option<&ActionDefinition> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:13051:
+ 
+         pub fn with_mut<T: std::any::Any, R>(&self, apply: impl FnOnce(&mut T) -> Result<R, Fault>) -> Result<R, Fault> {
+             let mut owner = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?;
+-            let owner = owner
+-                .as_any_mut()
+-                .downcast_mut::<T>()
+-                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-type"), "app-instance operation owner type does not match its concrete app"))?;
++            let owner = owner.as_any_mut().downcast_mut::<T>().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-type"), "app-instance operation owner type does not match its concrete app"))?;
+             apply(owner)
+         }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:13061:
+         fn maintenance_step(&self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+-            self.inner
+-                .try_lock()
+-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?
+-                .maintenance_step(maximum_items, maximum_bytes)
++            self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?.maintenance_step(maximum_items, maximum_bytes)
+         }
+ 
+         fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:13069:
+-            self.inner
+-                .try_lock()
+-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?
+-                .close_step(maximum_items, maximum_bytes)
++            self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?.close_step(maximum_items, maximum_bytes)
+         }
+ 
+         fn terminal_is_empty(&self) -> Result<bool, Fault> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:13076:
+-            self.inner
+-                .try_lock()
+-                .map(|owner| owner.terminal_is_empty())
+-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))
++            self.inner.try_lock().map(|owner| owner.terminal_is_empty()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))
+         }
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:13456:
+         fn try_serialize<T: serde::Serialize>(token: TypedOperationResultToken, lane: TypedOperationResultLane, value: &T) -> Result<Self, Fault> {
+             let mut page = Self { token, lane, bytes: [0; TYPED_OPERATION_RESULT_PAGE_BYTES], len: 0 };
+             let mut writer = TypedOperationResultPageWriter { bytes: &mut page.bytes, len: 0 };
+-            serde_json::to_writer(&mut writer, value)
+-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-capacity"), "one typed-operation result exceeds its fixed incremental encoder authority"))?;
++            serde_json::to_writer(&mut writer, value).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.result-page-capacity"), "one typed-operation result exceeds its fixed incremental encoder authority"))?;
+             page.len = writer.len;
+             Ok(page)
+         }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:15634:
+         }
+ 
+         fn next_token(&self) -> TypedOperationResultToken {
+-            TypedOperationResultToken {
+-                receiver: self.meta.instance_id,
+-                operation: self.operation.operation.0,
+-                generation: self.operation.generation.0,
+-                sequence: self.result_sequence,
+-                attempt: 1,
+-            }
++            TypedOperationResultToken { receiver: self.meta.instance_id, operation: self.operation.operation.0, generation: self.operation.generation.0, sequence: self.result_sequence, attempt: 1 }
+         }
+ 
+         fn queue_page(&mut self, page: TypedOperationResultPage) -> Result<(), Fault> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:16474:
+                 let phases = law["phases"].as_array().cloned().unwrap_or_else(|| vec![serde_json::Value::Null]);
+                 for (phase, _) in phases.iter().enumerate() {
+                     let mut machine = OwnedFixtureMachine::new(phase);
+-                    let actual = machine.grant(
+-                        law["fuel"].as_u64().expect("grant fuel"),
+-                        law["deadline"] == "expired",
+-                        law["cancelled"].as_bool().expect("grant cancellation"),
+-                    );
++                    let actual = machine.grant(law["fuel"].as_u64().expect("grant fuel"), law["deadline"] == "expired", law["cancelled"].as_bool().expect("grant cancellation"));
+                     assert_eq!(actual, SerdeFixtureOracle(law).transition());
+                     assert_eq!(machine.advanced, law["advancedUnits"].as_u64().expect("advanced units") as usize);
+                 }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:16501:
+             }
+             for law in fixture["publicationLaws"].as_array().expect("publication laws") {
+                 let mut machine = OwnedFixtureMachine::new(0);
+-                let actual = machine.publish(
+-                    law["attempt"].as_u64().expect("publication attempt") as u8,
+-                    law["acknowledged"].as_bool().expect("publication ACK"),
+-                    fixture["capacities"]["maximumRetries"].as_u64().expect("maximum retries") as u8,
+-                );
++                let actual = machine.publish(law["attempt"].as_u64().expect("publication attempt") as u8, law["acknowledged"].as_bool().expect("publication ACK"), fixture["capacities"]["maximumRetries"].as_u64().expect("maximum retries") as u8);
+                 assert_eq!(actual, SerdeFixtureOracle(law).transition());
+                 assert_eq!(machine.retained_page, !law["acknowledged"].as_bool().expect("publication ACK"));
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:16626:
+             let publisher_start = source.find("async fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
+             let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
+             let publisher = &source[publisher_start..publisher_end];
+-            for retained_apply in [
+-                "artifact_mutations.last().cloned()",
+-                "config_mutations.last().cloned()",
+-                "draft_mutations.last().cloned()",
+-                "presence.last().cloned()",
+-                "transient.last().cloned()",
+-            ] {
++            for retained_apply in ["artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {
+                 assert!(publisher.contains(retained_apply), "production apply must preserve its original owner: {retained_apply}");
+             }
+             assert!(publisher.contains("dispatch_emit_group"));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:16688:
+             let command_end = source[command_start..].find("async fn dispatch_typed_command(").map(|offset| command_start + offset).expect("typed command route");
+             let command_route = &source[command_start..command_end];
+             let command_hook = command_route.find("A::host_configuration_mutation(command_id, Some(&args))?").expect("manifest command host configuration owner hook");
+-            let command_admission = command_route[command_hook..]
+-                .find("self.admit_host_configuration_json(command_id, Some(&args)).await?")
+-                .expect("manifest command bounded host admission")
+-                + command_hook;
++            let command_admission = command_route[command_hook..].find("self.admit_host_configuration_json(command_id, Some(&args)).await?").expect("manifest command bounded host admission") + command_hook;
+             let command_authority = command_route[command_admission..].find("self.require_tool_operation_authority(&admission)?").expect("manifest command bounded host authority") + command_admission;
+             let command_event = command_route[command_authority..].find("Emit::config(vec![config_mutation])").expect("manifest command single event-sourced configuration mutation") + command_authority;
+             let command_generic_gate = command_route[command_event..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("manifest command generic retained operation gate") + command_event;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:17536:
+             let key = proof.key();
+             let admission = match supplied_admission {
+                 Some(admission) => admission,
+-                None => self
+-                    .tool_jobs
+-                    .admit_exact_wire(key.controller_id.clone(), key.tool_id.clone(), proof.schema_id(), raw)
+-                    .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?,
++                None => self.tool_jobs.admit_exact_wire(key.controller_id.clone(), key.tool_id.clone(), proof.schema_id(), raw).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?,
+             };
+             if decoded_items > proof.contract().max_decoded_items || !proof.admits::<A>(&admission) {
+                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-admission"), format!("framework route '{verb}' failed its exact owner/factory/schema/contract admission")));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:17698:
+                 return Ok(QualifiedToolProof::FrameworkOwned(registration.clone()));
+             }
+             if self.bounded_tool_proofs.contains_key(verb) {
+-                return Err(Fault::new(
+-                    FaultOrigin::Framework,
+-                    FaultCode::new("interactive-job.missing-owned-reducer"),
+-                    format!("typed command '{verb}' has only a generic proof and no exact app-owned retained decoder/reducer factory"),
+-                ));
++                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-owned-reducer"), format!("typed command '{verb}' has only a generic proof and no exact app-owned retained decoder/reducer factory")));
+             }
+             Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-factory"), format!("typed command '{verb}' has no exact controller/owner/factory/tool/schema proof")))
+         }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:17732:
+             };
+             validate_ui_dispatch_classification("owner", verb, definition)?;
+             let key = proof.key();
+-            let (admission, input) = self
+-                .tool_jobs
+-                .begin_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), payload.len())
+-                .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
++            let (admission, input) =
++                self.tool_jobs.begin_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), payload.len()).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
+             let mut writer = TypedCommandWireWriter { input, page: [0; semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES], len: 0 };
+             std::io::Write::write_all(&mut writer, payload).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+             let raw_wire = writer.finish()?;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20469:
+                     self.require_tool_operation_authority(&admission)?;
+                     let encoded = ::protocol::OpBinary::encode_op(&config_mutation).map_err(|error| error.into_fault())?;
+                     if encoded.len() > admission.proof.contract().max_output_bytes {
+-                        return Err(Fault::new(
+-                            FaultOrigin::Framework,
+-                            FaultCode::new("interactive-job.host-configuration-output"),
+-                            format!("host configuration action '{action}' exceeds its exact output cap"),
+-                        ));
++                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.host-configuration-output"), format!("host configuration action '{action}' exceeds its exact output cap")));
+                     }
+                     let previous_kind = self.invocation_kind.replace(definition.kind);
+                     let result = self.dispatch_emit(action, Emit::config(vec![config_mutation]), meta).await;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20516:
+                 self.require_tool_operation_authority(&admission)?;
+                 let encoded = ::protocol::OpBinary::encode_op(&config_mutation).map_err(|error| error.into_fault())?;
+                 if encoded.len() > admission.proof.contract().max_output_bytes {
+-                    return Err(Fault::new(
+-                        FaultOrigin::Framework,
+-                        FaultCode::new("interactive-job.host-configuration-output"),
+-                        format!("host configuration command '{command_id}' exceeds its exact output cap"),
+-                    ));
++                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.host-configuration-output"), format!("host configuration command '{command_id}' exceeds its exact output cap")));
+                 }
+                 let previous_kind = self.invocation_kind.replace(kind);
+                 let result = self.dispatch_emit(command_id, Emit::config(vec![config_mutation]), meta).await;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20552:
+             if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.stage == MountedTypedCommandFullOperationStage::Publishing) {
+                 return Ok(());
+             }
+-            let mut mounted = self
+-                .tool_operations
+-                .remove(operation_id)
+-                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
++            let mut mounted =
++                self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.publication-authority"), "typed-operation publication owner changed before one-unit transfer"))?;
+             let outcome = self.publish_mounted_typed_operation_unit(&mut mounted).await;
+             if let Err(fault) = outcome {
+                 mounted.publication_attempt = mounted.publication_attempt.saturating_add(1);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20585:
+             let live_revision = self.store.content_revision_now();
+             let live_generation = self.store.generation_now();
+             let live_short = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
+-            if mounted.canonical_revision != live_revision
+-                || !matches!(semio_framework_job::validate_commit(&mounted.operation, live_short, semio_framework_job::Generation(live_generation)), semio_framework_job::CommitValidation::Accepted)
+-            {
++            if mounted.canonical_revision != live_revision || !matches!(semio_framework_job::validate_commit(&mounted.operation, live_short, semio_framework_job::Generation(live_generation)), semio_framework_job::CommitValidation::Accepted) {
+                 let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, b"typed-operation publication rejected a stale immutable root")?;
+                 return mounted.queue_page(page);
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20640:
+                         mounted.transient_generation = receipt.generation_after;
+                         TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Transient, &receipt)?
+                     } else if let Some(child) = emit.child_emits.last().cloned() {
+-                        let receipt = self
+-                            .dispatch_emit_group(
+-                                &mounted.verb,
+-                                Vec::new(),
+-                                vec![child.clone()],
+-                                None,
+-                                Vec::new(),
+-                                Vec::new(),
+-                                semio_framework::kernel::UiDirtyScope::None,
+-                                None,
+-                                &mounted.meta,
+-                            )
+-                            .await?;
++                        let receipt = self.dispatch_emit_group(&mounted.verb, Vec::new(), vec![child.clone()], None, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None, None, &mounted.meta).await?;
+                         drop(emit.child_emits.pop());
+                         TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Child, &(child.slot, child.child_id, receipt.inverse_group.member_edits.len()))?
+                     } else if let Some(effect) = emit.effects.pop() {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20703:
+             self.require_tool_operation_authority(admission)?;
+             match admission.proof {
+                 QualifiedToolProof::AppOwned(_) => Ok(()),
+-                QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => Err(Fault::new(
+-                    FaultOrigin::Framework,
+-                    FaultCode::new("interactive-job.missing-owned-reducer"),
+-                    format!("typed command '{}' has no exact app-owned retained decoder/reducer factory", admission.verb),
+-                )),
++                QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => {
++                    Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-owned-reducer"), format!("typed command '{}' has no exact app-owned retained decoder/reducer factory", admission.verb)))
++                }
+             }
+         }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20752:
+             let retained_wire_admission = admission.wire_admission.clone();
+             let app_owned_retained_route = matches!(&admission.proof, QualifiedToolProof::AppOwned(_));
+             let mut retained_wire = Some(admission.raw_wire);
+-            let raw_input = if app_owned_retained_route {
+-                ArtifactToolRawInput::transferred_to_factory()
+-            } else {
+-                ArtifactToolRawInput::new(retained_wire.take().expect("generic retained wire owner remains mounted"))
+-            };
++            let raw_input = if app_owned_retained_route { ArtifactToolRawInput::transferred_to_factory() } else { ArtifactToolRawInput::new(retained_wire.take().expect("generic retained wire owner remains mounted")) };
+             let output_chunks = ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes);
+             let operation_spec = match admission.proof.clone() {
+                 QualifiedToolProof::Bounded(_) => {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20823:
+                 .await?
+                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-owned-builder"), format!("app-owned tool '{verb}' registered a factory but supplied no exact payload builder")))?,
+                 QualifiedToolProof::FrameworkOwned(_) => {
+-                    return Err(Fault::new(
+-                        FaultOrigin::Framework,
+-                        FaultCode::new("interactive-job.framework-route"),
+-                        format!("framework-owned tool '{verb}' cannot enter the application typed-command reducer"),
+-                    ));
++                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.framework-route"), format!("framework-owned tool '{verb}' cannot enter the application typed-command reducer")));
+                 }
+             };
+             let dispatch = if app_owned_retained_route {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:20917:
+             }
+             let proof = self.qualified_tool_proof("import-media")?;
+             let key = proof.key();
+-            let admission = self
+-                .tool_jobs
+-                .admit_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), &[])
+-                .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
++            let admission = self.tool_jobs.admit_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), &[]).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
+             if !proof.admits::<A>(&admission) {
+                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.factory-identity"), "media import resolved outside its exact controller/owner/factory/tool/schema proof"));
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:21344:
+                 let Some((_, operation_id)) = self.tool_operations.next_id_from(0) else {
+                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "typed operation registry changed during bounded close"));
+                 };
+-                let operation = self
+-                    .tool_operations
+-                    .get_mut(operation_id)
+-                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "typed operation owner changed during bounded close"))?;
++                let operation = self.tool_operations.get_mut(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "typed operation owner changed during bounded close"))?;
+                 let step = match operation.stage {
+                     MountedTypedCommandFullOperationStage::Worker => {
+                         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:21375:
+                     if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.terminal_is_empty()) {
+                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-terminal"), "typed operation close reported Complete without exact terminal emptiness"));
+                     }
+-                    let operation = self
+-                        .tool_operations
+-                        .remove(operation_id)
+-                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "terminal typed operation changed before exact removal"))?;
++                    let operation =
++                        self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "terminal typed operation changed before exact removal"))?;
+                     drop(operation);
+                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                 }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:21864:
+                         .tool_operations
+                         .get_mut(operation_id)
+                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "typed operation authority changed during one fixed maintenance step"))?;
+-                    let step = if operation.stage == MountedTypedCommandFullOperationStage::Retiring {
+-                        operation.retirement_step(maximum_items.min(1), maximum_bytes)?
+-                    } else {
+-                        operation.drive_worker_step(&pool)?
+-                    };
++                    let step = if operation.stage == MountedTypedCommandFullOperationStage::Retiring { operation.retirement_step(maximum_items.min(1), maximum_bytes)? } else { operation.drive_worker_step(&pool)? };
+                     if step == PluginCloseStep::Complete {
+                         if !self.tool_operations.get_mut(operation_id).is_some_and(|operation| operation.terminal_is_empty()) {
+                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness"));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:21875:
+                         }
+-                        let operation = self
+-                            .tool_operations
+-                            .remove(operation_id)
+-                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "terminal typed operation changed before exact removal"))?;
++                        let operation =
++                            self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "terminal typed operation changed before exact removal"))?;
+                         drop(operation);
+                         return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:22248:
+             if token.receiver != self.live_runtime_instance_id.unwrap_or(u32::MAX) {
+                 return Ok(false);
+             }
+-            let download_ack = self
+-                .tool_operations
+-                .get(token.operation)
+-                .and_then(|operation| operation.result_page.as_ref().map(|page| (operation, page)))
+-                .is_some_and(|(operation, page)| {
+-                    page.token == token
+-                        && page.lane == TypedOperationResultLane::Download
+-                        && operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck
+-                        && matches!(operation.publication.as_ref(), Some(ArtifactToolCompletionValue::Download(Ok(_), _)))
+-                });
++            let download_ack = self.tool_operations.get(token.operation).and_then(|operation| operation.result_page.as_ref().map(|page| (operation, page))).is_some_and(|(operation, page)| {
++                page.token == token
++                    && page.lane == TypedOperationResultLane::Download
++                    && operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck
++                    && matches!(operation.publication.as_ref(), Some(ArtifactToolCompletionValue::Download(Ok(_), _)))
++            });
+             if download_ack && (!self.segmented_downloads.can_insert(token.operation) || !self.segmented_closures.can_insert(token.operation)) {
+                 return Ok(false);
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:22266:
+             if !accepted || !download_ack {
+                 return Ok(accepted);
+             }
+-            let publication = operation
+-                .publication
+-                .take()
+-                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-owner"), "download ACK lost its exact retained publication owner"))?;
++            let publication = operation.publication.take().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-owner"), "download ACK lost its exact retained publication owner"))?;
+             let ArtifactToolCompletionValue::Download(Ok(download), ephemeral) = publication else {
+                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-owner"), "download ACK resolved a non-download retained publication owner"));
+             };
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:22370:
+             let verb = intent.action.name.as_str();
+             let proof = self.qualified_tool_proof(verb)?;
+             let _ = (proof, meta);
+-            Err(Fault::new(
+-                FaultOrigin::Framework,
+-                FaultCode::new("interactive-job.intent-raw-owner-required"),
+-                format!("UI intent '{verb}' has no retained raw-page owner; application intent parsing is not admitted"),
+-            ))
++            Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.intent-raw-owner-required"), format!("UI intent '{verb}' has no retained raw-page owner; application intent parsing is not admitted")))
+         }
+ 
+         /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes each lane's wire ops back into this
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:24227:
+         }
+         async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
+         /// 🎭️ Renders against the same instance-retained operation owner used by typed jobs.
+-        async fn render_with_instance_operation_owner(
+-            owner: &ArtifactInstanceOperationOwnerHandle,
+-            body_key: &str,
+-            doc: &ArtifactView<'_, Self::Snapshot>,
+-            cfg: &ConfigView<'_, Self::Config>,
+-        ) -> UiAssemblyResult<ComponentTree> {
++        async fn render_with_instance_operation_owner(owner: &ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
+             let _ = owner;
+             Self::render(body_key, doc, cfg).await
+         }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:24635:
+         async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
+             E::render(body_key, doc, cfg).await
+         }
+-        async fn render_with_instance_operation_owner(
+-            owner: &ArtifactInstanceOperationOwnerHandle,
+-            body_key: &str,
+-            doc: &ArtifactView<'_, Self::Snapshot>,
+-            cfg: &ConfigView<'_, Self::Config>,
+-        ) -> UiAssemblyResult<ComponentTree> {
++        async fn render_with_instance_operation_owner(owner: &ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
+             E::render_with_instance_operation_owner(owner, body_key, doc, cfg).await
+         }
+         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:28421:
+         for frame in frames.iter() {
+             frame_bytes.push(protocol::encode_app_frame(frame).await);
+         }
+-        PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_result: None }
++        PluginExchangeOutput {
++            frames: frame_bytes,
++            effects: effect_bytes,
++            events: event_bytes,
++            retry_command: None,
++            command_terminal_fault: None,
++            presence_pending: None,
++            presence_terminal: None,
++            presence_terminal_fault: None,
++            typed_operation_result: None,
++        }
+     }
+ 
+     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches every `intents` entry for
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:28476:
+         for frame in frames.iter() {
+             frame_bytes.push(protocol::encode_app_frame(frame).await);
+         }
+-        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_result: None })
++        Ok(PluginExchangeOutput {
++            frames: frame_bytes,
++            effects: effect_bytes,
++            events: event_bytes,
++            retry_command: None,
++            command_terminal_fault: None,
++            presence_pending: None,
++            presence_terminal: None,
++            presence_terminal_fault: None,
++            typed_operation_result: None,
++        })
+     }
+ 
+     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains `instance_id`'s render-plane presence
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:28635:
+                 PluginCommandIngressStep::TerminalFault(fault) => {
+                     command_terminal_fault = Some(dsl::encode_fault_bytes(&fault));
+                     push_app_fault(&mut frames, Some(envelope_seq), fault).await;
+-                    return Ok(PluginExchangeOutput { frames: encode_exchange_frames(&frames).await, effects: effect_bytes, events: event_bytes, retry_command, command_terminal_fault, presence_pending, presence_terminal, presence_terminal_fault, typed_operation_result: None });
++                    return Ok(PluginExchangeOutput {
++                        frames: encode_exchange_frames(&frames).await,
++                        effects: effect_bytes,
++                        events: event_bytes,
++                        retry_command,
++                        command_terminal_fault,
++                        presence_pending,
++                        presence_terminal,
++                        presence_terminal_fault,
++                        typed_operation_result: None,
++                    });
+                 }
+             },
+             None => None,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:29171:
+             event_bytes.push(encode_wire_serialized(&event));
+         }
+         if let Some(ui_scope) = typed_ui_scope {
+-            frames.push(protocol::AppFrame::Invocation {
+-                in_reply_to: 0,
+-                output: Vec::new(),
+-                diagnostics: Vec::new(),
+-                ui_scope: encode_wire_serialized(&ui_scope),
+-                history_patch: Vec::new(),
+-                messages: Vec::new(),
+-            });
++            frames.push(protocol::AppFrame::Invocation { in_reply_to: 0, output: Vec::new(), diagnostics: Vec::new(), ui_scope: encode_wire_serialized(&ui_scope), history_patch: Vec::new(), messages: Vec::new() });
+         }
+ 
+         let ephemeral = with_instances_mut(runtime, |list| {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ //! `🔖️Manifest` region that calls one `definition()` per node.
+ 
+ use crate::artifacts::draw::op::DrawMutation;
+-use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
++use crate::artifacts::draw::{DRAW_DOCUMENT_SCHEMA, DrawSnapshot};
+ use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
+ use crate::editor::draw::commands::{
+     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:20:
+ use crate::editor::draw::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
+ use crate::editor::draw::presence::{DrawPresence, DrawPresenceMutation};
+ use crate::editor::draw::terminology::DrawPlayLabels;
++use semio_framework_job::FixedOperationOwner;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+     ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:27:
+     WindowEngagementStatus,
+ };
+ use serde_json::Value;
+-use semio_framework_job::FixedOperationOwner;
+ use store::ArtifactPack;
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:52:
+     semio_framework_plugin::ActionFactory::new(DRAW_PLAY_CONTROLLER_ID).action(action, args)
+ }
+ 
+-
+ /// 🧱️ Admits one fixed UI text action value without JSON staging.
+ pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
+-        .map(semio_framework_plugin::UiValue::Text)
+-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
++    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+ }
+ 
+ /// 🔘️ Admits one boolean UI action value.
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:70:
+     semio_framework_plugin::UiValue::Number(value.into())
+ }
+ 
+-
+ /// 📚️ Admits one fixed UI list action value without dynamic staging.
+ pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
+-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
++    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+     for value in values {
+-        builder
+-            .push(value)
+-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
++        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+     }
+     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
+ }
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:85:
+ 
+ /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
+ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
+-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
++    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+     for (key, value) in values {
+-        builder
+-            .push(key.to_owned(), value)
+-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
++        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+     }
+     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+ }
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:100:
+     let mut nodes = semio_framework_plugin::UiFixedList::default();
+     for value in values {
+         let node = value?;
+-        nodes
+-            .try_push(node)
+-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
++        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+     }
+     Ok(nodes)
+ }
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:109:
+ 
+-
+ /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
+ /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
+ async fn draw_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:245:
+             })?;
+             self.active = Some((live_key, base_revision));
+         }
+-        let retained = self
+-            .operations
+-            .get_mut(live_key)
+-            .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.owner"), "the exact Draw gesture owner changed before its bounded reducer step"))?;
++        let retained = self.operations.get_mut(live_key).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.owner"), "the exact Draw gesture owner changed before its bounded reducer step"))?;
+         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.owner"), "the Draw gesture session is already closing"))?;
+         session.interaction.ids = selection.selection.get(DRAW_INTERACTION_DOMAIN).map_or_else(Vec::new, |domain| domain.ids.clone());
+         let doc = ArtifactView::with_operation(snapshot, history, operation);
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:491:
+     }
+ }
+ 
+-async fn render_draw_body(
+-    body_key: &str,
+-    document: &DrawSnapshot,
+-    config: &DrawConfig,
+-    session: &DrawSession,
+-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
++async fn render_draw_body(body_key: &str, document: &DrawSnapshot, config: &DrawConfig, session: &DrawSession) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+     let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
+     let active_utility = config.active_utility_id.as_str();
+     match body_key {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1024:
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+-    use crate::artifacts::draw::schema::{default_draw_document, layer_id, semio_draw_example_json};
+     use crate::artifacts::draw::DrawLayerNode;
++    use crate::artifacts::draw::schema::{default_draw_document, layer_id, semio_draw_example_json};
+     use semio_framework_plugin::kernel::Effect;
+-    use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
+-    use testkit::{draw_app, draw_app_with_registry, set_utility, DrawApp};
++    use semio_framework_plugin::{PluginApp, SET_ACTIVE_UTILITY_ACTION_ID, ViewModel, testkit as fw_testkit};
++    use testkit::{DrawApp, draw_app, draw_app_with_registry, set_utility};
+ 
+     fn draw_envelope_wire() -> Vec<u8> {
+         use store::ArtifactPack;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs:5:
+ use crate::artifacts::draw::{DrawCamera, DrawLayerNode, DrawSnapshot, PathSegment};
+ use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
+ use crate::editor::draw::{DRAW_INTERACTION_DOMAIN, DRAW_INTERACTION_GRANULARITY};
+-use semio_framework_plugin::{kernel::Effect, ArtifactView, ConfigView, Emit, Fault, RequestId};
++use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, RequestId, kernel::Effect};
+ use std::collections::BTreeMap;
+ use std::sync::atomic::{AtomicU64, Ordering};
+ use std::sync::{Mutex, OnceLock};
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs:1124:
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+-    use crate::editor::draw::testkit::{draw_app_with_registry, set_utility, DrawApp};
+     use crate::editor::draw::DrawCommand;
++    use crate::editor::draw::testkit::{DrawApp, draw_app_with_registry, set_utility};
+     use semio_framework::kernel::Effect;
+-    use semio_framework_plugin::testkit::meta;
+     use semio_framework_plugin::PluginApp;
++    use semio_framework_plugin::testkit::meta;
+ 
+     fn payload(generation: Option<u64>) -> CanvasPointerDown {
+         CanvasPointerDown { x: 1.0, y: 1.0, width: 100.0, height: 100.0, shift: false, ctrl: false, meta: false, generation, checkpoint_completed_work: None, checkpoint_pending_work: None, ..Default::default() }

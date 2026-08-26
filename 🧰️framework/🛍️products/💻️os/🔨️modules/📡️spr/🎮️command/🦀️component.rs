@@ -243,7 +243,7 @@ pub trait SemanticMutation<P>: Mutation<P> {
 
 //#region 🔖️Collection
 /// 🧬️ Collection identity/patch/diff/ops — single source of truth in VCS (`crate::os_vcs`).
-pub use crate::os_vcs::{CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable, apply_collection_mutation, collection_diff_from_mutation, inverse_collection_mutation};
+pub use crate::os_vcs::{apply_collection_mutation, collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable};
 
 //#endregion 🔖️Collection
 
@@ -377,7 +377,7 @@ where
     added.sort_unstable_by_key(|(_, (index, _))| *index);
     let mut next_len = items.len() - diff.removed.len();
     for (ordinal, (position, (index, _))) in added.iter().enumerate() {
-        if ordinal > 0 && added[ordinal - 1].1.0 == *index {
+        if ordinal > 0 && added[ordinal - 1].1 .0 == *index {
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("final index {index} is added more than once")).at(["added".to_string(), position.to_string()]));
         }
         if *index > next_len {
@@ -869,7 +869,11 @@ mod tests {
         }
         fn diff_patch(&self, other: &Self) -> Option<i64> {
             let delta = other.value - self.value;
-            if delta == 0 { None } else { Some(delta) }
+            if delta == 0 {
+                None
+            } else {
+                Some(delta)
+            }
         }
     }
     //#endregion 🧸️Fixtures
@@ -1366,7 +1370,11 @@ mod tests {
     }
     impl DiffRegions for AddDiff {
         fn touches(&self) -> TouchedPaths {
-            if self.delta == 0 { TouchedPaths::default() } else { TouchedPaths::new(["value"]) }
+            if self.delta == 0 {
+                TouchedPaths::default()
+            } else {
+                TouchedPaths::new(["value"])
+            }
         }
     }
 

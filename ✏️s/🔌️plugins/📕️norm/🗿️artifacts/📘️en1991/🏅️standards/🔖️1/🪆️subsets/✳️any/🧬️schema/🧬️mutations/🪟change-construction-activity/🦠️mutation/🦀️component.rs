@@ -12,13 +12,13 @@ pub struct ChangeConstructionActivity {
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeConstructionActivity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "construction-activity", kind: "change-construction-activity", record: "ChangedConstructionActivity" };
 
-    async fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
+    fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change construction activity to \"{}\"", self.new_construction_activity)
     }
 }

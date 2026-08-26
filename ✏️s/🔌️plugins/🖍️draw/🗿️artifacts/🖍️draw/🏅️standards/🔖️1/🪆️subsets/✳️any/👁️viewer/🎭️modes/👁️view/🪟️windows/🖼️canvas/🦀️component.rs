@@ -7,23 +7,20 @@
 
 use crate::artifacts::draw::schema::{flatten_draw_document_to_scene_nodes, resolve_draw_artboard};
 use crate::artifacts::draw::{DrawArtboard, DrawCamera, DrawSnapshot, PathSegment};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "draw-view-canvas";
 pub const BODY_KEY: &str = "draw.view.canvas";
 pub const SURFACE_ID: &str = "draw.view.composite";
-/// 👁️ Read-only counterpart of the editor's `DRAW_PLAY_CONTROLLER_ID` controller id — kept distinct
-/// so a viewer session's canvas controller can never be mistaken for an editor session's.
-const DRAW_VIEW_CONTROLLER_ID: &str = "draw-view";
 const DRAW_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
 const DRAW_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::draw::create_draw_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Canvas", "Leinwand"),
@@ -47,7 +44,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `DrawSnapshot -> UiNode` read: a hardcoded default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gesture overlay, real artboard frame +
 /// document content read straight off the document.
-pub async fn render(document: &DrawSnapshot) -> UiNode {
+pub fn render(document: &DrawSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = DrawCamera::default();
     let artboard_records = artboard_scene_records(document);
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
@@ -56,13 +53,17 @@ pub async fn render(document: &DrawSnapshot) -> UiNode {
     for node in &scene_nodes {
         records.push(serde_json::to_value(node).unwrap_or(Value::Null));
     }
-    build_canvas_2d_scene(SURFACE_ID, DRAW_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None })
+    scene_surface(
+        SURFACE_ID,
+        semio_framework_ui_contract::SurfaceKind::Canvas2d,
+        &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None },
+    )
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension
 /// label — cosmetic, dropped for the viewer's minimal first pass) — duplicated on purpose rather than
 /// imported through the sibling editor module, which `policyViewerPurityBreaches` forbids outright.
-async fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
+fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
     let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);

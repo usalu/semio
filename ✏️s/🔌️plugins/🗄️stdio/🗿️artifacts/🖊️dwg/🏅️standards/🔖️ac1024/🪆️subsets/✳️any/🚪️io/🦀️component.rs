@@ -1819,17 +1819,6 @@ fn dwg_encode_entity_common(body: &mut DwgBitWriter, handles: &mut DwgBitWriter,
     handles.write_handle(5, layer_handle);
 }
 
-struct DwgEntityCommon {
-    entmode: u8,
-    num_reactors: u32,
-    xdic_missing: bool,
-    color_book: bool,
-    ltype_flags: u8,
-    plotstyle_flags: u8,
-    material_flags: u8,
-    color: DwgColor,
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dwg_skip_r2010_graphic(reader: &mut DwgBitReader<'_>) -> Result<(), String> {
     if reader.read_b()? {
@@ -1839,56 +1828,33 @@ fn dwg_skip_r2010_graphic(reader: &mut DwgBitReader<'_>) -> Result<(), String> {
     Ok(())
 }
 
+/// 🎨️ The typed common-entity colour narrowed to the drawing model's own three-way `DwgColor`. A
+/// true-colour entity has no index to carry here, so it lands on its ACI index — the same widening
+/// `DwgColor::from_bs` performs — rather than being refused: this projection is geometry, and a
+/// colour it cannot name is not a reason to drop a polyline.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_decode_r2010_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgEntityCommon, String> {
-    dwg_skip_r2010_graphic(reader)?;
-    let entmode = reader.read_bb()?;
-    let num_reactors = reader.read_bl()?;
-    let xdic_missing = reader.read_b()?;
-    let _nolinks = reader.read_b()?;
-    let encoded_color = reader.read_bs()?;
-    if encoded_color & 0x8000 != 0 {
-        let _rgb = reader.read_bl()?;
-    }
-    if encoded_color & 0x2000 != 0 {
-        let _transparency = reader.read_bl()?;
-    }
-    let color = DwgColor::from_bs(encoded_color & 0x01ff);
-    let _ltype_scale = reader.read_bd()?;
-    let ltype_flags = reader.read_bb()?;
-    let plotstyle_flags = reader.read_bb()?;
-    let material_flags = reader.read_bb()?;
-    let _shadow_flags = reader.read_rc()?;
-    let _invisibility = reader.read_bs()?;
-    let _lineweight = reader.read_rc()?;
-    Ok(DwgEntityCommon { entmode, num_reactors, xdic_missing, color_book: encoded_color & 0x4000 != 0, ltype_flags, plotstyle_flags, material_flags, color })
+fn entity_color_of(common: &DwgDecodedEntityCommon) -> DwgColor {
+    DwgColor::from_bs(common.logical.color.index)
 }
 
+/// 🧬️ The common-entity block as the drawing-geometry decoder needs it: an embedded preview bitmap
+/// is SKIPPED rather than refused (this path projects geometry and has no typed graphic model to put
+/// one in), and everything after it is read by the single shared
+/// [`decode_r2010_entity_common_fields`] rather than by a second transcription of the layout.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_decode_r2010_entity_handles(reader: &mut DwgBitReader<'_>, common: &DwgEntityCommon) -> Result<u64, String> {
-    if common.entmode == 0 {
-        reader.read_handle()?;
-    }
-    for _ in 0..common.num_reactors {
-        reader.read_handle()?;
-    }
-    if !common.xdic_missing {
-        reader.read_handle()?;
-    }
-    if common.color_book {
-        reader.read_handle()?;
-    }
-    let (_layer_code, layer_handle) = reader.read_handle()?;
-    if common.ltype_flags == 3 {
-        reader.read_handle()?;
-    }
-    if common.material_flags == 3 {
-        reader.read_handle()?;
-    }
-    if common.plotstyle_flags == 3 {
-        reader.read_handle()?;
-    }
-    Ok(layer_handle)
+fn dwg_decode_r2010_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgDecodedEntityCommon, String> {
+    dwg_skip_r2010_graphic(reader)?;
+    decode_r2010_entity_common_fields(reader)
+}
+
+/// 🔗️ The entity's layer, read out of the handle stream by the same shared walk the document
+/// decoder uses — including the R2010 visual-style handles the presence bits above gate. Handles are
+/// resolved RELATIVE to the entity's own handle, which is what makes the returned value an absolute
+/// handle the object map can be indexed by.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dwg_decode_r2010_entity_handles(reader: &mut DwgBitReader<'_>, common: &mut DwgDecodedEntityCommon, base: u64) -> Result<u64, String> {
+    decode_r2010_entity_common_handles(common, reader, base)?;
+    Ok(common.logical.layer_handle)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2021,10 +1987,10 @@ fn dwg_encode_entity(objects_bytes: &mut Vec<u8>, object_map: &mut Vec<(u64, usi
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
     match object_type {
         DWG_TYPE_LINE => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let z_is_zero = reader.read_b()?;
             let start_x = reader.read_rd()?;
             let end_x = reader.read_dd(start_x)?;
@@ -2038,60 +2004,60 @@ fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, hand
             };
             let _thickness = reader.read_bt()?;
             let _extrusion = reader.read_be()?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Line { start: [start_x, start_y, start_z], end: [end_x, end_y, end_z] })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Line { start: [start_x, start_y, start_z], end: [end_x, end_y, end_z] })))
         }
         DWG_TYPE_POINT => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let at = reader.read_3bd()?;
             let _thickness = reader.read_bt()?;
             let _extrusion = reader.read_be()?;
             let _x_axis_angle = reader.read_bd()?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Point { at })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Point { at })))
         }
         DWG_TYPE_CIRCLE => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let center = reader.read_3bd()?;
             let radius = reader.read_bd()?;
             let _thickness = reader.read_bt()?;
             let normal = reader.read_be()?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Circle { center, radius, normal })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Circle { center, radius, normal })))
         }
         DWG_TYPE_ARC => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let center = reader.read_3bd()?;
             let radius = reader.read_bd()?;
             let _thickness = reader.read_bt()?;
             let normal = reader.read_be()?;
             let start_angle = reader.read_bd()?;
             let end_angle = reader.read_bd()?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Arc { center, radius, start_angle, end_angle, normal })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Arc { center, radius, start_angle, end_angle, normal })))
         }
         DWG_TYPE_ELLIPSE => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let center = reader.read_3bd()?;
             let major_axis = reader.read_3bd()?;
             let normal = reader.read_3bd()?;
             let ratio = reader.read_bd()?;
             let start_param = reader.read_bd()?;
             let end_param = reader.read_bd()?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal })))
         }
         DWG_TYPE_TEXT => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let at = reader.read_3bd()?;
             let height = reader.read_bd()?;
             let rotation = reader.read_bd()?;
             let content = reader.read_t()?;
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Text { at, height, rotation, content })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Text { at, height, rotation, content })))
         }
         DWG_TYPE_FACE3D => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let has_no_flags = reader.read_b()?;
             let z_is_zero = reader.read_b()?;
             let first = [reader.read_rd()?, reader.read_rd()?, if z_is_zero { 0.0 } else { reader.read_rd()? }];
@@ -2102,11 +2068,11 @@ fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, hand
             if !has_no_flags {
                 let _invisible_edges = reader.read_bs()?;
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Face3d { corners })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Face3d { corners })))
         }
         DWG_TYPE_LWPOLYLINE => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let flags = reader.read_bs()?;
             if flags & 4 != 0 {
                 let _constant_width = reader.read_bd()?;
@@ -2141,11 +2107,11 @@ fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, hand
                 reader.read_bd()?;
                 reader.read_bd()?;
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::LwPolyline { closed: flags & 512 != 0, elevation, vertices, bulges })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::LwPolyline { closed: flags & 512 != 0, elevation, vertices, bulges })))
         }
         DWG_TYPE_SPLINE => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let degree = reader.read_bl()?;
             let cp_count = reader.read_bl()? as usize;
             let mut control_points = Vec::with_capacity(cp_count);
@@ -2162,22 +2128,22 @@ fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, hand
             for _ in 0..weight_count {
                 weights.push(reader.read_rd()?);
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Spline { degree, control_points, knots, weights })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Spline { degree, control_points, knots, weights })))
         }
         DWG_TYPE_POLYLINE3D => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let closed = reader.read_b()?;
             let count = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(count);
             for _ in 0..count {
                 vertices.push(reader.read_3bd()?);
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::Polyline3d { closed, vertices })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::Polyline3d { closed, vertices })))
         }
         DWG_TYPE_POLYLINE_PFACE => {
-            let common = dwg_decode_r2010_entity_common(reader)?;
+            let mut common = dwg_decode_r2010_entity_common(reader)?;
             let vcount = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(vcount);
             for _ in 0..vcount {
@@ -2194,8 +2160,8 @@ fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, hand
                 }
                 faces.push(face);
             }
-            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
-            Ok(Some((layer_handle, common.color, DwgGeometry::PolyfaceMesh { vertices, faces })))
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &mut common, base)?;
+            Ok(Some((layer_handle, entity_color_of(&common), DwgGeometry::PolyfaceMesh { vertices, faces })))
         }
         _ => Ok(None),
     }
@@ -7951,10 +7917,23 @@ fn entity_reference_mode(value: u8) -> crate::artifacts::dwg::schema::snapshot::
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_r2010_entity_common_main(data: &mut DwgBitReader<'_>) -> Result<DwgDecodedEntityCommon, String> {
-    use crate::artifacts::dwg::schema::snapshot::{DwgEntityColor, DwgEntityColorKind, DwgEntityCommon};
     if data.read_b()? {
         return Err("R2010 entity graphic requires a typed semantic graphic model".into());
     }
+    decode_r2010_entity_common_fields(data)
+}
+
+/// 🧬️ Every common-entity field AFTER the graphic-present bit, in ODA R2010 order. The one and only
+/// reading of that layout in this codec: `decode_r2010_entity_common_main` reaches it after refusing
+/// a graphic it cannot model, and the drawing-geometry decoder after skipping one it does not need.
+///
+/// ⚠️ Two version-gated details that a reader written against the R2000 layout gets wrong, and did:
+/// the `nolinks` bit is R13–R2000 ONLY and must NOT be consumed here, and R2010 adds three
+/// visual-style presence bits after `shadow_flags` — each one gating a handle in the handle stream.
+/// Off by those two bits, every subsequent field of a real AutoCAD entity decodes as noise.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decode_r2010_entity_common_fields(data: &mut DwgBitReader<'_>) -> Result<DwgDecodedEntityCommon, String> {
+    use crate::artifacts::dwg::schema::snapshot::{DwgEntityColor, DwgEntityColorKind, DwgEntityCommon};
     let mode = data.read_bb()?;
     let reactor_count = data.read_bl()? as usize;
     let extension_dictionary_missing = data.read_b()?;
@@ -11072,7 +11051,7 @@ fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawing, Str
             }
             layers.push(layer);
         } else {
-            let entity = dwg_decode_r2010_entity(object_type, &mut reader, &mut handle_reader)
+            let entity = dwg_decode_r2010_entity(object_type, &mut reader, &mut handle_reader, handle)
                 .map_err(|error| format!("R2004 entity {handle:#x} type {object_type}: {error}"))?
                 .ok_or_else(|| format!("R2004 entity {handle:#x} type {object_type} was classified as known but has no decoder"))?;
             pending_entities.push(entity);

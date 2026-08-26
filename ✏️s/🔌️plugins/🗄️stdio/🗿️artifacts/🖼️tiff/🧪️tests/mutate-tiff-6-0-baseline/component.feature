@@ -90,4 +90,4 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
   Scenario: Decode and re-encode the real scan without passing bytes through
     Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
     When the scan is decoded into a snapshot and re-serialized from that snapshot alone
-    Then the re-encoded bytes differ from the input, the document is still Baseline-conforming, and the INDEPENDENT IFD reader agrees on the geometry of both
+    Then the re-encoded bytes reproduce the reference writer's own file exactly, flipping one byte of the decoded raster changes them, the document is still Baseline-conforming, and the INDEPENDENT IFD reader agrees on the geometry of both

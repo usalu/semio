@@ -1,0 +1,3 @@
+[test] level=exhaustive cases=1 executed=30 passed=29 failed=1 errored=0 parity=14/15
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp::mutate-bmp-v3::mutate-set-pixel-data::rust::subject (1 differences)
+EXIT=1

@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "w17-dwg-probe"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "probe"
+path = "src/main.rs"
+
+[dependencies]
+semio-s-plugin-stdio = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }

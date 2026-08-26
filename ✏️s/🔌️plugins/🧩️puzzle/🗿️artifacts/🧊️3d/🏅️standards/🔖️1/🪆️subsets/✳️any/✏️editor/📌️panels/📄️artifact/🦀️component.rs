@@ -9,7 +9,10 @@ use crate::editor::puzzle3d::{
     PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, Label, RowAction, RowActionPlacement, Trigger};
-use semio_framework_plugin::{ActionFactory, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::{
+    ActionFactory, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
+};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -33,12 +36,9 @@ fn action(action: &str, args: Option<UiValue>) -> UiAssemblyResult<(semio_framew
     ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -51,27 +51,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -81,23 +74,14 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
 
-
 fn select_action(granularity: &str, id: &str) -> UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<UiValue>)> {
-    let targets = serde_json::to_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }])
-        .map_err(|error| PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
-    let args = ui_value_map([
-        ("domainId", ui_value_text(PUZZLE3D_INTERACTION_DOMAIN)?),
-        ("merge", ui_value_text("replace")?),
-        ("method", ui_value_text("pick")?),
-        ("targets", ui_value_text(targets)?),
-    ])?;
+    let targets = serde_json::to_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }]).map_err(|error| PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
+    let args = ui_value_map([("domainId", ui_value_text(PUZZLE3D_INTERACTION_DOMAIN)?), ("merge", ui_value_text("replace")?), ("method", ui_value_text("pick")?), ("targets", ui_value_text(targets)?)])?;
     action(INTERACTION_SELECT_ACTION_ID, Some(args))
 }
 
@@ -120,12 +104,7 @@ fn selectable_item(id: impl AsRef<str>, label: impl AsRef<str>, icon: &str, acti
 }
 
 fn flag_args(entity: &str, id: &str, flag: &str) -> UiAssemblyResult<UiValue> {
-    ui_value_map([
-        ("entity", ui_value_text(entity)?),
-        ("flag", ui_value_text(flag)?),
-        ("ids", ui_value_list([ui_value_text(id)?])?),
-        ("value", ui_value_bool(true)),
-    ])
+    ui_value_map([("entity", ui_value_text(entity)?), ("flag", ui_value_text(flag)?), ("ids", ui_value_list([ui_value_text(id)?])?), ("value", ui_value_bool(true))])
 }
 
 fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, entity: &str, id: &str) -> UiAssemblyResult<[RowAction; 2]> {
@@ -192,14 +171,9 @@ pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_frame
     }
     let mut attraction_items = UiFixedList::<BuiltNode>::default();
     for attraction in &fixture.attractions {
-        let item = selectable_item(
-            &attraction.id,
-            format!("{} → {}", attraction.attracting, attraction.attracted),
-            "link",
-            select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id),
-        )?
-        .try_build()
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction row admission failed"))?;
+        let item = selectable_item(&attraction.id, format!("{} → {}", attraction.attracting, attraction.attracted), "link", select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id))?
+            .try_build()
+            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction row admission failed"))?;
         attraction_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d attraction list admission failed"))?;
     }
     PanelTreeBuilder::new("puzzle3d-play-document")?

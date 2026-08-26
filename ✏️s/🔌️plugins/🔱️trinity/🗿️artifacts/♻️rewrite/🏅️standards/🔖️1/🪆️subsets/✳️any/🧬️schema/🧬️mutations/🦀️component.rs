@@ -80,7 +80,7 @@ pub fn inverse_rewrite_mutation_steps(mutation: &RewriteRuleMutation, base: &Rew
 pub type RewriteRuleEnvelope = ArtifactEnvelope<RewriteSnapshot, RewriteRuleMutation>;
 pub type RewriteRuleStore = ArtifactStore<RewriteSnapshot, RewriteRuleMutation>;
 
-pub async fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> RewriteRuleEnvelope {
+pub fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> RewriteRuleEnvelope {
     create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None)
 }
 //#endregion 🔖️Store
@@ -89,7 +89,7 @@ pub async fn create_rewrite_rule_envelope(id: &str, state: RewriteSnapshot) -> R
 /// 🔀️ Diffs two snapshots into a minimal typed semantic mutation set — the seam every command that
 /// still computes a whole `next: RewriteSnapshot` (convenient for JSON-body clause editing) uses to
 /// emit granular mutations instead of a whole-document replace.
-pub async fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+pub fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
     let mut mutations = Vec::new();
     if before.before_fixture_json != after.before_fixture_json {
         mutations.push(edit_before_fixture(after.before_fixture_json.clone()));
@@ -125,20 +125,20 @@ pub async fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &Rewrit
 //#endregion 🔖️SnapshotDiffHelper
 
 //#region 🔖️BatchHelpers
-pub async fn apply_rewrite_rule_mutation(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_rewrite_rule_mutation(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
     let outcome = protocol::Mutation::diff(mutation, snapshot);
     let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
     *snapshot = next;
     Ok(())
 }
 
-pub async fn inverse_rewrite_rule_mutation(snapshot: &RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
+pub fn inverse_rewrite_rule_mutation(snapshot: &RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
     protocol::Mutation::inverse(mutation, snapshot)
 }
 
 /// ▶️ Dispatches a batch of granular mutations (typically from `rewrite_snapshot_mutations`) as one
 /// VCS edit.
-pub async fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutations: Vec<RewriteRuleMutation>) -> Result<(), TrinityRewriteError> {
+pub fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutations: Vec<RewriteRuleMutation>) -> Result<(), TrinityRewriteError> {
     if mutations.is_empty() {
         return Ok(());
     }
@@ -175,7 +175,7 @@ mod tests {
     }
     use std::collections::BTreeMap;
 
-    async fn sample_rule_state() -> RewriteSnapshot {
+    fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));

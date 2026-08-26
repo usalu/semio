@@ -833,10 +833,10 @@ pub mod native {
 #[cfg(target_arch = "wasm32")]
 pub mod browser {
     use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
+    use semio_framework_async::browser::JsFuture;
     use semio_framework_async::OperationContext;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
-    use wasm_bindgen_futures::JsFuture;
     use web_sys::{BinaryType, MessageEvent, RequestInit, Response, WebSocket};
 
     #[derive(Clone)]

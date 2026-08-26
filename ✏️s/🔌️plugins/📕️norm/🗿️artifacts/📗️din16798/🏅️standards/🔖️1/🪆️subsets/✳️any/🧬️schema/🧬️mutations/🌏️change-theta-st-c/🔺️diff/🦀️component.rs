@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_theta_st_c::mutation::ChangeTh
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeThetaStC, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeThetaStC, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_theta_st_c.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Storage temperature must be a finite number, got {}.", payload.new_theta_st_c), Vec::<String>::new());
     }

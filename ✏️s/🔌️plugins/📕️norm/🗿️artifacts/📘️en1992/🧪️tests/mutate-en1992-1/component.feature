@@ -1,155 +1,155 @@
 @capability-en1992-1-mutate
-@no-oracle-en1992-1-mutation-semantics
+@oracle-en1992-1-python-independent
 @comparison-ordered-json-v1
 @mutations-en1992-1-any
-Feature: Apply every typed EN 1992 mutation to its committed specification fixtures
-  `s.norm.en1992` is a semio-NATIVE artifact — no third party reads or writes its
-  `.dsl.semio`/`.pack.semio` envelope — so there is no reference implementation to register as an
-  oracle. That is recorded as the `en1992-1-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and it means the runner
-  executes NO oracle role for this case: every assertion below lives inside the subject handler,
-  which compares the applied document against the committed after-snapshot and the undone document
-  against the committed before-snapshot, and fails with both documents printed. A handler that
-  merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed EN 1992 mutation against an independent Python implementation
+  `s.norm.en1992` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  assumed: PyPI serves no `en1992` distribution, and none for `eurocode`, `vdi3805` or `iso16757`
+  either, and the nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`)
+  implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
+  authoritative over this subset's `En1992Mutation` vocabulary. The second producer a differential
+  comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is
+  it: all 35 kinds of this vocabulary, written in Python from the repository's own written
+  specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
+  ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
+  `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape
+  rules — plus this subset's committed catalog for the closed list of kinds. It imports nothing from
+  the Rust it judges and transliterates none of it: the document field a `new*` argument names is
+  resolved by normalised spelling against the document's own keys, which is what the naming mechanic
+  states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the
+  spellings in THIS subset where that resolution can genuinely go wrong. The recorded no-oracle
+  decision it replaces is gone from
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a
+  reference to compare against.
 
-  Thirty-five document-root scalars, one `change-<field>` each, feeding five distinct EN 1992
-  checks: bending and shear (M_Ed, V_Ed, f_ck, b, d, A_s, f_yk, rho_l, N_Ed, P, A_c, the FEM
-  toggle, span and UDL), fire (rating and provided axis distance), bridge fatigue (concrete stress
-  and steel stress range), the liquid-retaining crack-width check (tightness class, h_D/h ratio,
-  sigma_s, rho_p,eff, f_ct,eff, E_s and s_r,max) and the anchor check (h_ef, the cracked-concrete
-  flag, f_uk, f_yk, A_s, d, c_1, N_Ed and V_Ed).
+  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path below is a declared `asset://` fixture, so neither side holds a transcription that could
+  drift. All thirty-five kinds are flat `change-<field>` edits, and this subset's own difficulty is
+  PREFIX FAMILIES: ten `change-anchor-*` keys, five `change-liquid-*` keys and two `change-bridge-*`
+  keys sit in the same document as the bare section keys they shadow (`change-anchor-as-mm2` beside
+  `change-as-mm2`, `change-anchor-d-mm` beside `change-d-mm`). Resolving `new_as_mm2` by normalised
+  spelling has to land on the bare key and not on the anchor one, and that is a genuine way for an
+  independent reading to go wrong. Each side then asserts the same three laws in role — the applied
+  document must BE the committed after-snapshot; an `applied` vector must move the document and a
+  `rejected` one must leave it bit-identical; and the mutation followed by its OWN computed inverse
+  must restore the before-snapshot exactly. What `parity` adds on top is the only thing a single
+  implementation can never provide: that two implementations, in two languages, written from one
+  written specification, reach the same document.
 
-  Three of the five families carry their OWN copy of a symbol that already exists at the document
-  root — `change-liquid-sigma-s-mpa` beside `change-bridge-delta-sigma-s-mpa`,
-  `change-anchor-as-mm2` beside `change-as-mm2`, `change-anchor-f-yk-mpa` beside `change-f-yk`,
-  `change-anchor-n-ed-kn`/`change-anchor-v-ed-kn` beside `change-n-ed-kn`/`change-v-ed-kn`. They
-  are different physical quantities in different clauses that happen to share a symbol, and the
-  single most likely defect in this vocabulary is a diff builder wired to the wrong one of a pair.
-  Every scenario below compares the whole document, so writing the sibling field is a failure
-  rather than a plausible number.
-    The committed example is a liquid-retaining structure WITH a FEM run and an anchor check, so
-    the real asset actually exercises all three of the families that overlap.
+  `inverse-` projects BOTH the mutated and the restored document. Every kind is scalar, so the
+  restored document repeats the before-document on all thirty-five rows; only the mutated projection
+  distinguishes `change-as-mm2` from `change-anchor-as-mm2`, which is exactly the confusion this
+  case exists to catch.
 
-  Each of the 35 kinds carries its own independently handcrafted `(before, mutation, after, diff,
-  outcome)` quintet under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, and this
-  feature re-exercises those SAME committed bytes end to end through `apply_en1992_mutation`
-  rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture tests do.
-  The committed `🎯️outcome` decides which contract a row is held to: `applied` demands the
-  observability law (the document must MOVE), `rejected` demands the opposite and stricter one —
-  the mutation must be refused and the document must come back bit-identical. All 35 committed
-  vectors declare `applied`, so every row below is held to the observability law: a kind that left
-  the document bit-for-bit unchanged would fail rather than pass silently.
-
-  The identity scenario reads the real committed EN 1992 document at
-  `📚️examples/📕️liquid-retaining-fem-anchor`, not a fixture authored for this case. Its DSL
-  carrier is deliberately byte-preserving — the committed file IS this codec's own canonical
-  printer output, so reproducing it exactly is the correct answer and anything else is the defect
-  — which is why that half of the identity law is asserted as `carrier_is_exact` rather than as
-  the usual no-byte-pass-through inequality. The evidence that the document was genuinely PARSED
-  rather than copied comes from the other half: the same snapshot is round-tripped through two
-  further, independently written codecs — the binary `.pack.semio` protocol and the JSON
-  projection — and all three must agree on one document. The committed binary twin
-  `🎒️liquid-retaining-fem-anchor.pack.semio` is decoded and cross-checked against the text
-  artifact as well, so two separately committed files written by two separate codecs have to
-  describe the same EN 1992 document.
+  ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
+  `📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🗣️liquid-retaining-fem-anchor.dsl.semio` — a
+  named case that carries the liquid-retaining, FEM and anchor field families at once, which is why
+  every prefix family above is present in one document instead of being split across fixtures. It is
+  an authored case, not a submitted design. The carrier has no published grammar: the committed
+  `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` placeholder, so identity is
+  compared at the envelope preamble, the ordered `key=value` fields and the digest and length of the
+  re-emitted bytes, never at an inferred token-to-enum mapping.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot, mutation and outcome fixture for the <id> kind
-    When <id> is applied through apply_en1992_mutation
-    Then the resulting document matches the committed after-snapshot fixture for <id> and honours the committed outcome status
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id |
-      | change-annex |
-      | change-m-ed-knm |
-      | change-v-ed-kn |
-      | change-f-ck |
-      | change-b-mm |
-      | change-d-mm |
-      | change-as-mm2 |
-      | change-f-yk |
-      | change-rho-l |
-      | change-n-ed-kn |
-      | change-p-kn |
-      | change-ac-mm2 |
-      | change-use-fem |
-      | change-span-m |
-      | change-udl-kn-m |
-      | change-fire-rating |
-      | change-provided-axis-distance-mm |
-      | change-bridge-sigma-c-mpa |
-      | change-bridge-delta-sigma-s-mpa |
-      | change-tightness-class |
-      | change-hd-over-h |
-      | change-liquid-sigma-s-mpa |
-      | change-liquid-rho-p-eff |
-      | change-liquid-f-ct-eff-mpa |
-      | change-liquid-es-mpa |
-      | change-liquid-sr-max-mm |
-      | change-anchor-h-ef-mm |
-      | change-anchor-cracked |
-      | change-anchor-f-uk-mpa |
-      | change-anchor-f-yk-mpa |
-      | change-anchor-as-mm2 |
-      | change-anchor-d-mm |
-      | change-anchor-c1-mm |
-      | change-anchor-n-ed-kn |
-      | change-anchor-v-ed-kn |
+      | id                               | dir                               | fixture                                  |
+      | change-annex                     | 🐝set-snapshot                     | switches-annex-to-en                     |
+      | change-m-ed-knm                  | 🐮change-m-ed-knm                  | raises-m-ed-knm-to-187-5                 |
+      | change-v-ed-kn                   | 🦒change-v-ed-kn                   | raises-v-ed-kn-to-96-5                   |
+      | change-f-ck                      | 🐜change-f-ck                      | raises-f-ck-to-45-0                      |
+      | change-b-mm                      | 🦂change-b-mm                      | raises-b-mm-to-375-0                     |
+      | change-d-mm                      | 🕷️change-d-mm                     | raises-d-mm-to-512-5                     |
+      | change-as-mm2                    | 🐍change-as-mm2                    | raises-a-s-mm2-to-1608-5                 |
+      | change-f-yk                      | 🦔change-f-yk                      | raises-f-yk-to-550-0                     |
+      | change-rho-l                     | 🐘change-rho-l                     | raises-rho-l-to-0-015625                 |
+      | change-n-ed-kn                   | 🐷change-n-ed-kn                   | raises-n-ed-kn-to-62-5                   |
+      | change-p-kn                      | 🐗change-p-kn                      | raises-p-kn-to-45-5                      |
+      | change-ac-mm2                    | 🐞change-ac-mm2                    | raises-a-c-mm2-to-168750-0               |
+      | change-use-fem                   | 🐫change-use-fem                   | turns-use-fem-on                         |
+      | change-span-m                    | 🦏change-span-m                    | raises-span-m-to-7-5                     |
+      | change-udl-kn-m                  | 🐪change-udl-kn-m                  | raises-udl-kn-m-to-26-25                 |
+      | change-fire-rating               | 🦇change-fire-rating               | switches-fire-rating-to-r120             |
+      | change-provided-axis-distance-mm | 🦌change-provided-axis-distance-mm | raises-provided-axis-distance-mm-to-42-5 |
+      | change-bridge-sigma-c-mpa        | 🦗change-bridge-sigma-c-mpa        | raises-bridge-sigma-c-mpa-to-15-75       |
+      | change-bridge-delta-sigma-s-mpa  | 🦟change-bridge-delta-sigma-s-mpa  | raises-bridge-delta-sigma-s-mpa-to-132-5 |
+      | change-tightness-class           | 🦛change-tightness-class           | switches-tightness-class-to-tc2          |
+      | change-hd-over-h                 | 🦉change-hd-over-h                 | raises-hd-over-h-to-12-5                 |
+      | change-liquid-sigma-s-mpa        | 🐑change-liquid-sigma-s-mpa        | raises-liquid-sigma-s-mpa-to-235-5       |
+      | change-liquid-rho-p-eff          | 🦄change-liquid-rho-p-eff          | raises-liquid-rho-p-eff-to-0-0078125     |
+      | change-liquid-f-ct-eff-mpa       | 🐎change-liquid-f-ct-eff-mpa       | raises-liquid-f-ct-eff-mpa-to-3-25       |
+      | change-liquid-es-mpa             | 🐴change-liquid-es-mpa             | raises-liquid-e-s-mpa-to-205000-0        |
+      | change-liquid-sr-max-mm          | 🐐change-liquid-sr-max-mm          | raises-liquid-s-r-max-mm-to-312-5        |
+      | change-anchor-h-ef-mm            | 🦭change-anchor-h-ef-mm            | raises-anchor-h-ef-mm-to-105-0           |
+      | change-anchor-cracked            | 🐢change-anchor-cracked            | turns-anchor-cracked-on                  |
+      | change-anchor-f-uk-mpa           | 🐳change-anchor-f-uk-mpa           | raises-anchor-f-uk-mpa-to-900-0          |
+      | change-anchor-f-yk-mpa           | 🦈change-anchor-f-yk-mpa           | raises-anchor-f-yk-mpa-to-720-0          |
+      | change-anchor-as-mm2             | 🦋change-anchor-as-mm2             | raises-anchor-a-s-mm2-to-157-0           |
+      | change-anchor-d-mm               | 🐬change-anchor-d-mm               | raises-anchor-d-mm-to-16-0               |
+      | change-anchor-c1-mm              | 🐌change-anchor-c1-mm              | raises-anchor-c1-mm-to-137-5             |
+      | change-anchor-n-ed-kn            | 🐊change-anchor-n-ed-kn            | raises-anchor-n-ed-kn-to-22-5            |
+      | change-anchor-v-ed-kn            | 🦎change-anchor-v-ed-kn            | raises-anchor-v-ed-kn-to-11-25           |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_en1992_mutation
-    And the mutation's own computed inverse is applied through apply_en1992_mutation
-    Then the document matches the committed before-snapshot fixture again
+  @mode-differential
+  Scenario Outline: Undoing <id> restores its committed before-snapshot
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When each implementation applies the committed mutation and then its OWN computed inverse
+    Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id |
-      | change-annex |
-      | change-m-ed-knm |
-      | change-v-ed-kn |
-      | change-f-ck |
-      | change-b-mm |
-      | change-d-mm |
-      | change-as-mm2 |
-      | change-f-yk |
-      | change-rho-l |
-      | change-n-ed-kn |
-      | change-p-kn |
-      | change-ac-mm2 |
-      | change-use-fem |
-      | change-span-m |
-      | change-udl-kn-m |
-      | change-fire-rating |
-      | change-provided-axis-distance-mm |
-      | change-bridge-sigma-c-mpa |
-      | change-bridge-delta-sigma-s-mpa |
-      | change-tightness-class |
-      | change-hd-over-h |
-      | change-liquid-sigma-s-mpa |
-      | change-liquid-rho-p-eff |
-      | change-liquid-f-ct-eff-mpa |
-      | change-liquid-es-mpa |
-      | change-liquid-sr-max-mm |
-      | change-anchor-h-ef-mm |
-      | change-anchor-cracked |
-      | change-anchor-f-uk-mpa |
-      | change-anchor-f-yk-mpa |
-      | change-anchor-as-mm2 |
-      | change-anchor-d-mm |
-      | change-anchor-c1-mm |
-      | change-anchor-n-ed-kn |
-      | change-anchor-v-ed-kn |
+      | id                               | dir                               | fixture                                  |
+      | change-annex                     | 🐝set-snapshot                     | switches-annex-to-en                     |
+      | change-m-ed-knm                  | 🐮change-m-ed-knm                  | raises-m-ed-knm-to-187-5                 |
+      | change-v-ed-kn                   | 🦒change-v-ed-kn                   | raises-v-ed-kn-to-96-5                   |
+      | change-f-ck                      | 🐜change-f-ck                      | raises-f-ck-to-45-0                      |
+      | change-b-mm                      | 🦂change-b-mm                      | raises-b-mm-to-375-0                     |
+      | change-d-mm                      | 🕷️change-d-mm                     | raises-d-mm-to-512-5                     |
+      | change-as-mm2                    | 🐍change-as-mm2                    | raises-a-s-mm2-to-1608-5                 |
+      | change-f-yk                      | 🦔change-f-yk                      | raises-f-yk-to-550-0                     |
+      | change-rho-l                     | 🐘change-rho-l                     | raises-rho-l-to-0-015625                 |
+      | change-n-ed-kn                   | 🐷change-n-ed-kn                   | raises-n-ed-kn-to-62-5                   |
+      | change-p-kn                      | 🐗change-p-kn                      | raises-p-kn-to-45-5                      |
+      | change-ac-mm2                    | 🐞change-ac-mm2                    | raises-a-c-mm2-to-168750-0               |
+      | change-use-fem                   | 🐫change-use-fem                   | turns-use-fem-on                         |
+      | change-span-m                    | 🦏change-span-m                    | raises-span-m-to-7-5                     |
+      | change-udl-kn-m                  | 🐪change-udl-kn-m                  | raises-udl-kn-m-to-26-25                 |
+      | change-fire-rating               | 🦇change-fire-rating               | switches-fire-rating-to-r120             |
+      | change-provided-axis-distance-mm | 🦌change-provided-axis-distance-mm | raises-provided-axis-distance-mm-to-42-5 |
+      | change-bridge-sigma-c-mpa        | 🦗change-bridge-sigma-c-mpa        | raises-bridge-sigma-c-mpa-to-15-75       |
+      | change-bridge-delta-sigma-s-mpa  | 🦟change-bridge-delta-sigma-s-mpa  | raises-bridge-delta-sigma-s-mpa-to-132-5 |
+      | change-tightness-class           | 🦛change-tightness-class           | switches-tightness-class-to-tc2          |
+      | change-hd-over-h                 | 🦉change-hd-over-h                 | raises-hd-over-h-to-12-5                 |
+      | change-liquid-sigma-s-mpa        | 🐑change-liquid-sigma-s-mpa        | raises-liquid-sigma-s-mpa-to-235-5       |
+      | change-liquid-rho-p-eff          | 🦄change-liquid-rho-p-eff          | raises-liquid-rho-p-eff-to-0-0078125     |
+      | change-liquid-f-ct-eff-mpa       | 🐎change-liquid-f-ct-eff-mpa       | raises-liquid-f-ct-eff-mpa-to-3-25       |
+      | change-liquid-es-mpa             | 🐴change-liquid-es-mpa             | raises-liquid-e-s-mpa-to-205000-0        |
+      | change-liquid-sr-max-mm          | 🐐change-liquid-sr-max-mm          | raises-liquid-s-r-max-mm-to-312-5        |
+      | change-anchor-h-ef-mm            | 🦭change-anchor-h-ef-mm            | raises-anchor-h-ef-mm-to-105-0           |
+      | change-anchor-cracked            | 🐢change-anchor-cracked            | turns-anchor-cracked-on                  |
+      | change-anchor-f-uk-mpa           | 🐳change-anchor-f-uk-mpa           | raises-anchor-f-uk-mpa-to-900-0          |
+      | change-anchor-f-yk-mpa           | 🦈change-anchor-f-yk-mpa           | raises-anchor-f-yk-mpa-to-720-0          |
+      | change-anchor-as-mm2             | 🦋change-anchor-as-mm2             | raises-anchor-a-s-mm2-to-157-0           |
+      | change-anchor-d-mm               | 🐬change-anchor-d-mm               | raises-anchor-d-mm-to-16-0               |
+      | change-anchor-c1-mm              | 🐌change-anchor-c1-mm              | raises-anchor-c1-mm-to-137-5             |
+      | change-anchor-n-ed-kn            | 🐊change-anchor-n-ed-kn            | raises-anchor-n-ed-kn-to-22-5            |
+      | change-anchor-v-ed-kn            | 🦎change-anchor-v-ed-kn            | raises-anchor-v-ed-kn-to-11-25           |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed EN 1992 document through every encoding it has
+  Scenario: Re-emit the real committed EN 1992 document from the parsed carrier
     Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🗣️liquid-retaining-fem-anchor.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️liquid-retaining-fem-anchor/🖼️assets/🎒️liquid-retaining-fem-anchor.pack.semio
-    When the text artifact is parsed, printed back to DSL and parsed again, and the same document is round-tripped through the binary pack protocol and the JSON projection
-    Then the canonical DSL rendering is reproduced byte for byte and every decoding agrees on one EN 1992 document
+    When each implementation parses the artifact and prints it back to its canonical carrier bytes
+    Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

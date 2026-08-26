@@ -3,13 +3,24 @@
   "$id": "semio://sequence.browser-abi/v1",
   "title": "Sequence Browser ABI",
   "type": "object",
-  "required": ["version", "operations", "events", "limits", "identities", "framing"],
+  "required": ["version", "operations", "features", "events", "limits", "identities", "framing"],
   "properties": {
     "version": { "const": 1 },
     "operations": {
       "type": "object",
       "minProperties": 47,
       "additionalProperties": { "type": "integer", "minimum": 2300, "maximum": 2346 }
+    },
+    "features": {
+      "type": "object",
+      "minProperties": 10,
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 10,
+        "items": { "type": "string" },
+        "uniqueItems": true
+      }
     },
     "events": {
       "type": "object",
@@ -98,6 +109,18 @@
     "play": 2344,
     "pause": 2345,
     "stop": 2346
+  },
+  "features": {
+    "lifetime": ["open"],
+    "document": ["loadFixtureJson", "fixtureJson", "catalogueJson"],
+    "editing": ["addStep", "addStepDropped", "addStepToSlot", "setStepCollapsed", "pickStepIdAtScreen", "buildPathJson", "removeStep", "setStepParamsJson", "connectSteps", "disconnectSteps"],
+    "execution": ["compileText", "compiledWireLiteral", "run"],
+    "viewport": ["attachSurface", "gpuReady", "setSize", "renderFrame"],
+    "input": ["worldFromScreen", "pointerDownScreen", "pointerMoveScreen", "pointerUpScreen", "wheelScreen"],
+    "layout": ["reorganize", "lodScaleJson", "setAutomaticLod", "setForcedDrawLodLabel", "drawLodLabel", "setCanvasThemeJson"],
+    "selection": ["selectedNodeIds", "setSelection", "labelOverlayPaintStateJson", "hoveredNodeId"],
+    "preview": ["preselectNodeIdsJson", "selectionPreviewPointsJson", "selectionPreviewCrossing", "selectionPreviewMethod", "selectionUnionBoundsScreenJson", "setSelectionOptions", "setGhostStep", "clearGhostStep"],
+    "playback": ["play", "pause", "stop"]
   },
   "events": {
     "admitted": 2400,

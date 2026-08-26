@@ -26,7 +26,7 @@ fn mutation() -> En1994Mutation {
 
 /// ▶️ `change-m-ed-knm` carries `m_ed_knm` from 240.0 to 320.0 and lands on the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = outcome.diff().apply(&base).expect("change-m-ed-knm/raises-design-moment-to-320-knm: mutation applies to its committed before-snapshot");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ The inverse re-states the pre-edit `m_ed_knm` (240.0) and restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let outcome = forward.diff(&base);
@@ -52,7 +52,7 @@ async fn inverse_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1994Snapshot = serde_json::from_str(text).expect("change-m-ed-knm/raises-design-moment-to-320-knm: snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-m-ed-knm/raises-design-moment-to-320-knm: snapshot encodes");
@@ -66,7 +66,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared `applied` outcome holds — a clean 240.0→320.0 edit of `m_ed_knm` raises no diagnostic.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-m-ed-knm/raises-design-moment-to-320-knm: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-m-ed-knm/raises-design-moment-to-320-knm: this fixture declares an applied outcome");
     let base = before();
@@ -77,7 +77,7 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ The sparse delta is exactly the committed diff: `mEdKnm` set, every other field left null.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert_eq!(outcome.diff().m_ed_knm, Some(320.0), "change-m-ed-knm/raises-design-moment-to-320-knm: the diff must carry `m_ed_knm` = 320.0");
@@ -89,7 +89,7 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff is canonical and decodes to `En1994Diff`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1994Diff = serde_json::from_str(DIFF).expect("change-m-ed-knm/raises-design-moment-to-320-knm: committed diff decodes");
     assert_eq!(decoded.m_ed_knm, Some(320.0), "change-m-ed-knm/raises-design-moment-to-320-knm: the committed diff must name `m_ed_knm` = 320.0");
     let reencoded = serde_json::to_value(&decoded).expect("change-m-ed-knm/raises-design-moment-to-320-knm: diff re-encodes");
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff to `before` yields `after` — the 320.0 `m_ed_knm` edit is complete on its own.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: En1994Diff = serde_json::from_str(DIFF).expect("change-m-ed-knm/raises-design-moment-to-320-knm: committed diff decodes");
     let produced = decoded.apply(&base).expect("change-m-ed-knm/raises-design-moment-to-320-knm: committed diff applies to the before-snapshot");

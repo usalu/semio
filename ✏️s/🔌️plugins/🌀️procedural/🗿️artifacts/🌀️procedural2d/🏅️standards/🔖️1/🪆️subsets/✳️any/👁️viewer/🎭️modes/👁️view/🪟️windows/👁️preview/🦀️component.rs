@@ -65,7 +65,11 @@ pub fn render(document: &Procedural2dSnapshot) -> semio_framework_plugin::UiAsse
         })
         .collect();
     let _ = PROCEDURAL2D_VIEW_CONTROLLER_ID;
-    crate::scene_surface(SURFACE_ID, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()), snapshot: None })
+    crate::scene_surface(
+        SURFACE_ID,
+        semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
+        &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()), snapshot: None },
+    )
 }
 //#endregion 🔖️Render
 

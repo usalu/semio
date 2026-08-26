@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-drift-mm` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `drift_mm` from 20.0 to 33.5, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_drift_mm_applies_to_committed_after() {
+fn change_drift_mm_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-drift-mm applies to its committed before-snapshot");
     assert_eq!(applied.drift_mm, 33.5, "change-drift-mm/raises-drift-mm-to-33-5: drift_mm must read 33.5 after the change");
     assert_eq!(applied, expected_after(), "change-drift-mm/raises-drift-mm-to-33-5: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_drift_mm_applies_to_committed_after() {
 /// ↩️ `change-drift-mm` is its own inverse partner: the inverse step restores `drift_mm` to its pre-change
 /// 20.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_drift_mm_inverse_restores_before() {
+fn change_drift_mm_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-drift-mm applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_drift_mm_inverse_restores_before() {
 /// decode then encode is a fixed point, so `driftMm` and `newDriftMm` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_drift_mm_committed_json_is_canonical() {
+fn change_drift_mm_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-drift-mm snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-drift-mm snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_drift_mm_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-drift-mm` at 33.5 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_drift_mm_declared_outcome_holds() {
+fn change_drift_mm_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-drift-mm outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-drift-mm/raises-drift-mm-to-33-5: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_drift_mm_declared_outcome_holds() {
 /// assertion: it pins that only `driftMm` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `heightM`.
 #[semio_framework_async_macros::async_test]
-async fn change_drift_mm_produces_committed_diff() {
+fn change_drift_mm_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().drift_mm, Some(33.5), "change-drift-mm/raises-drift-mm-to-33-5: the diff must set drift_mm to 33.5");
     assert!(outcome.diff().artifact.is_none(), "change-drift-mm/raises-drift-mm-to-33-5: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_drift_mm_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-drift-mm`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_drift_mm_committed_diff_is_canonical() {
+fn change_drift_mm_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-drift-mm committed diff decodes");
     assert_eq!(decoded.drift_mm, Some(33.5), "change-drift-mm/raises-drift-mm-to-33-5: the committed diff must carry drift_mm at 33.5");
     assert!(decoded.selected_check_index.is_none(), "change-drift-mm/raises-drift-mm-to-33-5: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_drift_mm_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 20.0 to 33.5 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_drift_mm_committed_diff_applies_to_after() {
+fn change_drift_mm_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-drift-mm committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-drift-mm committed diff applies to the before-snapshot");
     assert_eq!(produced.drift_mm, 33.5, "change-drift-mm/raises-drift-mm-to-33-5: the committed diff must leave drift_mm reading 33.5");

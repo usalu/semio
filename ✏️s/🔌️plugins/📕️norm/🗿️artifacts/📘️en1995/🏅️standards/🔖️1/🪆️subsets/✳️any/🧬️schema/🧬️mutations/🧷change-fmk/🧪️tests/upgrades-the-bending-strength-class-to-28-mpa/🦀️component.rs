@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// change would move f_c,0,k and f_v,k too, but each is its own `change-<field>` mutation — this one must not
 /// touch them.
 #[semio_framework_async_macros::async_test]
-async fn upgrades_the_bending_strength_class_to_28_mpa() {
+fn upgrades_the_bending_strength_class_to_28_mpa() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-fmk applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-fmk/upgrades-the-bending-strength-class-to-28-mpa: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.f_m_k, 28.0, "change-fmk/upgrades-the-bending-strength-class-to-28-mpa: f_m_k must read 28.0 MPa once the change lands");
@@ -44,7 +44,7 @@ async fn upgrades_the_bending_strength_class_to_28_mpa() {
 /// ↩️ `change-fmk`'s inverse reads the OLD 24.0 MPa out of BASE, so replaying it puts the 24.0 MPa bending
 /// strength back on `f_m_k`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_24_mpa_bending_strength_restores_before() {
+fn restoring_the_24_mpa_bending_strength_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-fmk applies");
@@ -62,7 +62,7 @@ async fn restoring_the_24_mpa_bending_strength_restores_before() {
 /// a fixed point, so `{"ChangeFMK": {"newFMK": 28.0}}` — the variant is `ChangeFMK`, and serde camelCase over
 /// `new_f_m_k` gives `newFMK` is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 28.0 MPa is finite and differs from the committed 24.0 MPa, so `change-fmk` (whose guard
 /// message reads "Fmk") emits nothing.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-fmk/upgrades-the-bending-strength-class-to-28-mpa: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `fMK` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-fmk diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-fmk/upgrades-the-bending-strength-class-to-28-mpa: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the characteristic bending
 /// strength and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-fmk diff decodes");
     assert_eq!(decoded.f_m_k, Some(28.0), "change-fmk/upgrades-the-bending-strength-class-to-28-mpa: the committed diff must carry fMK = 28.0 MPa");
     assert!(decoded.f_c_0_k.is_none(), "change-fmk/upgrades-the-bending-strength-class-to-28-mpa: change-fmk writes fMK and must leave `f_c_0_k` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the bending-strength change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-fmk diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-fmk/upgrades-the-bending-strength-class-to-28-mpa: the committed diff did not carry before to after");

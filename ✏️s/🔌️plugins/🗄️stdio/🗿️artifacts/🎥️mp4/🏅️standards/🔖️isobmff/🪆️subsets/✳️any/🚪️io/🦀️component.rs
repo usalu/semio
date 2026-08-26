@@ -961,7 +961,7 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sniff_recognizes_real_ftyp_magic_only() {
-        let bytes = encode_mp4(&synthetic_snapshot());
+        let bytes = encode_mp4(&synthetic_snapshot().await);
         assert!(sniff_real_bytes(&bytes));
         assert!(!sniff_real_bytes(b"not an mp4 at all"));
         assert!(!sniff_real_bytes(&[0u8, 0, 0, 8, b'f', b'r', b'e', b'e']));
@@ -969,10 +969,10 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decode_encode_decode_round_trips_synthetic_snapshot() {
-        let snap = synthetic_snapshot();
+        let snap = synthetic_snapshot().await;
         let bytes = encode_mp4(&snap);
-        let back = decode_mp4(&bytes).await.expect("decode");
-        assert_eq!(back, snap.await, "decode(encode(snapshot)) must reproduce the snapshot exactly");
+        let back = decode_mp4(&bytes).expect("decode");
+        assert_eq!(back, snap, "decode(encode(snapshot)) must reproduce the snapshot exactly");
     }
 
     //#region codec_retention_law — the REAL 43KB fixture
@@ -984,7 +984,7 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
-        let snap = decode_mp4(REAL_LOGO_MP4).await.expect("decode the real 43KB fixture");
+        let snap = decode_mp4(REAL_LOGO_MP4).expect("decode the real 43KB fixture");
         assert_eq!(snap.ftyp.major_brand, "isom");
         assert!(snap.ftyp.compatible_brands.iter().any(|b| b == "avc1"), "compatible_brands: {:?}", snap.ftyp.compatible_brands);
         assert_eq!(snap.tracks.len(), 1, "logo.mp4 has exactly one (video) track");
@@ -1005,9 +1005,9 @@ mod codec_tests {
         // snapshot — every sample's bytes/duration/cts_offset/sync flag, every track field, ftyp,
         // and every named logical field survives through a real mux/demux cycle on
         // real, non-synthetic, 1441-frame H.264 data.
-        let snap = decode_mp4(REAL_LOGO_MP4).await.expect("decode");
+        let snap = decode_mp4(REAL_LOGO_MP4).expect("decode");
         let re_encoded = encode_mp4(&snap);
-        let round_tripped = decode_mp4(&re_encoded).await.expect("re-decode the round-tripped bytes");
+        let round_tripped = decode_mp4(&re_encoded).expect("re-decode the round-tripped bytes");
         assert_eq!(round_tripped, snap, "decode(encode(decode(real_fixture))) must equal decode(real_fixture)");
 
         // 🧪️ Sample PAYLOAD bytes (the actual codec substance) are byte-exact against the ORIGINAL
@@ -1031,19 +1031,19 @@ mod codec_tests {
 
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let snapshot = decode_mp4(&bytes).await.expect("decode exact MP4 fixture");
+        let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
         assert_eq!(encode_mp4(&snapshot), bytes);
 
         let pack = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
-        let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("decode MP4 pack");
+        let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode MP4 pack");
         assert_eq!(encode_mp4(&from_pack), bytes);
 
         let dsl = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-        let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).await.expect("parse MP4 DSL");
+        let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
         assert_eq!(encode_mp4(&from_dsl), bytes);
 
-        let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]);
-        let analyzed = analysis.await.parts.snapshot.expect("MP4 analyzer snapshot");
+        let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]).await;
+        let analyzed = analysis.parts.snapshot.expect("MP4 analyzer snapshot");
         assert_eq!(encode_mp4(&analyzed), bytes);
 
         let dialect = <Mp4AnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
@@ -1051,21 +1051,21 @@ mod codec_tests {
         assert_eq!(encode_mp4(&composition.snapshot), bytes);
 
         let self_diff = Mp4Diff::between(&snapshot, &snapshot);
-        let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).await.expect("parse MP4 diff text");
-        assert_eq!(encode_mp4(&text_diff.apply(&snapshot).await.unwrap()), bytes);
-        let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).await.expect("decode MP4 diff");
-        assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).await.unwrap()), bytes);
+        let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).expect("parse MP4 diff text");
+        assert_eq!(encode_mp4(&text_diff.apply(&snapshot).unwrap()), bytes);
+        let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).expect("decode MP4 diff");
+        assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).unwrap()), bytes);
 
         let mut no_op = snapshot.clone();
-        assert!(apply_mp4_mutation(&mut no_op, &Mp4Mutation::NoMutation).await.diff().is_empty());
+        assert!(apply_mp4_mutation(&mut no_op, &Mp4Mutation::NoMutation).diff().is_empty());
         assert_eq!(encode_mp4(&no_op), bytes);
 
         let set_snapshot = Mp4Mutation::SetSnapshot { snapshot: snapshot.clone() };
-        let text_op = Mp4Mutation::parse_op(&set_snapshot.print_op()).await.expect("parse MP4 operation text");
+        let text_op = Mp4Mutation::parse_op(&set_snapshot.print_op()).expect("parse MP4 operation text");
         let mut from_text_op = Mp4Snapshot::default();
         apply_mp4_mutation(&mut from_text_op, &text_op);
         assert_eq!(encode_mp4(&from_text_op), bytes);
-        let binary_op = Mp4Mutation::decode_op(&set_snapshot.encode_op().await.expect("encode MP4 operation")).await.expect("decode MP4 operation");
+        let binary_op = Mp4Mutation::decode_op(&set_snapshot.encode_op().expect("encode MP4 operation")).expect("decode MP4 operation");
         let mut from_binary_op = Mp4Snapshot::default();
         apply_mp4_mutation(&mut from_binary_op, &binary_op);
         assert_eq!(encode_mp4(&from_binary_op), bytes);

@@ -5,7 +5,7 @@ use crate::artifacts::en1996::mutations::change_t_ef_mm::mutation::ChangeTEfMm;
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeTEfMm, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+pub fn diff(payload: &ChangeTEfMm, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if !payload.new_t_ef_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "T ef mm must be a finite number.", Vec::<String>::new());
     }

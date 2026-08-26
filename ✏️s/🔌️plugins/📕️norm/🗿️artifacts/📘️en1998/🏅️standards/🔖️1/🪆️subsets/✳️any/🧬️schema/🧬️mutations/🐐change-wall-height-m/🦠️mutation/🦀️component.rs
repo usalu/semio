@@ -15,15 +15,15 @@ pub struct ChangeWallHeightM {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallHeightM {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "wall-height-m", kind: "change-wall-height-m", record: "ChangedWallHeightM" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_wall_height_m::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_wall_height_m::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change retaining wall height [m] to {}", self.new_wall_height_m)
     }
 }

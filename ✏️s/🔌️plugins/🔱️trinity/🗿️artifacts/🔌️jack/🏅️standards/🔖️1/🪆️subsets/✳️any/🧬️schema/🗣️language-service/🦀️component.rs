@@ -9,13 +9,13 @@ use std::collections::BTreeSet;
 pub mod queryable {
     use super::*;
 
-    async fn trinity_jack_manifest() -> &'static graph::manifest::GraphManifest {
+    fn trinity_jack_manifest() -> &'static graph::manifest::GraphManifest {
         use std::sync::OnceLock;
         static MANIFEST: OnceLock<graph::manifest::GraphManifest> = OnceLock::new();
         MANIFEST.get_or_init(|| graph::manifest::manifest_by_id("nakagin").expect("nakagin manifest").clone())
     }
 
-    async fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {
+    fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {
         graph
             .edges
             .values()
@@ -38,23 +38,23 @@ pub mod queryable {
     pub struct TrinityQueryableGraph<'a>(pub &'a Graph);
 
     impl QueryableGraph for TrinityQueryableGraph<'_> {
-        async fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
             Some(trinity_jack_manifest())
         }
 
-        async fn node_ids(&self) -> Vec<String> {
+        fn node_ids(&self) -> Vec<String> {
             self.0.nodes.keys().cloned().collect()
         }
 
-        async fn node_kind(&self, id: &str) -> Option<String> {
+        fn node_kind(&self, id: &str) -> Option<String> {
             self.0.nodes.get(id).map(|node| node.kind.clone())
         }
 
-        async fn node_name(&self, id: &str) -> Option<String> {
+        fn node_name(&self, id: &str) -> Option<String> {
             self.0.nodes.get(id).map(|node| node.name.clone())
         }
 
-        async fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
             let node = self.0.nodes.get(id)?;
             match key {
                 "id" => Some(PropertyValue::String(id.to_string())),
@@ -65,11 +65,11 @@ pub mod queryable {
             }
         }
 
-        async fn edges(&self) -> Vec<QueryableEdge> {
+        fn edges(&self) -> Vec<QueryableEdge> {
             trinity_queryable_edges(self.0)
         }
 
-        async fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
             self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
         }
     }
@@ -77,23 +77,23 @@ pub mod queryable {
     pub struct OwnedTrinityQueryableGraph(pub Graph);
 
     impl QueryableGraph for OwnedTrinityQueryableGraph {
-        async fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
             Some(trinity_jack_manifest())
         }
 
-        async fn node_ids(&self) -> Vec<String> {
+        fn node_ids(&self) -> Vec<String> {
             self.0.nodes.keys().cloned().collect()
         }
 
-        async fn node_kind(&self, id: &str) -> Option<String> {
+        fn node_kind(&self, id: &str) -> Option<String> {
             self.0.nodes.get(id).map(|node| node.kind.clone())
         }
 
-        async fn node_name(&self, id: &str) -> Option<String> {
+        fn node_name(&self, id: &str) -> Option<String> {
             self.0.nodes.get(id).map(|node| node.name.clone())
         }
 
-        async fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
             let node = self.0.nodes.get(id)?;
             match key {
                 "id" => Some(PropertyValue::String(id.to_string())),
@@ -104,11 +104,11 @@ pub mod queryable {
             }
         }
 
-        async fn edges(&self) -> Vec<QueryableEdge> {
+        fn edges(&self) -> Vec<QueryableEdge> {
             trinity_queryable_edges(&self.0)
         }
 
-        async fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
             self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
         }
     }
@@ -119,7 +119,7 @@ use graph::dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToke
 pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
 
 // #region 🔖️Language
-async fn completion_prefix(source: &str, cursor: usize) -> String {
+fn completion_prefix(source: &str, cursor: usize) -> String {
     let cursor = cursor.min(source.len());
     let bytes = source.as_bytes();
     let mut start = cursor;
@@ -134,7 +134,7 @@ async fn completion_prefix(source: &str, cursor: usize) -> String {
     source[start..cursor].to_string()
 }
 
-async fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[SpannedToken] {
+fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[SpannedToken] {
     let mut end = tokens.len();
     for (i, row) in tokens.iter().enumerate() {
         if row.start >= cursor && !matches!(row.token, Token::Eof) {
@@ -145,7 +145,7 @@ async fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[Spann
     &tokens[..end]
 }
 
-async fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
+fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
     let cursor = cursor.min(source.len());
     let before = &source[..cursor];
     let colon = before.rfind(':')?;
@@ -164,7 +164,7 @@ async fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
     Some(in_bracket)
 }
 
-async fn after_dot_property_context(source: &str, cursor: usize) -> bool {
+fn after_dot_property_context(source: &str, cursor: usize) -> bool {
     let cursor = cursor.min(source.len());
     let before = &source[..cursor];
     let Some(dot) = before.rfind('.') else {
@@ -173,7 +173,7 @@ async fn after_dot_property_context(source: &str, cursor: usize) -> bool {
     let after = &before[dot + 1..];
     !after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',' | ':'))
 }
-async fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
+fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
     let mut paren = 0i32;
     let mut bracket = 0i32;
     for row in tokens.iter().rev() {
@@ -190,7 +190,7 @@ async fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
     None
 }
 
-async fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
+fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
     let mut vars = BTreeSet::new();
     let mut i = 0;
     while i + 2 < tokens.len() {
@@ -206,7 +206,7 @@ async fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
     vars
 }
 
-async fn in_where_clause(tokens: &[SpannedToken]) -> bool {
+fn in_where_clause(tokens: &[SpannedToken]) -> bool {
     let mut seen_where = false;
     let mut seen_return = false;
     for row in tokens {
@@ -219,7 +219,7 @@ async fn in_where_clause(tokens: &[SpannedToken]) -> bool {
     seen_where && !seen_return
 }
 
-async fn graph_node_kinds(graph: &Graph) -> Vec<String> {
+fn graph_node_kinds(graph: &Graph) -> Vec<String> {
     let mut kinds = BTreeSet::new();
     for node in graph.nodes.values() {
         kinds.insert(node.kind.clone());
@@ -230,7 +230,7 @@ async fn graph_node_kinds(graph: &Graph) -> Vec<String> {
     kinds.into_iter().collect()
 }
 
-async fn graph_edge_kinds(graph: &Graph) -> Vec<String> {
+fn graph_edge_kinds(graph: &Graph) -> Vec<String> {
     let mut kinds = BTreeSet::new();
     for edge in graph.edges.values() {
         kinds.insert(edge.kind.clone());
@@ -241,7 +241,7 @@ async fn graph_edge_kinds(graph: &Graph) -> Vec<String> {
     kinds.into_iter().collect()
 }
 
-async fn graph_property_names(graph: &Graph) -> Vec<String> {
+fn graph_property_names(graph: &Graph) -> Vec<String> {
     let mut props = BTreeSet::from(["id".to_string(), "name".to_string(), "kind".to_string()]);
     for node in graph.nodes.values() {
         for key in node.properties.keys() {
@@ -251,7 +251,7 @@ async fn graph_property_names(graph: &Graph) -> Vec<String> {
     props.into_iter().collect()
 }
 
-async fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
+fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
     let prefix_lower = prefix.to_ascii_lowercase();
     let mut out = Vec::new();
     for (label, kind, detail) in candidates {
@@ -264,11 +264,11 @@ async fn filter_completions(candidates: impl IntoIterator<Item = (String, String
 }
 
 /// 🔎️ Context-aware jack completions for the editor.
-pub async fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion> {
+pub fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion> {
     graph::dsl::complete(&TrinityQueryableGraph(graph), source, cursor)
 }
 // #endregion 🔖️Language
-async fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
+fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
     for node in &pattern.nodes {
         out.insert(node.var.clone());
     }
@@ -280,7 +280,7 @@ async fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
     }
 }
 
-async fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
+fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
     let mut vars = BTreeSet::new();
     for clause in clauses {
         match clause {
@@ -296,7 +296,7 @@ async fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
     vars
 }
 
-async fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usize)> {
+fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usize)> {
     let mut refs = Vec::new();
     for clause in clauses {
         match clause {
@@ -325,7 +325,7 @@ async fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usiz
     refs
 }
 
-async fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) {
+fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) {
     match expr {
         Expr::Eq { var, .. } | Expr::Ne { var, .. } => refs.push((var.clone(), 0, var.len())),
         Expr::And(a, b) | Expr::Or(a, b) => {
@@ -335,7 +335,7 @@ async fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) 
     }
 }
 
-async fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic> {
+fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic> {
     let mut out = Vec::new();
     let node_kinds = graph_node_kinds(graph).into_iter().collect::<BTreeSet<_>>();
     let edge_kinds = graph_edge_kinds(graph).into_iter().collect::<BTreeSet<_>>();
@@ -384,13 +384,13 @@ async fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagn
     out
 }
 
-async fn find_kind_span(source: &str, kind: &str) -> Option<(usize, usize)> {
+fn find_kind_span(source: &str, kind: &str) -> Option<(usize, usize)> {
     let needle = format!(":{kind}");
     let start = source.find(&needle)?;
     Some((start + 1, start + needle.len()))
 }
 
-async fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
+fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
     let mut from = 0;
     while let Some(rel) = source[from..].find(ident) {
         let start = from + rel;
@@ -408,12 +408,12 @@ async fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
 }
 
 /// 🩺️ Lint jack source with syntax and semantic diagnostics.
-pub async fn lint(graph: &Graph, source: &str) -> Vec<Diagnostic> {
+pub fn lint(graph: &Graph, source: &str) -> Vec<Diagnostic> {
     graph::dsl::lint(&TrinityQueryableGraph(graph), source)
 }
 
 #[allow(dead_code)]
-async fn format_token(tok: &Token) -> String {
+fn format_token(tok: &Token) -> String {
     match tok {
         Token::KwMatch => "MATCH".into(),
         Token::KwWhere => "WHERE".into(),
@@ -449,12 +449,12 @@ async fn format_token(tok: &Token) -> String {
 }
 
 /// 🪞️ Format jack source canonically (idempotent).
-pub async fn format(source: &str) -> Result<String, String> {
+pub fn format(source: &str) -> Result<String, String> {
     graph::dsl::format(source).map_err(|err| err.to_string())
 }
 
 #[allow(dead_code)]
-async fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> {
+fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> {
     let cursor = cursor.min(source.len());
     if cursor > source.len() {
         return None;
@@ -485,18 +485,18 @@ async fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, Str
 }
 
 /// 💬️ Hover information at cursor.
-pub async fn hover(graph: &Graph, source: &str, cursor: usize) -> Option<Hover> {
+pub fn hover(graph: &Graph, source: &str, cursor: usize) -> Option<Hover> {
     graph::dsl::hover(&TrinityQueryableGraph(graph), source, cursor)
 }
 
 /// 🎨️ Semantic token classes for LSP highlighting.
-pub async fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
+pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
     graph::dsl::semantic_tokens(source)
 }
 // #endregion 🔖️LanguageService
 /// 🧩️ Demo `Piece`/`Connection` fixture shared by the jack language server default session
 /// and playgrounds that need a non-empty graph for completions, hover and lint.
-pub async fn example_graph_fixture() -> JackSnapshot {
+pub fn example_graph_fixture() -> JackSnapshot {
     JackSnapshot::with_content(
         JackSnapshot::SCHEMA.into(),
         "jack-example".into(),
@@ -533,12 +533,12 @@ pub async fn example_graph_fixture() -> JackSnapshot {
 }
 
 /// 🧩️ [`example_graph_fixture`] as a resolved in-memory [`Graph`].
-pub async fn example_graph() -> Graph {
+pub fn example_graph() -> Graph {
     Graph::from_fixture(example_graph_fixture()).expect("jack example fixture")
 }
 
 /// 🧩️ [`example_graph_fixture`] serialized as fixture JSON.
-pub async fn example_graph_fixture_json() -> String {
+pub fn example_graph_fixture_json() -> String {
     serde_json::to_string(&example_graph_fixture()).unwrap_or_else(|_| "{}".into())
 }
 // #endregion 🔖️ExampleFixture
@@ -548,15 +548,15 @@ struct Parser {
 }
 
 impl Parser {
-    async fn new(tokens: Vec<Token>) -> Self {
+    fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, pos: 0 }
     }
 
-    async fn peek(&self) -> &Token {
+    fn peek(&self) -> &Token {
         self.tokens.get(self.pos).unwrap_or(&Token::Eof)
     }
 
-    async fn bump(&mut self) -> Token {
+    fn bump(&mut self) -> Token {
         let t = self.peek().clone();
         if !matches!(t, Token::Eof) {
             self.pos += 1;
@@ -564,14 +564,14 @@ impl Parser {
         t
     }
 
-    async fn expect_ident(&mut self) -> Result<String, String> {
+    fn expect_ident(&mut self) -> Result<String, String> {
         match self.bump() {
             Token::Ident(s) => Ok(s),
             other => Err(format!("expected ident, got {other:?}")),
         }
     }
 
-    async fn parse_query(&mut self) -> Result<Query, String> {
+    fn parse_query(&mut self) -> Result<Query, String> {
         let mut clauses = Vec::new();
         while !matches!(self.peek(), Token::Eof) {
             clauses.push(self.parse_clause()?);
@@ -579,7 +579,7 @@ impl Parser {
         Ok(Query { clauses })
     }
 
-    async fn parse_clause(&mut self) -> Result<Clause, String> {
+    fn parse_clause(&mut self) -> Result<Clause, String> {
         match self.peek() {
             Token::KwMatch => {
                 self.bump();
@@ -633,7 +633,7 @@ impl Parser {
         }
     }
 
-    async fn parse_pattern(&mut self) -> Result<Pattern, String> {
+    fn parse_pattern(&mut self) -> Result<Pattern, String> {
         self.expect(&Token::LParen)?;
         let left = self.parse_pattern_node()?;
         self.expect(&Token::RParen)?;
@@ -658,14 +658,14 @@ impl Parser {
         }
     }
 
-    async fn parse_pattern_node(&mut self) -> Result<PatternNode, String> {
+    fn parse_pattern_node(&mut self) -> Result<PatternNode, String> {
         let var = self.expect_ident()?;
         self.expect(&Token::Colon)?;
         let kind = self.expect_ident()?;
         Ok(PatternNode { var, kind })
     }
 
-    async fn parse_return_item(&mut self) -> Result<ReturnItem, String> {
+    fn parse_return_item(&mut self) -> Result<ReturnItem, String> {
         let var = self.expect_ident()?;
         if matches!(self.peek(), Token::Dot) {
             self.bump();
@@ -676,7 +676,7 @@ impl Parser {
         }
     }
 
-    async fn parse_assignment(&mut self) -> Result<Assignment, String> {
+    fn parse_assignment(&mut self) -> Result<Assignment, String> {
         let var = self.expect_ident()?;
         self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
@@ -685,11 +685,11 @@ impl Parser {
         Ok(Assignment { var, prop, value })
     }
 
-    async fn parse_expr(&mut self) -> Result<Expr, String> {
+    fn parse_expr(&mut self) -> Result<Expr, String> {
         self.parse_or_expr()
     }
 
-    async fn parse_or_expr(&mut self) -> Result<Expr, String> {
+    fn parse_or_expr(&mut self) -> Result<Expr, String> {
         let mut left = self.parse_and_expr()?;
         while matches!(self.peek(), Token::Or) {
             self.bump();
@@ -699,7 +699,7 @@ impl Parser {
         Ok(left)
     }
 
-    async fn parse_and_expr(&mut self) -> Result<Expr, String> {
+    fn parse_and_expr(&mut self) -> Result<Expr, String> {
         let mut left = self.parse_cmp_expr()?;
         while matches!(self.peek(), Token::And) {
             self.bump();
@@ -709,7 +709,7 @@ impl Parser {
         Ok(left)
     }
 
-    async fn parse_cmp_expr(&mut self) -> Result<Expr, String> {
+    fn parse_cmp_expr(&mut self) -> Result<Expr, String> {
         let var = self.expect_ident()?;
         self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
@@ -720,7 +720,7 @@ impl Parser {
         }
     }
 
-    async fn parse_value(&mut self) -> Result<PropertyValue, String> {
+    fn parse_value(&mut self) -> Result<PropertyValue, String> {
         match self.bump() {
             Token::Number(n) => Ok(PropertyValue::Number(n)),
             Token::StringLit(s) => Ok(PropertyValue::String(s)),
@@ -731,7 +731,7 @@ impl Parser {
         }
     }
 
-    async fn expect(&mut self, want: &Token) -> Result<(), String> {
+    fn expect(&mut self, want: &Token) -> Result<(), String> {
         if std::mem::discriminant(self.peek()) == std::mem::discriminant(want) {
             self.bump();
             Ok(())
@@ -742,7 +742,7 @@ impl Parser {
 }
 
 /// 🔍️ Parse a jack query string.
-pub async fn parse(query: &str) -> Result<Query, String> {
+pub fn parse(query: &str) -> Result<Query, String> {
     let tokens = lex(query)?;
     Parser::new(tokens).parse_query()
 }
@@ -759,7 +759,7 @@ pub struct SpannedNode {
 }
 
 /// 🌊️ Collapses runs of whitespace to a single space, for deriving a node's default display label.
-async fn collapse_spanned_whitespace(text: &str) -> String {
+fn collapse_spanned_whitespace(text: &str) -> String {
     let mut out = String::new();
     let mut last_was_space = false;
     for ch in text.chars() {
@@ -776,7 +776,7 @@ async fn collapse_spanned_whitespace(text: &str) -> String {
     out.trim().to_string()
 }
 
-async fn spanned_node(kind: &str, start: usize, end: usize, source: &str, children: Vec<SpannedNode>, label: Option<&str>) -> SpannedNode {
+fn spanned_node(kind: &str, start: usize, end: usize, source: &str, children: Vec<SpannedNode>, label: Option<&str>) -> SpannedNode {
     let slice = collapse_spanned_whitespace(source.get(start..end).unwrap_or(""));
     let label = label.map_or_else(|| if slice.is_empty() { kind.to_string() } else { slice }, str::to_string);
     SpannedNode { kind: kind.into(), label, start, end, children }
@@ -789,15 +789,15 @@ struct SpannedParser<'a> {
 }
 
 impl<'a> SpannedParser<'a> {
-    async fn new(tokens: &'a [SpannedToken], source: &'a str) -> Self {
+    fn new(tokens: &'a [SpannedToken], source: &'a str) -> Self {
         Self { tokens, source, pos: 0 }
     }
 
-    async fn peek(&self) -> &SpannedToken {
+    fn peek(&self) -> &SpannedToken {
         &self.tokens[self.pos.min(self.tokens.len() - 1)]
     }
 
-    async fn bump(&mut self) -> SpannedToken {
+    fn bump(&mut self) -> SpannedToken {
         let token = self.peek().clone();
         if !matches!(token.token, Token::Eof) {
             self.pos += 1;
@@ -805,7 +805,7 @@ impl<'a> SpannedParser<'a> {
         token
     }
 
-    async fn expect_ident(&mut self) -> Result<(String, usize, usize), String> {
+    fn expect_ident(&mut self) -> Result<(String, usize, usize), String> {
         let token = self.bump();
         match token.token {
             Token::Ident(text) => Ok((text, token.start, token.end)),
@@ -813,7 +813,7 @@ impl<'a> SpannedParser<'a> {
         }
     }
 
-    async fn expect(&mut self, want: &Token) -> Result<SpannedToken, String> {
+    fn expect(&mut self, want: &Token) -> Result<SpannedToken, String> {
         let token = self.bump();
         if std::mem::discriminant(&token.token) == std::mem::discriminant(want) {
             Ok(token)
@@ -822,7 +822,7 @@ impl<'a> SpannedParser<'a> {
         }
     }
 
-    async fn parse_query(&mut self) -> Result<SpannedNode, String> {
+    fn parse_query(&mut self) -> Result<SpannedNode, String> {
         let mut children = Vec::new();
         while !matches!(self.peek().token, Token::Eof) {
             children.push(self.parse_clause()?);
@@ -830,7 +830,7 @@ impl<'a> SpannedParser<'a> {
         Ok(spanned_node("query", 0, self.source.len(), self.source, children, Some("Query")))
     }
 
-    async fn parse_clause(&mut self) -> Result<SpannedNode, String> {
+    fn parse_clause(&mut self) -> Result<SpannedNode, String> {
         let start = self.peek().start;
         match self.peek().token {
             Token::KwMatch => {
@@ -896,7 +896,7 @@ impl<'a> SpannedParser<'a> {
         }
     }
 
-    async fn parse_pattern(&mut self) -> Result<SpannedNode, String> {
+    fn parse_pattern(&mut self) -> Result<SpannedNode, String> {
         let start = self.expect(&Token::LParen)?.start;
         let left = self.parse_pattern_node()?;
         self.expect(&Token::RParen)?;
@@ -926,7 +926,7 @@ impl<'a> SpannedParser<'a> {
         Ok(spanned_node("pattern", start, end, self.source, vec![left], None))
     }
 
-    async fn parse_pattern_node(&mut self) -> Result<SpannedNode, String> {
+    fn parse_pattern_node(&mut self) -> Result<SpannedNode, String> {
         let start = self.peek().start;
         let (var_text, _, var_end) = self.expect_ident()?;
         self.expect(&Token::Colon)?;
@@ -937,7 +937,7 @@ impl<'a> SpannedParser<'a> {
         Ok(spanned_node("patternNode", start, kind_end, self.source, vec![var_node, kind_node], Some(label.as_str())))
     }
 
-    async fn parse_return_item(&mut self) -> Result<SpannedNode, String> {
+    fn parse_return_item(&mut self) -> Result<SpannedNode, String> {
         let start = self.peek().start;
         let (var_text, var_start, var_end) = self.expect_ident()?;
         if matches!(self.peek().token, Token::Dot) {
@@ -952,7 +952,7 @@ impl<'a> SpannedParser<'a> {
         Ok(spanned_node("returnItem", start, var_end, self.source, vec![var_node], Some(var_text.as_str())))
     }
 
-    async fn parse_assignment(&mut self) -> Result<SpannedNode, String> {
+    fn parse_assignment(&mut self) -> Result<SpannedNode, String> {
         let start = self.peek().start;
         let (var_text, var_start, var_end) = self.expect_ident()?;
         self.expect(&Token::Dot)?;
@@ -965,11 +965,11 @@ impl<'a> SpannedParser<'a> {
         Ok(spanned_node("assignment", start, end, self.source, vec![var_node, prop_node, value], None))
     }
 
-    async fn parse_expr(&mut self) -> Result<SpannedNode, String> {
+    fn parse_expr(&mut self) -> Result<SpannedNode, String> {
         self.parse_or_expr()
     }
 
-    async fn parse_or_expr(&mut self) -> Result<SpannedNode, String> {
+    fn parse_or_expr(&mut self) -> Result<SpannedNode, String> {
         let mut left = self.parse_and_expr()?;
         while matches!(self.peek().token, Token::Or) {
             let op_start = self.bump().start;
@@ -980,7 +980,7 @@ impl<'a> SpannedParser<'a> {
         Ok(left)
     }
 
-    async fn parse_and_expr(&mut self) -> Result<SpannedNode, String> {
+    fn parse_and_expr(&mut self) -> Result<SpannedNode, String> {
         let mut left = self.parse_cmp_expr()?;
         while matches!(self.peek().token, Token::And) {
             let op_start = self.bump().start;
@@ -991,7 +991,7 @@ impl<'a> SpannedParser<'a> {
         Ok(left)
     }
 
-    async fn parse_cmp_expr(&mut self) -> Result<SpannedNode, String> {
+    fn parse_cmp_expr(&mut self) -> Result<SpannedNode, String> {
         let start = self.peek().start;
         let (var_text, var_start, var_end) = self.expect_ident()?;
         self.expect(&Token::Dot)?;
@@ -1008,7 +1008,7 @@ impl<'a> SpannedParser<'a> {
         Ok(spanned_node(kind, start, end, self.source, vec![var_node, prop_node, value], None))
     }
 
-    async fn parse_value(&mut self) -> Result<SpannedNode, String> {
+    fn parse_value(&mut self) -> Result<SpannedNode, String> {
         let token = self.bump();
         match token.token {
             Token::Number(_) => Ok(spanned_node("number", token.start, token.end, self.source, Vec::new(), None)),
@@ -1030,7 +1030,7 @@ impl<'a> SpannedParser<'a> {
 
 /// 🌳️ Parse jack source into a span-tracked AST for hierarchy/outline panels; lexing never fails —
 /// only parsing can, in which case a single `"error"` node spans the source.
-pub async fn parse_spanned(source: &str) -> SpannedNode {
+pub fn parse_spanned(source: &str) -> SpannedNode {
     let tokens = lex_spanned(source, true).unwrap_or_else(|_| vec![SpannedToken { token: Token::Eof, start: source.len(), end: source.len() }]);
     let mut parser = SpannedParser::new(&tokens, source);
     match parser.parse_query() {

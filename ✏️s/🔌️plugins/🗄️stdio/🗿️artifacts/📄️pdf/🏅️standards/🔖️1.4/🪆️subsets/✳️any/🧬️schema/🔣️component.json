@@ -2,9 +2,9 @@
   "$id": "https://semio.tech/schema/s.stdio.pdf/artifact.json",
   "title": "PdfArtifact",
   "type": "object",
-  "required": ["schema", "page"],
+  "required": ["schema", "pages"],
   "properties": {
     "schema": { "type": "string", "x-semio-state": "artifact" },
-    "page": { "type": "object", "x-semio-state": "artifact" }
+    "pages": { "type": "array", "items": { "$ref": "snapshot.json#/$defs/PageDoc" }, "x-semio-state": "artifact" }
   }
 }

@@ -6,7 +6,7 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
-pub(crate) async fn set_rhs_json(state: &RewriteSnapshot, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn set_rhs_json(state: &RewriteSnapshot, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     let mut next = state.clone();
     next.rhs_json = value.to_string();
     next.parameter_bindings = crate::editor::rewrite::default_parameter_bindings(&next.rhs_json);

@@ -5,7 +5,7 @@ use crate::artifacts::en1995::mutations::change_load_duration::mutation::ChangeL
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeLoadDuration, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+pub fn diff(payload: &ChangeLoadDuration, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if base.load_duration == payload.new_load_duration {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Load duration already has this value.");
     }

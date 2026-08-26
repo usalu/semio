@@ -4,7 +4,7 @@ use super::mutation::UpdateBridgeInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdateBridgeInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdateBridgeInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_bridge_lambda.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Bridge lambda must be a finite number, got {}.", payload.new_bridge_lambda), Vec::<String>::new());
     }

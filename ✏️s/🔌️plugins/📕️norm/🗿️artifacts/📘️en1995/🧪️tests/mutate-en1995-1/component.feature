@@ -1,124 +1,124 @@
 @capability-en1995-1-mutate
-@no-oracle-en1995-1-mutation-semantics
+@oracle-en1995-1-python-independent
 @comparison-ordered-json-v1
 @mutations-en1995-1-any
-Feature: Apply every typed EN 1995 mutation to its committed specification fixtures
-  `s.norm.en1995` is a semio-NATIVE artifact — no third party reads or writes its
-  `.dsl.semio`/`.pack.semio` envelope — so there is no reference implementation to register as an
-  oracle. That is recorded as the `en1995-1-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and it means the runner
-  executes NO oracle role for this case: every assertion below lives inside the subject handler,
-  which compares the applied document against the committed after-snapshot and the undone document
-  against the committed before-snapshot, and fails with both documents printed. A handler that
-  merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed EN 1995 mutation against an independent Python implementation
+  `s.norm.en1995` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  assumed: PyPI serves no `en1995` distribution, and none for `eurocode`, `vdi3805` or `iso16757`
+  either, and the nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`)
+  implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
+  authoritative over this subset's `En1995Mutation` vocabulary. The second producer a differential
+  comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is
+  it: all 20 kinds of this vocabulary, written in Python from the repository's own written
+  specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
+  ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
+  `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape
+  rules — plus this subset's committed catalog for the closed list of kinds. It imports nothing from
+  the Rust it judges and transliterates none of it: the document field a `new*` argument names is
+  resolved by normalised spelling against the document's own keys, which is what the naming mechanic
+  states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the
+  spellings in THIS subset where that resolution can genuinely go wrong. The recorded no-oracle
+  decision it replaces is gone from
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a
+  reference to compare against.
 
-  Twenty document-root scalars, one `change-<field>` each: national annex, the design actions
-  M_Ed, N_Ed and V_Ed, the section properties W, A, b and h, the characteristic strengths f_m,k,
-  f_c,0,k and f_v,k, the two classification enums that drive k_mod and k_def — service class and
-  load-duration class — the lateral-torsional M_crit, the connection inputs F_Ed and A_ef, the
-  fire inputs (duration and section depth) and the footbridge vibration inputs (vertical
-  acceleration and bridge cycle count).
+  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path below is a declared `asset://` fixture, so neither side holds a transcription that could
+  drift. All twenty kinds are flat `change-<field>` edits, and this subset is the one whose fields
+  are mostly SHORT, unpunctuated symbols out of the timber code — `fmk`, `fvk`, `fc0-k`, `chi`-free
+  but `w-mm3`, `a-mm2`, `a-ef-mm2`, `h-mm`, `b-mm`. Normalised spelling has less to work with here
+  than anywhere else in the plugin (`a-mm2` versus `a-ef-mm2` differ by two characters), which is
+  exactly the case a second reading written from the naming mechanic alone has to survive. Each side
+  then asserts the same three laws in role — the applied document must BE the committed
+  after-snapshot; an `applied` vector must move the document and a `rejected` one must leave it
+  bit-identical; and the mutation followed by its OWN computed inverse must restore the
+  before-snapshot exactly. What `parity` adds on top is the only thing a single implementation can
+  never provide: that two implementations, in two languages, written from one written specification,
+  reach the same document.
 
-  Timber is the Eurocode whose answer depends on two ENUMS more than on any number: k_mod and
-  k_def are looked up from the service class and the load-duration class together, so
-  `change-service-class` and `change-load-duration` move every derived resistance in the document
-  at once while touching a single field. Both are exercised here as whole-document comparisons,
-  which is the only way a lookup wired to the wrong axis of that table shows up. Its own module
-  header is explicit that this artifact follows the `📘️en1992`/`📘️en1994` flat-scalar precedent
-  and NOT `📘️en1993`'s per-part grouping, because `⚙️engine`'s EN 1995 checks read the snapshot as
-  one flat bag of fields rather than as named per-part sub-structs — so the twenty kinds here are
-  a derivation result, not a stylistic choice. The committed example is a glulam footbridge, which
-  is why the vibration pair is real data.
+  `inverse-` projects BOTH the mutated and the restored document. Every kind is scalar, so the
+  restored document repeats the before-document on all twenty rows; the mutated projection is what
+  tells `a-mm2` from `a-ef-mm2`.
 
-  Each of the 20 kinds carries its own independently handcrafted `(before, mutation, after, diff,
-  outcome)` quintet under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, and this
-  feature re-exercises those SAME committed bytes end to end through `apply_en1995_mutation`
-  rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture tests do.
-  The committed `🎯️outcome` decides which contract a row is held to: `applied` demands the
-  observability law (the document must MOVE), `rejected` demands the opposite and stricter one —
-  the mutation must be refused and the document must come back bit-identical. All 20 committed
-  vectors declare `applied`, so every row below is held to the observability law: a kind that left
-  the document bit-for-bit unchanged would fail rather than pass silently.
-
-  The identity scenario reads the real committed EN 1995 document at
-  `📚️examples/📕️glulam-footbridge`, not a fixture authored for this case. Its DSL carrier is
-  deliberately byte-preserving — the committed file IS this codec's own canonical printer output,
-  so reproducing it exactly is the correct answer and anything else is the defect — which is why
-  that half of the identity law is asserted as `carrier_is_exact` rather than as the usual
-  no-byte-pass-through inequality. The evidence that the document was genuinely PARSED rather than
-  copied comes from the other half: the same snapshot is round-tripped through two further,
-  independently written codecs — the binary `.pack.semio` protocol and the JSON projection — and
-  all three must agree on one document. The committed binary twin `🎒️glulam-footbridge.pack.semio`
-  is decoded and cross-checked against the text artifact as well, so two separately committed
-  files written by two separate codecs have to describe the same EN 1995 document.
+  ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
+  `📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio` — a named glulam
+  footbridge, so the vibration and fatigue keys (`change-a-vert-ms2`, `change-n-cycles-bridge`) and
+  the `change-service-class`/`change-load-duration` pair are populated by a document that motivates
+  them. It is an authored case, not a built bridge. The carrier has no published grammar: the
+  committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` placeholder, so
+  the two sides are compared at the envelope preamble, the ordered `key=value` fields and the digest
+  and length of what each re-emitted, never at an inferred token-to-enum mapping.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot, mutation and outcome fixture for the <id> kind
-    When <id> is applied through apply_en1995_mutation
-    Then the resulting document matches the committed after-snapshot fixture for <id> and honours the committed outcome status
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id |
-      | change-annex |
-      | change-m-ed-knm |
-      | change-n-ed-kn |
-      | change-v-ed-kn |
-      | change-w-mm3 |
-      | change-a-mm2 |
-      | change-b-mm |
-      | change-h-mm |
-      | change-fmk |
-      | change-fc0-k |
-      | change-service-class |
-      | change-load-duration |
-      | change-m-crit-knm |
-      | change-f-ed-kn |
-      | change-a-ef-mm2 |
-      | change-fvk |
-      | change-fire-duration-min |
-      | change-section-depth-mm |
-      | change-a-vert-ms2 |
-      | change-n-cycles-bridge |
+      | id                       | dir                       | fixture                                                 |
+      | change-annex             | 📐change-annex             | switches-from-the-german-na-to-the-recommended-en-annex |
+      | change-m-ed-knm          | 🧴change-m-ed-knm          | raises-the-design-bending-moment-to-32-knm              |
+      | change-n-ed-kn           | 🧽change-n-ed-kn           | raises-the-design-axial-force-to-75-kn                  |
+      | change-v-ed-kn           | 🧺change-v-ed-kn           | raises-the-design-shear-force-to-22-5-kn                |
+      | change-w-mm3             | 🪑change-w-mm3             | raises-the-section-modulus-to-4000000-mm3               |
+      | change-a-mm2             | 🪣change-a-mm2             | enlarges-the-gross-area-to-72000-mm2                    |
+      | change-b-mm              | 🧵change-b-mm              | widens-the-beam-to-240-mm                               |
+      | change-h-mm              | 🪤change-h-mm              | deepens-the-beam-to-360-mm                              |
+      | change-fmk               | 🧷change-fmk               | upgrades-the-bending-strength-class-to-28-mpa           |
+      | change-fc0-k             | 🪡change-fc0-k             | raises-the-parallel-compressive-strength-to-26-5-mpa    |
+      | change-service-class     | 🧹change-service-class     | moves-the-beam-from-service-class-1-to-service-class-2  |
+      | change-load-duration     | 🪒change-load-duration     | shortens-the-load-duration-class-from-medium-to-short   |
+      | change-m-crit-knm        | 🪥change-m-crit-knm        | raises-the-critical-buckling-moment-to-96-knm           |
+      | change-f-ed-kn           | 🧶change-f-ed-kn           | raises-the-design-fastener-force-to-24-kn               |
+      | change-a-ef-mm2          | 🪝change-a-ef-mm2          | enlarges-the-effective-connection-area-to-16000-mm2     |
+      | change-fvk               | 🧲change-fvk               | lowers-the-characteristic-shear-strength-to-3-5-mpa     |
+      | change-fire-duration-min | 🪢change-fire-duration-min | raises-the-fire-exposure-from-r30-to-r60                |
+      | change-section-depth-mm  | 🪠change-section-depth-mm  | raises-the-size-effect-depth-to-360-mm                  |
+      | change-a-vert-ms2        | 🧰change-a-vert-ms2        | doubles-the-vertical-footfall-acceleration-to-0-5-m-s2  |
+      | change-n-cycles-bridge   | 🧼change-n-cycles-bridge   | quadruples-the-bridge-fatigue-cycles-to-2000000         |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_en1995_mutation
-    And the mutation's own computed inverse is applied through apply_en1995_mutation
-    Then the document matches the committed before-snapshot fixture again
+  @mode-differential
+  Scenario Outline: Undoing <id> restores its committed before-snapshot
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When each implementation applies the committed mutation and then its OWN computed inverse
+    Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id |
-      | change-annex |
-      | change-m-ed-knm |
-      | change-n-ed-kn |
-      | change-v-ed-kn |
-      | change-w-mm3 |
-      | change-a-mm2 |
-      | change-b-mm |
-      | change-h-mm |
-      | change-fmk |
-      | change-fc0-k |
-      | change-service-class |
-      | change-load-duration |
-      | change-m-crit-knm |
-      | change-f-ed-kn |
-      | change-a-ef-mm2 |
-      | change-fvk |
-      | change-fire-duration-min |
-      | change-section-depth-mm |
-      | change-a-vert-ms2 |
-      | change-n-cycles-bridge |
+      | id                       | dir                       | fixture                                                 |
+      | change-annex             | 📐change-annex             | switches-from-the-german-na-to-the-recommended-en-annex |
+      | change-m-ed-knm          | 🧴change-m-ed-knm          | raises-the-design-bending-moment-to-32-knm              |
+      | change-n-ed-kn           | 🧽change-n-ed-kn           | raises-the-design-axial-force-to-75-kn                  |
+      | change-v-ed-kn           | 🧺change-v-ed-kn           | raises-the-design-shear-force-to-22-5-kn                |
+      | change-w-mm3             | 🪑change-w-mm3             | raises-the-section-modulus-to-4000000-mm3               |
+      | change-a-mm2             | 🪣change-a-mm2             | enlarges-the-gross-area-to-72000-mm2                    |
+      | change-b-mm              | 🧵change-b-mm              | widens-the-beam-to-240-mm                               |
+      | change-h-mm              | 🪤change-h-mm              | deepens-the-beam-to-360-mm                              |
+      | change-fmk               | 🧷change-fmk               | upgrades-the-bending-strength-class-to-28-mpa           |
+      | change-fc0-k             | 🪡change-fc0-k             | raises-the-parallel-compressive-strength-to-26-5-mpa    |
+      | change-service-class     | 🧹change-service-class     | moves-the-beam-from-service-class-1-to-service-class-2  |
+      | change-load-duration     | 🪒change-load-duration     | shortens-the-load-duration-class-from-medium-to-short   |
+      | change-m-crit-knm        | 🪥change-m-crit-knm        | raises-the-critical-buckling-moment-to-96-knm           |
+      | change-f-ed-kn           | 🧶change-f-ed-kn           | raises-the-design-fastener-force-to-24-kn               |
+      | change-a-ef-mm2          | 🪝change-a-ef-mm2          | enlarges-the-effective-connection-area-to-16000-mm2     |
+      | change-fvk               | 🧲change-fvk               | lowers-the-characteristic-shear-strength-to-3-5-mpa     |
+      | change-fire-duration-min | 🪢change-fire-duration-min | raises-the-fire-exposure-from-r30-to-r60                |
+      | change-section-depth-mm  | 🪠change-section-depth-mm  | raises-the-size-effect-depth-to-360-mm                  |
+      | change-a-vert-ms2        | 🧰change-a-vert-ms2        | doubles-the-vertical-footfall-acceleration-to-0-5-m-s2  |
+      | change-n-cycles-bridge   | 🧼change-n-cycles-bridge   | quadruples-the-bridge-fatigue-cycles-to-2000000         |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed EN 1995 document through every encoding it has
+  Scenario: Re-emit the real committed EN 1995 document from the parsed carrier
     Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️glulam-footbridge/🖼️assets/🎒️glulam-footbridge.pack.semio
-    When the text artifact is parsed, printed back to DSL and parsed again, and the same document is round-tripped through the binary pack protocol and the JSON projection
-    Then the canonical DSL rendering is reproduced byte for byte and every decoding agrees on one EN 1995 document
+    When each implementation parses the artifact and prints it back to its canonical carrier bytes
+    Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

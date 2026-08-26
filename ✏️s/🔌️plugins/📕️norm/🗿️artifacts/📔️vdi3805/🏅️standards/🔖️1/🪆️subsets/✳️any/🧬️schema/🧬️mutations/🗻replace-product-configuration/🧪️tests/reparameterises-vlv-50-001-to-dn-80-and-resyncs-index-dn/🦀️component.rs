@@ -32,7 +32,7 @@ fn applied() -> Vdi3805Snapshot {
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.index.entries[0].dn, Some(80), "replace-product-configuration/reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn: extract_dn must lift dn 80 out of the new parameter bag");
     assert_eq!(snapshot.index.entries[0].tags, before().index.entries[0].tags, "replace-product-configuration/reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn: the title-derived tags must be left alone");
@@ -42,7 +42,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ Applying the mutation then every step of its inverse restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(&mutation, &base);
@@ -58,7 +58,7 @@ async fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is
 /// a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Vdi3805Snapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -73,7 +73,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome — status AND every diagnostic `replace-product-configuration`'s own diff builder raises —
 /// matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
@@ -100,7 +100,7 @@ async fn declared_outcome_holds() {
 /// load-bearing assertion in the fixture: it pins WHICH fields `replace-product-configuration` is allowed to
 /// touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
     assert_eq!(raised_diff.index.as_ref().and_then(|index| index.entries[0].dn), Some(80), "replace-product-configuration/reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn: the diff must republish the index with dn 80");
@@ -115,7 +115,7 @@ async fn produces_committed_diff() {
 /// explicit `null` — and its `Option<Option<u32>>` presence field cannot distinguish "cleared" from
 /// "untouched" across a JSON round trip, which is why no case here writes it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Vdi3805Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -125,7 +125,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of what `replace-product-configuration` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Vdi3805Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-product-configuration/reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn: committed diff did not carry before to after");

@@ -1,0 +1,1016 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://flow.editor-browser-abi/v1",
+  "title": "Flow Editor Browser ABI",
+  "type": "object",
+  "required": [
+    "version",
+    "operations",
+    "arguments",
+    "events",
+    "limits",
+    "identities",
+    "framing",
+    "surfaceProtocol"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operations": {
+      "type": "object",
+      "minProperties": 111,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 2500,
+        "maximum": 2610
+      }
+    },
+    "events": {
+      "type": "object",
+      "minProperties": 7,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 2650,
+        "maximum": 2656
+      }
+    },
+    "limits": {
+      "type": "object"
+    },
+    "identities": {
+      "type": "object"
+    },
+    "framing": {
+      "type": "object"
+    },
+    "surfaceProtocol": {
+      "const": "semio://framework.webgpu-surface-port/v1"
+    },
+    "arguments": {
+      "type": "object",
+      "minProperties": 111,
+      "additionalProperties": {
+        "type": "array",
+        "maxItems": 8,
+        "items": {
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "utf8",
+                "optional-utf8",
+                "f64",
+                "u64",
+                "u32",
+                "u8",
+                "bool",
+                "bytes"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "version": 1,
+  "surfaceProtocol": "semio://framework.webgpu-surface-port/v1",
+  "operations": {
+    "open": 2500,
+    "vcsCheckpoint": 2501,
+    "vcsFault": 2502,
+    "vcsRetryCheckpoint": 2503,
+    "catalogueJson": 2504,
+    "setCatalogueJson": 2505,
+    "setNeuronKindInfosJson": 2506,
+    "addInputPort": 2507,
+    "removeInputPort": 2508,
+    "addOutputPort": 2509,
+    "removeOutputPort": 2510,
+    "connectPorts": 2511,
+    "compiledWireLiteral": 2512,
+    "applyEvalOutputsJson": 2513,
+    "setComputingProgress": 2514,
+    "setNodeStatuses": 2515,
+    "clearComputingWidgetIds": 2516,
+    "previewText": 2517,
+    "selectedWidgetIds": 2518,
+    "selectedEdgeIds": 2519,
+    "selectionDomainsJson": 2520,
+    "hoveredWidgetId": 2521,
+    "hoveredChannelJson": 2522,
+    "selectedChannelsJson": 2523,
+    "previewOffWidgetIds": 2524,
+    "setSelection": 2525,
+    "setHover": 2526,
+    "setHoverChannel": 2527,
+    "setSelectedChannels": 2528,
+    "setPreviewOff": 2529,
+    "togglePreview": 2530,
+    "collapseSelection": 2531,
+    "explodeCluster": 2532,
+    "takePendingExportClick": 2533,
+    "exportPayloadJson": 2534,
+    "takePendingClusterExplode": 2535,
+    "setSliderValue": 2536,
+    "sliderOverlayStateJson": 2537,
+    "setNoteText": 2538,
+    "beginNoteEdit": 2539,
+    "noteInsertText": 2540,
+    "noteBackspace": 2541,
+    "noteDeleteForward": 2542,
+    "noteMoveCaret": 2543,
+    "noteCommitEdit": 2544,
+    "setNoteCaretVisible": 2545,
+    "setImageSrc": 2546,
+    "schemasJson": 2547,
+    "setVariableName": 2548,
+    "setVariableSchema": 2549,
+    "addWidget": 2550,
+    "setGhostWidget": 2551,
+    "clearGhostWidget": 2552,
+    "removeWidget": 2553,
+    "moveWidget": 2554,
+    "insertBetween": 2555,
+    "makeSpace": 2556,
+    "setNeuronParams": 2557,
+    "connect": 2558,
+    "disconnect": 2559,
+    "undo": 2560,
+    "redo": 2561,
+    "canUndo": 2562,
+    "canRedo": 2563,
+    "worldFromScreen": 2564,
+    "setCamera": 2565,
+    "cameraJson": 2566,
+    "wheelScreen": 2567,
+    "setWheelZoomActive": 2568,
+    "lodScaleJson": 2569,
+    "setAutomaticLod": 2570,
+    "setProximityDistance": 2571,
+    "setForcedDrawLodLabel": 2572,
+    "drawLodLabel": 2573,
+    "labelOverlayPaintStateJson": 2574,
+    "attachSurface": 2575,
+    "surfaceStatus": 2576,
+    "gpuReady": 2577,
+    "setSize": 2578,
+    "setCanvasThemeJson": 2579,
+    "reorganize": 2580,
+    "renderFrame": 2581,
+    "pointerDownScreen": 2582,
+    "pointerMoveScreen": 2583,
+    "pickTargetsAtScreenJson": 2584,
+    "entityScreenJson": 2585,
+    "widgetDragActive": 2586,
+    "pointerUpScreen": 2587,
+    "setSelectionOptions": 2588,
+    "selectionPreviewPointsJson": 2589,
+    "selectionPreviewCrossing": 2590,
+    "selectionPreviewMethod": 2591,
+    "selectionUnionBoundsScreenJson": 2592,
+    "alignSelection": 2593,
+    "preselectWidgetIdsJson": 2594,
+    "cancelAreaSelect": 2595,
+    "deleteSelection": 2596,
+    "hasSelection": 2597,
+    "selectAll": 2598,
+    "tessellate": 2599,
+    "renderDrawingScene": 2600,
+    "exportDrawingSvg": 2601,
+    "exportDrawingPdf": 2602,
+    "exportDrawingDwg": 2603,
+    "importDrawingDwg": 2604,
+    "traceDrawingBitmap": 2605,
+    "booleanDrawingSegments": 2606,
+    "dispose": 2607,
+    "dwgEncodeMeshJson": 2608,
+    "documentJson": 2609,
+    "synchronizeDocumentJson": 2610
+  },
+  "events": {
+    "admitted": 2650,
+    "progress": 2651,
+    "checkpoint": 2652,
+    "preview": 2653,
+    "surfaceStatus": 2654,
+    "output": 2655,
+    "terminal": 2656
+  },
+  "limits": {
+    "requestBytes": 1048576,
+    "inlineReplyBytes": 1024,
+    "pageBytes": 65536,
+    "transferBytes": 16777216,
+    "resources": 64,
+    "requests": 256,
+    "outbound": 64,
+    "eventsInFlight": 64,
+    "workUnits": 64,
+    "deadlineMilliseconds": 8
+  },
+  "identities": {
+    "session": [
+      "slot:u32",
+      "generation:u32"
+    ],
+    "operation": [
+      "slot:u32",
+      "generation:u32"
+    ],
+    "surface": "nonzero-u32",
+    "surfaceGeneration": "nonzero-u32"
+  },
+  "framing": {
+    "message": "A1-AbiMessage-v1",
+    "requestBody": [
+      "session-slot:u32",
+      "session-generation:u32",
+      "operation-specific-fields:arguments[operation]"
+    ],
+    "surfaceBody": [
+      "surface:u32",
+      "surface-generation:u32",
+      "logical-width:u32",
+      "logical-height:u32",
+      "dpr:f64"
+    ],
+    "pagedOutput": [
+      "operation-slot:u32",
+      "operation-generation:u32",
+      "total-bytes:u64"
+    ],
+    "byteOrder": "little-endian"
+  },
+  "arguments": {
+    "open": [],
+    "vcsCheckpoint": [
+      {
+        "name": "sessionGeneration",
+        "type": "u32"
+      },
+      {
+        "name": "baseRevision",
+        "type": "u64"
+      },
+      {
+        "name": "parentRevision",
+        "type": "u64"
+      }
+    ],
+    "vcsFault": [
+      {
+        "name": "sessionGeneration",
+        "type": "u32"
+      },
+      {
+        "name": "baseRevision",
+        "type": "u64"
+      },
+      {
+        "name": "parentRevision",
+        "type": "u64"
+      }
+    ],
+    "vcsRetryCheckpoint": [
+      {
+        "name": "sessionGeneration",
+        "type": "u32"
+      },
+      {
+        "name": "baseRevision",
+        "type": "u64"
+      },
+      {
+        "name": "parentRevision",
+        "type": "u64"
+      }
+    ],
+    "catalogueJson": [],
+    "setCatalogueJson": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "setNeuronKindInfosJson": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "addInputPort": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "index",
+        "type": "u64"
+      }
+    ],
+    "removeInputPort": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "portId",
+        "type": "utf8"
+      }
+    ],
+    "addOutputPort": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "index",
+        "type": "u64"
+      }
+    ],
+    "removeOutputPort": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "portId",
+        "type": "utf8"
+      }
+    ],
+    "connectPorts": [
+      {
+        "name": "fromId",
+        "type": "utf8"
+      },
+      {
+        "name": "fromPort",
+        "type": "utf8"
+      },
+      {
+        "name": "toId",
+        "type": "utf8"
+      },
+      {
+        "name": "toPort",
+        "type": "utf8"
+      }
+    ],
+    "compiledWireLiteral": [],
+    "applyEvalOutputsJson": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "setComputingProgress": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "setNodeStatuses": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "clearComputingWidgetIds": [],
+    "previewText": [],
+    "selectedWidgetIds": [],
+    "selectedEdgeIds": [],
+    "selectionDomainsJson": [],
+    "hoveredWidgetId": [],
+    "hoveredChannelJson": [],
+    "selectedChannelsJson": [],
+    "previewOffWidgetIds": [],
+    "setSelection": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "setHover": [
+      {
+        "name": "widgetId",
+        "type": "optional-utf8"
+      }
+    ],
+    "setHoverChannel": [
+      {
+        "name": "widgetId",
+        "type": "optional-utf8"
+      },
+      {
+        "name": "port",
+        "type": "optional-utf8"
+      }
+    ],
+    "setSelectedChannels": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "setPreviewOff": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "togglePreview": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      }
+    ],
+    "collapseSelection": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "explodeCluster": [
+      {
+        "name": "clusterId",
+        "type": "utf8"
+      }
+    ],
+    "takePendingExportClick": [],
+    "exportPayloadJson": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      }
+    ],
+    "takePendingClusterExplode": [],
+    "setSliderValue": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "value",
+        "type": "f64"
+      }
+    ],
+    "sliderOverlayStateJson": [],
+    "setNoteText": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "text",
+        "type": "utf8"
+      }
+    ],
+    "beginNoteEdit": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "worldX",
+        "type": "f64"
+      },
+      {
+        "name": "worldY",
+        "type": "f64"
+      }
+    ],
+    "noteInsertText": [
+      {
+        "name": "chunk",
+        "type": "utf8"
+      }
+    ],
+    "noteBackspace": [],
+    "noteDeleteForward": [],
+    "noteMoveCaret": [
+      {
+        "name": "direction",
+        "type": "utf8"
+      },
+      {
+        "name": "extend",
+        "type": "bool"
+      }
+    ],
+    "noteCommitEdit": [],
+    "setNoteCaretVisible": [
+      {
+        "name": "visible",
+        "type": "bool"
+      }
+    ],
+    "setImageSrc": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "src",
+        "type": "utf8"
+      }
+    ],
+    "schemasJson": [],
+    "setVariableName": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "name",
+        "type": "utf8"
+      }
+    ],
+    "setVariableSchema": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "schema",
+        "type": "utf8"
+      }
+    ],
+    "addWidget": [
+      {
+        "name": "descriptorJson",
+        "type": "utf8"
+      },
+      {
+        "name": "worldX",
+        "type": "f64"
+      },
+      {
+        "name": "worldY",
+        "type": "f64"
+      }
+    ],
+    "setGhostWidget": [
+      {
+        "name": "descriptorJson",
+        "type": "utf8"
+      },
+      {
+        "name": "worldX",
+        "type": "f64"
+      },
+      {
+        "name": "worldY",
+        "type": "f64"
+      }
+    ],
+    "clearGhostWidget": [],
+    "removeWidget": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      }
+    ],
+    "moveWidget": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "x",
+        "type": "f64"
+      },
+      {
+        "name": "y",
+        "type": "f64"
+      }
+    ],
+    "insertBetween": [
+      {
+        "name": "anchorId",
+        "type": "utf8"
+      },
+      {
+        "name": "anchorOutPort",
+        "type": "utf8"
+      },
+      {
+        "name": "midId",
+        "type": "utf8"
+      },
+      {
+        "name": "midInPort",
+        "type": "utf8"
+      },
+      {
+        "name": "midOutPort",
+        "type": "utf8"
+      }
+    ],
+    "makeSpace": [
+      {
+        "name": "anchorId",
+        "type": "utf8"
+      },
+      {
+        "name": "dx",
+        "type": "f64"
+      },
+      {
+        "name": "dy",
+        "type": "f64"
+      }
+    ],
+    "setNeuronParams": [
+      {
+        "name": "widgetId",
+        "type": "utf8"
+      },
+      {
+        "name": "paramsJson",
+        "type": "utf8"
+      }
+    ],
+    "connect": [
+      {
+        "name": "fromId",
+        "type": "utf8"
+      },
+      {
+        "name": "toId",
+        "type": "utf8"
+      }
+    ],
+    "disconnect": [
+      {
+        "name": "synapseId",
+        "type": "utf8"
+      }
+    ],
+    "undo": [],
+    "redo": [],
+    "canUndo": [],
+    "canRedo": [],
+    "worldFromScreen": [
+      {
+        "name": "sx",
+        "type": "f64"
+      },
+      {
+        "name": "sy",
+        "type": "f64"
+      }
+    ],
+    "setCamera": [
+      {
+        "name": "x",
+        "type": "f64"
+      },
+      {
+        "name": "y",
+        "type": "f64"
+      },
+      {
+        "name": "zoom",
+        "type": "f64"
+      }
+    ],
+    "cameraJson": [],
+    "wheelScreen": [
+      {
+        "name": "sx",
+        "type": "f64"
+      },
+      {
+        "name": "sy",
+        "type": "f64"
+      },
+      {
+        "name": "deltaX",
+        "type": "f64"
+      },
+      {
+        "name": "deltaY",
+        "type": "f64"
+      },
+      {
+        "name": "zoomGesture",
+        "type": "bool"
+      }
+    ],
+    "setWheelZoomActive": [
+      {
+        "name": "active",
+        "type": "bool"
+      }
+    ],
+    "lodScaleJson": [],
+    "setAutomaticLod": [
+      {
+        "name": "enabled",
+        "type": "bool"
+      }
+    ],
+    "setProximityDistance": [
+      {
+        "name": "world",
+        "type": "f64"
+      }
+    ],
+    "setForcedDrawLodLabel": [
+      {
+        "name": "label",
+        "type": "utf8"
+      }
+    ],
+    "drawLodLabel": [],
+    "labelOverlayPaintStateJson": [],
+    "attachSurface": [
+      {
+        "name": "surface",
+        "type": "u32"
+      },
+      {
+        "name": "surfaceGeneration",
+        "type": "u32"
+      },
+      {
+        "name": "width",
+        "type": "u32"
+      },
+      {
+        "name": "height",
+        "type": "u32"
+      },
+      {
+        "name": "dpr",
+        "type": "f64"
+      }
+    ],
+    "surfaceStatus": [
+      {
+        "name": "surface",
+        "type": "u32"
+      },
+      {
+        "name": "surfaceGeneration",
+        "type": "u32"
+      },
+      {
+        "name": "status",
+        "type": "utf8"
+      }
+    ],
+    "gpuReady": [],
+    "setSize": [
+      {
+        "name": "width",
+        "type": "u32"
+      },
+      {
+        "name": "height",
+        "type": "u32"
+      },
+      {
+        "name": "dpr",
+        "type": "f64"
+      }
+    ],
+    "setCanvasThemeJson": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "reorganize": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ],
+    "renderFrame": [],
+    "pointerDownScreen": [
+      {
+        "name": "sx",
+        "type": "f64"
+      },
+      {
+        "name": "sy",
+        "type": "f64"
+      },
+      {
+        "name": "button",
+        "type": "u8"
+      },
+      {
+        "name": "shift",
+        "type": "bool"
+      },
+      {
+        "name": "ctrlOrMeta",
+        "type": "bool"
+      },
+      {
+        "name": "alt",
+        "type": "bool"
+      },
+      {
+        "name": "pan",
+        "type": "bool"
+      }
+    ],
+    "pointerMoveScreen": [
+      {
+        "name": "sx",
+        "type": "f64"
+      },
+      {
+        "name": "sy",
+        "type": "f64"
+      },
+      {
+        "name": "shift",
+        "type": "bool"
+      },
+      {
+        "name": "ctrlOrMeta",
+        "type": "bool"
+      },
+      {
+        "name": "alt",
+        "type": "bool"
+      }
+    ],
+    "pickTargetsAtScreenJson": [
+      {
+        "name": "sx",
+        "type": "f64"
+      },
+      {
+        "name": "sy",
+        "type": "f64"
+      }
+    ],
+    "entityScreenJson": [
+      {
+        "name": "domain",
+        "type": "utf8"
+      },
+      {
+        "name": "id",
+        "type": "utf8"
+      }
+    ],
+    "widgetDragActive": [],
+    "pointerUpScreen": [
+      {
+        "name": "sx",
+        "type": "f64"
+      },
+      {
+        "name": "sy",
+        "type": "f64"
+      },
+      {
+        "name": "shift",
+        "type": "bool"
+      },
+      {
+        "name": "ctrlOrMeta",
+        "type": "bool"
+      },
+      {
+        "name": "alt",
+        "type": "bool"
+      }
+    ],
+    "setSelectionOptions": [
+      {
+        "name": "method",
+        "type": "utf8"
+      },
+      {
+        "name": "mode",
+        "type": "utf8"
+      }
+    ],
+    "selectionPreviewPointsJson": [],
+    "selectionPreviewCrossing": [],
+    "selectionPreviewMethod": [],
+    "selectionUnionBoundsScreenJson": [],
+    "alignSelection": [
+      {
+        "name": "mode",
+        "type": "utf8"
+      }
+    ],
+    "preselectWidgetIdsJson": [],
+    "cancelAreaSelect": [],
+    "deleteSelection": [],
+    "hasSelection": [],
+    "selectAll": [],
+    "tessellate": [
+      {
+        "name": "handle",
+        "type": "utf8"
+      },
+      {
+        "name": "tolerance",
+        "type": "f64"
+      }
+    ],
+    "renderDrawingScene": [
+      {
+        "name": "handle",
+        "type": "utf8"
+      }
+    ],
+    "exportDrawingSvg": [
+      {
+        "name": "handle",
+        "type": "utf8"
+      }
+    ],
+    "exportDrawingPdf": [
+      {
+        "name": "handle",
+        "type": "utf8"
+      }
+    ],
+    "exportDrawingDwg": [
+      {
+        "name": "handle",
+        "type": "utf8"
+      }
+    ],
+    "importDrawingDwg": [
+      {
+        "name": "dataBase64",
+        "type": "utf8"
+      }
+    ],
+    "traceDrawingBitmap": [
+      {
+        "name": "width",
+        "type": "u32"
+      },
+      {
+        "name": "height",
+        "type": "u32"
+      },
+      {
+        "name": "mask",
+        "type": "bytes"
+      },
+      {
+        "name": "threshold",
+        "type": "f64"
+      },
+      {
+        "name": "simplifyEpsilon",
+        "type": "f64"
+      }
+    ],
+    "booleanDrawingSegments": [
+      {
+        "name": "aJson",
+        "type": "utf8"
+      },
+      {
+        "name": "bJson",
+        "type": "utf8"
+      },
+      {
+        "name": "operation",
+        "type": "utf8"
+      }
+    ],
+    "dispose": [
+      {
+        "name": "handle",
+        "type": "utf8"
+      }
+    ],
+    "dwgEncodeMeshJson": [
+      {
+        "name": "meshJson",
+        "type": "utf8"
+      }
+    ],
+    "documentJson": [],
+    "synchronizeDocumentJson": [
+      {
+        "name": "json",
+        "type": "utf8"
+      }
+    ]
+  }
+}

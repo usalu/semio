@@ -37,8 +37,6 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framew
         tree_item_desc("puzzle2d-play-inspector.nodes", ui_label(labels.nodes.as_str())?, Some(fixture_nodes(&envelope.fixture).len().to_string())),
         tree_item_desc("puzzle2d-play-inspector.edges", ui_label(labels.edges.as_str())?, Some(fixture_edges(&envelope.fixture).len().to_string())),
     ])?;
-    PanelTreeBuilder::new("puzzle2d-play-inspector")?
-        .section("puzzle2d-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?
-        .build()
+    PanelTreeBuilder::new("puzzle2d-play-inspector")?.section("puzzle2d-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 //#endregion 🔖️Render

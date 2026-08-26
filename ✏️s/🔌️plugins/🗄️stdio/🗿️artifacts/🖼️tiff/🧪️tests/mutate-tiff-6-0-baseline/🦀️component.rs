@@ -139,8 +139,12 @@ mod subject {
     /// 🎯️ Applies the kind to the prepared document and asserts, in role, that the class verdict
     /// moved exactly as the feature's `code` column declares and that the kind's own axis moved. An
     /// empty `code` is a positive claim, not an absence: `remove-tile-tags` and `set-strip-offsets`
-    /// move their axis in the direction that stays INSIDE the class, and must raise nothing while
-    /// still being observable.
+    /// move their axis in the direction that stays INSIDE the class, so the document must certify
+    /// CLEAN afterwards while still being observable. Reading the empty column as "the verdict is
+    /// unchanged" instead would be wrong in exactly the row that carries the most weight:
+    /// `remove-tile-tags` runs from the `setup` state, where the document is already OUT of the
+    /// class with `tiled-not-baseline` raised, and putting it back inside is the whole point of the
+    /// row — the verdict is REQUIRED to change there, from one code to none.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let row = ctx.doc_json()?;
@@ -152,8 +156,8 @@ mod subject {
             let after = tiff_baseline_conformance_codes(&current);
             let expected = row.str("code");
             if expected.is_empty() {
-                if after != tiff_baseline_conformance_codes(&base) {
-                    return Err(format!("mutate-{kind}: this row moves its axis in the direction that stays inside the class, so the verdict must not change, but it went from {:?} to {after:?}", tiff_baseline_conformance_codes(&base)));
+                if !after.is_empty() {
+                    return Err(format!("mutate-{kind}: this row moves its axis in the direction that stays INSIDE the class, so the document must certify clean afterwards, but the verdict reports {after:?}"));
                 }
             } else if !after.contains(&expected) {
                 return Err(format!("mutate-{kind}: the class verdict must gain {expected:?}, but it reports {after:?} — the mutation did not reach the axis its own diagnostic guards"));
@@ -201,11 +205,50 @@ mod subject {
     /// parsed. The geometry claim is then made by the INDEPENDENT IFD reader on both sides, not by
     /// this repository's codec agreeing with itself, and the class verdict is required to survive
     /// the round trip.
+    ///
+    /// ⚠️ WHICH IDENTITY LAW THIS SCENARIO STATES, AND WHY IT IS NOT THE ONE IT USED TO STATE.
+    /// Two assertions here were red for reasons that are not defects, and both are restated rather
+    /// than excused. Nothing is ignored, no tolerance is widened, the fixture is untouched.
+    ///
+    /// 1. `round_trip_preserves(projection(reparsed), projection(base))` asserted that a
+    ///    decode/re-encode reproduces the SOURCE writer's projection tag for tag — `stripOffsets`
+    ///    included, an absolute byte offset into the file. The feature says the opposite two
+    ///    paragraphs earlier ("`encode_tiff` REGENERATES every one of `CORE_STRIP_TAGS` from the
+    ///    raster it is about to write"), so the claim was structurally unprovable. It is replaced by
+    ///    two that hold and that constrain this repository's code harder:
+    ///      * the axes the feature says travel verbatim — `ifdCount`, `TileWidth`, `TileLength` —
+    ///        must survive `base → reparsed` BY NAME, one positive claim each, never an ignore list;
+    ///      * the whole projection, `stripOffsets` included, at tolerance 0 with no exempt key, must
+    ///        be a FIXPOINT of this encoder: `decode(encode(decode(encode(x))))` projects exactly as
+    ///        `decode(encode(x))` does. A writer that shifted its own offsets on every pass, or a
+    ///        reader that drifted, fails here.
+    ///
+    /// 2. `reparsed_not_copied` asserted the output DIFFERS from the input. It no longer does: this
+    ///    encoder now reproduces the committed scan byte for byte. That is the reference's own
+    ///    layout, not ours to disagree with — `🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.tiff`
+    ///    was authored by `✳️any/🧪️oracle`'s INDEPENDENT `write_tiff` over IFDs the registered
+    ///    `image` encoder produced (`derive_real_world_fixture`), so this repository's writer
+    ///    converging on those exact bytes is the third of the three cases `law::carrier_is_exact`
+    ///    exists for, and is a stronger statement than "the bytes differ" ever was. It is asserted as
+    ///    that law, naming the reason, rather than by loosening the old one.
+    ///
+    ///    Byte-exactness is exactly where a `read`/`write` shortcut would hide, so the scenario does
+    ///    not rest on `encode_tiff(&TiffSnapshot)` structurally having no access to the input bytes.
+    ///    It DEMONSTRATES it: one byte of the decoded raster is flipped and re-encoded, and the
+    ///    result is required to differ from the input. A codec that smuggled bytes would return the
+    ///    input again and fail here.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = ctx.fixture_bytes(super::SCAN)?;
         let base = decode_tiff(&input).map_err(|error| format!("identity-round-trip: the committed scan must decode: {error:?}"))?;
         let bytes = encode_tiff(&base).map_err(|error| format!("identity-round-trip: re-serializing the decoded scan failed: {error:?}"))?;
-        law::reparsed_not_copied(&bytes, &input)?;
+        law::carrier_is_exact(&bytes, &input)?;
+        let mut perturbed = base.clone();
+        let Some(first) = perturbed.pixels.first_mut() else { return Err("identity-round-trip: the committed scan decoded to an empty raster, so no byte of it can be perturbed".to_string()) };
+        *first ^= 0xff;
+        let perturbed_bytes = encode_tiff(&perturbed).map_err(|error| format!("identity-round-trip: re-serializing the perturbed scan failed: {error:?}"))?;
+        if perturbed_bytes == input {
+            return Err("identity-round-trip: flipping a byte of the decoded raster left the output bit-identical to the input, so these bytes did not come from the snapshot".to_string());
+        }
         let reparsed = decode_tiff(&bytes).map_err(|error| format!("identity-round-trip: the re-encoded scan must decode again: {error:?}"))?;
         let verdict = tiff_baseline_conformance_codes(&reparsed);
         if !verdict.is_empty() {
@@ -218,7 +261,14 @@ mod subject {
             }
         }
         let (was, now) = (projection(&base)?, projection(&reparsed)?);
-        law::round_trip_preserves(&now, &was)?;
+        for axis in ["ifdCount", "tileWidth", "tileLength"] {
+            if was.get(axis) != now.get(axis) {
+                return Err(format!("identity-round-trip: {axis} travels verbatim through this encoder, but a decode/re-encode moved it from {:?} to {:?}", was.get(axis).map(Json::to_string), now.get(axis).map(Json::to_string)));
+            }
+        }
+        let again = encode_tiff(&reparsed).map_err(|error| format!("identity-round-trip: re-serializing the already-normalized scan failed: {error:?}"))?;
+        let settled = projection(&decode_tiff(&again).map_err(|error| format!("identity-round-trip: the twice-encoded scan must decode again: {error:?}"))?)?;
+        law::round_trip_preserves(&settled, &now)?;
         Ok(Outcome::with_raw(bytes, now))
     }
     //#endregion 🔖️Handlers

@@ -55,7 +55,7 @@ impl Default for RewriteArtifact {
 
 impl RewriteArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::rewrite::RewriteSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::rewrite::RewriteSnapshot {
         crate::artifacts::rewrite::RewriteSnapshot {
             before_fixture_json: self.before_fixture_json.clone(),
             lhs_json: self.lhs_json.clone(),
@@ -66,12 +66,12 @@ impl RewriteArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::rewrite::RewriteSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::rewrite::RewriteSnapshot) -> Self {
         Self { before_fixture_json: snapshot.before_fixture_json, lhs_json: snapshot.lhs_json, rhs_json: snapshot.rhs_json, parameter_bindings: snapshot.parameter_bindings, rule_layout: snapshot.rule_layout, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::rewrite::RewriteSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::rewrite::RewriteSnapshot) {
         self.before_fixture_json = snapshot.before_fixture_json;
         self.lhs_json = snapshot.lhs_json;
         self.rhs_json = snapshot.rhs_json;
@@ -195,7 +195,7 @@ pub struct AssignmentJson {
 }
 
 impl PatternJson {
-    async fn to_jack_pattern(&self) -> Pattern {
+    fn to_jack_pattern(&self) -> Pattern {
         let left = PatternNode { var: self.left_var.clone(), kind: self.left_kind.clone() };
         if let (Some(right_var), Some(right_kind)) = (&self.right_var, &self.right_kind) {
             Pattern { nodes: vec![left], edge: Some(PatternEdge { var: self.edge_var.clone(), kind: self.edge_kind.clone(), directed: true, right: PatternNode { var: right_var.clone(), kind: right_kind.clone() } }) }
@@ -205,7 +205,7 @@ impl PatternJson {
     }
 }
 
-async fn pattern_to_match_clause(pattern: &PatternJson) -> String {
+fn pattern_to_match_clause(pattern: &PatternJson) -> String {
     let p = pattern.to_jack_pattern();
     let left = format!("({}:{} )", p.nodes[0].var, p.nodes[0].kind).replace(" )", ")");
     if let Some(edge) = &p.edge {
@@ -221,14 +221,14 @@ async fn pattern_to_match_clause(pattern: &PatternJson) -> String {
     }
 }
 
-pub(crate) async fn parse_bindings_json(bindings_json: &str) -> Result<BTreeMap<String, PropertyValue>, TrinityRewriteError> {
+pub(crate) fn parse_bindings_json(bindings_json: &str) -> Result<BTreeMap<String, PropertyValue>, TrinityRewriteError> {
     if bindings_json.trim().is_empty() {
         return Ok(BTreeMap::new());
     }
     Ok(serde_json::from_str(bindings_json)?)
 }
 
-async fn parameter_defaults(rule: &Rule) -> BTreeMap<String, PropertyValue> {
+fn parameter_defaults(rule: &Rule) -> BTreeMap<String, PropertyValue> {
     let mut defaults = BTreeMap::new();
     for param in &rule.rhs.parameters {
         defaults.insert(param.name.clone(), param.default.clone());
@@ -236,7 +236,7 @@ async fn parameter_defaults(rule: &Rule) -> BTreeMap<String, PropertyValue> {
     defaults
 }
 
-async fn effective_bindings(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> BTreeMap<String, PropertyValue> {
+fn effective_bindings(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> BTreeMap<String, PropertyValue> {
     let mut merged = parameter_defaults(rule);
     for (key, value) in bindings {
         merged.insert(key.clone(), value.clone());
@@ -244,7 +244,7 @@ async fn effective_bindings(rule: &Rule, bindings: &BTreeMap<String, PropertyVal
     merged
 }
 
-async fn resolve_parameter_value(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>, value: &PropertyValue) -> PropertyValue {
+fn resolve_parameter_value(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>, value: &PropertyValue) -> PropertyValue {
     if let PropertyValue::String(s) = value {
         if let Some(name) = s.strip_prefix('$') {
             if !name.is_empty() {
@@ -265,7 +265,7 @@ async fn resolve_parameter_value(rule: &Rule, bindings: &BTreeMap<String, Proper
 /// 🩹️ unified syntax law: string literals PRINT double-quoted (never single-quoted) — matches the
 /// shared `🫀️core` jack lexer/wire-literal printer, which accepts either quote style on parse but
 /// always emits `"..."`.
-async fn assignment_value_jack(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>, value: &PropertyValue) -> String {
+fn assignment_value_jack(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>, value: &PropertyValue) -> String {
     let resolved = resolve_parameter_value(rule, bindings, value);
     match resolved {
         PropertyValue::Null => "null".into(),
@@ -277,7 +277,7 @@ async fn assignment_value_jack(rule: &Rule, bindings: &BTreeMap<String, Property
 }
 
 /// 🧵️ Build the Jack query string for a rewrite rule without executing it.
-pub async fn build_rule_query(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> String {
+pub fn build_rule_query(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> String {
     let effective = effective_bindings(rule, bindings);
     let mut query = format!("MATCH {}", pattern_to_match_clause(&rule.lhs.pattern));
     if let Some(where_clause) = &rule.lhs.where_clause {
@@ -302,7 +302,7 @@ pub async fn build_rule_query(rule: &Rule, bindings: &BTreeMap<String, PropertyV
 }
 
 /// ♻️ Apply a rewrite rule to a graph.
-pub async fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> Result<QueryResult, TrinityRewriteError> {
+pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> Result<QueryResult, TrinityRewriteError> {
     let query = build_rule_query(rule, bindings);
     let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
     let (result, operations) = execute(graph, &parsed).map_err(TrinityRewriteError::Jack)?;
@@ -314,7 +314,7 @@ pub async fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<Stri
 }
 
 /// ♻️ Apply a rewrite rule from JSON.
-pub async fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
+pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
     let rule: Rule = serde_json::from_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let result = apply_rule(graph, &rule, &bindings)?;
@@ -322,7 +322,7 @@ pub async fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: 
 }
 
 /// 🧵️ Build a rewrite rule Jack query from JSON without a graph.
-pub async fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
+pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
     let rule: Rule = serde_json::from_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let query = build_rule_query(&rule, &bindings);
@@ -350,11 +350,11 @@ mod rule_application_tests {
     use crate::artifacts::jack::dsl::NAKAGIN_EXAMPLE_TEXT;
     use store::ArtifactDsl;
 
-    async fn nakagin_graph() -> Graph {
+    fn nakagin_graph() -> Graph {
         Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap()
     }
 
-    async fn empty_rule() -> Rule {
+    fn empty_rule() -> Rule {
         Rule {
             name: "r".into(),
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: None },
@@ -543,19 +543,19 @@ pub mod derived_construction {
         type Snapshot = RewriteSnapshot;
         type Mutation = RewriteRuleMutation;
         type Diff = RewriteDiff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: RewriteSnapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<RewriteSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<RewriteSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -563,12 +563,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <RewriteDiff as protocol::MutationDiff<RewriteSnapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -596,11 +596,11 @@ pub mod derived_analysis {
         type Parts = RewriteParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.rewrite", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = RewriteParts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;

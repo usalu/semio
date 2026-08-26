@@ -4,7 +4,7 @@ use super::mutation::ChangeWindZone;
 use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeWindZone, base: &En1991Snapshot) -> Vec<En1991Mutation> {
+pub fn inverse(_payload: &ChangeWindZone, base: &En1991Snapshot) -> Vec<En1991Mutation> {
     vec![En1991Mutation::ChangeWindZone(ChangeWindZone { new_wind_zone: base.wind_zone.clone() })]
 }
 //#endregion 🔖️Inverse

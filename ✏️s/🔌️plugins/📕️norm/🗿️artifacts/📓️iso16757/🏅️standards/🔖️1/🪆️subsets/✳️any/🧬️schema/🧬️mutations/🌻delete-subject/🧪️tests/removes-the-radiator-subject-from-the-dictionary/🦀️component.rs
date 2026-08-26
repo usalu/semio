@@ -35,7 +35,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// cascade, and this case is the pin on that: a dangling dictionary reference is a validation concern, not a
 /// mutation one.
 #[semio_framework_async_macros::async_test]
-async fn removes_the_radiator_subject_from_the_dictionary() {
+fn removes_the_radiator_subject_from_the_dictionary() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("delete-subject applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "delete-subject/removes-the-radiator-subject-from-the-dictionary: the applied state differs from the committed after-snapshot");
     assert!(applied.dictionary.subjects.is_empty(), "delete-subject/removes-the-radiator-subject-from-the-dictionary: the addressed subject must be gone");
@@ -50,7 +50,7 @@ async fn removes_the_radiator_subject_from_the_dictionary() {
 /// ↩️ `delete-subject`'s inverse is a `CreateSubject` carrying the removed subject AND its recorded position
 /// (`index: Some(0)`), which is what makes the round trip order-exact rather than merely set-exact.
 #[semio_framework_async_macros::async_test]
-async fn recreating_the_radiator_subject_restores_before() {
+fn recreating_the_radiator_subject_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward delete-subject applies");
@@ -67,7 +67,7 @@ async fn recreating_the_radiator_subject_restores_before() {
 /// is a fixed point. The committed payload is spelled `{"DeleteSubject": {"id": "subject.radiator"}}` —
 /// externally tagged, snake_case payload key.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -82,7 +82,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `subject.radiator` IS among the committed subjects, so the `mutation.target-missing` Error branch is not
 /// taken.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-subject/removes-the-radiator-subject-from-the-dictionary: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -94,7 +94,7 @@ async fn declared_outcome_holds() {
 /// this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `dictionary` is rewritten
 /// and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced delete-subject diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "delete-subject/removes-the-radiator-subject-from-the-dictionary: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -103,7 +103,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole emptied
 /// dictionary and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed delete-subject diff decodes");
     let dictionary = decoded.dictionary.as_ref().expect("the committed delete-subject diff carries the dictionary");
     assert!(dictionary.subjects.is_empty(), "delete-subject/removes-the-radiator-subject-from-the-dictionary: the deletion is expressed as the shorter whole subject list");
@@ -121,7 +121,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the subject deletion, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed delete-subject diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-subject/removes-the-radiator-subject-from-the-dictionary: the committed diff did not carry before to after");

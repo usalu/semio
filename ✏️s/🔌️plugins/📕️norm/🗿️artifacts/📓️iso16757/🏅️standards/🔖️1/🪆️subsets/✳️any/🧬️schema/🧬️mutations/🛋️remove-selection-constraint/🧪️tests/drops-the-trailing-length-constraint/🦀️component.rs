@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// ▶️ `remove-selection-constraint` is INDEX-addressed, not id-addressed. This case removes index 1 — the
 /// trailing length constraint — leaving the height constraint at index 0.
 #[semio_framework_async_macros::async_test]
-async fn drops_the_trailing_length_constraint() {
+fn drops_the_trailing_length_constraint() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("remove-selection-constraint applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "remove-selection-constraint/drops-the-trailing-length-constraint: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.selection.constraints.len(), 1, "remove-selection-constraint/drops-the-trailing-length-constraint: the constraint list must shrink by exactly one");
@@ -45,7 +45,7 @@ async fn drops_the_trailing_length_constraint() {
 /// removed entry only because this case deliberately removes the LAST constraint. Removing an interior index
 /// would invert to a different order, and this fixture pins the boundary the inverse is exact at.
 #[semio_framework_async_macros::async_test]
-async fn re_appending_the_length_constraint_restores_before() {
+fn re_appending_the_length_constraint_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward remove-selection-constraint applies");
@@ -62,7 +62,7 @@ async fn re_appending_the_length_constraint_restores_before() {
 /// decode → encode is a fixed point. The committed payload is spelled `{"RemoveSelectionConstraint":
 /// {"index": 1}}` — a bare JSON integer, because the payload field is a `usize`.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ Index 1 is inside the committed two-entry list, so the `index >= len` bound check does not take the
 /// `mutation.target-missing` Error branch.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "remove-selection-constraint/drops-the-trailing-length-constraint: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `selection` is
 /// rewritten and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced remove-selection-constraint diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "remove-selection-constraint/drops-the-trailing-length-constraint: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole surviving
 /// selection request and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed remove-selection-constraint diff decodes");
     let selection = decoded.selection.as_ref().expect("the committed remove-selection-constraint diff carries the selection request");
     assert_eq!(selection.constraints.len(), 1, "remove-selection-constraint/drops-the-trailing-length-constraint: a removal is expressed as the SHORTER whole list, never as an index marker");
@@ -120,7 +120,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the constraint removal, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed remove-selection-constraint diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-selection-constraint/drops-the-trailing-length-constraint: the committed diff did not carry before to after");

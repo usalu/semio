@@ -14,7 +14,7 @@
 //!
 //! 🚫️async: E6 sync payload encoding — no `async fn` anywhere in this module.
 
-use serde::de::{self, DeserializeSeed, SeqAccess, Visitor};
+use serde::de::{self, DeserializeSeed, MapAccess, SeqAccess, Visitor};
 use serde::ser::{self, SerializeSeq, SerializeStruct, SerializeStructVariant, SerializeTuple, SerializeTupleStruct, SerializeTupleVariant};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -68,6 +68,7 @@ const TAG_SOME: u8 = 9;
 const TAG_SEQ: u8 = 10;
 const TAG_CHAR: u8 = 11;
 const TAG_VARIANT: u8 = 12;
+const TAG_MAP: u8 = 13;
 
 fn write_varint(out: &mut Vec<u8>, value: u64) {
     let mut remaining = value;
@@ -100,6 +101,12 @@ fn zigzag_encode(value: i64) -> u64 {
 }
 fn zigzag_decode(value: u64) -> i64 {
     ((value >> 1) as i64) ^ -((value & 1) as i64)
+}
+
+fn write_string(out: &mut Vec<u8>, value: &str) {
+    out.push(TAG_STR);
+    write_varint(out, value.len() as u64);
+    out.extend_from_slice(value.as_bytes());
 }
 //#endregion 🔖️Primitives
 
@@ -171,9 +178,7 @@ impl<'a> ser::Serializer for &mut PackSerializer<'a> {
         Ok(())
     }
     fn serialize_str(self, v: &str) -> Result<(), PackError> {
-        self.out.push(TAG_STR);
-        write_varint(self.out, v.len() as u64);
-        self.out.extend_from_slice(v.as_bytes());
+        write_string(self.out, v);
         Ok(())
     }
     fn serialize_bytes(self, v: &[u8]) -> Result<(), PackError> {
@@ -197,17 +202,18 @@ impl<'a> ser::Serializer for &mut PackSerializer<'a> {
     fn serialize_unit_struct(self, _name: &'static str) -> Result<(), PackError> {
         self.serialize_unit()
     }
-    fn serialize_unit_variant(self, _name: &'static str, variant_index: u32, _variant: &'static str) -> Result<(), PackError> {
+    fn serialize_unit_variant(self, _name: &'static str, _variant_index: u32, variant: &'static str) -> Result<(), PackError> {
         self.out.push(TAG_VARIANT);
-        write_varint(self.out, variant_index as u64);
+        write_string(self.out, variant);
+        self.out.push(TAG_UNIT);
         Ok(())
     }
     fn serialize_newtype_struct<T: Serialize + ?Sized>(self, _name: &'static str, value: &T) -> Result<(), PackError> {
         value.serialize(self)
     }
-    fn serialize_newtype_variant<T: Serialize + ?Sized>(self, _name: &'static str, variant_index: u32, _variant: &'static str, value: &T) -> Result<(), PackError> {
+    fn serialize_newtype_variant<T: Serialize + ?Sized>(self, _name: &'static str, _variant_index: u32, variant: &'static str, value: &T) -> Result<(), PackError> {
         self.out.push(TAG_VARIANT);
-        write_varint(self.out, variant_index as u64);
+        write_string(self.out, variant);
         value.serialize(self)
     }
     fn serialize_seq(self, len: Option<usize>) -> Result<Self, PackError> {
@@ -225,9 +231,9 @@ impl<'a> ser::Serializer for &mut PackSerializer<'a> {
         write_varint(self.out, len as u64);
         Ok(self)
     }
-    fn serialize_tuple_variant(self, _name: &'static str, variant_index: u32, _variant: &'static str, len: usize) -> Result<Self, PackError> {
+    fn serialize_tuple_variant(self, _name: &'static str, _variant_index: u32, variant: &'static str, len: usize) -> Result<Self, PackError> {
         self.out.push(TAG_VARIANT);
-        write_varint(self.out, variant_index as u64);
+        write_string(self.out, variant);
         self.out.push(TAG_SEQ);
         write_varint(self.out, len as u64);
         Ok(self)
@@ -236,14 +242,14 @@ impl<'a> ser::Serializer for &mut PackSerializer<'a> {
         Err(PackError::Unsupported("map"))
     }
     fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self, PackError> {
-        self.out.push(TAG_SEQ);
+        self.out.push(TAG_MAP);
         write_varint(self.out, len as u64);
         Ok(self)
     }
-    fn serialize_struct_variant(self, _name: &'static str, variant_index: u32, _variant: &'static str, len: usize) -> Result<Self, PackError> {
+    fn serialize_struct_variant(self, _name: &'static str, _variant_index: u32, variant: &'static str, len: usize) -> Result<Self, PackError> {
         self.out.push(TAG_VARIANT);
-        write_varint(self.out, variant_index as u64);
-        self.out.push(TAG_SEQ);
+        write_string(self.out, variant);
+        self.out.push(TAG_MAP);
         write_varint(self.out, len as u64);
         Ok(self)
     }
@@ -305,7 +311,8 @@ impl<'a> ser::SerializeMap for &mut PackSerializer<'a> {
 impl<'a> SerializeStruct for &mut PackSerializer<'a> {
     type Ok = ();
     type Error = PackError;
-    fn serialize_field<T: Serialize + ?Sized>(&mut self, _key: &'static str, value: &T) -> Result<(), PackError> {
+    fn serialize_field<T: Serialize + ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), PackError> {
+        write_string(self.out, key);
         value.serialize(&mut **self)
     }
     fn end(self) -> Result<(), PackError> {
@@ -315,7 +322,8 @@ impl<'a> SerializeStruct for &mut PackSerializer<'a> {
 impl<'a> SerializeStructVariant for &mut PackSerializer<'a> {
     type Ok = ();
     type Error = PackError;
-    fn serialize_field<T: Serialize + ?Sized>(&mut self, _key: &'static str, value: &T) -> Result<(), PackError> {
+    fn serialize_field<T: Serialize + ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), PackError> {
+        write_string(self.out, key);
         value.serialize(&mut **self)
     }
     fn end(self) -> Result<(), PackError> {
@@ -355,6 +363,27 @@ impl<'de> PackDeserializer<'de> {
 struct PackSeqAccess<'a, 'de> {
     de: &'a mut PackDeserializer<'de>,
     remaining: u64,
+}
+
+struct PackMapAccess<'a, 'de> {
+    de: &'a mut PackDeserializer<'de>,
+    remaining: u64,
+}
+impl<'a, 'de> MapAccess<'de> for PackMapAccess<'a, 'de> {
+    type Error = PackError;
+    fn next_key_seed<K: DeserializeSeed<'de>>(&mut self, seed: K) -> Result<Option<K::Value>, PackError> {
+        if self.remaining == 0 {
+            return Ok(None);
+        }
+        seed.deserialize(&mut *self.de).map(Some)
+    }
+    fn next_value_seed<V: DeserializeSeed<'de>>(&mut self, seed: V) -> Result<V::Value, PackError> {
+        self.remaining -= 1;
+        seed.deserialize(&mut *self.de)
+    }
+    fn size_hint(&self) -> Option<usize> {
+        Some(self.remaining as usize)
+    }
 }
 impl<'a, 'de> SeqAccess<'de> for PackSeqAccess<'a, 'de> {
     type Error = PackError;
@@ -424,6 +453,10 @@ impl<'de> serde::Deserializer<'de> for &mut PackDeserializer<'de> {
             TAG_SEQ => {
                 let len = self.read_varint()?;
                 visitor.visit_seq(PackSeqAccess { de: self, remaining: len })
+            }
+            TAG_MAP => {
+                let len = self.read_varint()?;
+                visitor.visit_map(PackMapAccess { de: self, remaining: len })
             }
             other => Err(PackError::InvalidTag(other)),
         }
@@ -530,11 +563,21 @@ impl<'de> serde::Deserializer<'de> for &mut PackDeserializer<'de> {
         self.deserialize_seq(visitor)
     }
     fn deserialize_struct<V: Visitor<'de>>(self, _name: &'static str, _fields: &'static [&'static str], visitor: V) -> Result<V::Value, PackError> {
-        self.deserialize_seq(visitor)
+        let tag = self.read_tag()?;
+        if tag != TAG_MAP {
+            return Err(PackError::InvalidTag(tag));
+        }
+        let len = self.read_varint()?;
+        visitor.visit_map(PackMapAccess { de: self, remaining: len })
     }
 
-    fn deserialize_map<V: Visitor<'de>>(self, _visitor: V) -> Result<V::Value, PackError> {
-        Err(PackError::Unsupported("map"))
+    fn deserialize_map<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, PackError> {
+        let tag = self.read_tag()?;
+        if tag != TAG_MAP {
+            return Err(PackError::InvalidTag(tag));
+        }
+        let len = self.read_varint()?;
+        visitor.visit_map(PackMapAccess { de: self, remaining: len })
     }
     fn deserialize_enum<V: Visitor<'de>>(self, _name: &'static str, _variants: &'static [&'static str], visitor: V) -> Result<V::Value, PackError> {
         let tag = self.read_tag()?;
@@ -544,7 +587,7 @@ impl<'de> serde::Deserializer<'de> for &mut PackDeserializer<'de> {
         visitor.visit_enum(PackEnumAccess { de: self })
     }
     fn deserialize_identifier<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, PackError> {
-        self.deserialize_u32(visitor)
+        self.deserialize_str(visitor)
     }
     fn deserialize_ignored_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, PackError> {
         self.deserialize_any(visitor)
@@ -569,8 +612,8 @@ impl<'a, 'de> de::EnumAccess<'de> for PackEnumAccess<'a, 'de> {
     type Error = PackError;
     type Variant = PackVariantAccess<'a, 'de>;
     fn variant_seed<S: DeserializeSeed<'de>>(self, seed: S) -> Result<(S::Value, Self::Variant), PackError> {
-        let index = self.de.read_varint()? as u32;
-        let value = seed.deserialize(index.into_deserializer())?;
+        let variant = String::deserialize(&mut *self.de)?;
+        let value = seed.deserialize(variant.into_deserializer())?;
         Ok((value, PackVariantAccess { de: self.de }))
     }
 }
@@ -582,7 +625,7 @@ struct PackVariantAccess<'a, 'de> {
 impl<'a, 'de> de::VariantAccess<'de> for PackVariantAccess<'a, 'de> {
     type Error = PackError;
     fn unit_variant(self) -> Result<(), PackError> {
-        Ok(())
+        <()>::deserialize(self.de)
     }
     fn newtype_variant_seed<S: DeserializeSeed<'de>>(self, seed: S) -> Result<S::Value, PackError> {
         seed.deserialize(self.de)
@@ -591,7 +634,7 @@ impl<'a, 'de> de::VariantAccess<'de> for PackVariantAccess<'a, 'de> {
         serde::Deserializer::deserialize_seq(self.de, visitor)
     }
     fn struct_variant<V: Visitor<'de>>(self, _fields: &'static [&'static str], visitor: V) -> Result<V::Value, PackError> {
-        serde::Deserializer::deserialize_seq(self.de, visitor)
+        serde::Deserializer::deserialize_map(self.de, visitor)
     }
 }
 //#endregion 🔖️Deserializer
@@ -615,6 +658,22 @@ mod tests {
         items: Vec<Nested>,
     }
 
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Sparse {
+        first_value: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        middle_value: Option<String>,
+        last_value: String,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    enum Choice {
+        Unit,
+        Newtype(String),
+        Record { value: String },
+    }
+
     #[test]
     fn round_trips_struct_with_option_and_seq() {
         let value = Sample { name: "hello".into(), count: 42, active: true, tag: Some("v1".into()), items: vec![Nested { label: "a".into(), weight: 1.5 }, Nested { label: "b".into(), weight: -2.25 }] };
@@ -629,6 +688,24 @@ mod tests {
         let bytes = to_bytes(&value).expect("encode");
         let back: Sample = from_bytes(&bytes).expect("decode");
         assert_eq!(value, back);
+    }
+
+    #[test]
+    fn self_describing_struct_preserves_a_field_after_a_skipped_middle_field() {
+        let value = Sparse { first_value: "first".into(), middle_value: None, last_value: "last".into() };
+        let bytes = to_bytes(&value).expect("encode");
+        let back: Sparse = from_bytes(&bytes).expect("decode");
+        assert_eq!(value, back);
+        assert!(bytes.windows("lastValue".len()).any(|window| window == b"lastValue"));
+    }
+
+    #[test]
+    fn self_describing_enum_round_trips_every_payload_shape() {
+        for value in [Choice::Unit, Choice::Newtype("newtype".into()), Choice::Record { value: "record".into() }] {
+            let bytes = to_bytes(&value).expect("encode");
+            let back: Choice = from_bytes(&bytes).expect("decode");
+            assert_eq!(value, back);
+        }
     }
 
     #[test]

@@ -913,7 +913,7 @@ mod tests {
     }
 
     /// 🧪️ field_sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable
-    /// field at every nesting depth (timeline/channel/keyframe), including the `name` tri-state
+    /// field at every nesting depth (timeline/channel/keyframe).await, including the `name` tri-state
     /// and an `AnimValue` variant change, with a removed+modified collection member exercised at
     /// SOME direction/level and an added+modified member exercised at the opposite
     /// direction/level — `timelines`/`channels`/`keyframes` are ALL `IndexedTripleDiff`

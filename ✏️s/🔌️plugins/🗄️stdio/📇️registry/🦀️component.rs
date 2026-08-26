@@ -787,14 +787,16 @@ mod tests {
         source.runtime_capabilities.iter().map(|capability| runtime_key(&capability.category, runtime_claims(capability))).collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn declaration_runtime_keys(declaration: &ArtifactDeclaration) -> BTreeSet<String> {
-        declaration
-            .runtime_capability_requirements()
-            .unwrap()
-            .into_iter()
-            .map(|requirement| runtime_key(requirement.kind().as_str(), requirement.claims().iter().map(|claim| (claim.namespace().as_str().to_owned(), claim.value().to_owned()))))
-            .collect()
+    /// ⏳️ `ArtifactRuntimeCapabilityRequirement::kind`/`claims` are declared `async` by the plugin
+    /// SDK, so this reader suspends once per requirement and cannot be a `🚫️async` helper.
+    async fn declaration_runtime_keys(declaration: &ArtifactDeclaration) -> BTreeSet<String> {
+        let mut keys = BTreeSet::new();
+        for requirement in declaration.runtime_capability_requirements().unwrap() {
+            let kind = requirement.kind().await.as_str();
+            let claims = requirement.claims().await.iter().map(|claim| (claim.namespace().as_str().to_owned(), claim.value().to_owned()));
+            keys.insert(runtime_key(kind, claims));
+        }
+        keys
     }
 
     #[semio_framework_async_macros::async_test]
@@ -803,7 +805,7 @@ mod tests {
         for source in sources().unwrap() {
             let assembly = factories.get(source.artifact.as_str()).expect("schema artifact factory")(build(&source).expect("schema definition")).expect("runtime parity");
             match assembly {
-                ArtifactAssembly::Runtime(declaration) => assert_eq!(schema_runtime_keys(&source), declaration_runtime_keys(&declaration), "runtime capability rows diverge for {}", source.artifact),
+                ArtifactAssembly::Runtime(declaration) => assert_eq!(schema_runtime_keys(&source), declaration_runtime_keys(&declaration).await, "runtime capability rows diverge for {}", source.artifact),
                 ArtifactAssembly::Definition(_) => assert!(source.runtime_capabilities.is_empty(), "definition-only {} declares unregistered runtime capabilities", source.artifact),
             }
         }

@@ -5,5 +5,5 @@ import "s_stdio_pdf_snapshot.proto"; // PageDoc
 
 message PdfArtifact {
   string schema = 1;
-  semio.s_stdio_pdf.snapshot.PageDoc page = 2;
+  repeated semio.s_stdio_pdf.snapshot.PageDoc pages = 2;
 }

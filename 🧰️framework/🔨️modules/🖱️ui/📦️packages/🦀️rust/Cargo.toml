@@ -21,7 +21,7 @@ default = []
 # ⌨️ Terminal target: semio-styled scene/cell renderer, wasm-safe. Carries no platform I/O on its own.
 tui = ["dep:semio-framework-async"]
 # 🖥️ Native terminal backend for `tui`: raw mode, alt screen, stdin ANSI input decoding.
-tui-terminal = ["tui", "dep:libc", "dep:windows-sys"]
+tui-terminal = ["tui", "dep:libc"]
 # 🌐️ wasm-bindgen exports of the tui `WasmHost` for browser hosts (xterm.js); never default.
 tui-bindgen = ["tui", "dep:wasm-bindgen"]
 # 🧊️ wgpu target: declarative component types only, so wasm32-wasip2 program components stay light.
@@ -38,7 +38,6 @@ wgpu-engine = [
     "dep:taffy",
     "dep:js-sys",
     "dep:wasm-bindgen",
-    "dep:wasm-bindgen-futures",
     "dep:web-sys",
     "dep:arboard",
     "dep:semio-framework-geometry",
@@ -80,21 +79,10 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], 
 [target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
 libc = { version = "0.2.186", optional = true }
 
-[target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.60.2", optional = true, features = [
-    "Win32_Foundation",
-    "Win32_System_Console",
-    "Win32_Storage_FileSystem",
-    "Win32_System_Threading",
-    "Win32_System_Pipes",
-    "Win32_Security",
-] }
-
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"], optional = true }
 js-sys = { version = "0.3.83", optional = true }
 wasm-bindgen = { version = "0.2.106", optional = true }
-wasm-bindgen-futures = { version = "0.4.71", optional = true }
 web-sys = { version = "0.3.98", optional = true, features = [
     "Window",
     "Navigator",

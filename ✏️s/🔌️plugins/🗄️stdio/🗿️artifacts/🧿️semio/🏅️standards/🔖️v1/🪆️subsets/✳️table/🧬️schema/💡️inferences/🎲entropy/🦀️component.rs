@@ -166,7 +166,7 @@ mod tests {
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_column_snapshot();
         let pure = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&snapshot, None);
-        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
+        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
         let via_disabled = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&snapshot, Some(&mut disabled));
         assert_eq!(pure, via_disabled);
     }
@@ -175,27 +175,27 @@ mod tests {
     //#region 🧪️IncrementalityLaw
     #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.stats().await;
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
         assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
         assert_eq!(after.hits - before.hits, 2, "both columns must be cache hits");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.rows[0].cells[0] = SemioValue::Str { value: "edge".into() };
-        let before = cache.stats();
+        let before = cache.stats().await;
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 1, "only coin's own entry may miss when its own cells change");
         assert_eq!(values.get("always_a").map(|e| e.distinct), Some(1), "always_a's entropy must be untouched");
@@ -208,15 +208,15 @@ mod tests {
         // column at all — the isolation law instead is: editing `always_a` misses ONLY `always_a`'s
         // own cache entry, proven in both directions together with
         // `changing_one_columns_cells_misses_only_that_columns_cache_entry` above.
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.rows[0].cells[1] = SemioValue::Str { value: "z".into() };
-        let before = cache.stats();
+        let before = cache.stats().await;
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
         assert_eq!(after.misses - before.misses, 1, "only always_a's own entry may miss when its own cells change");
         assert_eq!(values.get("coin").map(|e| e.distinct), Some(2), "coin's entropy must be untouched by an edit to always_a");
     }

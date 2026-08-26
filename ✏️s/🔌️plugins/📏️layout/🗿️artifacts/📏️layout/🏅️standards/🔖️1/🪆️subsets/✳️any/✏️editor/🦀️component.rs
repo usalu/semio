@@ -52,12 +52,9 @@ pub fn layout_action(action: &str, args: Option<semio_framework_plugin::UiValue>
     semio_framework_plugin::ActionFactory::new(LAYOUT_PLAY_APP_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -70,27 +67,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -100,13 +90,10 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
-
 
 //#region 🔖️Interaction
 /// 🕹️ The one framework-owned interaction domain layout declares — pages/frames on the Blueprint

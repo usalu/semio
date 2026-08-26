@@ -3,8 +3,8 @@
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex, OnceLock};
 
 //#region 🔖️Constants
 pub const WRITER_DOCUMENT_SCHEMA: &str = "writer.document";
@@ -148,34 +148,40 @@ pub struct WriterWorkingScene {
     pub language_id: String,
 }
 
-thread_local! {
-    static WRITER_SCRATCH: RefCell<HashMap<String, String>> = RefCell::new(HashMap::new());
+fn writer_scratch() -> &'static Mutex<HashMap<String, Arc<str>>> {
+    static WRITER_SCRATCH: OnceLock<Mutex<HashMap<String, Arc<str>>>> = OnceLock::new();
+    WRITER_SCRATCH.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 /// 📝 Seeds the scratch cache for a handle — call whenever new text content is about to become a
 /// document's `document` field (every mutation-diff/fixture builder in this plugin does, via
 /// [`document_child_handle_and_cache`]).
-pub async fn cache_writer_document_text(child_id: &str, text: &str) {
-    WRITER_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), text.to_string()));
+pub fn cache_writer_document_text(child_id: &str, text: &str) {
+    writer_scratch().lock().unwrap_or_else(|poisoned| poisoned.into_inner()).insert(child_id.to_string(), Arc::<str>::from(text));
 }
 
 /// 🔎 Reads the cached live text for a document child handle — empty string (never a panic) when
 /// nothing has cached it yet (see this region's module doc comment for why that can happen).
-pub async fn writer_text_for_handle(handle: &WriterDocumentChild) -> String {
-    WRITER_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
+pub fn writer_text_for_handle(handle: &WriterDocumentChild) -> String {
+    writer_scratch().lock().unwrap_or_else(|poisoned| poisoned.into_inner()).get(&handle.child_id).cloned().map_or_else(String::new, |text| text.to_string())
 }
 
 /// 🔎 Reads the current document's live text off its `document` child handle — the single read
 /// call site every render/inference/export path in this plugin uses instead of the old
 /// `snapshot.text` field access.
-pub async fn writer_text(snapshot: &WriterSnapshot) -> String {
+pub fn writer_text(snapshot: &WriterSnapshot) -> String {
     writer_text_for_handle(&snapshot.document)
+}
+
+/// 🧵️ Retains the immutable child-text owner for bounded worker jobs without cloning its bytes.
+pub fn writer_text_owner(snapshot: &WriterSnapshot) -> Arc<str> {
+    writer_scratch().lock().unwrap_or_else(|poisoned| poisoned.into_inner()).get(&snapshot.document.child_id).cloned().unwrap_or_else(|| Arc::<str>::from(""))
 }
 
 /// 🏗️ Mints a new content-addressed handle AND seeds the scratch cache with its text in one call —
 /// the standard way every mutation-diff/fixture builder in this plugin creates a `document` field
 /// value; never construct a handle without also caching, or [`writer_text`] will read back empty.
-pub async fn document_child_handle_and_cache(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
+pub fn document_child_handle_and_cache(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
     let handle = document_child_handle(id, text, language_id);
     cache_writer_document_text(&handle.child_id, text);
     handle
@@ -184,7 +190,7 @@ pub async fn document_child_handle_and_cache(id: &str, text: &str, language_id: 
 /// 🏗️ Builds a full `WriterSnapshot` from literal text — the standard fixture/import constructor
 /// replacing the old 5-field `WriterSnapshot { ..., text }` struct literal now that `document` is a
 /// composed child handle, not a plain field.
-pub async fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri: &str, text: &str) -> WriterSnapshot {
+pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri: &str, text: &str) -> WriterSnapshot {
     WriterSnapshot { schema: schema.into(), id: id.into(), language_id: language_id.into(), uri: uri.into(), document: document_child_handle_and_cache(id, text, language_id) }
 }
 //#endregion 🔖️WorkingScene

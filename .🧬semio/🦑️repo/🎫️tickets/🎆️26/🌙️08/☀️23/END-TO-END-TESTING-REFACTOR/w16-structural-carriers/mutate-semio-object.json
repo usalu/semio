@@ -1,0 +1,204 @@
+{
+ "rows": {
+  "move-object": {
+   "prepare": [],
+   "mutation": {
+    "MoveObject": {
+     "translation": {
+      "x": -4.25,
+      "y": 0.0,
+      "z": 7.5
+     }
+    }
+   }
+  },
+  "rotate-object": {
+   "prepare": [],
+   "mutation": {
+    "RotateObject": {
+     "rotation": {
+      "x": 0.5,
+      "y": -0.5,
+      "z": 0.5,
+      "w": 0.5
+     }
+    }
+   }
+  },
+  "scale-object": {
+   "prepare": [],
+   "mutation": {
+    "ScaleObject": {
+     "scale": {
+      "x": 2.0,
+      "y": 0.5,
+      "z": 4.0
+     }
+    }
+   }
+  },
+  "create-brep": {
+   "prepare": [
+    {
+     "DeleteBrep": {}
+    }
+   ],
+   "mutation": {
+    "CreateBrep": {
+     "child_id": "brep-02",
+     "target": {
+      "artifactId": "crate-brep-lod2",
+      "dialect": {
+       "artifactKind": "s.stdio.semio",
+       "standard": "v1",
+       "subset": "brep"
+      }
+     }
+    }
+   }
+  },
+  "delete-brep": {
+   "prepare": [],
+   "mutation": {
+    "DeleteBrep": {}
+   }
+  },
+  "create-mesh": {
+   "prepare": [
+    {
+     "DeleteMesh": {}
+    }
+   ],
+   "mutation": {
+    "CreateMesh": {
+     "child_id": "mesh-02",
+     "target": {
+      "artifactId": "crate-mesh-lod2",
+      "dialect": {
+       "artifactKind": "s.stdio.semio",
+       "standard": "v1",
+       "subset": "mesh"
+      }
+     }
+    }
+   }
+  },
+  "delete-mesh": {
+   "prepare": [],
+   "mutation": {
+    "DeleteMesh": {}
+   }
+  },
+  "create-properties": {
+   "prepare": [
+    {
+     "DeleteProperties": {}
+    }
+   ],
+   "mutation": {
+    "CreateProperties": {
+     "child_id": "props-02",
+     "target": {
+      "artifactId": "crate-props-metric",
+      "dialect": {
+       "artifactKind": "s.stdio.semio",
+       "standard": "v1",
+       "subset": "value"
+      }
+     }
+    }
+   }
+  },
+  "delete-properties": {
+   "prepare": [],
+   "mutation": {
+    "DeleteProperties": {}
+   }
+  }
+ },
+ "vectors": {
+  "move-object": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚚move-object/🧪️tests/moves-the-object-to-a-new-translation/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "rotate-object": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🔄rotate-object/🧪️tests/rotates-the-object-a-half-turn-about-z/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "scale-object": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📏scale-object/🧪️tests/scales-the-object-non-uniformly/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📏scale-object/🧪️tests/scales-the-object-non-uniformly/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/📏scale-object/🧪️tests/scales-the-object-non-uniformly/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-brep": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧱create-brep/🧪️tests/attaches-a-brep-child-to-an-object-that-has-none/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-brep": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/💥delete-brep/🧪️tests/detaches-the-brep-child-and-leaves-the-mesh-child-alone/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-mesh": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/attaches-a-mesh-child-to-an-object-that-has-none/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-mesh": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/detaches-the-mesh-child-and-leaves-the-brep-child-alone/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-properties": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🏷️create-properties/🧪️tests/attaches-a-properties-child-to-an-object-that-has-none/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-properties": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🚫delete-properties/🧪️tests/detaches-the-properties-child-and-leaves-the-mesh-child-alone/📸️snapshot/➡️after/🔣️component.json"
+  ]
+ },
+ "dirs": {
+  "move-object": [
+   "🚚move-object",
+   "moves-the-object-to-a-new-translation"
+  ],
+  "rotate-object": [
+   "🔄rotate-object",
+   "rotates-the-object-a-half-turn-about-z"
+  ],
+  "scale-object": [
+   "📏scale-object",
+   "scales-the-object-non-uniformly"
+  ],
+  "create-brep": [
+   "🧱create-brep",
+   "attaches-a-brep-child-to-an-object-that-has-none"
+  ],
+  "delete-brep": [
+   "💥delete-brep",
+   "detaches-the-brep-child-and-leaves-the-mesh-child-alone"
+  ],
+  "create-mesh": [
+   "🕸️create-mesh",
+   "attaches-a-mesh-child-to-an-object-that-has-none"
+  ],
+  "delete-mesh": [
+   "🧨delete-mesh",
+   "detaches-the-mesh-child-and-leaves-the-brep-child-alone"
+  ],
+  "create-properties": [
+   "🏷️create-properties",
+   "attaches-a-properties-child-to-an-object-that-has-none"
+  ],
+  "delete-properties": [
+   "🚫delete-properties",
+   "detaches-the-properties-child-and-leaves-the-mesh-child-alone"
+  ]
+ }
+}

@@ -1,5 +1,5 @@
 [package]
-name = "procedural-manifest-probe"
+name = "procedural-ui-patch-probe"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -7,8 +7,18 @@ publish = false
 [workspace]
 
 [dependencies]
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-os-flow = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-ui-runtime = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
 semio-s-plugin-procedural = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", default-features = false }
 
 [[bin]]
-name = "procedural-manifest-probe"
+name = "procedural-ui-patch-probe"
 path = "🦀️main.rs"
+
+[[bin]]
+name = "flow-pack-probe"
+path = "🦀️flow-pack-probe.rs"

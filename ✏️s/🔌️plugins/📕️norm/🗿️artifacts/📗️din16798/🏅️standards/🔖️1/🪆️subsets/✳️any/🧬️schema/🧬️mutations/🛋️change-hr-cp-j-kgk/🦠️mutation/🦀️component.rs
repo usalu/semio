@@ -15,15 +15,15 @@ pub struct ChangeHrCpJKgk {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHrCpJKgk {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "hr-cp-j-kgk", kind: "change-hr-cp-j-kgk", record: "ChangedHrCpJKgk" };
 
-    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_hr_cp_j_kgk::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_hr_cp_j_kgk::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change heat recovery specific heat capacity to {}", self.new_hr_cp_j_kgk)
     }
 }

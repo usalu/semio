@@ -15,15 +15,15 @@ pub struct ChangeNEdKn {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeNEdKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "n-ed-kn", kind: "change-n-ed-kn", record: "ChangedNEdKn" };
 
-    async fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_n_ed_kn::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
+    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
         crate::artifacts::en1995::mutations::change_n_ed_kn::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change n ed kn to {:?}", self.new_n_ed_kn)
     }
 }

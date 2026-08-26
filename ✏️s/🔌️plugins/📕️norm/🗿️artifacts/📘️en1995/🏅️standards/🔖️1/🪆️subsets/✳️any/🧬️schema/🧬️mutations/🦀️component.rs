@@ -109,7 +109,7 @@ impl En1995Mutation {
     /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
     /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
     /// bundle a bulk document replacement into a single atomic `Emit::commit`.
-    pub async fn from_snapshot(snapshot: &En1995Snapshot) -> Vec<En1995Mutation> {
+    pub fn from_snapshot(snapshot: &En1995Snapshot) -> Vec<En1995Mutation> {
         let mut mutations = Vec::with_capacity(20);
         mutations.push(En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: snapshot.annex.clone() }));
         mutations.push(En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
@@ -144,7 +144,7 @@ mod tests {
 
     /// ⚖️ One value per `En1995Mutation` variant — the closed set the semantics/round-trip tests
     /// iterate, mirroring this ticket's `en1992`/`en1993` precedent's own `every_mutation()` fixture.
-    async fn every_mutation() -> Vec<En1995Mutation> {
+    fn every_mutation() -> Vec<En1995Mutation> {
         vec![
             En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
             En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 }),
@@ -169,7 +169,7 @@ mod tests {
         ]
     }
 
-    async fn round_trip(base: &En1995Snapshot, mutation: &En1995Mutation) -> En1995Snapshot {
+    fn round_trip(base: &En1995Snapshot, mutation: &En1995Mutation) -> En1995Snapshot {
         let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_registers_an_approved_semantic_descriptor() {
+    fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_round_trips_via_inverse() {
+    fn every_variant_round_trips_via_inverse() {
         let base = En1995Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -202,7 +202,7 @@ mod tests {
     /// distinct variants: the enum-typed scalar (`change-annex`), a typical `f64` scalar
     /// (`change-m-ed-knm`), and a `String` scalar (`change-service-class`).
     #[semio_framework_async_macros::async_test]
-    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -211,7 +211,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
+    fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -220,7 +220,7 @@ mod tests {
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_service_class_satisfies_the_inverse_and_absorb_laws() {
+    fn change_service_class_satisfies_the_inverse_and_absorb_laws() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);

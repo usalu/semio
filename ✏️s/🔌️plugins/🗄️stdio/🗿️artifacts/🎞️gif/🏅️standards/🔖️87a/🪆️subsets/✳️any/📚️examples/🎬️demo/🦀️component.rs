@@ -28,7 +28,7 @@ mod tests {
     /// parsed through the real `ArtifactDsl` codec — not a hand-built stub). `PRIMARY_TEXT`'s own
     /// `semio stdio.gif.dsl v1` envelope is the 87a standard's (`envelope_id()`), so this parses
     /// as `standards::v87a`'s `GifSnapshot` — 89a's own laws are covered separately by the
-    /// `💃️dancing` example (a real 89a fixture).
+    /// `💃️dancing` example (a real 89a fixture).await.
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;

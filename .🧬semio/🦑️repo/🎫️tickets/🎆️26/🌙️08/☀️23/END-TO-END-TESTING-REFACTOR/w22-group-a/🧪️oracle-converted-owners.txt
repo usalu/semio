@@ -1,0 +1,31 @@
+##### owner 🏛️architect
+[test] level=exhaustive cases=1 executed=533 passed=528 failed=5 errored=0 parity=0/0
+EXIT=1
+##### owner 🧱️block
+[test] level=exhaustive cases=3 executed=237 passed=231 failed=6 errored=0 parity=0/0
+EXIT=1
+##### owner 🧩️puzzle
+[test] level=exhaustive cases=3 executed=181 passed=175 failed=6 errored=0 parity=0/0
+EXIT=1
+##### owner 📐️cad
+[test] level=exhaustive cases=1 executed=41 passed=41 failed=0 errored=0 parity=0/0
+EXIT=0
+##### owner 💠️lowpoly
+[test] level=exhaustive cases=1 executed=35 passed=35 failed=0 errored=0 parity=0/0
+EXIT=0
+##### owner 🌀️procedural
+[test] level=exhaustive cases=3 executed=77 passed=77 failed=0 errored=0 parity=0/0
+EXIT=0
+##### owner 🗒️note
+[test] level=exhaustive cases=1 executed=67 passed=64 failed=3 errored=0 parity=0/0
+EXIT=1
+##### owner ✒️writer
+[test] level=exhaustive cases=1 executed=9 passed=6 failed=3 errored=0 parity=0/0
+EXIT=1
+##### owner 📖️playbook
+[test] level=exhaustive cases=1 executed=19 passed=18 failed=1 errored=0 parity=0/0
+EXIT=1
+##### owner 📋️forms
+[test] level=exhaustive cases=1 executed=21 passed=19 failed=2 errored=0 parity=0/0
+EXIT=1
+ALLDONE

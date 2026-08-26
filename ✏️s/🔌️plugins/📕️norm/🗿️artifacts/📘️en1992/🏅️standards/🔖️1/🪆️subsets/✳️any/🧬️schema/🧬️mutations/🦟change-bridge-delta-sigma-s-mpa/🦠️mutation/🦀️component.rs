@@ -15,15 +15,15 @@ pub struct ChangeBridgeDeltaSigmaSMpa {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeBridgeDeltaSigmaSMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "bridge-delta-sigma-s-mpa", kind: "change-bridge-delta-sigma-s-mpa", record: "ChangedBridgeDeltaSigmaSMpa" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_bridge_delta_sigma_s_mpa::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_bridge_delta_sigma_s_mpa::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change bridge delta sigma s mpa to {:?}", self.new_bridge_delta_sigma_s_mpa)
     }
 }

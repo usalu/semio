@@ -113,7 +113,7 @@ impl En1996Mutation {
     /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
     /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app
     /// command to bundle a bulk document replacement into a single atomic `Emit::commit`.
-    pub async fn from_snapshot(snapshot: &En1996Snapshot) -> Vec<En1996Mutation> {
+    pub fn from_snapshot(snapshot: &En1996Snapshot) -> Vec<En1996Mutation> {
         let mut mutations = Vec::with_capacity(22);
         mutations.push(En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: snapshot.m_ed_knm.clone() }));
         mutations.push(En1996Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: snapshot.n_ed_kn.clone() }));
@@ -151,7 +151,7 @@ mod tests {
 
     /// ⚖️ One value per `En1996Mutation` variant — the closed set the semantics/round-trip
     /// tests iterate, mirroring `din16798`'s own `every_mutation()` fixture.
-    async fn every_mutation() -> Vec<En1996Mutation> {
+    fn every_mutation() -> Vec<En1996Mutation> {
         vec![
             En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 }),
             En1996Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 250.0 }),
@@ -178,7 +178,7 @@ mod tests {
         ]
     }
 
-    async fn round_trip(base: &En1996Snapshot, mutation: &En1996Mutation) -> En1996Snapshot {
+    fn round_trip(base: &En1996Snapshot, mutation: &En1996Mutation) -> En1996Snapshot {
         let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_registers_an_approved_semantic_descriptor() {
+    fn every_variant_registers_an_approved_semantic_descriptor() {
         for mutation in every_mutation() {
             let descriptor = protocol::SemanticMutation::semantics(&mutation);
             assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_round_trips_via_inverse() {
+    fn every_variant_round_trips_via_inverse() {
         let base = En1996Snapshot::default();
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
@@ -212,7 +212,7 @@ mod tests {
     /// variants: an enum scalar (`change-annex`), a plain `f64` scalar (`change-m-ed-knm`), and a
     /// `String` scalar (`change-unit`).
     #[semio_framework_async_macros::async_test]
-    async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
+    fn change_annex_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -221,7 +221,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
+    fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -230,7 +230,7 @@ mod tests {
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[semio_framework_async_macros::async_test]
-    async fn change_unit_satisfies_the_inverse_and_absorb_laws() {
+    fn change_unit_satisfies_the_inverse_and_absorb_laws() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
@@ -246,7 +246,7 @@ mod tests {
     /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
     /// don't apply/aren't landed yet.
     #[semio_framework_async_macros::async_test]
-    async fn change_m_ed_knm_non_finite_is_fatal() {
+    fn change_m_ed_knm_non_finite_is_fatal() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
         let outcome = mutation.diff(&base);
@@ -255,7 +255,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_masonry_class_same_value_is_no_op() {
+    fn change_masonry_class_same_value_is_no_op() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMasonryClass(change_masonry_class::mutation::ChangeMasonryClass { new_masonry_class: base.masonry_class });
         let outcome = mutation.diff(&base);
@@ -264,7 +264,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_m_ed_knm_is_deterministic() {
+    fn change_m_ed_knm_is_deterministic() {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 });
         protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation);

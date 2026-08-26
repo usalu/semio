@@ -78,7 +78,7 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real drawing
     Given the real input document shared://qr-code.svg
     When the <id> mutation is applied and then undone with its own inverse

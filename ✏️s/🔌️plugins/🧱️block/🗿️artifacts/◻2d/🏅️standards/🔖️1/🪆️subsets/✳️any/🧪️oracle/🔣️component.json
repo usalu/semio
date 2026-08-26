@@ -1,17 +1,22 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `Block2dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.block.block2d` is a semio-NATIVE KIND DEFINITION — one node kind's identity and presentation, the handle kinds it declares, the handles on its rim, the compatibility relation between those kinds, its attributes, authors, camera and metadata. No symbol- or component-library format models that and none reads `.dsl.semio`, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas, grammar and specification vectors.",
+  "oracles": [
     {
-      "id": "block-2d-mutation-semantics",
-      "capabilities": ["block-2d-1-mutate"],
-      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Block2dMutation`. This document is not a drawing: it is the DEFINITION of a node kind — its identity record, its 2d presentation, the handle kinds it offers, the handles it places, the compatibility rules it publishes, its attributes, its authors and its editor camera. The vocabulary is therefore about authoring a kind, not about placing instances, and that distinction IS the specification. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability (a kind must move the compared projection) and footprint completeness (`before` and `after` may differ on exactly the fields the committed diff declares).",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "id": "block-2d-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "block-2d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.block.block2d` node-kind document and all twenty-six typed mutations, in Python, at `../../../../../🧪️tests/mutate-block-2d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the ten members), `../🧬️schema/🧬️mutations/🔣️component.json` and `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the twenty-six verbs and their argument lists), and the twenty-six committed `(before, mutation, after, outcome)` specification vectors — which give the internally tagged wire form of each verb and the two things only they state: that `update-presentation` REBUILDS the presentation from its six arguments and drops every member whose argument is null, and that an `author` keeps only the members it was given. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: a symbol- or component-library format such as KiCad, Modelica or IFC's property sets carries pins or ports but has no notion of a kind-level compatibility relation between handle kinds, of a rim angle in radians, or of the presentation variant this vocabulary switches with one verb, and none of them reads this carrier. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
   "mutationCatalogs": [

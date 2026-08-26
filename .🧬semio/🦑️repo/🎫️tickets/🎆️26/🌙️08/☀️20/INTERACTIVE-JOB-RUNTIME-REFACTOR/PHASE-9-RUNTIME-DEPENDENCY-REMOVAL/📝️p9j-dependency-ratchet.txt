@@ -1,7 +1,0 @@
-[verify dependencies] baseline: 238 third-party dependenc(y/ies) (commit 95b8688ee2f62f4056b6403c282bf0c76172c37c); current: 234.
-[verify dependencies] 4 dependenc(y/ies) removed since baseline (always passes — ratchet only tightens):
-  rust:pretty_assertions
-  rust:rayon
-  rust:thiserror
-  rust:uuid
-[verify dependencies] clean — no new third-party dependencies.

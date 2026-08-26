@@ -30,7 +30,7 @@ fn mutation() -> En1992Mutation {
 /// ▶️ `change-p-kn` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `p_kn` from 0.0 to 45.5, leaving every other EN 1992 concrete-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_p_kn_applies_to_committed_after() {
+fn change_p_kn_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-p-kn applies to its committed before-snapshot");
     assert_eq!(applied.p_kn, 45.5, "change-p-kn/raises-p-kn-to-45-5: p_kn must read 45.5 after the change");
     assert_eq!(applied, expected_after(), "change-p-kn/raises-p-kn-to-45-5: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_p_kn_applies_to_committed_after() {
 /// ↩️ `change-p-kn` is its own inverse partner: the inverse step restores `p_kn` to its pre-change
 /// 0.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_p_kn_inverse_restores_before() {
+fn change_p_kn_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-p-kn applies");
     let inverse = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_p_kn_inverse_restores_before() {
 /// decode then encode is a fixed point, so `pKn` and `newPKn` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_p_kn_committed_json_is_canonical() {
+fn change_p_kn_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1992Snapshot = serde_json::from_str(text).expect("change-p-kn snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-p-kn snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_p_kn_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-p-kn` at 45.5 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_p_kn_declared_outcome_holds() {
+fn change_p_kn_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-p-kn outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-p-kn/raises-p-kn-to-45-5: this fixture declares an applied outcome");
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_p_kn_declared_outcome_holds() {
 /// assertion: it pins that only `pKn` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `aCMm2`.
 #[semio_framework_async_macros::async_test]
-async fn change_p_kn_produces_committed_diff() {
+fn change_p_kn_produces_committed_diff() {
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().p_kn, Some(45.5), "change-p-kn/raises-p-kn-to-45-5: the diff must set p_kn to 45.5");
     assert!(outcome.diff().artifact.is_none(), "change-p-kn/raises-p-kn-to-45-5: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_p_kn_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-p-kn`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_p_kn_committed_diff_is_canonical() {
+fn change_p_kn_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-p-kn committed diff decodes");
     assert_eq!(decoded.p_kn, Some(45.5), "change-p-kn/raises-p-kn-to-45-5: the committed diff must carry p_kn at 45.5");
     assert!(decoded.selected_check_index.is_none(), "change-p-kn/raises-p-kn-to-45-5: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_p_kn_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 0.0 to 45.5 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_p_kn_committed_diff_applies_to_after() {
+fn change_p_kn_committed_diff_applies_to_after() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-p-kn committed diff decodes");
     let produced = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(&decoded, &before()).expect("change-p-kn committed diff applies to the before-snapshot");
     assert_eq!(produced.p_kn, 45.5, "change-p-kn/raises-p-kn-to-45-5: the committed diff must leave p_kn reading 45.5");

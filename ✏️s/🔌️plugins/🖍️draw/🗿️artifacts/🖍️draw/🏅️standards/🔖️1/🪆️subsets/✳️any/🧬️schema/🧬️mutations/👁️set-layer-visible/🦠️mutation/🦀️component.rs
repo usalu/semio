@@ -16,23 +16,23 @@ pub struct SetLayerVisible {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn set_layer_visible(layer_id: String, visible: bool) -> DrawMutation {
+pub fn set_layer_visible(layer_id: String, visible: bool) -> DrawMutation {
     DrawMutation::SetLayerVisible(SetLayerVisible { layer_id, visible })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for SetLayerVisible {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-visible", record: "SetLayerVisible" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Set layer \"{}\" visible to {}", self.layer_id, self.visible)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

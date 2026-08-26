@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// carries `dictionary_subject_id: None`, i.e. a group may exist before it is mapped onto a dictionary
 /// subject.
 #[semio_framework_async_macros::async_test]
-async fn appends_a_towel_radiators_group() {
+fn appends_a_towel_radiators_group() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("create-product-group applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "create-product-group/appends-a-towel-radiators-group: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.catalogue.product_groups.len(), 2, "create-product-group/appends-a-towel-radiators-group: the group list must grow by exactly one");
@@ -45,7 +45,7 @@ async fn appends_a_towel_radiators_group() {
 /// ↩️ `create-product-group`'s inverse is a `DeleteProductGroup` on the created id — produced only because that
 /// id is absent from BASE, which it is here.
 #[semio_framework_async_macros::async_test]
-async fn deleting_the_towel_radiators_group_restores_before() {
+fn deleting_the_towel_radiators_group_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward create-product-group applies");
@@ -63,7 +63,7 @@ async fn deleting_the_towel_radiators_group_restores_before() {
 /// "index": null}}` — `Names.short_name` and `dictionary_subject_id` are plain `Option`s with no skip
 /// attribute, so both appear as explicit `null`.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `group.towel-radiators` is not among the committed groups, so the fatal `mutation.duplicate-id` branch is
 /// not taken; `index` is `None`, so `mutation.clamped` is not raised either.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "create-product-group/appends-a-towel-radiators-group: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `catalogue` is
 /// rewritten and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced create-product-group diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "create-product-group/appends-a-towel-radiators-group: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -99,7 +99,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten
 /// catalogue and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed create-product-group diff decodes");
     let catalogue = decoded.catalogue.as_ref().expect("the committed create-product-group diff carries the catalogue");
     assert_eq!(catalogue.product_groups.len(), 2, "create-product-group/appends-a-towel-radiators-group: the diff carries both groups, because the catalogue delta is whole-container");
@@ -117,7 +117,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the product-group creation, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed create-product-group diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-product-group/appends-a-towel-radiators-group: the committed diff did not carry before to after");

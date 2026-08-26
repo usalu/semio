@@ -320,7 +320,11 @@ pub mod pack {
         }
     }
     pub async fn read_opt_bytes(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<Vec<u8>>, PackError> {
-        if read_bool(bytes, pos, what).await? { Ok(Some(read_bytes(bytes, pos, what).await?)) } else { Ok(None) }
+        if read_bool(bytes, pos, what).await? {
+            Ok(Some(read_bytes(bytes, pos, what).await?))
+        } else {
+            Ok(None)
+        }
     }
 
     /// 🪡 Same rationale as `write_opt_bytes`/`read_opt_bytes`, for `Option<u64>` (deadlines/wake times).
@@ -331,7 +335,11 @@ pub mod pack {
         }
     }
     pub async fn read_opt_u64(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<u64>, PackError> {
-        if read_bool(bytes, pos, what).await? { Ok(Some(read_u64(bytes, pos, what).await?)) } else { Ok(None) }
+        if read_bool(bytes, pos, what).await? {
+            Ok(Some(read_u64(bytes, pos, what).await?))
+        } else {
+            Ok(None)
+        }
     }
 
     /// 🪡 `f` is a bare async fn item (`Type::pack_encode`), never a closure — fn items are
@@ -1731,6 +1739,7 @@ impl JobOutcomeProjection {
 }
 
 /// 🌉️ Stateful actor bridge that advances at most one interactive job step or one retained payload page per turn.
+#[cfg(test)]
 pub struct JobTurnBridge {
     operation: job::Operation,
     next_step_sequence: u64,
@@ -1738,6 +1747,7 @@ pub struct JobTurnBridge {
     pending: Option<JobOutcomeProjection>,
 }
 
+#[cfg(test)]
 impl JobTurnBridge {
     pub fn new(operation: job::Operation) -> Self {
         Self { operation, next_step_sequence: 0, terminal: false, pending: None }

@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// the declared footing AREA is a separate field and this mutation must not silently push it from 4.0 m² to
 /// 6.25 m².
 #[semio_framework_async_macros::async_test]
-async fn widens_the_footing_to_2_5_m() {
+fn widens_the_footing_to_2_5_m() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-bm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-bm/widens-the-footing-to-2-5-m: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.b_m, 2.5, "change-bm/widens-the-footing-to-2-5-m: b_m must read 2.5 m once the change lands");
@@ -44,7 +44,7 @@ async fn widens_the_footing_to_2_5_m() {
 /// ↩️ `change-bm`'s inverse reads the OLD 2.0 m out of BASE, so replaying it puts the 2.0 m footing width back
 /// on `b_m`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_2_m_restores_before() {
+fn restoring_2_m_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-bm applies");
@@ -62,7 +62,7 @@ async fn restoring_2_m_restores_before() {
 /// fixed point, so `newBM` — serde camelCase over `new_b_m` capitalises the trailing `m` segment, giving
 /// `BM`, not `Bm` is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 2.5 m is finite and differs from the committed 2.0 m, so `change-bm` (whose guard message
 /// reads "Footing width B [m]") emits nothing.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-bm/widens-the-footing-to-2-5-m: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `bM` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-bm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-bm/widens-the-footing-to-2-5-m: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the footing width and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-bm diff decodes");
     assert_eq!(decoded.b_m, Some(2.5), "change-bm/widens-the-footing-to-2-5-m: the committed diff must carry bM = 2.5 m");
     assert!(decoded.footing_area_m2.is_none(), "change-bm/widens-the-footing-to-2-5-m: change-bm writes bM and must leave `footing_area_m2` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the footing-width change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-bm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-bm/widens-the-footing-to-2-5-m: the committed diff did not carry before to after");

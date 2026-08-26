@@ -15,15 +15,15 @@ pub struct ChangeCoolingGainsKwh {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCoolingGainsKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cooling-gains-kwh", kind: "change-cooling-gains-kwh", record: "ChangedCoolingGainsKwh" };
 
-    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_cooling_gains_kwh::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_cooling_gains_kwh::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change cooling internal gains to {}", self.new_cooling_gains_kwh)
     }
 }

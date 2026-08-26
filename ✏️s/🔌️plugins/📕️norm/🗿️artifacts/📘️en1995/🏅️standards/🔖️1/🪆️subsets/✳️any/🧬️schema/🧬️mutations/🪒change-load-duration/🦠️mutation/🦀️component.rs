@@ -15,15 +15,15 @@ pub struct ChangeLoadDuration {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeLoadDuration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "load-duration", kind: "change-load-duration", record: "ChangedLoadDuration" };
 
-    async fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_load_duration::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
+    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
         crate::artifacts::en1995::mutations::change_load_duration::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change load duration to {:?}", self.new_load_duration)
     }
 }

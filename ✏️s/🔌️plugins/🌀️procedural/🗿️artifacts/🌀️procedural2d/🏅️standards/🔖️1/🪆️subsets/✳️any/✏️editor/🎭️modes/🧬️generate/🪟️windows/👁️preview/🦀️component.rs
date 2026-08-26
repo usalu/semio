@@ -37,8 +37,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(config: &Procedural2dConfig, labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = config.generation_preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or("");
     if eval_json.is_empty() {
-        return built_text_node(semio_framework_plugin::Label::data(labels.preview_hint.as_str()))
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
+        return built_text_node(semio_framework_plugin::Label::data(labels.preview_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-preview.hint", "fixed UI hint admission failed"));
     }
     let layers = generation_preview_layers(eval_json);
     if layers == "[]" {

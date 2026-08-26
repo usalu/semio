@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-k-soil` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `k_soil` from 200000.0 to 262500.0, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_k_soil_applies_to_committed_after() {
+fn change_k_soil_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-k-soil applies to its committed before-snapshot");
     assert_eq!(applied.k_soil, 262500.0, "change-k-soil/raises-k-soil-to-262500-0: k_soil must read 262500.0 after the change");
     assert_eq!(applied, expected_after(), "change-k-soil/raises-k-soil-to-262500-0: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_k_soil_applies_to_committed_after() {
 /// ↩️ `change-k-soil` is its own inverse partner: the inverse step restores `k_soil` to its pre-change
 /// 200000.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_k_soil_inverse_restores_before() {
+fn change_k_soil_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-k-soil applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_k_soil_inverse_restores_before() {
 /// decode then encode is a fixed point, so `kSoil` and `newKSoil` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_k_soil_committed_json_is_canonical() {
+fn change_k_soil_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-k-soil snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-k-soil snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_k_soil_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-k-soil` at 262500.0 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_k_soil_declared_outcome_holds() {
+fn change_k_soil_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-k-soil outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-k-soil/raises-k-soil-to-262500-0: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_k_soil_declared_outcome_holds() {
 /// assertion: it pins that only `kSoil` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `wallHeightM`.
 #[semio_framework_async_macros::async_test]
-async fn change_k_soil_produces_committed_diff() {
+fn change_k_soil_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().k_soil, Some(262500.0), "change-k-soil/raises-k-soil-to-262500-0: the diff must set k_soil to 262500.0");
     assert!(outcome.diff().artifact.is_none(), "change-k-soil/raises-k-soil-to-262500-0: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_k_soil_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-k-soil`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_k_soil_committed_diff_is_canonical() {
+fn change_k_soil_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-k-soil committed diff decodes");
     assert_eq!(decoded.k_soil, Some(262500.0), "change-k-soil/raises-k-soil-to-262500-0: the committed diff must carry k_soil at 262500.0");
     assert!(decoded.selected_check_index.is_none(), "change-k-soil/raises-k-soil-to-262500-0: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_k_soil_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 200000.0 to 262500.0 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_k_soil_committed_diff_applies_to_after() {
+fn change_k_soil_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-k-soil committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-k-soil committed diff applies to the before-snapshot");
     assert_eq!(produced.k_soil, 262500.0, "change-k-soil/raises-k-soil-to-262500-0: the committed diff must leave k_soil reading 262500.0");

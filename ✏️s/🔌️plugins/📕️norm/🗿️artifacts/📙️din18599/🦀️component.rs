@@ -26,7 +26,7 @@ pub struct MonthlyClimate {
 }
 
 impl MonthlyClimate {
-    pub async fn german_reference(zone: ClimateZoneDe) -> Self {
+    pub fn german_reference(zone: ClimateZoneDe) -> Self {
         let winter = zone.design_external_temperature_c();
         let summer = zone.summer_design_temperature_c();
         let mean = (winter + summer) / 2.0;
@@ -58,7 +58,7 @@ pub type Din18599ClimateChild = store::ArtifactChild<semio_s_plugin_stdio::artif
 /// 🌉 REAL bidirectional converter: `MonthlyClimate`'s two parallel twelve-month arrays <-> `table`
 /// rows — one row per calendar month (index-addressed, month = row index + 1), two columns
 /// (`thetaEC: Float`, `gHWM2: Float`).
-pub async fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
@@ -71,10 +71,10 @@ pub async fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio
 /// 🌉 Inverse of the converter above — real reconstruction, not a stub. A short/missing row
 /// degrades honestly (`0.0` for the missing month(s)) rather than panicking, since an
 /// externally-composed mismatch is possible in principle.
-pub async fn din18599_climate_data_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
+pub fn din18599_climate_data_from_table(table: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-    async fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
+    fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
         match row.and_then(|row| row.cells.get(index)) {
             Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
             _ => 0.0,
@@ -109,7 +109,7 @@ thread_local! {
     static DIN18599_CLIMATE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, MonthlyClimate>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-async fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
+fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(climate).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -117,7 +117,7 @@ async fn din18599_climate_scene_id(climate: &MonthlyClimate) -> String {
     format!("din18599-climate-{:016x}", hasher.finish())
 }
 
-async fn din18599_climate_target() -> store::os_io::ArtifactRef {
+fn din18599_climate_target() -> store::os_io::ArtifactRef {
     store::os_io::ArtifactRef { artifact_id: "din18599-climate".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } }
 }
 
@@ -125,7 +125,7 @@ async fn din18599_climate_target() -> store::os_io::ArtifactRef {
 /// one call — the standard way every mutation-diff/fixture builder in this artifact creates
 /// `climate` field values; never construct this handle without also caching, or
 /// `din18599_climate` will read back all-zero.
-pub async fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599ClimateChild {
+pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599ClimateChild {
     let scene_id = din18599_climate_scene_id(climate);
     DIN18599_CLIMATE_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(scene_id.clone(), climate.clone());
@@ -137,7 +137,7 @@ pub async fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18
 /// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses
 /// instead of the old `.climate` field. All-zero (never a panic) on a cache miss, per this
 /// region's own doc comment.
-pub async fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
+pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
     DIN18599_CLIMATE_SCRATCH.with(|cache| cache.borrow().get(&snapshot.climate.child_id).cloned()).unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
 }
 //#endregion 🔖️WorkingScene
@@ -169,7 +169,7 @@ pub type BalancingInputs = Din18599Snapshot;
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("din18599", "DIN V 18599")
 }
 
@@ -185,7 +185,7 @@ pub const DIN18599_DOCUMENT_SCHEMA: &str = "semio.norm.din18599/v1";
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use crate::artifacts::definition::{CapabilitySpec, ClaimSpec, LocalizationSpec};
     const SCHEMA: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din18599" }];
     const INFERENCE: &[ClaimSpec] = &[ClaimSpec { namespace: "schema", value: "s.norm.din18599.inference" }];
@@ -211,7 +211,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     crate::artifacts::definition::assemble_definition("s.din18599", CAPABILITIES)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::din18599::schema::din18599_artifact_schema_descriptor())
         .inferences([crate::artifacts::din18599::standards::v1::subsets::any::schema::inferences::din18599_artifact_inference_descriptor()])
@@ -224,7 +224,7 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

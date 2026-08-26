@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// `series_id: "series.pr"`, an existing series — but the oracle checks only id UNIQUENESS, never referential
 /// validity, so nothing about the series is verified here.
 #[semio_framework_async_macros::async_test]
-async fn appends_a_pr900_product_to_the_existing_series() {
+fn appends_a_pr900_product_to_the_existing_series() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("create-product applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "create-product/appends-a-pr900-product-to-the-existing-series: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.catalogue.products.len(), 2, "create-product/appends-a-pr900-product-to-the-existing-series: the product list must grow by exactly one");
@@ -45,7 +45,7 @@ async fn appends_a_pr900_product_to_the_existing_series() {
 /// ↩️ `create-product`'s inverse is a `DeleteProduct` on the created id — produced only because that id is
 /// absent from BASE, which it is here.
 #[semio_framework_async_macros::async_test]
-async fn deleting_the_pr900_product_restores_before() {
+fn deleting_the_pr900_product_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward create-product applies");
@@ -63,7 +63,7 @@ async fn deleting_the_pr900_product_restores_before() {
 /// the nested `series_id`/`parameter_domains`/`static_properties` keys stay snake_case, because `Product`
 /// carries no `rename_all`.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `product.pr900` is not among the committed products, so the fatal `mutation.duplicate-id` branch is not
 /// taken; `index` is `None`, so `mutation.clamped` is not raised either.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "create-product/appends-a-pr900-product-to-the-existing-series: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
 /// this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `catalogue` is rewritten and
 /// the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced create-product diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "create-product/appends-a-pr900-product-to-the-existing-series: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -99,7 +99,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten
 /// catalogue and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed create-product diff decodes");
     let catalogue = decoded.catalogue.as_ref().expect("the committed create-product diff carries the catalogue");
     assert_eq!(catalogue.products.len(), 2, "create-product/appends-a-pr900-product-to-the-existing-series: the diff carries both products, because the catalogue delta is whole-container");
@@ -117,7 +117,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the product creation, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed create-product diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-product/appends-a-pr900-product-to-the-existing-series: the committed diff did not carry before to after");

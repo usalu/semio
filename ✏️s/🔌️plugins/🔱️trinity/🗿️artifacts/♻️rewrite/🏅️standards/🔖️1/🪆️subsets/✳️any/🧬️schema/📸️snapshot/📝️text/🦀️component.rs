@@ -15,12 +15,12 @@ use store::ArtifactDsl;
 pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.rewrite` DSL text into a `RewriteSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<RewriteSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<RewriteSnapshot, store::TextError> {
     <RewriteSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RewriteSnapshot` back to `.rewrite` DSL text.
-pub async fn print_dsl(document: &RewriteSnapshot) -> String {
+pub fn print_dsl(document: &RewriteSnapshot) -> String {
     ArtifactDsl::print_dsl(document)
 }
 
@@ -33,7 +33,7 @@ mod tests {
     use ::store::os_store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
     use std::collections::BTreeMap;
 
-    async fn sample_rule_state() -> RewriteSnapshot {
+    fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));

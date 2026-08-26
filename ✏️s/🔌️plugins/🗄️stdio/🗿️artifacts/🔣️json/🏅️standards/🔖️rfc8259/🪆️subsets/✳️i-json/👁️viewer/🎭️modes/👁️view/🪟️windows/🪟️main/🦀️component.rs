@@ -87,9 +87,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_walks_object_and_array_members() {
         let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Bool { value: true } }] } };
-        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
-        let root = &node.sections[0].items[0];
-        assert_eq!(root.id, "");
+        let node = render(&document).expect("render");
+        let section = node.children.get(0).expect("tree section");
+        let root = section.children.get(0).expect("tree root");
+        assert_eq!(root.key.as_str(), "");
     }
 }
 //#endregion 🧪️Tests

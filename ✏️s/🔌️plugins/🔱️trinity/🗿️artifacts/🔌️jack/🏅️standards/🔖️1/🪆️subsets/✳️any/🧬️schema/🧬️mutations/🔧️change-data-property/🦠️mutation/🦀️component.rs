@@ -15,27 +15,27 @@ pub struct ChangeDataProperty {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_data_property(entity: EntityRef, key: String, new_value: PropertyValue) -> TrinityGraphMutation {
+pub fn change_data_property(entity: EntityRef, key: String, new_value: PropertyValue) -> TrinityGraphMutation {
     TrinityGraphMutation::ChangeDataProperty(ChangeDataProperty { entity, key, new_value })
 }
 
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for ChangeDataProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "data-property", kind: "change-data-property", record: "ChangedDataProperty" };
 
-    async fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+    fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         let (kind, id) = match &self.entity {
             EntityRef::Node(id) => ("node", id),
             EntityRef::Edge(id) => ("edge", id),
         };
         format!("Change {kind} \"{id}\" property \"{}\"", self.key)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         match &self.entity {
             EntityRef::Node(id) | EntityRef::Edge(id) => vec![id.clone()],
         }

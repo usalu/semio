@@ -1,8 +1,0 @@
-[run r13-f0qiamib] crate=semio-s-plugin-stdio dryRun=true target=(host) excludePath=/🗿️artifacts/📄️pdf/
-[run r13-f0qiamib] iteration 1: total errors=2, async-class=2
-[run r13-f0qiamib] iteration 1: planned 2 edits (0 residue)
-[run r13-f0qiamib] DRY RUN — edits by kind: {
-  "call-remove-await": 2,
-}
-  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:259398-259404 ".await" -> ""
-  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:259462-259468 ".await" -> ""

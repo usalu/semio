@@ -45,7 +45,7 @@ Feature: Apply every typed IFC4 mutation to a real-world exchange structure
 
   THE FIRST SUBJECT RUN OF THIS CASE COULD NOT READ THE FIXTURE AT ALL, AND THE READER WAS WRONG.
   All 22 executable scenarios failed with `parse_part21 failed: part21: unsupported string escape at
-  138718: unsupported escape start Some('\\')`, `parity=1/23`. Byte 138718 is
+  138718: unsupported escape start Some('\\')`. Byte 138718 is
   `#966=IFCBUILDINGELEMENTPROXYTYPE('1Cr_EEDPz6fuVrxIH6lX$j',$,'\\',$,$,…)` — a real one-character
   backslash name IfcOpenShell wrote as the doubled reverse solidus that ISO 10303-21's own STRING
   production defines, exactly as it defines the doubled apostrophe. This repository's shared Part-21

@@ -11,4 +11,6 @@ extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🦀️component.rs"]
 pub mod component;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+pub use component::component_persistent_local;
 pub use component::*;

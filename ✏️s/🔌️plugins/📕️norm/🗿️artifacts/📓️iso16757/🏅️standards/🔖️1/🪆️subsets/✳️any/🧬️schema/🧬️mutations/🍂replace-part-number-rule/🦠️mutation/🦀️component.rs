@@ -13,13 +13,13 @@ pub struct ReplacePartNumberRule {
 impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ReplacePartNumberRule {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "part-number-rule", kind: "replace-part-number-rule", record: "ReplacedPartNumberRule" };
 
-    async fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Replace part-number rule".to_string()
     }
 }

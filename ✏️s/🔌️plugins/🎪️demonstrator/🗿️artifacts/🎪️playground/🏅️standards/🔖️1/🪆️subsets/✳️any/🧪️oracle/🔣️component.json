@@ -6,16 +6,23 @@
   "noOracleDecisions": [
     {
       "id": "playground-mutation-semantics",
-      "capabilities": ["playground-1-mutate"],
-      "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `PlaygroundMutation` — a one-variant vocabulary whose single kind retags the artifact's only persistent field. What genuinely distinguishes this subset from every other mutation vocabulary in the repository is that `PlaygroundSnapshot` carries NO `#[serde(tag = ..)]` and its payload struct carries no `rename_all`, so the mutation encodes EXTERNALLY tagged as `{\"ChangeSchema\": {\"new_schema\": ..}}` with a snake_case field — the opposite convention from every sibling artifact. Confidence therefore comes from the committed specification vector under `../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/`, whose `(before, mutation, after, diff, outcome)` quintet pins exactly that wire shape and is already unit-tested inside the production crate (`committed_json_is_canonical`, `produces_committed_diff`, `committed_diff_applies_to_after`, `declared_outcome_holds`), plus the inverse law as a metamorphic property: retagging and then applying the mutation's own computed inverse must restore the committed before-document. The `mutate-playground-1` case re-exercises those SAME committed bytes end-to-end through `apply_playground_mutation`/`inverse_playground_mutation` rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture test does.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "capabilities": [
+        "playground-1-mutate"
+      ],
+      "rationale": "No third party reads or writes this subset's carriers. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-writer-1` and `mutate-playbook-1`, whose documents are handle records with a handful of scalars, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️component.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the one committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-writer-1`: a document-level scalar setter and nothing else. This is the smallest case in the group and the cheapest to convert.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
     }
   ],
   "mutationCatalogs": [
     {
       "id": "playground-1-any",
       "capability": "playground-1-mutate",
-      "kinds": ["change-schema"]
+      "kinds": [
+        "change-schema"
+      ]
     }
   ]
 }

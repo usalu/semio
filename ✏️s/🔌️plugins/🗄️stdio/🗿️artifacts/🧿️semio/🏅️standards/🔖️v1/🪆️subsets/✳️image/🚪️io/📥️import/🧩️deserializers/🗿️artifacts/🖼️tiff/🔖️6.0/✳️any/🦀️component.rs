@@ -77,7 +77,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn sample_tiff() -> TiffSnapshot {
         TiffSnapshot {
-            ifds: vec![TiffIfd {
+            ifds: vec![TiffIfd { pixels: Vec::new(),
                 entries: vec![
                     TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![2]) },
                     TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![1]) },

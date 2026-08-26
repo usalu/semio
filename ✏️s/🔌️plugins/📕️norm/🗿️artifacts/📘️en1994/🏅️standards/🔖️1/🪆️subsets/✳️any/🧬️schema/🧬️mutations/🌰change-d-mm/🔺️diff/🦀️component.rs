@@ -4,7 +4,7 @@ use super::mutation::ChangeDMm;
 use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeDMm, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
+pub fn diff(payload: &ChangeDMm, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_d_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "D mm must be a finite number.", Vec::<String>::new());
     }

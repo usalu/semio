@@ -95,12 +95,16 @@ mod tests {
                     rc_frame_top: 0,
                     rc_frame_right: 16,
                     rc_frame_bottom: 16,
+                    rc_frame_width: 16,
+                    strh_extra: Vec::new(),
                 },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true }, AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7, 8], keyframe: false }],
+                strl_extra: Vec::new(),
             }],
             idx1_present: true,
             unknown_chunks: vec![],
+            hdrl_extra: Vec::new(),
         }
     }
 

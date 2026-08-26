@@ -1668,11 +1668,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
         pop_owner!(self.weighted_log_sums);
         pop_owner!(self.revisions);
         pop_owner!(self.queued_marks);
-        if self.entropy_heap.pop().is_some()
-            || self.header.take().is_some()
-            || self.model.take().is_some()
-            || self.topology.take().is_some()
-        {
+        if self.entropy_heap.pop().is_some() || self.header.take().is_some() || self.model.take().is_some() || self.topology.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
@@ -1823,11 +1819,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
         pop_owner!(self.state.changed_domains);
         pop_owner!(self.state.backtrack_path);
         pop_owner!(self.state.observed);
-        if self.state.entropy_heap.pop().is_some()
-            || self.checkpoint_build.take().is_some()
-            || self.commit_build.take().is_some()
-            || self.completed_commit.take().is_some()
-        {
+        if self.state.entropy_heap.pop().is_some() || self.checkpoint_build.take().is_some() || self.commit_build.take().is_some() || self.completed_commit.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         if let Some(bytes) = self.final_checkpoint.as_mut() {

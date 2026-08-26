@@ -4,7 +4,7 @@ use super::mutation::UpdateThroughThicknessInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdateThroughThicknessInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdateThroughThicknessInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_t10_actual_thickness_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("T10 actual thickness mm must be a finite number, got {}.", payload.new_t10_actual_thickness_mm), Vec::<String>::new());
     }

@@ -140,7 +140,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_and_stamps_a() {
-            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").await.add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).await.build().await.unwrap();
+            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0)).build().await.unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = PdfAComposerComposition::compose(&sources).await.expect("clean document must compose to a");
@@ -189,7 +189,7 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload() {
-            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").await.add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).await.build().await.unwrap();
+            let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(50.0, 50.0)).build().await.unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             // The registered validator, called directly (same fn the generic io hook calls): today's
             // writer drops `objects` on encode, so the OutputIntent genuinely isn't in these bytes --

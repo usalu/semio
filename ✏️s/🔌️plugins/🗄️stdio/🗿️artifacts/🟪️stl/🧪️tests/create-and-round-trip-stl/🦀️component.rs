@@ -31,7 +31,7 @@ mod subject {
     use super::spec;
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio_test_oracle::mesh::{oracle_create_stl, project_stl};
-    use semio_s_plugin_stdio::artifacts::stl::standards::ascii::subsets::any::io::{decode_stl_binary, encode_stl_binary};
+    use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::subsets::any::io::{decode_stl_binary, encode_stl_binary};
 
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let reference = oracle_create_stl(&spec(ctx)?)?;

@@ -4,7 +4,7 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::RemoveRuleLayoutPoint, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+pub fn diff(payload: &super::mutation::RemoveRuleLayoutPoint, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
     if !base.rule_layout.contains_key(&payload.key) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Rule layout point \"{}\" is already absent.", payload.key));
     }

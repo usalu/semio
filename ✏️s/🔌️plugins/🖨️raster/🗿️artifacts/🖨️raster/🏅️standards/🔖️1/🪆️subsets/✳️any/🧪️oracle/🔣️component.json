@@ -1,21 +1,42 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `s.raster.raster` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below. Note that the artifact is a LAYERED RASTER DOCUMENT, not an image file: the pixels live in referenced assets and the vocabulary edits the layer tree around them, so a PNG/TIFF/BMP crate is not a reference for it and registering one would be a category error.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.raster.raster` is a LAYERED DOCUMENT, not an image file: its pixels live behind ids in a root `assets` pool and the vocabulary edits the layer tree around them, so a raster codec is a reader of a different artifact. The reference is a SECOND IMPLEMENTATION in Python written from this subset's committed mutation schema, grammar and specification vectors.",
+  "oracles": [
     {
-      "id": "raster-mutation-semantics",
-      "capabilities": ["raster-1-mutate"],
-      "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and the crates that DO read raster formats (`png`, `image`, `tiff`) read pixel containers — they are not authoritative over a layered document whose pixels sit behind ids in a root `assets` pool. What distinguishes this subset is that its layer nodes are three DIFFERENT kinds over one shared base: pixel layers carry an `assetIds` list, adjustment layers carry an `adjustmentKind` plus a parameter map, and group layers carry `children` — so `change-layer-adjustment-kind` applies to exactly one kind, `add-layer-asset`/`remove-layer-asset` join the layer tree to the root `assets` pool by id, and `reorder-layers` can lift a node OUT of a group rather than merely permute siblings. Confidence comes from the committed per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, already unit-tested inside the production crate, plus the inverse law as a metamorphic property. Two of those vectors are deliberately NEGATIVE — `add-layer-asset` records an accepted no-op and `remove-layer-asset` a `mutation.target-missing` rejection — so the `mutate-raster-1` case asserts the declared refusal for those kinds instead of pretending an application happened, and says so in its feature description.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "id": "raster-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "raster-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.raster.raster` layered document and all twelve typed mutations, in Python, at `../../../../../🧪️tests/mutate-raster-1/🐍️component.py`. Written from `../🧬️schema/🧬️mutations/🔣️component.json` (all twelve variants, their internally tagged wire form and each one's required members), `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the twelve verbs and their positional argument lists) and the twelve committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `png`, `image` and `tiff` read image FILES and this artifact is a layer tree over an id-keyed asset pool; Pillow reads the pixel payloads and has no authority over a group's `children`, a blend mode, or a reorder that lifts a node out of a group. What a reference can adjudicate is the tree algebra, and that is what this one implements. DEFECT FOUND WHILE WRITING IT, reported rather than worked around: `../🧬️schema/📸️snapshot/🔣️component.json` does not describe this artifact — it is a verbatim copy of `s.stdio.json`'s `JsonSnapshot` schema with the wrong `$id`, so the mutation schema's `RasterLayerNode` reference points at nothing; the document shape was read off the twelve committed vectors, which agree with one another on every field. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
   "mutationCatalogs": [
     {
       "id": "raster-1-any",
       "capability": "raster-1-mutate",
-      "kinds": ["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset"]
+      "kinds": [
+        "create-layer",
+        "delete-layer",
+        "reorder-layers",
+        "rename-layer",
+        "change-layer-visible",
+        "change-layer-opacity",
+        "change-layer-blend-mode",
+        "move-layer",
+        "resize-layer",
+        "change-layer-adjustment-kind",
+        "add-layer-asset",
+        "remove-layer-asset"
+      ]
     }
   ]
 }

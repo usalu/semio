@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// ▶️ Lowering α_s from 0.75 to 0.5 rewrites `alpha_s` alone. It scales the mobilised shaft resistance, but the
 /// unit shaft resistance q_s it scales is a separate ground-model input and stays as committed.
 #[semio_framework_async_macros::async_test]
-async fn lowers_the_shaft_resistance_factor_to_0_5() {
+fn lowers_the_shaft_resistance_factor_to_0_5() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-alpha-s applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-alpha-s/lowers-the-shaft-resistance-factor-to-0-5: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.alpha_s, 0.5, "change-alpha-s/lowers-the-shaft-resistance-factor-to-0-5: alpha_s must read 0.5 once the change lands");
@@ -43,7 +43,7 @@ async fn lowers_the_shaft_resistance_factor_to_0_5() {
 /// ↩️ `change-alpha-s`'s inverse reads the OLD 0.75 out of BASE, so replaying it puts the 0.75 shaft-resistance
 /// factor back on `alpha_s`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_0_75_restores_before() {
+fn restoring_0_75_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-alpha-s applies");
@@ -61,7 +61,7 @@ async fn restoring_0_75_restores_before() {
 /// is a fixed point, so `newAlphaS` (serde camelCase over `new_alpha_s`) is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 0.5 is finite and differs from the committed 0.75, so `change-alpha-s` produces a clean
 /// outcome.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-alpha-s/lowers-the-shaft-resistance-factor-to-0-5: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `alphaS` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-alpha-s diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-alpha-s/lowers-the-shaft-resistance-factor-to-0-5: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the shaft-resistance factor
 /// and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-alpha-s diff decodes");
     assert_eq!(decoded.alpha_s, Some(0.5), "change-alpha-s/lowers-the-shaft-resistance-factor-to-0-5: the committed diff must carry alphaS = 0.5");
     assert!(decoded.q_s_kpa.is_none(), "change-alpha-s/lowers-the-shaft-resistance-factor-to-0-5: change-alpha-s writes alphaS and must leave `q_s_kpa` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the shaft-factor change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-alpha-s diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-alpha-s/lowers-the-shaft-resistance-factor-to-0-5: the committed diff did not carry before to after");

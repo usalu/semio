@@ -1,0 +1,22 @@
+===== mutate-xlsx-ecma-376-strict  start 21:14:34
+[test] level=exhaustive cases=1 executed=38 passed=38 failed=0 errored=0 parity=13/19
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376-strict::mutate-set-snapshot::rust::subject (13 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376-strict::mutate-set-main-namespace::rust::subject (3 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376-strict::mutate-set-relationships-namespace::rust::subject (5 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376-strict::mutate-set-conformance-attribute::rust::subject (6 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376-strict::mutate-set-worksheet-content-type::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx::mutate-xlsx-ecma-376-strict::inverse-remove-conformance-attribute::rust::subject (6 differences)
+===== mutate-xlsx-ecma-376-strict  exit=1 end 21:32:41
+===== mutate-jpg-jfif-1-01-baseline  start 21:32:41
+[test] level=exhaustive cases=1 executed=21 passed=21 failed=0 errored=0 parity=0/0
+===== mutate-jpg-jfif-1-01-baseline  exit=0 end 21:40:37
+===== mutate-tiff-6-0-baseline  start 21:40:37
+[test] level=exhaustive cases=1 executed=19 passed=18 failed=1 errored=0 parity=0/0
+===== mutate-tiff-6-0-baseline  exit=1 end 21:43:26
+===== mutate-dwg-ac1018  start 21:43:26
+[test] level=exhaustive cases=1 executed=7 passed=7 failed=0 errored=0 parity=0/0
+===== mutate-dwg-ac1018  exit=0 end 21:45:04
+===== mutate-dwg-ac1024  start 21:45:04
+[test] level=exhaustive cases=1 executed=7 passed=7 failed=0 errored=0 parity=0/0
+===== mutate-dwg-ac1024  exit=0 end 21:48:06
+ALLDONE 21:48:06

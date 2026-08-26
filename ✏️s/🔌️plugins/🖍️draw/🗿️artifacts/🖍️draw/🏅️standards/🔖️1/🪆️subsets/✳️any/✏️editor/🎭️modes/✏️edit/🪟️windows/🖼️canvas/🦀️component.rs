@@ -2,9 +2,10 @@
 
 use crate::artifacts::draw::schema::{flatten_draw_document_to_scene_nodes, resolve_draw_artboard};
 use crate::artifacts::draw::{DrawArtboard, DrawSnapshot, PathSegment};
-use crate::editor::draw::commands::canvas_pointer_down::{draft_preview_segments, draw_gesture, shape_preview_segments};
+use crate::editor::draw::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawGesturePreview, DrawGesturePreviewPhase};
 use crate::editor::draw::config::DrawConfig;
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, UiNode};
+use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};
+use serde::Serialize;
 use serde_json::{json, Value};
 
 pub const DRAW_PLAY_WINDOW_CANVAS: &str = "draw-composite";
@@ -19,7 +20,7 @@ const DRAW_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
 const DRAW_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 const DRAW_ARTBOARD_LABEL: [f64; 4] = [0.198, 0.223, 0.205, 0.92];
 
-async fn overlay_record(id: &str, transform: [f64; 6], segments: &[PathSegment], fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
+fn overlay_record<T: Serialize + ?Sized>(id: &str, transform: [f64; 6], segments: &T, fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> Value {
     json!({
         "id": id,
         "role": "overlay",
@@ -35,7 +36,7 @@ async fn overlay_record(id: &str, transform: [f64; 6], segments: &[PathSegment],
 }
 
 /// 📐️ Formats one artboard edge length for the dimension label (integers stay bare).
-async fn format_artboard_dimension(value: f64) -> String {
+fn format_artboard_dimension(value: f64) -> String {
     if (value - value.round()).abs() < 1e-6 {
         format!("{}", value.round() as i64)
     } else {
@@ -44,7 +45,7 @@ async fn format_artboard_dimension(value: f64) -> String {
 }
 
 /// 🖼️ Artboard paper + `W × H` dimension label — drawn under document content.
-async fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
+fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
     let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);
@@ -73,7 +74,7 @@ async fn artboard_scene_records(document: &DrawSnapshot) -> Vec<Value> {
 /// and `ArtifactApp::render` is never given an `InteractionView`) — the selection/hover overlay
 /// records this function used to bake into `layersJson` are gone; the client renders that highlight
 /// itself from the framework's own interaction state now.
-pub async fn render(document: &DrawSnapshot, config: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
+pub fn render(document: &DrawSnapshot, config: &DrawConfig, preview: &DrawGesturePreview, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
@@ -86,26 +87,26 @@ pub async fn render(document: &DrawSnapshot, config: &DrawConfig, gesture: &draw
     for node in &scene_nodes {
         records.push(serde_json::to_value(node).unwrap_or(Value::Null));
     }
-    if gesture.matches("marqueeing") {
-        let ctx = &gesture.context;
+    if preview.phase == DrawGesturePreviewPhase::Marquee {
+        let ctx = &preview.context;
         let x = ctx.start[0].min(ctx.cursor[0]);
         let y = ctx.start[1].min(ctx.cursor[1]);
         let width = (ctx.cursor[0] - ctx.start[0]).abs();
         let height = (ctx.cursor[1] - ctx.start[1]).abs();
         let segments = vec![PathSegment::Move { to: [x, y] }, PathSegment::Line { to: [x + width, y] }, PathSegment::Line { to: [x + width, y + height] }, PathSegment::Line { to: [x, y + height] }, PathSegment::Close];
         records.push(overlay_record("overlay:marquee", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_MARQUEE_FILL), DRAW_OVERLAY_MARQUEE_STROKE, 1.0));
-    } else if gesture.matches("shape_dragging") {
-        let ctx = &gesture.context;
+    } else if preview.phase == DrawGesturePreviewPhase::Shape {
+        let ctx = &preview.context;
         let segments = shape_preview_segments(&ctx.utility, ctx.start, ctx.cursor);
         records.push(overlay_record("overlay:preview", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
-    } else if gesture.matches("drafting") {
-        let ctx = &gesture.context;
+    } else if preview.phase == DrawGesturePreviewPhase::Draft {
+        let ctx = &preview.context;
         let segments = draft_preview_segments(&ctx.utility, &ctx.points, ctx.cursor);
         records.push(overlay_record("overlay:preview", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
     }
-    build_canvas_2d_scene(
+    scene_surface(
         DRAW_PLAY_SURFACE_ID,
-        crate::editor::draw::DRAW_PLAY_CONTROLLER_ID,
-        Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None },
+        semio_framework_ui_contract::SurfaceKind::Canvas2d,
+        &Canvas2dScene { camera_x: config.camera.x, camera_y: config.camera.y, zoom: config.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()), snapshot: None },
     )
 }

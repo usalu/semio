@@ -1,4 +1,4 @@
-# 🧬️ PdfSnapshot (1.4) schema — the intentionally-frozen pre-real-codec stub.
+# 🧬️ PdfSnapshot (1.4) schema — the document's real page tree.
 type PageDoc {
   width: Float!
   height: Float!
@@ -6,5 +6,5 @@ type PageDoc {
 }
 type PdfSnapshot {
   schema: String! @state(class: ARTIFACT)
-  page: PageDoc! @state(class: ARTIFACT)
+  pages: [PageDoc!]! @state(class: ARTIFACT)
 }

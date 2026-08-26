@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::change_hd_over_h::mutation::ChangeHdOve
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeHdOverH, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub fn diff(payload: &ChangeHdOverH, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if !payload.new_hd_over_h.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Hd over h must be a finite number.", Vec::<String>::new());
     }

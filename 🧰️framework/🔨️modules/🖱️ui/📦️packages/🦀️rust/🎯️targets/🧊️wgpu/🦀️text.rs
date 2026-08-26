@@ -16,10 +16,10 @@ use std::sync::Arc;
 
 use parley::fontique::{Blob, Collection, CollectionOptions, FamilyId, FontInfoOverride, GenericFamily, SourceCache};
 use parley::{FontContext, FontStack, LayoutContext, PositionedLayoutItem, StyleProperty};
-use swash::FontRef as SwashFontRef;
 use swash::scale::image::Content as SwashContent;
 use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::zeno::Format as SwashFormat;
+use swash::FontRef as SwashFontRef;
 
 pub struct GlyphEntry {
     pub atlas_x: u32,
@@ -514,8 +514,8 @@ pub async fn fetch_font_bytes(url: &str) -> Result<Vec<u8>, String> {
     #[cfg(target_arch = "wasm32")]
     {
         use js_sys::Uint8Array;
+        use semio_framework_async::browser::JsFuture;
         use wasm_bindgen::JsCast;
-        use wasm_bindgen_futures::JsFuture;
         use web_sys::{Request, RequestInit, RequestMode, Response};
 
         let opts = RequestInit::new();

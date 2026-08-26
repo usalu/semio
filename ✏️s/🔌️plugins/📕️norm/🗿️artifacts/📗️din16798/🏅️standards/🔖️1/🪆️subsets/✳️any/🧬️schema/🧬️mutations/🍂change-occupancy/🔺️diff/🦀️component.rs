@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_occupancy::mutation::ChangeOcc
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeOccupancy, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeOccupancy, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if base.occupancy == payload.new_occupancy {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Occupancy type is already \"{}\".", payload.new_occupancy));
     }

@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
     assert!(decoded.byte_order.is_none() && decoded.pixels.is_none(), "tiff/set-snapshot: neither the byte order nor the decoded raster may be re-emitted");
     let ifds = decoded.ifds.as_ref().expect("the committed diff carries an ifds triple");
     assert!(ifds.removed.is_empty() && ifds.added.is_empty() && ifds.modified.len() == 1, "tiff/set-snapshot: the single IFD must be patched in place");
-    let tags = &ifds.modified[0].diff;
+    let tags = &ifds.modified[0].diff.entries;
     assert!(tags.removed.is_empty() && tags.modified.len() == 1 && tags.added.len() == 1, "tiff/set-snapshot: exactly one tag is rewritten and exactly one is introduced");
     assert_eq!(tags.modified[0].tag, 305, "tiff/set-snapshot: the rewritten entry is the Software tag");
     assert_eq!(tags.added[0].tag, 270, "tiff/set-snapshot: the introduced entry is the ImageDescription tag");

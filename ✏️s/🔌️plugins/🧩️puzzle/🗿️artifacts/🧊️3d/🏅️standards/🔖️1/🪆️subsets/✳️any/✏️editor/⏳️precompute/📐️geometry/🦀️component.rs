@@ -327,11 +327,11 @@ impl<K, const N: usize> FixedOwnerSet<K, N> {
 //#region 🔒️GeometryAdapter
 /// 🔒️ Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this artifact depends on.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Vec3d(nalgebra::Vector3<f32>);
+pub(crate) struct Vec3d(parry3d::na::Vector3<f32>);
 
 impl Vec3d {
     pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
-        Self(nalgebra::Vector3::new(x, y, z))
+        Self(parry3d::na::Vector3::new(x, y, z))
     }
     pub(crate) fn x(&self) -> f32 {
         self.0.x
@@ -362,11 +362,11 @@ impl std::ops::Mul<f32> for Vec3d {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Point3d(nalgebra::Point3<f32>);
+pub(crate) struct Point3d(parry3d::na::Point3<f32>);
 
 impl Point3d {
     pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
-        Self(nalgebra::Point3::new(x, y, z))
+        Self(parry3d::na::Point3::new(x, y, z))
     }
     pub(crate) fn x(&self) -> f32 {
         self.0.x
@@ -387,7 +387,7 @@ impl Point3d {
         Vec3d(self.0.coords)
     }
     pub(crate) fn from_coords(v: Vec3d) -> Self {
-        Self(nalgebra::Point3::from(v.0))
+        Self(parry3d::na::Point3::from(v.0))
     }
 }
 
@@ -399,22 +399,22 @@ impl std::ops::Sub for Point3d {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Rotation3d(nalgebra::UnitQuaternion<f32>);
+pub(crate) struct Rotation3d(parry3d::na::UnitQuaternion<f32>);
 
 impl Rotation3d {
     pub(crate) fn identity() -> Self {
-        Self(nalgebra::UnitQuaternion::identity())
+        Self(parry3d::na::UnitQuaternion::identity())
     }
     /// 🔓️ Builds from CAD's `[i, j, k, w]` quaternion convention.
     pub(crate) fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
-        Self(nalgebra::UnitQuaternion::from_quaternion(nalgebra::Quaternion::new(w, i, j, k)))
+        Self(parry3d::na::UnitQuaternion::from_quaternion(parry3d::na::Quaternion::new(w, i, j, k)))
     }
     pub(crate) fn to_ijkw(self) -> (f32, f32, f32, f32) {
         let q = self.0.quaternion();
         (q.i, q.j, q.k, q.w)
     }
     pub(crate) fn rotation_between(from: Vec3d, to: Vec3d) -> Option<Self> {
-        nalgebra::UnitQuaternion::rotation_between(&from.0, &to.0).map(Self)
+        parry3d::na::UnitQuaternion::rotation_between(&from.0, &to.0).map(Self)
     }
     pub(crate) fn apply(&self, v: Vec3d) -> Vec3d {
         Vec3d(self.0 * v.0)
@@ -422,14 +422,14 @@ impl Rotation3d {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Pose3d(nalgebra::Isometry3<f32>);
+pub(crate) struct Pose3d(parry3d::na::Isometry3<f32>);
 
 impl Pose3d {
     pub(crate) fn identity() -> Self {
-        Self(nalgebra::Isometry3::identity())
+        Self(parry3d::na::Isometry3::identity())
     }
     pub(crate) fn from_parts(translation: Vec3d, rotation: Rotation3d) -> Self {
-        Self(nalgebra::Isometry3::from_parts(translation.0.into(), rotation.0))
+        Self(parry3d::na::Isometry3::from_parts(translation.0.into(), rotation.0))
     }
     pub(crate) fn inverse(&self) -> Self {
         Self(self.0.inverse())
@@ -452,8 +452,8 @@ pub(crate) struct CollisionShape {
 
 impl CollisionShape {
     pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
-        let verts: Vec<nalgebra::Point3<f32>> = vertices.iter().map(|p| p.0).collect();
-        let vertex_bytes = verts.capacity().saturating_mul(std::mem::size_of::<nalgebra::Point3<f32>>());
+        let verts: Vec<parry3d::na::Point3<f32>> = vertices.iter().map(|p| p.0).collect();
+        let vertex_bytes = verts.capacity().saturating_mul(std::mem::size_of::<parry3d::na::Point3<f32>>());
         let index_bytes = indices.capacity().saturating_mul(std::mem::size_of::<[u32; 3]>());
         let retained_items = usize::from(vertex_bytes != 0) + usize::from(index_bytes != 0);
         let retained_bytes = vertex_bytes.saturating_add(index_bytes);
@@ -1680,6 +1680,7 @@ impl CollisionOverlapState {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use crate::artifacts::puzzle3d::schema::testkit::*;
     use std::time::{Duration, Instant};
 

@@ -7,7 +7,7 @@ use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::CreateSubject;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &CreateSubject, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &CreateSubject, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
     if base.dictionary.subjects.iter().any(|subject| subject.id == payload.subject.id) {
         return Vec::new();
     }

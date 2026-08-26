@@ -1,0 +1,52 @@
+{
+ "cases": 166,
+ "scenarios": 4933,
+ "oracleCases": 138,
+ "oracleScenarios": 4355,
+ "differentialScenarios": 3728,
+ "noOracleCases": 28,
+ "noOracleScenarios": 578,
+ "registryOracles": 139,
+ "registryDecisions": 29,
+ "orphanOracles": [
+  "csv"
+ ],
+ "orphanDecisions": [
+  "os-config-merge-policy-unmounted-facet"
+ ],
+ "modes": {
+  "error": 7,
+  "differential": 3729,
+  "conformance": 284,
+  "property": 743,
+  "round-trip": 170
+ }
+}
+71	mutate-remodel-1	remodel-mutation-semantics
+63	mutate-shooting-1	shooting-render-scene-mutation-semantics
+51	mutate-layout-1	layout-mutation-semantics
+43	mutate-semio-any	semio-envelope-routing
+33	mutate-process3d-1	process3d-mutation-semantics
+31	mutate-mathematical-1	mathematical-mutation-semantics
+29	mutate-dag-1	dag-1-port-directed-graph-mutation-semantics
+29	mutate-draw-1	draw-mutation-semantics
+24	mutate-txt-utf-8	txt-utf-8-line-structure
+21	mutate-flow-1	flow-widget-graph-mutation-semantics
+21	mutate-wires-1	wires-1-argument-board-mutation-semantics
+21	mutate-jpg-jfif-1-01-baseline	jpg-jfif-1-01-baseline-conformance-class-semantics
+20	mutate-binary-raw	raw-buffer-no-format
+19	mutate-present-1	present-figure-deck-mutation-semantics
+19	mutate-tiff-6-0-baseline	tiff-6-0-baseline-conformance-class-semantics
+17	mutate-sequence-1	sequence-step-graph-mutation-semantics
+13	mutate-vcs-1	vcs-1-checkpoint-mutation-semantics
+9	mutate-imperative-1	imperative-1-nested-step-list-mutation-semantics
+9	mutate-s-space-1	s-space-index-mutation-semantics
+7	mutate-dwg-ac1018	dwg-ac1018-proprietary-container
+7	mutate-dwg-ac1024	dwg-ac1024-proprietary-container
+5	mutate-os-config-opening	os-config-opening-preferences-mutation-semantics
+3	merge-conflicting-utilities	repository-owned-utility-groups
+3	host-protocol-parity	repo-test-platform
+3	mutate-playground-1	playground-mutation-semantics
+3	mutate-energy-model-1	energy-model-mutation-semantics
+3	mutate-s-home-1	s-home-mutation-semantics
+1	reject-malformed-version-input	frozen-requirement-grammar

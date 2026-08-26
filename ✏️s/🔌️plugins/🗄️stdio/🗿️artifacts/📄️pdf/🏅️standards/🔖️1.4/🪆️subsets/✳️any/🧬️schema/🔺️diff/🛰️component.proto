@@ -1,8 +1,32 @@
 syntax = "proto3";
 package semio.s_stdio_pdf.diff;
 
-message PdfDiff {
+import "s_stdio_pdf_snapshot.proto"; // PageDoc
+
+// 📄️ Sparse per-field patch for one PageDoc.
+message PdfPageDiff {
   optional double width = 1;
   optional double height = 2;
   optional string text = 3;
+}
+
+message PdfPageModified {
+  uint64 index = 1;
+  PdfPageDiff diff = 2;
+}
+
+message PdfPageAdded {
+  uint64 index = 1;
+  semio.s_stdio_pdf.snapshot.PageDoc page = 2;
+}
+
+// 📦️ Index-keyed collection triple over the document's pages.
+message PdfPagesDiff {
+  repeated uint64 removed = 1;
+  repeated PdfPageModified modified = 2;
+  repeated PdfPageAdded added = 3;
+}
+
+message PdfDiff {
+  optional PdfPagesDiff pages = 1;
 }

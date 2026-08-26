@@ -47,11 +47,43 @@ where
             added.push(o.clone());
         }
     }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(NamedTripleDiff { removed, modified, added })
+    let faithful = reproduces_order(base, other, &removed, &added, &key_of);
+    if !faithful {
+        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.to_vec() });
     }
+    if removed.is_empty() && modified.is_empty() && added.is_empty() {
+        return None;
+    }
+    Some(NamedTripleDiff { removed, modified, added })
+}
+
+/// 🧮️ Whether the sparse triple can reproduce `other`'s ORDER. [`apply_named`] keeps every surviving
+/// member where it already stood and pushes `added` onto the tail, so the key sequence it produces is
+/// exactly `survivors(base order) ++ added(other order)`. When `other` orders its members any other
+/// way — a member that survives but moved, or a new member that belongs before an old one — the
+/// sparse triple is not a faithful description of the transition and [`between_named`] degrades to a
+/// full replacement instead, which the same [`apply_named`] reproduces exactly.
+///
+/// 🐛️ Same defect `✳️flow`'s own `between_named` carries this guard for, measured here on the real
+/// artifact: `set-snapshot` replacing the capsule tower's `[site, building, storey]` with
+/// `[storey, site]` produced `[site, storey]`, because both survivors kept the positions they held in
+/// the base while the building was dropped. `set-snapshot` means the snapshot BECOMES the named one,
+/// order included, and now it does. Reached here through `diff_set_snapshot`, which is why every
+/// spelling of a whole-collection replacement is covered rather than only the reordering one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[T], key_of: &impl Fn(&T) -> K) -> bool
+where
+    K: PartialEq,
+{
+    let produced = base.iter().map(key_of).filter(|k| !removed.contains(k)).chain(added.iter().map(key_of));
+    let mut target = other.iter().map(key_of);
+    for key in produced {
+        match target.next() {
+            Some(expected) if expected == key => {}
+            _ => return false,
+        }
+    }
+    target.next().is_none()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

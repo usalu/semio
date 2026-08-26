@@ -37,6 +37,8 @@ extern crate self as semio_framework_os_kernel;
 extern crate self as spr;
 extern crate self as store;
 extern crate self as vcs;
+#[cfg(target_arch = "wasm32")]
+extern crate semio_framework_async as wasm_bindgen_futures;
 
 // 🏷️ Former standalone crate names — proc-macros (`dsl_derive`) and in-tree `use store::` /
 // `use protocol::` style paths resolve through these aliases to this crate root.

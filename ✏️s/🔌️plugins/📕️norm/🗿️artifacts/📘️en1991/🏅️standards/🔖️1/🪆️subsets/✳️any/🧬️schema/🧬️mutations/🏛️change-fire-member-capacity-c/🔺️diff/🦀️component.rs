@@ -4,7 +4,7 @@ use super::mutation::ChangeFireMemberCapacityC;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeFireMemberCapacityC, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub fn diff(payload: &ChangeFireMemberCapacityC, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_fire_member_capacity_c.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Fire member capacity c must be a finite number.", Vec::<String>::new());
     }

@@ -64,7 +64,7 @@ mod tests {
         document.presentation.slides.push(PptxSlide {
             shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("a")], position: Default::default() }, PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("b")], position: Default::default() }],
         });
-        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        let stack = render(&document).expect("render");
         assert_eq!(stack.children.len(), 1);
     }
 }

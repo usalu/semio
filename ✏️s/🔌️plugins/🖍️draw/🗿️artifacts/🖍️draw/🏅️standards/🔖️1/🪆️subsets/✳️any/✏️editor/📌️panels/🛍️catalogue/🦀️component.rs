@@ -5,13 +5,13 @@ use crate::artifacts::draw::{DrawSnapshot, DRAW_BOOLEAN_OPERATIONS};
 use crate::editor::draw::{draw_play_action, ui_node_list, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::draw::terminology::DrawPlayLabels;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
-use semio_framework_plugin::{tree_item_with_action, Label, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiFixedMap, UiText, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiFixedMap, UiText, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use semio_framework_ui_contract as ui;
 
 pub const DRAW_PLAY_BODY_CATALOGUE: &str = "draw.play.catalogue";
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -23,7 +23,7 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let catalogue_kinds = [
         ("path", labels.kind_path, "pen-tool"),
         ("shape:rect", labels.kind_rectangle, "square"),
@@ -42,6 +42,7 @@ pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_
         let key = UiText::try_from_str(crate::editor::draw::panels::layers::DRAW_LAYER_KIND_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "draw drag mime admission failed"))?;
         let value = UiText::try_from_string(serde_json::json!({ "kind": kind }).to_string()).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "draw drag payload admission failed"))?;
         drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw drag map admission failed"))?;
+        let label = ui::Label::try_from(label.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw catalogue label admission failed"))?;
         let item = ui::tree_item(label)
             .try_id(format!("draw-play-catalogue.{kind}"))
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw catalogue id admission failed"))?
@@ -59,7 +60,7 @@ pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_
         ])?;
         let mut item = tree_item_with_action(
                 format!("draw-play-catalogue.bool.{operation}"),
-                Label::data(format!("{} {operation}", labels.kind_boolean.as_str())),
+                format!("{} {operation}", labels.kind_boolean.as_str()),
                 None,
                 draw_play_action("combineBoolean", Some(args))?,
             )?;
@@ -68,6 +69,7 @@ pub async fn render(_document: &DrawSnapshot, labels: &DrawPlayLabels) -> semio_
         }
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw boolean row admission failed"))?;
     }
-    PanelTreeBuilder::new("draw-play-catalogue")?.section("draw-play-catalogue", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)?.build()
+    let section = ui::Label::try_from(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "draw catalogue section label admission failed"))?;
+    PanelTreeBuilder::new("draw-play-catalogue")?.section("draw-play-catalogue", Some(section), true, items)?.build()
 }
 //#endregion 🔖️Render

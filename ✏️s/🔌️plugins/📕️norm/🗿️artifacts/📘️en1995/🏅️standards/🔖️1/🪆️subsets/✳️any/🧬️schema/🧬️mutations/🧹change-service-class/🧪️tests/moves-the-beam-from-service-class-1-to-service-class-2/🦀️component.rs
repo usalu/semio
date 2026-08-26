@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// indexed by (service class, load duration), so the load duration — the OTHER index — must survive untouched
 /// for that lookup to stay meaningful.
 #[semio_framework_async_macros::async_test]
-async fn moves_the_beam_from_service_class_1_to_service_class_2() {
+fn moves_the_beam_from_service_class_1_to_service_class_2() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-service-class applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.service_class, "sc2", "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: service_class must read "sc2" once the change lands");
@@ -44,7 +44,7 @@ async fn moves_the_beam_from_service_class_1_to_service_class_2() {
 /// ↩️ `change-service-class`'s inverse reads the OLD "sc1" out of BASE, so replaying it puts the "sc1" service
 /// class back on `service_class`.
 #[semio_framework_async_macros::async_test]
-async fn returning_to_service_class_1_restores_before() {
+fn returning_to_service_class_1_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-service-class applies");
@@ -63,7 +63,7 @@ async fn returning_to_service_class_1_restores_before() {
 /// unvalidated `String`, not an enum is spelled here exactly as this artifact's own serde attributes render
 /// it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ "sc2" differs from the committed "sc1", so the equality guard — `change-service-class`'s only
 /// guard — does not degrade this to a `mutation.no-op` warning.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `serviceClass` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-service-class diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -99,7 +99,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the service class and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-service-class diff decodes");
     assert_eq!(decoded.service_class, Some("sc2".to_string()), "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: the committed diff must carry serviceClass = "sc2"");
     assert!(decoded.load_duration.is_none(), "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: change-service-class writes serviceClass and must leave `load_duration` untouched");
@@ -113,7 +113,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the service-class change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-service-class diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-service-class/moves-the-beam-from-service-class-1-to-service-class-2: the committed diff did not carry before to after");

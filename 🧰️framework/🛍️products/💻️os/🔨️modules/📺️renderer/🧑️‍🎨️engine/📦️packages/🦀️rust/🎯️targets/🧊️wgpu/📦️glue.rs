@@ -91,10 +91,10 @@ mod winit_app;
 pub mod parallel_runtime;
 
 use infinite_world::world::{
-    WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind,
-    WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset,
-    publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction,
-    step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation,
+    begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
+    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested,
+    world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
+    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
@@ -106,21 +106,21 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use ui_wgpu::wgpu::ActionDescriptor;
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
+use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
+#[cfg(target_arch = "wasm32")]
+use semio_framework_async::browser::spawn_local;
 use ui_wgpu::wgpu::{
-    CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor, Theme, apply_window_cursor, fetch_font_bytes,
-    mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3,
-    resolve_semio_cursor,
+    apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
+    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
+    SemioCursor, Theme,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen_futures::spawn_local;
 // 🏚️ `ApplicationHandler`/`WindowEvent`/`ActiveEventLoop`/`EventLoopProxy`/`WindowAttributes`/
 // `WindowId` no longer imported here — all `SemioApp`-only (deleted, packet os-host); `winit_app.rs`
 // imports each of these itself. `EventLoop`/`Window` stay: `run_native`/`semio_wgpu_mount` still
@@ -476,7 +476,11 @@ impl GlbStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) { Ok(()) } else { Err("GLB structure ended before JSON and BIN reached terminal") }
+        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("GLB structure ended before JSON and BIN reached terminal")
+        }
     }
 }
 
@@ -569,7 +573,11 @@ impl PngStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) { Ok(()) } else { Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal") }
+        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal")
+        }
     }
 }
 
@@ -676,7 +684,11 @@ impl JpegStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) { Ok(()) } else { Err("JPEG structure ended before a bounded frame and EOI reached terminal") }
+        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("JPEG structure ended before a bounded frame and EOI reached terminal")
+        }
     }
 }
 
@@ -727,7 +739,11 @@ impl TextAssetStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) { Ok(()) } else { Err("text asset structure did not reach its bounded terminal witness") }
+        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) {
+            Ok(())
+        } else {
+            Err("text asset structure did not reach its bounded terminal witness")
+        }
     }
 }
 
@@ -810,7 +826,11 @@ impl ProtobufStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) { Ok(()) } else { Err("protobuf structure did not reach a field boundary") }
+        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) {
+            Ok(())
+        } else {
+            Err("protobuf structure did not reach a field boundary")
+        }
     }
 }
 
@@ -2016,7 +2036,11 @@ fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
 
 fn glb_normalize(value: [f32; 3]) -> [f32; 3] {
     let length = value.iter().map(|value| value * value).sum::<f32>().sqrt();
-    if length <= f32::EPSILON { value } else { value.map(|value| value / length) }
+    if length <= f32::EPSILON {
+        value
+    } else {
+        value.map(|value| value / length)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -2424,23 +2448,43 @@ fn glb_read_component(owner: &RendererAssetFetchOwner, pages: &RendererAssetPage
     let value = match component {
         5120 => {
             let value = i8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized { (f32::from(value) / 127.0).max(-1.0) } else { f32::from(value) }
+            if normalized {
+                (f32::from(value) / 127.0).max(-1.0)
+            } else {
+                f32::from(value)
+            }
         }
         5121 => {
             let value = u8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized { f32::from(value) / 255.0 } else { f32::from(value) }
+            if normalized {
+                f32::from(value) / 255.0
+            } else {
+                f32::from(value)
+            }
         }
         5122 => {
             let value = i16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized { (f32::from(value) / 32767.0).max(-1.0) } else { f32::from(value) }
+            if normalized {
+                (f32::from(value) / 32767.0).max(-1.0)
+            } else {
+                f32::from(value)
+            }
         }
         5123 => {
             let value = u16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized { f32::from(value) / 65535.0 } else { f32::from(value) }
+            if normalized {
+                f32::from(value) / 65535.0
+            } else {
+                f32::from(value)
+            }
         }
         5125 => {
             let value = u32::from_le_bytes(pages.read::<4>(owner, absolute)?);
-            if normalized { value as f32 / u32::MAX as f32 } else { value as f32 }
+            if normalized {
+                value as f32 / u32::MAX as f32
+            } else {
+                value as f32
+            }
         }
         5126 if !normalized => f32::from_le_bytes(pages.read::<4>(owner, absolute)?),
         5126 => return Err("GLB FLOAT accessor could not be normalized"),
@@ -3004,7 +3048,7 @@ fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
-    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
         if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return None;
@@ -3649,6 +3693,9 @@ pub(crate) mod kernel_runtime {
         AcknowledgeJobProgress {
             token: JobProgressPresentationToken,
         },
+        AcknowledgeTypedOperationResult {
+            token: TypedOperationResultToken,
+        },
     }
 
     impl KernelRequest {
@@ -3666,7 +3713,8 @@ pub(crate) mod kernel_runtime {
                 | Self::DestroyApp { .. }
                 | Self::CloseRealm { .. }
                 | Self::CloseRejectedEvents { .. }
-                | Self::AcknowledgeJobProgress { .. } => (0, 0),
+                | Self::AcknowledgeJobProgress { .. }
+                | Self::AcknowledgeTypedOperationResult { .. } => (0, 0),
             }
         }
     }
@@ -4799,6 +4847,227 @@ pub(crate) mod kernel_runtime {
         (worker_count != 0 && process_slot != u16::MAX).then_some(process_slot % worker_count)
     }
 
+    //#region 📬️TypedOperationResultExchange
+    pub(crate) const TYPED_OPERATION_RESULT_PAGE_BYTES: usize = 4_096;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub(crate) struct TypedOperationResultToken {
+        pub receiver: u32,
+        pub operation: u64,
+        pub generation: u64,
+        pub sequence: u32,
+        pub attempt: u8,
+    }
+
+    #[derive(Clone)]
+    pub(crate) struct TypedOperationResultPage {
+        pub token: TypedOperationResultToken,
+        pub lane: u8,
+        bytes: [u8; TYPED_OPERATION_RESULT_PAGE_BYTES],
+        len: usize,
+    }
+
+    impl TypedOperationResultPage {
+        const PAGE_MAGIC: &'static [u8] = b"semio.typed-operation-page.v1\0";
+        const ACK_MAGIC: &'static [u8] = b"semio.typed-operation-ack.v1\0";
+
+        pub(crate) fn try_copy_from(token: TypedOperationResultToken, lane: u8, bytes: &[u8]) -> Result<Self, &'static str> {
+            if bytes.len() > TYPED_OPERATION_RESULT_PAGE_BYTES {
+                return Err("typed-operation result exceeds renderer fixed page authority");
+            }
+            let mut page = Self { token, lane, bytes: [0; TYPED_OPERATION_RESULT_PAGE_BYTES], len: bytes.len() };
+            page.bytes[..bytes.len()].copy_from_slice(bytes);
+            Ok(page)
+        }
+
+        pub(crate) fn bytes(&self) -> &[u8] {
+            &self.bytes[..self.len]
+        }
+
+        fn decode_guest_message(bytes: &[u8]) -> Option<Self> {
+            let body = bytes.strip_prefix(Self::PAGE_MAGIC)?;
+            if body.len() < 30 {
+                return None;
+            }
+            let token = TypedOperationResultToken {
+                receiver: u32::from_le_bytes(body[0..4].try_into().ok()?),
+                operation: u64::from_le_bytes(body[4..12].try_into().ok()?),
+                generation: u64::from_le_bytes(body[12..20].try_into().ok()?),
+                sequence: u32::from_le_bytes(body[20..24].try_into().ok()?),
+                attempt: body[24],
+            };
+            let lane = body[25];
+            if lane > 11 {
+                return None;
+            }
+            let len = u32::from_le_bytes(body[26..30].try_into().ok()?) as usize;
+            if len > TYPED_OPERATION_RESULT_PAGE_BYTES || body.len() != 30 + len {
+                return None;
+            }
+            Self::try_copy_from(token, lane, &body[30..]).ok()
+        }
+
+        fn encode_ack(token: TypedOperationResultToken) -> Vec<u8> {
+            let mut bytes = Vec::with_capacity(Self::ACK_MAGIC.len() + 25);
+            bytes.extend_from_slice(Self::ACK_MAGIC);
+            bytes.extend_from_slice(&token.receiver.to_le_bytes());
+            bytes.extend_from_slice(&token.operation.to_le_bytes());
+            bytes.extend_from_slice(&token.generation.to_le_bytes());
+            bytes.extend_from_slice(&token.sequence.to_le_bytes());
+            bytes.push(token.attempt);
+            bytes
+        }
+    }
+
+    /// 🎯️ Object-safe renderer boundary for one retained page and its exact ACK token.
+    /// The installed plugin host keeps the original owner until `acknowledge` succeeds.
+    pub(crate) trait TypedOperationResultExchange: Send + Sync {
+        fn take_page(&self, receiver: u32) -> Option<TypedOperationResultPage>;
+        fn acknowledge(&self, token: TypedOperationResultToken) -> bool;
+    }
+
+    struct MountedTypedOperationResultPage {
+        page: TypedOperationResultPage,
+        acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>,
+    }
+
+    struct MountedTypedOperationResultExchange {
+        pages: Mutex<[Option<MountedTypedOperationResultPage>; 64]>,
+    }
+
+    impl MountedTypedOperationResultExchange {
+        fn new() -> Self {
+            Self { pages: Mutex::new(std::array::from_fn(|_| None)) }
+        }
+
+        fn publish(&self, page: TypedOperationResultPage, acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>) -> Result<(), TypedOperationResultPage> {
+            let mut pages = self.pages.lock().expect("typed-operation renderer exchange lock");
+            if let Some(pending) = pages.iter_mut().flatten().find(|pending| {
+                pending.page.token.receiver == page.token.receiver && pending.page.token.operation == page.token.operation && pending.page.token.generation == page.token.generation && pending.page.token.sequence == page.token.sequence
+            }) {
+                if page.token.attempt >= pending.page.token.attempt {
+                    *pending = MountedTypedOperationResultPage { page, acknowledge };
+                }
+                return Ok(());
+            }
+            let Some(slot) = pages.iter_mut().find(|slot| slot.is_none()) else { return Err(page) };
+            *slot = Some(MountedTypedOperationResultPage { page, acknowledge });
+            Ok(())
+        }
+    }
+
+    impl TypedOperationResultExchange for MountedTypedOperationResultExchange {
+        fn take_page(&self, receiver: u32) -> Option<TypedOperationResultPage> {
+            self.pages.lock().expect("typed-operation renderer exchange lock").iter().flatten().find(|pending| pending.page.token.receiver == receiver).map(|pending| pending.page.clone())
+        }
+
+        fn acknowledge(&self, token: TypedOperationResultToken) -> bool {
+            let mut pages = self.pages.lock().expect("typed-operation renderer exchange lock");
+            let Some(index) = pages.iter().position(|pending| pending.as_ref().is_some_and(|pending| pending.page.token == token)) else { return false };
+            let accepted = pages[index].as_ref().is_some_and(|pending| (pending.acknowledge)(token));
+            if accepted {
+                pages[index] = None;
+            }
+            accepted
+        }
+    }
+
+    fn typed_operation_result_exchange() -> &'static OnceLock<Arc<dyn TypedOperationResultExchange>> {
+        static EXCHANGE: OnceLock<Arc<dyn TypedOperationResultExchange>> = OnceLock::new();
+        &EXCHANGE
+    }
+
+    pub(crate) fn install_typed_operation_result_exchange(exchange: Arc<dyn TypedOperationResultExchange>) -> Result<(), Arc<dyn TypedOperationResultExchange>> {
+        typed_operation_result_exchange().set(exchange)
+    }
+
+    fn mounted_typed_operation_result_exchange() -> &'static Arc<MountedTypedOperationResultExchange> {
+        static EXCHANGE: OnceLock<Arc<MountedTypedOperationResultExchange>> = OnceLock::new();
+        EXCHANGE.get_or_init(|| Arc::new(MountedTypedOperationResultExchange::new()))
+    }
+
+    fn install_mounted_typed_operation_result_exchange() {
+        let exchange: Arc<dyn TypedOperationResultExchange> = mounted_typed_operation_result_exchange().clone();
+        let _ = install_typed_operation_result_exchange(exchange);
+    }
+
+    pub(crate) fn publish_typed_operation_result_page(page: TypedOperationResultPage, acknowledge: Arc<dyn Fn(TypedOperationResultToken) -> bool + Send + Sync>) -> Result<(), TypedOperationResultPage> {
+        install_mounted_typed_operation_result_exchange();
+        mounted_typed_operation_result_exchange().publish(page, acknowledge)
+    }
+
+    #[cfg(test)]
+    mod typed_operation_result_exchange_tests {
+        use super::*;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        #[test]
+        fn concrete_exchange_is_installed_and_retains_the_page_until_the_receiver_accepts_the_exact_ack() {
+            install_mounted_typed_operation_result_exchange();
+            assert!(typed_operation_result_exchange().get().is_some());
+
+            let exchange = MountedTypedOperationResultExchange::new();
+            let token = TypedOperationResultToken { receiver: u32::MAX, operation: u64::MAX, generation: u64::MAX - 1, sequence: u32::MAX, attempt: u8::MAX };
+            let page = TypedOperationResultPage::try_copy_from(token, u8::MAX, b"retained-page").expect("bounded typed-operation page");
+            let attempts = Arc::new(AtomicUsize::new(0));
+            let callback_attempts = attempts.clone();
+            let published = exchange.publish(page, Arc::new(move |acknowledged| acknowledged == token && callback_attempts.fetch_add(1, Ordering::SeqCst) > 0));
+            assert!(published.is_ok(), "first retained page slot");
+
+            let wrong = TypedOperationResultToken { sequence: token.sequence - 1, ..token };
+            assert!(!exchange.acknowledge(wrong));
+            assert!(!exchange.acknowledge(token));
+            assert_eq!(exchange.take_page(token.receiver).expect("rejected ACK retains the exact page").bytes(), b"retained-page");
+            assert!(exchange.acknowledge(token));
+            assert!(exchange.take_page(token.receiver).is_none());
+            assert_eq!(attempts.load(Ordering::SeqCst), 2);
+        }
+
+        #[test]
+        fn renderer_wire_maximum_plus_one_and_exchange_saturation_preserve_exact_owners() {
+            let token = TypedOperationResultToken { receiver: 7, operation: 11, generation: 13, sequence: 17, attempt: 1 };
+            assert!(TypedOperationResultPage::try_copy_from(token, 0, &[0; TYPED_OPERATION_RESULT_PAGE_BYTES]).is_ok());
+            assert!(TypedOperationResultPage::try_copy_from(token, 0, &[0; TYPED_OPERATION_RESULT_PAGE_BYTES + 1]).is_err());
+            let mut wire = Vec::from(TypedOperationResultPage::PAGE_MAGIC);
+            wire.extend_from_slice(&token.receiver.to_le_bytes());
+            wire.extend_from_slice(&token.operation.to_le_bytes());
+            wire.extend_from_slice(&token.generation.to_le_bytes());
+            wire.extend_from_slice(&token.sequence.to_le_bytes());
+            wire.push(token.attempt);
+            wire.push(0);
+            wire.extend_from_slice(&(TYPED_OPERATION_RESULT_PAGE_BYTES as u32).to_le_bytes());
+            wire.extend_from_slice(&[0x2a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
+            assert_eq!(TypedOperationResultPage::decode_guest_message(&wire).expect("exact maximum guest page").bytes(), &[0x2a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
+            wire.push(0);
+            assert!(TypedOperationResultPage::decode_guest_message(&wire).is_none(), "maximum plus one wire byte is rejected");
+
+            let exchange = MountedTypedOperationResultExchange::new();
+            for sequence in 0..64 {
+                let token = TypedOperationResultToken { sequence, ..token };
+                let page = TypedOperationResultPage::try_copy_from(token, 0, &[sequence as u8]).expect("bounded saturation page");
+                assert!(exchange.publish(page, Arc::new(|_| true)).is_ok());
+            }
+            let overflow_token = TypedOperationResultToken { sequence: 64, ..token };
+            let overflow = TypedOperationResultPage::try_copy_from(overflow_token, 0, b"overflow").expect("bounded overflow owner");
+            let returned = match exchange.publish(overflow, Arc::new(|_| true)) {
+                Ok(()) => panic!("maximum plus one page must be returned"),
+                Err(returned) => returned,
+            };
+            assert_eq!(returned.token, overflow_token);
+            assert_eq!(returned.bytes(), b"overflow");
+
+            let retries = MountedTypedOperationResultExchange::new();
+            let first = TypedOperationResultPage::try_copy_from(token, 0, b"first").expect("first attempt");
+            retries.publish(first, Arc::new(|_| true)).unwrap_or_else(|_| panic!("first attempt slot"));
+            let latest_token = TypedOperationResultToken { attempt: 2, ..token };
+            let latest = TypedOperationResultPage::try_copy_from(latest_token, 0, b"latest").expect("latest attempt");
+            retries.publish(latest, Arc::new(|_| true)).unwrap_or_else(|_| panic!("latest attempt replaces stable identity"));
+            assert!(!retries.acknowledge(token), "stale attempt must not consume the replacement owner");
+            assert_eq!(retries.take_page(token.receiver).expect("latest owner retained").token, latest_token);
+        }
+    }
+    //#endregion 📬️TypedOperationResultExchange
+
     pub(crate) struct ExchangeSurfaceDocument {
         pub surface: SurfaceId,
         pub document: UiDocumentLease,
@@ -4819,6 +5088,14 @@ pub(crate) mod kernel_runtime {
     }
 
     impl ExchangeOutcome {
+        pub(crate) fn take_typed_operation_result(&self, receiver: u32) -> Option<TypedOperationResultPage> {
+            typed_operation_result_exchange().get()?.take_page(receiver)
+        }
+
+        pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
+            typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
+        }
+
         pub(crate) fn take_surface(&mut self, surface: &str) -> Option<UiDocumentLease> {
             let index = self.surfaces.iter().position(|entry| entry.surface.as_ref() == surface)?;
             self.surfaces.swap_remove(index).map(|entry| entry.document)
@@ -4928,6 +5205,7 @@ pub(crate) mod kernel_runtime {
     impl KernelClient {
         /// ▶️ Mounts the kernel request state machine on the process-wide worker pool exactly once.
         pub(crate) fn get() -> KernelClient {
+            install_mounted_typed_operation_result_exchange();
             global_client()
                 .get_or_init(|| {
                     let queue = Arc::new(KernelRequestQueue::default());
@@ -4943,6 +5221,14 @@ pub(crate) mod kernel_runtime {
 
         fn try_acknowledge_job_progress(&self, token: JobProgressPresentationToken) -> bool {
             self.queue.try_push(KernelRequest::AcknowledgeJobProgress { token }, Arc::new(ResponseSlot::default()), None).is_ok()
+        }
+
+        pub(crate) fn take_typed_operation_result_page(&self, receiver: u32) -> Option<TypedOperationResultPage> {
+            typed_operation_result_exchange().get()?.take_page(receiver)
+        }
+
+        pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
+            typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
         }
 
         pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
@@ -5950,6 +6236,7 @@ pub(crate) mod kernel_runtime {
     //#endregion 📦️CommandDocumentRetirement
 
     struct KernelPoolState {
+        request_queue: Arc<KernelRequestQueue>,
         guest_runtime: Arc<GuestRuntimes>,
         /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
         /// `ShardLoop`/`Kernel::new(.., 1, 0, ..)` this host used to run. `Kernel::new(Native, K, 2,
@@ -6000,7 +6287,7 @@ pub(crate) mod kernel_runtime {
         /// state machine is genuinely asynchronous and the whole request loop is mounted once on the
         /// injected renderer worker pool. No executor bridge or dedicated kernel thread remains in
         /// product logic.
-        async fn new() -> Self {
+        async fn new(request_queue: Arc<KernelRequestQueue>) -> Self {
             let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
             // 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
             // type mints for itself — see `ParallelRuntime::new`'s own doc.
@@ -6008,6 +6295,7 @@ pub(crate) mod kernel_runtime {
             let worker_count = u16::try_from(pool.worker_count()).unwrap_or(u16::MAX);
             let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64).await;
             Self {
+                request_queue,
                 guest_runtime,
                 runtime,
                 worker_count,
@@ -7012,6 +7300,15 @@ pub(crate) mod kernel_runtime {
             self.run_turn(actor, instance, events).await
         }
 
+        async fn deliver_typed_operation_result_ack(&mut self, token: TypedOperationResultToken) -> Result<(), String> {
+            let Some(&actor) = self.instances.get(&token.receiver) else {
+                return Err("kernel: typed-operation ACK receiver is not registered".to_string());
+            };
+            let event = Event::Message { source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(token.receiver.to_string()) }, payload: TypedOperationResultPage::encode_ack(token) };
+            let _ = self.run_turn(actor, token.receiver, vec![event]).await?;
+            Ok(())
+        }
+
         async fn exchange_commands(&mut self, instance: u32, driver: semio_framework::kernel::CommandBatchDriver) -> Result<ExchangeOutcome, String> {
             let key = u64::from(instance);
             let generation = driver.generation();
@@ -7319,6 +7616,14 @@ pub(crate) mod kernel_runtime {
             for effect in result.effects {
                 if let Effect::SendMessage { target: MessageEndpoint::Shell { instance: target_instance }, payload } = &effect {
                     if target_instance.0 == instance.to_string() {
+                        if let Some(page) = TypedOperationResultPage::decode_guest_message(payload) {
+                            if page.token.receiver == instance {
+                                let queue = self.request_queue.clone();
+                                let acknowledge = Arc::new(move |token| queue.try_push(KernelRequest::AcknowledgeTypedOperationResult { token }, Arc::new(ResponseSlot::default()), None).is_ok());
+                                let _ = publish_typed_operation_result_page(page, acknowledge);
+                                continue;
+                            }
+                        }
                         if let Ok(frame) = protocol::decode_app_frame(payload).await {
                             frames.push(frame);
                             continue;
@@ -7708,7 +8013,7 @@ pub(crate) mod kernel_runtime {
     }
 
     async fn run_kernel_pool(queue: Arc<KernelRequestQueue>) {
-        let mut state = KernelPoolState::new().await;
+        let mut state = KernelPoolState::new(queue.clone()).await;
         loop {
             if state.command_maintenance_pending() {
                 let _ = state.command_maintenance_step();
@@ -7755,6 +8060,10 @@ pub(crate) mod kernel_runtime {
                 }
                 KernelRequest::AcknowledgeJobProgress { token } => {
                     state.acknowledge_job_progress(token);
+                    continue;
+                }
+                KernelRequest::AcknowledgeTypedOperationResult { token } => {
+                    let _ = state.deliver_typed_operation_result_ack(token).await;
                     continue;
                 }
                 KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(state.exchange(instance, vec![event.into_event()]).await),
@@ -14167,11 +14476,7 @@ impl AppPresenter {
         if !self.gate.close_step() {
             return Ok(false);
         }
-        Ok(self.pending.is_none()
-            && self.retirement.as_ref().is_none_or(AppPresentedRetirement::terminal_is_empty)
-            && self.retained_fault.is_none()
-            && self.gate.terminal_is_empty()
-            && self.raster_operation_authority.current().is_none())
+        Ok(self.pending.is_none() && self.retirement.as_ref().is_none_or(AppPresentedRetirement::terminal_is_empty) && self.retained_fault.is_none() && self.gate.terminal_is_empty() && self.raster_operation_authority.current().is_none())
     }
 
     pub(crate) fn close_world_owners_step(&mut self) -> Result<bool, String> {
@@ -14606,7 +14911,11 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
 fn push_renderer_asset_page(_fetch: &mut RendererAssetFetchOwner, mut bytes: semio_framework_job::RetainedJobPayload) -> Result<(), String> {
     let populated = !bytes.is_empty();
     let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    if populated { Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into()) } else { Ok(()) }
+    if populated {
+        Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into())
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]

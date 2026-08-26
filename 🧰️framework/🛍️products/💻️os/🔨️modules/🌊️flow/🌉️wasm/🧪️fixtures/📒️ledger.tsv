@@ -1,0 +1,7 @@
+name	operation	request	generation	args
+open	2500	1	1	{}
+vcs_checkpoint	2501	2	1	{"sessionGeneration":1,"baseRevision":0,"parentRevision":0}
+selection_unknown_optional	2525	3	1	{"json":"{\"widgets\":[],\"futureOptional\":true}"}
+attach_surface	2575	4	1	{"surface":7,"surfaceGeneration":1,"width":800,"height":600,"dpr":2}
+surface_ready	2576	5	1	{"surface":7,"surfaceGeneration":1,"status":"created"}
+close	control-close	6	1	{}

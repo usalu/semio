@@ -208,7 +208,7 @@ pub mod derived_composition {
                 blocks: vec![DocBlock::Paragraph { style_id: Some("child".into()), runs: Vec::new() }, DocBlock::Image { image_id: "img1".into(), alt: "alt".into(), width: None, height: None }],
             };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.is_empty(), "expected no diagnostics, got {diagnostics:?}");
         }
 
@@ -221,7 +221,7 @@ pub mod derived_composition {
                 blocks: vec![DocBlock::Paragraph { style_id: Some("missing-style".into()), runs: Vec::new() }, DocBlock::Image { image_id: "missing-image".into(), alt: String::new(), width: None, height: None }],
             };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioDocumentValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_document.unresolved-style-id"), "got {diagnostics:?}");
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_document.unresolved-image-id"), "got {diagnostics:?}");
         }
@@ -259,7 +259,7 @@ pub mod derived_composition {
             let snapshot = SemioDocumentSnapshot::default();
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = SemioDocumentComposerComposition::compose(&sources).expect("compose from native dialect");
+            let composed = SemioDocumentComposerComposition::compose(&sources).await.expect("compose from native dialect");
             assert_eq!(composed.snapshot, snapshot);
         }
 

@@ -1,0 +1,17 @@
+{
+  "documentOwners": ["schema", "camera", "widgets", "synapses", "layout"],
+  "widgetOwners": ["neuron", "inputSlider", "inputNote", "inputImage", "variable", "outputPreview", "outputAction", "outputExport", "cluster"],
+  "nestedOwners": ["params", "inputPorts", "outputPorts", "preview", "expanded", "clusterTree", "clusterFlow", "flowNodes", "flowPreviews", "sourceChannel", "dictionary", "atom", "string", "collection"],
+  "publicationOwners": ["operation", "sessionGeneration", "slotGeneration", "baseRevision", "parentRevision", "documentGeneration", "surface", "host"],
+  "lifecycleOwners": ["page", "item", "byte", "output", "event", "control", "history", "inverse", "redo", "checkpoint", "edit", "conflict", "cursor", "retiredSurface", "retiredAction"],
+  "surfaceBackings": ["document", "widgets", "synapses", "previews", "expanded", "layout", "history", "edit", "conflict", "control", "output"],
+  "countingModel": { "kind": "schemaFixedTopLevelSlots", "recursiveScan": false, "previewSlotsPerWidget": 1, "expandedSlotsPerWidget": 1 },
+  "editAuthority": { "owners": 1, "acquireBeforeTransfer": true, "releaseAfterPageOrRollback": true },
+  "fixtureLedgers": {
+    "semanticResultOwners": ["document", "page", "history", "handback"],
+    "thirdPartyOracle": { "library": "serde_json", "testOnly": true, "ownedInterface": "FlowSemanticOracle", "externalTypesExported": false, "runtimeDependency": false },
+    "actualExtraction": { "source": "retainedSession", "after": ["acknowledgePage", "closeOperationStep"], "literalFeatureResults": false },
+    "hostileOmissionLaws": ["mutatedByteVectorScalar", "mutatedAuthorityVectorScalar", "mutatedMalformedVectorScalar", "mutatedGrantVectorScalar", "mutatedTransferVectorScalar", "mutatedFingerprintScalar", "mutatedExpectedStateScalar", "mutatedProtocolDocumentScalar", "missingFreshRollbackPrimaryCancel", "missingFreshRollbackPrimaryFault", "mismatchedRollbackStage", "mismatchedRollbackAuthority", "mismatchedRollbackSurfaceOwner", "missingActualDocumentExtraction", "missingActualPageExtraction", "missingActualHistoryExtraction", "missingActualHandbackExtraction"]
+  },
+  "forbiddenProductionRoutes": ["reject_whole_buffer_artifact_envelope_ingress", "ArtifactDsl", "ArtifactPack", "RecordValue", "FlowStore::new", ".dispatch(", "snapshot_json", "envelope_json", "FlowHost", "serde_json::Value"]
+}

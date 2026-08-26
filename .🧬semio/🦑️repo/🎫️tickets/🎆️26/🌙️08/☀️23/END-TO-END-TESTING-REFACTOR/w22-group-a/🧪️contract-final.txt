@@ -1,0 +1,7 @@
+2 high-priority breach(es) across 1 rule(s):
+      2  testing/discovery
+
+  testing/discovery  🧰️framework  44 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s  5 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json

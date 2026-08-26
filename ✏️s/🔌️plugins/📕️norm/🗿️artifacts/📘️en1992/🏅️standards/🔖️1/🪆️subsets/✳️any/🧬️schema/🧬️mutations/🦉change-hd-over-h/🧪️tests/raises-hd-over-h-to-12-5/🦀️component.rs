@@ -30,7 +30,7 @@ fn mutation() -> En1992Mutation {
 /// ▶️ `change-hd-over-h` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `hd_over_h` from 10.0 to 12.5, leaving every other EN 1992 concrete-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_hd_over_h_applies_to_committed_after() {
+fn change_hd_over_h_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-hd-over-h applies to its committed before-snapshot");
     assert_eq!(applied.hd_over_h, 12.5, "change-hd-over-h/raises-hd-over-h-to-12-5: hd_over_h must read 12.5 after the change");
     assert_eq!(applied, expected_after(), "change-hd-over-h/raises-hd-over-h-to-12-5: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_hd_over_h_applies_to_committed_after() {
 /// ↩️ `change-hd-over-h` is its own inverse partner: the inverse step restores `hd_over_h` to its pre-change
 /// 10.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_hd_over_h_inverse_restores_before() {
+fn change_hd_over_h_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-hd-over-h applies");
     let inverse = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_hd_over_h_inverse_restores_before() {
 /// decode then encode is a fixed point, so `hdOverH` and `newHdOverH` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_hd_over_h_committed_json_is_canonical() {
+fn change_hd_over_h_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1992Snapshot = serde_json::from_str(text).expect("change-hd-over-h snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-hd-over-h snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_hd_over_h_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-hd-over-h` at 12.5 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_hd_over_h_declared_outcome_holds() {
+fn change_hd_over_h_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-hd-over-h outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-hd-over-h/raises-hd-over-h-to-12-5: this fixture declares an applied outcome");
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_hd_over_h_declared_outcome_holds() {
 /// assertion: it pins that only `hdOverH` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `liquidSigmaSMpa`.
 #[semio_framework_async_macros::async_test]
-async fn change_hd_over_h_produces_committed_diff() {
+fn change_hd_over_h_produces_committed_diff() {
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().hd_over_h, Some(12.5), "change-hd-over-h/raises-hd-over-h-to-12-5: the diff must set hd_over_h to 12.5");
     assert!(outcome.diff().artifact.is_none(), "change-hd-over-h/raises-hd-over-h-to-12-5: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_hd_over_h_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-hd-over-h`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_hd_over_h_committed_diff_is_canonical() {
+fn change_hd_over_h_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-hd-over-h committed diff decodes");
     assert_eq!(decoded.hd_over_h, Some(12.5), "change-hd-over-h/raises-hd-over-h-to-12-5: the committed diff must carry hd_over_h at 12.5");
     assert!(decoded.selected_check_index.is_none(), "change-hd-over-h/raises-hd-over-h-to-12-5: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_hd_over_h_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 10.0 to 12.5 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_hd_over_h_committed_diff_applies_to_after() {
+fn change_hd_over_h_committed_diff_applies_to_after() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-hd-over-h committed diff decodes");
     let produced = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(&decoded, &before()).expect("change-hd-over-h committed diff applies to the before-snapshot");
     assert_eq!(produced.hd_over_h, 12.5, "change-hd-over-h/raises-hd-over-h-to-12-5: the committed diff must leave hd_over_h reading 12.5");

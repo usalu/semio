@@ -4,7 +4,7 @@ use super::mutation::UpdateMemberProperties;
 use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &UpdateMemberProperties, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+pub fn inverse(_payload: &UpdateMemberProperties, base: &En1993Snapshot) -> Vec<En1993Mutation> {
     vec![En1993Mutation::UpdateMemberProperties(UpdateMemberProperties {
         new_n_ed_kn: base.n_ed_kn,
         new_m_ed_knm: base.m_ed_knm,

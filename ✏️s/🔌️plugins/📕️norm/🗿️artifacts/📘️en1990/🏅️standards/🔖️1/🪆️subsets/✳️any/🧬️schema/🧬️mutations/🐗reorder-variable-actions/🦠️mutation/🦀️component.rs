@@ -14,16 +14,16 @@ pub struct ReorderVariableActions {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ReorderVariableActions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "variable-action", kind: "reorder-variable-actions", record: "ReorderedVariableActions" };
 
-    async fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+    fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Move variable action #{} to #{}", self.from, self.to)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]
     }
 }

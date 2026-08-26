@@ -13,7 +13,7 @@ use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::component::layout::MeasureSelectItem;
 use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::theme::Level;
-use crate::wgpu::widgets::{SelectItem, WidgetContext, draw_text, draw_text_on};
+use crate::wgpu::widgets::{draw_text, draw_text_on, SelectItem, WidgetContext};
 
 pub(crate) trait SelectItemView {
     fn value(&self) -> &str;

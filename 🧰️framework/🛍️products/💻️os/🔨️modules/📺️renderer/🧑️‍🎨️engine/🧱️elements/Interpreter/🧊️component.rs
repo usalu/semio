@@ -7,7 +7,7 @@
 //! with zero other changes.
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface, queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene_step};
+use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene_step, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -17,8 +17,8 @@ use ui_contract::UiDocumentLease;
 use ui_wgpu::wgpu::UiPresence;
 #[cfg(any(target_arch = "wasm32", test))]
 use ui_wgpu::wgpu::UiState;
+use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
 use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode};
-use ui_wgpu::wgpu::{Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode, draw_text, render_widget};
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
@@ -552,7 +552,7 @@ fn write_os_clipboard(text: &str) {
     #[cfg(target_arch = "wasm32")]
     {
         let text = text.to_string();
-        wasm_bindgen_futures::spawn_local(async move {
+        semio_framework_async::browser::spawn_local(async move {
             ui_wgpu::wgpu::clipboard_write_text(&text).await;
         });
     }
@@ -584,7 +584,7 @@ thread_local! {
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(Result<Option<String>, String>) + 'static) {
-    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
     let mut complete = Some(Box::new(complete) as Box<dyn FnOnce(Result<Option<String>, String>)>);
     let mut job = Some(job);
     MOUNTED_CLIPBOARD_IO.with(|registry| {
@@ -721,7 +721,7 @@ fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::
 /** 🌐️ `ClipboardPasteRequested`'s wasm handling: the browser's Clipboard API is Promise-based with
  * no synchronous read (`ui_wgpu::wgpu::clipboard_read_text` is `async` there — see that fn's doc comment).
  * Spawns a
- * `wasm_bindgen_futures::spawn_local` task that re-enters `UI_ENGINE` once the browser grants/denies
+ * owned browser-local task that re-enters `UI_ENGINE` once the browser grants/denies
  * the read, on a later microtask (no `&mut InputState<ActionDescriptor>` borrow can survive that
  * boundary — it's tied to this frame's call stack). Whatever `UiCommand`s that later `dispatch_event`
  * call produces are still captured by `engine::Ui`'s own internal `pending_commands` queue (every
@@ -733,7 +733,7 @@ fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::
 #[cfg(target_arch = "wasm32")]
 fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let window_id = window_id.to_string();
-    wasm_bindgen_futures::spawn_local(async move {
+    semio_framework_async::browser::spawn_local(async move {
         if let Some(text) = ui_wgpu::wgpu::clipboard_read_text().await {
             UI_ENGINE.with(|cell| {
                 cell.borrow_mut().dispatch_event(&window_id, ui_wgpu::wgpu::UiEvent::Paste { text });
@@ -1978,7 +1978,11 @@ fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     let comma = rest.find(',')?;
     let params = &rest[..comma];
     let payload = &rest[comma + 1..];
-    if params.contains("base64") { base64::engine::general_purpose::STANDARD.decode(payload).ok() } else { Some(percent_decode_basic(payload)) }
+    if params.contains("base64") {
+        base64::engine::general_purpose::STANDARD.decode(payload).ok()
+    } else {
+        Some(percent_decode_basic(payload))
+    }
 }
 
 fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
@@ -2144,7 +2148,7 @@ pub fn framework_widget_context<'a>(
 #[cfg(test)]
 mod render_plan_validator_tests {
     use super::*;
-    use ui_wgpu::wgpu::{TableScene, UiStackNode, World3dScene, build_table_scene, build_world_3d_scene};
+    use ui_wgpu::wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
 
     #[test]
     fn validate_ui_node_rejects_oversized_json_payload() {
@@ -2464,7 +2468,11 @@ fn rgba_array(color: ui_wgpu::wgpu::Rgba) -> [f32; 4] {
 
 #[cfg(any(target_arch = "wasm32", test))]
 fn dim(color: ui_wgpu::wgpu::Rgba, disabled: bool) -> ui_wgpu::wgpu::Rgba {
-    if disabled { color.with_alpha(color.a * 0.5) } else { color }
+    if disabled {
+        color.with_alpha(color.a * 0.5)
+    } else {
+        color
+    }
 }
 
 /// 🎨️ Best-effort `(text, color, bg, fontSize)` per `UiNode` kind, read straight off `theme`'s
@@ -2546,7 +2554,11 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
 #[cfg(any(target_arch = "wasm32", test))]
 fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
     let live = node.flags.contains(ui_wgpu::wgpu::NodeFlags::HOVERED);
-    if disabled { live } else { live || presence_hover }
+    if disabled {
+        live
+    } else {
+        live || presence_hover
+    }
 }
 
 /// 🚶️ Depth-first walk mirroring `paint::paint_node`'s own recursion exactly (same `tree.children`

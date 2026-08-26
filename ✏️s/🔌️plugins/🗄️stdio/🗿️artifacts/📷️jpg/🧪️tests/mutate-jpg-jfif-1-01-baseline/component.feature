@@ -17,11 +17,15 @@ Feature: Move a real photographic JPEG across every axis of the T.81 baseline co
 
   ⚠️ WHAT THIS CASE DOES NOT CLAIM. It makes no byte-level claim about any `mutate-<kind>` row, and
   that is deliberate rather than a shortfall. `encode_jpg` writes a conforming baseline file and no
-  other kind of JPEG at all — `FF C0` for the frame marker, precision 8, a fixed three-component
-  4:2:0 sampling array, exactly four DHT segments, never a DAC — so every axis here is normalized
-  away on re-serialization. A byte-level exhaustive case built on this catalog would report all ten
-  kinds green while the mutation never reached a byte, which is the exact shape of shallow green
-  this ticket exists to remove. The vocabulary is therefore measured where its axes actually live:
+  other kind of JPEG at all — `FF C0` for the frame marker, precision 8, exactly four DHT segments,
+  never a DAC — so four of this vocabulary's five axes are normalized away on re-serialization. The
+  fifth, per-component sampling, is NOT normalized: T.81 §B.2.2 makes `H`/`V` frame parameters that
+  belong to the document, so `encode_jpg` writes back the factors the frame carries and a 4:4:4 scan
+  stays 4:4:4 across a round trip. That is asserted by `identity-round-trip` below rather than by a
+  `mutate-<kind>` row, because these rows are still measured on the decoded snapshot. A byte-level
+  exhaustive case built on this catalog would report the four normalized kinds green while the
+  mutation never reached a byte, which is the exact shape of shallow green this ticket exists to
+  remove. The vocabulary is therefore measured where its axes actually live:
   on the DECODED SNAPSHOT, against the checker's own verdict. That is also why no oracle is
   registered — `image` 0.25, the reference the `✳️any` subset does register, hands back pixels and
   dimensions and cannot see a SOF marker, a DAC flag or a DHT table at all, so it could neither

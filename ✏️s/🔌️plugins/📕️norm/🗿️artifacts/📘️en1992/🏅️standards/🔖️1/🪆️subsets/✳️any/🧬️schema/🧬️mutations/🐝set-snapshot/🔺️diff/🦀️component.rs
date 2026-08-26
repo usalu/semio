@@ -5,7 +5,7 @@ use crate::artifacts::en1992::mutations::set_snapshot::mutation::ChangeAnnex;
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeAnnex, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+pub fn diff(payload: &ChangeAnnex, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if base.annex == payload.new_annex {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Annex already has this value.");
     }

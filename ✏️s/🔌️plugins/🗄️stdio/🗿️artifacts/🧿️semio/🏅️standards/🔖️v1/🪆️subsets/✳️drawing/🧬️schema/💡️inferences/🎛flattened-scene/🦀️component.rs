@@ -295,15 +295,15 @@ mod tests {
     /// every other entity was actually consulted and found warm.
     #[semio_framework_async_macros::async_test]
     async fn changing_a_leaf_own_style_does_not_recompute_ancestors_or_siblings() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = fixture();
         let _ = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.styles[0].stroke_width = Some(99.0);
-        let before = cache.stats();
+        let before = cache.stats().await;
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 1, "only the leaf referencing the changed style may miss");
         assert_eq!(after.hits - before.hits, 3, "root + the unrelated nested Group + the unrelated nested Text (its sibling subtree) must all remain cache hits");
@@ -314,16 +314,16 @@ mod tests {
     /// (root + every descendant transitively folds root's `DepHash` into its own chain).
     #[semio_framework_async_macros::async_test]
     async fn changing_the_root_transform_recomputes_the_whole_subtree() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = fixture();
         let _ = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         let DrawNode::Group { transform, .. } = &mut changed.layers[0].root else { panic!() };
         transform.translation.x = 999.0;
-        let before = cache.stats();
+        let before = cache.stats().await;
         let _ = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 4, "root + its 3 descendants all depend on the root's world transform");
         assert_eq!(after.hits - before.hits, 0, "a root-wide change leaves nothing warm");
@@ -358,16 +358,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unrelated_sibling_edit_leaves_the_other_siblings_chain_warm() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_independent_styled_siblings();
         let baseline = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&base, Some(&mut cache));
         let sibling_before = baseline[&key_for(0, &[1])].clone();
 
         let mut changed = base.clone();
         changed.styles[0].stroke_width = Some(42.0); // only sibling 0 (style "s1") is affected
-        let before = cache.stats();
+        let before = cache.stats().await;
         let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 1, "only sibling 0 (which references the changed style) may miss");
         assert_eq!(after.hits - before.hits, 2, "root + sibling 1 (which references a different, untouched style) must remain cache hits");
@@ -379,7 +379,7 @@ mod tests {
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = fixture();
         let pure = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, None);
-        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
+        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
         let via_disabled = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&snapshot, Some(&mut disabled));
         assert_eq!(pure, via_disabled);
     }

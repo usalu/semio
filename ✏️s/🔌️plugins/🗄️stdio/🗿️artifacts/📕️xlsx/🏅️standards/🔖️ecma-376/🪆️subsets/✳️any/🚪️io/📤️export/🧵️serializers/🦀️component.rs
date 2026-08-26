@@ -149,11 +149,88 @@ fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
 }
 //#endregion 🔖️WorksheetXml
 
+//#region 🔖️WorkbookRelationships
+/// 🔗️ Whether a relationship TYPE is the one this codec regenerates, matched by type SUFFIX so a
+/// genuinely Strict package (whose types are `purl.oclc.org/ooxml/…`) is recognized exactly like a
+/// Transitional one — the same suffix convention `docx`'s `main_part_path` already uses.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_rel_type(rel_type: &str, suffix: &str) -> bool {
+    rel_type.ends_with(suffix)
+}
+
+/// 🆔 The lowest `rIdN` not already spoken for — relationship ids are unique per owner part
+/// (ECMA-376 Part 2 §9.3), so a regenerated worksheet pointer may never collide with a preserved
+/// `styles`/`theme`/`calcChain` one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fresh_rel_id(taken: &mut Vec<String>) -> String {
+    let mut n = 1usize;
+    loop {
+        let candidate = format!("rId{n}");
+        if !taken.iter().any(|id| id == &candidate) {
+            taken.push(candidate.clone());
+            return candidate;
+        }
+        n += 1;
+    }
+}
+
+/// 🔗️ `xl/workbook.xml`'s relationship list, regenerated for the sheet list this snapshot carries
+/// while PRESERVING every relationship the package was read with that this codec does not own
+/// (`styles`, `theme`, `calcChain`, `printerSettings`, `externalLink`, …). An OPC package that
+/// loses a part pointer on a no-op round trip has lost real data, so only the `worksheet` and
+/// `sharedStrings` pointers — the two this codec regenerates the targets of — are rebuilt; each
+/// reuses the id AND the declared type URI of the relationship it replaces, so a Strict package
+/// keeps its `purl.oclc.org/ooxml` types and the whole list keeps its original order.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn workbook_relationships(existing: &[OpcRelationship], sheet_count: usize) -> (Vec<String>, Vec<OpcRelationship>) {
+    let worksheet_type = existing.iter().find(|r| is_rel_type(&r.rel_type, "/worksheet")).map(|r| r.rel_type.clone()).unwrap_or_else(|| REL_TYPE_WORKSHEET.to_string());
+    let shared_strings_type = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map(|r| r.rel_type.clone()).unwrap_or_else(|| REL_TYPE_SHARED_STRINGS.to_string());
+
+    // 🩹 Every id the package already spells — preserved AND regenerated alike — is reserved before
+    // a single fresh one is minted, so growing the sheet list can never steal the `sharedStrings`
+    // pointer's own id out from under it.
+    let mut taken: Vec<String> = existing.iter().map(|r| r.id.clone()).collect();
+    let prior_worksheet_ids: Vec<String> = existing.iter().filter(|r| is_rel_type(&r.rel_type, "/worksheet")).map(|r| r.id.clone()).collect();
+    let worksheets: Vec<OpcRelationship> = (0..sheet_count)
+        .map(|i| {
+            let id = prior_worksheet_ids.get(i).cloned().unwrap_or_else(|| fresh_rel_id(&mut taken));
+            OpcRelationship { id, rel_type: worksheet_type.clone(), target: format!("worksheets/sheet{}.xml", i + 1), target_mode: OpcTargetMode::Internal }
+        })
+        .collect();
+    let shared_strings_id = existing.iter().find(|r| is_rel_type(&r.rel_type, "/sharedStrings")).map(|r| r.id.clone()).unwrap_or_else(|| fresh_rel_id(&mut taken));
+    let shared_strings = OpcRelationship { id: shared_strings_id, rel_type: shared_strings_type, target: "sharedStrings.xml".into(), target_mode: OpcTargetMode::Internal };
+
+    let rids = worksheets.iter().map(|r| r.id.clone()).collect();
+    let mut regenerated = worksheets.into_iter();
+    let mut shared_strings = Some(shared_strings);
+    let mut rebuilt = Vec::with_capacity(existing.len().max(sheet_count + 1));
+    for relationship in existing {
+        if is_rel_type(&relationship.rel_type, "/worksheet") {
+            if let Some(next) = regenerated.next() {
+                rebuilt.push(next);
+            }
+            continue;
+        }
+        if is_rel_type(&relationship.rel_type, "/sharedStrings") {
+            if let Some(next) = shared_strings.take() {
+                rebuilt.push(next);
+            }
+            continue;
+        }
+        rebuilt.push(relationship.clone());
+    }
+    rebuilt.extend(regenerated);
+    rebuilt.extend(shared_strings);
+    (rids, rebuilt)
+}
+//#endregion 🔖️WorkbookRelationships
+
 //#region 🔖️Codec
 /// 🔄 Regenerates every xlsx-owned part (`xl/workbook.xml`, every `xl/worksheets/sheetN.xml`,
 /// `xl/sharedStrings.xml`, and `xl/workbook.xml`'s relationships) from `workbook`, discarding
 /// stale worksheet parts a shrinking sheet list would otherwise leave orphaned. Unrelated parts
-/// (styles, themes, media, …) are untouched.
+/// (styles, themes, media, …) are untouched, and so are the relationships that point AT them —
+/// see [`workbook_relationships`].
 // 🩹 `WORKBOOK_PART` (the package's root/main part) is `set_part`'d FIRST, before
 // `SHARED_STRINGS_PART`/worksheet parts — deliberately, NOT cosmetic. `opc.parts` is a
 // name-keyed `Vec`, diffed/applied via `NamedTripleDiff`'s position-preserving-survivor
@@ -176,14 +253,7 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
         sheet_bytes.push(xml_document_to_text(&xml).into_bytes());
     }
 
-    let mut rids = Vec::with_capacity(workbook.sheets.len());
-    let mut workbook_rels = Vec::new();
-    for i in 0..workbook.sheets.len() {
-        let rid = format!("rId{}", i + 1);
-        workbook_rels.push(OpcRelationship { id: rid.clone(), rel_type: REL_TYPE_WORKSHEET.into(), target: format!("worksheets/sheet{}.xml", i + 1), target_mode: OpcTargetMode::Internal });
-        rids.push(rid);
-    }
-    workbook_rels.push(OpcRelationship { id: format!("rId{}", workbook.sheets.len() + 1), rel_type: REL_TYPE_SHARED_STRINGS.into(), target: "sharedStrings.xml".into(), target_mode: OpcTargetMode::Internal });
+    let (rids, workbook_rels) = workbook_relationships(opc.relationships_for(WORKBOOK_PART), workbook.sheets.len());
     opc.relationships.insert(WORKBOOK_PART.to_string(), workbook_rels);
 
     let workbook_bytes = xml_document_to_text(&workbook_to_xml(workbook, &rids)).into_bytes();
@@ -200,7 +270,7 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
         opc.set_part(&path, WORKSHEET_CONTENT_TYPE, bytes);
     }
 
-    if opc.relationships_for("").iter().all(|r| r.rel_type != REL_TYPE_OFFICE_DOCUMENT) {
+    if !opc.relationships_for("").iter().any(|r| is_rel_type(&r.rel_type, "/officeDocument")) {
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, WORKBOOK_PART);
     }
 }

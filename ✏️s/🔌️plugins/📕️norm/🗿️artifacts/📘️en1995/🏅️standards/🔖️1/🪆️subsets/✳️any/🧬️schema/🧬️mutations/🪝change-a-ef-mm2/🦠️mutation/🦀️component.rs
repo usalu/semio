@@ -15,15 +15,15 @@ pub struct ChangeAEfMm2 {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeAEfMm2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "a-ef-mm2", kind: "change-a-ef-mm2", record: "ChangedAEfMm2" };
 
-    async fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_a_ef_mm2::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
+    fn inverse(&self, base: &En1995Snapshot) -> Vec<En1995Mutation> {
         crate::artifacts::en1995::mutations::change_a_ef_mm2::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change a ef mm2 to {:?}", self.new_a_ef_mm2)
     }
 }

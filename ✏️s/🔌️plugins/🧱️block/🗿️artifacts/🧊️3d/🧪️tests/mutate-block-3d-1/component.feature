@@ -1,34 +1,64 @@
 @capability-block-3d-1-mutate
-@no-oracle-block-3d-mutation-semantics
+@oracle-block-3d-python-independent
 @comparison-ordered-json-v1
 @mutations-block-3d-1-any
-Feature: Replay every typed Block 3d 1 mutation against its committed specification vector
-  `s.block.3d@1/*` is a semio-NATIVE document, carried as `.dsl.semio`/`.pack.semio`. No third party reads
-  those, and none is authoritative over `Block3dMutation`, so this case rests on the recorded
-  `block-3d-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) and its two named substitutes: the
-  committed specification vectors, and the metamorphic laws below.
+Feature: Apply every typed block3d object-kind mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.block.3d` object-kind document and all thirty-seven typed
+  mutations, written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`,
+  from `…/🧬️schema/🧬️mutations/🔣️component.json`, from rules 1, 2 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the thirty-seven committed quintets. It imports nothing from this repository's Rust.
 
-  This document defines an object kind, and what makes it unlike either block sibling is that its
-  vortex-kind vocabulary lives in TWO places at once: a shared catalogue held as a CHILD DOCUMENT reference
-  in `catalog`, and this document's own additions in `vortexKindExtra`. `create-vortex-kind` and
-  `delete-vortex-kind` move both fields together, `rename-vortex-kind` moves only the catalogue child, and
-  the label/colour/default-cable-kind kinds move only the local extras — three different footprints over
-  one apparent concept.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. `s.block.3d@1/*` is a semio-NATIVE KIND DEFINITION carried as `.dsl.semio`/`.pack.semio`,
+  and this case used to argue that because its vortex-kind vocabulary is SPLIT across a shared
+  catalogue child and a local extras table, "that split IS this subset's specification, not a fact an
+  external library could confirm or refute". The sibling `mutate-block-2d-1` — same plugin, same
+  carrier, same kind-definition document shape — refuted that in this very wave by taking a Python
+  second implementation. The split is not an obstacle to a second implementation; it is something a
+  second implementation must model, and the reference models it, including the many-to-one diff arm
+  that maps BOTH snapshot members onto the diff's single `vortexKinds` field.
 
-  The diff does not mirror that split: it declares all of it through a single `vortexKinds` field. The
-  adapter's alias table maps BOTH snapshot fields onto that one diff field, which is the many-to-one case
-  no other subset in this scope needs. Without it, six of the thirty-seven kinds would report undeclared
-  changes on every run.
+  What the document is: one object kind's identity and unit, the mesh representations it offers at
+  several levels of detail with their tags and attributes, the vortex kinds it exposes, the vortices
+  placed on it in 3-space by position and direction, the compatibility relation between vortex kinds,
+  its attribute table, its authors, its editor camera and its metadata. Thirty-seven kinds — six
+  object-kind scalars, ten over the representations, six over the vortex kinds, six over the
+  vortices, two each over compatibility, attributes and authors, two camera gestures and one metadata
+  setter.
 
-  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same
-  bytes the production crate's own fixture tests beside each leaf assert against — end to end through
-  the test platform. The vector each row names is written out in full in the row itself, so the
-  provenance of every input is readable here and pinned by digest at plan time.
+  🚧️ THREE KINDS THE REFERENCE REFUSES BY CLAUSE, and reports rather than works around.
+  `create-vortex-kind`, `delete-vortex-kind` and `rename-vortex-kind` all rewrite `catalog`, which a
+  committed snapshot carries as a COMPOSED CHILD HANDLE `{childId, target}`. Their committed
+  after-snapshots carry a NEW `childId` — `catalog-69f2059178f5dfa4`, `catalog-9dc5de0f33c9568d`,
+  `catalog-e76534bc13e6b5a6` — which is a content address of the child `s.stdio.semio@v1/kit`
+  document after the vocabulary moved, and no document in this repository states the addressing
+  function or the child's canonical encoding. The LOCAL `vortexKindExtra` half of those kinds is
+  implemented; the catalogue half is not, and the reference declines to guess rather than hard-code
+  the committed answer. `mutate-program-1` reports the identical blocker over `knowledge` and
+  `benchmarks`, and `mutate-en1990-1`'s two red scenarios are the same finding again: publishing the
+  child-addressing rule closes all of them, and no comparison profile moves.
+
+  📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
+  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  crate and replays the committed vectors, so today the comparison establishes that an independent
+  implementation of the specification computes the committed after-snapshots — a real check of the
+  vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec
+  against a second producer. A `block3d_mutation_report_json` bridge beside the mutation enum, the
+  one thing `mutate-block-2d-1` gained in this wave, is what closes that; it was not added here
+  because `semio-s-plugin-block` does not compile today (1,522 errors from a peer session's in-flight
+  async refactor), so it could not be verified. Second, this case reads no real-world artifact: all
+  185 of its fixtures are handcrafted specification vectors.
+
+  The committed specification vectors were KEPT, not replaced, and the reference asserts more against
+  them than the subject half can: it applies each verb, requires the committed after-snapshot member
+  by member, applies its OWN computed inverse and requires the committed before-snapshot back — the
+  full inverse law, where the subject half asserts only the weaker footprint precondition.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: The committed <id> vector declares its own kind and moves the document
     Given the committed specification vector for the <id> kind
       """
@@ -85,7 +115,7 @@ Feature: Replay every typed Block 3d 1 mutation against its committed specificat
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: The committed <id> vector changes only what its diff declares
     Given the committed specification vector for the <id> kind
       """

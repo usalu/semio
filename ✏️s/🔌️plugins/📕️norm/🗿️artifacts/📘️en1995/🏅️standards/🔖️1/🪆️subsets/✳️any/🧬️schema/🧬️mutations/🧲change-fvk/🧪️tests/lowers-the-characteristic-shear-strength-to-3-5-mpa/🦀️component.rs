@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// ▶️ Lowering f_v,k from 4.0 MPa to 3.5 MPa rewrites `f_v_k` alone — the design shear force it resists is an
 /// action and must not be trimmed to keep the §6.1.7 check passing.
 #[semio_framework_async_macros::async_test]
-async fn lowers_the_characteristic_shear_strength_to_3_5_mpa() {
+fn lowers_the_characteristic_shear_strength_to_3_5_mpa() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-fvk applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.f_v_k, 3.5, "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: f_v_k must read 3.5 MPa once the change lands");
@@ -43,7 +43,7 @@ async fn lowers_the_characteristic_shear_strength_to_3_5_mpa() {
 /// ↩️ `change-fvk`'s inverse reads the OLD 4.0 MPa out of BASE, so replaying it puts the 4.0 MPa shear strength
 /// back on `f_v_k`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_4_mpa_shear_strength_restores_before() {
+fn restoring_the_4_mpa_shear_strength_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-fvk applies");
@@ -61,7 +61,7 @@ async fn restoring_the_4_mpa_shear_strength_restores_before() {
 /// a fixed point, so `{"ChangeFVK": {"newFVK": 3.5}}` — the variant is `ChangeFVK`, and serde camelCase over
 /// `new_f_v_k` gives `newFVK` is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 3.5 MPa is finite and differs from the committed 4.0 MPa — a DOWNWARD move, which the
 /// equality guard treats no differently — so `change-fvk` (guard message "Fvk") stays silent.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `fVK` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-fvk diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the characteristic shear
 /// strength and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-fvk diff decodes");
     assert_eq!(decoded.f_v_k, Some(3.5), "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: the committed diff must carry fVK = 3.5 MPa");
     assert!(decoded.v_ed_kn.is_none(), "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: change-fvk writes fVK and must leave `v_ed_kn` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the shear-strength change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-fvk diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-fvk/lowers-the-characteristic-shear-strength-to-3-5-mpa: the committed diff did not carry before to after");

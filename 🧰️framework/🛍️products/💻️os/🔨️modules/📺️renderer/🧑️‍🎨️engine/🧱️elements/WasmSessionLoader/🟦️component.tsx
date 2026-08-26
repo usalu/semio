@@ -118,78 +118,102 @@ export async function createGraphSession(): Promise<GraphWasmSession> {
 //#endregion GraphSession
 
 //#region FlowSession
-export type FlowWasmSession = GraphWasmSession & {
-  loadFixtureJson(json: string): void;
-  resyncFixtureJson?(json: string): void;
-  fixtureJson(): string;
-  syncFromSceneJson?(json: string): void;
-  setSelection(json: string): void;
-  setPreviewOff(json: string): void;
-  setCatalogueJson(json: string): void;
-  catalogueJson(): string;
-  setNeuronKindInfosJson(json: string): void;
-  setComputingProgress(json: string): void;
-  setNodeStatuses?(json: string): void;
-  setAutomaticLod(enabled: boolean): void;
-  setForcedDrawLodLabel(label: string): void;
-  setCanvasThemeJson(json: string): void;
-  setCamera(x: number, y: number, zoom: number): void;
-  pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean, pan: boolean): void;
-  pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
-  pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
-  wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): void;
-  labelOverlayPaintStateJson(): string;
-  sliderOverlayStateJson(): string;
-  selectionUnionBoundsScreenJson(): string;
-  selectionPreviewPointsJson(): string;
-  selectionPreviewCrossing(): boolean;
-  selectionPreviewMethod?(): string;
-  selectedWidgetIds(): string;
-  hoveredWidgetId(): string | undefined;
-  hoveredChannelJson(): string;
-  pickTargetsAtScreenJson(sx: number, sy: number): string;
-  /** 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) — powers
-   * introduction-demonstration semantic targeting. */
-  entityScreenJson?(domain: string, id: string): string;
-  previewText(): string;
-  preselectWidgetIdsJson(): string;
-  previewOffWidgetIds(): string;
-  alignSelection(mode: string): void;
-  undo(): boolean;
-  redo(): boolean;
-  selectAll(): void;
-  deleteSelection(): void;
-  addWidget(descriptorJson: string, worldX: number, worldY: number): string;
-  setGhostWidget(descriptorJson: string, worldX: number, worldY: number): void;
-  clearGhostWidget(): void;
-  worldFromScreen(sx: number, sy: number): string;
-  /** 🧵️ Applies channel-structured eval JSON computed off-main-thread (a plugin worker's
-   * `flowEvalTick` chain) — the canvas session itself never evaluates. */
-  applyEvalOutputsJson(json: string): void;
-  noteInsertText(chunk: string): void;
-  noteBackspace(): void;
-  noteDeleteForward(): void;
-  noteCommitEdit(): void;
-  noteMoveCaret(direction: string, extend: boolean): void;
-  setSliderValue(widgetId: string, value: number): void;
-  setNeuronParams(widgetId: string, paramsJson: string): void;
-  setHover?(widgetId: string | null): void;
-  setHoverChannel?(widgetId: string | null, port?: string | null): void;
-  cameraJson?(): string;
+export type FlowTaskEvent = {
+  readonly event?: number;
+  readonly status?: number;
+  readonly body?: Uint8Array;
+};
+
+export type FlowTask<T = unknown> = {
+  readonly result: Promise<T>;
+  cancel(): boolean;
+  subscribe(observer: (event: FlowTaskEvent) => void): () => void;
+};
+
+type FlowMutation = FlowTask<void>;
+type FlowQuery = FlowTask<unknown>;
+
+export type FlowWasmSession = {
+  documentJson(): FlowQuery;
+  synchronizeDocumentJson(json: string): FlowMutation;
+  selectionDomainsJson(): FlowQuery;
+  setSelection(json: string): FlowMutation;
+  setPreviewOff(json: string): FlowMutation;
+  setCatalogueJson(json: string): FlowMutation;
+  catalogueJson(): FlowQuery;
+  setNeuronKindInfosJson(json: string): FlowMutation;
+  setComputingProgress(json: string): FlowMutation;
+  setNodeStatuses(json: string): FlowMutation;
+  setAutomaticLod(enabled: boolean): FlowMutation;
+  setForcedDrawLodLabel(label: string): FlowMutation;
+  setCanvasThemeJson(json: string): FlowMutation;
+  setCamera(x: number, y: number, zoom: number): FlowMutation;
+  pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean, pan: boolean): FlowMutation;
+  pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): FlowMutation;
+  pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): FlowMutation;
+  wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): FlowMutation;
+  labelOverlayPaintStateJson(): FlowQuery;
+  sliderOverlayStateJson(): FlowQuery;
+  selectionUnionBoundsScreenJson(): FlowQuery;
+  selectionPreviewPointsJson(): FlowQuery;
+  selectionPreviewCrossing(): FlowQuery;
+  selectionPreviewMethod(): FlowQuery;
+  selectedWidgetIds(): FlowQuery;
+  hoveredWidgetId(): FlowQuery;
+  hoveredChannelJson(): FlowQuery;
+  pickTargetsAtScreenJson(sx: number, sy: number): FlowQuery;
+  entityScreenJson(domain: string, id: string): FlowQuery;
+  previewText(): FlowQuery;
+  preselectWidgetIdsJson(): FlowQuery;
+  previewOffWidgetIds(): FlowQuery;
+  alignSelection(mode: string): FlowMutation;
+  undo(): FlowQuery;
+  redo(): FlowQuery;
+  selectAll(): FlowMutation;
+  deleteSelection(): FlowMutation;
+  addWidget(descriptorJson: string, worldX: number, worldY: number): FlowQuery;
+  setGhostWidget(descriptorJson: string, worldX: number, worldY: number): FlowMutation;
+  clearGhostWidget(): FlowMutation;
+  worldFromScreen(sx: number, sy: number): FlowQuery;
+  applyEvalOutputsJson(json: string): FlowMutation;
+  noteInsertText(chunk: string): FlowMutation;
+  noteBackspace(): FlowMutation;
+  noteDeleteForward(): FlowMutation;
+  noteCommitEdit(): FlowMutation;
+  noteMoveCaret(direction: string, extend: boolean): FlowMutation;
+  setSliderValue(widgetId: string, value: number): FlowMutation;
+  setNeuronParams(widgetId: string, paramsJson: string): FlowMutation;
+  setHover(widgetId: string | null): FlowMutation;
+  setHoverChannel(widgetId: string | null, port?: string | null): FlowMutation;
+  cameraJson(): FlowQuery;
+  setSize(width: number, height: number, dpr: number): FlowMutation;
+  renderFrame(): FlowQuery;
+  attachCanvas(canvas: HTMLCanvasElement, width: number, height: number, dpr: number): FlowTask<unknown>;
+  renderCanvas(canvas: HTMLCanvasElement): FlowTask<unknown>;
+  close(): Promise<void>;
+  free(): Promise<void>;
 };
 
 type FlowSessionModule = {
-  readonly default: (input?: unknown) => Promise<unknown>;
+  readonly default: (source: unknown) => Promise<unknown>;
   readonly FlowSession: new () => FlowWasmSession;
+};
+
+type FlowCoreModule = {
+  readonly default: (input?: unknown) => Promise<unknown>;
 };
 
 let flowSessionPromise: Promise<FlowSessionModule> | null = null;
 
 export async function createFlowSession(): Promise<FlowWasmSession> {
   if (!flowSessionPromise) {
-    flowSessionPromise = import("@semio-tech/flow-core").then(async (mod) => {
-      await mod.default();
-      return mod as FlowSessionModule;
+    flowSessionPromise = Promise.all([
+      import("@semio-tech/flow-core") as Promise<FlowCoreModule>,
+      import("@semio-tech/flow-core/🟨️flow-browser.js") as Promise<FlowSessionModule>,
+    ]).then(async ([core, browser]) => {
+      const exports = await core.default();
+      await browser.default(exports);
+      return browser;
     });
   }
   const mod = await flowSessionPromise;

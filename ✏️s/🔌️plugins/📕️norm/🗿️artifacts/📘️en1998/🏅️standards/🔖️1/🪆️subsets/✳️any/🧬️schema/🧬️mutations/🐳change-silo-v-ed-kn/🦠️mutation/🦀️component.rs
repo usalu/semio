@@ -15,15 +15,15 @@ pub struct ChangeSiloVEdKn {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSiloVEdKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "silo-v-ed-kn", kind: "change-silo-v-ed-kn", record: "ChangedSiloVEdKn" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_silo_v_ed_kn::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_silo_v_ed_kn::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change silo design shear V_Ed [kN] to {}", self.new_silo_v_ed_kn)
     }
 }

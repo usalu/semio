@@ -95,7 +95,6 @@ semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️produc
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-nalgebra = { version = "0.33", default-features = false, features = ["std"] }
 parry3d = "0.17"
 serde.workspace = true
 serde_json.workspace = true
@@ -106,7 +105,6 @@ semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/�
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true
 js-sys = "0.3.83"
-wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 
 [dev-dependencies]

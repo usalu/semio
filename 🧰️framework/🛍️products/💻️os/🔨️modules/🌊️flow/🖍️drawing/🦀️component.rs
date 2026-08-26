@@ -969,9 +969,6 @@ impl DrawingStore {
 // #endregion 🔖️KernelImpl
 
 // #region 🖍️DrawingKernel
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::wasm_bindgen;
-
 static DRAWING_KERNEL: LazyLock<Mutex<DrawingStore>> = LazyLock::new(|| Mutex::new(DrawingStore::new()));
 
 fn drawing_kernel() -> &'static Mutex<DrawingStore> {
@@ -1092,7 +1089,6 @@ pub fn import_dwg_json(data_base64: &str) -> String {
 }
 
 /// 🗑️ Disposes a drawing handle owned by the in-process draw kernel.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub fn dispose_drawing(handle: &str) {
     if let Ok(mut store) = drawing_kernel().lock() {
         store.dispose(&DrawingHandle(handle.to_string()));

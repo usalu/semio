@@ -182,11 +182,74 @@ impl Part21Instance {
 //#region 🔖️Header
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`),
 /// each a parenthesized tuple of typed values — kept verbatim, not schema-interpreted.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Part21Header {
     pub file_description: Vec<Part21Value>,
     pub file_name: Vec<Part21Value>,
     pub file_schema: Vec<Part21Value>,
+}
+
+/// 📜️ ISO 10303-21 §8.2.2's population constraint for one attribute of a mandatory `HEADER`
+/// record: either a plain `STRING` or a `LIST[1:?] OF STRING`, which the standard forbids from
+/// ever being empty. This is the schema of the exchange structure itself — fixed by the standard,
+/// identical for every EXPRESS schema carried in it — so it lives with the syntax rather than with
+/// any one artifact's typed view of it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum HeaderAttribute {
+    Text,
+    NonEmptyTextList,
+}
+
+/// 📜️ `FILE_DESCRIPTION(description, implementation_level)` — ISO 10303-21 §8.2.2.
+const FILE_DESCRIPTION_ATTRIBUTES: &[HeaderAttribute] = &[HeaderAttribute::NonEmptyTextList, HeaderAttribute::Text];
+/// 📜️ `FILE_NAME(name, time_stamp, author, organization, preprocessor_version,
+/// originating_system, authorization)` — ISO 10303-21 §8.2.3. `author` and `organization` are
+/// `LIST[1:?]`, exactly like `FILE_DESCRIPTION.description`.
+const FILE_NAME_ATTRIBUTES: &[HeaderAttribute] = &[
+    HeaderAttribute::Text,
+    HeaderAttribute::Text,
+    HeaderAttribute::NonEmptyTextList,
+    HeaderAttribute::NonEmptyTextList,
+    HeaderAttribute::Text,
+    HeaderAttribute::Text,
+    HeaderAttribute::Text,
+];
+/// 📜️ `FILE_SCHEMA(schema_identifiers)` — ISO 10303-21 §8.2.4, also `LIST[1:?]`.
+const FILE_SCHEMA_ATTRIBUTES: &[HeaderAttribute] = &[HeaderAttribute::NonEmptyTextList];
+
+impl HeaderAttribute {
+    /// 🈳️ The conformant spelling of "nothing to say here" for this attribute — `''` for a
+    /// `STRING`, `('')` for a `LIST[1:?] OF STRING`. `()` is NOT that spelling: the standard's
+    /// lower bound of one is a population constraint, and every conformant producer writes the
+    /// one-empty-string list instead (the ruststep reference reader refuses `()` outright).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn unpopulated(self) -> Part21Value {
+        match self {
+            HeaderAttribute::Text => Part21Value::Str(String::new()),
+            HeaderAttribute::NonEmptyTextList => Part21Value::List(vec![Part21Value::Str(String::new())]),
+        }
+    }
+}
+
+impl Part21Header {
+    /// 🌱 ISO 10303-21 §8.2's conformant minimum `HEADER` — all three mandatory records present,
+    /// each with its full attribute list and every `LIST[1:?]` populated. This is what `default()`
+    /// means for a header: the previous all-empty derive produced `FILE_DESCRIPTION();`, which is
+    /// neither the right arity nor a readable exchange structure.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn iso_10303_21_minimum() -> Self {
+        Self {
+            file_description: FILE_DESCRIPTION_ATTRIBUTES.iter().map(|attribute| attribute.unpopulated()).collect(),
+            file_name: FILE_NAME_ATTRIBUTES.iter().map(|attribute| attribute.unpopulated()).collect(),
+            file_schema: FILE_SCHEMA_ATTRIBUTES.iter().map(|attribute| attribute.unpopulated()).collect(),
+        }
+    }
+}
+
+impl Default for Part21Header {
+    fn default() -> Self {
+        Self::iso_10303_21_minimum()
+    }
 }
 //#endregion 🔖️Header
 
@@ -779,9 +842,9 @@ pub fn write_part21_with<P: Part21Preamble>(doc: &Part21Document, options: Part2
     if let Some(preamble) = preamble {
         preamble.write_preamble(&mut out, eol);
     }
-    write_record(&mut out, "FILE_DESCRIPTION", &doc.header.file_description, eol);
-    write_record(&mut out, "FILE_NAME", &doc.header.file_name, eol);
-    write_record(&mut out, "FILE_SCHEMA", &doc.header.file_schema, eol);
+    write_header_record(&mut out, "FILE_DESCRIPTION", FILE_DESCRIPTION_ATTRIBUTES, &doc.header.file_description, eol);
+    write_header_record(&mut out, "FILE_NAME", FILE_NAME_ATTRIBUTES, &doc.header.file_name, eol);
+    write_header_record(&mut out, "FILE_SCHEMA", FILE_SCHEMA_ATTRIBUTES, &doc.header.file_schema, eol);
     out.push_str("ENDSEC;");
     out.push_str(eol);
     if options.blank_before_data {
@@ -809,6 +872,35 @@ fn write_record(out: &mut String, name: &str, args: &[Part21Value], line_ending:
     write_value_list(out, args);
     out.push_str(");");
     out.push_str(line_ending);
+}
+
+/// 📜️ One mandatory `HEADER` record, written against ISO 10303-21 §8.2's fixed attribute list so
+/// the emitted exchange structure is always one a conformant reader accepts.
+///
+/// Two spec obligations the generic [`write_record`] cannot know about, both of which this
+/// codebase was breaching until wave 15's differential run caught it (`ruststep` refusing
+/// `FILE_DESCRIPTION((),'')` with "expected ')', found ("):
+///
+/// * every attribute the standard declares is present, so a header carrying fewer values than its
+///   record's arity is padded with that position's unpopulated spelling rather than emitted short;
+/// * a `LIST[1:?] OF STRING` is never emitted empty — `()` violates the lower bound, and the
+///   conformant spelling of an empty description/author/organization/schema list is `('')`.
+///
+/// Values the caller DID populate are written verbatim; this only ever fills in what is missing,
+/// so nothing a real document carried is normalized away.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_header_record(out: &mut String, name: &str, attributes: &[HeaderAttribute], args: &[Part21Value], line_ending: &str) {
+    let conformant: Vec<Part21Value> = attributes
+        .iter()
+        .enumerate()
+        .map(|(position, attribute)| match args.get(position) {
+            Some(Part21Value::List(items)) if items.is_empty() && *attribute == HeaderAttribute::NonEmptyTextList => attribute.unpopulated(),
+            Some(value) => value.clone(),
+            None => attribute.unpopulated(),
+        })
+        .chain(args.iter().skip(attributes.len()).cloned())
+        .collect();
+    write_record(out, name, &conformant, line_ending);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

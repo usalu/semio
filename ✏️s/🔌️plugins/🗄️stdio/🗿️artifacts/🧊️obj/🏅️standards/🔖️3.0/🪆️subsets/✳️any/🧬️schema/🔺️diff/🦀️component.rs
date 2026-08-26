@@ -2468,7 +2468,7 @@ mod tests {
     /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `ObjDiff` text/binary grammar —
     /// exercises every scalar, both tri-states (`mtllib` at the top level, `texcoords[1].w`
     /// inside a modified item), and all three collection-triple kinds — index-keyed
-    /// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`) — via a real
+    /// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`).await — via a real
     /// `between()` result in both directions.
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {

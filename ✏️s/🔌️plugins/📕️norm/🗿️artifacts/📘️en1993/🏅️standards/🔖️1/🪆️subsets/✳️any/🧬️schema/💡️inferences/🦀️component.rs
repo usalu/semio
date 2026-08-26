@@ -24,19 +24,19 @@ pub struct En1993Inference {
 }
 
 impl protocol::Inference<En1993Snapshot> for En1993Inference {
-    async fn infer(snapshot: &En1993Snapshot) -> Self {
+    fn infer(snapshot: &En1993Snapshot) -> Self {
         Self { outline: En1993Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1993Snapshot> for En1993Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.norm.en1993.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1993.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1993::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1993.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1993_artifact_schema_descriptor`'s registration.
-pub async fn en1993_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn en1993_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1993.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    fn inference_determinism_law() {
         let snapshot = En1993Snapshot::default();
         assert_eq!(En1993Inference::infer(&snapshot), En1993Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    fn inference_default_law() {
         assert_eq!(En1993Inference::infer(&En1993Snapshot::default()), En1993Inference::default());
     }
 }
@@ -95,7 +95,7 @@ use crate::artifacts::en1993::standards::v1::subsets::any::schema::{
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::CheckReport;
 
-async fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
+fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
     match value.to_ascii_lowercase().as_str() {
         "r30" => part_1_2::FireRating::R30,
         "r90" => part_1_2::FireRating::R90,
@@ -104,7 +104,7 @@ async fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
     }
 }
 
-async fn parse_fatigue_method(value: &str) -> part_1_9::AssessmentMethod {
+fn parse_fatigue_method(value: &str) -> part_1_9::AssessmentMethod {
     match value.to_ascii_lowercase().as_str() {
         "low_consequence" => part_1_9::AssessmentMethod::LowConsequence,
         "safe_life" => part_1_9::AssessmentMethod::SafeLife,
@@ -113,7 +113,7 @@ async fn parse_fatigue_method(value: &str) -> part_1_9::AssessmentMethod {
 }
 
 /// 📋️ Full steel member check across all sixteen EN 1993 parts (1-1 through 6), each reached from `evaluate`.
-pub async fn check_full_steel_member(document: &En1993Snapshot) -> CheckReport {
+pub fn check_full_steel_member(document: &En1993Snapshot) -> CheckReport {
     let annex = document.annex;
     let params = AnnexParams { gamma_mf: parse_fatigue_method(&document.fatigue_method).gamma_mf(), ..AnnexParams::for_choice(annex) };
 
@@ -221,7 +221,7 @@ pub async fn check_full_steel_member(document: &En1993Snapshot) -> CheckReport {
 }
 
 /// 📋️ `En1993Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub async fn evaluate(document: &En1993Snapshot) -> CheckReport {
+pub fn evaluate(document: &En1993Snapshot) -> CheckReport {
     check_full_steel_member(document)
 }
 //#endregion 🔖️ComplianceReport
@@ -232,13 +232,13 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn full_steel_member_e2e() {
+    fn full_steel_member_e2e() {
         let report = check_full_steel_member(&En1993Snapshot::default());
         assert_eq!(report.checks.len(), 25);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_part_reaches_evaluate() {
+    fn every_part_reaches_evaluate() {
         let report = check_full_steel_member(&En1993Snapshot::default());
         let families: std::collections::BTreeSet<&str> = report.checks.iter().map(|c| c.clause.family.as_str()).collect();
         for expected in

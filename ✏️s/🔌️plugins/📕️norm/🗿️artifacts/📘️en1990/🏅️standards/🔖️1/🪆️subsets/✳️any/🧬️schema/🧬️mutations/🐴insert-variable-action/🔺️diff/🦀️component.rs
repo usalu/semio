@@ -8,7 +8,7 @@ use super::mutation::InsertVariableAction;
 use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990QkEntry, En1990Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &InsertVariableAction, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
+pub fn diff(payload: &InsertVariableAction, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
     if !payload.value.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Variable action value must be a finite number.", Vec::<String>::new());
     }

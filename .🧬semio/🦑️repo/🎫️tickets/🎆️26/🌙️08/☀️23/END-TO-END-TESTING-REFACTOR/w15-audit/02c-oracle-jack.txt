@@ -1,0 +1,2 @@
+[test] level=exhaustive cases=1 executed=25 passed=24 failed=1 errored=0 parity=0/0
+ORACLE_JACK_EXIT=1

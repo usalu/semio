@@ -2,17 +2,28 @@
 @oracle-quick-xml-svg-1-1-basic-mutate
 @comparison-semantic-svg-basic-1-1-v1
 @mutations-svg-1-1-basic
-Feature: Apply every typed SVG Basic 1.1 mutation to a real-world clipped drawing
-  The input is `shared://mouse.svg`, the real committed introduction-demonstration mouse graphic
-  (provenance: copied verbatim from `🧰️framework/🔨️modules/🖼️assets/👋️introduction/🔣️mouse.svg` into
-  this artifact's own `🧫️fixtures/`), which the framework's own onboarding UI renders today. It is
-  small — 1,463 bytes — and it is chosen for what it CONTAINS rather than for its size: a real
-  `<clipPath id="introduction-demo-mouse-clip">` holding a real `<path>`, a real
-  `clip-path="url(#introduction-demo-mouse-clip)"` reference on a real `<g>`, real `fill-opacity`
-  and `stroke-opacity` attributes, a real XML comment, a real `viewBox="0 0 48 72"`, and eight
-  `<path>` elements with real path data. It is the only real, committed SVG in this repository that
-  declares a clip path at all, and SVG Basic 1.1's clip-path rule is half of what distinguishes the
-  profile — a synthetic fixture would have made both clip-path mutations vacuous.
+Feature: Apply every typed SVG Basic 1.1 mutation to a real 138 KB clipped drawing
+  🎨️ **The input is a real 138 KB drawing, composed ONCE out of two real committed ones.** SVG Basic
+  1.1's distinguishing rule is the clip-path mechanism, and `shared://mouse.svg` — the real
+  introduction-demonstration mouse graphic the framework's own onboarding UI renders today, copied
+  verbatim from `🧰️framework/🔨️modules/🖼️assets/👋️introduction/🔣️mouse.svg` — is the ONLY committed
+  SVG in this repository that declares a `<clipPath>` at all. It is also 1 463 bytes, which puts every
+  mutation at the document's edge. Every larger real SVG committed here (the brand logos, the QR
+  code, the metabolism icons) declares no clip path, so no single committed file is both real,
+  complex and in-profile. `shared://🎨️semio-brand-and-onboarding.svg` is therefore composed, body for
+  body and byte for byte, by `🐍️derive-svg-basic-fixture.py` in the ticket folder, out of exactly two
+  real committed drawings: `🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo_dark.svg`, the repository's
+  real animated brand logo (136 854 bytes, 23 real `<g>` groups, 23 real `<path>` shapes, 69 real
+  `<animate>` and 69 real `<animateTransform>` elements with their real key-time and key-spline
+  lists, a real `<title>`), which supplies the document element with its own real
+  `viewBox="0 0 410 140"`/`version`/`xmlns` and the first 48 children; and the mouse, which supplies
+  the remaining 15 — its real XML comment, its real `<defs>` holding the real
+  `<clipPath id="introduction-demo-mouse-clip">`, the real `<g>` that references it through
+  `clip-path="url(#introduction-demo-mouse-clip)"`, and its four real `<path>` shapes with their real
+  `stroke-opacity` and `stroke-width` attributes. Nothing was invented: no element, no attribute and
+  no character of the result is absent from one of the two sources. Every scenario copies it into the
+  case work directory before touching it; the committed fixtures are never written to, and
+  `mouse.svg` is still read on its own by `identity-round-trip`.
 
   Unlike the sibling `✳️tiny` case's input, this document already conforms: SVG Basic 1.1 (W3C Mobile
   SVG Profiles, REC-SVGMobile-20030114 §SVG Basic 1.1) RETAINS opacity, masks, gradients, the
@@ -56,7 +67,7 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real-world clipped drawin
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real drawing
-    Given the real input document shared://mouse.svg
+    Given the real input document shared://🎨️semio-brand-and-onboarding.svg
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -68,20 +79,20 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real-world clipped drawin
       | no-mutation             | {}                                                                                                                                                                                        |
       | set-snapshot            | {"rootId": "wave8-basic-snapshot-marker", "viewBoxWidth": 96}                                                                                                                             |
       | stamp-base-profile      | {"baseProfile": "basic", "version": "1.1"}                                                                                                                                                |
-      | insert-basic-element    | {"parent": [3], "index": 1, "node": {"kind": "element", "name": "filter", "attrs": [{"name": "id", "value": "wave8-basic-blur"}], "children": [{"kind": "element", "name": "feGaussianBlur", "attrs": [{"name": "stdDeviation", "value": "2"}], "children": []}]}} |
-      | remove-element          | {"parent": [5], "index": 5}                                                                                                                                                               |
-      | set-basic-attribute     | {"path": [7], "name": "stroke-width", "value": "3.5"}                                                                                                                                     |
-      | set-clip-path-reference | {"path": [7], "clipPathId": "introduction-demo-mouse-clip"}                                                                                                                               |
+      | insert-basic-element    | {"parent": [51], "index": 1, "node": {"kind": "element", "name": "filter", "attrs": [{"name": "id", "value": "wave8-basic-blur"}], "children": [{"kind": "element", "name": "feGaussianBlur", "attrs": [{"name": "stdDeviation", "value": "2"}], "children": []}]}} |
+      | remove-element          | {"parent": [53], "index": 5}                                                                                                                                                               |
+      | set-basic-attribute     | {"path": [55], "name": "stroke-width", "value": "3.5"}                                                                                                                                     |
+      | set-clip-path-reference | {"path": [55], "clipPathId": "introduction-demo-mouse-clip"}                                                                                                                               |
       | insert-clip-path-shape  | {"clipPathId": "introduction-demo-mouse-clip", "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "24"}, {"name": "cy", "value": "36"}, {"name": "r", "value": "20"}], "children": []}} |
-      | set-text                | {"path": [0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
+      | set-text                | {"path": [1, 0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
       | set-view-box            | {"path": [], "viewBox": [0, 0, 96, 144]}                                                                                                                                                  |
-      | set-transform           | {"path": [5], "transform": [{"kind": "translate", "x": 4, "y": 4}, {"kind": "scale", "x": 2}]}                                                                                            |
+      | set-transform           | {"path": [53], "transform": [{"kind": "translate", "x": 4, "y": 4}, {"kind": "scale", "x": 2}]}                                                                                            |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real drawing
-    Given the real input document shared://mouse.svg
+    Given the real input document shared://🎨️semio-brand-and-onboarding.svg
     When the <id> mutation is applied and then undone with its own inverse
       """
       {"kind": "<id>", "params": <params>}
@@ -92,20 +103,21 @@ Feature: Apply every typed SVG Basic 1.1 mutation to a real-world clipped drawin
       | no-mutation             | {}                                                                                                                                                                                        |
       | set-snapshot            | {"rootId": "wave8-basic-snapshot-marker", "viewBoxWidth": 96}                                                                                                                             |
       | stamp-base-profile      | {"baseProfile": "basic", "version": "1.1"}                                                                                                                                                |
-      | insert-basic-element    | {"parent": [3], "index": 1, "node": {"kind": "element", "name": "filter", "attrs": [{"name": "id", "value": "wave8-basic-blur"}], "children": [{"kind": "element", "name": "feGaussianBlur", "attrs": [{"name": "stdDeviation", "value": "2"}], "children": []}]}} |
-      | remove-element          | {"parent": [5], "index": 5}                                                                                                                                                               |
-      | set-basic-attribute     | {"path": [7], "name": "stroke-width", "value": "3.5"}                                                                                                                                     |
-      | set-clip-path-reference | {"path": [7], "clipPathId": "introduction-demo-mouse-clip"}                                                                                                                               |
+      | insert-basic-element    | {"parent": [51], "index": 1, "node": {"kind": "element", "name": "filter", "attrs": [{"name": "id", "value": "wave8-basic-blur"}], "children": [{"kind": "element", "name": "feGaussianBlur", "attrs": [{"name": "stdDeviation", "value": "2"}], "children": []}]}} |
+      | remove-element          | {"parent": [53], "index": 5}                                                                                                                                                               |
+      | set-basic-attribute     | {"path": [55], "name": "stroke-width", "value": "3.5"}                                                                                                                                     |
+      | set-clip-path-reference | {"path": [55], "clipPathId": "introduction-demo-mouse-clip"}                                                                                                                               |
       | insert-clip-path-shape  | {"clipPathId": "introduction-demo-mouse-clip", "index": 1, "node": {"kind": "element", "name": "circle", "attrs": [{"name": "cx", "value": "24"}, {"name": "cy", "value": "36"}, {"name": "r", "value": "20"}], "children": []}} |
-      | set-text                | {"path": [0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
+      | set-text                | {"path": [1, 0], "text": "wave8 basic mutation marker"}                                                                                                                                      |
       | set-view-box            | {"path": [], "viewBox": [0, 0, 96, 144]}                                                                                                                                                  |
-      | set-transform           | {"path": [5], "transform": [{"kind": "translate", "x": 4, "y": 4}, {"kind": "scale", "x": 2}]}                                                                                            |
+      | set-transform           | {"path": [53], "transform": [{"kind": "translate", "x": 4, "y": 4}, {"kind": "scale", "x": 2}]}                                                                                            |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real drawing without passing bytes through
-    Given the real input document shared://mouse.svg
-    When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
-    Then the oracle and the subject agree on the semantic projection
-    And the re-encoded bytes are not bit-identical to the input
+  Scenario: Decode and re-encode both real drawings without passing bytes through
+    Given the real input document shared://🎨️semio-brand-and-onboarding.svg
+    And the onboarding mouse it was composed from shared://mouse.svg
+    When each document is fully parsed into the subset's own snapshot model and re-encoded from it alone
+    Then the oracle and the subject agree on the semantic projection of both
+    And the re-encoded bytes of each are not bit-identical to its input

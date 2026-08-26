@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_sfp_w_m3_s::mutation::ChangeSf
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSfpWM3S, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeSfpWM3S, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_sfp_w_m3_s.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Specific fan power must be a finite number, got {}.", payload.new_sfp_w_m3_s), Vec::<String>::new());
     }

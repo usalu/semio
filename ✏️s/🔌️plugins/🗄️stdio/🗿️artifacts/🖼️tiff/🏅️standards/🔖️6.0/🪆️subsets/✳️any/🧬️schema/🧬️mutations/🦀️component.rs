@@ -334,7 +334,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
     vec![
         TiffMutation::NoMutation,
         TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
-        TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Short, values: TiffValues::Short(vec![1]) }] } },
+        TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Short, values: TiffValues::Short(vec![1]) }] } },
         TiffMutation::RemoveIfd { index: 0 },
         TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) },
         TiffMutation::SetTag { ifd_index: 0, tag: 282, kind: TiffFieldType::Rational, values: TiffValues::Rational(vec![(72, 1)]) },
@@ -365,7 +365,7 @@ mod tests {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
-            ifds: vec![TiffIfd {
+            ifds: vec![TiffIfd { pixels: Vec::new(),
                 entries: vec![
                     TiffTag { tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) }, // ImageWidth
                     TiffTag { tag: 257, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) }, // ImageLength
@@ -392,8 +392,8 @@ mod tests {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
             ifds: vec![
-                TiffIfd { entries: vec![short_tag(300, 1), short_tag(301, 9)] },                                                       // tag 300 survives+changes, 301 removed
-                TiffIfd { entries: vec![TiffTag { tag: 302, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("gone".into()) }] }, // whole IFD removed in b
+                TiffIfd { pixels: Vec::new(), entries: vec![short_tag(300, 1), short_tag(301, 9)] },                                                       // tag 300 survives+changes, 301 removed
+                TiffIfd { pixels: Vec::new(), entries: vec![TiffTag { tag: 302, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("gone".into()) }] }, // whole IFD removed in b
             ],
             pixels: vec![0u8, 0, 0, 255, 1, 1, 1, 255],
         }
@@ -404,7 +404,7 @@ mod tests {
         TiffSnapshot {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::BigEndian,
-            ifds: vec![TiffIfd { entries: vec![short_tag(300, 2), TiffTag { tag: 303, kind: TiffFieldType::Long, values: TiffValues::Long(vec![42]) }] }], // 300 changed, 303 added
+            ifds: vec![TiffIfd { pixels: Vec::new(), entries: vec![short_tag(300, 2), TiffTag { tag: 303, kind: TiffFieldType::Long, values: TiffValues::Long(vec![42]) }] }], // 300 changed, 303 added
             pixels: vec![9u8, 9, 9, 255],
         }
     }
@@ -432,7 +432,7 @@ mod tests {
                 },
             },
             TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
-            TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(270, 1)] } },
+            TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(270, 1)] } },
             TiffMutation::RemoveIfd { index: 0 },
             TiffMutation::SetTag { ifd_index: 0, tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) }, // modify existing
             TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("An Author".into()) }, // create new
@@ -497,10 +497,10 @@ mod tests {
         // IFD-level (index-keyed), Insert+Remove-before: insert a new IFD at 1 -> [ifd0,new],
         // then remove index 0 -> [new] lands at final index 0 (the recipe's own canonical
         // shift case).
-        assert_absorb_law(&base, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(1, 1)] } }, TiffMutation::RemoveIfd { index: 0 });
+        assert_absorb_law(&base, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(1, 1)] } }, TiffMutation::RemoveIfd { index: 0 });
 
         // IFD-level, Insert+Insert-same-index: both survive.
-        assert_absorb_law(&base, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(2, 2)] } }, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(3, 3)] } });
+        assert_absorb_law(&base, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(2, 2)] } }, TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(3, 3)] } });
 
         // Tag-level (id-keyed), Add+SetField: the second mutation patches directly into the
         // still-pending added tag.
@@ -614,14 +614,14 @@ mod tests {
 
         // entries within ifds[0] (tag-id-keyed): a SINGLE between() call genuinely shows
         // removed+modified+added together (id-keyed union, no positional-pairing trap).
-        let fwd_entries = &fwd_ifds.modified[0].diff;
+        let fwd_entries = &fwd_ifds.modified[0].diff.entries;
         assert_eq!(fwd_entries.removed, vec![301]);
         assert_eq!(fwd_entries.modified.len(), 1);
         assert_eq!(fwd_entries.modified[0].tag, 300);
         assert_eq!(fwd_entries.added.len(), 1);
         assert_eq!(fwd_entries.added[0].tag, 303);
 
-        let bwd_entries = &bwd_ifds.modified[0].diff;
+        let bwd_entries = &bwd_ifds.modified[0].diff.entries;
         assert_eq!(bwd_entries.removed, vec![303]);
         assert_eq!(bwd_entries.modified.len(), 1);
         assert_eq!(bwd_entries.modified[0].tag, 300);
@@ -656,7 +656,7 @@ mod tests {
             TiffMutation::NoMutation,
             TiffMutation::SetSnapshot { snapshot: base.clone() },
             TiffMutation::SetByteOrder { byte_order: TiffByteOrder::BigEndian },
-            TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { entries: vec![short_tag(270, 1)] } },
+            TiffMutation::InsertIfd { index: 1, ifd: TiffIfd { pixels: Vec::new(), entries: vec![short_tag(270, 1)] } },
             TiffMutation::RemoveIfd { index: 0 },
             TiffMutation::SetTag { ifd_index: 0, tag: 256, kind: TiffFieldType::Long, values: TiffValues::Long(vec![4]) },
             TiffMutation::SetTag { ifd_index: 0, tag: 258, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8, 8, 8]) },

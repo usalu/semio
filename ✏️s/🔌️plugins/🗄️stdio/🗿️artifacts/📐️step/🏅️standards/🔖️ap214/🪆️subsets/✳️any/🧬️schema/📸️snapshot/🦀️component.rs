@@ -44,28 +44,53 @@ impl Default for StepValue {
 //#endregion 🔖️Value
 
 //#region 🔖️Header
-/// 📇️ `FILE_DESCRIPTION(description, implementation_level)` — ISO 10303-21 §4.3.1.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// 📜️ The one empty-but-populated `LIST[1:?] OF STRING` ISO 10303-21 §8.2 leaves a producer with
+/// nothing to say: exactly one empty string. The standard's lower bound of one is a population
+/// constraint, so `()` is not a legal spelling of "no description" — `('')` is, and it is what
+/// every conformant writer (including the ruststep reference this repository measures against)
+/// emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unpopulated_string_list() -> Vec<String> {
+    vec![String::new()]
+}
+
+/// 📜️ `implementation_level` for a file this codebase authored from scratch: ISO 10303-21 §8.2.2's
+/// `'2;1'` — version 2 of the exchange structure, conformance option 1 (internal mapping, no
+/// external references), which is what a document built from a `StepSnapshot` alone genuinely is.
+pub const ISO_10303_21_IMPLEMENTATION_LEVEL: &str = "2;1";
+
+/// 📇️ `FILE_DESCRIPTION(description, implementation_level)` — ISO 10303-21 §8.2.2. `description`
+/// is `LIST[1:?] OF STRING`, hence the hand-written [`Default`]: a derived one would give the
+/// empty list the standard forbids.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StepFileDescription {
-    #[serde(default)]
+    #[serde(default = "unpopulated_string_list")]
     pub description: Vec<String>,
     #[serde(default)]
     pub implementation_level: String,
 }
 
+impl Default for StepFileDescription {
+    fn default() -> Self {
+        Self { description: unpopulated_string_list(), implementation_level: ISO_10303_21_IMPLEMENTATION_LEVEL.into() }
+    }
+}
+
 /// 📇️ `FILE_NAME(name, timestamp, author, organization, preprocessor_version,
-/// originating_system, authorization)` — ISO 10303-21 §4.3.2.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// originating_system, authorization)` — ISO 10303-21 §8.2.3. `author` and `organization` are
+/// `LIST[1:?] OF STRING`, so this carries the same hand-written [`Default`] as
+/// [`StepFileDescription`] for the same reason.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StepFileName {
     #[serde(default)]
     pub name: String,
     #[serde(default)]
     pub timestamp: String,
-    #[serde(default)]
+    #[serde(default = "unpopulated_string_list")]
     pub author: Vec<String>,
-    #[serde(default)]
+    #[serde(default = "unpopulated_string_list")]
     pub organization: Vec<String>,
     #[serde(default)]
     pub preprocessor_version: String,
@@ -75,15 +100,40 @@ pub struct StepFileName {
     pub authorization: String,
 }
 
-/// 📇️ `FILE_SCHEMA(schemas)` — ISO 10303-21 §4.3.3.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+impl Default for StepFileName {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            timestamp: String::new(),
+            author: unpopulated_string_list(),
+            organization: unpopulated_string_list(),
+            preprocessor_version: String::new(),
+            originating_system: String::new(),
+            authorization: String::new(),
+        }
+    }
+}
+
+/// 📇️ `FILE_SCHEMA(schemas)` — ISO 10303-21 §8.2.4, `LIST[1:?] OF schema_name`. An unnamed schema
+/// is a real (and diagnosable) state — `check_ccN_conformance` reports it as a hard `CODE_FILE_
+/// SCHEMA` violation — but an empty LIST is not a state the exchange structure can even carry, so
+/// the default is the one unpopulated entry rather than none.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StepFileSchema {
-    #[serde(default)]
+    #[serde(default = "unpopulated_string_list")]
     pub schemas: Vec<String>,
 }
 
-/// 📇️ The full typed `HEADER;` section — all three standard records.
+impl Default for StepFileSchema {
+    fn default() -> Self {
+        Self { schemas: unpopulated_string_list() }
+    }
+}
+
+/// 📇️ The full typed `HEADER;` section — all three standard records. Its `Default` is ISO
+/// 10303-21 §8.2's conformant minimum, so `StepSnapshot::default()` writes an exchange structure a
+/// conformant reader accepts instead of one it refuses.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StepHeader {

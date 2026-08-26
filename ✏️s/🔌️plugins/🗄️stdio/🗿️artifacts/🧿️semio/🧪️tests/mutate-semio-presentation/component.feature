@@ -1,77 +1,94 @@
 @capability-semio-v1-presentation-mutate
-@no-oracle-semio-presentation-mutation-semantics
+@oracle-semio-presentation-python-independent
 @comparison-ordered-json-v1
 @mutations-semio-v1-presentation
-Feature: Apply every typed semio PRESENTATION mutation to the real committed deck artifact
+Feature: Apply every typed semio PRESENTATION mutation to a real conference deck, against an independent Python implementation
   `s.stdio.semio.presentation` is a semio-NATIVE format: no third party reads or writes
-  `.dsl.semio`/`.pack.semio`, so there is no reference implementation to register as an oracle.
-  `python-pptx` was surveyed as the obvious candidate — this subset is deliberately modelled on pptx,
-  the Python oracle host has landed, and a real `.pptx` fixture is committed in this repository — and
-  rejected on three findings: reaching a `SemioPresentationSnapshot` from pptx bytes needs this
-  repository's OWN pptx bridge, so the comparison would run our importer against our exporter;
-  `python-pptx` cannot create slide masters or slide layouts at all, which removes a third of the
-  vocabulary; and `set-snapshot`'s semantics are a whole-state structural comparison no presentation
-  library models. That is recorded as the `semio-presentation-mutation-semantics` no-oracle decision
-  in `../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧪️oracle/🔣️component.json`.
+  `.dsl.semio`/`.pack.semio`, and `python-pptx` — the obvious candidate — was surveyed and rejected,
+  because it cannot create masters or layouts at all and because reaching a
+  `SemioPresentationSnapshot` from pptx bytes through OUR importer would compare this repository with
+  itself. The second producer THE STANDARD requires is therefore a second IMPLEMENTATION.
+  `🐍️component.py` beside this file is that implementation — the carrier, the DSL grammar, the pack
+  frame, document's own recursive `DocBlock` union and all fifteen verbs — written in Python from the
+  committed specification documents alone
+  (`../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
+  `…/📸️snapshot/💾️binary/📡️component.protocol.semio` and its Kaitai mirror,
+  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and the semio envelope in
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`). It imports nothing from and
+  transliterates nothing of the Rust it judges, and it was pinned before use: it reproduces the
+  committed `📽️deck` example artifact byte for byte in BOTH encodings and reaches all fifteen
+  committed after-snapshots. It is registered as the oracle `semio-presentation-python-independent`;
+  the recorded no-oracle decision it replaces is gone, because a reference now exists.
 
-  What replaces the oracle is a REAL input rather than an invented one. The before-state of every
-  scenario below is the committed example artifact
-  `🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio` — a real deck
-  carrying one master with a title placeholder, one layout with a subtitle placeholder, and one slide
-  whose shape tree exercises all four shape kinds (a text box, an embedded PNG picture, a one-cell
-  table and an `other`-typed placeholder) plus a speaker-notes page. This subset's own
-  `fixture_honesty_law` asserts it is byte-identical to `demo_semio_presentation_snapshot()`, so it
-  can never silently drift back into a synthetic fixture. `identity-round-trip` reads that artifact
-  and its `.pack.semio` sibling directly and pins that both decode to exactly the same committed
-  snapshot; the fifteen mutation kinds are then applied to that snapshot as committed
-  `(before, mutation, after)` specification vectors, transcribed from it once and read at run time by
-  BOTH roles rather than transcribed into either role's source.
+  **The deck under test is a real one, and its provenance is written down.**
+  `local://🗣️talk.dsl.semio` and its binary twin were derived ONCE from the real committed PowerPoint
+  deck `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧫️fixtures/🎞️semio-talk.pptx` — a genuine 2020
+  conference talk: one slide master, ELEVEN slide layouts, SEVEN slides, ninety-eight shapes, three
+  embedded PNG parts and German text throughout, with real EMU geometry and real run styling. The
+  reader that produced it is an independent Python OOXML reader built on `zipfile` and `xml.etree`,
+  never this repository's own pptx bridge — using that bridge is precisely what the old no-oracle
+  decision refused, and it stays out of the fixture's provenance for the same reason. `p:sp` carrying
+  text becomes a `TextBox` so no content is dropped, a bare `p:ph` becomes a `Placeholder`, `p:pic`
+  carries the media part's real bytes, and pptx geometry inheritance (slide → layout → master, by
+  placeholder `idx` then `type`) is resolved rather than zeroed. That is 183 293 bytes of DSL and
+  97 849 of pack, against the committed `📽️deck` example's 826 and 516; `asset://` cannot leave this
+  artifact's root, which is why the derived deck is committed here as a case fixture rather than
+  borrowed in place. The derivation script and its provenance note live in the ticket folder.
 
-  Three kinds take a before-state that is the real artifact after one declared preparatory step, and
-  say so: `remove-master` and `set-layout-master` start from the after-state of `insert-master`, and
-  `remove-layout` from the after-state of `insert-layout`. That is deliberate and it is a finding
-  about the vocabulary rather than fixture convenience. Masters and layouts are ID-keyed and
-  `apply_named` appends, so undoing the removal of a non-terminal master restores it at the wrong
-  position; and the deck's own single master and single layout are both referenced — by `layout1`
-  and by `slide1` respectively — so removing them directly would leave dangling references. Slides
-  and shapes need none of this: they are INDEX-addressed, `InsertSlide`/`InsertShape` carry the exact
-  final index, and `remove-slide` therefore removes the deck's real only slide at index 0 and
-  `remove-shape` its real embedded picture at index 1, both restored in place by their own inverse.
+  The parameters are chosen against the deck's own shape, so a plausible wrong codec fails:
+  `insert-slide` puts a new slide in the MIDDLE and that slide's single text box carries a heading, an
+  ordered list, a quote, a code block, an image block and a page break — six of document's eight
+  block kinds the real deck itself never uses, so the block grammar is exercised end to end;
+  `remove-slide` drops a middle slide, so its POSITION and not merely its presence is what the
+  inverse has to restore; `insert-shape` adds a real two-by-two table beside the title of slide 1;
+  `set-textbox-blocks` rewrites the title with two differently styled runs, so a rewrite that drops
+  run styling fails; `set-shape-frame` moves a shape whose frame was INHERITED from its layout; and
+  `set-slide-layout` clears the layout reference entirely, exercising both arms of `option-hex`.
 
-  The `oracle` role reads the committed after- (or before-) snapshot literally — no recomputation,
-  no reimplementation of mutation semantics. The `subject` role decodes the committed before-snapshot
-  and mutation payload and runs this repository's own `apply_semio_presentation_mutation`.
+  Two parameters are deliberately conservative, and this is why. Masters and layouts are ID-KEYED and
+  `insert-master`/`insert-layout` APPEND, so undoing the removal of a NON-terminal one restores it at
+  the wrong position — a documented property of this vocabulary since wave 7, not a codec defect.
+  `remove-layout` therefore targets the trailing layout and `remove-master` the deck's only master.
+  That was checked rather than assumed: against this same real deck, removing `slideLayout1` really
+  does fail the inverse law and removing the trailing layout really does restore it.
 
-  ⚖️ Because this case records a no-oracle decision, the runner executes NO oracle role: it resolves
-  an oracle implementation from an `@oracle-` tag this feature deliberately does not carry, so the
-  comparison profile never receives two sides to compare and the `oracle` handlers below are the
-  written statement of the reference answer rather than a second running party. Every law this
-  feature claims is therefore asserted INSIDE the subject handler, which fails with both documents
-  printed. A handler that merely ran the mutation and returned would report a pass having checked
-  nothing. Here that means the applied deck is checked against the committed
-  after-snapshot with slide and shape ORDER significant, so a removed slide's position — not merely
-  its absence — is what the inverse has to restore.
+  🔴 **`mutate-set-snapshot` and `inverse-set-snapshot` are RED, and they are left red.** The
+  `set-snapshot` payload replaces the deck with one whose slides are the same seven in REVERSE order.
+  The independent implementation returns the reversed deck. The subject returns the reversed layouts,
+  shapes and notes but the ORIGINAL seven slide ids, still at their original indices — so slide 0 ends
+  up carrying slide 23's content under slide 1's identifier. The cause is in the production diff
+  facet, not in either adapter: `SlideDiff`
+  (`../../🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🔺️diff/🦀️component.rs`) declares
+  `layout_id`, `shapes` and `notes` and NO `id`, and `set-snapshot`'s semantics are
+  `SemioPresentationDiff::between`, so an index-keyed slide diff has no slot in which to carry a new
+  identifier. The committed specification vector cannot see this — its replacement snapshot reuses
+  the same single slide id — which is exactly why the real seven-slide deck was worth deriving. The
+  scenario is NOT tuned away: no `ignoreKeys`, no relaxed profile and no substituted payload, because
+  a whole-document replacement that keeps the old identity strings while taking the new content is a
+  defect and not a convention. `spec-vector-set-snapshot` stays green, which localises the failure to
+  the reordering case.
 
-  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
-  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
-  and both committed example files were produced by these very codecs — so re-printing the parsed
-  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
-  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
-  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
-  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
-  the same document the text does, which no single codec can arrange on its own.
+  `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed
+  `(before, mutation, after)` vector for each of the fifteen kinds, whose before-state is the
+  committed `📽️deck` example artifact, applied now by BOTH implementations and checked against the
+  committed after-snapshot by each of them in role. Nothing was removed to make room for the oracle.
+
+  `identity-round-trip` carries the BYTE half of the identity law, for BOTH decks. `.dsl.semio` is a
+  fixed-layout record grammar and `.pack.semio` is its binary twin, so reproducing all four committed
+  files byte for byte is the CORRECT answer here and the wave's must-differ tripwire would be
+  backwards — which is why the Rust side asserts `law::carrier_is_exact`. What stops that being a
+  codec agreeing with itself is that the talk deck's two files were WRITTEN by the Python
+  implementation from the grammar alone, in another language, and the two sides' digests of the
+  re-emitted bytes are compared.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed specification fixtures for the <id> kind
-      | role     | fixture                        |
-      | before   | local://<id>/⬅️before.json      |
-      | mutation | local://<id>/🦠️mutation.json    |
-      | after    | local://<id>/➡️after.json       |
-    When <id> is applied through apply_semio_presentation_mutation
-    Then the resulting snapshot matches the committed after-snapshot fixture for <id>
+  @mode-differential
+  Scenario Outline: Apply <id> to the real derived talk deck
+    Given the real derived presentation artifact local://🗣️talk.dsl.semio
+    And the committed mutation payload local://🦠️<id>.json
+    When the <id> mutation is applied to the deck parsed from it
+    Then the independent implementation and the subject agree on the resulting deck
     Examples:
       | id                 |
       | no-mutation        |
@@ -92,15 +109,41 @@ Feature: Apply every typed semio PRESENTATION mutation to the real committed dec
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
+  @mode-differential
+  Scenario Outline: Undoing <id> restores the real derived talk deck
+    Given the real derived presentation artifact local://🗣️talk.dsl.semio
+    And the committed mutation payload local://🦠️<id>.json
+    When the <id> mutation is applied to the deck parsed from it and each side undoes it with its own computed inverse
+    Then both sides restore the deck and agree on the mutated and the restored snapshot, slide and shape order included
+    Examples:
+      | id                 |
+      | no-mutation        |
+      | set-snapshot       |
+      | insert-slide       |
+      | remove-slide       |
+      | set-slide-layout   |
+      | set-slide-notes    |
+      | insert-shape       |
+      | remove-shape       |
+      | set-shape-frame    |
+      | set-textbox-blocks |
+      | insert-master      |
+      | remove-master      |
+      | insert-layout      |
+      | remove-layout      |
+      | set-layout-master  |
+
+  @id-spec-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector over the committed deck artifact
     Given the committed specification fixtures for the <id> kind
-      | role     | fixture                        |
-      | before   | local://<id>/⬅️before.json      |
-      | mutation | local://<id>/🦠️mutation.json    |
-    When <id> is applied through apply_semio_presentation_mutation
-    And the mutation's own computed inverse is applied through apply_semio_presentation_mutation
-    Then the snapshot matches the committed before-snapshot fixture again, slide and shape order included
+      | role     | fixture                     |
+      | before   | local://<id>/⬅️before.json   |
+      | mutation | local://<id>/🦠️mutation.json |
+      | after    | local://<id>/➡️after.json    |
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                 |
       | no-mutation        |
@@ -122,8 +165,10 @@ Feature: Apply every typed semio PRESENTATION mutation to the real committed dec
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed deck artifact through both envelopes without transcribing it
-    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio
-    And the real committed binary artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio
-    When both envelopes are decoded and the deck is re-encoded through pack and dsl in turn
-    Then every decode agrees and the result matches the committed snapshot local://no-mutation/⬅️before.json
+  Scenario: Re-emit both committed encodings of both decks from the parsed documents
+    Given the real derived presentation artifact local://🗣️talk.dsl.semio
+    And its committed binary twin local://🎒️talk.pack.semio
+    And the committed deck example asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🗣️example.dsl.semio
+    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🖼️assets/🎒️example.pack.semio
+    When each implementation parses both text artifacts, prints them back, decodes both binary twins and re-encodes them
+    Then both reproduce all four committed files byte for byte and agree on the two decks and on the digests of what they emitted

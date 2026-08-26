@@ -1013,6 +1013,7 @@ async function runInvokeExtensionEffect(
  * {@link ShellScope} — the seam that lets several of these coexist on one page — around the actual shell
  * implementation in {@link FrameworkOsShellInner}. */
 export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactElement {
+  navigator.sendBeacon("http://127.0.0.1:6040/framework-shell-render-start");
   const { shellId, storageNamespace, ownsPage = false, brand, locks, ...innerProps } = props;
   const ephemeral = isEphemeralShellBrand(brand);
   const [scope] = useState<ShellScope>(() => {
@@ -1041,6 +1042,7 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
     bumpAfterRootAttach((n) => n + 1);
   }, [scope]);
   useEffect(() => () => disposeShellI18nInstance(scope.i18n), [scope]);
+  navigator.sendBeacon("http://127.0.0.1:6040/framework-shell-return");
   return (
     <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ position: "relative", height: "100%", width: "100%", isolation: "isolate" }}>
       <ShellScopeProvider scope={scope}>
@@ -1071,6 +1073,7 @@ function FrameworkOsShellInner({
   readonly brand?: ShellBrand;
   readonly suppressAutoIntroduction?: boolean;
 }) {
+  navigator.sendBeacon("http://127.0.0.1:6040/framework-shell-inner-start");
   const scope = useShellScope();
   const shellContextMenuTitleLabel = useLabel("ui.surfaceContextMenu.workspace");
   // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
@@ -1632,6 +1635,7 @@ function FrameworkOsShellInner({
    * only) and the `PluginSource` subscription effect (every other plugin, as its build lands). */
   const installPlugin = useCallback(
     async (pluginId: string, rebuiltAt?: number): Promise<PluginInstallOutcome> => {
+      navigator.sendBeacon(`http://127.0.0.1:6040/plugin-install-start-${encodeURIComponent(pluginId)}`);
       if (pluginOpInFlightRef.current.has(pluginId)) return "in-flight";
       if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId)) return "already-loaded";
       const entry = registry.find((candidate) => candidate.pluginId === pluginId);
@@ -1641,6 +1645,7 @@ function FrameworkOsShellInner({
       try {
         const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
         const handle = await loadPluginModuleResilient(pluginId, moduleUrl);
+        navigator.sendBeacon(`http://127.0.0.1:6040/plugin-module-resolved-${encodeURIComponent(pluginId)}-${handle ? "loaded" : "missing"}`);
         if (!handle) {
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
@@ -1657,10 +1662,13 @@ function FrameworkOsShellInner({
         const ownsPinnedApp = appId !== undefined && handle.manifest.apps.some((app) => app.id === appId);
         const shouldEstablish = !sessionRef.current && (ownsPinnedApp || (appId === undefined && pluginId === primaryPluginId));
         if (shouldEstablish) {
+          navigator.sendBeacon(`http://127.0.0.1:6040/plugin-session-establish-${encodeURIComponent(pluginId)}`);
           try {
             await establishPrimarySession(handle);
+            navigator.sendBeacon(`http://127.0.0.1:6040/plugin-session-established-${encodeURIComponent(pluginId)}`);
             dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "running" });
           } catch (bootError) {
+            navigator.sendBeacon(`http://127.0.0.1:6040/plugin-session-failed-${encodeURIComponent(pluginId)}-${encodeURIComponent(bootError instanceof Error ? bootError.message : String(bootError)).slice(0, 160)}`);
             console.error("[DEBUG] framework os boot failed", bootError);
             dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
             return "failed";
@@ -1668,6 +1676,7 @@ function FrameworkOsShellInner({
         }
         return "loaded";
       } finally {
+        navigator.sendBeacon(`http://127.0.0.1:6040/plugin-install-finished-${encodeURIComponent(pluginId)}`);
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },
@@ -2357,6 +2366,7 @@ function FrameworkOsShellInner({
   useEffect(() => {
     if (!primaryPluginId) return;
     if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === primaryPluginId)) return;
+    navigator.sendBeacon(`http://127.0.0.1:6040/plugin-primary-boot-${encodeURIComponent(primaryPluginId)}`);
     void (async () => {
       const outcome = await installPlugin(primaryPluginId);
       if (outcome === "failed") {
@@ -7043,6 +7053,7 @@ function FrameworkOsShellInner({
   }, [buildShellContextMenuItems]);
   //#endregion 🖱️ShellContextMenu
 
+  navigator.sendBeacon("http://127.0.0.1:6040/framework-shell-inner-return");
   return (
     <SetWindowTitleContext.Provider value={setWindowTitle}>
     <SetWindowIconContext.Provider value={setWindowIcon}>

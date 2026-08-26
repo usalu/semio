@@ -33,7 +33,7 @@ fn applied() -> En1990Snapshot {
 /// ▶️ The rejected mutation carries `before` to exactly the committed `after` — which, for a
 /// rejection, is `before` verbatim.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.q_k.child_id, before().q_k.child_id, "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: a refused removal must not re-mint the q_k handle");
     assert!(
@@ -47,7 +47,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ A rejection changes nothing, and replaying its inverse on top still lands on `before`.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let mut snapshot = applied();
@@ -61,7 +61,7 @@ async fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is
 /// a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1990Snapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome — the `rejected` status AND the exact diagnostic `remove-variable-action`'s own
 /// diff builder raises — matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     assert_eq!(status, "rejected", "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: this case exists to pin a rejection");
@@ -101,7 +101,7 @@ async fn declared_outcome_holds() {
 /// the case must carry contract D6's empty `🚫️component.absent` marker instead of an invented
 /// empty patch.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let raised = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(&mutation(), &before());
     assert_eq!(raised.diff(), &En1990Diff::default(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: a fatal rejection must publish the default (all-null) diff");
     assert!(DIFF_ABSENT.is_empty(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: 🔺️diff/🚫️component.absent must be a zero-byte marker");
@@ -110,7 +110,7 @@ async fn produces_committed_diff() {
 /// 🔣️ There is no committed diff JSON to be canonical — the absent marker is the committed form,
 /// and it must stay empty.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     assert_eq!(DIFF_ABSENT.len(), 0, "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the absence marker must carry no bytes at all");
     let produced = serde_json::to_value(En1990Diff::default()).expect("default diff encodes");
     assert!(
@@ -121,7 +121,7 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the rejection's own (default) diff to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let produced = <En1990Diff as protocol::MutationDiff<En1990Snapshot>>::apply(&En1990Diff::default(), &before()).expect("the default diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the rejection's empty diff must leave before exactly as committed in after");
 }

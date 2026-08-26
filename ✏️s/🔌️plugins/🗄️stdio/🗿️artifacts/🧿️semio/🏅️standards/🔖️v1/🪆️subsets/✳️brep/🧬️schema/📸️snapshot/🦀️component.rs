@@ -18,8 +18,14 @@ pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
 
 //#region 🔖️Curve
 /// 📈️ A b-rep edge's underlying 3D curve. Owned by `brep` (`w1b-type-ownership.md`).
+///
+/// 🔣️ `rename_all_fields` is load-bearing and NOT redundant beside `rename_all`: on an enum serde's
+/// `rename_all` renames the VARIANTS only, so without it the struct-variant members would go out as
+/// `radius_major`/`control_points` while this subset's own committed schema
+/// (`📸️snapshot/🔣️component.json`) declares them `radiusMajor`/`controlPoints`. The four
+/// single-word arms hid the mismatch until a cross-language differential reached `ellipse`/`nurbs`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepCurve {
     Line {
         origin: SemioPoint3,
@@ -60,8 +66,13 @@ impl Default for BrepCurve {
 
 //#region 🔖️Surface
 /// 🗺️ A b-rep face's underlying surface. Owned by `brep`.
+///
+/// 🔣️ `rename_all_fields` is load-bearing for the same reason `BrepCurve`'s is: without it
+/// `half_angle`/`major_radius`/`minor_radius`/`control_points`/`u_count`/`v_count`/`degree_u`/
+/// `degree_v`/`knots_u`/`knots_v` would contradict the committed schema's camelCase spelling of
+/// every one of them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepSurface {
     Plane {
         origin: SemioPoint3,

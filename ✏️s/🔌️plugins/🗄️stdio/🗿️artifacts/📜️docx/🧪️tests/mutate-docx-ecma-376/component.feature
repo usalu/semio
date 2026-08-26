@@ -117,7 +117,7 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document shared://📜️example-readme.docx
     When the <id> mutation is applied and then undone

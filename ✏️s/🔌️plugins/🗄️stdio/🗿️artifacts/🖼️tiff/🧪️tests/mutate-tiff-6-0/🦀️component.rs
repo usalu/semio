@@ -214,7 +214,7 @@ mod subject {
             Some(hex) => Some(hex_decode(hex)?),
             None => None,
         };
-        Ok((TiffIfd { entries }, pixels))
+        Ok((TiffIfd { entries, pixels: pixels.clone().unwrap_or_default() }, pixels))
     }
 
     fn spec_to_mutation(spec: &Json) -> Result<TiffMutation, String> {
@@ -228,7 +228,7 @@ mod subject {
             "insert-ifd" => {
                 let index = p_num("index").ok_or("insert-ifd needs `index`")? as usize;
                 let ifd_json = params.and_then(|p| p.get("ifd")).ok_or("insert-ifd needs `ifd`")?;
-                let (ifd, _pixels) = ifd_from_json(ifd_json)?;
+                let (ifd, _strip) = ifd_from_json(ifd_json)?;
                 TiffMutation::InsertIfd { index, ifd }
             }
             "remove-ifd" => TiffMutation::RemoveIfd { index: p_num("index").ok_or("remove-ifd needs `index`")? as usize },
@@ -246,12 +246,19 @@ mod subject {
                     Some(Json::Array(items)) => items,
                     _ => return Err("set-snapshot needs an `ifds` array".to_string()),
                 };
-                let mut ifds = Vec::new();
+                let mut ifds: Vec<TiffIfd> = Vec::new();
                 let mut pixels = Vec::new();
                 for ifd_json in ifds_json {
-                    let (ifd, strip) = ifd_from_json(ifd_json)?;
-                    if let Some(strip) = strip {
-                        pixels = strip.chunks_exact(3).flat_map(|px| [px[0], px[1], px[2], 255]).collect();
+                    let (mut ifd, strip) = ifd_from_json(ifd_json)?;
+                    // 🥇 IFD 0's raster is the snapshot's own canonical RGBA `pixels` (see `TiffIfd::pixels`),
+                    // so its `ifd.pixels` stays empty and the supplied RGB strip is widened into that field
+                    // instead. Every later directory keeps the raw strip it was given, which is what lets the
+                    // encoder emit that directory's required StripOffsets/RowsPerStrip/StripByteCounts triple.
+                    if ifds.is_empty() {
+                        if let Some(strip) = strip {
+                            pixels = strip.chunks_exact(3).flat_map(|px| [px[0], px[1], px[2], 255]).collect();
+                        }
+                        ifd.pixels = Vec::new();
                     }
                     ifds.push(ifd);
                 }

@@ -1,5 +1,14 @@
 {
-  "width": 420.0,
-  "height": 595.0,
-  "text": "Final"
+  "pages": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "width": 420.0,
+          "height": 595.0,
+          "text": "Final"
+        }
+      }
+    ]
+  }
 }

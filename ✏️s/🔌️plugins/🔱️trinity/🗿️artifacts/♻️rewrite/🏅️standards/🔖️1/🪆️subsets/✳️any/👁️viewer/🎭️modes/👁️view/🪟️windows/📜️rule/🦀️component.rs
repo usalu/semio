@@ -19,7 +19,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::rewrite::create_trinity_rewrite_viewer` —
 /// the read-only variant (`TextWindowKit::window_kind`, no `replace-text` action).
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     TextWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -29,14 +29,14 @@ pub async fn definition() -> WindowKindDefinition {
 /// bindings, pretty-printed as one read-only JSON document — no rule-applied After computation (that
 /// stays the editor-only `after_fixture_json` helper's job), no rule-layout point positions (pure
 /// window-arrangement state, not rule content).
-pub async fn rule_text(state: &RewriteSnapshot) -> String {
+pub fn rule_text(state: &RewriteSnapshot) -> String {
     let lhs: serde_json::Value = serde_json::from_str(&state.lhs_json).unwrap_or_default();
     let rhs: serde_json::Value = serde_json::from_str(&state.rhs_json).unwrap_or_default();
     let document = serde_json::json!({ "lhs": lhs, "rhs": rhs, "parameterBindings": state.parameter_bindings });
     serde_json::to_string_pretty(&document).unwrap_or_default()
 }
 
-pub async fn render(document: &RewriteSnapshot) -> UiNode {
+pub fn render(document: &RewriteSnapshot) -> UiNode {
     TextWindowKit::render(&TextView { text: rule_text(document), language: Some("json".into()), read_only: true })
 }
 //#endregion 🔖️Render

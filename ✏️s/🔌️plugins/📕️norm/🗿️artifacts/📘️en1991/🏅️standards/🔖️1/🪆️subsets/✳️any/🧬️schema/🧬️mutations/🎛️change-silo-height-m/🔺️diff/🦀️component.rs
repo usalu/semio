@@ -4,7 +4,7 @@ use super::mutation::ChangeSiloHeightM;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeSiloHeightM, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub fn diff(payload: &ChangeSiloHeightM, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_silo_height_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Silo height m must be a finite number.", Vec::<String>::new());
     }

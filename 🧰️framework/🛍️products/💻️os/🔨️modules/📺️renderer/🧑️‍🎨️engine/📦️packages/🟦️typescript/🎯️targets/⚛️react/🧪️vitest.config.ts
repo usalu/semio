@@ -21,6 +21,7 @@ export default defineConfig({
       { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx") },
       { find: "@semio-tech/framework-surface-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-editor-rs", replacement: wasmEngineStub },
+      { find: "@semio-tech/flow-core/🟨️flow-browser.js", replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌉️wasm/📦️packages/🟨️javascript/🟨️flow-browser.js") },
       { find: "@semio-tech/flow-core", replacement: wasmEngineStub },
     ],
   },

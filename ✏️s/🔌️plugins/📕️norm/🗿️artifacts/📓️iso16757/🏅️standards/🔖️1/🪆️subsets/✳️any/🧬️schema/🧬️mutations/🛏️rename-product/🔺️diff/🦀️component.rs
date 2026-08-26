@@ -4,7 +4,7 @@ use super::mutation::RenameProduct;
 use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &RenameProduct, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
+pub fn diff(payload: &RenameProduct, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
     let Some(product) = base.catalogue.products.iter().find(|product| product.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Product \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };

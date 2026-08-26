@@ -2887,7 +2887,12 @@
       "request": "launch",
       "command": "bun ./📜️script.ts verify rust-warnings --target native",
       "cwd": "${workspaceFolder}",
-      "presentation":     {
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.4
+      }
+    },
+    {
       "name": "🧹clean",
       "type": "node-terminal",
       "request": "launch",
@@ -2896,11 +2901,6 @@
       "presentation": {
         "group": "4_gate",
         "order": 410
-      }
-    },
-{
-        "group": "4_gate",
-        "order": 411.4
       }
     },
     {
@@ -3065,7 +3065,7 @@
       "name": "🛠️dev✏️draw🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native s",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native draw",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -4030,8 +4030,1300 @@
         "group": "5_publish",
         "order": 50
       }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.43
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🎯️tool-jobs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity tool-jobs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.44
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🧭️apps",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity apps",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.45
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🧭️apps🎛️actions",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity apps --actions",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.46
+      }
+    },
+    {
+      "name": "⚖️gate📦️dependencies",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.47
+      }
+    },
+    {
+      "name": "⚖️gate📦️dependencies0️⃣",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify dependencies literal-external",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.48
+      }
     }
     // #endregion
+    ,
+{
+      "name": "🛠️dev🏚️mitbestand🧱️aggregator🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:aggregator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6123",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.puzzle.puzzle3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.001
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6123)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🧱️aggregator🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native aggregator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_APP": "s.puzzle.puzzle3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.002
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🪵️aussuchen🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev aussuchen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6130",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.sourcing.curate@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.03099999999995
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6130)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🪵️aussuchen🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native aussuchen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_APP": "s.sourcing.curate@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.032
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🏭️bearbeiten🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev bearbeiten",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6131",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.process.process3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.041
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6131)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🏭️bearbeiten🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native bearbeiten",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_APP": "s.process.process3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.04200000000003
+      }
+    },
+{
+      "name": "🛠️dev🧩️demonstrator⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev demonstrator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6107",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.demonstrator.playground@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6107)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️demonstrator🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev demonstrator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6207",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.demonstrator.playground@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.101
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6207)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️demonstrator🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native demonstrator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_APP": "s.demonstrator.playground@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.10200000000003
+      }
+    },
+{
+      "name": "🛠️dev🧩️din16798⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev din16798",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6092",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.din16798@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.11
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6092)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️din16798🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev din16798",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6192",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.din16798@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.111
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6192)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️din16798🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native din16798",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.din16798@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.112
+      }
+    },
+{
+      "name": "🛠️dev🧩️din18599⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev din18599",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6093",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.din18599@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.12
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6093)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️din18599🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev din18599",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6193",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.din18599@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.121
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6193)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️din18599🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native din18599",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.din18599@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.122
+      }
+    },
+{
+      "name": "🛠️dev🧩️din4108⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev din4108",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6091",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.din4108@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.13
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6091)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️din4108🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev din4108",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6191",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.din4108@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.131
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6191)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️din4108🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native din4108",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.din4108@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.132
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1990⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1990",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6094",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1990@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.15
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6094)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1990🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1990",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6194",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1990@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.15099999999995
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6194)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1990🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1990",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1990@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.152
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1991⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1991",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6095",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1991@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.16
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6095)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1991🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1991",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6195",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1991@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.161
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6195)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1991🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1991",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1991@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.16200000000003
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1992⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1992",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6096",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1992@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.17
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6096)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1992🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1992",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6196",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1992@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.171
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6196)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1992🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1992",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1992@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.172
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1993⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1993",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6097",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1993@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.18
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6097)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1993🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1993",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6197",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1993@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.181
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6197)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1993🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1993",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1993@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.182
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1994⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1994",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6098",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1994@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.19
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6098)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1994🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1994",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6198",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1994@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.191
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6198)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1994🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1994",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1994@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.192
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1995⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1995",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6099",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1995@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6099)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1995🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1995",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6199",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1995@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.20099999999996
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6199)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1995🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1995",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1995@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.202
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1996⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1996",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6100",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1996@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.21
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6100)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1996🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1996",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6200",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1996@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.21099999999996
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6200)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1996🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1996",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1996@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.212
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1997⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1997",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6101",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1997@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.22
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6101)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1997🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1997",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6201",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1997@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.221
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6201)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1997🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1997",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1997@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.22200000000004
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1998⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1998",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6102",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1998@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.23
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6102)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1998🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1998",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6202",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1998@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.231
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6202)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1998🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1998",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1998@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.232
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1999⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1999",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6103",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.en1999@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.24
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6103)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1999🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev en1999",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6203",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.en1999@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.241
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6203)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️en1999🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native en1999",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.en1999@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.242
+      }
+    },
+{
+      "name": "🛠️dev🧩️energy⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev energy",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6106",
+        "SEMIO_PLUGIN": "energy",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.energy.model@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.25
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6106)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️energy🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev energy",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6206",
+        "SEMIO_PLUGIN": "energy",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.energy.model@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.251
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6206)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️energy🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native energy",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "energy",
+        "SEMIO_APP": "s.energy.model@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.252
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand⚙️generator🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev generator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6127",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.procedural.procedural3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.301
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6127)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand⚙️generator🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native generator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_APP": "s.procedural.procedural3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.302
+      }
+    },
+{
+      "name": "🛠️dev🧩️iso16757⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev iso16757",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6104",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.iso16757@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.34
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6104)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️iso16757🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev iso16757",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6204",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.iso16757@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.34099999999995
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6204)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️iso16757🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native iso16757",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.iso16757@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.342
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🧭️koordinator🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev koordinator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6128",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.cad.cad@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.351
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6128)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🧭️koordinator🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native koordinator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_APP": "s.cad.cad@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.35200000000003
+      }
+    },
+{
+      "name": "🛠️dev🧩️vdi3805⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev vdi3805",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6105",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.norm.vdi3805@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.57
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6105)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️vdi3805🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev vdi3805",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6205",
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.norm.vdi3805@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.57099999999997
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6205)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🧩️vdi3805🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native vdi3805",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "norm",
+        "SEMIO_APP": "s.norm.vdi3805@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.572
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🌍️verfolgen🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev verfolgen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6132",
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.gis.gismap@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.58099999999996
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6132)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🏚️mitbestand🌍️verfolgen🧊️wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native verfolgen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_PLUGIN": "demonstrator",
+        "SEMIO_APP": "s.gis.gismap@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.582
+      }
+    }
   ],
   "compounds": [
     {

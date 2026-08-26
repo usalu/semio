@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// ▶️ Raising N_Ed from 50.0 kN to 75.0 kN rewrites `n_ed_kn` alone — the gross area it is divided by for the
 /// §6.2.4 combined bending-and-compression interaction is untouched.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_design_axial_force_to_75_kn() {
+fn raises_the_design_axial_force_to_75_kn() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-n-ed-kn applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.n_ed_kn, 75.0, "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: n_ed_kn must read 75.0 kN once the change lands");
@@ -43,7 +43,7 @@ async fn raises_the_design_axial_force_to_75_kn() {
 /// ↩️ `change-n-ed-kn`'s inverse reads the OLD 50.0 kN out of BASE, so replaying it puts the 50.0 kN back on
 /// `n_ed_kn`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_50_kn_restores_before() {
+fn restoring_50_kn_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-n-ed-kn applies");
@@ -61,7 +61,7 @@ async fn restoring_50_kn_restores_before() {
 /// is a fixed point, so `{"ChangeNEdKn": {"newNEdKn": 75.0}}` — externally tagged is spelled here exactly as
 /// this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 75.0 kN is finite and differs from the committed 50.0 kN, so `change-n-ed-kn` returns an
 /// empty message list.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `nEdKn` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-n-ed-kn diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the design axial force and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-n-ed-kn diff decodes");
     assert_eq!(decoded.n_ed_kn, Some(75.0), "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: the committed diff must carry nEdKn = 75.0 kN");
     assert!(decoded.a_mm2.is_none(), "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: change-n-ed-kn writes nEdKn and must leave `a_mm2` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the axial-force change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-n-ed-kn diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-n-ed-kn/raises-the-design-axial-force-to-75-kn: the committed diff did not carry before to after");

@@ -421,6 +421,42 @@ pub enum Puzzle3dConfigMutation {
     Snapshot { config: Puzzle3dConfig },
     SetFillRequest { count: u32, generation: u64 },
     SetFillAppliedCount { count: u32 },
+    SetOverlapBudget { value: f64 },
+    SetObjectKindWeights { value: HashMap<String, f64> },
+    SetVortexKindWeights { value: HashMap<String, f64> },
+    SetWindowCamera { window_id: String, camera: Puzzle3dCamera },
+    SetWindowSun { window_id: String, sun: WorldSunConfig },
+    SetWindowLodAutomatic { window_id: String, value: bool },
+    SetWindowLodDepthVariable { window_id: String, value: bool },
+    SetWindowLodManual { window_id: String, value: f64 },
+    SetWindowGridVisible { window_id: String, value: bool },
+    SetWindowGridSnapEnabled { window_id: String, value: bool },
+    SetWindowGridSpacing { window_id: String, value: f64 },
+    SetWindowSelectableKinds { window_id: String, value: Puzzle3dSelectableKinds },
+    SetWindowProximityRadius { window_id: String, value: f64 },
+    SetWindowChunkSize { window_id: String, value: f64 },
+    SetWindowVoxelDims { window_id: String, value: [u32; 3] },
+    SetWindowTransformMove { window_id: String, value: bool },
+    SetWindowTransformRotate { window_id: String, value: bool },
+    SetWindowVortexShow { window_id: String, value: String },
+    SetWindowVortexDirection { window_id: String, value: String },
+    SetSuggestionMenu { value: Option<Puzzle3dSuggestionMenu> },
+    SetBrushCandidateIndex { value: usize },
+    SetWindowEngagementInput { window_id: String, value: String },
+    SetActiveUtility { window_id: String, value: Option<String> },
+}
+
+fn mutate_window_options(base: &Puzzle3dConfig, window_id: &str, mutate: impl FnOnce(&mut Puzzle3dWindowOptions)) -> Puzzle3dConfig {
+    let mut next = base.clone();
+    let mut options = base.window_options.get(window_id).cloned().unwrap_or_default();
+    mutate(&mut options);
+    next.apply_window_options(&options);
+    next.window_options.insert(window_id.to_string(), options);
+    next
+}
+
+fn window_options(base: &Puzzle3dConfig, window_id: &str) -> Puzzle3dWindowOptions {
+    base.window_options.get(window_id).cloned().unwrap_or_default()
 }
 
 impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
@@ -440,6 +476,57 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
                 next.fill_applied_count = *count;
                 next
             }
+            Puzzle3dConfigMutation::SetOverlapBudget { value } => {
+                let mut next = _base.clone();
+                next.overlap_budget = *value;
+                next
+            }
+            Puzzle3dConfigMutation::SetObjectKindWeights { value } => {
+                let mut next = _base.clone();
+                next.object_kind_weights = value.clone();
+                next
+            }
+            Puzzle3dConfigMutation::SetVortexKindWeights { value } => {
+                let mut next = _base.clone();
+                next.vortex_kind_weights = value.clone();
+                next
+            }
+            Puzzle3dConfigMutation::SetWindowCamera { window_id, camera } => mutate_window_options(_base, window_id, |options| options.camera = camera.clone()),
+            Puzzle3dConfigMutation::SetWindowSun { window_id, sun } => mutate_window_options(_base, window_id, |options| options.sun = sun.clone()),
+            Puzzle3dConfigMutation::SetWindowLodAutomatic { window_id, value } => mutate_window_options(_base, window_id, |options| options.lod_automatic = *value),
+            Puzzle3dConfigMutation::SetWindowLodDepthVariable { window_id, value } => mutate_window_options(_base, window_id, |options| options.lod_depth_variable = *value),
+            Puzzle3dConfigMutation::SetWindowLodManual { window_id, value } => mutate_window_options(_base, window_id, |options| options.lod_manual = *value),
+            Puzzle3dConfigMutation::SetWindowGridVisible { window_id, value } => mutate_window_options(_base, window_id, |options| options.grid_visible = *value),
+            Puzzle3dConfigMutation::SetWindowGridSnapEnabled { window_id, value } => mutate_window_options(_base, window_id, |options| options.grid_snap_enabled = *value),
+            Puzzle3dConfigMutation::SetWindowGridSpacing { window_id, value } => mutate_window_options(_base, window_id, |options| options.grid_spacing = *value),
+            Puzzle3dConfigMutation::SetWindowSelectableKinds { window_id, value } => mutate_window_options(_base, window_id, |options| options.selectable_kinds = value.clone()),
+            Puzzle3dConfigMutation::SetWindowProximityRadius { window_id, value } => mutate_window_options(_base, window_id, |options| options.proximity_radius = *value),
+            Puzzle3dConfigMutation::SetWindowChunkSize { window_id, value } => mutate_window_options(_base, window_id, |options| options.chunk_size = *value),
+            Puzzle3dConfigMutation::SetWindowVoxelDims { window_id, value } => mutate_window_options(_base, window_id, |options| options.voxel_dims = *value),
+            Puzzle3dConfigMutation::SetWindowTransformMove { window_id, value } => mutate_window_options(_base, window_id, |options| options.transform_move = *value),
+            Puzzle3dConfigMutation::SetWindowTransformRotate { window_id, value } => mutate_window_options(_base, window_id, |options| options.transform_rotate = *value),
+            Puzzle3dConfigMutation::SetWindowVortexShow { window_id, value } => mutate_window_options(_base, window_id, |options| options.vortex_show = value.clone()),
+            Puzzle3dConfigMutation::SetWindowVortexDirection { window_id, value } => mutate_window_options(_base, window_id, |options| options.vortex_direction = value.clone()),
+            Puzzle3dConfigMutation::SetSuggestionMenu { value } => {
+                let mut next = _base.clone();
+                next.suggestion_menu = value.clone();
+                next
+            }
+            Puzzle3dConfigMutation::SetBrushCandidateIndex { value } => {
+                let mut next = _base.clone();
+                next.brush_candidate_index = *value;
+                next
+            }
+            Puzzle3dConfigMutation::SetWindowEngagementInput { window_id, value } => mutate_window_options(_base, window_id, |options| options.engagement_input = value.clone()),
+            Puzzle3dConfigMutation::SetActiveUtility { window_id, value } => {
+                let mut next = _base.clone();
+                if let Some(value) = value {
+                    next.active_utility_by_window_id.insert(window_id.clone(), value.clone());
+                } else {
+                    next.active_utility_by_window_id.remove(window_id);
+                }
+                next
+            }
         })
     }
 
@@ -448,6 +535,29 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
             Puzzle3dConfigMutation::Snapshot { .. } => Puzzle3dConfigMutation::Snapshot { config: base.clone() },
             Puzzle3dConfigMutation::SetFillRequest { .. } => Puzzle3dConfigMutation::SetFillRequest { count: base.fill_count, generation: base.fill_apply_generation },
             Puzzle3dConfigMutation::SetFillAppliedCount { .. } => Puzzle3dConfigMutation::SetFillAppliedCount { count: base.fill_applied_count },
+            Puzzle3dConfigMutation::SetOverlapBudget { .. } => Puzzle3dConfigMutation::SetOverlapBudget { value: base.overlap_budget },
+            Puzzle3dConfigMutation::SetObjectKindWeights { .. } => Puzzle3dConfigMutation::SetObjectKindWeights { value: base.object_kind_weights.clone() },
+            Puzzle3dConfigMutation::SetVortexKindWeights { .. } => Puzzle3dConfigMutation::SetVortexKindWeights { value: base.vortex_kind_weights.clone() },
+            Puzzle3dConfigMutation::SetWindowCamera { window_id, .. } => Puzzle3dConfigMutation::SetWindowCamera { window_id: window_id.clone(), camera: window_options(base, window_id).camera },
+            Puzzle3dConfigMutation::SetWindowSun { window_id, .. } => Puzzle3dConfigMutation::SetWindowSun { window_id: window_id.clone(), sun: window_options(base, window_id).sun },
+            Puzzle3dConfigMutation::SetWindowLodAutomatic { window_id, .. } => Puzzle3dConfigMutation::SetWindowLodAutomatic { window_id: window_id.clone(), value: window_options(base, window_id).lod_automatic },
+            Puzzle3dConfigMutation::SetWindowLodDepthVariable { window_id, .. } => Puzzle3dConfigMutation::SetWindowLodDepthVariable { window_id: window_id.clone(), value: window_options(base, window_id).lod_depth_variable },
+            Puzzle3dConfigMutation::SetWindowLodManual { window_id, .. } => Puzzle3dConfigMutation::SetWindowLodManual { window_id: window_id.clone(), value: window_options(base, window_id).lod_manual },
+            Puzzle3dConfigMutation::SetWindowGridVisible { window_id, .. } => Puzzle3dConfigMutation::SetWindowGridVisible { window_id: window_id.clone(), value: window_options(base, window_id).grid_visible },
+            Puzzle3dConfigMutation::SetWindowGridSnapEnabled { window_id, .. } => Puzzle3dConfigMutation::SetWindowGridSnapEnabled { window_id: window_id.clone(), value: window_options(base, window_id).grid_snap_enabled },
+            Puzzle3dConfigMutation::SetWindowGridSpacing { window_id, .. } => Puzzle3dConfigMutation::SetWindowGridSpacing { window_id: window_id.clone(), value: window_options(base, window_id).grid_spacing },
+            Puzzle3dConfigMutation::SetWindowSelectableKinds { window_id, .. } => Puzzle3dConfigMutation::SetWindowSelectableKinds { window_id: window_id.clone(), value: window_options(base, window_id).selectable_kinds },
+            Puzzle3dConfigMutation::SetWindowProximityRadius { window_id, .. } => Puzzle3dConfigMutation::SetWindowProximityRadius { window_id: window_id.clone(), value: window_options(base, window_id).proximity_radius },
+            Puzzle3dConfigMutation::SetWindowChunkSize { window_id, .. } => Puzzle3dConfigMutation::SetWindowChunkSize { window_id: window_id.clone(), value: window_options(base, window_id).chunk_size },
+            Puzzle3dConfigMutation::SetWindowVoxelDims { window_id, .. } => Puzzle3dConfigMutation::SetWindowVoxelDims { window_id: window_id.clone(), value: window_options(base, window_id).voxel_dims },
+            Puzzle3dConfigMutation::SetWindowTransformMove { window_id, .. } => Puzzle3dConfigMutation::SetWindowTransformMove { window_id: window_id.clone(), value: window_options(base, window_id).transform_move },
+            Puzzle3dConfigMutation::SetWindowTransformRotate { window_id, .. } => Puzzle3dConfigMutation::SetWindowTransformRotate { window_id: window_id.clone(), value: window_options(base, window_id).transform_rotate },
+            Puzzle3dConfigMutation::SetWindowVortexShow { window_id, .. } => Puzzle3dConfigMutation::SetWindowVortexShow { window_id: window_id.clone(), value: window_options(base, window_id).vortex_show },
+            Puzzle3dConfigMutation::SetWindowVortexDirection { window_id, .. } => Puzzle3dConfigMutation::SetWindowVortexDirection { window_id: window_id.clone(), value: window_options(base, window_id).vortex_direction },
+            Puzzle3dConfigMutation::SetSuggestionMenu { .. } => Puzzle3dConfigMutation::SetSuggestionMenu { value: base.suggestion_menu.clone() },
+            Puzzle3dConfigMutation::SetBrushCandidateIndex { .. } => Puzzle3dConfigMutation::SetBrushCandidateIndex { value: base.brush_candidate_index },
+            Puzzle3dConfigMutation::SetWindowEngagementInput { window_id, .. } => Puzzle3dConfigMutation::SetWindowEngagementInput { window_id: window_id.clone(), value: window_options(base, window_id).engagement_input },
+            Puzzle3dConfigMutation::SetActiveUtility { window_id, .. } => Puzzle3dConfigMutation::SetActiveUtility { window_id: window_id.clone(), value: base.active_utility_by_window_id.get(window_id).cloned() },
         }]
     }
 }

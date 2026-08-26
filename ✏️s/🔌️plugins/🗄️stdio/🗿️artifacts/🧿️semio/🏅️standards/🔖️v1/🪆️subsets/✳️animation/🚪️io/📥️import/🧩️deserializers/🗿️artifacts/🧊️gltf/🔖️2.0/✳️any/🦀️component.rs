@@ -105,9 +105,8 @@ mod tests {
     /// 🏗️ Builds a real, decodable glTF document: two nodes, one animation with a Linear
     /// Translation channel (2 keyframes) and a CubicSpline Weights channel (2 keyframes, arity 2)
     /// -- exercises tangent-stripping and node-name resolution in one real-world-shaped fixture.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn real_world_gltf() -> GltfSnapshot {
-        let mut b = GltfDocBuilder::empty();
+    async fn real_world_gltf() -> GltfSnapshot {
+        let mut b = GltfDocBuilder::empty().await;
         b.set_asset_version("2.0");
         let n0 = b.add_node(None);
         let n1 = b.add_node(None);
@@ -165,7 +164,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn deserialize_maps_linear_translation_channel_with_named_node() {
-        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf())).expect("deserialize");
+        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf().await)).expect("deserialize");
         assert_eq!(anim.timelines.len(), 1);
         assert_eq!(anim.timelines[0].name.as_deref(), Some("clip"));
         let ch = &anim.timelines[0].channels[0];
@@ -178,7 +177,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn deserialize_strips_cubic_spline_tangents_keeping_only_the_real_value_third() {
-        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf())).expect("deserialize");
+        let anim = semio_framework_plugin::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf().await)).expect("deserialize");
         let ch = &anim.timelines[0].channels[1];
         assert_eq!(ch.target.node, "node#1"); // unnamed node -> synthesized name
         assert_eq!(ch.interpolation, AnimInterpolation::CubicSpline);

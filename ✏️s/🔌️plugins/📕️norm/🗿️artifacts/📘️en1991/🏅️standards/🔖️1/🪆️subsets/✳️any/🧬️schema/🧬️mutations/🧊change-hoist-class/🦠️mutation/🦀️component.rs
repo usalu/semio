@@ -12,13 +12,13 @@ pub struct ChangeHoistClass {
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeHoistClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "hoist-class", kind: "change-hoist-class", record: "ChangedHoistClass" };
 
-    async fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
+    fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change hoist class to \"{}\"", self.new_hoist_class)
     }
 }

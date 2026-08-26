@@ -1,0 +1,93 @@
+
+    //#region 🔖️Derivation
+    /// 🌲️ One RFC 8259 value as a `SemioValue`, by the rule the feature states and both
+    /// implementations read from there: a number whose lexeme carries a `.`, an `e` or an `E` is a
+    /// `Float`, every other number is an `Int`, and both keep the SOURCE LEXEME verbatim — which is
+    /// the one property of `SemioValue` a native numeric type would destroy.
+    fn value_of_json(node: &JsonValue) -> SemioValue {
+        match node {
+            JsonValue::Null => SemioValue::Null,
+            JsonValue::Bool { value } => SemioValue::Bool { value: *value },
+            JsonValue::Number { lexeme } => {
+                if lexeme.contains(['.', 'e', 'E']) {
+                    SemioValue::Float { lexeme: lexeme.clone() }
+                } else {
+                    SemioValue::Int { lexeme: lexeme.clone() }
+                }
+            }
+            JsonValue::String { value } => SemioValue::Str { value: value.clone() },
+            JsonValue::Array { items } => SemioValue::List { items: items.iter().map(value_of_json).collect() },
+            JsonValue::Object { members } => SemioValue::Map { entries: members.iter().map(|member| SemioValueEntry { key: member.key.clone(), value: value_of_json(&member.value) }).collect() },
+        }
+    }
+
+    fn member<'a>(node: &'a JsonValue, key: &str) -> Option<&'a JsonValue> {
+        match node {
+            JsonValue::Object { members } => members.iter().find(|member| member.key == key).map(|member| &member.value),
+            _ => None,
+        }
+    }
+
+    fn models_of(source: &JsonValue) -> Result<&Vec<JsonValue>, String> {
+        match member(source, "models") {
+            Some(JsonValue::Array { items }) => Ok(items),
+            _ => Err("payload-fidelity: the committed source carries no `models` array".to_string()),
+        }
+    }
+
+    fn model_id(model: &JsonValue) -> Result<String, String> {
+        match member(model, "id") {
+            Some(JsonValue::String { value }) => Ok(value.clone()),
+            _ => Err("payload-fidelity: every source model needs a string id".to_string()),
+        }
+    }
+
+    /// 🌲️ The root of the derived document: the source verbatim, except that each model's `objects`
+    /// array is replaced by a `Ref` to the graph node it was lifted into.
+    fn root_of(source: &JsonValue) -> Result<SemioValue, String> {
+        let JsonValue::Object { members } = source else {
+            return Err("payload-fidelity: the committed source is not a JSON object".to_string());
+        };
+        let mut entries = Vec::new();
+        for entry in members {
+            if entry.key != "models" {
+                entries.push(SemioValueEntry { key: entry.key.clone(), value: value_of_json(&entry.value) });
+                continue;
+            }
+            let mut models = Vec::new();
+            for model in models_of(source)? {
+                let id = model_id(model)?;
+                let lifted = format!("{id}#objects");
+                let body = match member(model, "model") {
+                    Some(JsonValue::Object { members }) => members,
+                    _ => return Err("payload-fidelity: every source model needs a `model` object".to_string()),
+                };
+                let fields = body
+                    .iter()
+                    .map(|field: &JsonMember| SemioValueEntry {
+                        key: field.key.clone(),
+                        value: if field.key == "objects" { SemioValue::Ref { id: ValueId::new(lifted.clone()) } } else { value_of_json(&field.value) },
+                    })
+                    .collect();
+                models.push(SemioValue::Map {
+                    entries: vec![SemioValueEntry { key: "id".to_string(), value: SemioValue::Str { value: id } }, SemioValueEntry { key: "model".to_string(), value: SemioValue::Map { entries: fields } }],
+                });
+            }
+            entries.push(SemioValueEntry { key: "models".to_string(), value: SemioValue::List { items: models } });
+        }
+        Ok(SemioValue::Map { entries })
+    }
+
+    /// 🕸️ The graph nodes of the derived document: one per model, holding the `objects` array that
+    /// was lifted out of it.
+    fn nodes_of(source: &JsonValue) -> Result<Vec<SemioValueNode>, String> {
+        let mut nodes = Vec::new();
+        for model in models_of(source)? {
+            let id = model_id(model)?;
+            let body = member(model, "model").ok_or_else(|| "payload-fidelity: every source model needs a `model` object".to_string())?;
+            let objects = member(body, "objects").ok_or_else(|| "payload-fidelity: every source model needs an `objects` member".to_string())?;
+            nodes.push(SemioValueNode { id: ValueId::new(format!("{id}#objects")), value: value_of_json(objects) });
+        }
+        Ok(nodes)
+    }
+    //#endregion 🔖️Derivation

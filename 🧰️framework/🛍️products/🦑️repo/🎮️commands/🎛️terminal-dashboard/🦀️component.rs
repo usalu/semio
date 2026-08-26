@@ -262,15 +262,12 @@ impl Dashboard {
             if let WindowBody::Output { terminal, session } = &mut win.body {
                 if let Some(s) = session.as_mut() {
                     let mut buf = [0u8; 4096];
-                    loop {
-                        match s.pty.try_read(&mut buf) {
-                            Ok(0) => break,
-                            Ok(n) => {
-                                if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*terminal).widget() {
-                                    t.feed(&buf[..n]);
-                                }
+                    match s.pty.try_read(&mut buf) {
+                        Ok(0) | Err(_) => {}
+                        Ok(n) => {
+                            if let Some(WidgetState::Terminal(t)) = tui.scene.node_mut(*terminal).widget() {
+                                t.feed(&buf[..n]);
                             }
-                            Err(_) => break,
                         }
                     }
                     if let Ok(Some(_)) = s.pty.try_wait() {

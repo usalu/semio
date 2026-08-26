@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// ▶️ Switching the design situation from `Persistent` to `Seismic` rewrites `design_situation` alone — none of
 /// the four EN 1990 Table A1.1 situations reaches back into the declared actions.
 #[semio_framework_async_macros::async_test]
-async fn switches_the_design_situation_to_seismic() {
+fn switches_the_design_situation_to_seismic() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-design-situation applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-design-situation/switches-the-design-situation-to-seismic: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.design_situation, crate::document::DesignSituation::Seismic, "change-design-situation/switches-the-design-situation-to-seismic: design_situation must read `DesignSituation::Seismic` once the change lands");
@@ -43,7 +43,7 @@ async fn switches_the_design_situation_to_seismic() {
 /// ↩️ `change-design-situation`'s inverse reads the OLD `DesignSituation::Persistent` out of BASE, so replaying
 /// it puts the persistent situation back on `design_situation`.
 #[semio_framework_async_macros::async_test]
-async fn returning_to_the_persistent_situation_restores_before() {
+fn returning_to_the_persistent_situation_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-design-situation applies");
@@ -61,7 +61,7 @@ async fn returning_to_the_persistent_situation_restores_before() {
 /// → encode is a fixed point, so `"Seismic"` — `DesignSituation` carries no serde rename is spelled here
 /// exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `Seismic` differs from the committed `Persistent`, so `change-design-situation`'s equality
 /// guard does not degrade this to a `mutation.no-op` warning.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-design-situation/switches-the-design-situation-to-seismic: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -88,7 +88,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `designSituation` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-design-situation diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-design-situation/switches-the-design-situation-to-seismic: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -97,7 +97,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the design situation and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-design-situation diff decodes");
     assert_eq!(decoded.design_situation, Some(crate::document::DesignSituation::Seismic), "change-design-situation/switches-the-design-situation-to-seismic: the committed diff must carry designSituation = `DesignSituation::Seismic`");
     assert!(decoded.annex.is_none(), "change-design-situation/switches-the-design-situation-to-seismic: change-design-situation writes designSituation and must leave `annex` untouched");
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the design-situation switch, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-design-situation diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-design-situation/switches-the-design-situation-to-seismic: the committed diff did not carry before to after");

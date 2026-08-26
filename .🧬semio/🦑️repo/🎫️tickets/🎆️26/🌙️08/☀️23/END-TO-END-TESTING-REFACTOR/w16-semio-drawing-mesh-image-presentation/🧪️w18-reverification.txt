@@ -1,0 +1,36 @@
+===== oracle exhaustive --case mutate-semio-image
+[test] level=exhaustive cases=1 executed=40 passed=40 failed=0 errored=0 parity=0/0
+EXIT=0
+===== oracle exhaustive --case mutate-semio-presentation
+[test] level=exhaustive cases=1 executed=46 passed=46 failed=0 errored=0 parity=0/0
+EXIT=0
+===== oracle exhaustive --case mutate-semio-mesh
+[test] level=exhaustive cases=1 executed=52 passed=52 failed=0 errored=0 parity=0/0
+EXIT=0
+===== oracle exhaustive --case mutate-semio-drawing
+[test] level=exhaustive cases=1 executed=52 passed=52 failed=0 errored=0 parity=0/0
+EXIT=0
+===== parity exhaustive --case mutate-semio-image --implementation rust
+[test] level=exhaustive cases=1 executed=80 passed=80 failed=0 errored=0 parity=40/40
+EXIT=0
+===== parity exhaustive --case mutate-semio-presentation --implementation rust
+[test] level=exhaustive cases=1 executed=92 passed=92 failed=0 errored=0 parity=44/46
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio::mutate-semio-presentation::mutate-set-snapshot::rust::subject (6 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio::mutate-semio-presentation::inverse-set-snapshot::rust::subject (6 differences)
+EXIT=1
+===== parity exhaustive --case mutate-semio-mesh --implementation rust
+[test] level=exhaustive cases=1 executed=104 passed=103 failed=1 errored=0 parity=51/52
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio::mutate-semio-mesh::identity-round-trip::rust::subject (1 differences)
+EXIT=1
+===== parity exhaustive --case mutate-semio-drawing --implementation rust
+[test] level=exhaustive cases=1 executed=104 passed=103 failed=1 errored=0 parity=51/52
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio::mutate-semio-drawing::inverse-unflatten::rust::subject (1 differences)
+EXIT=1
+===== contract --owner 🗄️stdio
+2 high-priority breach(es) across 1 rule(s):
+      2  testing/discovery
+
+  testing/discovery  🧰️framework  42 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s  4 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json

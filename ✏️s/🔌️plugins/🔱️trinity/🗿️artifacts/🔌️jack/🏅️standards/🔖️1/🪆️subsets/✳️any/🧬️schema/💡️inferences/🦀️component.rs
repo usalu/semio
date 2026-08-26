@@ -34,19 +34,19 @@ pub struct JackInference {
 }
 
 impl protocol::Inference<JackSnapshot> for JackInference {
-    async fn infer(snapshot: &JackSnapshot) -> Self {
+    fn infer(snapshot: &JackSnapshot) -> Self {
         Self { topology: compute_topology(snapshot), flat_position: compute_flat_position(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<JackSnapshot> for JackInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.trinity.jack.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["nodes", "edges"] }, protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.flatPosition", reads: &["nodes", "edges", "root_node_id"] }]
     }
 }
@@ -87,7 +87,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn node(id: &str) -> Node {
+    fn node(id: &str) -> Node {
         Node {
             id: id.into(),
             kind: "Piece".into(),
@@ -104,11 +104,11 @@ mod tests {
         }
     }
 
-    async fn edge(id: &str, source: &str, target: &str) -> Edge {
+    fn edge(id: &str, source: &str, target: &str) -> Edge {
         Edge { id: id.into(), kind: "Connection".into(), source: source.into(), target: target.into(), properties: PropertyBag::new() }
     }
 
-    async fn chain_snapshot() -> JackSnapshot {
+    fn chain_snapshot() -> JackSnapshot {
         JackSnapshot::with_content(
             "trinity.graph".into(),
             "chain".into(),

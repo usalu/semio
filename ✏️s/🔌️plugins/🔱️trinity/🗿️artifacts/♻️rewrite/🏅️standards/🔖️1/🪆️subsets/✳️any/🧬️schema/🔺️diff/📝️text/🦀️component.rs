@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl RewriteDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &RewriteArtifact) -> protocol::MutationApplyResult<RewriteArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &RewriteArtifact) -> protocol::MutationApplyResult<RewriteArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(value) = &self.before_fixture_json {
@@ -50,7 +50,7 @@ impl RewriteDiff {
     }
 }
 
-async fn apply_map_delta<V: Clone>(target: &mut BTreeMap<String, V>, delta: &BTreeMap<String, Option<V>>) -> protocol::MutationApplyResult<()> {
+fn apply_map_delta<V: Clone>(target: &mut BTreeMap<String, V>, delta: &BTreeMap<String, Option<V>>) -> protocol::MutationApplyResult<()> {
     for (key, value) in delta {
         if value.is_none() && !target.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed map entry does not exist").at([key.as_str()]));
@@ -72,7 +72,7 @@ async fn apply_map_delta<V: Clone>(target: &mut BTreeMap<String, V>, delta: &BTr
 /// 🪢 Merges a per-key map delta into `self`'s accumulated delta (per-key upsert of the newer
 /// entry) rather than replacing the whole map — two `change-*`/`remove-*` mutations touching
 /// DIFFERENT keys in the same coalesced batch must both survive.
-async fn merge_map_delta<V>(dst: &mut Option<BTreeMap<String, Option<V>>>, src: Option<BTreeMap<String, Option<V>>>) {
+fn merge_map_delta<V>(dst: &mut Option<BTreeMap<String, Option<V>>>, src: Option<BTreeMap<String, Option<V>>>) {
     match (dst.as_mut(), src) {
         (Some(dst_map), Some(src_map)) => dst_map.extend(src_map),
         (None, Some(src_map)) => *dst = Some(src_map),
@@ -81,7 +81,7 @@ async fn merge_map_delta<V>(dst: &mut Option<BTreeMap<String, Option<V>>>, src: 
 }
 
 impl MutationDiff<RewriteSnapshot> for RewriteDiff {
-    async fn apply(&self, snapshot: &RewriteSnapshot) -> protocol::MutationApplyResult<RewriteSnapshot> {
+    fn apply(&self, snapshot: &RewriteSnapshot) -> protocol::MutationApplyResult<RewriteSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(value) = &self.before_fixture_json {
@@ -102,7 +102,7 @@ impl MutationDiff<RewriteSnapshot> for RewriteDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {

@@ -399,7 +399,8 @@ mod tests {
 
 impl TriangleMesh {
     #[cfg(test)]
-    async fn triangle_count(&self) -> usize {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn triangle_count(&self) -> usize {
         self.indices.len() / 3
     }
 }

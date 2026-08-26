@@ -23,8 +23,6 @@ pub struct DrawConfig {
     #[state(config)]
     pub trace_pointer_pending_work: u64,
     #[state(config)]
-    pub gesture_checkpoint_json: String,
-    #[state(config)]
     pub locale: String,
 }
 //#endregion 🔖️Config
@@ -33,7 +31,7 @@ pub struct DrawConfig {
 /// 📎 The `s.draw.draw` app-schema descriptor (config + presence facets) — returned, not
 /// self-registered; `ArtifactApp::app_schema` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// W1c) hands it to `register_document_app` for registration.
-pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     ::schema::AppSchemaDescriptor {
         id: "s.draw.draw",
         config: ::schema::FacetLeaves {

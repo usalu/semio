@@ -2624,11 +2624,8 @@ async fn kernel_message_endpoint_to_wit_reverse(endpoint: wit_types::MessageEndp
 }
 
 async fn wit_surface_ref(instance_id: u32, surface: &str) -> wit_ui::SurfaceRef {
-    // 🌉️ Convention (not yet confirmed with A2/A3 — `## blocked-on`): kernel's `Event`/`Effect`
-    // surface fields are a plain `String`; WIT's `surface-ref` is a structured `{instance, surface:
-    // u32}`. Treated here as the decimal string of the WIT `surface: u32`, `instance` supplied from
-    // context (this actor's own instance id) since kernel's `String` never carried it.
-    wit_ui::SurfaceRef { instance: instance_id, surface: surface.parse().unwrap_or(0) }
+    let body_key = surface.split_once(':').map(|(_, body_key)| body_key).unwrap_or(surface);
+    wit_ui::SurfaceRef { instance: instance_id, surface: body_key.to_owned() }
 }
 
 /// 🏁️ Host → guest: `semio_framework::kernel::Event` to WIT `event` (`📜️wit/📜️events.wit`).

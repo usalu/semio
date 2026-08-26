@@ -1,0 +1,172 @@
+Wave 14 — cross-language differential oracles for the 🧿️semio subsets
+  ✳️audio ✳️video ✳️animation ✳️cad ✳️document (converted) and ✳️any (not converted, reported)
+Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. Date 2026-08-25.
+Every command below was run from 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test.
+Exit codes are the tool's own, read without a pipe.
+
+================================================================================
+BEFORE (wave 12 repo-wide run, 📊️w15-audit/02-oracle-repo.txt)
+================================================================================
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio     (recorded no-oracle decision semio-audio-mutation-semantics)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video     (recorded no-oracle decision semio-video-mutation-semantics)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation (recorded no-oracle decision semio-animation-mutation-semantics)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad       (recorded no-oracle decision semio-cad-mutation-semantics)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document  (recorded no-oracle decision semio-document-mutation-semantics)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-any       (recorded no-oracle decision semio-envelope-routing)
+  => 0 oracle-executed scenarios across all six.
+
+================================================================================
+AFTER — oracle phase (Python reference implementations)
+================================================================================
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-audio        # exit 0
+[test] level=exhaustive cases=1 executed=31 passed=31 failed=0 errored=0 parity=0/0
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-video        # exit 0
+[test] level=exhaustive cases=1 executed=28 passed=28 failed=0 errored=0 parity=0/0
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-animation    # exit 0
+[test] level=exhaustive cases=1 executed=40 passed=40 failed=0 errored=0 parity=0/0
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-cad          # exit 0
+[test] level=exhaustive cases=1 executed=49 passed=49 failed=0 errored=0 parity=0/0
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-document     # exit 0
+[test] level=exhaustive cases=1 executed=55 passed=55 failed=0 errored=0 parity=0/0
+
+================================================================================
+AFTER — parity (Python ORACLE vs Rust SUBJECT; --implementation rust per trap 1
+of 📓️w13-cross-language-recipe.md, which is pre-existing and not caused here)
+================================================================================
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-audio     --implementation rust   # exit 0
+[test] level=exhaustive cases=1 executed=62 passed=62 failed=0 errored=0 parity=31/31
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-video     --implementation rust   # exit 0
+[test] level=exhaustive cases=1 executed=56 passed=56 failed=0 errored=0 parity=28/28
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-animation --implementation rust   # exit 0
+[test] level=exhaustive cases=1 executed=80 passed=80 failed=0 errored=0 parity=40/40
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-cad       --implementation rust   # exit 0
+[test] level=exhaustive cases=1 executed=98 passed=98 failed=0 errored=0 parity=49/49
+
+================================================================================
+CONTRACT
+================================================================================
+$ bun ./📜️script.ts contract --owner 🗄️stdio --case mutate-semio-audio                # exit 1
+2 high-priority breach(es) across 1 rule(s):
+      2  testing/discovery
+  testing/discovery  🧰️framework  42 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s          4 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+
+.🧬semio/🦑️repo/⚡️cache/breaches/testing.json read directly: 2 records, both id `unmanaged-tests`,
+kind `testing/discovery`, scope 🧰️framework and ✏️s. ZERO records name any mutate-semio-* case.
+The four ✏️s files behind that count are all owned by other plugins/sessions:
+  ✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/🧪️tests/🧪️sequence-browser-consumer.test.js
+  ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🟦️typescript/🧪️index.test.ts
+  ✏️s/🔌️plugins/🎬️sequence/…/🧪️tests/🧬️sequence-schema.test.js
+  ✏️s/🔌️plugins/🎬️sequence/…/🧪️tests/🧪️sequence-host.test.js
+testing/contract, testing/oracle, testing/fixture and testing/taxonomy are all at zero.
+
+================================================================================
+BYTE-LEVEL AGREEMENT — the two languages emit the same files
+================================================================================
+🎵️tone     .dsl.semio  226 bytes   re-printed byte for byte by both implementations
+🎥️clip     .dsl.semio  172 bytes   re-printed byte for byte by both implementations
+🚶️walk     .dsl.semio  278 bytes   re-printed byte for byte by both implementations
+📐️drawing  .dsl.semio  479 bytes   re-printed byte for byte by both implementations
+📐️drawing  .pack.semio 560 bytes   re-encoded  byte for byte by both implementations
+📄️memo     .dsl.semio  610 bytes   re-printed byte for byte by both implementations
+📄️memo     .pack.semio 271 bytes   re-encoded  byte for byte by both implementations
+
+================================================================================
+DEPENDENCY LEDGER — unchanged (`package: ""` contributes nothing)
+================================================================================
+$ bun ./📜️script.ts dependency                                                        # exit 0
+[dependency] ecosystems=4 entries=232 production-reachable=151 test-oracle=30
+  identical to the wave-12 baseline; the five new oracle entries add no distribution.
+
+================================================================================
+NEGATIVE CONTROL — the case goes red when the reference is wrong,
+and the REAL-ARTIFACT scenarios catch what the committed vectors cannot
+================================================================================
+Injected defect: the Python `insert-tag` was changed from
+    result["tags"].insert(index_at(...), clone(args["tag"]))
+to
+    result["tags"].append(clone(args["tag"]))
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-audio        # exit 1
+[test] level=exhaustive cases=1 executed=31 passed=30 failed=1 errored=0 parity=0/0
+
+The single red is `inverse-insert-tag`, on the REAL committed tone:
+  undoing inverse-insert-tag did not restore the tone
+       got: … "tags": [{"key": "artist", "value": "semio"}]
+  expected: … "tags": [{"key": "title",  "value": "test tone"}]
+
+`spec-vector-insert-tag` STAYS GREEN under the same defect, and that is the point: the committed
+vector inserts at index 1 into a one-element tag list, where "insert at 1" and "append" are the same
+operation. The real committed tone is mutated at index 0 of that same one-element list, where they
+are not. The real-artifact scenarios therefore carry evidence the specification vectors cannot.
+
+Reverted:
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-audio        # exit 0
+[test] level=exhaustive cases=1 executed=31 passed=31 failed=0 errored=0 parity=0/0
+
+================================================================================
+PEER BUILD BREAKAGE — why the last parity numbers arrived late
+================================================================================
+From ~17:40 a concurrent session's uncommitted refactor of ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf
+(PdfSnapshot losing its `page` field) stopped `semio-s-plugin-stdio` from compiling, which is the
+crate the Rust SUBJECT phase links. Every parity attempt in that window ends:
+
+  error[E0560]: struct `artifacts::pdf::…::PdfSnapshot` has no field named `page`
+  error[E0609]: no field `page` on type `artifacts::pdf::…::PdfSnapshot`     (×36)
+  error: could not compile `semio-s-plugin-stdio` (lib) due to 37 previous errors
+  [test] …/mutate-semio-document: no result stream at …/📤️results.jsonl
+
+All 37 (later 41, then 15 as the peer worked) errors are inside 🗿️artifacts/📄️pdf; ZERO are in
+🗿️artifacts/🧿️semio. `git status` shows that whole PDF tree modified and uncommitted. The
+mutate-semio-audio and mutate-semio-cad parity runs completed BEFORE that window and are unaffected.
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-document --implementation rust   # exit 0
+[test] level=exhaustive cases=1 executed=110 passed=110 failed=0 errored=0 parity=55/55
+  (third attempt; the first two hit the peer PDF breakage above)
+
+================================================================================
+STATE OF THE TREE VS THE REPORTED NUMBERS
+================================================================================
+Between the video/animation parity runs and the end of the session the two Rust adapters were
+briefly re-wrapped (doc comments only, no code). They were restored to the exact bytes that produced
+`parity=28/28` and `parity=40/40`, so every number in this log corresponds to the tree as committed.
+The oracle phase was re-run afterwards to confirm:
+
+[test] level=exhaustive cases=1 executed=28 passed=28 failed=0 errored=0 parity=0/0   # video
+[test] level=exhaustive cases=1 executed=40 passed=40 failed=0 errored=0 parity=0/0   # animation
+[test] level=exhaustive cases=1 executed=49 passed=49 failed=0 errored=0 parity=0/0   # cad
+[test] level=exhaustive cases=1 executed=55 passed=55 failed=0 errored=0 parity=0/0   # document
+                                                                          # chain exit 0
+
+Machine contention note: at the end of this session sixteen concurrent `parity exhaustive` runs from
+sibling agents were sharing one cargo target directory, and the framework's own budget guard reports
+it verbatim — "exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from
+another concurrent session". My retry loop was stopped rather than left competing for the machine.
+
+================================================================================
+NOT CONVERTED — mutate-semio-any, and why
+================================================================================
+`✳️any` keeps its recorded `semio-envelope-routing` no-oracle decision. Its rationale in
+`…/✳️any/🧪️oracle/🔣️component.json` now records the wave-14 re-survey and the two blockers:
+  1. the envelope's own committed documents declare the wrapped arm OPAQUE — the snapshot grammar is
+     `document = artifact-mark subset-line REST`, the binary protocol models the wrapped pack as one
+     opaque `payload` chain, and the mutations grammar is `op = "noMutation" | tag ":" REST` — so an
+     envelope-level second implementation can reproduce both carriers byte for byte but can say
+     nothing about whether a DELEGATED verb changed the arm, which is what 18 of the 20 kinds measure;
+  2. `✳️any` exports `parse/print_semio_envelope_dsl` and `decode/encode_semio_envelope_pack` but NO
+     JSON bridge for `SemioSnapshot`/`SemioMutation`, so the arm snapshots and wrapped verbs can only
+     be built inside the subject crate, where a second language cannot read them.
+A Python oracle restating the routing table would be a transcribed expectation, i.e. our own answer
+on both sides, so it was not written.
+
+Third finding, recorded here: the committed `✳️any` SNAPSHOT grammar's `subset-tag` production lists
+thirteen tags (brep, mesh, model, value, document, cad, drawing, image, video, audio, animation,
+presentation, flow) while this subset's catalog and its own sibling MUTATIONS grammar both declare
+eighteen arms — `text`, `table`, `graph`, `object` and `kit` are missing from it.

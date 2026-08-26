@@ -1,0 +1,272 @@
+{
+  "$schema": "semio.puzzle.retained-command.fixture.v1",
+  "owner": "puzzle3d",
+  "documentSchema": "puzzle.3d.fixture",
+  "payloadSchema": "puzzle.3d.fixture.tool-command.v1",
+  "toolIds": [
+    "acceptSuggestion", "addBrushObject", "addObjectKind", "addTargetVolume", "closeVortexSuggestions", "createAttraction",
+    "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput",
+    "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openAddObjectDialog",
+    "patchInspector", "registerBrushMesh", "relocateTargetVolume", "rotateSelection", "scaleSelection", "setActiveExample",
+    "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setFillCount", "setGridSnapEnabled", "setGridSpacing",
+    "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection",
+    "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity",
+    "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick",
+    "toggleSun", "transformBegin", "transformEnd", "translateSelection", "worldPointerDown", "worldRelocate"
+  ],
+  "capacities": {"rawBytes": 8192, "decodedItems": 512, "workItems": 4096, "outputBytes": 262144, "stepMicros": 7500, "semanticUnitsPerGrant": 1},
+  "semanticCursors": {
+    "translateSelection": ["objectSelectionId", "volumeSelectionId", "objectScan", "volumeScan", "mutation"],
+    "rotateSelection": ["objectSelectionId", "volumeSelectionId", "objectScan", "volumeScan", "mutation"],
+    "scaleSelection": ["objectSelectionId", "volumeSelectionId", "objectScan", "volumeScan", "mutation"],
+    "focusSelection": ["objectSelectionId", "centerScan", "distanceScan", "cameraPublish", "closeOwner"],
+    "patchInspector": ["selectionId", "objectScan", "vortexOwner", "vortexScan", "attractionScan", "attractionDisconnect", "attractionReconnect", "referenceScan", "volumeScan", "mutationPublish", "closeOwner"],
+    "worldRelocate": ["objectScan", "moveMutation", "existingAttractionScan", "candidateObject", "candidateVortex", "distanceMeasure", "attractionPublish", "closeOwner"],
+    "createAttraction": ["existingAttractionScan", "attractingObject", "attractingVortex", "attractedObject", "attractedVortex", "compatibilityScan", "attractionPublish", "closeOwner"],
+    "setActiveExample": ["deleteAttraction", "deleteObject", "deleteVolume", "deleteReference", "deleteCompatibility", "domainMutation", "catalogMutation", "createObject", "createAttraction", "createVolume", "createReference", "createCompatibility", "configPublish", "closeOwner"],
+    "addBrushObject": ["boundedPayloadDecode", "kindScan", "representationScan", "vortexTemplate", "existingAttractionScan", "objectPublish", "attractionPublish", "closeOwner"],
+    "scalarConfigCommands": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"],
+    "addObjectKind": ["boundedPayloadDecode", "kindScan", "representationScan", "vortexTemplate", "objectPublish", "closeOwner"],
+    "closeVortexSuggestions": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"],
+    "hoverSuggestion": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"],
+    "engagementControlSelect": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"],
+    "engagementInput": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"],
+    "engagementAbort": ["clearInputOwner", "resetCandidateOwner", "releaseUtilityOwner", "publish", "closeOwner"]
+    ,"setBrushPlacementOverlapBudget": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"transformBegin": ["boundedGestureBoundary", "publishEmpty", "closeOwner"]
+    ,"transformEnd": ["boundedGestureBoundary", "publishEmpty", "closeOwner"]
+    ,"engagementRepeatLast": ["fillUtilityRead", "fillRequestOwner", "publish", "closeOwner"]
+    ,"engagementSubmit": ["boundedTokenDecode", "selectionOwner", "focusCenterScan", "focusDistanceScan", "focusTransfer", "utilityConfigOwner", "utilityEffectOwner", "fillRequestOwner", "inputOwner", "publish", "closeOwner"]
+    ,"setObjectKindWeight": ["catalogKindOwner", "currentWeightValidation", "siblingWeightSum", "changedWeightOwner", "normalizedWeightOwner", "publish", "closeOwner"]
+    ,"setVortexKindWeight": ["catalogKindOwner", "parentWeightRead", "currentWeightValidation", "siblingWeightSum", "changedWeightOwner", "normalizedWeightOwner", "publish", "closeOwner"]
+    ,"acceptSuggestion": ["targetObject", "targetVortex", "candidate", "representation", "vortexTemplate", "existingAttraction", "objectPublish", "attractionPublish", "closeOwner"]
+    ,"cycleBrushCandidate": ["decode", "object", "vortex", "attraction", "objectKind", "vortexKind", "publish", "closeOwner"]
+    ,"cycleBrushCandidateBack": ["decode", "object", "vortex", "attraction", "objectKind", "vortexKind", "publish", "closeOwner"]
+    ,"fillBuildTick": ["decode", "object", "vortex", "attraction", "objectKind", "vortexKind", "checkpointByte", "publish", "closeOwner"]
+    ,"registerBrushMesh": ["decode", "position", "index", "publish", "closeOwner"]
+    ,"setFillCount": ["decode", "object", "vortex", "attraction", "objectKind", "vortexKind", "checkpointByte", "publish", "closeOwner"]
+    ,"suggestionsTick": ["decode", "object", "vortex", "attraction", "objectKind", "vortexKind", "publish", "closeOwner"]
+    ,"addTargetVolume": ["boundedDecode", "oneVolumeMutation", "publish", "closeOwner"]
+    ,"openAddObjectDialog": ["boundedDecode", "oneDialogEffect", "publish", "closeOwner"]
+    ,"relocateTargetVolume": ["volumeScan", "originMutation", "orientationMutation", "scaleMutation", "closeOwner"]
+    ,"setCamera": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setChunkSize": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setGridSnapEnabled": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setGridSpacing": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setGridVisible": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setLodAutomatic": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setLodDepthVariable": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setLodManual": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setProjection": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setProjectionParam": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setProximityRadius": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setSelectableKind": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setSunAzimuth": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setSunElevation": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setSunIntensity": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setTransformGumballFlag": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setVortexDirection": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setVortexShow": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"setVoxelDims": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"toggleSun": ["boundedFieldDecode", "exactTypedMutation", "publish", "closeOwner"]
+    ,"worldPointerDown": ["boundedPointerBoundary", "publishEmpty", "closeOwner"]
+  },
+  "hostileSourceMutations": [
+    {"id": "translateOldReducer", "replace": "Puzzle3dScaleWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "rotateOldReducer", "replace": "Puzzle3dScaleWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "selectionCursorRemoved", "remove": "Puzzle3dScaleStage::ObjectSelection", "expected": "rejected"},
+    {"id": "objectCursorRemoved", "remove": "Puzzle3dScaleStage::Objects", "expected": "rejected"},
+    {"id": "volumeCursorRemoved", "remove": "Puzzle3dScaleStage::Volumes", "expected": "rejected"},
+    {"id": "focusOldReducer", "replace": "Puzzle3dFocusSelectionWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "focusCenterCursorRemoved", "remove": "Puzzle3dFocusSelectionStage::SumObjects", "expected": "rejected"},
+    {"id": "focusDistanceCursorRemoved", "remove": "Puzzle3dFocusSelectionStage::DistanceObjects", "expected": "rejected"},
+    {"id": "focusPublishBoundaryRemoved", "remove": "Puzzle3dFocusSelectionStage::Publish", "expected": "rejected"},
+    {"id": "patchInspectorOldReducer", "replace": "Puzzle3dPatchInspectorWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "patchInspectorObjectCursorRemoved", "remove": "Puzzle3dPatchInspectorStage::Objects", "expected": "rejected"},
+    {"id": "patchInspectorVortexCursorRemoved", "remove": "Puzzle3dPatchInspectorStage::Vortices", "expected": "rejected"},
+    {"id": "patchInspectorAttractionReconnectRemoved", "remove": "Puzzle3dPatchInspectorStage::AttractionReconnect", "expected": "rejected"},
+    {"id": "patchInspectorReferenceCursorRemoved", "remove": "Puzzle3dPatchInspectorStage::References", "expected": "rejected"},
+    {"id": "patchInspectorVolumeCursorRemoved", "remove": "Puzzle3dPatchInspectorStage::Volumes", "expected": "rejected"},
+    {"id": "worldRelocateOldReducer", "replace": "Puzzle3dWorldRelocateWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "worldRelocateExistingScanRemoved", "remove": "Puzzle3dWorldRelocateStage::ExistingAttractions", "expected": "rejected"},
+    {"id": "worldRelocateVortexCursorRemoved", "remove": "Puzzle3dWorldRelocateStage::CandidateVortex", "expected": "rejected"},
+    {"id": "worldRelocatePublishBoundaryRemoved", "remove": "Puzzle3dWorldRelocateStage::PublishAttraction", "expected": "rejected"},
+    {"id": "worldRelocateVortexCapRemoved", "remove": "PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT", "expected": "rejected"},
+    {"id": "createAttractionOldReducer", "replace": "Puzzle3dCreateAttractionWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "createAttractionExistingCursorRemoved", "remove": "Puzzle3dCreateAttractionStage::Existing", "expected": "rejected"},
+    {"id": "createAttractionEndpointCursorRemoved", "remove": "Puzzle3dCreateAttractionStage::Attracting", "expected": "rejected"},
+    {"id": "createAttractionCompatibilityCursorRemoved", "remove": "Puzzle3dCreateAttractionStage::Compatibility", "expected": "rejected"},
+    {"id": "createAttractionPublishBoundaryRemoved", "remove": "Puzzle3dCreateAttractionStage::Publish", "expected": "rejected"},
+    {"id": "setActiveExampleOldReducer", "replace": "Puzzle3dSetActiveExampleWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "setActiveExampleDeleteCursorRemoved", "remove": "Puzzle3dSetActiveExampleStage::DeleteAttractions", "expected": "rejected"},
+    {"id": "setActiveExampleCreateCursorRemoved", "remove": "Puzzle3dSetActiveExampleStage::CreateObjects", "expected": "rejected"},
+    {"id": "setActiveExampleCompatibilityCursorRemoved", "remove": "Puzzle3dSetActiveExampleStage::CreateCompatibility", "expected": "rejected"},
+    {"id": "setActiveExamplePublishBoundaryRemoved", "remove": "Puzzle3dSetActiveExampleStage::Publish", "expected": "rejected"},
+    {"id": "addBrushObjectOldReducer", "replace": "Puzzle3dAddBrushObjectWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "addBrushObjectKindCursorRemoved", "remove": "Puzzle3dAddBrushObjectStage::Kind", "expected": "rejected"},
+    {"id": "addBrushObjectVortexCursorRemoved", "remove": "Puzzle3dAddBrushObjectStage::Vortices", "expected": "rejected"},
+    {"id": "addBrushObjectDuplicateCursorRemoved", "remove": "Puzzle3dAddBrushObjectStage::ExistingAttractions", "expected": "rejected"},
+    {"id": "addBrushObjectSplitPublishRemoved", "remove": "Puzzle3dAddBrushObjectStage::PublishAttraction", "expected": "rejected"},
+    {"id": "scalarConfigOldReducer", "replace": "Puzzle3dScalarConfigWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "scalarConfigPrepareRemoved", "remove": "Puzzle3dScalarConfigStage::Prepare", "expected": "rejected"},
+    {"id": "scalarConfigPublishRemoved", "remove": "Puzzle3dScalarConfigStage::Publish", "expected": "rejected"},
+    {"id": "scalarConfigCameraMutationRemoved", "remove": "Puzzle3dConfigMutation::SetWindowCamera", "expected": "rejected"},
+    {"id": "scalarConfigSunMutationRemoved", "remove": "Puzzle3dConfigMutation::SetWindowSun", "expected": "rejected"},
+    {"id": "scalarConfigGridMutationRemoved", "remove": "Puzzle3dConfigMutation::SetWindowGridSpacing", "expected": "rejected"},
+    {"id": "scalarConfigVoxelMutationRemoved", "remove": "Puzzle3dConfigMutation::SetWindowVoxelDims", "expected": "rejected"},
+    {"id": "scalarConfigOverlapMutationRemoved", "remove": "Puzzle3dConfigMutation::SetOverlapBudget", "expected": "rejected"},
+    {"id": "transformLifecycleOldReducer", "replace": "NoopPuzzleCommandWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "engagementRepeatOldReducer", "replace": "Puzzle3dEngagementRepeatWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "engagementSubmitOldReducer", "replace": "Puzzle3dEngagementSubmitWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "engagementSubmitFocusScanRemoved", "remove": "Puzzle3dEngagementSubmitStage::Focus", "expected": "rejected"},
+    {"id": "engagementSubmitUtilityTransferRemoved", "remove": "Puzzle3dEngagementSubmitStage::UtilityEffect", "expected": "rejected"},
+    {"id": "engagementSubmitInputTransferRemoved", "remove": "Puzzle3dEngagementSubmitStage::Input", "expected": "rejected"},
+    {"id": "kindWeightOldReducer", "replace": "Puzzle3dKindWeightWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "kindWeightCatalogCursorRemoved", "remove": "Puzzle3dKindWeightStage::Catalog", "expected": "rejected"},
+    {"id": "kindWeightValidationCursorRemoved", "remove": "Puzzle3dKindWeightStage::Validate", "expected": "rejected"},
+    {"id": "kindWeightSiblingSumRemoved", "remove": "Puzzle3dKindWeightStage::SumOthers", "expected": "rejected"},
+    {"id": "kindWeightBuildCursorRemoved", "remove": "Puzzle3dKindWeightStage::Build", "expected": "rejected"},
+    {"id": "kindWeightObjectMutationRemoved", "remove": "Puzzle3dConfigMutation::SetObjectKindWeights", "expected": "rejected"},
+    {"id": "kindWeightVortexMutationRemoved", "remove": "Puzzle3dConfigMutation::SetVortexKindWeights", "expected": "rejected"},
+    {"id": "addObjectKindOldReducer", "replace": "Puzzle3dAddObjectKindWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "addObjectKindCatalogCursorRemoved", "remove": "Puzzle3dAddObjectKindStage::Kind", "expected": "rejected"},
+    {"id": "addObjectKindRepresentationCursorRemoved", "remove": "Puzzle3dAddObjectKindStage::Representation", "expected": "rejected"},
+    {"id": "addObjectKindVortexCursorRemoved", "remove": "Puzzle3dAddObjectKindStage::Vortex", "expected": "rejected"},
+    {"id": "addObjectKindPublishBoundaryRemoved", "remove": "Puzzle3dAddObjectKindStage::Publish", "expected": "rejected"},
+    {"id": "scalarConfigSuggestionMutationRemoved", "remove": "Puzzle3dConfigMutation::SetSuggestionMenu", "expected": "rejected"},
+    {"id": "scalarConfigCandidateMutationRemoved", "remove": "Puzzle3dConfigMutation::SetBrushCandidateIndex", "expected": "rejected"},
+    {"id": "scalarConfigEngagementInputMutationRemoved", "remove": "Puzzle3dConfigMutation::SetWindowEngagementInput", "expected": "rejected"},
+    {"id": "engagementAbortOldReducer", "replace": "Puzzle3dEngagementAbortWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "engagementAbortInputBoundaryRemoved", "remove": "Puzzle3dEngagementAbortStage::Input", "expected": "rejected"},
+    {"id": "engagementAbortCandidateBoundaryRemoved", "remove": "Puzzle3dEngagementAbortStage::Candidate", "expected": "rejected"},
+    {"id": "engagementAbortUtilityBoundaryRemoved", "remove": "Puzzle3dEngagementAbortStage::Utility", "expected": "rejected"},
+    {"id": "engagementAbortPublishBoundaryRemoved", "remove": "Puzzle3dEngagementAbortStage::Publish", "expected": "rejected"},
+    {"id": "acceptSuggestionOldReducer", "replace": "Puzzle3dAcceptSuggestionWork::default()", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "acceptSuggestionTargetCursorRemoved", "remove": "Puzzle3dAcceptSuggestionStage::Target", "expected": "rejected"},
+    {"id": "acceptSuggestionVortexCursorRemoved", "remove": "Puzzle3dAcceptSuggestionStage::Vortices", "expected": "rejected"},
+    {"id": "acceptSuggestionSplitObjectPublishRemoved", "remove": "Puzzle3dAcceptSuggestionStage::PublishObject", "expected": "rejected"},
+    {"id": "acceptSuggestionSplitAttractionPublishRemoved", "remove": "Puzzle3dAcceptSuggestionStage::PublishAttraction", "expected": "rejected"},
+    {"id": "precomputeOldReducer", "replace": "Puzzle3dPrecomputeCommandWork::new(tool_id)", "with": "BoundedFirstStepCommandWork", "expected": "rejected"},
+    {"id": "precomputeObjectCursorRemoved", "remove": "Puzzle3dPrecomputeCommandStage::Objects", "expected": "rejected"},
+    {"id": "precomputeVortexCursorRemoved", "remove": "Puzzle3dPrecomputeCommandStage::Vortices", "expected": "rejected"},
+    {"id": "precomputeAttractionCursorRemoved", "remove": "Puzzle3dPrecomputeCommandStage::Attractions", "expected": "rejected"},
+    {"id": "precomputePositionCursorRemoved", "remove": "Puzzle3dPrecomputeCommandStage::Positions", "expected": "rejected"},
+    {"id": "precomputeIndexCursorRemoved", "remove": "Puzzle3dPrecomputeCommandStage::Indices", "expected": "rejected"},
+    {"id": "precomputeCheckpointCursorRemoved", "remove": "Puzzle3dPrecomputeCommandStage::CheckpointBytes", "expected": "rejected"},
+    {"id": "precomputePublishBoundaryRemoved", "remove": "Puzzle3dPrecomputeCommandStage::Publish", "expected": "rejected"}
+  ],
+  "locales": {
+    "en": {"progress": ["Reading command page", "Validating command capacity", "Applying command", "Publishing result"], "cancel": "Cancel command", "status": "Command status"},
+    "de": {"progress": ["Befehlsseite wird gelesen", "Befehlskapazität wird geprüft", "Befehl wird angewendet", "Ergebnis wird veröffentlicht"], "cancel": "Befehl abbrechen", "status": "Befehlsstatus"}
+  },
+  "vectors": [
+    {"id": "zero", "rawBytes": 0, "control": "poll", "expected": "malformedFault", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "max", "rawBytes": 8192, "padding": "jsonWhitespace", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "maxPlusOne", "rawBytes": 8193, "control": "admit", "expected": "rejectedUnchanged", "fingerprint": "8193:0:0:0:0:0"},
+    {"id": "malformed", "raw": "{", "control": "poll", "expected": "malformedFault", "fingerprint": "1:0:0:0:0:0"},
+    {"id": "staleGeneration", "authority": {"operation": 7, "generation": 1, "presentedGeneration": 0}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
+    {"id": "wrongOperation", "authority": {"operation": 7, "presentedOperation": 8, "generation": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
+    {"id": "abaGeneration", "authority": {"operation": 7, "generation": 3, "presentedGeneration": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
+    {"id": "cancelWirePage", "boundary": "wirePage", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelWireByte", "boundary": "wireByte", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelPreflight", "boundary": "preflight", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelWork", "boundary": "work", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelPublish", "boundary": "publish", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "faultWork", "boundary": "work", "control": "faultClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "retry", "control": "faultRetryAckClose", "expected": "onePublicationTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "close", "closeGrant": {"items": 1, "bytes": 1}, "expected": "incrementalTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "replay", "control": "runAckReplayAckClose", "expected": "sameSemanticDigest", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "focusSelectionTwoPass", "toolId": "focusSelection", "selection": ["objekt-ä", "objekt-ß"], "objects": [{"id": "objekt-ä", "origin": [1, 3, 5]}, {"id": "objekt-ß", "origin": [5, 7, 9]}], "expectedCenter": [3, 5, 7], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "focusCancelEveryBoundary", "toolId": "focusSelection", "boundaries": ["objectSelectionId", "centerScan", "distanceScan", "cameraPublish", "closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "focusFaultEveryBoundary", "toolId": "focusSelection", "boundaries": ["objectSelectionId", "centerScan", "distanceScan", "cameraPublish", "closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "patchInspectorObjectUtf8", "toolId": "patchInspector", "input": {"entity": "object", "ids": ["objekt-ä"], "field": "label", "value": "Würfel-ß"}, "expectedMutation": "editObjectLabel:objekt-ä:Würfel-ß", "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "patchInspectorAttractionOrdering", "toolId": "patchInspector", "input": {"entity": "attraction", "ids": ["anziehung-ä"], "field": "attracted", "value": "objekt-ß::vortex-ü"}, "expectedMutations": ["disconnectVortices:anziehung-ä", "connectVortices:anziehung-ä:objekt-ß::vortex-ü"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "patchInspectorCancelEveryBoundary", "toolId": "patchInspector", "boundaries": ["selectionId", "objectScan", "vortexOwner", "vortexScan", "attractionScan", "attractionDisconnect", "attractionReconnect", "referenceScan", "volumeScan", "mutationPublish", "closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "patchInspectorFaultEveryBoundary", "toolId": "patchInspector", "boundaries": ["selectionId", "objectScan", "vortexOwner", "vortexScan", "attractionScan", "attractionDisconnect", "attractionReconnect", "referenceScan", "volumeScan", "mutationPublish", "closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "worldRelocateUtf8", "toolId": "worldRelocate", "input": {"objectId": "objekt-ä", "position": [1,2,3]}, "nearby": {"objectId": "objekt-ß", "vortexId": "vortex-ü"}, "expectedOrder": ["moveObject:objekt-ä:[1,2,3]", "connectVortices:objekt-ß:vortex-ü:objekt-ä"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "worldRelocateVortexMax", "toolId": "worldRelocate", "vorticesPerObject": 64, "expected": "admitted"},
+    {"id": "worldRelocateVortexMaxPlusOne", "toolId": "worldRelocate", "vorticesPerObject": 65, "expected": "faultUnchanged"},
+    {"id": "worldRelocateCancelEveryBoundary", "toolId": "worldRelocate", "boundaries": ["objectScan", "moveMutation", "existingAttractionScan", "candidateObject", "candidateVortex", "distanceMeasure", "attractionPublish", "closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "worldRelocateFaultEveryBoundary", "toolId": "worldRelocate", "boundaries": ["objectScan", "moveMutation", "existingAttractionScan", "candidateObject", "candidateVortex", "distanceMeasure", "attractionPublish", "closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "createAttractionUtf8", "toolId": "createAttraction", "input": {"attracting": "objekt-ä:vortex-ü", "attracted": "objekt-ß:vortex-ö"}, "compatibility": [{"source": "stecker-ä", "target": "buchse-ß", "bidirectional": true}], "expectedMutation": "connectVortices:objekt-ä:vortex-ü:objekt-ß:vortex-ö", "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "createAttractionVortexMax", "toolId": "createAttraction", "vorticesPerObject": 64, "expected": "admitted"},
+    {"id": "createAttractionVortexMaxPlusOne", "toolId": "createAttraction", "vorticesPerObject": 65, "expected": "faultUnchanged"},
+    {"id": "createAttractionCancelEveryBoundary", "toolId": "createAttraction", "boundaries": ["existingAttractionScan", "attractingObject", "attractingVortex", "attractedObject", "attractedVortex", "compatibilityScan", "attractionPublish", "closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "createAttractionFaultEveryBoundary", "toolId": "createAttraction", "boundaries": ["existingAttractionScan", "attractingObject", "attractingVortex", "attractedObject", "attractedVortex", "compatibilityScan", "attractionPublish", "closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setActiveExampleUtf8", "toolId": "setActiveExample", "input": {"exampleId": "nakagin"}, "targetLedger": {"domain": "architecture", "objectIds": ["kapsel-ä"], "attractionIds": ["verbindung-ß"]}, "expectedOrder": ["deleteAttractions", "deleteObjects", "deleteVolumes", "deleteReferences", "deleteCompatibility", "domain", "catalogs", "createObjects", "createAttractions", "createVolumes", "createReferences", "createCompatibility", "configPublish"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setActiveExampleCancelEveryBoundary", "toolId": "setActiveExample", "boundaries": ["deleteAttraction", "deleteObject", "deleteVolume", "deleteReference", "deleteCompatibility", "domainMutation", "catalogMutation", "createObject", "createAttraction", "createVolume", "createReference", "createCompatibility", "configPublish", "closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setActiveExampleFaultEveryBoundary", "toolId": "setActiveExample", "boundaries": ["deleteAttraction", "deleteObject", "deleteVolume", "deleteReference", "deleteCompatibility", "domainMutation", "catalogMutation", "createObject", "createAttraction", "createVolume", "createReference", "createCompatibility", "configPublish", "closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "addBrushObjectUtf8", "toolId": "addBrushObject", "input": {"targetVortexFullId": "objekt-ä:vortex-ü", "objectKindId": "bauteil-ß", "sourceVortexIndex": 0, "origin": [1,2,3], "orientation": [0,0,0,1], "scale": [1,1,1]}, "expectedOrder": ["createObject:puzzle3d.brush.*", "connectVortices:objekt-ä:vortex-ü"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "addBrushObjectVortexMax", "toolId": "addBrushObject", "vortexTemplates": 64, "expected": "admitted"},
+    {"id": "addBrushObjectVortexMaxPlusOne", "toolId": "addBrushObject", "vortexTemplates": 65, "expected": "faultUnchanged"},
+    {"id": "addBrushObjectCancelEveryBoundary", "toolId": "addBrushObject", "boundaries": ["boundedPayloadDecode", "kindScan", "representationScan", "vortexTemplate", "existingAttractionScan", "objectPublish", "attractionPublish", "closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "addBrushObjectFaultEveryBoundary", "toolId": "addBrushObject", "boundaries": ["boundedPayloadDecode", "kindScan", "representationScan", "vortexTemplate", "existingAttractionScan", "objectPublish", "attractionPublish", "closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setCameraExact", "toolId": "setCamera", "windowId": "fenster-ä", "input": {"camera": {"position":[1,2,3],"target":[4,5,6],"zoom":2}}, "expectedMutation": "SetWindowCamera", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setProjectionExact", "toolId": "setProjection", "windowId": "fenster-ä", "input": {"projection":"orthographic"}, "expectedMutation": "SetWindowCamera", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setProjectionParamExact", "toolId": "setProjectionParam", "windowId": "fenster-ä", "input": {"param":"fieldOfView","value":45}, "expectedMutation": "SetWindowCamera", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "toggleSunExact", "toolId": "toggleSun", "input": {"pressed":true}, "expectedMutation": "SetWindowSun", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setSunAzimuthExact", "toolId": "setSunAzimuth", "input": {"value":45}, "expectedMutation": "SetWindowSun", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setSunElevationExact", "toolId": "setSunElevation", "input": {"value":30}, "expectedMutation": "SetWindowSun", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setSunIntensityExact", "toolId": "setSunIntensity", "input": {"value":1.5}, "expectedMutation": "SetWindowSun", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setLodAutomaticExact", "toolId": "setLodAutomatic", "input": {"pressed":false}, "expectedMutation": "SetWindowLodAutomatic", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setLodDepthVariableExact", "toolId": "setLodDepthVariable", "input": {"pressed":true}, "expectedMutation": "SetWindowLodDepthVariable", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setLodManualExact", "toolId": "setLodManual", "input": {"value":250}, "expectedMutation": "SetWindowLodManual", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setGridVisibleExact", "toolId": "setGridVisible", "input": {"pressed":false}, "expectedMutation": "SetWindowGridVisible", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setGridSnapEnabledExact", "toolId": "setGridSnapEnabled", "input": {"pressed":true}, "expectedMutation": "SetWindowGridSnapEnabled", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setGridSpacingExact", "toolId": "setGridSpacing", "input": {"value":12.5}, "expectedMutation": "SetWindowGridSpacing", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setSelectableKindUtf8Window", "toolId": "setSelectableKind", "windowId": "fenster-ü", "input": {"kind":"vortices","pressed":false}, "expectedMutation": "SetWindowSelectableKinds", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setProximityRadiusExact", "toolId": "setProximityRadius", "input": {"value":0.75}, "expectedMutation": "SetWindowProximityRadius", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setChunkSizeExact", "toolId": "setChunkSize", "input": {"value":256}, "expectedMutation": "SetWindowChunkSize", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setVoxelDimsExact", "toolId": "setVoxelDims", "input": {"axis":"w","value":16}, "expectedMutation": "SetWindowVoxelDims", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setTransformGumballFlagExact", "toolId": "setTransformGumballFlag", "input": {"flag":"rotate","pressed":false}, "expectedMutation": "SetWindowTransformRotate", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setVortexShowExact", "toolId": "setVortexShow", "input": {"value":"always"}, "expectedMutation": "SetWindowVortexShow", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "setVortexDirectionExact", "toolId": "setVortexDirection", "input": {"value":"inwards"}, "expectedMutation": "SetWindowVortexDirection", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "closeVortexSuggestionsExact", "toolId": "closeVortexSuggestions", "initialMenu": {"x":1,"y":2,"vortexFullId":"objekt-ä:vortex-ü"}, "expectedMutation": "SetSuggestionMenu:none", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "hoverSuggestionExact", "toolId": "hoverSuggestion", "input": {"index":7}, "expectedMutation": "SetBrushCandidateIndex:7", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "engagementControlSelectExact", "toolId": "engagementControlSelect", "input": {"id":"puzzle3d.brush.candidate.3"}, "expectedMutation": "SetBrushCandidateIndex:3", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "engagementInputUtf8", "toolId": "engagementInput", "windowId": "fenster-ä", "input": {"value":"füllen 12"}, "expectedMutation": "SetWindowEngagementInput:füllen 12", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "scalarConfigCancelEveryBoundary", "toolIds": ["setCamera","setProjection","setProjectionParam","toggleSun","setSunAzimuth","setSunElevation","setSunIntensity","setLodAutomatic","setLodDepthVariable","setLodManual","setGridVisible","setGridSnapEnabled","setGridSpacing","setSelectableKind","setProximityRadius","setChunkSize","setVoxelDims","setTransformGumballFlag","setVortexShow","setVortexDirection","setBrushPlacementOverlapBudget","closeVortexSuggestions","hoverSuggestion","engagementControlSelect","engagementInput"], "boundaries": ["boundedFieldDecode","exactTypedMutation","publish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "scalarConfigFaultEveryBoundary", "toolIds": ["setCamera","setProjection","setProjectionParam","toggleSun","setSunAzimuth","setSunElevation","setSunIntensity","setLodAutomatic","setLodDepthVariable","setLodManual","setGridVisible","setGridSnapEnabled","setGridSpacing","setSelectableKind","setProximityRadius","setChunkSize","setVoxelDims","setTransformGumballFlag","setVortexShow","setVortexDirection","closeVortexSuggestions","hoverSuggestion","engagementControlSelect","engagementInput"], "boundaries": ["boundedFieldDecode","exactTypedMutation","publish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "addObjectKindUtf8", "toolId": "addObjectKind", "input": {"objectKind":"bauteil-ß","origin":[1,2,3]}, "catalog": {"id":"bauteil-ß","representations":[{"url":"mesh-ä.glb"}],"vortices":[{"id":"griff-ü","vortexKind":"buchse-ö"}]}, "expectedMutation": "createObject:puzzle3d.object.*:bauteil-ß", "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "addObjectKindVortexMax", "toolId": "addObjectKind", "vortexTemplates": 64, "expected": "admitted"},
+    {"id": "addObjectKindVortexMaxPlusOne", "toolId": "addObjectKind", "vortexTemplates": 65, "expected": "faultUnchanged"},
+    {"id": "addObjectKindCancelEveryBoundary", "toolId": "addObjectKind", "boundaries": ["boundedPayloadDecode","kindScan","representationScan","vortexTemplate","objectPublish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "addObjectKindFaultEveryBoundary", "toolId": "addObjectKind", "boundaries": ["boundedPayloadDecode","kindScan","representationScan","vortexTemplate","objectPublish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "engagementAbortOrder", "toolId": "engagementAbort", "windowId": "fenster-ä", "initial": {"engagementInput":"füllen 9","candidateIndex":4,"utility":"brush"}, "expectedMutations": ["SetWindowEngagementInput:","SetBrushCandidateIndex:0","SetActiveUtility:"], "expectedEffects": ["SetActiveUtility:fenster-ä:"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "engagementAbortCancelEveryBoundary", "toolId": "engagementAbort", "boundaries": ["clearInputOwner","resetCandidateOwner","releaseUtilityOwner","publish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "engagementAbortFaultEveryBoundary", "toolId": "engagementAbort", "boundaries": ["clearInputOwner","resetCandidateOwner","releaseUtilityOwner","publish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "overlapBudgetExact", "toolId": "setBrushPlacementOverlapBudget", "input": {"value": 1.5}, "expectedMutation": "SetOverlapBudget:1", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "transformBeginBounded", "toolId": "transformBegin", "expectedMutations": [], "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "transformEndBounded", "toolId": "transformEnd", "expectedMutations": [], "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "transformLifecycleCancelFault", "toolIds": ["transformBegin","transformEnd"], "boundaries": ["boundedGestureBoundary","publishEmpty","closeOwner"], "control": "freshCancelAndFreshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "engagementRepeatFill", "toolId": "engagementRepeatLast", "initial": {"utility":"fill","fillCount":3}, "expectedEffect": "DispatchAction:setFillCount:4", "control": "pollProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "engagementSubmitFill", "toolId": "engagementSubmit", "windowId": "fenster-ä", "input": {"value":"fill 7"}, "expectedMutations": ["SetActiveUtility:fill","SetWindowEngagementInput:"], "expectedEffects": ["SetActiveUtility:fill","DispatchAction:setFillCount:7"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "engagementSubmitBrushUtf8", "toolId": "engagementSubmit", "windowId": "fenster-ä", "input": {"value":"  BRUSH  "}, "expectedMutations": ["SetActiveUtility:brush","SetWindowEngagementInput:"], "expectedEffects": ["SetActiveUtility:brush"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "engagementSubmitZoom", "toolId": "engagementSubmit", "input": {"value":"zoom"}, "selection": ["objekt-ä","objekt-ß"], "expectedStages": ["selectionOwner","focusCenterScan","focusDistanceScan","focusTransfer","inputOwner","publish"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "engagementSubmitCancelEveryBoundary", "toolId": "engagementSubmit", "boundaries": ["boundedTokenDecode","selectionOwner","focusCenterScan","focusDistanceScan","focusTransfer","utilityConfigOwner","utilityEffectOwner","fillRequestOwner","inputOwner","publish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "engagementSubmitFaultEveryBoundary", "toolId": "engagementSubmit", "boundaries": ["boundedTokenDecode","selectionOwner","focusCenterScan","focusDistanceScan","focusTransfer","utilityConfigOwner","utilityEffectOwner","fillRequestOwner","inputOwner","publish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "objectKindWeightExact", "toolId": "setObjectKindWeight", "input": {"kindId":"bauteil-ä","value":0.6}, "catalogIds": ["bauteil-ä","bauteil-ß"], "initialWeights": {"bauteil-ä":0.5,"bauteil-ß":0.5}, "expectedWeights": {"bauteil-ä":0.6,"bauteil-ß":0.4}, "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "vortexJointWeightExact", "toolId": "setVortexKindWeight", "input": {"objectKindId":"bauteil-ä","kindId":"griff-ü","value":0.15}, "objectWeights": {"bauteil-ä":0.5}, "catalogIds": ["griff-ü","griff-ß"], "initialWeights": {"griff-ü":0.5,"griff-ß":0.5}, "expectedWeights": {"griff-ü":0.3,"griff-ß":0.7}, "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "kindWeightCatalogMax", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "catalogKinds": 512, "expected": "admitted"}
+    ,{"id": "kindWeightCatalogMaxPlusOne", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "catalogKinds": 513, "expected": "faultUnchanged"}
+    ,{"id": "kindWeightCancelEveryBoundary", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "boundaries": ["catalogKindOwner","parentWeightRead","currentWeightValidation","siblingWeightSum","changedWeightOwner","normalizedWeightOwner","publish","closeOwner"], "control": "freshCancelAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "kindWeightFaultEveryBoundary", "toolIds": ["setObjectKindWeight","setVortexKindWeight"], "boundaries": ["catalogKindOwner","parentWeightRead","currentWeightValidation","siblingWeightSum","changedWeightOwner","normalizedWeightOwner","publish","closeOwner"], "control": "freshFaultAtEachBoundaryThenClose", "expected": "terminalEmptyExactHandback", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "acceptSuggestionUtf8", "toolId": "acceptSuggestion", "input": {"fullId":"objekt-ä:vortex-ü","index":0}, "expectedOrder": ["createObject:puzzle3d.suggestion.*","connectVortices:objekt-ä:vortex-ü"], "control": "pollEachProgressAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"}
+    ,{"id": "acceptSuggestionVortexEmpty", "toolId": "acceptSuggestion", "vortexTemplates":0, "expected":"noMutationTerminalEmpty"}
+    ,{"id": "acceptSuggestionVortexSingle", "toolId": "acceptSuggestion", "vortexTemplates":1, "expected":"oneObjectOneAttractionTerminalEmpty"}
+    ,{"id": "acceptSuggestionVortexMax", "toolId": "acceptSuggestion", "vortexTemplates":64, "expected":"admitted"}
+    ,{"id": "acceptSuggestionVortexMaxPlusOne", "toolId": "acceptSuggestion", "vortexTemplates":65, "expected":"faultUnchanged"}
+    ,{"id": "acceptSuggestionCancelEveryBoundary", "toolId": "acceptSuggestion", "boundaries": ["targetObject","targetVortex","candidate","representation","vortexTemplate","existingAttraction","objectPublish","attractionPublish","closeOwner"], "control":"freshCancelAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"}
+    ,{"id": "acceptSuggestionFaultEveryBoundary", "toolId": "acceptSuggestion", "boundaries": ["targetObject","targetVortex","candidate","representation","vortexTemplate","existingAttraction","objectPublish","attractionPublish","closeOwner"], "control":"freshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"}
+    ,{"id": "precomputeMeshUtf8", "toolId":"registerBrushMesh", "input":{"meshUrl":"netz-ä.glb","positions":[0,1,2],"indices":[0,1,2]}, "expectedStages":["position","index","publish"], "control":"pollEachProgressAckClose", "expected":"terminalEmpty", "fingerprint":"0:0:0:0:0:0"}
+    ,{"id": "precomputePayloadEmpty", "toolId":"registerBrushMesh", "positions":0, "indices":0, "expected":"terminalEmpty"}
+    ,{"id": "precomputePayloadSingle", "toolId":"registerBrushMesh", "positions":1, "indices":1, "expected":"terminalEmpty"}
+    ,{"id": "precomputePayloadMax", "toolId":"registerBrushMesh", "positions":512, "indices":512, "expected":"admitted"}
+    ,{"id": "precomputePayloadMaxPlusOne", "toolId":"registerBrushMesh", "positions":513, "expected":"rejectedUnchanged"}
+    ,{"id": "precomputeCancelEveryBoundary", "toolIds":["cycleBrushCandidate","cycleBrushCandidateBack","fillBuildTick","registerBrushMesh","setFillCount","suggestionsTick"], "boundaries":["decode","object","vortex","attraction","objectKind","vortexKind","position","index","checkpointByte","publish","closeOwner"], "control":"freshCancelAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"}
+    ,{"id": "precomputeFaultEveryBoundary", "toolIds":["cycleBrushCandidate","cycleBrushCandidateBack","fillBuildTick","registerBrushMesh","setFillCount","suggestionsTick"], "boundaries":["decode","object","vortex","attraction","objectKind","vortexKind","position","index","checkpointByte","publish","closeOwner"], "control":"freshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"}
+    ,{"id": "precomputeStaleGeneration", "toolIds":["acceptSuggestion","fillBuildTick","setFillCount"], "authority":{"operation":29,"generation":4,"presentedGeneration":3}, "expected":"rejectedUnchanged", "fingerprint":"1:1:1:0:0:0"}
+    ,{"id": "precomputeRetryCloseReplay", "toolIds":["acceptSuggestion","cycleBrushCandidate","fillBuildTick","registerBrushMesh","setFillCount","suggestionsTick"], "control":"faultRetryAckIncrementalCloseReplay", "expected":"sameSemanticDigestTerminalEmpty", "fingerprint":"0:0:0:0:0:0"}
+  ],
+  "oracle": {"interface": "PuzzleRetainedFixtureOracle", "implementation": "serde_json", "runtimeReachable": false}
+}

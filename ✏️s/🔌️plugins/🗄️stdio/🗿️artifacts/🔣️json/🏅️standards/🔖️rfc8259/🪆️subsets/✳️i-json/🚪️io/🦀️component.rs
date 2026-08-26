@@ -100,7 +100,7 @@ pub mod derived_composition {
         async fn conforming_document_composes_and_stamps_i_json() {
             let text = conforming_json_text();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let composed = JsonIJsonComposerComposition::compose(&sources).expect("clean document must compose to i-json");
+            let composed = JsonIJsonComposerComposition::compose(&sources).await.expect("clean document must compose to i-json");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -108,7 +108,7 @@ pub mod derived_composition {
         async fn duplicate_member_name_fails_compose_with_real_diagnostic() {
             let text = "{\"a\":1,\"a\":2}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = JsonIJsonComposerComposition::compose(&sources).expect_err("a document with a duplicate member name must not stamp i-json");
+            let err = JsonIJsonComposerComposition::compose(&sources).await.expect_err("a document with a duplicate member name must not stamp i-json");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.json.i-json.duplicate-member-name" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -116,7 +116,7 @@ pub mod derived_composition {
         async fn unsafe_integer_fails_compose_with_real_diagnostic() {
             let text = "{\"n\":9007199254740993}".to_string();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
-            let err = JsonIJsonComposerComposition::compose(&sources).expect_err("a document with an unsafe integer must not stamp i-json");
+            let err = JsonIJsonComposerComposition::compose(&sources).await.expect_err("a document with an unsafe integer must not stamp i-json");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == "stdio.json.i-json.unsafe-integer" && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -125,7 +125,7 @@ pub mod derived_composition {
             let text = "\"just a top-level string\"".to_string();
             let snapshot = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parses");
             let bytes = <JsonSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = JsonIJsonValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = JsonIJsonValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a duplicate/overflow-free document: {diagnostics:?}");
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.json.i-json.top-level-scalar"), "got {diagnostics:?}");
         }

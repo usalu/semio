@@ -24,11 +24,5 @@ bytemuck = { version = "1.24.0", features = ["derive"] }
 ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2 = "0.6"
 objc2-metal = "0.3"
-objc2-quartz-core = { version = "0.3", features = ["CAMetalLayer"] }
-objc2-foundation = "0.3"
-# 📐️ Real `CGSize`/`CGRect` types, so the CAMetalLayer drawable-size call is a typed API rather than a
-# hand-rolled `msg_send!` shim guessing at struct layout.
-objc2-core-foundation = "0.3"
 raw-window-handle = "0.6"

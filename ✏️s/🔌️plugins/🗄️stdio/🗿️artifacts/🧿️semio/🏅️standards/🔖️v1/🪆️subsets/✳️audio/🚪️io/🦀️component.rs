@@ -174,7 +174,7 @@ pub mod derived_composition {
             };
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = SemioAudioComposerComposition::compose(&sources).expect("clean document must compose");
+            let composed = SemioAudioComposerComposition::compose(&sources).await.expect("clean document must compose");
             assert_eq!(composed.snapshot, snapshot);
             assert!(composed.diagnostics.is_empty(), "got {:?}", composed.diagnostics);
         }
@@ -204,7 +204,7 @@ pub mod derived_composition {
         async fn subset_validator_recheck_matches_the_composer_side_invariants() {
             let snapshot = SemioAudioSnapshot { sample_rate: 0, ..SemioAudioSnapshot::default() };
             let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = SemioAudioValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioAudioValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_audio.zero-sample-rate"), "got {diagnostics:?}");
         }
 

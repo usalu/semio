@@ -46,7 +46,7 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
 export type WireVariant<T = unknown> = { readonly tag?: string; readonly val?: T };
 
 export type WireUiPatch = {
-  readonly surface?: { readonly instance?: number; readonly surface?: number };
+  readonly surface?: { readonly instance?: number; readonly surface?: string };
   readonly kind?: string;
   readonly revision?: number;
   readonly baseRevision?: number;

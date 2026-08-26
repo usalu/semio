@@ -13,7 +13,6 @@ export interface DrawConfig {
   /** @state config */
   tracePointerPendingWork: number;
   /** @state config */
-  gestureCheckpointJson: string;
   /** @state config */
   locale: string;
 }

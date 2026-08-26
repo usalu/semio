@@ -5,7 +5,7 @@ use crate::editor::rewrite::config::RewriteConfig;
 use crate::editor::rewrite::terminology::TrinityRewriteLabels;
 use semio_framework_plugin::{tree_item_desc, ui_text, Label, PanelTreeBuilder, UiNode, UiTreeItemNode};
 
-pub(crate) async fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig, labels: &TrinityRewriteLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig, labels: &TrinityRewriteLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(fixture) = crate::editor::rewrite::parse_fixture_json(&state.before_fixture_json) else {
         return ui_text(Label::data("Invalid trinity fixture"));
     };

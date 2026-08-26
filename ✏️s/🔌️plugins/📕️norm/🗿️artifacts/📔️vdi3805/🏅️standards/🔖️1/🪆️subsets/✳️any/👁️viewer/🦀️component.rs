@@ -27,10 +27,10 @@ pub enum Vdi3805ViewCommand {
 }
 
 impl protocol::OpBinary for Vdi3805ViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Vdi3805ViewCommand::Noop)
     }
 }
@@ -54,18 +54,18 @@ impl ArtifactViewer for Vdi3805Viewer {
     const DIALECT: Dialect = VDI3805_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VDI3805_DOCUMENT_SCHEMA;
 
-    async fn initial_snapshot() -> Vdi3805Snapshot {
+    fn initial_snapshot() -> Vdi3805Snapshot {
         Vdi3805Snapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `Vdi3805ViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not
     /// `unreachable!()`) so a future view-only action is a pure addition here, never a signature change.
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             report::BODY_KEY => report::render(doc.snapshot),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -75,7 +75,7 @@ impl ArtifactViewer for Vdi3805Viewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_vdi3805_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_vdi3805_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(VDI3805_DIALECT)
         .document(["semio", "norm", "vdi3805"])
         .icon_id("check-circle")
@@ -93,18 +93,18 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn create_vdi3805_viewer_builds_a_definition_for_this_dialect() {
+    fn create_vdi3805_viewer_builds_a_definition_for_this_dialect() {
         let def = create_vdi3805_viewer();
         assert_eq!(def.dialect, VDI3805_DIALECT.into());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
+    fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Vdi3805Viewer as ArtifactViewer>::DIALECT, VDI3805_DIALECT);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn an_unknown_body_key_falls_back_to_a_text_node() {
+    fn an_unknown_body_key_falls_back_to_a_text_node() {
         let snapshot = Vdi3805Snapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);

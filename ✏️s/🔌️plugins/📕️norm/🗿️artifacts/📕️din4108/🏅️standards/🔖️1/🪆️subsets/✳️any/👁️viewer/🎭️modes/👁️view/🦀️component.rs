@@ -8,12 +8,12 @@ use semio_framework_plugin::{ModeDefinition, WindowLayout};
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::din4108::create_din4108_viewer`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     crate::app_surface::view_mode_definition()
 }
 
 /// 🪟️ Single full-pane Report window — the read-only viewer has no inputs/results split to allocate.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     crate::app_surface::single_window_layout(report::WINDOW_KIND_ID, "Report")
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn the_mode_is_the_viewers_default() {
+    fn the_mode_is_the_viewers_default() {
         assert_eq!(definition().id, crate::app_surface::MODE_VIEW);
     }
 }

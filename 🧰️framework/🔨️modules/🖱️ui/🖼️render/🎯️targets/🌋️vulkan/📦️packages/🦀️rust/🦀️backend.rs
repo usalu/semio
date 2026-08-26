@@ -19,6 +19,7 @@
 compile_error!("semio-framework-ui-backend-vulkan builds only on Linux.");
 
 use crate::resources::GpuResources;
+use crate::surface;
 use crate::swapchain_support::{choose_extent, choose_image_count, choose_present_mode, choose_surface_format, is_parked};
 use crate::vk_error::VulkanGraphicsError;
 use ash::vk;
@@ -116,7 +117,7 @@ pub struct VulkanBackend {
 
 impl VulkanBackend {
     /// 🏗️ Builds an instance, physical/logical device, graphics queue, `VK_KHR_swapchain` surface
-    /// (via `ash-window`), render pass, per-swapchain-image framebuffers, and `FRAMES_IN_FLIGHT` sync
+    /// (via the owned surface ABI), render pass, per-swapchain-image framebuffers, and `FRAMES_IN_FLIGHT` sync
     /// objects. Only construction is async per U1 — like the Metal target's `MetalBackend::new`, the
     /// body performs no real `.await`: `ash::Entry::load`/instance/device/swapchain creation are all
     /// synchronous FFI calls, unlike wgpu's adapter/device request.
@@ -134,7 +135,7 @@ impl VulkanBackend {
 
         let app_name = c"semio-ui-vulkan-backend";
         let app_info = vk::ApplicationInfo::default().application_name(app_name).application_version(vk::make_api_version(0, 1, 0, 0)).engine_name(app_name).engine_version(vk::make_api_version(0, 1, 0, 0)).api_version(vk::API_VERSION_1_1);
-        let required_extensions = ash_window::enumerate_required_extensions(display_handle)?;
+        let required_extensions = surface::required_extensions(display_handle)?;
         let instance_info = vk::InstanceCreateInfo::default().application_info(&app_info).enabled_extension_names(required_extensions);
         // 🔓️ SAFETY: `entry` was just loaded above and outlives `instance` (held alongside it in
         // `Self`, destroyed in reverse order by `Drop`); `instance_info` borrows only stack locals for
@@ -145,7 +146,7 @@ impl VulkanBackend {
         // 🔓️ SAFETY: `window_handle`/`display_handle` are the caller's live window/display handles
         // (the constructor's own safety contract, inherited from `raw_window_handle`'s); `entry`/
         // `instance` outlive the resulting surface (both held in `Self`).
-        let surface = unsafe { ash_window::create_surface(&entry, &instance, display_handle, window_handle, None)? };
+        let surface = unsafe { surface::create_surface(&entry, &instance, display_handle, window_handle, None)? };
 
         let (physical_device, queue_family_index) = pick_physical_device(&instance, &surface_loader, surface)?;
         // 🔓️ SAFETY: `physical_device` was just enumerated from `instance` above — a valid handle for

@@ -13,13 +13,13 @@ pub struct ChangePermanentAction {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangePermanentAction {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "permanent-action", kind: "change-permanent-action", record: "ChangedPermanentAction" };
 
-    async fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+    fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change permanent action G_k to {} kN", self.new_g_k)
     }
 }

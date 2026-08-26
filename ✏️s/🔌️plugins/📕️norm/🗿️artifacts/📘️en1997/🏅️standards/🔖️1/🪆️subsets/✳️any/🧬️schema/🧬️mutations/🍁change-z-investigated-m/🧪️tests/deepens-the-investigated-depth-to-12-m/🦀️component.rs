@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// the committed 12.0 m pile toe exactly, which is the EN 1997-2 depth-adequacy condition — but the pile
 /// length itself is a design decision and must not move with the investigation.
 #[semio_framework_async_macros::async_test]
-async fn deepens_the_investigated_depth_to_12_m() {
+fn deepens_the_investigated_depth_to_12_m() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-z-investigated-m applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-z-investigated-m/deepens-the-investigated-depth-to-12-m: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.z_investigated_m, 12.0, "change-z-investigated-m/deepens-the-investigated-depth-to-12-m: z_investigated_m must read 12.0 m once the change lands");
@@ -44,7 +44,7 @@ async fn deepens_the_investigated_depth_to_12_m() {
 /// ↩️ `change-z-investigated-m`'s inverse reads the OLD 8.0 m out of BASE, so replaying it puts the 8.0 m
 /// investigated depth back on `z_investigated_m`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_8_m_investigation_restores_before() {
+fn restoring_the_8_m_investigation_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-z-investigated-m applies");
@@ -62,7 +62,7 @@ async fn restoring_the_8_m_investigation_restores_before() {
 /// → encode is a fixed point, so `newZInvestigatedM` (serde camelCase over `new_z_investigated_m`) is spelled
 /// here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 12.0 m is finite and differs from the committed 8.0 m, so `change-z-investigated-m` (whose
 /// guard message reads "Investigated depth [m]") emits nothing.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-z-investigated-m/deepens-the-investigated-depth-to-12-m: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `zInvestigatedM` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-z-investigated-m diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-z-investigated-m/deepens-the-investigated-depth-to-12-m: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the investigated depth and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-z-investigated-m diff decodes");
     assert_eq!(decoded.z_investigated_m, Some(12.0), "change-z-investigated-m/deepens-the-investigated-depth-to-12-m: the committed diff must carry zInvestigatedM = 12.0 m");
     assert!(decoded.pile_l_m.is_none(), "change-z-investigated-m/deepens-the-investigated-depth-to-12-m: change-z-investigated-m writes zInvestigatedM and must leave `pile_l_m` untouched");
@@ -112,7 +112,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the investigation-depth change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-z-investigated-m diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-z-investigated-m/deepens-the-investigated-depth-to-12-m: the committed diff did not carry before to after");

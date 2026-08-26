@@ -4,7 +4,7 @@ use crate::artifacts::rewrite::mutations::{change_parameter_binding, RewriteRule
 use crate::artifacts::rewrite::RewriteSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::RemoveParameterBinding, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+pub fn inverse(payload: &super::mutation::RemoveParameterBinding, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
     base.parameter_bindings.get(&payload.key).map(|old| vec![change_parameter_binding(payload.key.clone(), old.clone())]).unwrap_or_default()
 }
 //#endregion 🔖️Inverse

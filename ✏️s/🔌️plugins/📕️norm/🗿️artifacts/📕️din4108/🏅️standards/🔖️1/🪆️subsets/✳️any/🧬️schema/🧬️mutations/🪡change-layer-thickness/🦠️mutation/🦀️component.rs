@@ -14,16 +14,16 @@ pub struct ChangeLayerThickness {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerThickness {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-thickness", kind: "change-layer-thickness", record: "ChangedLayerThickness" };
 
-    async fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change layer #{} thickness to {}", self.index, self.new_thickness_m)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
 }

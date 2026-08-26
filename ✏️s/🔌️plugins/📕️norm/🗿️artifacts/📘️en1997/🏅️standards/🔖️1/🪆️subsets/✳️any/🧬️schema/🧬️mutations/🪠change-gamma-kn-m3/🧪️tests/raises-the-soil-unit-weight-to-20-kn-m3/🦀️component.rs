@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// ▶️ Raising γ from 18.0 kN/m³ to 20.0 kN/m³ rewrites `gamma_kn_m3` alone. The overburden q = γ·D_f rises from
 /// 27.0 kPa to 30.0 kPa, but the founding depth that multiplies it is untouched.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_soil_unit_weight_to_20_kn_m3() {
+fn raises_the_soil_unit_weight_to_20_kn_m3() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-gamma-kn-m3 applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.gamma_kn_m3, 20.0, "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: gamma_kn_m3 must read 20.0 kN/m³ once the change lands");
@@ -43,7 +43,7 @@ async fn raises_the_soil_unit_weight_to_20_kn_m3() {
 /// ↩️ `change-gamma-kn-m3`'s inverse reads the OLD 18.0 kN/m³ out of BASE, so replaying it puts the 18.0 kN/m³
 /// back on `gamma_kn_m3`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_18_kn_m3_restores_before() {
+fn restoring_18_kn_m3_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-gamma-kn-m3 applies");
@@ -61,7 +61,7 @@ async fn restoring_18_kn_m3_restores_before() {
 /// encode is a fixed point, so `newGammaKnM3` (serde camelCase over `new_gamma_kn_m3`) is spelled here
 /// exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 20.0 kN/m³ is finite and differs from the committed 18.0 kN/m³, so `change-gamma-kn-m3`
 /// produces a message-free outcome.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `gammaKnM3` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-gamma-kn-m3 diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the soil unit weight and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-gamma-kn-m3 diff decodes");
     assert_eq!(decoded.gamma_kn_m3, Some(20.0), "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: the committed diff must carry gammaKnM3 = 20.0 kN/m³");
     assert!(decoded.d_f_m.is_none(), "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: change-gamma-kn-m3 writes gammaKnM3 and must leave `d_f_m` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the unit-weight change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-gamma-kn-m3 diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-gamma-kn-m3/raises-the-soil-unit-weight-to-20-kn-m3: the committed diff did not carry before to after");

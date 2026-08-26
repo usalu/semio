@@ -25,8 +25,8 @@ use semio_framework::io::resolve_ready;
 // #region ⚠️ Errors
 /// 🧯️ `FlowHost`'s error type — wraps JSON codec failures, the `dag` crate's own `DagError`, and
 /// this crate's own graph-editing validation failures. Every variant's Display text is byte-for-byte
-/// identical to the `String` it replaces, so downstream `.to_string()` call sites (wasm_bindgen
-/// `JsValue` bridging, JSON error envelopes) are unaffected.
+/// identical to the `String` it replaces, so downstream `.to_string()` call sites and JSON error
+/// envelopes are unaffected.
 #[derive(Debug)]
 pub enum FlowCoreError {
     Json(serde_json::Error),
@@ -153,7 +153,8 @@ pub struct FlowHost {
     ghost_node: Option<DagNodeSpec>,
     /// ↩️ Undo/redo, backed by the standard `crate::os_store::ArtifactStore<FlowFixture, FlowMutation>`
     /// mechanism (see the `impl FlowHost`'s `🔖️History` region) instead of a hand-rolled snapshot stack.
-    history_store: FlowStore,
+    history_store: Option<FlowStore>,
+    pending_history_baseline: Option<FlowFixture>,
     /// 🚩️ Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
     /// `history_store` — lets `can_undo` reflect it immediately, mirroring how the old snapshot stack's
     /// `begin_change` pushed synchronously instead of lazily.
@@ -182,11 +183,6 @@ impl FlowHost {
     /// keep per-node memoization alive across those reconstructions instead of discarding it.
     pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: Arc<NeuralCache>) -> Self {
         dedupe_fixture_widgets(&mut fixture);
-        // 🌱️ A throwaway placeholder, same as `dag` below — `rebuild_dag` (via `sync_from_dag`)
-        // settles auto-computed layout onto `self.fixture` before the real undo/redo baseline is
-        // captured, so a fresh host never starts with a spurious undoable step.
-        let mut history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None))).expect("failed to create flow history store");
-        history_store.install_member_store_owners_exact(FlowFixture::member_store_owners());
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
@@ -206,7 +202,8 @@ impl FlowHost {
             viewport_dpr: 1.0,
             pan_anchor: None,
             ghost_node: None,
-            history_store,
+            history_store: None,
+            pending_history_baseline: None,
             pending_change: false,
             gesture_active: false,
             pending_extension_eval: None,
@@ -215,8 +212,6 @@ impl FlowHost {
         };
         host.rebuild_dag();
         host.refresh_interaction_projection();
-        host.history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None))).expect("failed to create flow history store");
-        host.history_store.install_member_store_owners_exact(FlowFixture::member_store_owners());
         host
     }
 
@@ -255,10 +250,12 @@ impl FlowHost {
         self.rebuild_dag();
         self.refresh_interaction_projection();
         if reset_history {
-            // 🌱️ Captured AFTER `rebuild_dag` (see `from_fixture_with_cache`'s matching comment) so the
-            // new undo/redo baseline is the settled, auto-laid-out fixture, not the raw input.
-            self.history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None))).expect("failed to create flow history store");
-            self.history_store.install_member_store_owners_exact(FlowFixture::member_store_owners());
+            if let Some(store) = self.history_store.as_mut() {
+                let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None);
+                resolve_ready(store.reset(envelope, Vec::new(), Vec::new())).expect("failed to reset flow history store");
+                store.install_member_store_owners_exact(FlowFixture::member_store_owners());
+            }
+            self.pending_history_baseline = None;
             self.pending_change = false;
             self.gesture_active = false;
         }
@@ -1269,7 +1266,6 @@ impl FlowHost {
         }
     }
 
-    #[cfg(target_arch = "wasm32")]
     pub(crate) fn sync_dag_ghost(&mut self) {
         self.dag.set_ghost_node(self.ghost_node.clone());
     }
@@ -1280,7 +1276,7 @@ impl FlowHost {
         let automatic_lod = self.dag.automatic_lod();
         let forced_draw_lod = self.dag.forced_draw_lod_label().map(str::to_string);
         let ghost = self.ghost_node.clone();
-        self.dag = DagHost::from_fixture_without_layout(fixture);
+        self.dag.replace_fixture_without_layout(fixture);
         self.dag.canvas_theme = theme;
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.set_automatic_lod(automatic_lod);
@@ -1929,6 +1925,15 @@ impl FlowHost {
         a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
     }
 
+    fn history_store_from_baseline(&mut self, baseline: FlowFixture) -> Option<&mut FlowStore> {
+        if self.history_store.is_none() {
+            let mut store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
+            store.install_member_store_owners_exact(FlowFixture::member_store_owners());
+            self.history_store = Some(store);
+        }
+        self.history_store.as_mut()
+    }
+
     /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
     /// invertible `FlowMutation::SetFixture` edit — the standard `crate::os_store::ArtifactStore`/`Mutation`/
     /// `MutationDiff` mechanism (see `🔖️Mutations`) driving undo/redo here instead of the old
@@ -1938,7 +1943,11 @@ impl FlowHost {
     fn flush_pending_change(&mut self) {
         if self.pending_change {
             self.pending_change = false;
-            let _ = resolve_ready(self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None }));
+            let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.fixture.clone());
+            let fixture = self.fixture.clone();
+            if let Some(store) = self.history_store_from_baseline(baseline) {
+                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture }], description: None }));
+            }
         }
     }
 
@@ -1947,6 +1956,7 @@ impl FlowHost {
     pub fn begin_change(&mut self) {
         if !self.gesture_active {
             self.flush_pending_change();
+            self.pending_history_baseline = Some(self.fixture.clone());
             self.pending_change = true;
         }
     }
@@ -1955,15 +1965,19 @@ impl FlowHost {
     /// then suppresses further `begin_change` checkpoints until `commit_gesture_history`.
     fn begin_gesture(&mut self) {
         self.flush_pending_change();
+        self.pending_history_baseline = Some(self.fixture.clone());
         self.gesture_active = true;
     }
 
     fn commit_gesture_history(&mut self) {
         if self.gesture_active {
             self.gesture_active = false;
-            let committed = resolve_ready(self.history_store.snapshot()).unwrap_or_else(|_| self.fixture.clone());
-            if Self::content_changed(&committed, &self.fixture) {
-                let _ = resolve_ready(self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None }));
+            let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.fixture.clone());
+            if Self::content_changed(&baseline, &self.fixture) {
+                let fixture = self.fixture.clone();
+                if let Some(store) = self.history_store_from_baseline(baseline) {
+                    let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture }], description: None }));
+                }
             }
         }
     }
@@ -1972,10 +1986,13 @@ impl FlowHost {
     pub fn undo(&mut self) -> bool {
         self.flush_pending_change();
         let camera = self.fixture.camera.clone();
-        if resolve_ready(self.history_store.dispatch(ArtifactCommand::Undo)).is_err() {
+        let Some(store) = self.history_store.as_mut() else {
+            return false;
+        };
+        if resolve_ready(store.dispatch(ArtifactCommand::Undo)).is_err() {
             return false;
         }
-        let Ok(mut restored) = resolve_ready(self.history_store.snapshot()) else {
+        let Ok(mut restored) = resolve_ready(store.snapshot()) else {
             return false;
         };
         restored.camera = camera;
@@ -1987,10 +2004,13 @@ impl FlowHost {
     /// ↪️ Re-applies a fixture content snapshot undone earlier, keeping the current camera.
     pub fn redo(&mut self) -> bool {
         let camera = self.fixture.camera.clone();
-        if resolve_ready(self.history_store.dispatch(ArtifactCommand::Redo)).is_err() {
+        let Some(store) = self.history_store.as_mut() else {
+            return false;
+        };
+        if resolve_ready(store.dispatch(ArtifactCommand::Redo)).is_err() {
             return false;
         }
-        let Ok(mut restored) = resolve_ready(self.history_store.snapshot()) else {
+        let Ok(mut restored) = resolve_ready(store.snapshot()) else {
             return false;
         };
         restored.camera = camera;
@@ -2001,12 +2021,12 @@ impl FlowHost {
 
     /// ↩️ Whether a content undo step is available.
     pub fn can_undo(&self) -> bool {
-        self.pending_change || !resolve_ready(self.history_store.applied_edit_ids()).is_empty()
+        self.pending_change || self.history_store.as_ref().is_some_and(|store| !resolve_ready(store.applied_edit_ids()).is_empty())
     }
 
     /// ↪️ Whether a content redo step is available.
     pub fn can_redo(&self) -> bool {
-        !resolve_ready(self.history_store.redo_edit_ids()).is_empty()
+        self.history_store.as_ref().is_some_and(|store| !resolve_ready(store.redo_edit_ids()).is_empty())
     }
     // #endregion History
 }
@@ -2026,6 +2046,7 @@ pub struct FlowHostRetirement {
     previous_channels: Option<EvalChannels>,
     ghost_node: Option<DagNodeSpec>,
     history_store: Option<FlowStore>,
+    pending_history_baseline: Option<FlowFixture>,
     pending_extension_eval: Option<neural::PendingExtensionEval>,
     interaction_projection: Option<dag::DagInteractionProjection>,
     terminal: bool,
@@ -2054,6 +2075,7 @@ impl FlowHostRetirement {
             pan_anchor: _,
             ghost_node,
             history_store,
+            pending_history_baseline,
             pending_change: _,
             gesture_active: _,
             pending_extension_eval,
@@ -2073,7 +2095,8 @@ impl FlowHostRetirement {
             previous_snapshot,
             previous_channels,
             ghost_node,
-            history_store: Some(history_store),
+            history_store,
+            pending_history_baseline,
             pending_extension_eval,
             interaction_projection,
             terminal: false,
@@ -2111,6 +2134,7 @@ impl FlowHostRetirement {
             || self.ghost_node.take().is_some()
             || self.pending_extension_eval.take().is_some()
             || self.interaction_projection.take().is_some()
+            || self.pending_history_baseline.take().is_some()
         {
             context.consume_fuel(1);
             return false;
@@ -2161,6 +2185,7 @@ impl FlowHostRetirement {
             && self.previous_channels.is_none()
             && self.ghost_node.is_none()
             && self.history_store.is_none()
+            && self.pending_history_baseline.is_none()
             && self.pending_extension_eval.is_none()
             && self.interaction_projection.is_none()
     }

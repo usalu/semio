@@ -32,7 +32,7 @@ fn applied() -> En1990Snapshot {
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.consequence_class, 3, "change-consequence-class/escalates-the-building-from-cc2-to-cc3: the consequence class must be CC3");
     assert_eq!(before().consequence_class, 2, "change-consequence-class/escalates-the-building-from-cc2-to-cc3: the committed before-snapshot must start at CC2");
@@ -41,7 +41,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ Applying the mutation then every step of its inverse restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::inverse(&mutation, &base);
@@ -57,7 +57,7 @@ async fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is
 /// a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1990Snapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -72,7 +72,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome — status AND every diagnostic `change-consequence-class`'s own diff builder raises —
 /// matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
@@ -99,7 +99,7 @@ async fn declared_outcome_holds() {
 /// load-bearing assertion in the fixture: it pins WHICH fields `change-consequence-class` is allowed to
 /// touch, not merely that the end state matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let raised = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
     assert_eq!(raised_diff.consequence_class, Some(3u8), "change-consequence-class/escalates-the-building-from-cc2-to-cc3: the diff must publish consequenceClass as the u8 3");
@@ -114,7 +114,7 @@ async fn produces_committed_diff() {
 /// explicit `null` — and its `Option<Option<u32>>` presence field cannot distinguish "cleared" from
 /// "untouched" across a JSON round trip, which is why no case here writes it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1990Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -124,7 +124,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of what `change-consequence-class` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1990Diff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <En1990Diff as protocol::MutationDiff<En1990Snapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-consequence-class/escalates-the-building-from-cc2-to-cc3: committed diff did not carry before to after");

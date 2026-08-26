@@ -1,72 +1,107 @@
 @capability-semio-v1-drawing-mutate
-@no-oracle-semio-drawing-mutation-semantics
+@oracle-semio-drawing-python-independent
 @comparison-ordered-json-v1
 @mutations-semio-v1-drawing
-Feature: Apply every typed semio DRAWING mutation to its committed specification fixtures
-  `s.stdio.semio.drawing` is a semio-NATIVE format: no third party reads or writes `.dsl.semio`/
-  `.pack.semio`, so there is no reference implementation to register as an oracle (recorded as the
-  `semio-drawing-mutation-semantics` no-oracle decision in `../../🏅️standards/🔖️v1/🪆️subsets/
-  ✳️drawing/🧪️oracle/🔣️component.json`, which also records why `usvg`/`resvg` and `lyon`/`kurbo`
-  were surveyed and DELIBERATELY declined rather than merely absent). Every one of this subset's 17
-  kinds carries an independently handcrafted `(before, mutation, after, diff)` specification fixture
-  under its own leaf's `🧪️tests/` directory, and this feature re-exercises those SAME committed
-  bytes end-to-end through `apply_semio_drawing_mutation` rather than calling `Mutation::diff`/
-  `inverse` directly the way the in-crate fixture tests do.
+Feature: Apply every typed semio DRAWING mutation to a real vector document, against an independent Python implementation
+  `stdio.semio.drawing` is a semio-NATIVE format: no third party reads or writes `.dsl.semio`/
+  `.pack.semio`, and the earlier survey of the vector-graphics libraries still stands on its merits.
+  `usvg`/`resvg` model SVG, which has no counterpart for this subset's ANONYMOUS recursive `DrawNode`
+  tree addressed by a structural `NodePath`, and no counterpart at all for the four hierarchy verbs;
+  `lyon`/`kurbo` model path geometry alone and could adjudicate at most `replace-path`. Calling
+  either a reference would overstate the evidence. The second producer THE STANDARD requires is
+  therefore a second IMPLEMENTATION. `🐍️component.py` beside this file is that implementation — the
+  carrier, the DSL grammar, the pack frame, the recursive node tree and all seventeen verbs — written
+  in Python from the committed specification documents alone
+  (`../../🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
+  `…/📸️snapshot/💾️binary/📡️component.protocol.semio` and its Kaitai mirror,
+  `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, and the semio envelope in
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`). It imports nothing from and
+  transliterates nothing of the Rust it judges, and it was pinned before use: it reproduces the
+  committed `🖍️sketch` example artifact byte for byte in BOTH encodings — that one document exhibits
+  every node tag and every segment tag, the arc included — and it reaches all seventeen committed
+  after-snapshots. It is registered as the oracle `semio-drawing-python-independent`; the recorded
+  no-oracle decision it replaces is gone, because a reference now exists.
 
-  What distinguishes this subset is that its scene graph is ANONYMOUS. A `DrawNode` is a recursive
-  group/path/text/image union with no id field at all, so every node-addressed verb is keyed by a
-  structural path — layer index plus a child-index chain, `{"layer": 0, "path": [2]}` — and a verb
-  that changed a node's position among its siblings silently re-targets every later verb. Only two
-  things here are named: layers, which `delete-layer` addresses by `id`, and the STYLE table, which
-  `replace-fill`, `change-stroke-color` and `change-stroke-width` address by `style_name` while the
-  nodes reference it by name, so a style edit has to reach the shared record without touching the
-  node tree at all. Four of the seventeen kinds are hierarchy rewrites — `group`/`ungroup` and
-  `flatten`/`unflatten` — declared inverses of each other, and `unflatten` is the one payload that
-  carries a whole captured subtree so a flattening can be undone exactly rather than approximately.
+  **The drawing under test is a real one, and its provenance is written down.**
+  `local://🗣️artifact.dsl.semio` and its binary twin were derived ONCE from two real committed SVG
+  documents — `🗿️artifacts/🎨️svg/🧫️fixtures/mouse.svg`, the introduction demonstration mouse with its
+  eight real cubic-and-line paths, its `clipPath` group and its real stroke widths and opacities, and
+  `…/🎨️svg/🧫️fixtures/qr-code.svg`, a real 1015×1015 Inkscape QR document whose 329 rectangles each
+  sit inside their own `matrix(0.35,0,0,0.35,tx,ty)` group inside a fill group inside a layer group,
+  with a hidden background layer carrying a real 5 476-byte embedded image. The reader that produced
+  it is an independent Python SVG reader built on `xml.etree` plus a path-data scanner written from
+  the SVG 1.1 §8.3 command grammar — never this repository's own svg bridge. Relative commands are
+  resolved to absolute, `H`/`V` to `lineTo` and `S`/`T` against the previous control point exactly as
+  §8.3.6 defines; the one resolution that is not data is `currentColor`, which becomes black, CSS's
+  initial value for `color`, and that is said rather than hidden. The result is THREE layers, 1 006
+  nodes nested FIVE deep, 1 728 path segments, four styles — one carrying the QR background layer's
+  real `opacity:0.5` — and one layer whose `display:none` is its real `visible: false`. That is
+  56 205 bytes of DSL and 85 791 of pack, against the committed `🖍️sketch`'s 394 and 533; `asset://`
+  cannot leave this artifact's root, which is why the derived drawing is committed here as a case
+  fixture rather than borrowed in place. The derivation script and its provenance note live in the
+  ticket folder.
 
-  The fixtures are chosen against exactly those hazards, not against the easy cases. `reorder-nodes`
-  moves the LEADING child to the end, so an implementation that reordered by identity rather than by
-  position has nothing to hold on to. `create-node` appends at index 3 of a root that has three
-  children and `delete-node` removes the middle one, so an off-by-one lands in a different place in
-  the tree. `drag-nodes` offsets two siblings at once by the same vector, so a per-node loop that
-  invalidated its own paths as it went fails. `flatten` is applied to an IDENTITY-transformed nested
-  group, which is the only case where flattening is information-preserving and therefore the only
-  one where its inverse can be checked exactly. `delete-layer` removes the leading layer and keeps
-  the overlay. And the three style verbs each change one field of `primary` and must leave the other
-  three alone — `change-stroke-color` moves it to a translucent white, so an alpha channel dropped
-  on the way through shows up.
+  The parameters are chosen against the drawing's own shape, so a plausible wrong codec fails:
+  `reorder-nodes` moves the FIRST of the QR foreground's 329 groups to index 40, deep inside the run,
+  so an implementation that reordered by identity rather than position fails; `group` collects three
+  NON-leading siblings and must leave the new group at the first of their indices; `ungroup` splices a
+  real transform-carrying group's children back into a 329-child parent in place; `flatten` dissolves the mouse
+  layer's real `clipPath` group into its three paths and its inverse has to put the hierarchy back —
+  the mouse root is the one branch of this drawing `flatten` can touch at all, because every one of
+  the QR foreground's 329 descendant groups carries a `matrix(0.35,…)` transform and `flatten` refuses
+  the whole mutation when any descendant group is transformed, which is what the production test
+  `flatten_refuses_a_non_identity_descendant_group` states and what the first parity run measured; `drag-nodes` moves TWO nodes by one offset; `create-node` and `replace-path` both carry
+  an `arcTo` with a real `large_arc`/`sweep` pair, so the sixth segment variant is exercised through
+  the mutation wire form and both implementations' node algebra — neither source SVG uses an arc, so
+  the `A[…]` CARRIER production is pinned instead by the committed `🖍️sketch`, whose one path exhibits
+  all six segment tags and which both implementations reproduce byte for byte; and the style verbs address the
+  mouse's own `introduction-demo-mouse-button` style, which carries a fill and no stroke, so
+  `change-stroke-color` has to CREATE the optional leaf where `replace-fill` replaces one.
 
-  A word on what "real" can mean here, since it cannot mean what it means for PDF or DWG. There is
-  no real-world corpus of `.dsl.semio` drawings outside this repository — the format exists nowhere
-  else — so the identity round trip reads the artifact's own committed 394-byte sketch example,
-  which is handcrafted rather than found, and is chosen because it carries every `DrawNode` variant
-  and every `PathSegment` variant at once. Its image node is an `image/png` media type over three
-  opaque payload bytes, not an encoded picture: this subset's codecs carry image payloads through
-  without interpreting them, so what the round trip can honestly assert is that the media type and
-  the bytes survive, and that is what it asserts.
+  🔴 **`inverse-unflatten` is RED, and it is left red: `Unflatten`'s computed inverse cannot restore
+  an arbitrary replaced node.** The payload replaces the mouse layer's real `clipPath` group with a
+  different one. The independent implementation undoes it by putting the captured node back and
+  restores the drawing exactly. The subject's own inverse law fails — `inverse-unflatten: undoing the
+  mutation did not restore the drawing`, with two different digests over the same layer and style
+  lists — because `Unflatten`'s inverse is `Flatten`, and flattening the REPLACEMENT does not bring
+  the replaced node back. The production vocabulary knows this: the demo-variant list in
+  `../../🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/🦀️component.rs` carries the comment
+  *"`original` is a genuine no-op restore (identical to the fixture's own node at this path, which has
+  no nested groups) — `flatten(original) == original` here, so the `unflatten` ↔ `flatten` inverse
+  pair's own law holds against the shared fixture"*. That caveat is now a measured failure rather than
+  a code comment: for any `Unflatten` payload the grammar admits but that arrangement does not cover,
+  the verb neither refuses the input nor captures the node it overwrites. Not tuned away — no
+  `ignoreKeys`, no relaxed profile, and the payload was not swapped for one the caveat happens to
+  cover.
 
-  Because this case records a no-oracle decision, the runner executes NO oracle role — every
-  assertion below therefore lives inside the subject handler, which compares the applied snapshot
-  against the committed after-snapshot and the undone snapshot against the committed
-  before-snapshot, and fails with both JSON documents printed. A handler that merely ran the
-  mutation and returned would report a pass having checked nothing.
+  `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed,
+  independently handcrafted `(before, mutation, after)` vector for each of the seventeen kinds,
+  applied now by BOTH implementations and checked against the committed after-snapshot by each of
+  them in role. Nothing was removed to make room for the oracle.
 
-  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
-  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
-  and both committed example files were produced by these very codecs — so re-printing the parsed
-  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
-  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
-  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
-  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
-  the same document the text does, which no single codec can arrange on its own.
+  `identity-round-trip` carries the BYTE half of the identity law. `.dsl.semio` is a fixed-layout
+  record grammar and `.pack.semio` is its binary twin, so reproducing both committed files byte for
+  byte is the CORRECT answer here and the wave's must-differ tripwire would be backwards — which is
+  why the Rust side asserts `law::carrier_is_exact`. What stops that being a codec agreeing with
+  itself is that the two files were WRITTEN by the Python implementation from the grammar alone, in
+  another language, and the two sides' digests of the re-emitted bytes are compared.
+
+  ⚠️ One honest limit. `SemioRgba`'s four channels and a style's `opacity` are SINGLE precision, and
+  the reference's JSON wire form spells such a leaf with the shortest decimal that round-trips as an
+  `f32` while a Python float would print the widened double. The Python side therefore routes every
+  single-precision leaf through the same shortest-`f32` printer its DSL writer uses before projecting
+  it — that is emulating the format's own wire form, not a tolerance. The DSL and pack carriers are
+  unaffected: both move the exact `f32` bit pattern, which is why the QR document's `opacity:0.5` and
+  the mouse's `stroke-opacity:0.35` survive the round trip byte for byte.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_semio_drawing_mutation
-    Then the resulting snapshot matches the committed after-snapshot fixture for <id>
+  @mode-differential
+  Scenario Outline: Apply <id> to the real derived drawing
+    Given the real derived drawing artifact local://🗣️artifact.dsl.semio
+    And the committed mutation payload local://🦠️<id>.json
+    When the <id> mutation is applied to the drawing parsed from it
+    Then the independent implementation and the subject agree on the resulting snapshot and on the scene-graph census
     Examples:
       | id                  |
       | create-layer        |
@@ -89,12 +124,12 @@ Feature: Apply every typed semio DRAWING mutation to its committed specification
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_semio_drawing_mutation
-    And the mutation's own computed inverse is applied through apply_semio_drawing_mutation
-    Then the snapshot matches the committed before-snapshot fixture again
+  @mode-differential
+  Scenario Outline: Undoing <id> restores the real derived drawing
+    Given the real derived drawing artifact local://🗣️artifact.dsl.semio
+    And the committed mutation payload local://🦠️<id>.json
+    When the <id> mutation is applied to the drawing parsed from it and each side undoes it with its own computed inverse
+    Then both sides restore the drawing and agree on the mutated and the restored snapshot, scene-graph order and nesting included
     Examples:
       | id                  |
       | create-layer        |
@@ -115,11 +150,40 @@ Feature: Apply every typed semio DRAWING mutation to its committed specification
       | change-stroke-color |
       | change-stroke-width |
 
+  @id-spec-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed handcrafted specification vector
+    Given the committed before-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/<dir>/🧪️tests/<slug>/📸️snapshot/➡️after/🔣️component.json
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot and the two agree
+    Examples:
+      | id                  | dir                    | slug                                                        |
+      | change-stroke-color | 🖌️change-stroke-color | recolours-the-primary-styles-stroke-to-translucent-white    |
+      | change-stroke-width | 📐change-stroke-width  | thickens-the-primary-styles-stroke                          |
+      | create-layer        | 🌱create-layer         | inserts-a-second-layer-above-the-base-layer                 |
+      | create-node         | ➕create-node          | appends-a-caption-text-node-to-the-layer-root               |
+      | delete-layer        | 🗑️delete-layer        | removes-the-leading-layer-and-keeps-the-overlay             |
+      | delete-node         | ➖delete-node          | removes-the-text-node-from-the-layer-root                   |
+      | drag-nodes          | 🖐️drag-nodes          | drags-the-text-node-and-the-nested-group-by-the-same-offset |
+      | flatten             | 🫓flatten              | flattens-an-identity-nested-group-into-its-leaves           |
+      | group               | 🧷group                | groups-the-two-leading-children-into-a-new-group            |
+      | move-node           | 📍move-node            | moves-the-text-node-to-a-new-origin                         |
+      | reorder-nodes       | 🔀reorder-nodes        | moves-the-leading-path-node-to-the-end-of-the-layer-root    |
+      | replace-fill        | 🪣replace-fill         | repaints-the-primary-styles-fill-from-red-to-blue           |
+      | replace-path        | 🛤️replace-path        | swaps-the-open-path-for-a-closed-triangle                   |
+      | rotate              | 🔄rotate               | rotates-the-nested-group-a-half-turn-about-z                |
+      | scale               | 📏scale                | scales-the-nested-group-non-uniformly                       |
+      | unflatten           | 🎈unflatten            | restores-the-captured-hierarchy-over-the-flat-group         |
+      | ungroup             | 💫ungroup              | dissolves-the-nested-group-into-its-parent                  |
+
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed sketch through both of its committed encodings
-    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖍️sketch/🖼️assets/🗣️example.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖍️sketch/🖼️assets/🎒️example.pack.semio
-    When the text artifact is parsed, printed back to DSL and parsed again, and the binary twin is decoded and re-encoded
-    Then every decoding agrees on the same one-layer sketch, a path exercising move, line, cubic, quadratic, arc and close, a text node, an image node whose `image/png` media type and opaque payload bytes survive as-is, and an empty nested group
+  Scenario: Re-emit both committed encodings of the real derived drawing from the parsed document
+    Given the real derived drawing artifact local://🗣️artifact.dsl.semio
+    And its committed binary twin local://🎒️artifact.pack.semio
+    When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
+    Then both reproduce the two committed files byte for byte and agree on the drawing, the scene-graph census and the digests of what they emitted

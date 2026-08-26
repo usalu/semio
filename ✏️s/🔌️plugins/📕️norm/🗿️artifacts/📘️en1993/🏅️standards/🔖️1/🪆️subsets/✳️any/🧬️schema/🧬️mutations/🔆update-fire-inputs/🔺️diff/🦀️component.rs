@@ -4,7 +4,7 @@ use super::mutation::UpdateFireInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdateFireInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdateFireInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_fire_thickness_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fire thickness mm must be a finite number, got {}.", payload.new_fire_thickness_mm), Vec::<String>::new());
     }

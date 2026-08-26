@@ -20,7 +20,7 @@ pub struct Iso16757Outline {
 }
 
 impl Iso16757Outline {
-    pub async fn compute(snapshot: &Iso16757Snapshot) -> Self {
+    pub fn compute(snapshot: &Iso16757Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = snapshot.part_number_inputs.len() as u32;
@@ -41,13 +41,13 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn outline_field_count_matches_section_outline_length() {
+    fn outline_field_count_matches_section_outline_length() {
         let outline = Iso16757Outline::compute(&Iso16757Snapshot::default());
         assert_eq!(outline.field_count as usize, outline.section_outline.len());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn outline_is_deterministic() {
+    fn outline_is_deterministic() {
         let snapshot = Iso16757Snapshot::default();
         assert_eq!(Iso16757Outline::compute(&snapshot), Iso16757Outline::compute(&snapshot));
     }

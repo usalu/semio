@@ -4,7 +4,7 @@ use super::mutation::ChangeEnvelopeAreaM2;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeEnvelopeAreaM2, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+pub fn diff(payload: &ChangeEnvelopeAreaM2, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if !payload.new_envelope_area_m2.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Envelope area m2 must be a finite number.", Vec::<String>::new());
     }

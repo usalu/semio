@@ -1,31 +1,33 @@
-//! 🦀️ Semio CAD exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
-//! REFACTOR. Recorded no-oracle decision `semio-cad-mutation-semantics` (`../../🏅️standards/🔖️v1/
-//! 🪆️subsets/✳️cad/🧪️oracle/🔣️component.json`): `s.stdio.semio.cad` is a semio-NATIVE format with
-//! no third-party reader or writer in any ecosystem, so the `oracle` role here reads the committed
-//! `(before, mutation, after)` specification vectors LITERALLY — no recomputation, no
-//! reimplementation of mutation semantics — while `subject` decodes the same committed bytes into
-//! real `SemioCadSnapshot`/`SemioCadMutation` values and drives this repository's own
-//! `apply_semio_cad_mutation`. Both halves read one physical source, so nothing can drift between
-//! them; that is why nothing is hand-transcribed into a Rust literal here the way earlier semio
-//! cases had to.
+//! 🦀️ Semio CAD exhaustive mutation case — Rust SUBJECT adapter. Ticket 26/08/23/END-TO-END-
+//! TESTING-REFACTOR.
 //!
-//! The vectors were derived by an INDEPENDENT Python implementation of both the committed DSL
-//! grammar and this vocabulary's specification (see the ticket's `🐍️semio-pattern-a-vectors.py`),
-//! starting from this standard's own committed real artifact
-//! `📚️examples/📐️drawing/🖼️assets/🗣️example.dsl.semio` — never by running this repository's Rust. The
-//! `identity-round-trip` scenario is what keeps that honest: it asserts production's own `parse_dsl`
-//! of the same real artifact equals the vectors' `before` snapshot, and crosses the committed text
-//! artifact against its committed binary twin.
+//! This file registers the SUBJECT role only. The reference answer comes from `🐍️component.py`
+//! beside it — an independent Python implementation of both committed carriers and all sixteen
+//! verbs, written from the committed grammars and the committed binary protocol, registered as the
+//! oracle `semio-cad-python-independent` in
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧪️oracle/🔣️component.json`. Registering oracle handlers
+//! here as well would put this repository's own answer on both sides of the comparison, which is
+//! the one failure the platform exists to prevent, so the registrations this file used to carry are
+//! gone rather than merely unused.
 //!
-//! The oracle-only build must never link the subject crate (fleet brief §5.3), so every `subject` item is
-//! gated behind the generated host's `sut` feature. The Rust SUBJECT phase RUNS. The os-kernel blocker
-//! earlier waves recorded here was cleared on 2026-08-24 — `cargo check -p semio-framework-os-kernel
-//! --lib` exits 0 and `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts subject exhaustive --owner
-//! 🗄️stdio --case mutate-semio-cad` really executes every scenario below. The gate keeps the two BUILDS
-//! apart; it has never been a reason the subject half goes unmeasured, and for this recorded no-oracle
-//! case the subject phase is the only phase that runs at all.
+//! Every scenario drives this repository's own production entry points —
+//! `parse_semio_cad_dsl`/`print_semio_cad_dsl` and `decode_semio_cad_pack`/`encode_semio_cad_pack`
+//! for the two carriers, `apply_semio_cad_mutation`/`inverse_semio_cad_mutation` for the vocabulary
+//! — over the real committed drawing
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🖼️assets/🗣️example.dsl.semio` and its
+//! committed binary twin, and projects through this subset's own JSON bridge for `ordered-json-v1`
+//! to compare against the Python side's.
+//!
+//! The mutation parameters and the specification-vector paths live in `component.feature`, so both
+//! implementations read one physical copy of each and cannot drift apart. The laws are asserted
+//! here IN ROLE as well as compared: `inverse-` requires the drawing back, `spec-vector-` requires
+//! the committed after-snapshot, and `identity-round-trip` requires byte-exact re-emission of BOTH
+//! committed encodings through `law::carrier_is_exact`.
+//!
+//! The subject half is gated behind the generated host's `sut` feature so a non-subject build never
+//! compiles the local implementation.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioCadMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/
@@ -33,6 +35,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 /// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
 /// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
 /// the enum.
+#[cfg_attr(not(feature = "sut"), allow(dead_code))]
 const KINDS: &[&str] = &[
     "no-mutation",
     "set-snapshot",
@@ -53,52 +56,13 @@ const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Kinds
 
-//#region 🔖️Vectors
-/// 🧫️ The committed specification vector for one kind, read as the framework's own dependency-free
-/// `Json` — this IS the independently derived evidence the no-oracle decision rests on.
-fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
-    ctx.fixture_json(&format!("local://🦠️{kind}.json"))
-}
-
-/// 🔎️ One named member of a committed vector, or a loud error naming the file that lacks it.
-fn member(vector: &Json, name: &str) -> Result<Json, String> {
-    vector.get(name).cloned().ok_or_else(|| format!("committed specification vector carries no {name:?} member"))
-}
-//#endregion 🔖️Vectors
-
-//#region 🔖️Oracle
-/// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally.
-fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |ctx: &Context| {
-        let after = member(&vector(ctx, kind)?, "after")?;
-        Ok(Outcome::with_raw(after.to_string().into_bytes(), after))
-    }
-}
-
-/// 🔮️ The inverse reference answer: the committed BEFORE snapshot — undoing any mutation must land
-/// back exactly where the specification vector started.
-fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |ctx: &Context| {
-        let before = member(&vector(ctx, kind)?, "before")?;
-        Ok(Outcome::with_raw(before.to_string().into_bytes(), before))
-    }
-}
-
-/// 🔮️ The round-trip reference answer: the same committed BEFORE snapshot, which is what the real
-/// committed artifact decodes to through either of its two committed encodings.
-fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let before = member(&vector(ctx, "no-mutation")?, "before")?;
-    Ok(Outcome::with_raw(before.to_string().into_bytes(), before))
-}
-//#endregion 🔖️Oracle
-
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, decode_semio_cad_mutation_json, inverse_semio_cad_mutation};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, decode_semio_cad_mutation_json, inverse_semio_cad_mutation, SemioCadMutation};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{
         decode_semio_cad_pack, decode_semio_cad_snapshot_json, encode_semio_cad_pack, encode_semio_cad_snapshot_json, parse_semio_cad_dsl, print_semio_cad_dsl, SemioCadSnapshot,
     };
@@ -127,70 +91,89 @@ mod subject {
     }
     //#endregion 🔖️Fixtures
 
+    //#region 🔖️Inputs
+    /// 📐️ The real committed drawing, parsed by this repository's own DSL codec.
+    fn drawing(ctx: &Context) -> Result<SemioCadSnapshot, String> {
+        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("the committed drawing must be UTF-8: {error}"))?;
+        parse_semio_cad_dsl(&text)
+    }
+
+    /// 🦠️ The verb the scenario declares, read from the feature's own doc string through this
+    /// subset's own JSON bridge — no transcription into Rust literals.
+    fn declared(ctx: &Context) -> Result<SemioCadMutation, String> {
+        decode_semio_cad_mutation_json(ctx.doc_string()?)
+    }
+
+    fn run(current: &mut SemioCadSnapshot, mutation: &SemioCadMutation, what: &str) -> Result<(), String> {
+        let outcome = apply_semio_cad_mutation(current, mutation);
+        let refusals = semio_mutation_refusals(&outcome);
+        if refusals.is_empty() {
+            return Ok(());
+        }
+        Err(format!("{what}: mutation rejected: {refusals:?}"))
+    }
+
+    fn member_text(vector: &Json, name: &str) -> Result<String, String> {
+        Ok(vector.get(name).ok_or_else(|| format!("committed specification vector carries no {name:?} member"))?.to_string())
+    }
+    //#endregion 🔖️Inputs
+
     //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
-    /// after-snapshot. The assertion lives here rather than in the comparison because a recorded
-    /// no-oracle case runs no oracle role: a handler that merely returned `Ok` would report a pass
-    /// having checked nothing.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// 🎯️ One verb applied to the real committed drawing through the production entry point.
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let mut current = drawing(ctx)?;
+        run(&mut current, &declared(ctx)?, ctx.scenario.id.as_str())?;
+        let projection = projection(&current)?;
+        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+    }
+
+    /// ↩️ The metamorphic inverse law on the real committed drawing: applying the verb and then its
+    /// OWN computed inverse must restore the artifact exactly. The MUTATED snapshot travels in the
+    /// projection alongside the restored one, so the sixteen rows cannot all project the same
+    /// restored value and compare vacuously.
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let base = drawing(ctx)?;
+        let mutation = declared(ctx)?;
+        let mut current = base.clone();
+        run(&mut current, &mutation, ctx.scenario.id.as_str())?;
+        let mutated = projection(&current)?;
+        for step in inverse_semio_cad_mutation(&mutation, &base) {
+            run(&mut current, &step, ctx.scenario.id.as_str())?;
+        }
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the real committed drawing", ctx.scenario.id), &current, &base));
+        }
+        let projection = Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), projection(&current)?)]);
+        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+    }
+
+    /// 🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
+    /// what the verb means, independent of both implementations, kept from before this oracle
+    /// existed rather than replaced by it.
+    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let vector = vector(ctx, kind)?;
             let mut current = snapshot_of(&vector, "before")?;
             let expected = snapshot_of(&vector, "after")?;
-            let mutation = decode_semio_cad_mutation_json(&member_text(&vector, "mutation")?)?;
-            let outcome = apply_semio_cad_mutation(&mut current, &mutation);
-            if !semio_mutation_refusals(&outcome).is_empty() {
-                return Err(format!("mutate-{kind}: the mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
-            }
+            run(&mut current, &decode_semio_cad_mutation_json(&member_text(&vector, "mutation")?)?, ctx.scenario.id.as_str())?;
             if current != expected {
-                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the committed after-snapshot"), &current, &expected));
+                return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
             }
             let projection = projection(&current)?;
             Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
 
-    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
-    /// restore the committed before-snapshot exactly.
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let vector = vector(ctx, kind)?;
-            let base = snapshot_of(&vector, "before")?;
-            let mutation = decode_semio_cad_mutation_json(&member_text(&vector, "mutation")?)?;
-            let mut current = base.clone();
-            let outcome = apply_semio_cad_mutation(&mut current, &mutation);
-            if !semio_mutation_refusals(&outcome).is_empty() {
-                return Err(format!("inverse-{kind}: the forward mutation was rejected: {:?}", semio_mutation_refusals(&outcome)));
-            }
-            for step in inverse_semio_cad_mutation(&mutation, &base) {
-                let step_outcome = apply_semio_cad_mutation(&mut current, &step);
-                if !semio_mutation_refusals(&step_outcome).is_empty() {
-                    return Err(format!("inverse-{kind}: an inverse step was rejected: {:?}", semio_mutation_refusals(&step_outcome)));
-                }
-            }
-            if current != base {
-                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
-            }
-            let projection = projection(&current)?;
-            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
-        }
-    }
-
-    /// 🔁️ The real artifact through both of its committed encodings. The committed text is this
-    /// codec's own output, so byte-identical re-emission is the EXPECTED result here and the wave's
-    /// usual pass-through tripwire does not apply, and its MIRROR law is asserted below in its place:
-    /// `carrier_is_exact` on both committed files, with the binary twin — a separate committed file
-    /// produced by a separate codec, which cannot agree by accident — keeping that honest.
-    /// 🔒️ **The byte half of the identity law — asserted, and asserted as `carrier_is_exact`.**
+    /// 🔁️ The real drawing through both of its committed encodings.
+    /// 🔒️ **The byte half of the identity law — asserted as `carrier_is_exact` on BOTH files.**
     /// `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin; the two
-    /// committed example artifacts this scenario reads were produced by these very codecs, so
-    /// reproducing them BYTE FOR BYTE is the correct answer here and `law::reparsed_not_copied`
-    /// would be exactly backwards — the same reading `mutate-dag-1` records for `.dag.dsl.semio`
-    /// and `mutate-bmp-v3` for its own reference-authored fixture. Saying so in prose alone would
-    /// leave the claim an excuse; asserting it makes it checkable, and it fails with the offset of
-    /// the first differing byte the moment the printer or the packer drifts. Nor is it a
-    /// self-comparison: one side is a file committed to the repository, the other is computed now.
-    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+    /// committed example artifacts were produced by these very codecs, so reproducing them BYTE FOR
+    /// BYTE is the correct answer here and `law::reparsed_not_copied` would be exactly backwards.
+    /// Nor is it a self-comparison: the Python oracle re-emits the SAME two files, the text from
+    /// the committed grammar and the binary from the committed protocol plus a record layout
+    /// derived from the committed bytes, and the two sides' digests of what each emitted are
+    /// compared.
+    pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let expected = snapshot_of(&vector(ctx, "no-mutation")?, "before")?;
         let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_cad_dsl(&text)?;
@@ -214,12 +197,14 @@ mod subject {
         if repacked != expected {
             return Err(disagreement("identity-round-trip: encoding the snapshot to a pack and decoding it back lost content", &repacked, &expected));
         }
-        let projection = projection(&parsed)?;
+        let projection = Json::Object(vec![
+            ("document".to_string(), projection(&parsed)?),
+            ("dslDigest".to_string(), Json::String(digest(printed.as_bytes()))),
+            ("packDigest".to_string(), Json::String(digest(&repacked_bytes))),
+            ("dslLength".to_string(), Json::Number(printed.len() as f64)),
+            ("packLength".to_string(), Json::Number(repacked_bytes.len() as f64)),
+        ]);
         Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
-    }
-
-    fn member_text(vector: &Json, name: &str) -> Result<String, String> {
-        Ok(vector.get(name).ok_or_else(|| format!("committed specification vector carries no {name:?} member"))?.to_string())
     }
     //#endregion 🔖️Handlers
 }
@@ -227,20 +212,20 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the loop mirrors the feature's `Examples` tables exactly.
+/// id, so the loop mirrors the feature's `Examples` tables exactly. Subject only — the oracle role
+/// belongs to `🐍️component.py`.
 pub fn adapter() -> Adapter {
+    #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
-        }
-    }
-    built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("identity-round-trip", subject::round_trip);
+        for kind in KINDS {
+            built = built
+                .subject(&format!("mutate-{kind}"), subject::mutate)
+                .subject(&format!("inverse-{kind}"), subject::inverse)
+                .subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+        }
+        built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built
 }

@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// exist in `catalogue.product_classes`, and the oracle has no referential guard — a selection may
 /// legitimately be retargeted before the class is created, so this must apply cleanly.
 #[semio_framework_async_macros::async_test]
-async fn retargets_the_selection_at_the_towel_radiator_class() {
+fn retargets_the_selection_at_the_towel_radiator_class() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-selection-class applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.selection.class_id, "class.towel-radiator", "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the selection class must be retargeted");
@@ -45,7 +45,7 @@ async fn retargets_the_selection_at_the_towel_radiator_class() {
 /// ↩️ `change-selection-class`'s inverse reads the OLD `class_id` out of BASE, so replaying it points the
 /// request back at `class.panel-radiator`.
 #[semio_framework_async_macros::async_test]
-async fn retargeting_at_the_panel_radiator_class_restores_before() {
+fn retargeting_at_the_panel_radiator_class_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-selection-class applies");
@@ -62,7 +62,7 @@ async fn retargeting_at_the_panel_radiator_class_restores_before() {
 /// → encode is a fixed point. The committed payload is spelled `{"ChangeSelectionClass": {"new_class_id":
 /// …}}` — externally tagged, snake_case payload key.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ "class.towel-radiator" differs from the committed "class.panel-radiator", so the equality guard stays
 /// shut. There is deliberately no existence check on the target class.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `selection` is
 /// rewritten and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-selection-class diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the whole rewritten
 /// selection request and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-selection-class diff decodes");
     let selection = decoded.selection.as_ref().expect("the committed change-selection-class diff carries the selection request");
     assert_eq!(selection.class_id, "class.towel-radiator", "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the diff must carry the new class id");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the selection-class change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-selection-class diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the committed diff did not carry before to after");

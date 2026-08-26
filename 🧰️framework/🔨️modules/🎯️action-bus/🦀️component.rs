@@ -75,6 +75,128 @@ pub struct ToolWireAdmission {
     pub contract: ToolExecutionContract,
 }
 
+pub const TOOL_WIRE_PAGE_BYTES: usize = 4_096;
+
+pub struct ToolWirePage {
+    bytes: [u8; TOOL_WIRE_PAGE_BYTES],
+    len: usize,
+}
+
+impl ToolWirePage {
+    pub fn try_copy_from(bytes: &[u8]) -> Result<Self, ToolJobFactoryError> {
+        if bytes.len() > TOOL_WIRE_PAGE_BYTES {
+            return Err(ToolJobFactoryError::new("tool wire page exceeds its fixed byte capacity"));
+        }
+        let mut page = Self { bytes: [0; TOOL_WIRE_PAGE_BYTES], len: bytes.len() };
+        page.bytes[..bytes.len()].copy_from_slice(bytes);
+        Ok(page)
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.bytes[..self.len]
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+pub struct RetainedToolWireInput {
+    pages: Vec<ToolWirePage>,
+    declared_bytes: usize,
+    admitted_bytes: usize,
+    maximum_bytes: usize,
+    sealed: bool,
+    closing: bool,
+}
+
+impl RetainedToolWireInput {
+    fn try_new(declared_bytes: usize, maximum_bytes: usize) -> Result<Self, ToolJobFactoryError> {
+        if declared_bytes > maximum_bytes {
+            return Err(ToolJobFactoryError::new("declared tool wire extent exceeds its admitted contract"));
+        }
+        let page_capacity = declared_bytes.saturating_add(TOOL_WIRE_PAGE_BYTES - 1) / TOOL_WIRE_PAGE_BYTES;
+        let mut pages = Vec::new();
+        pages.try_reserve_exact(page_capacity).map_err(|_| ToolJobFactoryError::new("tool wire page owner capacity could not be retained"))?;
+        Ok(Self { pages, declared_bytes, admitted_bytes: 0, maximum_bytes, sealed: false, closing: false })
+    }
+
+    pub fn admit_page(&mut self, page: ToolWirePage) -> Result<(), (ToolJobFactoryError, ToolWirePage)> {
+        if self.sealed || self.closing {
+            return Err((ToolJobFactoryError::new("tool wire input is sealed or closing"), page));
+        }
+        let Some(next) = self.admitted_bytes.checked_add(page.len()) else { return Err((ToolJobFactoryError::new("tool wire byte extent overflowed"), page)) };
+        if next > self.declared_bytes || next > self.maximum_bytes || self.pages.len() == self.pages.capacity() {
+            return Err((ToolJobFactoryError::new("tool wire page exceeds its pre-admitted extent"), page));
+        }
+        self.admitted_bytes = next;
+        self.pages.push(page);
+        Ok(())
+    }
+
+    pub fn seal(&mut self) -> Result<(), ToolJobFactoryError> {
+        if self.closing || self.admitted_bytes != self.declared_bytes {
+            return Err(ToolJobFactoryError::new("tool wire input cannot seal before its exact declared extent is present"));
+        }
+        self.sealed = true;
+        Ok(())
+    }
+
+    /// 🛡️ Seals the admitted prefix after the maximum extent was reserved before an
+    /// incremental encoder ran. The retained page capacity is not released or widened here; only the
+    /// truthful logical extent is narrowed to the bytes already owned by this input.
+    pub fn seal_admitted_prefix(&mut self) -> Result<(), ToolJobFactoryError> {
+        if self.closing || self.sealed {
+            return Err(ToolJobFactoryError::new("tool wire input is already sealed or closing"));
+        }
+        self.declared_bytes = self.admitted_bytes;
+        self.sealed = true;
+        Ok(())
+    }
+
+    pub fn page(&self, index: usize) -> Option<&[u8]> {
+        self.sealed.then(|| self.pages.get(index).map(ToolWirePage::as_slice)).flatten()
+    }
+
+    pub fn page_count(&self) -> usize {
+        self.pages.len()
+    }
+
+    pub fn declared_bytes(&self) -> usize {
+        self.declared_bytes
+    }
+
+    pub fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        self.begin_close();
+        let Some(page) = self.pages.last() else { return semio_framework_job::InteractiveJobCloseStep::Complete };
+        if maximum_items == 0 || maximum_bytes < page.len() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let released_bytes = page.len();
+        drop(self.pages.pop());
+        self.admitted_bytes = self.admitted_bytes.saturating_sub(released_bytes);
+        semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closing && self.pages.is_empty() && self.admitted_bytes == 0
+    }
+}
+
+pub struct RetainedToolWireDispatchRejected {
+    pub error: ToolDispatchError,
+    pub input: RetainedToolWireInput,
+    pub checkpoint: Option<RetainedToolWireInput>,
+}
+
 /// 🔒️ Exact, reviewable admission bounds owned by one UI-reachable command factory.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ToolExecutionContract {
@@ -206,6 +328,30 @@ pub trait ToolJobFactory: Send + 'static {
     fn create_job_from_wire(&mut self, _operation: Operation, _payload: &[u8], _checkpoint: Option<Vec<u8>>) -> Result<Self::Job, ToolJobFactoryError> {
         Err(ToolJobFactoryError::new("tool factory does not own a wire payload decoder"))
     }
+
+    /// 🧬️ Takes the already-admitted raw page owner before application parsing or identity
+    /// construction. Rejection returns every retained owner to the caller for bounded retirement.
+    fn create_job_from_wire_pages(
+        &mut self,
+        _operation: Operation,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+        Err((ToolJobFactoryError::new("tool factory does not own a retained wire page decoder"), input, checkpoint))
+    }
+
+    /// 🧬️ Builds the concrete factory payload while transferring the already-admitted raw
+    /// pages into the same production job. Factories with a domain decoder override this so their job
+    /// consumes one retained page per step; the default preserves the pages only as factory authority.
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: Operation,
+        _payload: Self::Payload,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+        Err((ToolJobFactoryError::new("tool factory does not own retained wire pages alongside its typed payload"), input, checkpoint))
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -276,6 +422,18 @@ impl Error for ToolDispatchError {}
 trait ErasedToolJobFactory: Send {
     fn create_job(&mut self, spec: &mut ToolOperationSpec) -> Result<ErasedToolJob, ToolJobFactoryError>;
     fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError>;
+    fn create_job_from_wire_pages(
+        &mut self,
+        operation: Operation,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)>;
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        spec: &mut ToolOperationSpec,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)>;
 }
 
 struct ToolJobFactoryAdapter<F: ToolJobFactory> {
@@ -294,6 +452,32 @@ impl<F: ToolJobFactory> ErasedToolJobFactory for ToolJobFactoryAdapter<F> {
 
     fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError> {
         self.factory.create_job_from_wire(operation, payload, checkpoint).map(ErasedToolJob::new)
+    }
+
+    fn create_job_from_wire_pages(
+        &mut self,
+        operation: Operation,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+        self.factory.create_job_from_wire_pages(operation, input, checkpoint).map(ErasedToolJob::new)
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        spec: &mut ToolOperationSpec,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+        if spec.payload.schema_id != self.factory.payload_schema_id() {
+            return Err((ToolJobFactoryError::new(format!("expected payload schema '{}', got '{}'", self.factory.payload_schema_id(), spec.payload.schema_id)), input, checkpoint));
+        }
+        let placeholder = ToolPayload::new(spec.payload.schema_id.clone(), ());
+        let payload = match std::mem::replace(&mut spec.payload, placeholder).downcast::<F::Payload>() {
+            Ok(payload) => payload,
+            Err(error) => return Err((error, input, checkpoint)),
+        };
+        self.factory.create_job_from_wire_pages_with_payload(spec.operation, payload, input, checkpoint).map(ErasedToolJob::new)
     }
 }
 
@@ -427,22 +611,138 @@ impl ActionBus {
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).dispatch_count
     }
 
-    /// 🛡️ Admits an exact owner/tool/schema wire envelope before any caller-specific decoder runs.
-    pub fn admit_exact_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, payload: &[u8]) -> Result<ToolWireAdmission, ToolDispatchError> {
+    /// 🛡️ Reserves the exact raw extent before any caller-specific decoder, command identity,
+    /// or application allocation runs.
+    pub fn begin_exact_wire(
+        &self,
+        controller_id: impl Into<String>,
+        tool_id: impl Into<String>,
+        schema_id: impl Into<String>,
+        declared_bytes: usize,
+    ) -> Result<(ToolWireAdmission, RetainedToolWireInput), ToolDispatchError> {
         let controller_id = controller_id.into();
         let tool_id = tool_id.into();
         let schema_id = schema_id.into();
         let key = ToolFactoryKey::new(controller_id.clone(), tool_id.clone());
         let inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let contract = *inner.contract_by_key.get(&key).ok_or_else(|| ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") })?;
-        if payload.len() > contract.max_raw_wire_bytes {
-            return Err(ToolDispatchError::RawWireLimit { controller_id, tool_id, actual: payload.len(), maximum: contract.max_raw_wire_bytes });
+        if declared_bytes > contract.max_raw_wire_bytes {
+            return Err(ToolDispatchError::RawWireLimit { controller_id, tool_id, actual: declared_bytes, maximum: contract.max_raw_wire_bytes });
         }
         let (factory_type_id, factory_type_name, expected_schema) = inner.factory_identity_by_key.get(&key).expect("factory identity is registered atomically with its key");
         if expected_schema != &schema_id {
             return Err(ToolDispatchError::Factory { controller_id, tool_id, detail: format!("expected payload schema '{expected_schema}', got '{schema_id}'") });
         }
-        Ok(ToolWireAdmission { key, factory_type_id: *factory_type_id, factory_type_name, schema_id, contract })
+        let input = RetainedToolWireInput::try_new(declared_bytes, contract.max_raw_wire_bytes).map_err(|error| ToolDispatchError::Factory {
+            controller_id: controller_id.clone(),
+            tool_id: tool_id.clone(),
+            detail: error.detail,
+        })?;
+        Ok((ToolWireAdmission { key, factory_type_id: *factory_type_id, factory_type_name, schema_id, contract }, input))
+    }
+
+    /// 🛡️ Admits an exact owner/tool/schema wire envelope before any caller-specific decoder runs.
+    pub fn admit_exact_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, payload: &[u8]) -> Result<ToolWireAdmission, ToolDispatchError> {
+        self.begin_exact_wire(controller_id, tool_id, schema_id, payload.len()).map(|(admission, _)| admission)
+    }
+
+    /// 🧬️ Moves one sealed raw-page owner into the exact registered application factory.
+    /// No generic command or serialization value exists before this boundary.
+    pub fn dispatch_wire_retained(
+        &self,
+        admission: ToolWireAdmission,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+        operation: Operation,
+    ) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
+        let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
+        let controller_id = admission.key.controller_id.clone();
+        let tool_id = admission.key.tool_id.clone();
+        if !input.sealed || input.closing || input.declared_bytes != input.admitted_bytes || input.maximum_bytes != admission.contract.max_raw_wire_bytes {
+            return Err(reject(
+                ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() },
+                input,
+                checkpoint,
+            ));
+        }
+        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(index) = inner.factory_by_key.get(&admission.key).copied() else {
+            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
+        };
+        let Some((factory_type_id, factory_type_name, schema_id)) = inner.factory_identity_by_key.get(&admission.key) else {
+            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
+        };
+        let current_contract = *inner.contract_by_key.get(&admission.key).expect("factory contract is registered atomically with its key");
+        if *factory_type_id != admission.factory_type_id || *factory_type_name != admission.factory_type_name || schema_id != &admission.schema_id || current_contract != admission.contract {
+            return Err(reject(
+                ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before factory transfer".to_string() },
+                input,
+                checkpoint,
+            ));
+        }
+        let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
+        let job = match factory.create_job_from_wire_pages(operation, input, checkpoint) {
+            Ok(job) => job,
+            Err((error, input, checkpoint)) => {
+                return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: error.detail }, input, checkpoint));
+            }
+        };
+        inner.dispatch_count = inner.dispatch_count.saturating_add(1);
+        let spec = ToolOperationSpec::new(admission.key.controller_id, admission.key.tool_id, admission.schema_id, (), operation);
+        Ok(ToolJobDispatch { spec, job })
+    }
+
+    /// 🧬️ Transfers a concrete app payload and its exact retained ingress pages through the
+    /// same registered factory. This is the production route for factories whose worker performs the
+    /// domain decode incrementally before it starts the prepared reducer payload.
+    pub fn dispatch_wire_retained_with_spec(
+        &self,
+        admission: ToolWireAdmission,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+        mut spec: ToolOperationSpec,
+    ) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
+        let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
+        let controller_id = admission.key.controller_id.clone();
+        let tool_id = admission.key.tool_id.clone();
+        if spec.key() != admission.key || spec.payload.schema_id != admission.schema_id {
+            return Err(reject(
+                ToolDispatchError::Factory { controller_id, tool_id, detail: "typed payload does not match its retained wire admission".to_string() },
+                input,
+                checkpoint,
+            ));
+        }
+        if !input.sealed || input.closing || input.declared_bytes != input.admitted_bytes || input.maximum_bytes != admission.contract.max_raw_wire_bytes {
+            return Err(reject(
+                ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() },
+                input,
+                checkpoint,
+            ));
+        }
+        let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(index) = inner.factory_by_key.get(&admission.key).copied() else {
+            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
+        };
+        let Some((factory_type_id, factory_type_name, schema_id)) = inner.factory_identity_by_key.get(&admission.key) else {
+            return Err(reject(ToolDispatchError::UnknownController { controller_id: format!("{controller_id}/{tool_id}") }, input, checkpoint));
+        };
+        let current_contract = *inner.contract_by_key.get(&admission.key).expect("factory contract is registered atomically with its key");
+        if *factory_type_id != admission.factory_type_id || *factory_type_name != admission.factory_type_name || schema_id != &admission.schema_id || current_contract != admission.contract {
+            return Err(reject(
+                ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before concrete factory transfer".to_string() },
+                input,
+                checkpoint,
+            ));
+        }
+        let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
+        let job = match factory.create_job_from_wire_pages_with_payload(&mut spec, input, checkpoint) {
+            Ok(job) => job,
+            Err((error, input, checkpoint)) => {
+                return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: error.detail }, input, checkpoint));
+            }
+        };
+        inner.dispatch_count = inner.dispatch_count.saturating_add(1);
+        Ok(ToolJobDispatch { spec, job })
     }
 
     pub fn dispatch(&self, mut spec: ToolOperationSpec) -> Result<ToolJobDispatch, ToolDispatchError> {
@@ -728,6 +1028,203 @@ mod tests {
         }
         assert!(matches!(bus.dispatch_wire("number", "decode-wire", "wrong.schema", &42u64.to_le_bytes(), None, operation), Err(ToolDispatchError::Factory { .. })));
         assert!(matches!(bus.dispatch_wire("number", "decode-wire", "test.number.v1", &[0; 9], None, operation), Err(ToolDispatchError::RawWireLimit { actual: 9, maximum: 8, .. })));
+    }
+
+    struct RetainedNumberJob {
+        input: Option<RetainedToolWireInput>,
+        bytes: [u8; 8],
+        cursor: usize,
+        output: Option<ImmediateJob>,
+        closing: bool,
+    }
+
+    impl InteractiveJob for RetainedNumberJob {
+        fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+            if cx.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+            if cx.should_yield() || cx.fuel_remaining() == 0 {
+                return StepOutcome::Yield;
+            }
+            if self.cursor < self.bytes.len() {
+                self.bytes[self.cursor] = self.input.as_ref().and_then(|input| input.page(0)).and_then(|page| page.get(self.cursor)).copied().unwrap_or_default();
+                self.cursor += 1;
+                cx.consume_fuel(1);
+                return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
+                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState),
+                    applied_progress: self.cursor as u64,
+                });
+            }
+            self.output
+                .get_or_insert_with(|| ImmediateJob { output: Some(self.bytes.to_vec()), writer: None, cursor: 0, closing: false })
+                .step(cx)
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+            if let Some(input) = self.input.as_mut() {
+                input.begin_close();
+            }
+            if let Some(output) = self.output.as_mut() {
+                output.begin_close();
+            }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+            self.begin_close();
+            if let Some(input) = self.input.as_mut() {
+                let step = input.close_step(maximum_items, maximum_bytes);
+                if input.terminal_is_empty() {
+                    self.input = None;
+                }
+                return step;
+            }
+            if let Some(output) = self.output.as_mut() {
+                let step = output.close_step(maximum_items, maximum_bytes);
+                if output.terminal_is_empty() {
+                    self.output = None;
+                }
+                return step;
+            }
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.input.is_none() && self.output.is_none()
+        }
+    }
+
+    struct RetainedNumberFactory {
+        keys: Vec<ToolFactoryKey>,
+    }
+
+    impl ToolJobFactory for RetainedNumberFactory {
+        type Payload = RetainedNumberJob;
+        type Job = RetainedNumberJob;
+
+        fn keys(&self) -> &[ToolFactoryKey] {
+            &self.keys
+        }
+
+        fn payload_schema_id(&self) -> &str {
+            "test.retained-number.v1"
+        }
+
+        fn classification(&self) -> InteractiveJobClassification {
+            InteractiveJobClassification::Migrated
+        }
+
+        fn execution_contract(&self) -> ToolExecutionContract {
+            ToolExecutionContract::resumable(8, 1, 1, 8, 100, 1, 1)
+        }
+
+        fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+            Ok(payload)
+        }
+
+        fn create_job_from_wire_pages(
+            &mut self,
+            _operation: Operation,
+            input: RetainedToolWireInput,
+            checkpoint: Option<RetainedToolWireInput>,
+        ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+            if input.declared_bytes() != 8 || checkpoint.is_some() {
+                return Err((ToolJobFactoryError::new("retained number requires eight bytes and no checkpoint"), input, checkpoint));
+            }
+            Ok(RetainedNumberJob { input: Some(input), bytes: [0; 8], cursor: 0, output: None, closing: false })
+        }
+
+        fn create_job_from_wire_pages_with_payload(
+            &mut self,
+            _operation: Operation,
+            mut payload: Self::Payload,
+            input: RetainedToolWireInput,
+            checkpoint: Option<RetainedToolWireInput>,
+        ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+            if input.declared_bytes() != 8 || checkpoint.is_some() || payload.input.is_some() {
+                return Err((ToolJobFactoryError::new("retained number payload requires one eight-byte raw owner and no checkpoint"), input, checkpoint));
+            }
+            payload.input = Some(input);
+            Ok(payload)
+        }
+    }
+
+    #[test]
+    fn retained_wire_pages_are_admitted_sealed_transferred_and_closed_by_logical_bytes() {
+        let bus = ActionBus::new();
+        bus.register(RetainedNumberFactory { keys: vec![ToolFactoryKey::new("number", "retained")] }).unwrap();
+        let (admission, mut input) = bus.begin_exact_wire("number", "retained", "test.retained-number.v1", 8).unwrap();
+        input.admit_page(ToolWirePage::try_copy_from(&42u64.to_le_bytes()).unwrap()).unwrap();
+        assert!(input.seal().is_ok());
+        let operation = Operation::new(allocate_operation_id(), RevisionId(1), Generation(2), 3);
+        let mut dispatch = match bus.dispatch_wire_retained(admission, input, None, operation) {
+            Ok(dispatch) => dispatch,
+            Err(_) => panic!("retained dispatch was rejected"),
+        };
+        let mut sequence = 0;
+        for _ in 0..8 {
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
+        }
+        dispatch.job.begin_close();
+        assert_eq!(dispatch.job.close_step(1, 7), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(dispatch.job.close_step(1, 8), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 8 });
+        while !dispatch.job.terminal_is_empty() {
+            let _ = dispatch.job.close_step(1, 8);
+        }
+    }
+
+    #[test]
+    fn production_typed_payload_and_retained_pages_enter_the_same_registered_factory_job() {
+        let bus = ActionBus::new();
+        bus.register(RetainedNumberFactory { keys: vec![ToolFactoryKey::new("number", "retained")] }).unwrap();
+        let (admission, mut input) = bus.begin_exact_wire("number", "retained", "test.retained-number.v1", 8).unwrap();
+        input.admit_page(ToolWirePage::try_copy_from(&42u64.to_le_bytes()).unwrap()).unwrap();
+        input.seal().unwrap();
+        let operation = Operation::new(allocate_operation_id(), RevisionId(1), Generation(2), 3);
+        let payload = RetainedNumberJob { input: None, bytes: [0; 8], cursor: 0, output: None, closing: false };
+        let spec = ToolOperationSpec::new("number", "retained", "test.retained-number.v1", payload, operation);
+        let mut dispatch = match bus.dispatch_wire_retained_with_spec(admission, input, None, spec) {
+            Ok(dispatch) => dispatch,
+            Err(_) => panic!("production retained payload dispatch was rejected"),
+        };
+        let mut sequence = 0;
+        for _ in 0..8 {
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            assert!(matches!(dispatch.job.step(&mut context), StepOutcome::CheckpointReady(_)));
+        }
+        dispatch.job.begin_close();
+        while !dispatch.job.terminal_is_empty() {
+            let _ = dispatch.job.close_step(1, 8);
+        }
+    }
+
+    #[test]
+    fn retained_wire_admission_rejects_plus_one_and_returns_the_page_owner_on_saturation() {
+        let bus = ActionBus::new();
+        bus.register(RetainedNumberFactory { keys: vec![ToolFactoryKey::new("number", "retained")] }).unwrap();
+        assert!(matches!(bus.begin_exact_wire("number", "retained", "test.retained-number.v1", 9), Err(ToolDispatchError::RawWireLimit { actual: 9, maximum: 8, .. })));
+        let (_, mut input) = bus.begin_exact_wire("number", "retained", "test.retained-number.v1", 8).unwrap();
+        input.admit_page(ToolWirePage::try_copy_from(&[0; 8]).unwrap()).unwrap();
+        let rejected = input.admit_page(ToolWirePage::try_copy_from(&[1]).unwrap()).expect_err("plus-one page owner must be returned");
+        assert_eq!(rejected.1.as_slice(), &[1]);
+    }
+
+    #[test]
+    fn maximum_extent_owner_exists_before_incremental_encoding_and_seals_to_its_exact_prefix() {
+        let bus = ActionBus::new();
+        bus.register(RetainedNumberFactory { keys: vec![ToolFactoryKey::new("number", "retained")] }).unwrap();
+        let (admission, mut input) = bus.begin_exact_wire("number", "retained", "test.retained-number.v1", 8).unwrap();
+        input.admit_page(ToolWirePage::try_copy_from(&42u32.to_le_bytes()).unwrap()).unwrap();
+        input.seal_admitted_prefix().unwrap();
+        assert_eq!(input.declared_bytes(), 4);
+        assert_eq!(input.page(0), Some(42u32.to_le_bytes().as_slice()));
+        let operation = Operation::new(allocate_operation_id(), RevisionId(1), Generation(2), 3);
+        let rejected = match bus.dispatch_wire_retained(admission, input, None, operation) {
+            Ok(_) => panic!("factory owns the exact eight-byte decoder and must reject a truthful four-byte prefix"),
+            Err(rejected) => rejected,
+        };
+        assert_eq!(rejected.input.declared_bytes(), 4);
     }
 }
 //#endregion 🎯️ToolJobBus

@@ -606,7 +606,7 @@ mod tests {
     /// DIFFERENT length (2 vs 1) with the "surviving/modified" item at position 0 and the
     /// "removed-in-forward / added-in-backward" item as the tail — the recipe's documented
     /// workaround for the structural "same-length between() can show removed XOR added, never
-    /// both from one call" trap (see png/f1's field_sweep precedent).
+    /// both from one call" trap (see png/f1's field_sweep precedent).await.
     fn sweep_a() -> JpgSnapshot {
         JpgSnapshot {
             schema: "stdio.jpg".into(),

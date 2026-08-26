@@ -10,12 +10,12 @@ use crate::artifacts::en1990::En1990Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
-pub async fn encode(document: &En1990Snapshot) -> Vec<u8> {
+pub fn encode(document: &En1990Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<En1990Snapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<En1990Snapshot, PackError> {
     <En1990Snapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -24,7 +24,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn document_pack_round_trips_and_agrees_with_dsl() {
+    fn document_pack_round_trips_and_agrees_with_dsl() {
         let document = En1990Snapshot::default();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);

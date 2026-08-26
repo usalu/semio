@@ -3,7 +3,7 @@ use crate::artifacts::jack::mutations::{move_node, TrinityGraphMutation};
 use crate::artifacts::jack::JackSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::MoveNode, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+pub fn inverse(payload: &super::mutation::MoveNode, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
     base.nodes().iter().find(|node| node.id == payload.id).map(|node| vec![move_node(payload.id.clone(), node.x, node.y)]).unwrap_or_default()
 }
 //#endregion 🔖️Inverse

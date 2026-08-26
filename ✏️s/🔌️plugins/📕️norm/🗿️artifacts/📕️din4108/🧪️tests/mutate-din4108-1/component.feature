@@ -1,127 +1,133 @@
 @capability-din4108-1-mutate
-@no-oracle-din4108-1-mutation-semantics
+@oracle-din4108-1-python-independent
 @comparison-ordered-json-v1
 @mutations-din4108-1-any
-Feature: Apply every typed DIN 4108 mutation to its committed specification fixtures
-  `s.norm.din4108` is a semio-NATIVE artifact — no third party reads or writes its
-  `.dsl.semio`/`.pack.semio` envelope — so there is no reference implementation to register as an
-  oracle. That is recorded as the `din4108-1-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and it means the runner
-  executes NO oracle role for this case: every assertion below lives inside the subject handler,
-  which compares the applied document against the committed after-snapshot and the undone document
-  against the committed before-snapshot, and fails with both documents printed. A handler that
-  merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed DIN 4108 mutation against an independent Python implementation
+  `s.norm.din4108` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  assumed: PyPI serves no `din4108` distribution, and none for `eurocode`, `vdi3805` or `iso16757`
+  either, and the nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`)
+  implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
+  authoritative over this subset's `Din4108Mutation` vocabulary. The second producer a differential
+  comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is
+  it: all 22 kinds of this vocabulary, written in Python from the repository's own written
+  specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
+  ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
+  `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape
+  rules — plus this subset's committed catalog for the closed list of kinds. It imports nothing from
+  the Rust it judges and transliterates none of it: the document field a `new*` argument names is
+  resolved by normalised spelling against the document's own keys, which is what the naming mechanic
+  states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the
+  spellings in THIS subset where that resolution can genuinely go wrong. The recorded no-oracle
+  decision it replaces is gone from
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a
+  reference to compare against.
 
-  `Din4108Snapshot` is seventeen document-root scalars — assembly category, climate zone,
-  airtightness (n50 and class), thermal-bridge sum, indoor relative humidity and design
-  temperature, catalogue and material ids, solar absorptance, design irradiance, interior and
-  exterior vapour-diffusion mu values, envelope area, the Beiblatt-2 conformity flag, application
-  type and declared application class — plus `layers`, an id-less ORDERED construction build-up.
-  That gives seventeen `change-<field>` kinds and five collection kinds: `insert-layer` and
-  `remove-layer` address by index (inserted = final-state index, removed = base-state index),
-  `reorder-layers` moves one layer inside the build-up, and `change-layer-thickness` /
-  `change-layer-lambda` edit one field of one layer by base-state index.
+  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path below is a declared `asset://` fixture, so neither side holds a transcription that could
+  drift. What the second reading has to get right HERE is that nineteen of the twenty-two kinds are
+  flat scalar edits on the envelope record — `airtightness-n50`, `rh-int`, `psi-times-l-sum`,
+  `solar-absorptance` — while `insert-layer`, `remove-layer` and `reorder-layers` address the
+  `layers` build-up BY POSITION. A layer list that shifted the wrong way is invisible to any scalar
+  reading, so those three rows are the only ones in this subset where the two implementations can
+  disagree about structure rather than about a number. Each side then asserts the same three laws in
+  role — the applied document must BE the committed after-snapshot; an `applied` vector must move
+  the document and a `rejected` one must leave it bit-identical; and the mutation followed by its
+  OWN computed inverse must restore the before-snapshot exactly. What `parity` adds on top is the
+  only thing a single implementation can never provide: that two implementations, in two languages,
+  written from one written specification, reach the same document.
 
-  Layer ORDER is physics here, not presentation: a construction is a sequence from inside to
-  outside, and the interstitial-condensation check reads it in that sequence. The committed
-  fixtures are chosen against that — `inserts-an-interior-plaster-layer-at-index-1` inserts in the
-  MIDDLE rather than appending, `removes-the-load-bearing-masonry-layer` removes a non-terminal
-  member, and `moves-the-insulation-in-front-of-the-masonry` is a reorder whose whole meaning is
-  the position swap. An implementation that treats `layers` as an unordered set, or that appends
-  on insert, matches none of the three committed after-snapshots. Together with `📘️en1990` this is
-  one of only two norm vocabularies with an ordered collection at all.
+  `inverse-` projects BOTH the mutated and the restored document, because for nineteen scalar kinds
+  the restored document is the before-document and projecting only it would make every row of the
+  table report the same value. On `insert-layer`/`remove-layer`/`reorder-layers` the mutated
+  projection is the only place the layer ORDER is observable at all.
 
-  Each of the 22 kinds carries its own independently handcrafted `(before, mutation, after, diff,
-  outcome)` quintet under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, and this
-  feature re-exercises those SAME committed bytes end to end through `apply_din4108_mutation`
-  rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture tests do.
-  The committed `🎯️outcome` decides which contract a row is held to: `applied` demands the
-  observability law (the document must MOVE), `rejected` demands the opposite and stricter one —
-  the mutation must be refused and the document must come back bit-identical. All 22 committed
-  vectors declare `applied`, so every row below is held to the observability law: a kind that left
-  the document bit-for-bit unchanged would fail rather than pass silently.
-
-  The identity scenario reads the real committed DIN 4108 document at `📚️examples/🎬️demo`, not a
-  fixture authored for this case. Its DSL carrier is deliberately byte-preserving — the committed
-  file IS this codec's own canonical printer output, so reproducing it exactly is the correct
-  answer and anything else is the defect — which is why that half of the identity law is asserted
-  as `carrier_is_exact` rather than as the usual no-byte-pass-through inequality. The evidence
-  that the document was genuinely PARSED rather than copied comes from the other half: the same
-  snapshot is round-tripped through two further, independently written codecs — the binary
-  `.pack.semio` protocol and the JSON projection — and all three must agree on one document. This
-  artifact commits only the DSL encoding of its example, so the binary leg is encode-then-decode
-  rather than a committed twin; that is stated here rather than papered over.
+  ⚠️ Honest boundary — the CARRIER and the INPUT. `identity-round-trip` reads
+  `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`, a 455-byte hand-authored single-build-up demo:
+  one `category=residential` envelope over a two-entry `layers [thickness-m:QTY lambda-w-mk:NUM]`
+  build-up. It is the smallest committed document in this plugin and it is NOT a real DIN 4108
+  verification — no measured n50 report, no real material catalogue. It exercises the grammar, not
+  the domain, and that is the ceiling on what this case's identity evidence proves. The carrier
+  itself has no published grammar either: this subset's committed
+  `🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+  placeholder, so the two implementations are compared on the envelope preamble, the ordered
+  `key=value` fields and the `layers` block as written, plus the digest and length of what each side
+  re-emitted — never on a mapping from carrier tokens to the JSON snapshot's enum spellings, which
+  is stated nowhere.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot, mutation and outcome fixture for the <id> kind
-    When <id> is applied through apply_din4108_mutation
-    Then the resulting document matches the committed after-snapshot fixture for <id> and honours the committed outcome status
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id |
-      | change-category |
-      | change-climate |
-      | change-airtightness-n50 |
-      | change-psi-times-l-sum |
-      | change-rh-int |
-      | change-catalog-id |
-      | change-material-id |
-      | change-airtightness-class |
-      | change-t-int-c |
-      | change-solar-absorptance |
-      | change-irradiance-wm2 |
-      | change-moisture-mu-exterior |
-      | change-moisture-mu-interior |
-      | change-envelope-area-m2 |
-      | change-bb2-details-conform |
-      | change-application-type |
-      | change-declared-application-class |
-      | insert-layer |
-      | remove-layer |
-      | reorder-layers |
-      | change-layer-thickness |
-      | change-layer-lambda |
+      | id                                | dir                                | fixture                                              |
+      | change-category                   | 🪜change-category                   | retypes-the-assembly-as-office                       |
+      | change-climate                    | 🛠️change-climate                   | moves-the-building-to-climate-zone-4                 |
+      | change-airtightness-n50           | 🧰change-airtightness-n50           | tightens-n50-to-1-point-5-per-hour                   |
+      | change-psi-times-l-sum            | 🧯change-psi-times-l-sum            | raises-the-thermal-bridge-sum-to-0-point-05          |
+      | change-rh-int                     | 🪣change-rh-int                     | raises-indoor-relative-humidity-to-0-point-65        |
+      | change-catalog-id                 | 🧵change-catalog-id                 | repoints-the-catalogue-entry-to-aw-07                |
+      | change-material-id                | 🪥change-material-id                | swaps-the-insulation-material-to-eps                 |
+      | change-airtightness-class         | 🪚change-airtightness-class         | upgrades-the-airtightness-class-to-class1            |
+      | change-t-int-c                    | 🚨change-t-int-c                    | raises-the-indoor-design-temperature-to-22-point-5-c |
+      | change-solar-absorptance          | 🏷️change-solar-absorptance         | lightens-the-facade-to-absorptance-0-point-25        |
+      | change-irradiance-wm2             | 🧲change-irradiance-wm2             | raises-design-irradiance-to-750-w-per-m2             |
+      | change-moisture-mu-exterior       | 🪛change-moisture-mu-exterior       | raises-the-exterior-mu-value-to-20                   |
+      | change-moisture-mu-interior       | 🪝change-moisture-mu-interior       | raises-the-interior-mu-value-to-2-point-5            |
+      | change-envelope-area-m2           | 🪢change-envelope-area-m2           | grows-the-envelope-to-150-m2                         |
+      | change-bb2-details-conform        | 🔀change-bb2-details-conform        | declares-the-beiblatt-2-details-non-conforming       |
+      | change-application-type           | 🪤change-application-type           | reclassifies-the-application-type-as-wab             |
+      | change-declared-application-class | 🧶change-declared-application-class | declares-application-class-kh                        |
+      | insert-layer                      | 🔢insert-layer                      | inserts-an-interior-plaster-layer-at-index-1         |
+      | remove-layer                      | 🛡️remove-layer                     | removes-the-load-bearing-masonry-layer               |
+      | reorder-layers                    | 🧷reorder-layers                    | moves-the-insulation-in-front-of-the-masonry         |
+      | change-layer-thickness            | 🪡change-layer-thickness            | thickens-the-insulation-layer-to-0-point-2-m         |
+      | change-layer-lambda               | 🪒change-layer-lambda               | degrades-the-masonry-lambda-to-0-point-5             |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_din4108_mutation
-    And the mutation's own computed inverse is applied through apply_din4108_mutation
-    Then the document matches the committed before-snapshot fixture again
+  @mode-differential
+  Scenario Outline: Undoing <id> restores its committed before-snapshot
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When each implementation applies the committed mutation and then its OWN computed inverse
+    Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id |
-      | change-category |
-      | change-climate |
-      | change-airtightness-n50 |
-      | change-psi-times-l-sum |
-      | change-rh-int |
-      | change-catalog-id |
-      | change-material-id |
-      | change-airtightness-class |
-      | change-t-int-c |
-      | change-solar-absorptance |
-      | change-irradiance-wm2 |
-      | change-moisture-mu-exterior |
-      | change-moisture-mu-interior |
-      | change-envelope-area-m2 |
-      | change-bb2-details-conform |
-      | change-application-type |
-      | change-declared-application-class |
-      | insert-layer |
-      | remove-layer |
-      | reorder-layers |
-      | change-layer-thickness |
-      | change-layer-lambda |
+      | id                                | dir                                | fixture                                              |
+      | change-category                   | 🪜change-category                   | retypes-the-assembly-as-office                       |
+      | change-climate                    | 🛠️change-climate                   | moves-the-building-to-climate-zone-4                 |
+      | change-airtightness-n50           | 🧰change-airtightness-n50           | tightens-n50-to-1-point-5-per-hour                   |
+      | change-psi-times-l-sum            | 🧯change-psi-times-l-sum            | raises-the-thermal-bridge-sum-to-0-point-05          |
+      | change-rh-int                     | 🪣change-rh-int                     | raises-indoor-relative-humidity-to-0-point-65        |
+      | change-catalog-id                 | 🧵change-catalog-id                 | repoints-the-catalogue-entry-to-aw-07                |
+      | change-material-id                | 🪥change-material-id                | swaps-the-insulation-material-to-eps                 |
+      | change-airtightness-class         | 🪚change-airtightness-class         | upgrades-the-airtightness-class-to-class1            |
+      | change-t-int-c                    | 🚨change-t-int-c                    | raises-the-indoor-design-temperature-to-22-point-5-c |
+      | change-solar-absorptance          | 🏷️change-solar-absorptance         | lightens-the-facade-to-absorptance-0-point-25        |
+      | change-irradiance-wm2             | 🧲change-irradiance-wm2             | raises-design-irradiance-to-750-w-per-m2             |
+      | change-moisture-mu-exterior       | 🪛change-moisture-mu-exterior       | raises-the-exterior-mu-value-to-20                   |
+      | change-moisture-mu-interior       | 🪝change-moisture-mu-interior       | raises-the-interior-mu-value-to-2-point-5            |
+      | change-envelope-area-m2           | 🪢change-envelope-area-m2           | grows-the-envelope-to-150-m2                         |
+      | change-bb2-details-conform        | 🔀change-bb2-details-conform        | declares-the-beiblatt-2-details-non-conforming       |
+      | change-application-type           | 🪤change-application-type           | reclassifies-the-application-type-as-wab             |
+      | change-declared-application-class | 🧶change-declared-application-class | declares-application-class-kh                        |
+      | insert-layer                      | 🔢insert-layer                      | inserts-an-interior-plaster-layer-at-index-1         |
+      | remove-layer                      | 🛡️remove-layer                     | removes-the-load-bearing-masonry-layer               |
+      | reorder-layers                    | 🧷reorder-layers                    | moves-the-insulation-in-front-of-the-masonry         |
+      | change-layer-thickness            | 🪡change-layer-thickness            | thickens-the-insulation-layer-to-0-point-2-m         |
+      | change-layer-lambda               | 🪒change-layer-lambda               | degrades-the-masonry-lambda-to-0-point-5             |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed DIN 4108 document through every encoding it has
+  Scenario: Re-emit the real committed DIN 4108 document from the parsed carrier
     Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
-    When the text artifact is parsed, printed back to DSL and parsed again, and the same document is round-tripped through the binary pack protocol and the JSON projection
-    Then the canonical DSL rendering is reproduced byte for byte and every decoding agrees on one DIN 4108 document
+    When each implementation parses the artifact and prints it back to its canonical carrier bytes
+    Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

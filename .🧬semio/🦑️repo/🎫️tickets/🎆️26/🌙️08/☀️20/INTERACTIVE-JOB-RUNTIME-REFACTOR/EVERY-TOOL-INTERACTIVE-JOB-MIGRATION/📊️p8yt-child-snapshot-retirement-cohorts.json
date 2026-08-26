@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "semio.phase8.child-snapshot-retirement-cohorts.v1",
+  "generatedAt": "2026-08-23",
+  "verdict": "fail-closed-pending-store-disassembly",
+  "sharedContract": {
+    "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
+    "symbols": [
+      "SnapshotRetirementStep",
+      "ErasedSnapshotRetirement::close_step",
+      "ErasedSnapshotRetirement::terminal_is_empty",
+      "SnapshotRetirementFactory::retire",
+      "ArtifactOwnedValueRetirementFactory::retire_owned",
+      "ArtifactStoreOwnedDisposer::close_step",
+      "ArtifactStoreOwnedDisposer::terminal_is_empty",
+      "MemberStoreOwner::member_store_owners",
+      "MemberStoreOwners::new",
+      "SpaceMember::retire_snapshot_read_erased",
+      "ArtifactStore::install_member_store_owners_exact"
+    ],
+    "defaultImplementationAllowed": false
+  },
+  "sharedConsumers": [
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "symbol": "ChildContentRetirement::close_step",
+      "ownership": "exact-erased-snapshot-transfer"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "symbol": "VcsArtifactApp::publish_child_content_member",
+      "ownership": "old-root-retirement-admission"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "symbol": "VcsArtifactApp::maintenance_step",
+      "ownership": "live-bounded-retirement-pump"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "symbol": "VcsArtifactApp::close_step",
+      "ownership": "close-bounded-retirement-pump"
+    }
+  ],
+  "productionCohorts": [
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️component.rs",
+      "enum": "SemioMembers",
+      "macroLine": 123,
+      "ownerBindingStatus": "required",
+      "variants": [
+        {"variant": "Animation", "dispatchKey": "animation", "schema": "stdio.semio", "snapshot": "subsets::animation::schema::snapshot::SemioAnimationSnapshot", "mutation": "subsets::animation::schema::mutations::SemioAnimationMutation"},
+        {"variant": "Audio", "dispatchKey": "audio", "schema": "stdio.semio", "snapshot": "subsets::audio::schema::snapshot::SemioAudioSnapshot", "mutation": "subsets::audio::schema::mutations::SemioAudioMutation"},
+        {"variant": "Brep", "dispatchKey": "brep", "schema": "stdio.semio", "snapshot": "subsets::brep::schema::snapshot::SemioBrepSnapshot", "mutation": "subsets::brep::schema::mutations::SemioBrepMutation"},
+        {"variant": "Cad", "dispatchKey": "cad", "schema": "stdio.semio", "snapshot": "subsets::cad::schema::snapshot::SemioCadSnapshot", "mutation": "subsets::cad::schema::mutations::SemioCadMutation"},
+        {"variant": "Document", "dispatchKey": "document", "schema": "stdio.semio", "snapshot": "subsets::document::schema::snapshot::SemioDocumentSnapshot", "mutation": "subsets::document::schema::mutations::SemioDocumentMutation"},
+        {"variant": "Drawing", "dispatchKey": "drawing", "schema": "stdio.semio", "snapshot": "subsets::drawing::schema::snapshot::SemioDrawingSnapshot", "mutation": "subsets::drawing::schema::mutations::SemioDrawingMutation"},
+        {"variant": "Flow", "dispatchKey": "flow", "schema": "stdio.semio", "snapshot": "subsets::flow::schema::snapshot::SemioFlowSnapshot", "mutation": "subsets::flow::schema::mutations::SemioFlowMutation"},
+        {"variant": "Graph", "dispatchKey": "graph", "schema": "stdio.semio", "snapshot": "subsets::graph::schema::snapshot::SemioGraphSnapshot", "mutation": "subsets::graph::schema::mutations::SemioGraphMutation"},
+        {"variant": "Image", "dispatchKey": "image", "schema": "stdio.semio", "snapshot": "subsets::image::schema::snapshot::SemioImageSnapshot", "mutation": "subsets::image::schema::mutations::SemioImageMutation"},
+        {"variant": "Kit", "dispatchKey": "kit", "schema": "stdio.semio", "snapshot": "subsets::kit::schema::snapshot::SemioKitSnapshot", "mutation": "subsets::kit::schema::mutations::SemioKitMutation"},
+        {"variant": "Mesh", "dispatchKey": "mesh", "schema": "stdio.semio", "snapshot": "subsets::mesh::schema::snapshot::SemioMeshSnapshot", "mutation": "subsets::mesh::schema::mutations::SemioMeshMutation"},
+        {"variant": "Model", "dispatchKey": "model", "schema": "stdio.semio", "snapshot": "subsets::model::schema::snapshot::SemioModelSnapshot", "mutation": "subsets::model::schema::mutations::SemioModelMutation"},
+        {"variant": "Object", "dispatchKey": "object", "schema": "stdio.semio", "snapshot": "subsets::object::schema::snapshot::SemioObjectSnapshot", "mutation": "subsets::object::schema::mutations::SemioObjectMutation"},
+        {"variant": "Presentation", "dispatchKey": "presentation", "schema": "stdio.semio", "snapshot": "subsets::presentation::schema::snapshot::SemioPresentationSnapshot", "mutation": "subsets::presentation::schema::mutations::SemioPresentationMutation"},
+        {"variant": "Table", "dispatchKey": "table", "schema": "stdio.semio", "snapshot": "subsets::table::schema::snapshot::SemioTableSnapshot", "mutation": "subsets::table::schema::mutations::SemioTableMutation"},
+        {"variant": "Text", "dispatchKey": "text", "schema": "stdio.semio", "snapshot": "subsets::text::schema::snapshot::SemioTextSnapshot", "mutation": "subsets::text::schema::mutations::SemioTextMutation"},
+        {"variant": "Value", "dispatchKey": "value", "schema": "stdio.semio", "snapshot": "subsets::value::schema::snapshot::SemioValueSnapshot", "mutation": "subsets::value::schema::mutations::SemioValueMutation"},
+        {"variant": "Video", "dispatchKey": "video", "schema": "stdio.semio", "snapshot": "subsets::video::schema::snapshot::SemioVideoSnapshot", "mutation": "subsets::video::schema::mutations::SemioVideoMutation"}
+      ]
+    }
+  ],
+  "testCohorts": [
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
+      "enum": "TestMembers",
+      "macroLine": 24376,
+      "variants": [
+        {"variant": "Child", "dispatchKey": "s.test.child", "schema": "semio.test/v1", "snapshot": "TestSnapshot", "mutation": "TestMutation"}
+      ]
+    }
+  ],
+  "counts": {
+    "productionMacroCallsites": 1,
+    "productionVariants": 18,
+    "testMacroCallsites": 1,
+    "testVariants": 1,
+    "sharedConsumerCallsites": 4
+  }
+}

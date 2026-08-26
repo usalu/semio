@@ -15,11 +15,9 @@ pub struct AddStep {
     pub index: Option<usize>,
 }
 
-/// 🏗️ Builder — names the new step by its position in `spec` (the app's own step-add gesture never
-/// prompts for a title up front).
-pub async fn add_step_operation(spec: &PlaybookSnapshot, step_id: String) -> PlaybookMutation {
-    let step_count = crate::artifacts::playbook::playbook_working_scene(spec).steps.len();
-    PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: step_id, title: format!("Step {}", step_count + 1), description: None, blocks: Vec::new() }, index: None })
+/// 🏗️ Builder from operation-owned scalar identity and title; it never reads or clones the document.
+pub async fn add_step_operation(step_id: String, title: String) -> PlaybookMutation {
+    PlaybookMutation::AddStep(AddStep { step: PlaybookStep { id: step_id, title, description: None, blocks: Vec::new() }, index: None })
 }
 
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddStep {

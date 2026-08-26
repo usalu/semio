@@ -37,7 +37,11 @@ impl SplitMix64 {
     }
 
     async fn next_range(&mut self, bound: u64) -> u64 {
-        if bound == 0 { 0 } else { self.next_u64().await % bound }
+        if bound == 0 {
+            0
+        } else {
+            self.next_u64().await % bound
+        }
     }
 }
 
@@ -107,7 +111,11 @@ async fn next_timestamp(rng: &mut SplitMix64, adversarial: bool) -> String {
         let minute = rng.next_range(60).await;
         let second = rng.next_range(60).await;
         let ms = rng.next_range(1000).await;
-        if ms == 0 { format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z") } else { format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{ms:03}Z") }
+        if ms == 0 {
+            format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z")
+        } else {
+            format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{ms:03}Z")
+        }
     }
 }
 
@@ -876,7 +884,7 @@ pub async fn assert_channel_frame_corpus<T: PartialEq + std::fmt::Debug>(corpus:
 /// 🛡️ Reused verbatim from `pack_testkit` — closure-generic panic-safety fuzzers plus their level/
 /// report types. LAW (exercised in this crate's own tests against `crate::os_spr::HistoryReader::open`
 /// and `crate::os_spr::format::recover`): `CorruptionReport::cases_panicked` must always be empty.
-pub use crate::os_pack::testkit::{CorruptionLevel, CorruptionReport, fuzz_bit_flips, fuzz_truncation};
+pub use crate::os_pack::testkit::{fuzz_bit_flips, fuzz_truncation, CorruptionLevel, CorruptionReport};
 //#endregion 🔖️Corrupt
 
 //#region 🔖️Golden

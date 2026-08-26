@@ -6,6 +6,9 @@
 
 #![allow(clippy::too_many_lines, reason = "planner/wasm_api export match arms enumerate every AST/Step variant inline; splitting them up would scatter one concept across helper fns for no clarity gain")]
 
+#[cfg(target_arch = "wasm32")]
+extern crate semio_framework_async as wasm_bindgen_futures;
+
 pub use api::{compile, parse, plan, run};
 pub use errors::ArchitectError;
 pub use executor::Executor;
@@ -358,7 +361,7 @@ mod transport {
                 let vars = serde_wasm_bindgen::to_value(&variables).map_err(|e| TransportError::Msg(e.to_string()))?;
                 let promise = execute_fn.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(&kind_s), &wasm_bindgen::JsValue::from_str(&doc)).map_err(|e| TransportError::Msg(format!("{e:?}")))?;
                 let _ = vars;
-                let val = wasm_bindgen_futures::JsFuture::from(js_sys::Promise::resolve(&promise)).await.map_err(|e| TransportError::Msg(format!("{e:?}")))?;
+                let val = semio_framework_async::browser::JsFuture::from(js_sys::Promise::resolve(&promise)).await.map_err(|e| TransportError::Msg(format!("{e:?}")))?;
                 serde_wasm_bindgen::from_value(val).map_err(|e| TransportError::Msg(e.to_string()))
             })
         }

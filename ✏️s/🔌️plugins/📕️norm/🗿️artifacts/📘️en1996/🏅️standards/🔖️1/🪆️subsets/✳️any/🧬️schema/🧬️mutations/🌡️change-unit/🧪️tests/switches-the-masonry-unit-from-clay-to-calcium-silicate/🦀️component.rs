@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// required thickness by the ×1.1 factor and tightens the EN 1996-2 Annex B mortar admissibility, but both
 /// are computed downstream, so the declared mortar class must ride through unchanged.
 #[semio_framework_async_macros::async_test]
-async fn switches_the_masonry_unit_from_clay_to_calcium_silicate() {
+fn switches_the_masonry_unit_from_clay_to_calcium_silicate() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-unit applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.unit, "calcium_silicate", "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: unit must read "calcium_silicate" once the change lands");
@@ -48,7 +48,7 @@ async fn switches_the_masonry_unit_from_clay_to_calcium_silicate() {
 /// ↩️ `change-unit`'s inverse reads the OLD "clay" out of BASE, so replaying it puts the clay unit back on
 /// `unit`.
 #[semio_framework_async_macros::async_test]
-async fn returning_to_clay_restores_before() {
+fn returning_to_clay_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-unit applies");
@@ -66,7 +66,7 @@ async fn returning_to_clay_restores_before() {
 /// a fixed point, so `newUnit`, a plain JSON string (the field is an unvalidated `String`, not an enum) is
 /// spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -81,7 +81,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `unit` is a free-form `String`, so `change-unit` carries only the equality guard;
 /// "calcium_silicate" differs from the committed "clay", so it stays shut.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `unit` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-unit diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the unit material and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-unit diff decodes");
     assert_eq!(decoded.unit, Some("calcium_silicate".to_string()), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: the committed diff must carry unit = "calcium_silicate"");
     assert!(decoded.mortar.is_none(), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: change-unit writes unit and must leave `mortar` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the unit-material switch, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-unit diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-unit/switches-the-masonry-unit-from-clay-to-calcium-silicate: the committed diff did not carry before to after");

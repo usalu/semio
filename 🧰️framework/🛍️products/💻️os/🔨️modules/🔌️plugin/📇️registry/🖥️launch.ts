@@ -61,6 +61,11 @@ type DevLauncherEntry = {
 function readSeed(repoRoot: string): { readonly skeleton: string; readonly devLaunchers: Readonly<Record<string, DevLauncherEntry>> } {
   const seedPath = join(repoRoot, SEED_REL_PATH);
   const raw = readFileSync(seedPath, "utf8");
+  try {
+    Bun.JSONC.parse(raw);
+  } catch {
+    throw new Error(`🖥️launch.ts: seed file ${seedPath} is not valid JSONC`);
+  }
   const markerIndex = raw.indexOf(DEV_LAUNCHERS_MARKER);
   if (markerIndex === -1) throw new Error(`🖥️launch.ts: seed file ${seedPath} is missing the devLaunchers marker`);
   const skeleton = `${raw.slice(0, markerIndex)}}\n`;
@@ -97,6 +102,32 @@ function renderEntry(name: string, launcher: DevLauncherEntry, renderer: "react"
     env: renderEnv(env, port),
     presentation: { group: "3_dev", order },
     serverReadyAction: renderServerReadyAction(sra, port),
+  };
+}
+
+/** @emoji 🧽️ Supplies one zero-touch renderer entry when a discovered variant has no curated launcher surface. */
+function renderDiscoveredEntry(playground: PlaygroundEntry, namePrefix: string, renderer: "react" | "wgpu" | "native", order: number, command?: string): object {
+  const port = renderer === "react" ? playground.ports.react : playground.ports.wgpu;
+  if (renderer === "native") {
+    return {
+      name: `🛠️dev${namePrefix}🧊️wgpu🖥️native`,
+      type: "node-terminal",
+      request: "launch",
+      command: `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native ${playground.variant}`,
+      cwd: "${workspaceFolder}",
+      env: { SEMIO_PLUGIN: playground.pluginId, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
+      presentation: { group: "3_dev", order },
+    };
+  }
+  return {
+    name: `🛠️dev${namePrefix}${renderer === "react" ? "⚛️react" : "🧊️wgpu🌐️wasm"}`,
+    type: "node-terminal",
+    request: "launch",
+    command: command ?? `bun ./📜️script.ts dev ${playground.variant}`,
+    cwd: "${workspaceFolder}",
+    env: { S_OS_PORT: String(port), SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: renderer, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
+    presentation: { group: "3_dev", order },
+    serverReadyAction: { action: "openExternally", pattern: `(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):${port})`, uriFormat: "%s" },
   };
 }
 
@@ -184,6 +215,29 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
     }
   }
   if (out.includes("@generated:")) throw new Error("🖥️launch.ts: an @generated placeholder was not resolved (devLaunchers table is missing an entry)");
+  const synthesized: object[] = [];
+  const ordered = [...playgrounds].sort((left, right) => left.variant.localeCompare(right.variant));
+  ordered.forEach((playground, index) => {
+    const launcher = devLaunchers[playground.variant];
+    const prefix = launcher?.namePrefix ?? `🧩️${playground.variant}`;
+    const order = Math.round((390 + index * 0.01) * 1_000) / 1_000;
+    const reactName = `🛠️dev${prefix}⚛️react`;
+    const wgpuName = `🛠️dev${prefix}🧊️wgpu🌐️wasm`;
+    const nativeName = `🛠️dev${prefix}🧊️wgpu🖥️native`;
+    if (!out.includes(JSON.stringify(reactName))) synthesized.push(renderDiscoveredEntry(playground, prefix, "react", order, launcher?.command));
+    if (!out.includes(JSON.stringify(wgpuName))) synthesized.push(renderDiscoveredEntry(playground, prefix, "wgpu", order + 0.001, launcher?.command));
+    if (!out.includes(JSON.stringify(nativeName))) synthesized.push(renderDiscoveredEntry(playground, prefix, "native", order + 0.002));
+  });
+  if (synthesized.length > 0) {
+    const marker = '\n  ],\n  "compounds":';
+    if (!out.includes(marker)) throw new Error("🖥️launch.ts: generated skeleton lacks the configurations/compounds boundary");
+    out = out.replace(marker, `\n    ,\n${synthesized.map((entry) => reindent(JSON.stringify(entry, null, 2), 4)).join(",\n")}\n  ],\n  "compounds":`);
+  }
+  try {
+    Bun.JSONC.parse(out);
+  } catch {
+    throw new Error("🖥️launch.ts: generated launch output is not valid JSONC");
+  }
   return out;
 }
 //#endregion

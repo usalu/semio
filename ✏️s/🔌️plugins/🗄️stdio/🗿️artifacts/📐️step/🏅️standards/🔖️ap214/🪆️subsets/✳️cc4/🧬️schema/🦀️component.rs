@@ -98,7 +98,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn conforming_construction_builds() {
-            let snapshot = StepCc4BuilderConstruction::from_snapshot(conforming_snapshot()).build().expect("conforming construction must build");
+            let snapshot = StepCc4BuilderConstruction::from_snapshot(conforming_snapshot()).await.build().await.expect("conforming construction must build");
             assert!(crate::artifacts::step::standards::v_ap214::engine::ladder::has_product_definition_chain(&snapshot.to_part21_document()));
         }
 
@@ -108,8 +108,8 @@ pub mod derived_construction {
             let mut doc = snapshot.to_part21_document();
             doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
-            let (mutated, _diff) = StepCc4BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot { snapshot });
-            let err = mutated.build().expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 4 must fail build()");
+            let (mutated, _diff) = StepCc4BuilderConstruction::from_snapshot(StepSnapshot::default()).await.mutate(StepMutation::SetSnapshot { snapshot }).await;
+            let err = mutated.build().await.expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 4 must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_LADDER));
         }
     }

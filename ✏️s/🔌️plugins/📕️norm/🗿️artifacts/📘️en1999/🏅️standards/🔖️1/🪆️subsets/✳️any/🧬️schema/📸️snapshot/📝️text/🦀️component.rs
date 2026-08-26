@@ -16,12 +16,12 @@ use crate::artifacts::en1999::En1999Snapshot;
 pub const EN1999_ALUMINIUM_ROOF_PURLIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️aluminium-roof-purlin/🖼️assets/🗣️aluminium-roof-purlin.dsl.semio");
 
 /// 📖️ Parses `.en1999` DSL text into a `En1999Snapshot`.
-pub async fn parse_dsl(text: &str) -> Result<En1999Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1999Snapshot, store::TextError> {
     <En1999Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1999Snapshot` back to `.en1999` DSL text.
-pub async fn print_dsl(document: &En1999Snapshot) -> String {
+pub fn print_dsl(document: &En1999Snapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -32,12 +32,12 @@ mod tests {
     use crate::document::AnnexChoice;
 
     #[semio_framework_async_macros::async_test]
-    async fn document_dsl_round_trips() {
+    fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1999Snapshot::default());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn aluminium_roof_purlin_example_fixture_parses_and_round_trips() {
+    fn aluminium_roof_purlin_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(EN1999_ALUMINIUM_ROOF_PURLIN_EXAMPLE_TEXT).expect("parse aluminium roof purlin example");
         assert_eq!(document.alloy, "aw6082t6");
         assert_eq!(document.annex, AnnexChoice::En);

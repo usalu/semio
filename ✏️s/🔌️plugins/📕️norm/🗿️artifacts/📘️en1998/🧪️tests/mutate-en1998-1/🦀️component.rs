@@ -1,10 +1,11 @@
 //! 🦀️ EN 1998 exhaustive mutation case — Rust adapter. Ticket
-//! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 12 (the unregistered-vocabulary sweep). Recorded
-//! no-oracle decision `en1998-1-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`): `s.norm.en1998` is a
-//! semio-native artifact with no third-party reader or writer, so the `oracle` handlers here
-//! read the committed, independently handcrafted per-kind specification vectors literally — no
-//! recomputation, no reimplementation of mutation semantics — while `subject` drives this
+//! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
+//! no-oracle decision `en1998-1-mutation-semantics` is gone from
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because a reference now
+//! exists to compare against: `s.norm.en1998` is a
+//! semio-native artifact with no third-party reader or writer, so its reference is a second
+//! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
+//! oracle `en1998-1-python-independent`. This adapter is the SUBJECT half only — it drives this
 //! repository's own `apply_en1998_mutation` over the full 49-kind `En1998Mutation` vocabulary.
 //!
 //! Forty-nine document-root scalars and booleans, one `change-<field>` each — the
@@ -18,16 +19,14 @@
 //! H_Ed, H_Rd, the two stiffness factors k) and retaining walls (height, phi, soil gamma, the
 //! ductility factor r, H_Rd).
 //!
-//! ⚖️ WHERE THE ASSERTIONS LIVE. A recorded no-oracle case runs NO oracle role — the runner
-//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has
-//! none — so the comparison profile never gets two sides to compare. Every law this case claims
-//! is therefore asserted IN ROLE inside the subject handlers, through the shared
+//! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the
+//! subject handlers as well as being compared against the oracle's answer, through the shared
 //! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law` module (`law::mutation_is_observable`,
 //! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
 //! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️component.json`. The oracle handlers still
-//! assert what a committed vector can prove on its own: that an `applied` vector genuinely
-//! moves the document and a `rejected` one genuinely does not.
+//! declares in `✏️s/🔌️plugins/📕️norm/🧪️oracle/🔣️component.json`. What `parity` adds on top is the
+//! one thing a single implementation can never provide: that a second implementation, written in
+//! another language from the same written specification, reaches the same document.
 //!
 //! 🌉️ HOW THE FIXTURES REACH TYPED VALUES. The generated test host links only
 //! `semio-repo-test-host`, the stdio law crate and — behind `sut` — this plugin's own crate;
@@ -38,19 +37,21 @@
 //! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`;
 //! `decode_en1998_mutation_json`, `apply_en1998_mutation`, `inverse_en1998_mutation` in
 //! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`), whose
-//! signatures name only reachable types. Both roles read the SAME committed bytes — the oracle
-//! role via `include_str!`, the subject role by decoding that same text — so a fixture can
-//! never drift away from a Rust literal transcribed beside it, because there is none.
+//! signatures name only reachable types. This side reaches the committed vectors through
+//! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
+//! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
+//! them that could drift from what the other one read.
 //!
-//! 🚧️ The Rust SUBJECT phase cannot run at the time of writing: `semio-s-plugin-norm` does not
-//! compile (a concurrent session is mid-flight removing gratuitous `async fn` wrappers across
-//! the crate), and `semio-framework-os-kernel` is red for the same reason. The subject half is
+//! 🚧️ The Rust SUBJECT phase still cannot run: `semio-s-plugin-norm` does not compile (671 errors
+//! at the time of writing — a concurrent session is mid-flight across ~2000 files of this plugin,
+//! removing gratuitous `async fn` wrappers). `parity` therefore has nothing to compare the oracle
+//! against YET; the moment the crate is green it does, with no further change here. The subject half is
 //! written against the SYNC trait surface the fixture tests in this crate already call
 //! (`Mutation::diff`, `MutationDiff::apply`, `Mutation::inverse`, `ArtifactDsl`,
 //! `ArtifactPack`) rather than against the plugin's async wrappers, and is `sut`-gated so the
 //! oracle-only run never links it.
 
-use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
+use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Kinds
@@ -58,6 +59,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 /// duplicated, not imported, because the oracle-only build must not link the subject crate. The
 /// contract's mutation-coverage gate keeps this list honest against the catalog;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
+#[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
     "change-seismic-zone",
     "change-ground-type",
@@ -111,6 +113,7 @@ const KINDS: &[&str] = &[
 ];
 
 /// 🗣️ The real committed EN 1998 document, read where the domain already keeps it.
+#[cfg(feature = "sut")]
 const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️seismic-rc-frame/🖼️assets/🗣️seismic-rc-frame.dsl.semio";
 /// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
@@ -119,9 +122,10 @@ const PACK_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳�
 
 //#region 🔖️Fixtures
 /// 🧫️ The committed `(before, mutation, after, outcome)` specification vector for one kind, read
-/// literally via `include_str!` — this IS the independently handcrafted evidence the no-oracle
-/// decision rests on, never recomputed. One `include_str!` per committed file: the oracle role
-/// answers with `before`/`after`, the subject role decodes all four.
+/// literally via `include_str!` — the same committed bytes the independent Python oracle reads through
+/// the `asset://` URIs the feature declares, so the two sides can never be comparing different inputs.
+/// One `include_str!` per committed file; the subject role decodes all four.
+#[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-seismic-zone" => (
@@ -423,6 +427,7 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
 }
 
 /// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
+#[cfg(feature = "sut")]
 fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("committed fixture JSON must parse: {error}"))
 }
@@ -430,44 +435,34 @@ fn canonical(text: &str) -> Json {
 /// 🎯️ The status the committed `🎯️outcome/🔣️component.json` declares for one kind — `applied` or
 /// `rejected` — read out of the committed file rather than transcribed beside it, so the contract a
 /// row is held to cannot drift away from the vector that states it.
+#[cfg(feature = "sut")]
 fn committed_status(kind: &str) -> String {
     let (_before, _mutation, _after, outcome) = fixture_text(kind);
     canonical(outcome).str("status")
 }
 //#endregion 🔖️Fixtures
 
-//#region 🔖️Oracle
-/// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally. The one law a
-/// committed pair can carry on its own is asserted here in role — an `applied` vector must MOVE the
-/// document and a `rejected` vector must leave it identical — so a placeholder fixture that changed
-/// nothing could not sit in this table unnoticed.
-fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |_ctx: &Context| {
-        let (before, _mutation, after, _outcome) = fixture_text(kind);
-        let (base, projection) = (canonical(before), canonical(after));
-        match committed_status(kind).as_str() {
-            "applied" => law::mutation_is_observable(kind, &projection, &base, &[])?,
-            "rejected" if law::divergence(&projection, &base).is_some() => {
-                return Err(format!("mutate-{kind}: the committed outcome declares this vector rejected, so its after-snapshot must be identical to its before-snapshot"));
-            }
-            "rejected" => {}
-            other => return Err(format!("mutate-{kind}: unknown committed outcome status {other:?}")),
-        }
-        Ok(Outcome::with_raw(after.as_bytes().to_vec(), projection))
-    }
+//#region 🔖️Carrier
+/// 🧵️ The canonical carrier bytes as a comparable projection: the envelope preamble, every body line
+/// as written, and the digest and length of what was emitted. `.dsl.semio` has no grammar document in
+/// this repository — the committed `📖️component.grammar.semio` is the repository-wide `payload = OCTET+`
+/// placeholder — so the identity scenario compares the two implementations at the carrier level rather
+/// than mapping carrier tokens onto the snapshot's enum spellings, a mapping nothing states. The
+/// independent Python implementation builds the identical shape from ITS re-emission, and `digest` is
+/// the coordinator's own sha256, so the two languages' bytes are directly comparable.
+#[cfg(feature = "sut")]
+fn carrier_projection(text: &str) -> Json {
+    let (preamble, body) = text.split_once('\n').unwrap_or((text, ""));
+    let body = body.strip_suffix('\n').unwrap_or(body);
+    let lines = if body.is_empty() { Vec::new() } else { body.split('\n').map(|line| Json::String(line.to_string())).collect::<Vec<Json>>() };
+    Json::Object(vec![
+        ("preamble".to_string(), Json::String(preamble.to_string())),
+        ("lines".to_string(), Json::Array(lines)),
+        ("dslDigest".to_string(), Json::String(digest(text.as_bytes()))),
+        ("dslLength".to_string(), Json::Number(text.as_bytes().len() as f64)),
+    ])
 }
-
-/// 🔮️ The inverse reference answer: the committed BEFORE snapshot — undoing any mutation must
-/// return to exactly where the specification vector started. The inverse LAW itself cannot be
-/// asserted from the committed vectors alone (nothing here computes an inverse), which is precisely
-/// why it is asserted in the subject handler below instead.
-fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |_ctx: &Context| {
-        let (before, _mutation, _after, _outcome) = fixture_text(kind);
-        Ok(Outcome::with_raw(before.as_bytes().to_vec(), canonical(before)))
-    }
-}
-//#endregion 🔖️Oracle
+//#endregion 🔖️Carrier
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
@@ -541,6 +536,8 @@ mod subject {
     /// collection POSITION included, not merely membership. A kind the committed outcome declares
     /// `applied` must additionally produce a non-empty inverse, because a mutation that changes the
     /// document and reports nothing to undo silently breaks the event-sourced undo history.
+    /// The projection carries BOTH the mutated and the restored document: projecting only the restored
+    /// one would make every row of the table project the same value and the differential vacuous.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |_ctx: &Context| {
             let (before, mutation, _after, _outcome) = super::fixture_text(kind);
@@ -551,6 +548,7 @@ mod subject {
                 Ok((snapshot, _messages)) => snapshot,
                 Err(error) => return Err(format!("inverse-{kind}: the forward mutation could not be applied to its own committed before-snapshot: {error}")),
             };
+            let mutated = projection(&current)?;
             let steps = inverse_en1998_mutation(&mutation, &base);
             if super::committed_status(kind) == "applied" && steps.is_empty() {
                 return Err(format!("inverse-{kind}: this kind changes the document, so its computed inverse must not be empty"));
@@ -558,11 +556,13 @@ mod subject {
             for step in &steps {
                 current = apply_en1998_mutation(&current, step).map_err(|error| format!("inverse-{kind}: an inverse step was rejected: {error}"))?.0;
             }
-            law::inverse_restores(kind, &projection(&current)?, &original)?;
+            let restored = projection(&current)?;
+            law::inverse_restores(kind, &restored, &original)?;
             if current != base {
                 return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the before-snapshot"), &current, &base));
             }
-            Ok(Outcome::with_raw(original.to_string().into_bytes(), original))
+            let projection = Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), restored)]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
 
@@ -594,9 +594,8 @@ mod subject {
         if twin != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different document than the committed text artifact", &twin, &parsed));
         }
-        let projection = projection(&parsed)?;
-        law::round_trip_preserves(&projection(&repacked)?, &projection)?;
-        Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
+        law::round_trip_preserves(&projection(&repacked)?, &projection(&parsed)?)?;
+        Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), carrier_projection(&reprinted)))
     }
     //#endregion 🔖️Handlers
 }
@@ -604,22 +603,18 @@ mod subject {
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so the loop mirrors the feature's `Examples` tables exactly. `identity-round-trip` is
-/// deliberately subject-only: the reference answer for every other scenario is a committed JSON
-/// document the oracle role can read literally, but the real artifact is committed as DSL and pack bytes
-/// ONLY, and turning those into a document needs this subset's own codec — which the oracle-only
-/// build must not link.
+/// id, so the loop mirrors the feature's `Examples` tables exactly. SUBJECT role only: the reference
+/// answer now comes from the independent Python implementation registered as this subset's oracle, and
+/// registering this repository's own answer on the oracle side as well would compare it with
+/// itself.
 pub fn adapter() -> Adapter {
+    #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
-        }
-    }
     #[cfg(feature = "sut")]
     {
+        for kind in KINDS {
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
+        }
         built = built.subject("identity-round-trip", subject::round_trip);
     }
     built

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_heat_recovery_eta_min::mutatio
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeHeatRecoveryEtaMin, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeHeatRecoveryEtaMin, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_heat_recovery_eta_min.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Minimum heat recovery efficiency must be a finite number, got {}.", payload.new_heat_recovery_eta_min), Vec::<String>::new());
     }

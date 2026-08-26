@@ -24,19 +24,19 @@ pub struct En1998Inference {
 }
 
 impl protocol::Inference<En1998Snapshot> for En1998Inference {
-    async fn infer(snapshot: &En1998Snapshot) -> Self {
+    fn infer(snapshot: &En1998Snapshot) -> Self {
         Self { outline: En1998Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1998Snapshot> for En1998Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.norm.en1998.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1998.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1998::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1998.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1998_artifact_schema_descriptor`'s registration.
-pub async fn en1998_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn en1998_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1998.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    fn inference_determinism_law() {
         let snapshot = En1998Snapshot::default();
         assert_eq!(En1998Inference::infer(&snapshot), En1998Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    fn inference_default_law() {
         assert_eq!(En1998Inference::infer(&En1998Snapshot::default()), En1998Inference::default());
     }
 }
@@ -94,7 +94,7 @@ use crate::artifacts::en1998::standards::v1::subsets::any::schema::{check_buildi
 use crate::document::{AnnexChoice, CheckReport};
 
 /// 📋️ Full seismic check across EN 1998 parts 1 through 6.
-pub async fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
+pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
     let zone = parse_seismic_zone(document.seismic_zone);
     let ground = parse_ground_type(&document.ground_type);
     let importance = parse_importance(&document.importance_class);
@@ -168,7 +168,7 @@ pub async fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
     report
 }
 
-async fn parse_seismic_zone(value: u8) -> na_de::SeismicZone {
+fn parse_seismic_zone(value: u8) -> na_de::SeismicZone {
     match value {
         0 => na_de::SeismicZone::Zone0,
         1 => na_de::SeismicZone::Zone1,
@@ -177,7 +177,7 @@ async fn parse_seismic_zone(value: u8) -> na_de::SeismicZone {
     }
 }
 
-async fn parse_ground_type(value: &str) -> na_de::GroundType {
+fn parse_ground_type(value: &str) -> na_de::GroundType {
     match value.to_ascii_lowercase().as_str() {
         "a" => na_de::GroundType::A,
         "c" => na_de::GroundType::C,
@@ -187,7 +187,7 @@ async fn parse_ground_type(value: &str) -> na_de::GroundType {
     }
 }
 
-async fn parse_importance(value: &str) -> part_1::ImportanceClass {
+fn parse_importance(value: &str) -> part_1::ImportanceClass {
     match value.to_ascii_lowercase().as_str() {
         "cc1" => part_1::ImportanceClass::Cc1,
         "cc3" => part_1::ImportanceClass::Cc3,
@@ -196,7 +196,7 @@ async fn parse_importance(value: &str) -> part_1::ImportanceClass {
     }
 }
 
-async fn parse_structural_system(value: &str) -> part_1::StructuralSystem {
+fn parse_structural_system(value: &str) -> part_1::StructuralSystem {
     match value.to_ascii_lowercase().as_str() {
         "moment_frame_dcm" => part_1::StructuralSystem::MomentFrameDcm,
         "moment_frame_dcl" => part_1::StructuralSystem::MomentFrameDcl,
@@ -208,14 +208,14 @@ async fn parse_structural_system(value: &str) -> part_1::StructuralSystem {
     }
 }
 
-async fn parse_annex(value: &str) -> AnnexChoice {
+fn parse_annex(value: &str) -> AnnexChoice {
     match value.to_ascii_lowercase().as_str() {
         "en" => AnnexChoice::En,
         _ => AnnexChoice::De,
     }
 }
 
-async fn parse_en_ground_type(value: &str) -> part_1::EnGroundType {
+fn parse_en_ground_type(value: &str) -> part_1::EnGroundType {
     match value.to_ascii_lowercase().as_str() {
         "a" => part_1::EnGroundType::A,
         "c" => part_1::EnGroundType::C,
@@ -225,14 +225,14 @@ async fn parse_en_ground_type(value: &str) -> part_1::EnGroundType {
     }
 }
 
-async fn parse_spectrum_type(value: &str) -> part_1::SpectrumType {
+fn parse_spectrum_type(value: &str) -> part_1::SpectrumType {
     match value.to_ascii_lowercase().as_str() {
         "type2" => part_1::SpectrumType::Type2,
         _ => part_1::SpectrumType::Type1,
     }
 }
 
-async fn parse_knowledge_level(value: &str) -> part_3::KnowledgeLevel {
+fn parse_knowledge_level(value: &str) -> part_3::KnowledgeLevel {
     match value.to_ascii_lowercase().as_str() {
         "kl1" => part_3::KnowledgeLevel::Kl1,
         "kl3" => part_3::KnowledgeLevel::Kl3,
@@ -240,7 +240,7 @@ async fn parse_knowledge_level(value: &str) -> part_3::KnowledgeLevel {
     }
 }
 
-async fn parse_retrofit_limit_state(value: &str) -> part_3::RetrofitLimitState {
+fn parse_retrofit_limit_state(value: &str) -> part_3::RetrofitLimitState {
     match value.to_ascii_lowercase().as_str() {
         "damage_limitation" => part_3::RetrofitLimitState::DamageLimitation,
         "near_collapse" => part_3::RetrofitLimitState::NearCollapse,
@@ -250,7 +250,7 @@ async fn parse_retrofit_limit_state(value: &str) -> part_3::RetrofitLimitState {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1998Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub async fn evaluate(document: &En1998Snapshot) -> CheckReport {
+pub fn evaluate(document: &En1998Snapshot) -> CheckReport {
     check_full_seismic(document)
 }
 
@@ -262,13 +262,13 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn full_seismic_e2e() {
+    fn full_seismic_e2e() {
         let report = check_full_seismic(&En1998Snapshot::default());
         assert_eq!(report.checks.len(), 12);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn full_seismic_en_annex_e2e() {
+    fn full_seismic_en_annex_e2e() {
         let document = En1998Snapshot { annex: "en".into(), ..En1998Snapshot::default() };
         let report = check_full_seismic(&document);
         assert_eq!(report.checks.len(), 12);

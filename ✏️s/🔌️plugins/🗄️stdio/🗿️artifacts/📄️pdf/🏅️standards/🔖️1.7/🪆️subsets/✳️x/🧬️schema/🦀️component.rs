@@ -128,7 +128,7 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn new_requires_output_condition_and_builds_clean() {
             let snapshot =
-                PdfXBuilderConstruction::new("FOGRA39").await.add_page(PdfPage::new(200.0, 200.0)).await.set_info(PdfInfo { title: Some("An X Test".into()), ..PdfInfo::default() }).await.build().await.expect("conforming construction must build");
+                PdfXBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("An X Test".into()), ..PdfInfo::default() }).build().await.expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
@@ -144,10 +144,10 @@ pub mod derived_construction {
                     PdfDictEntry { key: "U".into(), value: PdfObject::Str(vec![0u8; 32]) },
                 ]),
             };
-            let mut snapshot = PdfXBuilderConstruction::new("FOGRA39").await.add_page(PdfPage::new(100.0, 100.0)).await.build().await.unwrap();
+            let mut snapshot = PdfXBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(100.0, 100.0)).build().await.unwrap();
             snapshot.objects.push(violating);
             let (mutated, _diff) = PdfXBuilderConstruction::from_snapshot(PdfSnapshot::default()).await.mutate(PdfMutation::SetSnapshot { snapshot }).await;
-            let err = mutated.build().expect_err("an /Encrypt dict must fail build()");
+            let err = mutated.build().await.expect_err("an /Encrypt dict must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::x::schema::CODE_ENCRYPT));
         }
     }

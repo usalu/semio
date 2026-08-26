@@ -1,4 +1,0 @@
-[run r13-df672gsn] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=artifacts/📄️pdf/
-[run r13-df672gsn] iteration 1: total errors=8, async-class=8
-[run r13-df672gsn] iteration 1: planned 5 edits (2 residue)
-[run r13-df672gsn] reached max-iterations=1 without reaching a fixpoint.

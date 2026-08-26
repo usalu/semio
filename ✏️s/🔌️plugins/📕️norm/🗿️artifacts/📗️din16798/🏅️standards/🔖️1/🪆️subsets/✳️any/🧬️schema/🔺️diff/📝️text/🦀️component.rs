@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl Din16798Diff {
-    pub async fn apply_to_artifact(&self, artifact: &Din16798Artifact) -> protocol::MutationApplyResult<Din16798Artifact> {
+    pub fn apply_to_artifact(&self, artifact: &Din16798Artifact) -> protocol::MutationApplyResult<Din16798Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -214,7 +214,7 @@ impl Din16798Diff {
 }
 
 impl MutationDiff<Din16798Snapshot> for Din16798Diff {
-    async fn apply(&self, snapshot: &Din16798Snapshot) -> protocol::MutationApplyResult<Din16798Snapshot> {
+    fn apply(&self, snapshot: &Din16798Snapshot) -> protocol::MutationApplyResult<Din16798Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -409,7 +409,7 @@ impl MutationDiff<Din16798Snapshot> for Din16798Diff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;

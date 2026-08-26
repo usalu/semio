@@ -40,35 +40,35 @@ pub struct Quantity {
 }
 
 impl Quantity {
-    pub async fn new(kind: QuantityKind, value: f64) -> Self {
+    pub fn new(kind: QuantityKind, value: f64) -> Self {
         Self { kind, value }
     }
 
-    pub async fn length_m(value: f64) -> Self {
+    pub fn length_m(value: f64) -> Self {
         Self::new(QuantityKind::Length, value)
     }
 
-    pub async fn area_m2(value: f64) -> Self {
+    pub fn area_m2(value: f64) -> Self {
         Self::new(QuantityKind::Area, value)
     }
 
-    pub async fn force_kn(value: f64) -> Self {
+    pub fn force_kn(value: f64) -> Self {
         Self::new(QuantityKind::Force, value * 1_000.0)
     }
 
-    pub async fn stress_mpa(value: f64) -> Self {
+    pub fn stress_mpa(value: f64) -> Self {
         Self::new(QuantityKind::Stress, value * 1_000_000.0)
     }
 
-    pub async fn thermal_resistance_m2k_w(value: f64) -> Self {
+    pub fn thermal_resistance_m2k_w(value: f64) -> Self {
         Self::new(QuantityKind::ThermalResistance, value)
     }
 
-    pub async fn u_value_w_m2k(value: f64) -> Self {
+    pub fn u_value_w_m2k(value: f64) -> Self {
         Self::new(QuantityKind::HeatTransferCoefficient, value)
     }
 
-    pub async fn acceleration_m_s2(value: f64) -> Self {
+    pub fn acceleration_m_s2(value: f64) -> Self {
         Self::new(QuantityKind::Acceleration, value)
     }
 }
@@ -84,7 +84,7 @@ pub struct ClauseId {
 }
 
 impl ClauseId {
-    pub async fn new(family: impl Into<String>, part: impl Into<String>, section: impl Into<String>) -> Self {
+    pub fn new(family: impl Into<String>, part: impl Into<String>, section: impl Into<String>) -> Self {
         Self { family: family.into(), part: part.into(), section: section.into() }
     }
 }
@@ -114,7 +114,7 @@ pub struct LocalizedText {
 }
 
 impl LocalizedText {
-    pub async fn new(locale: impl Into<String>, text: impl Into<String>) -> Self {
+    pub fn new(locale: impl Into<String>, text: impl Into<String>) -> Self {
         Self { locale: locale.into(), text: text.into() }
     }
 }
@@ -142,15 +142,15 @@ pub struct CheckResult {
 }
 
 impl CheckResult {
-    pub async fn pass(clause: ClauseId, computed: Quantity, limit: Quantity, utilization: f64, message: impl Into<String>, annex: AnnexChoice) -> Self {
+    pub fn pass(clause: ClauseId, computed: Quantity, limit: Quantity, utilization: f64, message: impl Into<String>, annex: AnnexChoice) -> Self {
         Self { clause, status: CheckStatus::Pass, computed, limit, utilization, message: message.into(), annex }
     }
 
-    pub async fn fail(clause: ClauseId, computed: Quantity, limit: Quantity, utilization: f64, message: impl Into<String>, annex: AnnexChoice) -> Self {
+    pub fn fail(clause: ClauseId, computed: Quantity, limit: Quantity, utilization: f64, message: impl Into<String>, annex: AnnexChoice) -> Self {
         Self { clause, status: CheckStatus::Fail, computed, limit, utilization, message: message.into(), annex }
     }
 
-    pub async fn from_utilization(clause: ClauseId, computed: Quantity, limit: Quantity, message: impl Into<String>, annex: AnnexChoice) -> Self {
+    pub fn from_utilization(clause: ClauseId, computed: Quantity, limit: Quantity, message: impl Into<String>, annex: AnnexChoice) -> Self {
         let utilization = if limit.value.abs() < f64::EPSILON { 0.0 } else { computed.value / limit.value };
         if utilization <= 1.0 {
             Self::pass(clause, computed, limit, utilization, message, annex)
@@ -159,7 +159,7 @@ impl CheckResult {
         }
     }
 
-    pub async fn from_minimum(clause: ClauseId, computed: Quantity, minimum: Quantity, message: impl Into<String>, annex: AnnexChoice) -> Self {
+    pub fn from_minimum(clause: ClauseId, computed: Quantity, minimum: Quantity, message: impl Into<String>, annex: AnnexChoice) -> Self {
         let passes = computed.value >= minimum.value;
         let utilization = if passes { minimum.value / computed.value.max(minimum.value) } else { computed.value / minimum.value.max(f64::EPSILON) };
         if passes {
@@ -177,15 +177,15 @@ pub struct CheckReport {
 }
 
 impl CheckReport {
-    pub async fn push(&mut self, check: CheckResult) {
+    pub fn push(&mut self, check: CheckResult) {
         self.checks.push(check);
     }
 
-    pub async fn all_pass(&self) -> bool {
+    pub fn all_pass(&self) -> bool {
         self.checks.iter().all(|c| c.status != CheckStatus::Fail)
     }
 
-    pub async fn worst_utilization(&self) -> f64 {
+    pub fn worst_utilization(&self) -> f64 {
         self.checks.iter().map(|c| c.utilization).fold(0.0_f64, f64::max)
     }
 }
@@ -202,7 +202,7 @@ pub enum AnnexChoice {
 }
 
 impl AnnexChoice {
-    pub async fn label(self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             Self::En => "EN",
             Self::De => "DE-NA",
@@ -215,21 +215,21 @@ impl AnnexChoice {
 /// `en1990`'s schema module, where the two impls live (`🎫️tickets/…/📓️terra-dedyn-fleet-norm-report.md`).
 #[dyn_enum]
 pub trait NationalAnnex {
-    async fn choice(&self) -> AnnexChoice;
-    async fn gamma_g(&self) -> f64;
-    async fn gamma_q(&self) -> f64;
-    async fn gamma_m(&self, _material: &str) -> f64 {
+    fn choice(&self) -> AnnexChoice;
+    fn gamma_g(&self) -> f64;
+    fn gamma_q(&self) -> f64;
+    fn gamma_m(&self, _material: &str) -> f64 {
         1.0
     }
-    async fn gamma_r(&self) -> f64 {
+    fn gamma_r(&self) -> f64 {
         1.0
     }
-    async fn xi(&self, _category: &str) -> f64 {
+    fn xi(&self, _category: &str) -> f64 {
         1.0
     }
-    async fn psi_0(&self, category: &str) -> f64;
-    async fn psi_1(&self, category: &str) -> f64;
-    async fn psi_2(&self, category: &str) -> f64;
+    fn psi_0(&self, category: &str) -> f64;
+    fn psi_1(&self, category: &str) -> f64;
+    fn psi_2(&self, category: &str) -> f64;
 }
 // #endregion 🔖️Annex
 
@@ -242,7 +242,7 @@ pub struct TableEntry1D {
 }
 
 /// 🔍️ Linear interpolation in a sorted 1D table.
-pub async fn table_lookup_linear(table: &[TableEntry1D], x: f64) -> f64 {
+pub fn table_lookup_linear(table: &[TableEntry1D], x: f64) -> f64 {
     if table.is_empty() {
         return 0.0;
     }
@@ -262,7 +262,7 @@ pub async fn table_lookup_linear(table: &[TableEntry1D], x: f64) -> f64 {
 }
 
 /// 🔍️ Bilinear interpolation on a regular grid.
-pub async fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: &[f64]) -> f64 {
+pub fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: &[f64]) -> f64 {
     let nx = x_vals.len();
     let ny = y_vals.len();
     if nx == 0 || ny == 0 || z.len() < nx * ny {
@@ -309,7 +309,7 @@ pub enum ConsequenceClass {
 }
 
 impl ConsequenceClass {
-    pub async fn as_u8(self) -> u8 {
+    pub fn as_u8(self) -> u8 {
         match self {
             Self::Cc1 => 1,
             Self::Cc2 => 2,
@@ -340,7 +340,7 @@ pub enum ImposedCategory {
 }
 
 impl ImposedCategory {
-    pub async fn q_k_kn_m2(self) -> f64 {
+    pub fn q_k_kn_m2(self) -> f64 {
         match self {
             Self::A => 2.0,
             Self::B => 2.5,
@@ -353,7 +353,7 @@ impl ImposedCategory {
         }
     }
 
-    pub async fn label(self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             Self::A => "residential",
             Self::B => "office",
@@ -402,7 +402,7 @@ pub enum ClimateZoneDe {
 }
 
 impl ClimateZoneDe {
-    pub async fn design_external_temperature_c(self) -> f64 {
+    pub fn design_external_temperature_c(self) -> f64 {
         match self {
             Self::Zone1 => -16.0,
             Self::Zone2 => -14.0,
@@ -411,7 +411,7 @@ impl ClimateZoneDe {
         }
     }
 
-    pub async fn summer_design_temperature_c(self) -> f64 {
+    pub fn summer_design_temperature_c(self) -> f64 {
         match self {
             Self::Zone1 => 26.0,
             Self::Zone2 => 28.0,
@@ -420,7 +420,7 @@ impl ClimateZoneDe {
         }
     }
 
-    pub async fn heating_degree_days(self) -> f64 {
+    pub fn heating_degree_days(self) -> f64 {
         match self {
             Self::Zone1 => 3800.0,
             Self::Zone2 => 3200.0,
@@ -494,7 +494,7 @@ pub enum NormFamilyId {
 }
 
 impl NormFamilyId {
-    pub async fn label(self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             Self::Din4108 => "DIN 4108",
             Self::DinEn16798 => "DIN EN 16798",
@@ -520,8 +520,8 @@ pub trait NormFamily: Send + Sync + 'static {
     type Document: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send;
     type Mutation: Mutation<Self::Document> + Clone + PartialEq + Send;
 
-    async fn family_id() -> NormFamilyId;
-    async fn evaluate(document: &Self::Document) -> CheckReport;
+    fn family_id() -> NormFamilyId;
+    fn evaluate(document: &Self::Document) -> CheckReport;
 }
 
 /// 📤️ Replace the whole family document (VCS undoable).
@@ -533,10 +533,10 @@ pub struct ArtifactDiff<D> {
 }
 
 impl<D: Clone + Default + Serialize + DeserializeOwned> MutationDiff<D> for ArtifactDiff<D> {
-    async fn apply(&self, projection: &D) -> protocol::MutationApplyResult<D> {
+    fn apply(&self, projection: &D) -> protocol::MutationApplyResult<D> {
         Ok({ self.document.clone().unwrap_or_else(|| projection.clone()) })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.document.is_some() {
             self.document = other.document;
         }
@@ -553,7 +553,7 @@ pub enum SetArtifactMutation<D> {
 impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Mutation<D> for SetArtifactMutation<D> {
     type Diff = ArtifactDiff<D>;
 
-    async fn diff(&self, projection: &D) -> protocol::MutationOutcome<ArtifactDiff<D>> {
+    fn diff(&self, projection: &D) -> protocol::MutationOutcome<ArtifactDiff<D>> {
         match self {
             Self::SetArtifact { document } => {
                 if document == projection {
@@ -564,7 +564,7 @@ impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Mutation<D> 
         }
     }
 
-    async fn inverse(&self, projection: &D) -> Vec<Self> {
+    fn inverse(&self, projection: &D) -> Vec<Self> {
         vec![Self::SetArtifact { document: projection.clone() }]
     }
 }
@@ -584,20 +584,20 @@ impl<F: NormFamily> Default for NormHost<F> {
 }
 
 impl<F: NormFamily> NormHost<F> {
-    pub async fn from_document(document: F::Document) -> Self {
+    pub fn from_document(document: F::Document) -> Self {
         let report = F::evaluate(&document);
         Self { document, report }
     }
 
-    pub async fn document(&self) -> &F::Document {
+    pub fn document(&self) -> &F::Document {
         &self.document
     }
 
-    pub async fn report(&self) -> &CheckReport {
+    pub fn report(&self) -> &CheckReport {
         &self.report
     }
 
-    pub async fn apply(&mut self, mutation: &F::Mutation) -> protocol::MutationApplyResult<()> {
+    pub fn apply(&mut self, mutation: &F::Mutation) -> protocol::MutationApplyResult<()> {
         let (document, _) = vcs::apply_mutation(&self.document, mutation)?;
         let report = F::evaluate(&document);
         self.document = document;
@@ -605,12 +605,12 @@ impl<F: NormFamily> NormHost<F> {
         Ok(())
     }
 
-    pub async fn replace_document(&mut self, document: F::Document) {
+    pub fn replace_document(&mut self, document: F::Document) {
         self.document = document;
         self.report = F::evaluate(&self.document);
     }
 
-    pub async fn evaluate(&mut self) {
+    pub fn evaluate(&mut self) {
         self.report = F::evaluate(&self.document);
     }
 }
@@ -621,7 +621,7 @@ impl<F: NormFamily> NormHost<F> {
 /// op-text field. Mirrors vcs's own private `escape_text_field`/`unescape_text_field` convention
 /// exactly (same three escapes, same order) so escaping behaves identically repo-wide, even though vcs
 /// does not expose those helpers for reuse.
-pub(crate) async fn escape_op_text_field(value: &str) -> String {
+pub(crate) fn escape_op_text_field(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
         match ch {
@@ -635,7 +635,7 @@ pub(crate) async fn escape_op_text_field(value: &str) -> String {
 }
 
 /// ✂️ Inverts {@link escape_op_text_field}.
-pub(crate) async fn unescape_op_text_field(value: &str) -> String {
+pub(crate) fn unescape_op_text_field(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars();
     while let Some(ch) = chars.next() {
@@ -668,7 +668,7 @@ impl<D> OpText for SetArtifactMutation<D>
 where
     D: ArtifactDsl + Clone + Default + PartialEq + Serialize + DeserializeOwned,
 {
-    async fn parse_op(line: &str) -> Result<Self, TextError> {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
         let trimmed = line.trim();
         let rest = trimmed.strip_prefix("set-document ").ok_or_else(|| TextError::new("expected 'set-document \"<document>\"'", TextSpan::at(1, 1)))?.trim();
         let quoted = rest.strip_prefix('"').and_then(|value| value.strip_suffix('"')).ok_or_else(|| TextError::new("expected a double-quoted document text field", TextSpan::at(1, 15)))?;
@@ -677,7 +677,7 @@ where
         Ok(SetArtifactMutation::SetArtifact { document })
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         match self {
             SetArtifactMutation::SetArtifact { document } => {
                 format!("set-document \"{}\"", escape_op_text_field(&document.print_dsl()))
@@ -696,7 +696,7 @@ impl<D> OpBinary for SetArtifactMutation<D>
 where
     D: ArtifactPack + Clone + Default + PartialEq + Serialize + DeserializeOwned,
 {
-    async fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
         match self {
             SetArtifactMutation::SetArtifact { document } => {
                 let mut out = vec![1u8];
@@ -706,7 +706,7 @@ where
         }
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
         let format = *bytes.first().ok_or(ProtocolError::Malformed { what: "set-document operation", offset: 0, detail: "empty payload".to_string() })?;
         if format != 1 {
             return Err(ProtocolError::Malformed { what: "set-document operation", offset: 0, detail: format!("unsupported format {format}") });
@@ -735,14 +735,14 @@ pub trait NormArtifactRecord: Sized {
     const EXTENSION: &'static str;
     /// 🆔️ Semio envelope id (`"norm.<family>"`) both the text and pack wire wrap themselves in.
     const ENVELOPE_ID: &'static str;
-    async fn dsl_spec() -> dsl::RecordSpec;
-    async fn dsl_to_record(&self) -> dsl::RecordValue;
-    async fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, TextError>;
+    fn dsl_spec() -> dsl::RecordSpec;
+    fn dsl_to_record(&self) -> dsl::RecordValue;
+    fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, TextError>;
 }
 
 /// 📖️ Shared `ArtifactDsl::parse_dsl` body: strip the optional semio-format text preamble, parse the
 /// remaining body against `T`'s record spec, then lower the parsed record back into `T`.
-pub async fn norm_parse_dsl<T: NormArtifactRecord>(text: &str) -> Result<T, TextError> {
+pub fn norm_parse_dsl<T: NormArtifactRecord>(text: &str) -> Result<T, TextError> {
     let body = match store::semio_format::split_text_preamble(text) {
         Ok((_, rest)) => rest,
         Err(_) => text,
@@ -752,14 +752,14 @@ pub async fn norm_parse_dsl<T: NormArtifactRecord>(text: &str) -> Result<T, Text
 }
 
 /// 🖨️ Shared `ArtifactDsl::print_dsl` body: print `T`'s record, then wrap it in its semio envelope.
-pub async fn norm_print_dsl<T: NormArtifactRecord>(value: &T) -> String {
+pub fn norm_print_dsl<T: NormArtifactRecord>(value: &T) -> String {
     let body = dsl::print(&value.dsl_to_record(), &T::dsl_spec(), dsl::JoinMode::Document);
     let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
     store::semio_format::wrap_text(&envelope, &body)
 }
 
 /// 📦️ Shared `ArtifactPack::encode_pack_with` body: pack-encode `T`'s record, then envelope-wrap it.
-pub async fn norm_encode_pack<T: NormArtifactRecord>(value: &T, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+pub fn norm_encode_pack<T: NormArtifactRecord>(value: &T, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
     let inner = store::pack_rt::encode_document(&T::dsl_spec(), &value.dsl_to_record(), options)?;
     let envelope = store::semio_format::SemioEnvelope::from_envelope_id(T::ENVELOPE_ID, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
     Ok(store::semio_format::wrap_binary(&envelope, &inner))
@@ -767,7 +767,7 @@ pub async fn norm_encode_pack<T: NormArtifactRecord>(value: &T, options: &store:
 
 /// 📦️ Shared `ArtifactPack::decode_pack_with` body: unwrap the envelope (checking it matches `T`'s
 /// own), pack-decode the inner record, then lower it back into `T`.
-pub async fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<T, store::PackError> {
+pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<T, store::PackError> {
     let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
     if envelope.envelope_id() != T::ENVELOPE_ID {
         return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", T::ENVELOPE_ID, envelope.envelope_id())));
@@ -785,36 +785,36 @@ macro_rules! impl_norm_artifact_record {
         impl $crate::document::NormArtifactRecord for $Snapshot {
             const EXTENSION: &'static str = $extension;
             const ENVELOPE_ID: &'static str = $envelope_id;
-            async fn dsl_spec() -> dsl::RecordSpec {
+            fn dsl_spec() -> dsl::RecordSpec {
                 Self::__dsl_spec()
             }
-            async fn dsl_to_record(&self) -> dsl::RecordValue {
+            fn dsl_to_record(&self) -> dsl::RecordValue {
                 self.__dsl_to_record()
             }
-            async fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, store::TextError> {
+            fn dsl_from_record(record: &dsl::RecordValue) -> Result<Self, store::TextError> {
                 Self::__dsl_from_record(record)
             }
         }
         impl store::ArtifactDsl for $Snapshot {
             const EXTENSION: &'static str = $extension;
-            async fn envelope_id() -> &'static str {
+            fn envelope_id() -> &'static str {
                 $envelope_id
             }
-            async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
                 $crate::document::norm_parse_dsl(text)
             }
-            async fn print_dsl(&self) -> String {
+            fn print_dsl(&self) -> String {
                 $crate::document::norm_print_dsl(self)
             }
         }
         impl store::ArtifactPack for $Snapshot {
-            async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 $crate::document::norm_encode_pack(self, options)
             }
-            async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                 $crate::document::norm_decode_pack(bytes, options)
             }
-            async fn record_spec() -> Option<dsl::RecordSpec> {
+            fn record_spec() -> Option<dsl::RecordSpec> {
                 Some(<Self as $crate::document::NormArtifactRecord>::dsl_spec())
             }
         }
@@ -829,7 +829,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn check_result_passes_when_utilization_below_one() {
+    fn check_result_passes_when_utilization_below_one() {
         let clause = ClauseId::new("EN 1990", "§6.4", "6.10");
         let result = CheckResult::from_utilization(clause, Quantity::stress_mpa(250.0), Quantity::stress_mpa(300.0), "ULS stress check", AnnexChoice::De);
         assert_eq!(result.status, CheckStatus::Pass);
@@ -837,13 +837,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn table_lookup_linear_interpolates() {
+    fn table_lookup_linear_interpolates() {
         let table = [TableEntry1D { x: 0.0, y: 1.0 }, TableEntry1D { x: 10.0, y: 2.0 }];
         assert!((table_lookup_linear(&table, 5.0) - 1.5).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn check_minimum_passes_when_above_threshold() {
+    fn check_minimum_passes_when_above_threshold() {
         let result = CheckResult::from_minimum(ClauseId::new("DIN 4108-3", "§6", "6.1"), Quantity::new(QuantityKind::Dimensionless, 0.8), Quantity::new(QuantityKind::Dimensionless, 0.25), "f_Rsi", AnnexChoice::De);
         assert_eq!(result.status, CheckStatus::Pass);
     }
@@ -869,11 +869,11 @@ mod tests {
         type Document = DemoDocument;
         type Mutation = SetArtifactMutation<DemoDocument>;
 
-        async fn family_id() -> NormFamilyId {
+        fn family_id() -> NormFamilyId {
             NormFamilyId::En1990
         }
 
-        async fn evaluate(document: &DemoDocument) -> CheckReport {
+        fn evaluate(document: &DemoDocument) -> CheckReport {
             let mut report = CheckReport::default();
             report.push(CheckResult::from_utilization(ClauseId::new("demo", "§1", "1.1"), Quantity::new(QuantityKind::Dimensionless, document.value), Quantity::new(QuantityKind::Dimensionless, 1.0), "demo check", AnnexChoice::De));
             report
@@ -881,7 +881,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn norm_host_recomputes_report_after_apply() {
+    fn norm_host_recomputes_report_after_apply() {
         let mut host = NormHost::<DemoFamily>::default();
         assert!(host.report().checks[0].utilization < 1.0);
         host.apply(&SetArtifactMutation::SetArtifact { document: DemoDocument { value: 2.0 } }).expect("valid artifact replacement");
@@ -889,18 +889,18 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn demo_document_dsl_round_trips() {
+    fn demo_document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
         store::os_store::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn set_artifact_operation_op_text_round_trips() {
+    fn set_artifact_operation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&SetArtifactMutation::SetArtifact { document: DemoDocument { value: 4.5 } });
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn set_artifact_operation_op_text_escapes_multiline_dsl_text() {
+    fn set_artifact_operation_op_text_escapes_multiline_dsl_text() {
         // ⚡️ The op-text field wraps the newline `print_dsl` always emits, so this exercises the
         // `\n` escape (not just the general round-trip law already covered above).
         let printed = SetArtifactMutation::SetArtifact { document: DemoDocument { value: 7.0 } }.print_op();
@@ -911,7 +911,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn document_text_round_trips_for_a_norm_family_document() {
+    fn document_text_round_trips_for_a_norm_family_document() {
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
         let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SetArtifactMutation::SetArtifact { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
@@ -927,7 +927,7 @@ mod tests {
     /// once for the shared generic `SetArtifactMutation<D>` bridge (`POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`'s
     /// `"SetArtifactMutation"` entry), covering every norm family that reuses it.
     #[semio_framework_async_macros::async_test]
-    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);

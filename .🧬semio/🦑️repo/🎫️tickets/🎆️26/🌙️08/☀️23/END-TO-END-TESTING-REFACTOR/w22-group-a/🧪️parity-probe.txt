@@ -1,0 +1,30 @@
+[budget] cargo run --quiet --manifest-path /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-note-artifacts-note-76d6d5-mutate-note-1-subject-rust/Cargo.toml --features sut -- --plan /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-note-artifacts-note-76d6d5-mutate-note-1-subject-rust/📋️plan.json --out /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-note-artifacts-note-76d6d5-mutate-note-1-subject-rust/📤️results.jsonl exceeded 900000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
+1694 | }
+1695 | 
+1696 | /** 🔍️Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
+1697 | export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
+1698 |   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
+1699 |   const result = spawnSync(cmd, args, {
+                        ^
+error: spawnSync cargo ETIMEDOUT
+      path: "cargo",
+   syscall: "spawnSync cargo",
+     errno: -60,
+ spawnargs: [
+  "run", "--quiet", "--manifest-path", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-note-artifacts-note-76d6d5-mutate-note-1-subject-rust/Cargo.toml",
+  "--features", "sut", "--", "--plan", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-note-artifacts-note-76d6d5-mutate-note-1-subject-rust/📋️plan.json",
+  "--out", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/results/test-s-plugins-note-artifacts-note-76d6d5-mutate-note-1-subject-rust/📤️results.jsonl"
+],
+      code: "ETIMEDOUT"
+
+      at spawnSync (node:child_process:254:20)
+      at runProbe (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1699:18)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:529:17)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:593:25)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1037:71)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1067:16)
+
+Bun v1.3.14 (macOS arm64)
+EXIT=1
+PROBEDONE

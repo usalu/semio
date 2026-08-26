@@ -18,26 +18,26 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 //#region 🔖️OpBinaryCodec
-async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
-async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
     String::from_utf8(bytes.to_vec()).map_err(|e| e.to_string())
 }
 /// 🧬️ Every payload field (even plain scalars) round-trips through JSON — see `../📝️text`'s
 /// `🔖️ScalarCodec` doc for why this stays uniform across all 5 field types in this facet.
-async fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
+fn write_json_bin<T: serde::Serialize>(out: &mut Vec<u8>, value: &T) {
     write_str_bin(out, &serde_json::to_string(value).expect("en1993 mutation payload field always serializes"));
 }
-async fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+fn read_json_bin<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     serde_json::from_str(&read_str_bin(reader)?).map_err(|e| e.to_string())
 }
 
 impl protocol::OpBinary for En1993Mutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             En1993Mutation::ChangeAnnex(_) => 0,
             En1993Mutation::UpdateMemberProperties(_) => 1,
@@ -171,7 +171,7 @@ impl protocol::OpBinary for En1993Mutation {
         Ok(out)
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;

@@ -1,0 +1,50 @@
+Parity evidence — oracle (IfcOpenShell) vs subject (this repository's codec), captured 2026-08-26
+
+== differential-ifc-4
+   oracle   differential-no-mutation                     passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-set-snapshot                    passed   entities=24792  schema=['IFC4X3']                                 rawHash=8d2702215387a98b146d47d2b53cd4ae
+   oracle   differential-set-file-description            passed   entities=24792  schema=['IFC4']                                   rawHash=e49b03be915d295427e376f9f82eb929
+   oracle   differential-set-file-name                   passed   entities=24792  schema=['IFC4']                                   rawHash=812554b7b936a28003dff3ace0a3aa1d
+   oracle   differential-set-file-schema                 passed   entities=24792  schema=['IFC4X3']                                 rawHash=8d2702215387a98b146d47d2b53cd4ae
+   oracle   differential-insert-entity                   passed   entities=24793  schema=['IFC4']                                   rawHash=7580967625a36bb069ad1336cf844a74
+   oracle   differential-set-entity-arg                  passed   entities=24792  schema=['IFC4']                                   rawHash=ca29b1680d2fc7d5b636cb89ff9b67f3
+   oracle   differential-inverse-no-mutation             passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-inverse-set-snapshot            passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-inverse-set-file-description    passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-inverse-set-file-name           passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-inverse-set-file-schema         passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-inverse-insert-entity           passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-inverse-set-entity-arg          passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   oracle   differential-identity-round-trip             passed   entities=24792  schema=['IFC4']                                   rawHash=4d1d98626ac3cf84d26ff8c46c8b2f62
+   subject  differential-no-mutation                     passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-set-snapshot                    passed   entities=24792  schema=['IFC4X3']                                 rawHash=e2b2b0fbda623d8dbf9d4cf74485350d
+   subject  differential-set-file-description            passed   entities=24792  schema=['IFC4']                                   rawHash=05422c2753b3bcc546ff422b7e229b5e
+   subject  differential-set-file-name                   passed   entities=24792  schema=['IFC4']                                   rawHash=d8be5d047a75083d19242d381d2f1db6
+   subject  differential-set-file-schema                 passed   entities=24792  schema=['IFC4X3']                                 rawHash=e2b2b0fbda623d8dbf9d4cf74485350d
+   subject  differential-insert-entity                   passed   entities=24793  schema=['IFC4']                                   rawHash=5ba11d4b1aa4847016599768ad631262
+   subject  differential-set-entity-arg                  passed   entities=24792  schema=['IFC4']                                   rawHash=0201b2698ab347abf17aa3c386701690
+   subject  differential-inverse-no-mutation             passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-inverse-set-snapshot            passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-inverse-set-file-description    passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-inverse-set-file-name           passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-inverse-set-file-schema         passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-inverse-insert-entity           passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-inverse-set-entity-arg          passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+   subject  differential-identity-round-trip             passed   entities=24792  schema=['IFC4']                                   rawHash=2f5f42f93058ec197fa020cf23f3d8ce
+== differential-ifc-2x3
+   oracle   differential-no-mutation                     passed   entities=3464   schema=['IFC2X3']                                 rawHash=f1240e9ce84e78402f479315d4f0089c
+   oracle   differential-set-snapshot                    passed   entities=3464   schema=['IFC2X3', 'IFC2X3-WAVE8-SNAPSHOT-MARKER'] rawHash=8c2ed6698ce9ab1114bf759dc4999264
+   oracle   differential-upsert-instance                 passed   entities=3464   schema=['IFC2X3']                                 rawHash=c01d3fd47cef00c1f40910efea3097db
+   oracle   differential-set-header                      passed   entities=3464   schema=['IFC2X3']                                 rawHash=3eb22f2ee574ef79788a983633f8f1cf
+   oracle   differential-inverse-no-mutation             passed   entities=3464   schema=['IFC2X3']                                 rawHash=f1240e9ce84e78402f479315d4f0089c
+   oracle   differential-inverse-upsert-instance         passed   entities=3464   schema=['IFC2X3']                                 rawHash=f1240e9ce84e78402f479315d4f0089c
+   oracle   differential-inverse-set-header              passed   entities=3464   schema=['IFC2X3']                                 rawHash=f1240e9ce84e78402f479315d4f0089c
+   oracle   differential-identity-round-trip             passed   entities=3464   schema=['IFC2X3']                                 rawHash=f1240e9ce84e78402f479315d4f0089c
+   subject  differential-no-mutation                     passed   entities=3464   schema=['IFC2X3']                                 rawHash=dec0ee8497633af2aba13e01feae9eb5
+   subject  differential-set-snapshot                    passed   entities=3464   schema=['IFC2X3', 'IFC2X3-WAVE8-SNAPSHOT-MARKER'] rawHash=4d2a45ebec378f03c6dd9f7f1989bf14
+   subject  differential-upsert-instance                 passed   entities=3464   schema=['IFC2X3']                                 rawHash=6fdd8ea08881165213286a0a3ed0dc7b
+   subject  differential-set-header                      passed   entities=3464   schema=['IFC2X3']                                 rawHash=2350857b6b5fd56a6b075ede6520d327
+   subject  differential-inverse-no-mutation             passed   entities=3464   schema=['IFC2X3']                                 rawHash=dec0ee8497633af2aba13e01feae9eb5
+   subject  differential-inverse-upsert-instance         passed   entities=3464   schema=['IFC2X3']                                 rawHash=dec0ee8497633af2aba13e01feae9eb5
+   subject  differential-inverse-set-header              passed   entities=3464   schema=['IFC2X3']                                 rawHash=dec0ee8497633af2aba13e01feae9eb5
+   subject  differential-identity-round-trip             passed   entities=3464   schema=['IFC2X3']                                 rawHash=dec0ee8497633af2aba13e01feae9eb5

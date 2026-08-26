@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl Vdi3805Diff {
-    pub async fn apply_to_artifact(&self, artifact: &Vdi3805Artifact) -> protocol::MutationApplyResult<Vdi3805Artifact> {
+    pub fn apply_to_artifact(&self, artifact: &Vdi3805Artifact) -> protocol::MutationApplyResult<Vdi3805Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -55,7 +55,7 @@ impl Vdi3805Diff {
 }
 
 impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
-    async fn apply(&self, snapshot: &Vdi3805Snapshot) -> protocol::MutationApplyResult<Vdi3805Snapshot> {
+    fn apply(&self, snapshot: &Vdi3805Snapshot) -> protocol::MutationApplyResult<Vdi3805Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -91,7 +91,7 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -118,7 +118,7 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub async fn diff_set_snapshot(snapshot: &Vdi3805Snapshot) -> Vdi3805Diff {
+pub fn diff_set_snapshot(snapshot: &Vdi3805Snapshot) -> Vdi3805Diff {
     Vdi3805Diff { artifact: Some(Box::new(Vdi3805Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers

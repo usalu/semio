@@ -57,12 +57,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
         let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
-        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
-        let root = &node.sections[0].items[0];
-        assert_eq!(root.id, COMMENT_NODE_ID);
-        let children = root.items.as_ref().expect("root has children");
+        let node = render(&document).expect("render");
+        let section = node.children.get(0).expect("tree section");
+        let root = section.children.get(0).expect("tree root");
+        assert_eq!(root.key.as_str(), COMMENT_NODE_ID);
+        let children = &root.children;
         assert_eq!(children.len(), 1);
-        assert_eq!(children[0].id, format!("{ENTRY_NODE_PREFIX}0"));
+        assert_eq!(children.get(0).expect("child").key.as_str(), format!("{ENTRY_NODE_PREFIX}0"));
     }
 }
 //#endregion 🧪️Tests

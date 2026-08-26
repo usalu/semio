@@ -9,7 +9,7 @@
 
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
-use crate::editor::draw::commands::canvas_pointer_down::{DrawGestureCheckpoint, DrawSession};
+use crate::editor::draw::commands::canvas_pointer_down::{DrawGesturePreview, DrawSession};
 use crate::editor::draw::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
     engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_locale, set_selected_opacity, set_snapshot, toggle_layer_visible,
@@ -23,12 +23,11 @@ use crate::editor::draw::terminology::DrawPlayLabels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
-    Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
+    Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
     WindowEngagementStatus,
 };
 use serde_json::Value;
-use std::collections::BTreeMap;
-use std::sync::{Mutex, OnceLock};
+use semio_framework_job::FixedOperationOwner;
 use store::ArtifactPack;
 use store::EngineHandles;
 
@@ -51,6 +50,11 @@ pub const DRAW_INTERACTION_GRANULARITY: &str = "stroke";
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
 pub fn draw_play_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(DRAW_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🎛️ Builds one manifest-side engagement action without crossing into the retained UI wire action type.
+fn draw_manifest_action(action: &str) -> ActionDescriptor {
+    ActionDescriptor { controller_id: DRAW_PLAY_CONTROLLER_ID.into(), action: action.into(), args: None }
 }
 
 
@@ -111,12 +115,12 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-async fn draw_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
+fn draw_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
     semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
-async fn draw_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+fn draw_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 //#endregion 🔖️Constants
@@ -161,41 +165,684 @@ semio_framework_plugin::app_commands! {
 
 //#endregion 🔖️Commands
 
-//#region 🔖️DrawPlayApp
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct DrawSessionKey {
-    app_instance_id: u32,
-    document_id: String,
-    operation_id: u64,
-    generation: u64,
-    base_revision: String,
+//#region 🧵️GestureOperationJobs
+const DRAW_GESTURE_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape"];
+const DRAW_GESTURE_RAW_BYTES: usize = 8_192;
+const DRAW_GESTURE_RETAINED_BYTES: usize = 32_768;
+
+struct DrawGestureOperationOwner {
+    session: Option<DrawSession>,
+    closing: bool,
 }
 
-static DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<DrawSessionKey, DrawSession>>> = OnceLock::new();
-static ACTIVE_DRAW_SESSIONS: OnceLock<Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>>> = OnceLock::new();
-const MAX_LIVE_DRAW_SESSIONS: usize = 64;
-
-fn draw_sessions() -> &'static Mutex<BTreeMap<DrawSessionKey, DrawSession>> {
-    DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
-}
-
-fn active_draw_sessions() -> &'static Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>> {
-    ACTIVE_DRAW_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
-}
-
-fn checkpoint_from_config(config: &DrawConfig) -> Option<DrawGestureCheckpoint> {
-    if config.gesture_checkpoint_json.len() > 4_096 {
-        return None;
+impl DrawGestureOperationOwner {
+    fn new() -> Self {
+        Self { session: Some(DrawSession::default()), closing: false }
     }
-    serde_json::from_str(&config.gesture_checkpoint_json).ok()
 }
 
+impl semio_framework_job::FixedOperationOwner for DrawGestureOperationOwner {
+    fn retained_bytes(&self) -> usize {
+        DRAW_GESTURE_RETAINED_BYTES
+    }
+
+    fn cancel(&mut self) {
+        self.closing = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 || maximum_bytes < DRAW_GESTURE_RETAINED_BYTES {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if self.session.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: DRAW_GESTURE_RETAINED_BYTES };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.session.is_none()
+    }
+}
+
+struct DrawInstanceOperationOwner {
+    operations: semio_framework_job::FixedOperationRegistry<DrawGestureOperationOwner, 64>,
+    active: Option<(semio_framework_job::FixedOperationKey, [u8; 32])>,
+    closing: bool,
+}
+
+impl DrawInstanceOperationOwner {
+    fn new() -> Self {
+        Self { operations: semio_framework_job::FixedOperationRegistry::new(64 * DRAW_GESTURE_RETAINED_BYTES), active: None, closing: false }
+    }
+
+    fn dispatch(
+        &mut self,
+        key: semio_framework_job::FixedOperationKey,
+        base_revision: [u8; 32],
+        command: &DrawCommand,
+        snapshot: &DrawSnapshot,
+        config: &DrawConfig,
+        history: &semio_framework_plugin::HistoryView,
+        operation: semio_framework_plugin::AppOperationContext,
+    ) -> Result<Option<Emit<DrawMutation, DrawConfigMutation, NoDraftMutation>>, Fault> {
+        if self.closing {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.closing"), "the Draw gesture operation owner is closing"));
+        }
+        if let Some((active, observed_revision)) = self.active {
+            if observed_revision != base_revision {
+                self.operations.cancel(active);
+                self.active = None;
+            }
+        }
+        let live_key = self.active.map_or(key, |(active, _)| active);
+        if self.operations.get(live_key).is_none() {
+            self.operations.admit(live_key, DrawGestureOperationOwner::new()).map_err(|mut rejected| {
+                rejected.owner.cancel();
+                rejected.owner.begin_close();
+                let _ = rejected.owner.close_step(1, DRAW_GESTURE_RETAINED_BYTES);
+                Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.saturated"), "the fixed Draw gesture operation authority is saturated")
+            })?;
+            self.active = Some((live_key, base_revision));
+        }
+        let retained = self
+            .operations
+            .get_mut(live_key)
+            .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.owner"), "the exact Draw gesture owner changed before its bounded reducer step"))?;
+        let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.owner"), "the Draw gesture session is already closing"))?;
+        if session.gesture.context.points_overflowed {
+            self.operations.cancel(live_key);
+            self.active = None;
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.point-capacity"), "the fixed Draw gesture point capacity was exceeded"));
+        }
+        if let Some(query) = session.draft_query.as_mut() {
+            if query.command_id != command.command_id() {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.draft-owner"), "a retained Draw draft query rejects a different command owner"));
+            }
+            let Some(emit) = query.advance(snapshot) else { return Ok(None) };
+            session.draft_query = None;
+            if session.gesture.matches("idle") && session.trace_pointer.is_none() {
+                self.operations.cancel(live_key);
+                self.active = None;
+            }
+            return Ok(Some(emit));
+        }
+        if let Some(query) = session.point_query.as_mut() {
+            if query.command_id != command.command_id() {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.query-owner"), "a retained Draw point query rejects a different command owner"));
+            }
+            if !query.traversal_complete {
+                if !query.cursor.advance(snapshot) {
+                    return Ok(None);
+                }
+                if query.cursor.overflowed {
+                    session.point_query = None;
+                    self.operations.cancel(live_key);
+                    self.active = None;
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.query-capacity"), "the fixed Draw query result capacity was exceeded"));
+                }
+                query.traversal_complete = true;
+                return Ok(None);
+            }
+            let targets = match query.publication_step() {
+                canvas_pointer_down::DrawQueryPublication::Pending => return Ok(None),
+                canvas_pointer_down::DrawQueryPublication::Complete(targets) => targets,
+                canvas_pointer_down::DrawQueryPublication::Fault => {
+                    session.point_query = None;
+                    self.operations.cancel(live_key);
+                    self.active = None;
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.query-output-capacity"), "the fixed Draw interaction output capacity was exceeded"));
+                }
+            };
+            let query = session.point_query.take().expect("the exact published query remains retained");
+            let effect = if query.hover {
+                canvas_pointer_down::interaction_hover_effect_from_targets(targets)
+            } else {
+                canvas_pointer_down::interaction_select_effect_from_targets(targets, &query.merge)
+            };
+            let mut emit = Emit::default();
+            emit.effects.push(effect);
+            if session.gesture.matches("idle") && session.trace_pointer.is_none() {
+                self.operations.cancel(live_key);
+                self.active = None;
+            }
+            return Ok(Some(emit));
+        }
+        if let DrawCommand::CanvasPointerMove(payload) = command {
+            if session.gesture.matches("idle") {
+                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
+                let tolerance = canvas_pointer_down::DRAW_PICK_TOLERANCE_PX / config.camera.zoom.max(1e-6);
+                session.point_query = Some(canvas_pointer_down::DrawPointQuery::new(
+                    command.command_id(),
+                    canvas_pointer_down::TracePointerJob::new_query(snapshot, [world_x, world_y], tolerance, config.active_utility_id == "selectDirect"),
+                    true,
+                    "replace".into(),
+                    false,
+                ));
+                return Ok(None);
+            }
+        }
+        let retained_emit = match command {
+            DrawCommand::CanvasPointerUp(payload) => {
+                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&config.camera, payload.x, payload.y, payload.width, payload.height);
+                Some(session.step_gesture_retained(
+                    command.command_id(),
+                    canvas_pointer_down::draw_gesture::Event::PointerUp {
+                        utility: config.active_utility_id.clone(),
+                        world: [world_x, world_y],
+                        shift: payload.shift,
+                        ctrl: payload.ctrl,
+                        meta: payload.meta,
+                    },
+                    snapshot,
+                    config,
+                ))
+            }
+            DrawCommand::CanvasDoubleClick(_) | DrawCommand::CanvasCommitDraft(_) => Some(session.step_gesture_retained(command.command_id(), canvas_pointer_down::draw_gesture::Event::CommitDraft, snapshot, config)),
+            _ => None,
+        };
+        if let Some(retained_emit) = retained_emit {
+            let Some(emit) = retained_emit else { return Ok(None) };
+            if session.gesture.matches("idle") && session.trace_pointer.is_none() {
+                self.operations.cancel(live_key);
+                self.active = None;
+            }
+            return Ok(Some(emit));
+        }
+        let doc = ArtifactView::with_operation(snapshot, history, operation);
+        let cfg = ConfigView { snapshot: config };
+        let emit = match command {
+            DrawCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle(payload, &doc, &cfg, session),
+            DrawCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle(payload, &doc, &cfg, session),
+            DrawCommand::CanvasPointerUp(_) | DrawCommand::CanvasDoubleClick(_) | DrawCommand::CanvasCommitDraft(_) => unreachable!("retained Draw gesture commands returned above"),
+            DrawCommand::CanvasEscape(payload) => canvas_escape::handle(payload, &doc, &cfg, session),
+            _ => Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.command"), "the retained Draw gesture owner rejects non-gesture commands")),
+        }?;
+        if session.gesture.context.points_overflowed {
+            self.operations.cancel(live_key);
+            self.active = None;
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.point-capacity"), "the fixed Draw gesture point capacity was exceeded"));
+        }
+        if session.gesture.matches("idle") && session.trace_pointer.is_none() {
+            self.operations.cancel(live_key);
+            self.active = None;
+        }
+        Ok(Some(emit))
+    }
+
+    fn preview_projection(&mut self, canonical_base_revision: [u8; 32], active_utility: &str) -> Option<DrawGesturePreview> {
+        let (key, observed_revision) = self.active?;
+        if observed_revision != canonical_base_revision {
+            self.operations.cancel(key);
+            self.active = None;
+            return None;
+        }
+        let session = self.operations.get_mut(key).and_then(|owner| owner.session.as_mut())?;
+        if active_utility != "trace" {
+            session.trace_pointer = None;
+        }
+        if session.gesture.matches("idle") && session.trace_pointer.is_none() && session.point_query.is_none() && session.draft_query.is_none() {
+            self.operations.cancel(key);
+            self.active = None;
+            return None;
+        }
+        Some(session.preview())
+    }
+}
+
+impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawInstanceOperationOwner {
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        Ok(match self.operations.close_step(maximum_items, maximum_bytes) {
+            semio_framework_job::InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "Draw gesture close owner awaits its exact grant" },
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes },
+            semio_framework_job::InteractiveJobCloseStep::Complete => semio_framework_plugin::PluginCloseStep::Complete,
+        })
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        self.closing = true;
+        if !self.operations.is_empty() {
+            self.operations.begin_close_step();
+        }
+        self.maintenance_step(maximum_items, maximum_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.operations.is_empty()
+    }
+}
+
+struct DrawGestureOperationPayload {
+    command: DrawCommand,
+    snapshot: std::sync::Arc<DrawSnapshot>,
+    config: std::sync::Arc<DrawConfig>,
+    history: std::sync::Arc<semio_framework_plugin::HistoryView>,
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    operation_context: semio_framework_plugin::AppOperationContext,
+    completion: semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<DrawPlayApp>>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DrawRetainedDecodePhase {
+    Open,
+    VerbOpen,
+    Verb,
+    Comma,
+    Value,
+    Close,
+    Complete,
+    Fault,
+}
+
+struct DrawRetainedCommandDecoder {
+    expected_verb: &'static [u8],
+    phase: DrawRetainedDecodePhase,
+    verb_cursor: usize,
+    nested_depth: usize,
+    string: bool,
+    escaped: bool,
+    scalar: bool,
+    value_complete: bool,
+}
+
+impl DrawRetainedCommandDecoder {
+    fn new(expected_verb: &'static str) -> Self {
+        Self { expected_verb: expected_verb.as_bytes(), phase: DrawRetainedDecodePhase::Open, verb_cursor: 0, nested_depth: 0, string: false, escaped: false, scalar: false, value_complete: false }
+    }
+
+    fn feed(&mut self, byte: u8) {
+        if matches!(self.phase, DrawRetainedDecodePhase::Fault | DrawRetainedDecodePhase::Complete) {
+            if !byte.is_ascii_whitespace() {
+                self.phase = DrawRetainedDecodePhase::Fault;
+            }
+            return;
+        }
+        match self.phase {
+            DrawRetainedDecodePhase::Open => {
+                if byte.is_ascii_whitespace() {
+                    return;
+                }
+                self.phase = if byte == b'[' { DrawRetainedDecodePhase::VerbOpen } else { DrawRetainedDecodePhase::Fault };
+            }
+            DrawRetainedDecodePhase::VerbOpen => {
+                if byte.is_ascii_whitespace() {
+                    return;
+                }
+                self.phase = if byte == b'"' { DrawRetainedDecodePhase::Verb } else { DrawRetainedDecodePhase::Fault };
+            }
+            DrawRetainedDecodePhase::Verb => {
+                if self.verb_cursor == self.expected_verb.len() {
+                    self.phase = if byte == b'"' { DrawRetainedDecodePhase::Comma } else { DrawRetainedDecodePhase::Fault };
+                } else if self.expected_verb.get(self.verb_cursor) == Some(&byte) {
+                    self.verb_cursor += 1;
+                } else {
+                    self.phase = DrawRetainedDecodePhase::Fault;
+                }
+            }
+            DrawRetainedDecodePhase::Comma => {
+                if byte.is_ascii_whitespace() {
+                    return;
+                }
+                self.phase = if byte == b',' { DrawRetainedDecodePhase::Value } else { DrawRetainedDecodePhase::Fault };
+            }
+            DrawRetainedDecodePhase::Value => self.feed_value(byte),
+            DrawRetainedDecodePhase::Close => {
+                if byte.is_ascii_whitespace() {
+                    return;
+                }
+                self.phase = if byte == b']' { DrawRetainedDecodePhase::Complete } else { DrawRetainedDecodePhase::Fault };
+            }
+            DrawRetainedDecodePhase::Complete | DrawRetainedDecodePhase::Fault => {}
+        }
+    }
+
+    fn feed_value(&mut self, byte: u8) {
+        if self.value_complete {
+            if byte.is_ascii_whitespace() {
+                return;
+            }
+            self.phase = if byte == b']' { DrawRetainedDecodePhase::Complete } else { DrawRetainedDecodePhase::Fault };
+            return;
+        }
+        if self.string {
+            if self.escaped {
+                self.escaped = false;
+            } else if byte == b'\\' {
+                self.escaped = true;
+            } else if byte == b'"' {
+                self.string = false;
+                if self.nested_depth == 0 {
+                    self.value_complete = true;
+                }
+            }
+            return;
+        }
+        if byte.is_ascii_whitespace() && !self.scalar && self.nested_depth == 0 {
+            return;
+        }
+        match byte {
+            b'"' => self.string = true,
+            b'{' | b'[' => self.nested_depth += 1,
+            b'}' | b']' if self.nested_depth != 0 => {
+                self.nested_depth -= 1;
+                if self.nested_depth == 0 {
+                    self.value_complete = true;
+                }
+            }
+            b']' if self.scalar => self.phase = DrawRetainedDecodePhase::Complete,
+            b']' => self.phase = DrawRetainedDecodePhase::Fault,
+            byte if byte.is_ascii_whitespace() && self.scalar => {
+                self.scalar = false;
+                self.value_complete = true;
+            }
+            _ => self.scalar = true,
+        }
+    }
+
+    fn finish(&mut self) -> bool {
+        if self.phase == DrawRetainedDecodePhase::Value && self.scalar {
+            self.value_complete = true;
+            self.phase = DrawRetainedDecodePhase::Close;
+        }
+        self.phase == DrawRetainedDecodePhase::Complete && self.verb_cursor == self.expected_verb.len() && self.nested_depth == 0 && !self.string && !self.escaped
+    }
+}
+
+struct DrawGestureOperationJob {
+    payload: Option<DrawGestureOperationPayload>,
+    raw_input: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    raw_page_cursor: usize,
+    raw_byte_cursor: usize,
+    decoder: Option<DrawRetainedCommandDecoder>,
+    raw_validated: bool,
+    completed: bool,
+    closing: bool,
+}
+
+impl semio_framework_job::InteractiveJob for DrawGestureOperationJob {
+    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if context.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if context.should_yield() || context.fuel_remaining() == 0 {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if !self.raw_validated {
+            let Some(input) = self.raw_input.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
+            if let Some(page) = input.page(self.raw_page_cursor) {
+                if let Some(byte) = page.get(self.raw_byte_cursor) {
+                    let Some(decoder) = self.decoder.as_mut() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
+                    decoder.feed(*byte);
+                    if decoder.phase == DrawRetainedDecodePhase::Fault {
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+                    }
+                    self.raw_byte_cursor += 1;
+                    context.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                self.raw_page_cursor += 1;
+                self.raw_byte_cursor = 0;
+                return semio_framework_job::StepOutcome::Yield;
+            }
+            let exact = self.decoder.as_mut().is_some_and(DrawRetainedCommandDecoder::finish);
+            if !exact {
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+            }
+            self.raw_validated = true;
+            context.consume_fuel(1);
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if !self.completed {
+            let Some(payload) = self.payload.as_ref() else { return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }) };
+            let key = semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
+            let emit = payload.instance_owner.with_mut::<DrawInstanceOperationOwner, _>(|owner| {
+                owner.dispatch(key, payload.operation_context.canonical_base_revision, &payload.command, &payload.snapshot, &payload.config, &payload.history, payload.operation_context.clone())
+            });
+            let emit = match emit {
+                Ok(Some(emit)) => Ok(emit),
+                Ok(None) => {
+                    context.consume_fuel(1);
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                Err(error) => Err(error),
+            };
+            if payload.completion.complete(emit, semio_framework_plugin::EphemeralEmit::default()).is_err() {
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });
+            }
+            self.completed = true;
+            context.consume_fuel(1);
+        }
+        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(input) = self.raw_input.as_mut() {
+            input.begin_close();
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(input) = self.raw_input.as_mut() {
+            let step = input.close_step(1, maximum_bytes);
+            if input.terminal_is_empty() {
+                self.raw_input = None;
+            }
+            return step;
+        }
+        if self.payload.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.decoder.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.payload.is_none() && self.raw_input.is_none() && self.decoder.is_none()
+    }
+}
+
+struct DrawGestureOperationJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl DrawGestureOperationJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: DRAW_GESTURE_TOOL_IDS.iter().map(|tool| semio_framework::ToolFactoryKey::new(controller_id, *tool)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for DrawGestureOperationJobFactory {
+    type Payload = DrawGestureOperationPayload;
+    type Job = DrawGestureOperationJob;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        DRAW_DOCUMENT_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        semio_framework::ToolExecutionContract::resumable(DRAW_GESTURE_RAW_BYTES, 32, 1, 16_384, 7_500, 1, 1)
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(DrawGestureOperationJob { payload: Some(payload), raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false })
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() || input.declared_bytes() > DRAW_GESTURE_RAW_BYTES {
+            return Err((semio_framework::ToolJobFactoryError::new("Draw gesture retained ingress rejects a checkpoint or oversized wire owner"), input, checkpoint));
+        }
+        let mut job = match self.create_job(operation, payload) {
+            Ok(job) => job,
+            Err(error) => return Err((error, input, None)),
+        };
+        let Some(expected_verb) = job.payload.as_ref().map(|payload| payload.command.command_id()) else {
+            return Err((semio_framework::ToolJobFactoryError::new("Draw gesture retained decoder has no exact typed command owner"), input, None));
+        };
+        job.raw_input = Some(input);
+        job.decoder = Some(DrawRetainedCommandDecoder::new(expected_verb));
+        job.raw_validated = false;
+        Ok(job)
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawGestureOperationJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<DrawPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = DRAW_GESTURE_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
+}
+
+#[cfg(test)]
+mod gesture_operation_owner_tests {
+    use super::*;
+
+    fn decode_retained(expected: &'static str, wire: &[u8]) -> bool {
+        let mut decoder = DrawRetainedCommandDecoder::new(expected);
+        for byte in wire {
+            decoder.feed(*byte);
+        }
+        decoder.finish()
+    }
+
+    fn key(operation: u64, generation: u64) -> semio_framework_job::FixedOperationKey {
+        semio_framework_job::FixedOperationKey::new(semio_framework_job::OperationId(operation), semio_framework_job::Generation(generation))
+    }
+
+    fn drain(registry: &mut semio_framework_job::FixedOperationRegistry<DrawGestureOperationOwner, 64>) {
+        for operation in 0..64 {
+            registry.cancel(key(operation, 0));
+        }
+        for _ in 0..256 {
+            if registry.is_empty() {
+                return;
+            }
+            let _ = registry.close_step(1, DRAW_GESTURE_RETAINED_BYTES);
+        }
+        assert!(registry.is_empty());
+    }
+
+    #[test]
+    fn draw_gesture_maximum_plus_one_returns_the_exact_owner() {
+        let mut registry = semio_framework_job::FixedOperationRegistry::<DrawGestureOperationOwner, 64>::new(64 * DRAW_GESTURE_RETAINED_BYTES);
+        for operation in 0..64 {
+            if registry.admit(key(operation, 0), DrawGestureOperationOwner::new()).is_err() {
+                panic!("every distinct fixed slot must admit through the declared maximum");
+            }
+        }
+        let rejected = match registry.admit(key(64, 0), DrawGestureOperationOwner::new()) {
+            Ok(()) => panic!("maximum plus one must return its exact owner"),
+            Err(rejected) => rejected,
+        };
+        assert_eq!(rejected.key, key(64, 0));
+        assert!(rejected.owner.session.is_some());
+        let mut owner = rejected.owner;
+        owner.cancel();
+        owner.begin_close();
+        assert_eq!(owner.close_step(1, DRAW_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: DRAW_GESTURE_RETAINED_BYTES });
+        assert!(owner.terminal_is_empty());
+        drain(&mut registry);
+    }
+
+    #[test]
+    fn draw_gesture_stale_generation_and_aba_are_exact() {
+        let mut registry = semio_framework_job::FixedOperationRegistry::<DrawGestureOperationOwner, 64>::new(DRAW_GESTURE_RETAINED_BYTES);
+        assert!(registry.admit(key(7, 1), DrawGestureOperationOwner::new()).is_ok());
+        for _ in 0..64 {
+            if registry.cancel_stale_step(semio_framework_job::OperationId(7), semio_framework_job::Generation(2)) {
+                break;
+            }
+        }
+        for _ in 0..128 {
+            if registry.is_empty() {
+                break;
+            }
+            let _ = registry.close_step(1, DRAW_GESTURE_RETAINED_BYTES);
+        }
+        assert!(registry.is_empty());
+        assert!(registry.admit(key(7, 2), DrawGestureOperationOwner::new()).is_ok(), "the new generation owns the retired slot");
+        registry.cancel(key(7, 2));
+        for _ in 0..128 {
+            if registry.is_empty() {
+                break;
+            }
+            let _ = registry.close_step(1, DRAW_GESTURE_RETAINED_BYTES);
+        }
+        assert!(registry.is_empty());
+    }
+
+    #[test]
+    fn draw_gesture_interrupted_and_repeated_close_is_terminal_empty() {
+        let mut owner = DrawGestureOperationOwner::new();
+        owner.cancel();
+        owner.begin_close();
+        assert_eq!(owner.close_step(0, DRAW_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Blocked);
+        assert_eq!(owner.close_step(1, DRAW_GESTURE_RETAINED_BYTES - 1), semio_framework_job::InteractiveJobCloseStep::Blocked);
+        assert_eq!(owner.close_step(1, DRAW_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: DRAW_GESTURE_RETAINED_BYTES });
+        assert_eq!(owner.close_step(1, DRAW_GESTURE_RETAINED_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete);
+        assert!(owner.terminal_is_empty());
+    }
+
+    #[test]
+    fn draw_retained_decoder_is_incremental_exact_and_fail_closed() {
+        assert!(decode_retained("canvasPointerMove", br#"["canvasPointerMove",{"x":1,"y":2}]"#));
+        assert!(decode_retained("canvasEscape", br#"["canvasEscape",null]"#));
+        assert!(!decode_retained("canvasPointerMove", br#"["canvasPointerUp",{"x":1}]"#));
+        assert!(!decode_retained("canvasPointerMove", br#"["canvasPointerMove",{"x":1}"#));
+        assert!(!decode_retained("canvasPointerMove", br#"["canvasPointerMove",{"x":1}]x"#));
+    }
+
+    #[test]
+    fn draw_preview_rejects_a_stale_revision_and_cancels_the_owner() {
+        let mut owner = DrawInstanceOperationOwner::new();
+        let operation = key(9, 4);
+        assert!(owner.operations.admit(operation, DrawGestureOperationOwner::new()).is_ok());
+        owner.active = Some((operation, [1; 32]));
+        assert!(owner.preview_projection([2; 32], "selectDirect").is_none());
+        assert!(owner.active.is_none());
+        for _ in 0..128 {
+            if owner.operations.is_empty() {
+                break;
+            }
+            let _ = owner.operations.close_step(1, DRAW_GESTURE_RETAINED_BYTES);
+        }
+        assert!(owner.operations.is_empty());
+    }
+}
+//#endregion 🧵️GestureOperationJobs
+
+//#region 🔖️DrawPlayApp
 pub(crate) fn draw_document_revision(doc: &ArtifactView<'_, DrawSnapshot>, _config: &DrawConfig) -> String {
     doc.operation_optional().map(|operation| operation.canonical_base_revision_hex()).unwrap_or_else(|| "0".repeat(64))
-}
-
-fn draw_session_key(app_instance_id: u32, document_id: &str, operation_id: u64, generation: u64, base_revision: &str) -> DrawSessionKey {
-    DrawSessionKey { app_instance_id, document_id: document_id.into(), operation_id, generation, base_revision: base_revision.into() }
 }
 
 /// 🧪️ Unit struct apart from `session`: every former `DrawInteractionState`/`ViewModel`-derived field
@@ -210,6 +857,25 @@ impl DrawPlayApp {
     pub fn arena_boot_fault(&self) -> Option<&'static str> {
         self.arena_boot_fault.or_else(crate::artifacts::draw::spr::draw_mutation_arena_pool_fault)
     }
+}
+
+fn render_draw_body(
+    body_key: &str,
+    document: &DrawSnapshot,
+    config: &DrawConfig,
+    preview: &DrawGesturePreview,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
+    let active_utility = config.active_utility_id.as_str();
+    let root = match body_key {
+        DRAW_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility),
+        DRAW_PLAY_BODY_LAYERS => layers_panel::render(document, labels),
+        DRAW_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels),
+        DRAW_PLAY_BODY_PROPERTIES => properties_panel::render(document, active_utility),
+        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("draw.body.label", "the fixed Draw unknown-body label exceeds its UI bound")),
+    }?;
+    Ok(semio_framework_plugin::built_to_component_tree(root))
 }
 
 impl Default for DrawPlayApp {
@@ -264,10 +930,50 @@ impl ArtifactEditor for DrawPlayApp {
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
         controller: "s.draw.draw@1/*#editor",
         document_schema: "draw.document",
-        factory: "BoundedFirstStepCommandJobFactory",
+        factory: "DrawGestureOperationJobFactory",
         tools: {
-            "canvasPointerDown" => semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "canvasPointerDown" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
+            "canvasPointerMove" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
+            "canvasPointerUp" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
+            "canvasDoubleClick" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
+            "canvasCommitDraft" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
+            "canvasEscape" => semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
         }
+    }
+
+    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+        Box::new(DrawInstanceOperationOwner::new())
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(DrawGestureOperationJobFactory::new(&controller))
+    }
+
+    async fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !DRAW_GESTURE_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.tool-mismatch"), "Draw gesture command does not match its exact registered tool"));
+        }
+        let operation_context = semio_framework_plugin::AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = DrawGestureOperationPayload {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            history: request.history,
+            instance_owner: request.instance_operation_owner,
+            operation_context,
+            completion: request.completion,
+        };
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
@@ -289,7 +995,7 @@ impl ArtifactEditor for DrawPlayApp {
         match port {
             "vector:out" => draw_vector_media(doc.snapshot),
             "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -317,98 +1023,52 @@ impl ArtifactEditor for DrawPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DrawMutation, DrawConfigMutation, Self::DraftMutation>, Fault> {
-        if let DrawCommand::CanvasPointerDown(payload) = command {
-            if let Some(generation) = payload.generation {
-                let observed_revision = draw_document_revision(doc, cfg.snapshot);
-                if cfg.snapshot.active_utility_id != "trace" || cfg.snapshot.trace_pointer_generation != generation || payload.base_revision.as_deref() != Some(observed_revision.as_str()) {
-                    return Ok(Emit::default());
-                }
-            }
+        if DRAW_GESTURE_TOOL_IDS.contains(&command.command_id()) {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.retained-route"), "Draw gesture commands are reachable only through their exact retained factory owner"));
         }
-        let selection_ids = interaction.selection(DRAW_INTERACTION_DOMAIN).ids.clone();
-        let operation = doc.operation()?;
-        let scope = (operation.app_instance_id, operation.parent_document_id.clone(), "gesture".to_string());
-        let observed_revision = draw_document_revision(doc, cfg.snapshot);
-        let active = active_draw_sessions().lock().expect("draw active session lock").get(&scope).cloned();
-        let (operation_id, generation, base_revision) = match active {
-            Some((operation_id, generation, base_revision)) if base_revision == observed_revision => (operation_id, generation, base_revision),
-            Some((operation_id, generation, base_revision)) => {
-                draw_sessions().lock().expect("draw session lock").remove(&draw_session_key(operation.app_instance_id, &operation.parent_document_id, operation_id, generation, &base_revision));
-                (operation.operation_id, operation.generation, observed_revision)
-            }
-            None => {
-                let restored = checkpoint_from_config(cfg.snapshot)
-                    .filter(|checkpoint| checkpoint.app_instance_id == operation.app_instance_id && checkpoint.document_id == operation.parent_document_id && checkpoint.base_revision == observed_revision)
-                    .map(|checkpoint| (checkpoint.operation_id, checkpoint.generation));
-                let (operation_id, generation) = restored.unwrap_or((operation.operation_id, operation.generation));
-                (operation_id, generation, observed_revision)
-            }
-        };
-        let key = draw_session_key(operation.app_instance_id, &operation.parent_document_id, operation_id, generation, &base_revision);
-        let stored_session = {
-            let mut sessions = draw_sessions().lock().expect("draw session lock");
-            if !sessions.contains_key(&key) && sessions.len() >= MAX_LIVE_DRAW_SESSIONS {
-                return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.busy"), "the bounded Draw gesture session pool is full"));
-            }
-            sessions.remove(&key)
-        };
-        active_draw_sessions().lock().expect("draw active session lock").insert(scope, (operation_id, generation, base_revision.clone()));
-        let mut session = stored_session
-            .or_else(|| {
-                checkpoint_from_config(cfg.snapshot)
-                    .filter(|checkpoint| {
-                        checkpoint.app_instance_id == operation.app_instance_id
-                            && checkpoint.document_id == operation.parent_document_id
-                            && checkpoint.operation_id == operation_id
-                            && checkpoint.generation == generation
-                            && checkpoint.base_revision == base_revision
-                    })
-                    .map(|checkpoint| DrawSession::from_checkpoint(&checkpoint))
-            })
-            .unwrap_or_default();
-        session.interaction.ids = selection_ids;
-        let mut emit = command.dispatch(doc, cfg, &mut session)?;
-        let checkpoint = session.checkpoint(operation.app_instance_id, &operation.parent_document_id, operation_id, generation, &base_revision);
-        let checkpoint_json = serde_json::to_string(&checkpoint).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.checkpoint-invalid"), error.to_string()))?;
-        if checkpoint_json.len() > 4_096 {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("draw.gesture.checkpoint-too-large"), "the bounded Draw gesture checkpoint exceeds 4,096 UTF-8 bytes"));
-        }
-        emit.config_mutations.push(DrawConfigMutation::SetGestureCheckpoint { json: checkpoint_json });
-        if session.gesture.matches("idle") {
-            active_draw_sessions().lock().expect("draw active session lock").remove(&(operation.app_instance_id, operation.parent_document_id.clone(), "gesture".to_string()));
-        } else {
-            draw_sessions().lock().expect("draw session lock").insert(key, session);
-        }
-        Ok(emit)
+        let mut session = DrawSession::default();
+        session.interaction.ids = interaction.selection(DRAW_INTERACTION_DOMAIN).await.ids.clone();
+        command.dispatch(doc, cfg, &mut session)
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, DrawSnapshot>, cfg: &ConfigView<'_, DrawConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let document = doc.snapshot;
-        let config = cfg.snapshot;
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
-        let active_utility = config.active_utility_id.as_str();
-        match body_key {
-            DRAW_PLAY_BODY_COMPOSITE => {
-                let session = checkpoint_from_config(config).map(|checkpoint| DrawSession::from_checkpoint(&checkpoint)).unwrap_or_default();
-                canvas_window::render(document, config, &session.gesture, active_utility)
-            }
-            DRAW_PLAY_BODY_LAYERS => layers_panel::render(document, labels),
-            DRAW_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels),
-            DRAW_PLAY_BODY_PROPERTIES => properties_panel::render(document, active_utility),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        render_draw_body(body_key, doc.snapshot, cfg.snapshot, &DrawSession::default().preview())
+    }
+
+    async fn render_with_instance_operation_owner(
+        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, DrawSnapshot>,
+        cfg: &ConfigView<'_, DrawConfig>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let preview = match doc.render_operation() {
+            Some(operation) => owner
+                .with_mut::<DrawInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(operation.canonical_base_revision, &cfg.snapshot.active_utility_id)))
+                .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("draw.gesture.preview-owner", error.message))?
+                .unwrap_or_default(),
+            None => DrawGesturePreview::default(),
+        };
+        render_draw_body(body_key, doc.snapshot, cfg.snapshot, &preview)
     }
 }
 //#endregion 🔖️DrawPlayApp
 
 //#region 🔖️Io
+/// 🌱️ Builds the single canonical non-history document-reset effect for Draw.
+pub(crate) fn draw_reset_document_effect(scene: &DrawSnapshot) -> semio_framework_plugin::Effect {
+    let pack = <DrawSnapshot as ArtifactPack>::encode_pack(scene);
+    let envelope = store::create_document_envelope::<DrawSnapshot, DrawMutation>(DRAW_DOCUMENT_SCHEMA, &scene.id, scene.clone(), None);
+    let spr = store::print_document_spr(&envelope).expect("draw document spr encode is infallible for a fresh, edit-free envelope");
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+
 /// 🔌️ Relocated verbatim from the `⚙️engine` directory (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 4: anything returning `AppIo` or
 /// referencing an app type lives in `🎛️apps/<app>/`). This app's typed media I/O surface
 /// (`AppDefinition.io`) — mirrors the `2d.drawing` `ArtifactKindSpec` literal `create_draw_app`
 /// already declares via `.artifact_kind(...)` (schema/media type/export+import formats copied
 /// verbatim), plus the app-specific `vector:out` port (see `draw_vector_out_port` below).
-pub async fn draw_io() -> semio_framework::AppIo {
+pub fn draw_io() -> semio_framework::AppIo {
     semio_framework::AppIo {
         document_schema: DRAW_DOCUMENT_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
@@ -425,7 +1085,7 @@ pub async fn draw_io() -> semio_framework::AppIo {
 /// duplicate — `kind_id` just pins this port to that same catalog entry. `Many`/optional: a
 /// consumer (e.g. raster's Vector→Raster-converted `image:in`) may connect before the canvas has
 /// any content, or fan out to several consumers at once.
-pub async fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
+pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
     semio_framework::MediaPortSpec {
         id: "vector:out".into(),
         label: "Vector".into(),
@@ -440,14 +1100,14 @@ pub async fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
 /// 🖼️ Exports the current draw document as an SVG `Media` payload for the `vector:out` port —
 /// reuses `crate::artifacts::draw::io::draw_document_to_svg` (the same semio/drawing↔svg bridge the
 /// export-svg shell path uses), so there is exactly one SVG renderer.
-pub async fn draw_vector_media(doc: &DrawSnapshot) -> Result<Media, MediaError> {
+pub fn draw_vector_media(doc: &DrawSnapshot) -> Result<Media, MediaError> {
     let (svg, _width, _height) = crate::artifacts::draw::io::draw_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg } })
 }
 //#endregion 🔖️Io
 
 //#region 🔖️Manifest
-pub async fn create_draw_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_draw_app() -> semio_framework_plugin::AppDefinition {
     let engagement = WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -455,8 +1115,8 @@ pub async fn create_draw_app() -> semio_framework_plugin::AppDefinition {
             id: Some("draw-canvas-engagement".into()),
             value: Some(String::new()),
             placeholder: Some("Layer name".into()),
-            on_change: Some(draw_play_action("engagementInput", None)),
-            on_submit: Some(draw_play_action("engagementSubmit", None)),
+            on_change: Some(draw_manifest_action("engagementInput")),
+            on_submit: Some(draw_manifest_action("engagementSubmit")),
             disabled: None,
             on_repeat_last: None,
             on_abort: None,
@@ -471,7 +1131,7 @@ pub async fn create_draw_app() -> semio_framework_plugin::AppDefinition {
             .icon_id("draw")
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, LocalizedLabel::native("Canvas", "Leinwand"), DRAW_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, engagement, "pen-tool")
+            .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, LocalizedLabel::native("Canvas", "Leinwand"), DRAW_PLAY_BODY_COMPOSITE, semio_framework_ui_contract::SurfaceKind::Canvas2d, engagement, "pen-tool")
             .panel_tab_def(layers_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(properties_panel::definition())
@@ -496,10 +1156,15 @@ pub async fn create_draw_app() -> semio_framework_plugin::AppDefinition {
             .action_with(draw_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation))
             .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(draw_internal_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation))
+            .action_interactive_job("canvasPointerUp", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(draw_internal_action("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick"), ActionKind::Mutation))
+            .action_interactive_job("canvasDoubleClick", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(draw_internal_action("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Mutation))
+            .action_interactive_job("canvasCommitDraft", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(draw_internal_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View))
+            .action_interactive_job("canvasPointerMove", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(draw_internal_action("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
+            .action_interactive_job("canvasEscape", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 👁️ Ephemeral view state — selection/hover are framework-owned now (see `.interaction(...)`
             // below): interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
             // setInteractionGranularity auto-inject, never declared here (ticket
@@ -1315,7 +1980,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn gesture_preview_is_none_while_idle() {
         let session = DrawSession::default();
-        assert!(session.gesture_preview().is_none(), "no live gesture, nothing to preview");
+        assert_eq!(session.preview().phase, canvas_pointer_down::DrawGesturePreviewPhase::Idle, "idle has an empty fixed projection");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1326,22 +1991,20 @@ mod tests {
 
         let down = session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document, &config);
         assert!(down.artifact_mutations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
-        let (key, seq_after_down, payload) = session.gesture_preview().expect("shape drag is live after pointer-down");
-        assert_eq!(key, "gesture");
-        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
-        assert_eq!(value["start"], serde_json::json!([10.0, 10.0]));
-        assert_eq!(value["cursor"], serde_json::json!([10.0, 10.0]));
+        let preview = session.preview();
+        let seq_after_down = preview.sequence;
+        assert_eq!(preview.context.start, [10.0, 10.0]);
+        assert_eq!(preview.context.cursor, [10.0, 10.0]);
 
         let moved = session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerMove { world: [40.0, 30.0], marquee_threshold_world: 4.0 }, &document, &config);
         assert!(moved.artifact_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
-        let (_, seq_after_move, payload) = session.gesture_preview().expect("shape drag is still live mid-drag");
-        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
-        assert_eq!(value["cursor"], serde_json::json!([40.0, 30.0]), "preview tracks the live cursor, not the drag start");
-        assert!(seq_after_move > seq_after_down, "seq is monotone per tick, for staleness detection on the receiving end");
+        let preview = session.preview();
+        assert_eq!(preview.context.cursor, [40.0, 30.0], "preview tracks the live cursor, not the drag start");
+        assert!(preview.sequence > seq_after_down, "seq is monotone per tick, for staleness detection on the receiving end");
 
         let up = session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerUp { utility: "shapeRect".into(), world: [40.0, 30.0], shift: false, ctrl: false, meta: false }, &document, &config);
         assert_eq!(up.artifact_mutations.len(), 1, "pointer-up commits the shape as one real DrawMutation");
-        assert!(session.gesture_preview().is_none(), "the gesture returned to idle: nothing left to preview, and the commit above already carried the real operation");
+        assert_eq!(session.preview().phase, canvas_pointer_down::DrawGesturePreviewPhase::Idle, "the committed projection is terminal idle");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1351,9 +2014,9 @@ mod tests {
         let config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
         session.step_gesture(canvas_pointer_down::draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document, &config);
         let context_before = session.gesture.context.clone();
-        let _ = session.gesture_preview();
-        let _ = session.gesture_preview();
-        assert_eq!(session.gesture.context, context_before, "gesture_preview must never mutate the live gesture scratch it reads");
+        let _ = session.preview();
+        let _ = session.preview();
+        assert_eq!(session.gesture.context, context_before, "preview must never mutate the live gesture scratch it reads");
     }
     //#endregion 🔖️GesturePreview
 

@@ -3,10 +3,26 @@
 @comparison-ordered-json-v1
 @mutations-playground-1-any
 Feature: Apply the playground artifact's whole one-kind mutation vocabulary
-  `s.demonstrator.playground` is a semio-NATIVE artifact and no third party reads or
-  writes `.dsl.semio`/`.pack.semio`, so there is no reference implementation to register as an oracle.
-  That is recorded as the `playground-mutation-semantics` no-oracle decision in
+  `s.demonstrator.playground` is a semio-NATIVE artifact and no third party reads or writes
+  `.dsl.semio`/`.pack.semio`, so no reference LIBRARY is registered. That is recorded as the
+  `playground-mutation-semantics` no-oracle decision in
   `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-writer-1` and `mutate-playbook-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
+  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
+  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   This vocabulary has exactly ONE kind, and that is a property of the artifact rather than a gap in
   the test: `PlaygroundSnapshot` carries a single persistent field, so `change-schema` retagging it is

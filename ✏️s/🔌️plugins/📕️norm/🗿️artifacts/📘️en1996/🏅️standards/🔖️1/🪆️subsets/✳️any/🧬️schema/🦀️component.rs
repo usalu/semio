@@ -75,7 +75,7 @@ impl From<En1996Snapshot> for En1996Artifact {
 }
 
 impl En1996Artifact {
-    pub async fn to_snapshot(&self) -> En1996Snapshot {
+    pub fn to_snapshot(&self) -> En1996Snapshot {
         En1996Snapshot {
             m_ed_knm: self.m_ed_knm.clone(),
             n_ed_kn: self.n_ed_kn.clone(),
@@ -102,7 +102,7 @@ impl En1996Artifact {
         }
     }
 
-    pub async fn from_snapshot(snapshot: En1996Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1996Snapshot) -> Self {
         Self {
             m_ed_knm: snapshot.m_ed_knm,
             n_ed_kn: snapshot.n_ed_kn,
@@ -130,7 +130,7 @@ impl En1996Artifact {
         }
     }
 
-    pub async fn set_snapshot(&mut self, snapshot: En1996Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: En1996Snapshot) {
         self.m_ed_knm = snapshot.m_ed_knm;
         self.n_ed_kn = snapshot.n_ed_kn;
         self.v_ed_kn = snapshot.v_ed_kn;
@@ -158,7 +158,7 @@ impl En1996Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub async fn en1996_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn en1996_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1996",
         artifact: schema::FacetLeaves {
@@ -207,19 +207,19 @@ pub mod derived_construction {
         type Snapshot = En1996Snapshot;
         type Mutation = En1996Mutation;
         type Diff = En1996Diff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: En1996Snapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1996Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<En1996Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -227,12 +227,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <En1996Diff as protocol::MutationDiff<En1996Snapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -260,11 +260,11 @@ pub mod derived_analysis {
         type Parts = En1996Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.en1996", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = En1996Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -316,7 +316,7 @@ pub mod na_de {
     pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;
 
     /// 🇩️🇪️ Partial factor γ_M per DIN EN 1996-1-1/NA (flat, independent of masonry class).
-    pub async fn gamma_m() -> f64 {
+    pub fn gamma_m() -> f64 {
         super::AnnexParams { annex: crate::document::AnnexChoice::De, masonry_class: crate::artifacts::en1996::MasonryClass::default(), accidental: false }.gamma_m()
     }
 }
@@ -330,7 +330,7 @@ pub enum MasonryUnit {
 }
 
 impl MasonryUnit {
-    pub async fn label(self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             Self::Clay => "clay",
             Self::CalciumSilicate => "calcium silicate",
@@ -349,7 +349,7 @@ pub struct AnnexParams {
 }
 
 impl AnnexParams {
-    pub async fn gamma_m(self) -> f64 {
+    pub fn gamma_m(self) -> f64 {
         match self.annex {
             AnnexChoice::En => self.masonry_class.gamma_m_en(),
             AnnexChoice::De if self.accidental => 1.3,
@@ -363,31 +363,31 @@ impl AnnexParams {
 pub mod part_1_1 {
     use super::*;
 
-    pub async fn design_strength_mpa(f_k_mpa: f64, gamma_m: f64) -> f64 {
+    pub fn design_strength_mpa(f_k_mpa: f64, gamma_m: f64) -> f64 {
         f_k_mpa / gamma_m
     }
 
-    pub async fn flexural_resistance_knm(z_mm3: f64, f_xd_mpa: f64) -> f64 {
+    pub fn flexural_resistance_knm(z_mm3: f64, f_xd_mpa: f64) -> f64 {
         z_mm3 * f_xd_mpa / 1_000_000.0
     }
 
-    pub async fn compression_resistance_kn(a_mm2: f64, f_d_mpa: f64) -> f64 {
+    pub fn compression_resistance_kn(a_mm2: f64, f_d_mpa: f64) -> f64 {
         a_mm2 * f_d_mpa / 1000.0
     }
 
-    pub async fn shear_design_strength_mpa(f_vk_mpa: f64, gamma_m: f64) -> f64 {
+    pub fn shear_design_strength_mpa(f_vk_mpa: f64, gamma_m: f64) -> f64 {
         f_vk_mpa / gamma_m
     }
 
-    pub async fn shear_resistance_kn(a_mm2: f64, f_vd_mpa: f64) -> f64 {
+    pub fn shear_resistance_kn(a_mm2: f64, f_vd_mpa: f64) -> f64 {
         a_mm2 * f_vd_mpa / 1000.0
     }
 
-    pub async fn sliding_resistance_kn(mu: f64, n_ed_kn: f64, f_vd_mpa: f64, a_mm2: f64) -> f64 {
+    pub fn sliding_resistance_kn(mu: f64, n_ed_kn: f64, f_vd_mpa: f64, a_mm2: f64) -> f64 {
         mu * n_ed_kn + a_mm2 * f_vd_mpa / 1000.0
     }
 
-    pub async fn check_flexure(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
+    pub fn check_flexure(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1996-1-1", "§6.2", "6.2"),
             Quantity::new(crate::document::QuantityKind::Moment, m_ed * 1_000_000.0),
@@ -397,15 +397,15 @@ pub mod part_1_1 {
         )
     }
 
-    pub async fn check_compression(sigma_ed_mpa: f64, f_d_mpa: f64, annex: AnnexChoice) -> CheckResult {
+    pub fn check_compression(sigma_ed_mpa: f64, f_d_mpa: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.1.2", "6.1"), Quantity::stress_mpa(sigma_ed_mpa), Quantity::stress_mpa(f_d_mpa), "masonry compression ULS", annex)
     }
 
-    pub async fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
+    pub fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2.3", "6.2"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "masonry shear ULS", annex)
     }
 
-    pub async fn check_sliding(h_ed_kn: f64, h_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
+    pub fn check_sliding(h_ed_kn: f64, h_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2.4", "6.2"), Quantity::force_kn(h_ed_kn), Quantity::force_kn(h_rd_kn), "masonry sliding ULS", annex)
     }
 }
@@ -416,7 +416,7 @@ pub mod part_1_2 {
     use super::*;
 
     /// 🔥️ Minimum fire wall thickness [mm] per EN 1996-1-2 Table 5.1 (simplified).
-    pub async fn required_wall_thickness_mm(fire_resistance_min: u32, unit: MasonryUnit) -> f64 {
+    pub fn required_wall_thickness_mm(fire_resistance_min: u32, unit: MasonryUnit) -> f64 {
         let base = match fire_resistance_min {
             30 => 60.0,
             60 => 90.0,
@@ -433,7 +433,7 @@ pub mod part_1_2 {
         }
     }
 
-    pub async fn check_fire_wall(thickness_mm: f64, required_mm: f64) -> CheckResult {
+    pub fn check_fire_wall(thickness_mm: f64, required_mm: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1996-1-2", "§4", "4.1"), Quantity::length_m(thickness_mm / 1000.0), Quantity::length_m(required_mm / 1000.0), "masonry fire wall thickness", AnnexChoice::De)
     }
 }
@@ -446,7 +446,7 @@ pub mod part_2 {
     use crate::artifacts::en1996::part_2::{ExposureClass, MortarClass};
 
     /// 📊️ Minimum admissible mortar strength [MPa] for a (unit, exposure) pair; ∞ marks an inadmissible combination.
-    async fn required_mortar_strength_mpa(exposure: ExposureClass, unit: MasonryUnit) -> f64 {
+    fn required_mortar_strength_mpa(exposure: ExposureClass, unit: MasonryUnit) -> f64 {
         match (exposure, unit) {
             (ExposureClass::Mx1, _) => 1.0,
             (ExposureClass::Mx2, MasonryUnit::Aac) => 2.5,
@@ -460,11 +460,11 @@ pub mod part_2 {
         }
     }
 
-    pub async fn is_combination_admissible(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> bool {
+    pub fn is_combination_admissible(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> bool {
         mortar.compressive_strength_mpa() >= required_mortar_strength_mpa(exposure, unit)
     }
 
-    pub async fn check_exposure_mortar(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> CheckResult {
+    pub fn check_exposure_mortar(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> CheckResult {
         let required = required_mortar_strength_mpa(exposure, unit);
         CheckResult::from_minimum(
             ClauseId::new("EN 1996-2", "Annex B", "B.1"),
@@ -476,7 +476,7 @@ pub mod part_2 {
     }
 
     /// 📏️ General-purpose mortar bed-joint thickness must fall within 6–15mm per EN 1996-2 §8.
-    pub async fn check_bed_joint_thickness(thickness_mm: f64) -> CheckResult {
+    pub fn check_bed_joint_thickness(thickness_mm: f64) -> CheckResult {
         let clause = ClauseId::new("EN 1996-2", "§8", "8.1");
         let computed = Quantity::length_m(thickness_mm / 1000.0);
         let limit = Quantity::length_m(0.015);
@@ -497,22 +497,22 @@ pub mod part_3 {
     use super::*;
 
     /// 📉️ Simplified capacity-reduction factor Φ_s per EN 1996-3 §4.2 (valid while ≥ 0).
-    pub async fn phi_s(h_ef_mm: f64, t_ef_mm: f64) -> f64 {
+    pub fn phi_s(h_ef_mm: f64, t_ef_mm: f64) -> f64 {
         let ratio = h_ef_mm / t_ef_mm;
         (0.85 - 0.0011 * ratio * ratio).max(0.0)
     }
 
-    pub async fn n_rd_kn(phi_s: f64, f_d_mpa: f64, area_mm2: f64) -> f64 {
+    pub fn n_rd_kn(phi_s: f64, f_d_mpa: f64, area_mm2: f64) -> f64 {
         phi_s * f_d_mpa * area_mm2 / 1000.0
     }
 
     /// 🚧️ The simplified method only applies up to 3 storeys and a slenderness ratio of 27 (EN 1996-3 §1.1 scope).
-    pub async fn is_applicable(storeys: u32, h_ef_mm: f64, t_ef_mm: f64) -> bool {
+    pub fn is_applicable(storeys: u32, h_ef_mm: f64, t_ef_mm: f64) -> bool {
         storeys <= 3 && h_ef_mm / t_ef_mm <= 27.0
     }
 
     #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-    pub async fn check_simplified_compression(n_ed_kn: f64, phi_s: f64, f_d_mpa: f64, area_mm2: f64, storeys: u32, h_ef_mm: f64, t_ef_mm: f64, annex: AnnexChoice) -> CheckResult {
+    pub fn check_simplified_compression(n_ed_kn: f64, phi_s: f64, f_d_mpa: f64, area_mm2: f64, storeys: u32, h_ef_mm: f64, t_ef_mm: f64, annex: AnnexChoice) -> CheckResult {
         let clause = ClauseId::new("EN 1996-3", "§4.2", "4.2");
         if !is_applicable(storeys, h_ef_mm, t_ef_mm) {
             return CheckResult {
@@ -532,7 +532,7 @@ pub mod part_3 {
 // #endregion 🔖️Part3
 
 /// 📋️ Masonry wall under vertical load.
-pub async fn check_masonry_wall(n_ed_kn: f64, area_mm2: f64, f_k_mpa: f64, gamma_m: f64) -> CheckReport {
+pub fn check_masonry_wall(n_ed_kn: f64, area_mm2: f64, f_k_mpa: f64, gamma_m: f64) -> CheckReport {
     let sigma = n_ed_kn * 1000.0 / area_mm2;
     let f_d = part_1_1::design_strength_mpa(f_k_mpa, gamma_m);
     let mut report = CheckReport::default();
@@ -548,7 +548,7 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn masonry_wall_sigma_vs_fd() {
+    fn masonry_wall_sigma_vs_fd() {
         let sigma = 200.0 * 1000.0 / 500_000.0;
         let f_d = part_1_1::design_strength_mpa(5.0, na_de::gamma_m());
         assert!((sigma - 0.4_f64).abs() < 1e-9);
@@ -559,31 +559,31 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn masonry_wall_e2e() {
+    fn masonry_wall_e2e() {
         let report = check_masonry_wall(200.0, 500_000.0, 5.0, 2.0);
         assert!(!report.checks.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn fire_wall_r60_clay() {
+    fn fire_wall_r60_clay() {
         let required = part_1_2::required_wall_thickness_mm(60, MasonryUnit::Clay);
         assert!((required - 90.0).abs() < 0.1);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn exposure_mortar_mx1_clay_m1_admissible() {
+    fn exposure_mortar_mx1_clay_m1_admissible() {
         let result = part_2::check_exposure_mortar(crate::artifacts::en1996::part_2::ExposureClass::Mx1, MasonryUnit::Clay, crate::artifacts::en1996::part_2::MortarClass::M1);
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn exposure_mortar_mx4_aac_inadmissible() {
+    fn exposure_mortar_mx4_aac_inadmissible() {
         let result = part_2::check_exposure_mortar(crate::artifacts::en1996::part_2::ExposureClass::Mx4, MasonryUnit::Aac, crate::artifacts::en1996::part_2::MortarClass::M20);
         assert_eq!(result.status, CheckStatus::Fail);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn bed_joint_thickness_range() {
+    fn bed_joint_thickness_range() {
         let ok = part_2::check_bed_joint_thickness(12.0);
         assert_eq!(ok.status, CheckStatus::Pass);
         let too_thin = part_2::check_bed_joint_thickness(3.0);
@@ -591,7 +591,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn simplified_method_worked_example() {
+    fn simplified_method_worked_example() {
         let phi_s = part_3::phi_s(3600.0, 240.0);
         assert!((phi_s - 0.6025).abs() < 1e-9);
         let gamma_m = AnnexParams { annex: AnnexChoice::De, masonry_class: MasonryClass::Class3, accidental: false }.gamma_m();
@@ -603,7 +603,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn simplified_method_applicability_guard() {
+    fn simplified_method_applicability_guard() {
         assert!(part_3::is_applicable(2, 2500.0, 240.0));
         assert!(!part_3::is_applicable(4, 2500.0, 240.0));
         assert!(!part_3::is_applicable(2, 8000.0, 240.0));
@@ -612,7 +612,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn gamma_m_diverges_en_class2_vs_de_flat() {
+    fn gamma_m_diverges_en_class2_vs_de_flat() {
         let en = AnnexParams { annex: AnnexChoice::En, masonry_class: MasonryClass::Class2, accidental: false };
         let de = AnnexParams { annex: AnnexChoice::De, masonry_class: MasonryClass::Class2, accidental: false };
         assert!((en.gamma_m() - 1.7).abs() < 1e-9);

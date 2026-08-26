@@ -122,7 +122,7 @@ impl Din4108Mutation {
     /// `layers` is a real ordered collection, so this also takes `base` (the pre-replacement
     /// document): every existing layer is removed (highest index first, so indices stay valid
     /// mid-sequence) before `target`'s layers are re-inserted in order.
-    pub async fn from_snapshot(base: &Din4108Snapshot, target: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    pub fn from_snapshot(base: &Din4108Snapshot, target: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         let mut mutations = Vec::with_capacity(17 + base.layers.len() + target.layers.len());
         mutations.push(Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: target.category.clone() }));
         mutations.push(Din4108Mutation::ChangeClimate(change_climate::mutation::ChangeClimate { new_climate: target.climate.clone() }));
@@ -160,7 +160,7 @@ mod tests {
     use crate::document::ClimateZoneDe;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
-    async fn round_trip(base: &Din4108Snapshot, operation: &Din4108Mutation) -> Din4108Snapshot {
+    fn round_trip(base: &Din4108Snapshot, operation: &Din4108Mutation) -> Din4108Snapshot {
         let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn every_scalar_change_round_trips() {
+    fn every_scalar_change_round_trips() {
         let base = Din4108Snapshot::default();
 
         let after = round_trip(&base, &Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: "office".into() }));
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn insert_remove_layer_round_trips() {
+    fn insert_remove_layer_round_trips() {
         let base = Din4108Snapshot::default();
         let new_layer = LayerDocument { thickness_m: 0.05, lambda_w_mk: 0.04 };
 
@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn remove_layer_of_an_out_of_range_index_is_rejected() {
+    fn remove_layer_of_an_out_of_range_index_is_rejected() {
         let base = Din4108Snapshot::default();
         let remove = Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
@@ -255,7 +255,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn reorder_layers_round_trips() {
+    fn reorder_layers_round_trips() {
         let base = Din4108Snapshot::default();
         assert!(base.layers.len() >= 2, "fixture must have at least two layers to exercise reorder");
 
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_layer_thickness_and_lambda_round_trip() {
+    fn change_layer_thickness_and_lambda_round_trip() {
         let base = Din4108Snapshot::default();
 
         let thickness = Din4108Mutation::ChangeLayerThickness(change_layer_thickness::mutation::ChangeLayerThickness { index: 0, new_thickness_m: 0.3 });
@@ -283,7 +283,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn semantic_kinds_cover_every_variant() {
+    fn semantic_kinds_cover_every_variant() {
         assert_eq!(Din4108Mutation::kinds().len(), 22);
         let mutation = Din4108Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: "x".into() });
         assert_eq!(mutation.semantics().kind, "change-category");

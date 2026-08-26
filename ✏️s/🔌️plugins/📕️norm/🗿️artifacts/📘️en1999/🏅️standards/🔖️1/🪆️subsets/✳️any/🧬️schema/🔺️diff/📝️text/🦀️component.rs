@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1999Diff {
-    pub async fn apply_to_artifact(&self, artifact: &En1999Artifact) -> protocol::MutationApplyResult<En1999Artifact> {
+    pub fn apply_to_artifact(&self, artifact: &En1999Artifact) -> protocol::MutationApplyResult<En1999Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -106,7 +106,7 @@ impl En1999Diff {
 }
 
 impl MutationDiff<En1999Snapshot> for En1999Diff {
-    async fn apply(&self, snapshot: &En1999Snapshot) -> protocol::MutationApplyResult<En1999Snapshot> {
+    fn apply(&self, snapshot: &En1999Snapshot) -> protocol::MutationApplyResult<En1999Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -193,7 +193,7 @@ impl MutationDiff<En1999Snapshot> for En1999Diff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -237,7 +237,7 @@ impl MutationDiff<En1999Snapshot> for En1999Diff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub async fn diff_set_snapshot(snapshot: &En1999Snapshot) -> En1999Diff {
+pub fn diff_set_snapshot(snapshot: &En1999Snapshot) -> En1999Diff {
     En1999Diff { artifact: Some(Box::new(En1999Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
@@ -250,7 +250,7 @@ mod tests {
     use protocol::{Mutation as _, MutationDiff};
 
     #[semio_framework_async_macros::async_test]
-    async fn change_mutation_diff_updates_only_its_field() {
+    fn change_mutation_diff_updates_only_its_field() {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeNEdKn(crate::artifacts::en1999::mutations::change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 });
         let outcome = mutation.diff(&base);

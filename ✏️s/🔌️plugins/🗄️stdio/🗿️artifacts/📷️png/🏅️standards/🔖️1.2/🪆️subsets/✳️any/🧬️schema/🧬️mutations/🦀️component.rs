@@ -578,7 +578,7 @@ mod tests {
     /// length (2 vs 1) with the "surviving/modified" item at position 0 and the
     /// "removed-in-forward / added-in-backward" item as the tail at position 1 — the recipe's
     /// own documented workaround for the structural "same-length between() can show removed
-    /// XOR added, never both from one call" trap (see `f1-closer-report.md` §4.4).
+    /// XOR added, never both from one call" trap (see `f1-closer-report.md` §4.4).await.
     fn sweep_a() -> PngSnapshot {
         PngSnapshot {
             schema: "stdio.png".into(),

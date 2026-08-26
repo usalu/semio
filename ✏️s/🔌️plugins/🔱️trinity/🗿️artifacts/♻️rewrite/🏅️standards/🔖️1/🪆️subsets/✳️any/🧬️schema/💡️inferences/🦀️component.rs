@@ -26,19 +26,19 @@ pub struct RewriteInference {
 }
 
 impl protocol::Inference<RewriteSnapshot> for RewriteInference {
-    async fn infer(snapshot: &RewriteSnapshot) -> Self {
+    fn infer(snapshot: &RewriteSnapshot) -> Self {
         Self { bounds: compute_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<RewriteSnapshot> for RewriteInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.trinity.rewrite.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.trinity.rewrite.inference.bounds", reads: &["rule_layout"] }]
     }
 }
@@ -79,7 +79,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     //#region 🧸️Fixtures
-    async fn two_point_snapshot() -> RewriteSnapshot {
+    fn two_point_snapshot() -> RewriteSnapshot {
         let mut rule_layout = BTreeMap::new();
         rule_layout.insert("a".to_string(), LayoutPoint { x: 0.0, y: 0.0 });
         rule_layout.insert("b".to_string(), LayoutPoint { x: -140.0, y: 80.0 });

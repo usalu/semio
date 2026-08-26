@@ -1,0 +1,1313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SurveyIdentifier</key>
+	<string>reuse-marketplaces</string>
+	<key>SurveyRowCount</key>
+	<integer>50</integer>
+	<key>SurveyRows</key>
+	<array>
+		<dict>
+			<key>ID</key>
+			<string>BB-08</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Materialrest24</string>
+			<key>Land</key>
+			<string>Deutschland</string>
+			<key>Angebotsform</key>
+			<string>n. p.</string>
+			<key>Zugang</key>
+			<string>n. p.</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>n. p.</string>
+			<key>Datenfelder</key>
+			<string>n. p.</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>n. p.</string>
+			<key>Beschaffungsschritte</key>
+			<string>n. p.</string>
+			<key>Uebergabe</key>
+			<string>n. p.</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-09</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Restado</string>
+			<key>Land</key>
+			<string>Deutschland</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Zustand, Farbe, Marke, Materialstandort, Versandoption</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-11</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Articonnex</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Artikelnummer, Preis, Bestand, Maße, Gewicht, Zustand, Materialstandort, Herkunft</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Filter, Merkliste</string>
+			<key>Beschaffungsschritte</key>
+			<string>Reservierung, Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-12</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Backacia</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Artikelnummer, Preis, Menge, Maße, Material, Verfügbarkeit, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche</string>
+			<key>Beschaffungsschritte</key>
+			<string>Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-13</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>BatRecup</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>App</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Menge, Maße, Gewicht, Material, Zustand, Farbe, Verfügbarkeit, Materialstandort, Versandoption, Gewährleistung</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-14</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Bâticycle</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Menge, Maße, Marke, Verfügbarkeit, Versandoption, Herkunft</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche</string>
+			<key>Beschaffungsschritte</key>
+			<string>Warenkorb, Bestellung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-16</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Cycle Zéro</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>App</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Verfügbarkeit, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Reservierung</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-17</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>R-Place</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Preis, Gewicht, Zustand, Verfügbarkeit, Datum, Materialstandort, Versandoption</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-20</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Réempro</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>externer Marktplatz</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Menge, Bestand, Zustand, Verfügbarkeit, Datum, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Warenkorb, Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-21</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Skop Marketplace</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Menge, Bestand, Maße, Gewicht, Material, Zustand, Farbe, Marke, Verfügbarkeit, Datum, Materialstandort, Herkunft, Anbieterangabe</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-22</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Gebruiktebouwmaterialen</string>
+			<key>Land</key>
+			<string>Niederlande</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Artikelnummer, Preis, Bestand, Maße, Zustand, Marke, Versandoption</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-23</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Insert Marketplace</string>
+			<key>Land</key>
+			<string>Niederlande</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite, Karte/GIS</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Preis, Menge, Maße, Zustand, Farbe, Varianten, Marke, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Merkliste, Verkäuferverzeichnis</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt</string>
+			<key>Uebergabe</key>
+			<string>—</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-24</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>ReSource Marktplaats</string>
+			<key>Land</key>
+			<string>Niederlande</string>
+			<key>Angebotsform</key>
+			<string>Katalog</string>
+			<key>Zugang</key>
+			<string>n. p.</string>
+			<key>DigitalerKanal</key>
+			<string>App</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>n. p.</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>n. p.</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kauf</string>
+			<key>Uebergabe</key>
+			<string>n. p.</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-26</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Baumatpool.ch</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Marke, Verfügbarkeit, Materialstandort, Versandoption, Anbieterangabe, Gewährleistung</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung</string>
+			<key>Beschaffungsschritte</key>
+			<string>Bestellung, Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-38</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>REUZI</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Katalog</string>
+			<key>Zugang</key>
+			<string>Mitgliedschaft</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Menge, Maße, Material</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>n. p.</string>
+			<key>Beschaffungsschritte</key>
+			<string>Reservierung</string>
+			<key>Uebergabe</key>
+			<string>n. p.</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-39</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Salza</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>n. p.</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Suche, Filter, Merkliste, Suchbenachrichtigung</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt</string>
+			<key>Uebergabe</key>
+			<string>direkte Übergabe</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-41</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>useagain / Bauteilclick</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Artikelnummer, Preis, Menge, Maße, Verfügbarkeit, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung, Verkäuferverzeichnis</string>
+			<key>Beschaffungsschritte</key>
+			<string>Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-43</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Building Spares Market</string>
+			<key>Land</key>
+			<string>Vereinigtes Königreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Preis, Menge, Maße, Datum, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt</string>
+			<key>Uebergabe</key>
+			<string>—</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-44</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Enviromate</string>
+			<key>Land</key>
+			<string>Vereinigtes Königreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Menge, Maße, Material, Datum, Materialstandort, Versandoption, Anbieterangabe</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Merkliste</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-45</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Globechain</string>
+			<key>Land</key>
+			<string>Vereinigtes Königreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht</string>
+			<key>Zugang</key>
+			<string>Mitgliedschaft</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>n. p.</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Suchbenachrichtigung</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-46</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Material Index</string>
+			<key>Land</key>
+			<string>Vereinigtes Königreich</string>
+			<key>Angebotsform</key>
+			<string>n. p.</string>
+			<key>Zugang</key>
+			<string>n. p.</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>n. p.</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>n. p.</string>
+			<key>Beschaffungsschritte</key>
+			<string>n. p.</string>
+			<key>Uebergabe</key>
+			<string>n. p.</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-47</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>SalvoWEB</string>
+			<key>Land</key>
+			<string>Vereinigtes Königreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Preis, Materialstandort, Anbieterangabe</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-48</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Surplus Building &amp; Plumbing Materials</string>
+			<key>Land</key>
+			<string>Vereinigtes Königreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Artikelnummer, Preis, Menge, Materialstandort, Versandoption, Anbieterangabe</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Warenkorb, Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-49</string>
+			<key>Kategorie</key>
+			<string>Marktplätze</string>
+			<key>Plattform</key>
+			<string>Sustainability Yard</string>
+			<key>Land</key>
+			<string>Vereinigtes Königreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website, App</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Rabatt, Bestand, Maße, Gewicht, Material, Zustand, Marke, Verfügbarkeit, Datum, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-01</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>BatiTerre</string>
+			<key>Land</key>
+			<string>Belgien</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Preis, Maße, Zustand, Varianten, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-02</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Cornermat / Retrival</string>
+			<key>Land</key>
+			<string>Belgien</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Preis, Maße, Gewicht, Zustand, Marke, Verfügbarkeit</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, Reservierung, Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-04</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>RotorDC</string>
+			<key>Land</key>
+			<string>Belgien</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Barcode, Preis, Bestand, Maße, Gewicht, Herkunft</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Warenkorb, stationärer Kauf</string>
+			<key>Uebergabe</key>
+			<string>—</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-05</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Bauteilbörse Bremen</string>
+			<key>Land</key>
+			<string>Deutschland</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Artikelnummer, Preis, Menge, Maße, Material</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Merkliste</string>
+			<key>Beschaffungsschritte</key>
+			<string>—</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-07</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Concular Shop</string>
+			<key>Land</key>
+			<string>Deutschland</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Preis, Bestand, Maße, Zustand, Farbe, Alter, Marke, Verfügbarkeit, Materialstandort, Gewährleistung</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-10</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Genbyg</string>
+			<key>Land</key>
+			<string>Dänemark</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Artikelnummer, Preis, Bestand, Maße</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Suchbenachrichtigung</string>
+			<key>Beschaffungsschritte</key>
+			<string>stationärer Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-25</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Archipel Sion Ressourcerie</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Maße, Zustand, Marke</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>stationärer Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-28</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Bauteilladen Winterthur</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Preis</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, Warenkorb, Bestellung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-31</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>GGZ@WORK Laden 2 Bauteile Zug</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>—</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>—</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, stationärer Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-33</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>La Ressourcerie Fribourg</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>n. p.</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>n. p.</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, stationärer Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-34</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Matériuum</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Preis, Menge, Bestand, Maße, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, Reservierung</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-35</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Matériuum Genève Ressourcerie</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>gemeinsamer Shop</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Preis, Menge, Maße, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Reservierung</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-36</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Ressourcerie Lausanne / Matériuum / R-UUL</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>gemeinsamer Shop</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Preis, Menge, Maße, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, Reservierung</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-37</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>wiederverwendung.ch / ReUse Recycling Center Riedtwil</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite, Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Marke</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Filter, Merkliste</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Warenkorb, Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-42</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>Wick ReUse / ROTO Baumarkt</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website, externer Marktplatz</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>—</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, stationärer Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-51</string>
+			<key>Kategorie</key>
+			<string>Depots / Shops</string>
+			<key>Plattform</key>
+			<string>re:Laden / HarvestMAP Vienna</string>
+			<key>Land</key>
+			<string>Österreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Zustand, Verfügbarkeit, Herkunft</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>Reservierung, Warenkorb, Bestellung, Zahlung</string>
+			<key>Uebergabe</key>
+			<string>Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-03</string>
+			<key>Kategorie</key>
+			<string>Vermittlung / Kontakt</string>
+			<key>Plattform</key>
+			<string>Materialenbank Leuven / Atelier Circuler</string>
+			<key>Land</key>
+			<string>Belgien</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite, Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Rabatt, Menge, Bestand, Maße, Material, Zustand, Herkunft</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Warenkorb</string>
+			<key>Uebergabe</key>
+			<string>—</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-06</string>
+			<key>Kategorie</key>
+			<string>Vermittlung / Kontakt</string>
+			<key>Plattform</key>
+			<string>bauteilnetz Deutschland</string>
+			<key>Land</key>
+			<string>Deutschland</string>
+			<key>Angebotsform</key>
+			<string>Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>n. p.</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt</string>
+			<key>Uebergabe</key>
+			<string>n. p.</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-15</string>
+			<key>Kategorie</key>
+			<string>Vermittlung / Kontakt</string>
+			<key>Plattform</key>
+			<string>Cycle Up</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>—</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>—</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>—</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt</string>
+			<key>Uebergabe</key>
+			<string>—</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-29</string>
+			<key>Kategorie</key>
+			<string>Vermittlung / Kontakt</string>
+			<key>Plattform</key>
+			<string>Bauteilvermittlung Zürichsee-Oberland</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Verfügbarkeit, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage</string>
+			<key>Uebergabe</key>
+			<string>direkte Übergabe</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-30</string>
+			<key>Kategorie</key>
+			<string>Vermittlung / Kontakt</string>
+			<key>Plattform</key>
+			<string>Bauteilverwertung Köppel &amp; Klein</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>externer Marktplatz</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Preis, Maße, Material, Zustand, Marke, Verfügbarkeit, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt, Kauf</string>
+			<key>Uebergabe</key>
+			<string>Abholung, Lieferung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-40</string>
+			<key>Kategorie</key>
+			<string>Vermittlung / Kontakt</string>
+			<key>Plattform</key>
+			<string>Stiftung Chance BauTeile Zürich / Glattbrugg</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>externer Marktplatz</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Artikelnummer, Preis, Menge, Maße, Verfügbarkeit, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung</string>
+			<key>Beschaffungsschritte</key>
+			<string>Kontakt</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-18</string>
+			<key>Kategorie</key>
+			<string>Ressourcenkataloge</string>
+			<key>Plattform</key>
+			<string>RAEDIFICARE</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite, Katalog, Karte/GIS</string>
+			<key>Zugang</key>
+			<string>Registrierung</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Menge, Maße, Zustand, Verfügbarkeit, Materialstandort</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Bestellung</string>
+			<key>Uebergabe</key>
+			<string>n. p.</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-19</string>
+			<key>Kategorie</key>
+			<string>Ressourcenkataloge</string>
+			<key>Plattform</key>
+			<string>REFAIR Bordeaux</string>
+			<key>Land</key>
+			<string>Frankreich</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite, Katalog, Karte/GIS</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>Standort</string>
+			<key>Datenfelder</key>
+			<string>Beschreibung, Bilder, Menge, Material, Zustand, Verfügbarkeit, Materialstandort, Dokumente, Anbieterangabe</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Suche, Filter, Auswahlliste</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage</string>
+			<key>Uebergabe</key>
+			<string>—</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-32</string>
+			<key>Kategorie</key>
+			<string>Ressourcenkataloge</string>
+			<key>Plattform</key>
+			<string>Gruner ReUse</string>
+			<key>Land</key>
+			<string>Schweiz</string>
+			<key>Angebotsform</key>
+			<string>Angebotsübersicht, Detailseite, Katalog, Karte/GIS</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Artikelnummer, Preis, Menge, Bestand, Material, Zustand, Marke, Verfügbarkeit, Materialstandort, Dokumente</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Reservierung</string>
+			<key>Uebergabe</key>
+			<string>—</string>
+		</dict>
+		<dict>
+			<key>ID</key>
+			<string>BB-50</string>
+			<key>Kategorie</key>
+			<string>Ressourcenkataloge</string>
+			<key>Plattform</key>
+			<string>BauKarussell</string>
+			<key>Land</key>
+			<string>Österreich</string>
+			<key>Angebotsform</key>
+			<string>Detailseite, Katalog</string>
+			<key>Zugang</key>
+			<string>öffentlich</string>
+			<key>DigitalerKanal</key>
+			<string>Website</string>
+			<key>PhysischerZugang</key>
+			<string>—</string>
+			<key>Datenfelder</key>
+			<string>Bilder, Artikelnummer, Preis, Menge, Maße, Material, Zustand, Marke, Verfügbarkeit, Materialstandort, Herkunft, Dokumente</string>
+			<key>SuchUndAuswahlfunktionen</key>
+			<string>Kategorien, Filter</string>
+			<key>Beschaffungsschritte</key>
+			<string>Anfrage, Reservierung, Warenkorb, Bestellung</string>
+			<key>Uebergabe</key>
+			<string>Abholung</string>
+		</dict>
+	</array>
+</dict>
+</plist>

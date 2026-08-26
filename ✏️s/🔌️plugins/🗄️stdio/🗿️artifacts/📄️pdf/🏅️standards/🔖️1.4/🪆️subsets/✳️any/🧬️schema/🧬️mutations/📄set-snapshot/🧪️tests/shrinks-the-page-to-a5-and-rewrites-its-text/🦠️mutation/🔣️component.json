@@ -2,10 +2,17 @@
   "mutation": "setSnapshot",
   "snapshot": {
     "schema": "stdio.pdf",
-    "page": {
-      "width": 420.0,
-      "height": 595.0,
-      "text": "Final"
-    }
+    "pages": [
+      {
+        "width": 420.0,
+        "height": 595.0,
+        "text": "Final"
+      },
+      {
+        "width": 612.0,
+        "height": 792.0,
+        "text": "Appendix"
+      }
+    ]
   }
 }

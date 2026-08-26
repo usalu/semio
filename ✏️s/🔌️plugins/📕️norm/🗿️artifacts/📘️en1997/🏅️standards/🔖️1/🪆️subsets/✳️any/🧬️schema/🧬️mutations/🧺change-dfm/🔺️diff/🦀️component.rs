@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_d_f_m::mutation::ChangeDFM;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeDFM, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeDFM, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_d_f_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Founding depth D_f [m] must be a finite number, got {}.", payload.new_d_f_m), Vec::<String>::new());
     }

@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_bedrooms::mutation::ChangeBedr
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeBedrooms, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeBedrooms, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if base.bedrooms == payload.new_bedrooms {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Number of bedrooms is already {}.", payload.new_bedrooms));
     }

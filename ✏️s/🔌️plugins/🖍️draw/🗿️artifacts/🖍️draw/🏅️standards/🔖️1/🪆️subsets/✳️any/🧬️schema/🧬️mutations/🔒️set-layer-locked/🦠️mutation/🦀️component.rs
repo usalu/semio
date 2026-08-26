@@ -15,23 +15,23 @@ pub struct SetLayerLocked {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn set_layer_locked(layer_id: String, locked: bool) -> DrawMutation {
+pub fn set_layer_locked(layer_id: String, locked: bool) -> DrawMutation {
     DrawMutation::SetLayerLocked(SetLayerLocked { layer_id, locked })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for SetLayerLocked {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-locked", record: "SetLayerLocked" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Set layer \"{}\" locked to {}", self.layer_id, self.locked)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

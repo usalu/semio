@@ -26,7 +26,7 @@ pub struct DrawInference {
 }
 
 impl protocol::Inference<DrawSnapshot> for DrawInference {
-    async fn infer(snapshot: &DrawSnapshot) -> Self {
+    fn infer(snapshot: &DrawSnapshot) -> Self {
         Self { topology: compute_draw_topology(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for DrawInference {
 }
 
 impl protocol::InferenceSpec<DrawSnapshot> for DrawInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.draw.draw.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.draw.draw.inference.topology", reads: &["layers"] }]
     }
 }
@@ -62,7 +62,7 @@ impl ArtifactInferrer for crate::artifacts::draw::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.draw.draw.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `draw_artifact_schema_descriptor`'s registration.
-pub async fn draw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn draw_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.draw.draw.inference",
         inference: schema::FacetLeaves {

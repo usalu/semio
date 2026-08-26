@@ -4,7 +4,7 @@ use super::mutation::UpdateSiloShellInputs;
 use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &UpdateSiloShellInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
+pub fn diff(payload: &UpdateSiloShellInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if !payload.new_silo_t_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Silo t mm must be a finite number, got {}.", payload.new_silo_t_mm), Vec::<String>::new());
     }

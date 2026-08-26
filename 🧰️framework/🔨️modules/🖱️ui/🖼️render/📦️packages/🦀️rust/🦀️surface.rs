@@ -470,7 +470,7 @@ mod tests {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn test_placement(id: &str, bounds: Bounds, clip: ClipId, z_index: i32) -> SurfacePlacement {
-        SurfacePlacement { id: SurfaceId(id.into()), bounds, clip, transform: Transform2D::IDENTITY, z_index }
+        SurfacePlacement { id: SurfaceId(ui_contract::UiText::try_from_str(id).expect("bounded fixture surface")), bounds, clip, transform: Transform2D::IDENTITY, z_index }
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

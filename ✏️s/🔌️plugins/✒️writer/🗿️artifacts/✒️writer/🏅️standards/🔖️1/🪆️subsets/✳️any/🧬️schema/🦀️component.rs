@@ -296,7 +296,7 @@ pub async fn wire_completions_json(text: &str, cursor: usize) -> Option<String> 
 }
 
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.
-pub async fn format_writer_text(text: &str, language_id: &str) -> String {
+pub fn format_writer_text(text: &str, language_id: &str) -> String {
     if language_id == "jack" {
         if let Ok(formatted) = trinity::core::format(text) {
             return formatted;
@@ -452,7 +452,7 @@ async fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
 
 /// 🔤️ Fine-grained, never-fails jack tokens for editor heuristics — routed through `trinity::core`'s shared
 /// forgiving lexer instead of a hand-rolled writer copy.
-async fn jack_tokens(text: &str) -> Vec<SpannedToken> {
+fn jack_tokens(text: &str) -> Vec<SpannedToken> {
     lex_spanned(text, true).unwrap_or_default()
 }
 
@@ -660,7 +660,7 @@ pub async fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
 }
 
 /// 🔗️ Bound jack variable names from pattern bindings (premigration `jackBoundVariableNames`).
-pub async fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
+pub fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
     use Token;
     let tokens = jack_tokens(text);
     let mut vars = std::collections::HashSet::new();
@@ -680,7 +680,7 @@ pub async fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<
     vars
 }
 
-async fn is_jack_variable_use_token(tokens: &[SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
+fn is_jack_variable_use_token(tokens: &[SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
     use Token;
     let Some(token) = tokens.get(index) else { return false };
     let Token::Ident(text) = &token.token else { return false };
@@ -695,7 +695,7 @@ async fn is_jack_variable_use_token(tokens: &[SpannedToken], index: usize, bound
 }
 
 /// 🔁️ All bound-variable occurrences for a jack variable name (premigration `jackVariableOccurrences`).
-pub async fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)> {
+pub fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)> {
     use Token;
     let tokens = jack_tokens(text);
     let bound = jack_bound_variable_names(text);
@@ -728,7 +728,7 @@ pub struct JackSymbolAtCursor {
 }
 
 /// 🎯️ Resolve the jack symbol at a byte offset for semantic editor actions (premigration `jackSymbolAtOffset`).
-pub async fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCursor> {
+pub fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCursor> {
     use Token;
     let tokens = jack_tokens(text);
     let clamped = offset.min(text.len());
@@ -753,7 +753,7 @@ pub async fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymb
 }
 
 /// ✏️ Apply a semantic jack rename across all occurrence spans (premigration `applyJackRename`).
-pub async fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &str) -> String {
+pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &str) -> String {
     let mut sorted: Vec<(usize, usize)> = occurrences.to_vec();
     sorted.sort_by_key(|a| std::cmp::Reverse(a.0));
     let mut out = text.to_string();

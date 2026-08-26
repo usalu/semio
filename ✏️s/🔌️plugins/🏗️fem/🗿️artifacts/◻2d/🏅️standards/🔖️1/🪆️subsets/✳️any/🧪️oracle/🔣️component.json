@@ -1,19 +1,22 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `fem.fem2d` declares 25 mutation kinds over eight id-keyed collections plus one inseparable analysis-settings facet. Semio-NATIVE, no oracle; the structural solvers surveyed and declined are named below. This catalog is NOT the same as `fem3d-1-any`: the 2D artifact's planar noun is a REGION where the 3D artifact's is a SOLID.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.fem.fem2d` is a semio-NATIVE structural MODEL — nine id-keyed collections and one settings record — and its vocabulary edits the model, never the analysis, so a finite-element solver has nothing to adjudicate. The reference is a SECOND IMPLEMENTATION in Python written from this subset's committed snapshot schema, mutation grammar and specification vectors.",
+  "oracles": [
     {
-      "id": "fem2d-mutation-semantics",
+      "id": "fem2d-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
       "capabilities": [
         "fem2d-1-mutate"
       ],
-      "rationale": "`fem.fem2d` is a semio-NATIVE artifact; `.fem2d.dsl.semio` is read by nothing outside this repository. The structural-analysis ecosystem was surveyed and DECLINED for a reason that applies to the whole family: `frame3dd`, `calculix` and `code_aster` are SOLVERS — they consume a model and produce displacements and stresses — and none of them has an editing vocabulary at all, let alone one that could adjudicate `create-support` or `change-load-case-self-weight`. There is also no neutral structural interchange these 25 kinds map onto: IFC's structural-analysis view (already covered by `✏️s/🔌️plugins/🗄️stdio`'s `🏗️ifc 2x3 ✳️sav` subset) models an analysis model as entity instances with no notion of this artifact's eight id-keyed collections, its loads-inside-a-load-case nesting, or its single inseparable analysis-settings facet. Evidence is the 25 committed specification vectors, one per kind, each a handcrafted `(before, mutation, after, diff, outcome)` quintet over a real timber-frame house model, plus the inverse law as a metamorphic property — which is the sharpest check available here because eleven of the 25 kinds are cascade-bearing: deleting a load case takes its loads with it, deleting a node must not silently take its support, and an inverse that rebuilt the collection by value rather than restoring the prior index space cannot land back on the before-snapshot.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.fem.fem2d` model and all twenty-five typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem2d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the nine members and the analysis settings record), `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the twenty-five verbs) and the twenty-five committed `(before, mutation, after, outcome)` specification vectors — which is also where the RECORD shapes and the cascade rules are actually written down. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-five kinds edits the model document itself — `replace-section` swaps a profile record, `add-load` appends to a case's load list, `change-load-case-self-weight` flips a boolean — and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around: `../🧬️schema/🧬️mutations/🔣️component.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every one of `FemNode`, `FemElement`, `FemRegion`, `FemMaterial`, `FemSection`, `FemSupport`, `FemLoadCase` and `FemCombination` is an EMPTY object with no properties at all. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
   "mutationCatalogs": [

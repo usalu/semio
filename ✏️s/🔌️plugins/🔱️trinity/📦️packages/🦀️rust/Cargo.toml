@@ -49,12 +49,15 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework = { workspace = true }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+# 🧵️ The generated `🧬️mutations/💾️binary` decoders yield through `semio_framework_job::StepOutcome`,
+# so the job crate has to be linked here the same way `🌍️gis` links it.
+semio-framework-job = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+semio-framework-async = { workspace = true }
 wasm-bindgen = { workspace = true }
-wasm-bindgen-futures = "0.4.71"
 js-sys = "0.3.83"
 web-sys = { version = "0.3.98", features = ["console", "HtmlCanvasElement"] }
 

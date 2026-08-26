@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_ground_type::mutation::ChangeGro
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeGroundType, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeGroundType, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.ground_type == payload.new_ground_type {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Ground type is already \"{}\".", payload.new_ground_type));
     }

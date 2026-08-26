@@ -88,7 +88,8 @@ pub mod derived_construction {
         #[semio_framework_async_macros::async_test]
         async fn pass_through_build_never_fails_on_conformance_grounds() {
             let snapshot = PdfABuilderConstruction::empty().await.build().await.expect("no hard check exists at this schema; build must succeed");
-            assert_eq!(snapshot.page.width, 612.0);
+            assert_eq!(snapshot.pages.len(), 1, "an empty PDF 1.4 document is one blank page, never a document with no page tree");
+            assert_eq!(snapshot.first_page().expect("page 1").width, 612.0);
         }
     }
 }
@@ -120,8 +121,8 @@ pub mod derived_analysis {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
-        if snapshot.page.text.trim().is_empty() {
-            out.push(soft(CODE_TEXT_EMPTY, "page.text is empty -- no extractable text content found; a very weak signal, but a real one given PageDoc has no other checkable field".into()));
+        if snapshot.first_page_text().trim().is_empty() {
+            out.push(soft(CODE_TEXT_EMPTY, "page 1 shows no extractable text -- read off the first page of the document's page tree, the page ISO 19005-1's readable-content axis is checked on here; a very weak signal, but a real one given PageDoc has no other checkable field".into()));
         }
         out.push(soft(
             CODE_SCHEMA_GAP,
@@ -162,14 +163,14 @@ pub mod derived_analysis {
 
         #[semio_framework_async_macros::async_test]
         async fn schema_gap_diagnostic_always_fires() {
-            let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "hello".into() }, ..PdfSnapshot::default() };
+            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "hello".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP && d.severity == Severity::Warning), "got {diagnostics:?}");
         }
 
         #[semio_framework_async_macros::async_test]
         async fn empty_text_is_flagged_soft() {
-            let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: String::new() }, ..PdfSnapshot::default() };
+            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: String::new() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_TEXT_EMPTY && d.severity == Severity::Warning), "got {diagnostics:?}");
             assert_eq!(diagnostics.len(), 2, "expected text-empty + schema-gap, got {diagnostics:?}");
@@ -177,7 +178,7 @@ pub mod derived_analysis {
 
         #[semio_framework_async_macros::async_test]
         async fn non_empty_text_skips_the_text_check() {
-            let snapshot = PdfSnapshot { page: PageDoc { width: 612.0, height: 792.0, text: "content".into() }, ..PdfSnapshot::default() };
+            let snapshot = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "content".into() }, PageDoc { width: 612.0, height: 792.0, text: "a later page this check never reads".into() }], ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert!(diagnostics.iter().all(|d| d.code.0 != CODE_TEXT_EMPTY), "got {diagnostics:?}");
             assert_eq!(diagnostics.len(), 1, "expected only schema-gap, got {diagnostics:?}");

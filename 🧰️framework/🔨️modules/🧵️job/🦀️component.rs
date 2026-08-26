@@ -149,6 +149,404 @@ pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generatio
 }
 //#endregion 🪪️Identity
 
+//#region 🗄️FixedOperationRegistry
+/// 🗄️ Typed retained owner admitted to a fixed operation scheduler.
+pub trait FixedOperationOwner {
+    fn retained_bytes(&self) -> usize;
+    fn cancel(&mut self);
+    fn begin_close(&mut self);
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep;
+    fn terminal_is_empty(&self) -> bool;
+}
+
+/// 🪪️ Exact scheduler identity. Reusing an operation id with another generation is never an ACK.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FixedOperationKey {
+    pub operation: OperationId,
+    pub generation: Generation,
+}
+
+impl FixedOperationKey {
+    pub const fn new(operation: OperationId, generation: Generation) -> Self {
+        Self { operation, generation }
+    }
+}
+
+/// ↩️ Failed fixed-registry admission returns the exact owner unchanged.
+#[derive(Debug)]
+pub struct FixedOperationAdmissionRejected<T> {
+    pub key: FixedOperationKey,
+    pub owner: T,
+}
+
+struct FixedOperationEntry<T> {
+    key: FixedOperationKey,
+    admitted_bytes: usize,
+    closing: bool,
+    owner: T,
+}
+
+/// 🗄️ Fixed scheduler authority for retained operation owners. Slots and byte credit are admitted
+/// once; no operation can resize the registry or detach an owner without its exact identity.
+pub struct FixedOperationRegistry<T, const CAPACITY: usize> {
+    slots: Box<[Option<FixedOperationEntry<T>>]>,
+    maximum_bytes: usize,
+    retained_bytes: usize,
+    occupied: usize,
+    close_cursor: usize,
+    allocation_admitted: bool,
+}
+
+impl<T: FixedOperationOwner, const CAPACITY: usize> FixedOperationRegistry<T, CAPACITY> {
+    pub const MAXIMUM_SLOTS: usize = 64;
+
+    pub fn new(maximum_bytes: usize) -> Self {
+        let mut slots = Vec::new();
+        let allocation_admitted = CAPACITY > 0 && CAPACITY <= Self::MAXIMUM_SLOTS && slots.try_reserve_exact(CAPACITY).is_ok();
+        if allocation_admitted {
+            slots.resize_with(CAPACITY, || None);
+        }
+        Self { slots: slots.into_boxed_slice(), maximum_bytes, retained_bytes: 0, occupied: 0, close_cursor: 0, allocation_admitted }
+    }
+
+    fn index(&self, key: FixedOperationKey) -> usize {
+        ((key.operation.0 ^ key.generation.0.rotate_left(17)) as usize) % CAPACITY.max(1)
+    }
+
+    pub fn can_admit(&self, key: FixedOperationKey, retained_bytes: usize) -> bool {
+        let Some(next_retained_bytes) = self.retained_bytes.checked_add(retained_bytes) else { return false };
+        if !self.allocation_admitted || self.occupied == CAPACITY || next_retained_bytes > self.maximum_bytes {
+            return false;
+        }
+        self.slots[self.index(key)].is_none()
+    }
+
+    pub fn admit(&mut self, key: FixedOperationKey, owner: T) -> Result<(), FixedOperationAdmissionRejected<T>> {
+        let retained_bytes = owner.retained_bytes();
+        if !self.can_admit(key, retained_bytes) {
+            return Err(FixedOperationAdmissionRejected { key, owner });
+        }
+        let index = self.index(key);
+        self.slots[index] = Some(FixedOperationEntry { key, admitted_bytes: retained_bytes, closing: false, owner });
+        self.retained_bytes = self.retained_bytes.checked_add(retained_bytes).expect("fixed operation byte admission was checked before exact owner insertion");
+        self.occupied += 1;
+        Ok(())
+    }
+
+    pub fn get(&self, key: FixedOperationKey) -> Option<&T> {
+        self.slots.get(self.index(key))?.as_ref().filter(|entry| entry.key == key && !entry.closing).map(|entry| &entry.owner)
+    }
+
+    pub fn get_mut(&mut self, key: FixedOperationKey) -> Option<&mut T> {
+        let index = self.index(key);
+        self.slots.get_mut(index)?.as_mut().filter(|entry| entry.key == key && !entry.closing).map(|entry| &mut entry.owner)
+    }
+
+    pub fn take(&mut self, key: FixedOperationKey) -> Option<T> {
+        let index = self.index(key);
+        if self.slots.get(index)?.as_ref().is_none_or(|entry| entry.key != key || entry.closing) {
+            return None;
+        }
+        let entry = self.slots[index].take().expect("exact fixed operation owner remains admitted");
+        self.retained_bytes -= entry.admitted_bytes;
+        self.occupied -= 1;
+        Some(entry.owner)
+    }
+
+    pub fn cancel(&mut self, key: FixedOperationKey) -> bool {
+        let index = self.index(key);
+        let Some(entry) = self.slots.get_mut(index).and_then(Option::as_mut).filter(|entry| entry.key == key) else { return false };
+        entry.owner.cancel();
+        entry.owner.begin_close();
+        entry.closing = true;
+        true
+    }
+
+    pub fn cancel_stale_step(&mut self, operation: OperationId, live_generation: Generation) -> bool {
+        if !self.allocation_admitted {
+            return false;
+        }
+        let index = self.close_cursor;
+        self.close_cursor = (self.close_cursor + 1) % CAPACITY;
+        let Some(entry) = self.slots[index].as_mut() else { return false };
+        if entry.key.operation != operation || entry.key.generation == live_generation {
+            return false;
+        }
+        entry.owner.cancel();
+        entry.owner.begin_close();
+        entry.closing = true;
+        true
+    }
+
+    pub fn begin_close_step(&mut self) -> bool {
+        if !self.allocation_admitted {
+            return false;
+        }
+        let index = self.close_cursor;
+        self.close_cursor = (self.close_cursor + 1) % CAPACITY;
+        let Some(entry) = self.slots[index].as_mut() else { return false };
+        if !entry.closing {
+            entry.owner.cancel();
+            entry.owner.begin_close();
+            entry.closing = true;
+        }
+        true
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if !self.allocation_admitted || maximum_items == 0 {
+            return InteractiveJobCloseStep::Blocked;
+        }
+        let index = self.close_cursor;
+        self.close_cursor = (self.close_cursor + 1) % CAPACITY;
+        let Some(entry) = self.slots[index].as_mut() else {
+            return if self.is_empty() { InteractiveJobCloseStep::Complete } else { InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 } };
+        };
+        if !entry.closing {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let step = entry.owner.close_step(1, maximum_bytes);
+        if entry.owner.terminal_is_empty() {
+            let entry = self.slots[index].take().expect("terminal fixed operation owner remains admitted");
+            self.retained_bytes -= entry.admitted_bytes;
+            self.occupied -= 1;
+            drop(entry);
+        }
+        if self.is_empty() {
+            InteractiveJobCloseStep::Complete
+        } else {
+            match step {
+                InteractiveJobCloseStep::Complete => InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                step => step,
+            }
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.occupied == 0
+    }
+
+    pub fn retained_bytes(&self) -> usize {
+        self.retained_bytes
+    }
+}
+
+impl<T, const CAPACITY: usize> Drop for FixedOperationRegistry<T, CAPACITY> {
+    fn drop(&mut self) {
+        assert_eq!(self.occupied, 0, "fixed operation registry reached Drop before every exact owner was terminal-empty");
+    }
+}
+
+#[cfg(test)]
+mod fixed_operation_registry_tests {
+    use super::*;
+
+    #[derive(Debug)]
+    struct Owner {
+        identity: u64,
+        fixture_label: Option<&'static str>,
+        bytes: Vec<u8>,
+        cancelled: bool,
+        closing: bool,
+    }
+
+    impl Owner {
+        fn new(identity: u64, bytes: usize) -> Self {
+            Self { identity, fixture_label: None, bytes: vec![0; bytes], cancelled: false, closing: false }
+        }
+
+        fn fixture(identity: u64, label: &'static str, bytes: usize) -> Self {
+            Self { identity, fixture_label: Some(label), bytes: vec![0; bytes], cancelled: false, closing: false }
+        }
+
+        fn close_all(&mut self) {
+            self.begin_close();
+            for _ in 0..16 {
+                let _ = self.close_step(1, 1);
+                if self.terminal_is_empty() {
+                    return;
+                }
+            }
+            panic!("fixture owner did not close within its declared fixed bound");
+        }
+    }
+
+    impl FixedOperationOwner for Owner {
+        fn retained_bytes(&self) -> usize {
+            self.bytes.len()
+        }
+
+        fn cancel(&mut self) {
+            self.cancelled = true;
+        }
+
+        fn begin_close(&mut self) {
+            self.closing = true;
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
+            if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
+                return InteractiveJobCloseStep::Blocked;
+            }
+            if self.bytes.pop().is_some() {
+                return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 1 };
+            }
+            InteractiveJobCloseStep::Complete
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.bytes.is_empty()
+        }
+    }
+
+    impl Drop for Owner {
+        fn drop(&mut self) {
+            assert!(self.terminal_is_empty(), "fixture owner was dropped before terminal-empty");
+        }
+    }
+
+    fn drain<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>) {
+        for _ in 0..64 {
+            let _ = registry.close_step(1, 1);
+            if registry.is_empty() {
+                return;
+            }
+        }
+        panic!("fixed operation registry did not close within capacity × owner bound");
+    }
+
+    fn fixture_admit<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, generation: Generation, bytes: usize, identity: u64, label: &'static str) {
+        match registry.admit(FixedOperationKey::new(operation, generation), Owner::fixture(identity, label, bytes)) {
+            Ok(()) => output.push(format!("admit:accepted:{label}")),
+            Err(mut rejected) => {
+                assert_eq!(rejected.owner.identity, identity);
+                assert_eq!(rejected.owner.fixture_label, Some(label));
+                output.push(format!("admit:rejected:{label}"));
+                rejected.owner.close_all();
+            }
+        }
+    }
+
+    fn fixture_take<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, generation: Generation) {
+        match registry.take(FixedOperationKey::new(operation, generation)) {
+            Some(mut owner) => {
+                output.push(format!("take:{}", owner.fixture_label.expect("fixture owner label")));
+                owner.close_all();
+            }
+            None => output.push("take:none".into()),
+        }
+    }
+
+    fn fixture_cancel<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, generation: Generation) {
+        output.push(format!("cancel:{}", registry.cancel(FixedOperationKey::new(operation, generation))));
+    }
+
+    fn fixture_cancel_stale<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, operation: OperationId, live_generation: Generation) {
+        output.push(format!("stale:{}", registry.cancel_stale_step(operation, live_generation)));
+    }
+
+    fn fixture_close<const CAPACITY: usize>(registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>, maximum_items: usize, maximum_bytes: usize) {
+        let state = match registry.close_step(maximum_items, maximum_bytes) {
+            InteractiveJobCloseStep::Blocked => "blocked",
+            InteractiveJobCloseStep::Pending { .. } => "pending",
+            InteractiveJobCloseStep::Complete => "complete",
+        };
+        output.push(format!("close:{state}"));
+    }
+
+    fn fixture_inspect<const CAPACITY: usize>(registry: &FixedOperationRegistry<Owner, CAPACITY>, output: &mut Vec<String>) {
+        let remaining = registry.slots.iter().filter_map(Option::as_ref).map(|entry| entry.owner.bytes.len()).sum::<usize>();
+        output.push(format!("state:{}:{}:{remaining}", registry.occupied, registry.retained_bytes));
+    }
+
+    fn fixture_assert<const CAPACITY: usize>(id: &str, registry: &mut FixedOperationRegistry<Owner, CAPACITY>, output: Vec<String>, expected: &[&str]) {
+        assert_eq!(output, expected, "language-neutral fixed operation case {id}");
+        assert!(registry.is_empty(), "language-neutral fixed operation case {id} retained an owner");
+    }
+
+    include!("🧪️fixtures/fixed-operation-registry-cases.rs");
+
+    #[test]
+    fn maximum_plus_one_and_saturation_return_the_exact_owner() {
+        let mut registry = FixedOperationRegistry::<Owner, 2>::new(4);
+        let key = FixedOperationKey::new(OperationId(1), Generation(7));
+        registry.admit(key, Owner::new(11, 4)).expect("exact maximum");
+        let mut byte_rejected = registry.admit(FixedOperationKey::new(OperationId(2), Generation(7)), Owner::new(12, 1)).expect_err("maximum plus one");
+        assert_eq!(byte_rejected.owner.identity, 12);
+        assert_eq!(byte_rejected.owner.bytes.len(), 1);
+        byte_rejected.owner.close_all();
+        let mut collision_rejected = registry.admit(FixedOperationKey::new(OperationId(3), Generation(7)), Owner::new(13, 0)).expect_err("fixed-slot collision");
+        assert_eq!(collision_rejected.owner.identity, 13);
+        collision_rejected.owner.close_all();
+        assert!(registry.cancel(key));
+        drain(&mut registry);
+        assert_eq!(registry.retained_bytes(), 0);
+
+        let mut full = FixedOperationRegistry::<Owner, 2>::new(8);
+        let first = FixedOperationKey::new(OperationId(0), Generation(0));
+        let second = FixedOperationKey::new(OperationId(1), Generation(0));
+        full.admit(first, Owner::new(14, 1)).expect("first distinct slot");
+        full.admit(second, Owner::new(15, 1)).expect("exact fixed capacity");
+        let mut capacity_rejected = full.admit(FixedOperationKey::new(OperationId(2), Generation(0)), Owner::new(16, 1)).expect_err("fixed capacity plus one");
+        assert_eq!(capacity_rejected.owner.identity, 16);
+        capacity_rejected.owner.close_all();
+        assert!(full.cancel(first));
+        assert!(full.cancel(second));
+        drain(&mut full);
+    }
+
+    #[test]
+    fn stale_generation_interrupted_close_and_aba_preserve_exact_authority() {
+        let mut registry = FixedOperationRegistry::<Owner, 4>::new(8);
+        let stale = FixedOperationKey::new(OperationId(9), Generation(1));
+        registry.admit(stale, Owner::new(21, 2)).expect("stale owner");
+        assert!(registry.take(FixedOperationKey::new(OperationId(9), Generation(2))).is_none());
+        for _ in 0..4 {
+            let _ = registry.cancel_stale_step(OperationId(9), Generation(2));
+        }
+        let _ = registry.close_step(1, 1);
+        assert!(!registry.is_empty(), "interrupted close must retain the exact owner");
+        drain(&mut registry);
+        let fresh = FixedOperationKey::new(OperationId(9), Generation(2));
+        registry.admit(fresh, Owner::new(22, 0)).expect("fresh ABA generation");
+        assert!(registry.take(stale).is_none());
+        let mut owner = registry.take(fresh).expect("exact accepted owner handback");
+        assert_eq!(owner.identity, 22);
+        owner.close_all();
+        assert!(matches!(registry.close_step(1, 1), InteractiveJobCloseStep::Complete));
+        assert!(matches!(registry.close_step(1, 1), InteractiveJobCloseStep::Complete));
+    }
+
+    #[test]
+    fn maximum_registry_backing_initializes_inside_one_interactive_ceiling_under_concurrent_load() {
+        const WORKERS: usize = 4;
+        const SAMPLES: usize = 31;
+        let barrier = Arc::new(std::sync::Barrier::new(WORKERS));
+        let mut workers = Vec::with_capacity(WORKERS);
+        for _ in 0..WORKERS {
+            let barrier = barrier.clone();
+            workers.push(std::thread::spawn(move || {
+                barrier.wait();
+                let mut elapsed = [0_u128; SAMPLES];
+                for sample in &mut elapsed {
+                    let started = Instant::now();
+                    let registry = FixedOperationRegistry::<Owner, 64>::new(4_096);
+                    *sample = started.elapsed().as_micros();
+                    assert!(registry.allocation_admitted);
+                    drop(registry);
+                }
+                elapsed.sort_unstable();
+                elapsed[SAMPLES / 2]
+            }));
+        }
+        for worker in workers {
+            let median = worker.join().expect("concurrent fixed registry initialization worker");
+            assert!(median < u128::from(semio_framework_trace::INTERACTIVE_STEP_CEILING_US), "fixed registry median backing initialization exceeded the interactive ceiling under concurrent load: {median}us");
+        }
+    }
+}
+//#endregion 🗄️FixedOperationRegistry
+
 //#region ⛽️Budget
 /// ⛽️ Two-bound step budget: a fuel counter (job-defined instruction-equivalent units, decremented via
 /// [`StepContext::consume_fuel`]) AND an absolute wall-clock `deadline_ms` — design doc Decision 3.
@@ -729,6 +1127,8 @@ impl<'a> StepContext<'a> {
     }
 
     fn with_payload_ledger(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_ms: fn() -> u64, preview_sequence: &'a mut u64, payload_ledger: Arc<JobPayloadOperationLedger>) -> StepContext<'a> {
+        assert_eq!(payload_ledger.operation, operation, "job payload ledger operation must match its step context");
+        assert_eq!(payload_ledger.generation, generation, "job payload ledger generation must match its step context");
         StepContext { operation, generation, fuel_remaining: budget.fuel, deadline_ms: budget.deadline_ms, now_ms, cancel, stage: "initial", preview_sequence, payload_ledger, payload_page_granted: false }
     }
 
@@ -2916,6 +3316,21 @@ mod retained_ownership_tests {
             std::thread::yield_now();
         }
         panic!("worker session did not reach {expected:?}");
+    }
+
+    #[test]
+    fn payload_ledger_identity_must_match_the_exact_step_context() {
+        let ledger = Arc::new(JobPayloadOperationLedger::new(OperationId(90_000), Generation(6)));
+        let operation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let mut sequence = 0;
+            let _ = StepContext::with_payload_ledger(OperationId(90_001), Generation(6), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        }));
+        assert!(operation_mismatch.is_err());
+        let generation_mismatch = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let mut sequence = 0;
+            let _ = StepContext::with_payload_ledger(OperationId(90_000), Generation(7), StepBudget::new(1, u64::MAX), root_cancel_token(), default_now_ms, &mut sequence, Arc::clone(&ledger));
+        }));
+        assert!(generation_mismatch.is_err());
     }
 
     #[test]

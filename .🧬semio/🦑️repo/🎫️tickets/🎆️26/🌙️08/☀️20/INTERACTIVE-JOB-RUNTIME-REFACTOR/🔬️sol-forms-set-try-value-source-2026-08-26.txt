@@ -1,0 +1,430 @@
+//! 🧪️ Forms try-value updates with bounded vector expansion.
+
+use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::editor::forms::config::{discard_staged_try_value, FormsConfig, FormsConfigMutation};
+use semio_framework::kernel::{Effect, UiDirtyScope};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
+use serde::de::Deserializer;
+use serde::ser::Serializer;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, OnceLock};
+
+//#region 🔖️Constants
+pub const SET_TRY_VALUE_STEP_ACTION_ID: &str = "setTryValueStep";
+pub(crate) const MAX_VECTOR_COMPONENTS_PER_STEP: usize = 64;
+pub(crate) const MAX_TRY_VALUE_BYTES_PER_STEP: usize = 4_096;
+const MAX_LIVE_TRY_VALUE_SESSIONS: usize = 64;
+const MAX_COMMAND_INPUT_CHUNKS: u64 = 16_384;
+const MAX_COMMAND_INPUT_IDLE_ACTIONS: u64 = 32_768;
+//#endregion 🔖️Constants
+
+//#region 🔖️ChunkAddressableInput
+/// 🪢 Action-decoded immutable JSON storage. The action decoder pays the single wire allocation;
+/// worker handlers retain this storage with an `Arc` clone and every continuation addresses <=4 KiB.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ChunkAddressableJson(std::sync::Arc<str>);
+
+impl ChunkAddressableJson {
+    pub(crate) fn owner(&self) -> std::sync::Arc<str> {
+        self.0.clone()
+    }
+}
+
+impl std::ops::Deref for ChunkAddressableJson {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<String> for ChunkAddressableJson {
+    fn from(value: String) -> Self {
+        Self(std::sync::Arc::from(value))
+    }
+}
+
+impl From<&str> for ChunkAddressableJson {
+    fn from(value: &str) -> Self {
+        Self(std::sync::Arc::from(value))
+    }
+}
+
+impl Serialize for ChunkAddressableJson {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self)
+    }
+}
+
+impl<'de> Deserialize<'de> for ChunkAddressableJson {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct BoundedChunkVisitor;
+        impl<'de> serde::de::Visitor<'de> for BoundedChunkVisitor {
+            type Value = ChunkAddressableJson;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a JSON chunk of at most 4,096 UTF-8 bytes")
+            }
+
+            fn visit_borrowed_str<E: serde::de::Error>(self, value: &'de str) -> Result<Self::Value, E> {
+                self.visit_str(value)
+            }
+
+            fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
+                if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP {
+                    return Err(E::custom("Forms command JSON chunks are limited to 4,096 UTF-8 bytes"));
+                }
+                Ok(value.into())
+            }
+
+            fn visit_string<E: serde::de::Error>(self, value: String) -> Result<Self::Value, E> {
+                if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP {
+                    return Err(E::custom("Forms command JSON chunks are limited to 4,096 UTF-8 bytes"));
+                }
+                Ok(value.into())
+            }
+        }
+        deserializer.deserialize_str(BoundedChunkVisitor)
+    }
+}
+
+impl dsl::DslField for ChunkAddressableJson {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Text
+    }
+
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Text(self.to_string())
+    }
+
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let dsl::FieldValue::Text(value) = value else { return Err(format!("expected Text, found {value:?}")) };
+        if value.len() > MAX_TRY_VALUE_BYTES_PER_STEP {
+            return Err("Forms command JSON chunks are limited to 4,096 UTF-8 bytes".into());
+        }
+        Ok(value.as_str().into())
+    }
+}
+//#endregion 🔖️ChunkAddressableInput
+
+//#region 🔖️Session
+#[derive(Debug)]
+struct TryValueSession {
+    app_id: String,
+    document_id: String,
+    operation_id: String,
+    base_revision: String,
+    baseline_content_id: Option<std::sync::Arc<str>>,
+    progress_base: u64,
+    key: String,
+    staging_id: String,
+    staged_cursor: usize,
+    staged_chunks: u64,
+    digest_high: u64,
+    digest_low: u64,
+    digest_third: u64,
+    digest_fourth: u64,
+    digest_len: u64,
+    source: ChunkedSource,
+    source_content_id: Option<std::sync::Arc<str>>,
+    source_chunk_cursor: u64,
+    rewrite: Option<TryValueRewrite>,
+    prepared_value: Option<std::sync::Arc<ChunkedSource>>,
+    prepared_cursor: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct FormsJobKey {
+    app_id: String,
+    document_id: String,
+    operation_id: String,
+    generation: u64,
+}
+
+static TRY_VALUE_SESSIONS: OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>> = OnceLock::new();
+static ACTIVE_TRY_VALUE_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), u64>>> = OnceLock::new();
+static NEXT_TRY_VALUE_REQUEST: AtomicU64 = AtomicU64::new(20_000);
+
+fn sessions() -> &'static Mutex<BTreeMap<FormsJobKey, TryValueSession>> {
+    TRY_VALUE_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+fn active_generations() -> &'static Mutex<BTreeMap<(String, String, String), u64>> {
+    ACTIVE_TRY_VALUE_GENERATIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
+}
+
+pub(crate) fn cancel_pending_generations(operation: &semio_framework_plugin::AppOperationContext) -> Vec<FormsConfigMutation> {
+    cancel_command_inputs(operation.app_instance_id, &operation.parent_document_id);
+    let mut mutations = Vec::with_capacity(2);
+    let scopes: Vec<_> = active_generations().lock().expect("forms active generations lock").keys().filter(|(app, document, _)| app == &operation.app_instance_id.to_string() && document == &operation.parent_document_id).cloned().collect();
+    for scope in scopes {
+        let generation = active_generations().lock().expect("forms active generations lock").remove(&scope);
+        let Some(generation) = generation else { continue };
+        let key = FormsJobKey { app_id: scope.0, document_id: scope.1, operation_id: scope.2, generation };
+        let Some(session) = sessions().lock().expect("forms try-value sessions lock").remove(&key) else { continue };
+        let staging_id = session.staging_id;
+        discard_staged_try_value(&staging_id);
+        mutations.push(FormsConfigMutation::DiscardTryValueStaging { staging_id });
+    }
+    mutations.extend(crate::editor::forms::commands::set_try_values::cancel_pending_bulk(operation.app_instance_id, &operation.parent_document_id));
+    mutations
+}
+
+fn job_key(payload: &SetTryValueStep) -> FormsJobKey {
+    FormsJobKey { app_id: payload.app_id.clone(), document_id: payload.document_id.clone(), operation_id: payload.operation_id.clone(), generation: payload.generation }
+}
+
+fn take_session(payload: &SetTryValueStep) -> Option<TryValueSession> {
+    sessions().lock().expect("forms try-value sessions lock").remove(&job_key(payload))
+}
+
+fn put_session(key: FormsJobKey, session: TryValueSession) -> Result<(), TryValueSession> {
+    let mut live = sessions().lock().expect("forms try-value sessions lock");
+    if !live.contains_key(&key) && live.len() >= MAX_LIVE_TRY_VALUE_SESSIONS {
+        return Err(session);
+    }
+    live.insert(key, session);
+    Ok(())
+}
+
+fn session_job_key(session: &TryValueSession, generation: u64) -> FormsJobKey {
+    FormsJobKey { app_id: session.app_id.clone(), document_id: session.document_id.clone(), operation_id: session.operation_id.clone(), generation }
+}
+
+fn update_digest(session: &mut TryValueSession, bytes: &[u8]) {
+    for byte in bytes {
+        session.digest_len = session.digest_len.wrapping_add(1);
+        session.digest_high ^= u64::from(*byte);
+        session.digest_high = session.digest_high.wrapping_mul(0x00000100000001b3);
+        session.digest_low ^= session.digest_high.rotate_left(17) ^ session.digest_len;
+        session.digest_low = session.digest_low.wrapping_mul(0x9e3779b185ebca87);
+        session.digest_third ^= session.digest_low.rotate_left(29) ^ u64::from(*byte);
+        session.digest_third = session.digest_third.wrapping_mul(0xc2b2ae3d27d4eb4f);
+        session.digest_fourth ^= session.digest_third.rotate_left(41) ^ session.digest_len.rotate_left(7);
+        session.digest_fourth = session.digest_fourth.wrapping_mul(0x165667b19e3779f9);
+    }
+}
+
+fn content_id(session: &TryValueSession) -> String {
+    format!("try-{:016x}{:016x}{:016x}{:016x}-{:016x}", session.digest_high, session.digest_low, session.digest_third, session.digest_fourth, session.digest_len)
+}
+//#endregion 🔖️Session
+
+//#region 🔖️Values
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RewritePhase {
+    Locate,
+    Array,
+    Value,
+    Prefix,
+    Replacement,
+    Suffix,
+    Done,
+    Failed,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ReplacementMode {
+    ExistingElement,
+    ExistingArrayInsertion,
+    FullArray,
+    MissingField,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct RewriteStep {
+    complete: bool,
+    bytes: usize,
+    components: usize,
+}
+
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ChunkedSource {
+    chunks: BTreeMap<usize, std::sync::Arc<str>>,
+    len: usize,
+}
+
+impl ChunkedSource {
+    pub(crate) fn push(&mut self, chunk: std::sync::Arc<str>) {
+        if chunk.is_empty() {
+            return;
+        }
+        let chunk_len = chunk.len();
+        self.chunks.insert(self.len, chunk);
+        self.len = self.len.saturating_add(chunk_len);
+    }
+
+    fn from_text(text: String) -> Self {
+        let mut source = Self::default();
+        source.push(std::sync::Arc::from(text));
+        source
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.len
+    }
+
+    pub(crate) fn byte(&self, index: usize) -> Option<u8> {
+        let (start, chunk) = self.chunks.range(..=index).next_back()?;
+        chunk.as_bytes().get(index - start).copied()
+    }
+
+    pub(crate) fn append_range(&self, cursor: &mut usize, end: usize, output: &mut Vec<std::sync::Arc<str>>) -> usize {
+        let start = *cursor;
+        let limit = start.saturating_add(MAX_TRY_VALUE_BYTES_PER_STEP).min(end);
+        while *cursor < limit {
+            let (chunk_start, chunk) = self.chunks.range(..=*cursor).next_back().expect("bounded source chunk");
+            let local_start = *cursor - *chunk_start;
+            let mut local_end = (limit - *chunk_start).min(chunk.len());
+            while local_end > local_start && !chunk.is_char_boundary(local_end) {
+                local_end -= 1;
+            }
+            if local_end == local_start {
+                local_end += chunk[local_start..].chars().next().map(char::len_utf8).unwrap_or(1);
+            }
+            output.push(std::sync::Arc::from(&chunk[local_start..local_end]));
+            *cursor = *chunk_start + local_end;
+        }
+        cursor.saturating_sub(start)
+    }
+
+    pub(crate) fn bounded_range(&self, start: usize, end: usize) -> Option<String> {
+        if end < start || end.saturating_sub(start) > MAX_TRY_VALUE_BYTES_PER_STEP {
+            return None;
+        }
+        let mut cursor = start;
+        let mut parts = Vec::new();
+        self.append_range(&mut cursor, end, &mut parts);
+        (cursor == end).then(|| {
+            parts.iter().fold(String::new(), |mut text, part| {
+                text.push_str(part);
+                text
+            })
+        })
+    }
+
+    #[cfg(test)]
+    fn materialize(&self) -> String {
+        self.chunks.values().fold(String::new(), |mut output, chunk| {
+            output.push_str(chunk);
+            output
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct FormsInputKey {
+    app_instance_id: u32,
+    document_id: String,
+    operation_id: u64,
+    generation: u64,
+    base_revision: [u8; 32],
+    semantic_id: String,
+    input_id: String,
+}
+
+pub(crate) struct StagedCommandInput {
+    pub(crate) source: ChunkedSource,
+    pub(crate) operation: semio_framework_plugin::AppOperationContext,
+}
+
+#[derive(Default)]
+struct FormsInputBlob {
+    source: ChunkedSource,
+    next_index: u64,
+    chunk_count: u64,
+    last_touch: u64,
+}
+
+#[derive(Default)]
+pub(crate) struct FormsInputRegistry {
+    blobs: BTreeMap<FormsInputKey, FormsInputBlob>,
+    expiry: BTreeMap<u64, FormsInputKey>,
+    active: BTreeMap<(u32, String, String), FormsInputKey>,
+    tick: u64,
+}
+
+static FORMS_INPUT_REGISTRY: OnceLock<Mutex<FormsInputRegistry>> = OnceLock::new();
+
+pub(crate) fn input_registry() -> &'static Mutex<FormsInputRegistry> {
+    FORMS_INPUT_REGISTRY.get_or_init(|| Mutex::new(FormsInputRegistry::default()))
+}
+
+fn cancel_command_inputs(app_instance_id: u32, document_id: &str) {
+    let mut registry = input_registry().lock().expect("forms input registry lock");
+    for operation_id in ["setTryValue", "setTryValues"] {
+        let scope = (app_instance_id, document_id.to_string(), operation_id.to_string());
+        let Some(key) = registry.active.remove(&scope) else { continue };
+        if let Some(blob) = registry.blobs.remove(&key) {
+            registry.expiry.remove(&blob.last_touch);
+        }
+    }
+}
+
+fn expire_one_command_input(registry: &mut FormsInputRegistry) {
+    let Some((&touch, key)) = registry.expiry.first_key_value() else { return };
+    if registry.tick.saturating_sub(touch) <= MAX_COMMAND_INPUT_IDLE_ACTIONS {
+        return;
+    }
+    let key = key.clone();
+    registry.expiry.remove(&touch);
+    if registry.blobs.get(&key).is_some_and(|blob| blob.last_touch == touch) {
+        registry.blobs.remove(&key);
+        registry.active.remove(&(key.app_instance_id, key.document_id.clone(), key.semantic_id.clone()));
+    }
+}
+
+pub(crate) fn stage_command_input(operation: &semio_framework_plugin::AppOperationContext, semantic_id: &str, input_id: &str, index: u64, chunk_count: u64, chunk: std::sync::Arc<str>) -> Result<Option<StagedCommandInput>, Fault> {
+    if input_id.len() > 256 || chunk.len() > MAX_TRY_VALUE_BYTES_PER_STEP || chunk_count == 0 || chunk_count > MAX_COMMAND_INPUT_CHUNKS || index >= chunk_count {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.input-invalid"), "the Forms input chunk address or size is invalid"));
+    }
+    let incoming_key = FormsInputKey {
+        app_instance_id: operation.app_instance_id,
+        document_id: operation.parent_document_id.clone(),
+        operation_id: operation.operation_id,
+        generation: operation.generation,
+        base_revision: operation.canonical_base_revision,
+        semantic_id: semantic_id.into(),
+        input_id: input_id.into(),
+    };
+    let scope = (incoming_key.app_instance_id, incoming_key.document_id.clone(), incoming_key.semantic_id.clone());
+    let mut registry = input_registry().lock().expect("forms input registry lock");
+    registry.tick = registry.tick.wrapping_add(1);
+    expire_one_command_input(&mut registry);
+    let key = match registry.active.get(&scope).cloned() {
+        Some(previous) if previous.input_id == incoming_key.input_id && previous.generation == incoming_key.generation && previous.base_revision == incoming_key.base_revision => previous,
+        Some(previous) => {
+            if let Some(blob) = registry.blobs.remove(&previous) {
+                registry.expiry.remove(&blob.last_touch);
+            }
+            registry.active.remove(&scope);
+            incoming_key
+        }
+        None => incoming_key,
+    };
+    if !registry.blobs.contains_key(&key) && registry.blobs.len() >= MAX_LIVE_TRY_VALUE_SESSIONS {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.busy"), "the bounded Forms input staging pool is full"));
+    }
+    if let Some(previous_touch) = registry.blobs.get(&key).map(|blob| blob.last_touch) {
+        registry.expiry.remove(&previous_touch);
+    }
+    let touch = registry.tick;
+    let blob = registry.blobs.entry(key.clone()).or_insert_with(|| FormsInputBlob { chunk_count, ..Default::default() });
+    if blob.chunk_count != chunk_count || blob.next_index != index {
+        registry.blobs.remove(&key);
+        registry.active.remove(&scope);
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.input-order"), "Forms input chunks must be contiguous and generation-stable"));
+    }
+    blob.source.push(chunk);
+    blob.next_index += 1;
+    blob.last_touch = touch;
+    if blob.next_index != blob.chunk_count {
+        registry.expiry.insert(touch, key.clone());
+        registry.active.insert(scope, key);
+        return Ok(None);
+    }
+    registry.active.remove(&scope);
+    Ok(registry.blobs.remove(&key).map(|blob| StagedCommandInput {

@@ -21,7 +21,7 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub async fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
+pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Din4108Mutation, NormConfigMutation>, Fault> {
     crate::app_surface::commit_snapshot_fields(Din4108Mutation::from_snapshot(doc.snapshot, &payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler
@@ -34,7 +34,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]
-    async fn handle_commits_the_payload_document_under_its_action_id() {
+    fn handle_commits_the_payload_document_under_its_action_id() {
         let projection = Din4108Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&ReplaceSnapshot { snapshot: Din4108Snapshot::default() }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");

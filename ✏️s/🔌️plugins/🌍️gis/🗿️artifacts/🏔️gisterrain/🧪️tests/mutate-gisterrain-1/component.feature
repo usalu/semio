@@ -1,76 +1,100 @@
 @capability-gisterrain-1-mutate
-@no-oracle-gisterrain-mutation-semantics
+@oracle-gisterrain-python-independent
 @comparison-ordered-json-v1
 @mutations-gisterrain-1-any
-Feature: Apply both typed gis.gisterrain mutations to their committed specification vectors
+Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once in Python — and require the same answer
 
-  `s.gis.gisterrain` is a semio-NATIVE artifact and nothing outside this repository reads
-  `.dsl.semio` (recorded as the `gisterrain-mutation-semantics` no-oracle decision in
-  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why `geo`,
-  `geojson` and `gdal` were surveyed and DECLINED).
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.gis.gisterrain` document and both typed mutations, written in
+  Python from `🧬️schema/📸️snapshot/🔣️component.json` (the document is an `f64` `exaggeration` and a
+  raw `importedFeaturesJson` string, `additionalProperties: false`),
+  `🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the two verbs) and the two committed
+  specification vectors (the externally tagged wire form of each, and the demonstration that the two
+  setters move their fields independently). It imports nothing from this repository's Rust.
 
-  What distinguishes this subset is how narrow its persisted state is and how indirect its mutations
-  are. Exactly two fields survive a save: an `f64` vertical `exaggeration` and a raw
-  `imported_features_json` string that is the `map:in` port's insertion point and that the artifact
-  never interprets. A third slot, `mesh`, is not persisted content at all but a CONTENT-ADDRESSED
-  child handle whose `childId` is derived from those two fields alone. So both declared kinds are
-  root-scalar setters whose visible effect is second-order: changing either field must re-derive the
-  mesh handle, and every constructor in the subset — `Default`, `apply_gis_terrain_mutation` and
-  `GisTerrainDiff::apply` alike — re-derives it for exactly that reason. An implementation that wrote
-  the field but forgot the handle leaves a stale digest behind, and the inverse law catches it in the
-  other direction too: undoing must converge back onto the original handle, not merely the original
-  field.
+  Why a second implementation rather than a third-party library. Two fields survive a save here: a
+  scalar and a string the artifact never parses. `geo`, `geojson` and `gdal` were surveyed by an
+  earlier wave and declined — none reads `.dsl.semio`, and none is authoritative over an
+  exaggeration factor or an opaque payload. What a reference can genuinely adjudicate is the two
+  setters, their independence and the inverse of each.
 
-  The two committed vectors are chosen to move the two fields independently.
-  `raises-the-exaggeration-from-one-to-two-and-a-half` moves the numeric field and leaves the JSON
-  string alone; `imports-a-single-harbor-position-descriptor` moves the string and leaves the number
-  alone. Neither is a round number pair, so a setter that clamped or defaulted shows up.
+  The real artifact, and the honest limit on it. The artifact's committed demo example is a real
+  Liège survey fragment — exaggeration 1.5, an origin at 5.5818/50.603 and two named positions — but
+  its `importedFeaturesJson` is EMPTY, so `change-imported-features` would replace nothing with
+  something and its inverse would restore emptiness. The mutation scenarios therefore read
+  local://🏔️liege-terrain.snapshot.json, derived ONCE by
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w16-cross-language/🐍️derive-gisterrain-imports.py`
+  from committed real content only: the exaggeration and the `mesh` composed-child handle come from
+  that same terrain example, and the imported payload carries the two REAL Liège positions with
+  their true WGS84 coordinates, taken from the committed `gismap` demo document in this same plugin
+  and rendered in the `{id, lat, lon}` descriptor shape the committed `change-imported-features`
+  vector demonstrates. Nothing in it is invented.
 
-  The identity round trip reads the artifact's own committed demo example, a real Liège survey
-  fragment: exaggeration 1.5, an origin at 5.5818/50.603, and two named positions — the Institut de
-  Botanique and Lycée Block 3000 — carried as `position` lines. Note that those `origin`/`position`
-  lines are NOT fields of `GisTerrainSnapshot`, which persists only the two scalars and the mesh
-  handle; if this subset's `parse_dsl` rejects them the identity scenario fails, and that failure is
-  a genuine finding about a stale committed example rather than something to route around.
+  Why the Python reference does not read the carrier. Its `gismap` sibling's `.dsl.semio` members
+  are plainly hex-encoded JSON, a layout that can be derived from the committed bytes and then
+  pinned by byte-exact re-encoding. This document's only committed example carries an EMPTY
+  `importedFeaturesJson`, so the encoding of a non-empty string value cannot be read off it, and no
+  prose document specifies it. Guessing and calling the guess a specification is exactly what this
+  exercise forbids, so the carrier's own laws stay where they can honestly be asserted: in role, on
+  the Rust side, in `identity-round-trip`, against the committed example — the ArtifactDsl fixpoint
+  law and agreement with the separate binary pack codec, both unchanged from before the conversion.
 
-  Where the assertions live. This case records a no-oracle decision, so the runner dispatches NO
-  oracle role at all: `oracleDecision` resolves an oracle implementation from an `@oracle-` tag, this
-  feature has none, and the comparison profile therefore never receives two sides to compare. Every
-  law below is asserted INSIDE the adapter's handler, through the shared law module
-  `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio subsets use — `divergence` for
-  a path-named first difference, `mutation_is_observable` for the forward law, `inverse_restores` for
-  the inverse law, `round_trip_preserves` and `carrier_is_exact` for the identity law. A handler that
-  applied the mutation and returned would report a pass having checked nothing, which is exactly the
-  failure this platform exists to prevent.
+  The committed specification vectors were KEPT, not replaced: `spec-vector-<kind>` replays each
+  handcrafted triple through both implementations, and the Rust side additionally holds the applied
+  document to the committed `🔺️diff` and `🎯️outcome` and to the re-derivation of the `mesh` handle.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> and land on the committed after-snapshot, diff and outcome
-    Given the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
-    When <id> is applied to that vector's before-snapshot through gis_terrain_mutation_report_json
-    Then the applied snapshot, the produced diff and the outcome's diagnostics are exactly what the vector commits, and a kind the vector declares observable really moved the projection
+  @mode-differential
+  Scenario Outline: Apply <id> to the real derived Liège terrain document
+    Given the real derived terrain document local://🏔️liege-terrain.snapshot.json
+    When the <id> mutation is applied with the parameters the feature states
+      """
+      <mutation>
+      """
+    Then both implementations produce the same exaggeration and the same imported-features payload
     Examples:
-      | id                       |
-      | change-exaggeration      |
-      | change-imported-features |
+      | id                       | mutation                                                                                                                                                                       |
+      | change-exaggeration      | {"ChangeExaggeration":{"newExaggeration":2.75}}                                                                                                                                |
+      | change-imported-features | {"ChangeImportedFeatures":{"newImportedFeaturesJson":"{\"positions\":[{\"id\":\"p_val_benoit_campus\",\"lat\":50.6231,\"lon\":5.5674}],\"routes\":[],\"regions\":[]}"}}         |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed <id> specification vector under 🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations
-    When <id> is applied and then its own computed inverse is applied through gis_terrain_mutation_report_json
-    Then the snapshot's projection is the before-snapshot's projection again, and any divergence is reported by JSON path
+  @mode-differential
+  Scenario Outline: Undo <id> on the real derived Liège terrain document and land back on it
+    Given the real derived terrain document local://🏔️liege-terrain.snapshot.json
+    When the <id> mutation is applied and then its own computed inverse is applied
+      """
+      <mutation>
+      """
+    Then both implementations agree on the mutated document AND on the restored one
     Examples:
-      | id                       |
-      | change-exaggeration      |
-      | change-imported-features |
+      | id                       | mutation                                                                                                                                                                       |
+      | change-exaggeration      | {"ChangeExaggeration":{"newExaggeration":2.75}}                                                                                                                                |
+      | change-imported-features | {"ChangeImportedFeatures":{"newImportedFeaturesJson":"{\"positions\":[{\"id\":\"p_val_benoit_campus\",\"lat\":50.6231,\"lon\":5.5674}],\"routes\":[],\"regions\":[]}"}}         |
+
+  @id-spec-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Replay the committed <id> specification vector through both implementations
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    When the committed mutation is applied to the committed before-snapshot
+    Then each implementation lands on the committed after-snapshot in role, and the two agree
+    Examples:
+      | id                       | dir                       | fixture                                            |
+      | change-exaggeration      | 🎚change-exaggeration      | raises-the-exaggeration-from-one-to-two-and-a-half |
+      | change-imported-features | 📥change-imported-features | imports-a-single-harbor-position-descriptor        |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Parse the real committed terrain document, print it back and cross it against its binary encoding
-    Given the real committed document asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
-    When the document is parsed, printed back to canonical DSL, parsed again, and separately encoded to a pack and decoded back
-    Then every decoding agrees on one snapshot, and printing the canonical text a second time reproduces it byte for byte as ArtifactDsl's own fixpoint law requires
+  Scenario: Read the real derived terrain document in both languages, and hold the committed carrier to its own laws in Rust
+    Given the real derived terrain document local://🏔️liege-terrain.snapshot.json
+    And the artifact's own committed carrier asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio
+    When each implementation reads the derived document, and the Rust additionally parses the committed carrier, prints it back, parses it again and cross-checks the pack codec
+      """
+      {"ChangeExaggeration":{"newExaggeration":1.5}}
+      """
+    Then both languages read the same exaggeration and imported-features payload, and the Rust printing is an ArtifactDsl fixpoint that agrees with the binary decoding

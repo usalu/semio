@@ -274,7 +274,7 @@ pub fn demo_tiff_snapshot() -> TiffSnapshot {
     let seed = TiffSnapshot {
         schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
         byte_order: TiffByteOrder::LittleEndian,
-        ifds: vec![TiffIfd {
+        ifds: vec![TiffIfd { pixels: Vec::new(),
             entries: vec![
                 TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![w]) },
                 TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![h]) },

@@ -55,8 +55,8 @@ import {
   encodePackValue,
   faultDisplayMessage,
 } from "@semio-tech/framework-os";
-import { type UiNodeRecord, type UiSnapshot } from "@semio-tech/framework";
-import { type UiDocumentState, uiDocumentStateFromSnapshot } from "../UiDocumentStore/🟦️component.tsx";
+import { type BuiltNode, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
+import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../UiDocumentStore/🟦️component.tsx";
 import {
   ActivationRegistry,
   type ActivationReason,
@@ -280,10 +280,10 @@ function getActivationRegistry(): ActivationRegistry {
 type WireVariant<T = unknown> = { readonly tag?: string; readonly val?: T };
 
 type WireUiPatch = {
-  readonly surface?: { readonly instance?: number; readonly surface?: number };
+  readonly surface?: { readonly instance?: number; readonly surface?: string };
   readonly kind?: string;
-  readonly revision?: number;
-  readonly baseRevision?: number;
+  readonly revision?: number | bigint;
+  readonly baseRevision?: number | bigint;
   readonly ops?: readonly WireVariant[];
 };
 
@@ -291,6 +291,7 @@ type WireTurnResult = {
   readonly uiPatches: readonly WireUiPatch[];
   readonly effects: readonly WireVariant[];
   readonly nextWake: number | null;
+  readonly status?: unknown;
   readonly commandIngress?: WireVariant;
 };
 
@@ -302,8 +303,22 @@ function coerceTurnResult(raw: unknown): WireTurnResult {
   const uiPatches = Array.isArray(record.uiPatches) ? (record.uiPatches as WireUiPatch[]) : [];
   const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
+  const status = record.status;
   const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? (record.commandIngress as WireVariant) : undefined;
-  return { uiPatches, effects, nextWake, commandIngress };
+  return { uiPatches, effects, nextWake, status, commandIngress };
+}
+
+/** 🧯️ Decodes the scalar WIT command-ingress fault envelope while retaining readable kernel
+ * rejection codes used by pre-decode validation paths. */
+function commandIngressFaultDisplay(status: WireVariant | undefined): string {
+  if (status?.tag !== "fault" || !status.val || typeof status.val !== "object") return "unknown fault";
+  const fault = (status.val as { readonly fault?: unknown }).fault;
+  const raw = fault && typeof fault === "object" && "val" in fault ? (fault as { readonly val?: unknown }).val : fault;
+  const bytes = coerceWireBytes(raw);
+  const decoded = faultDisplayMessage(bytes, decodePackValue);
+  if (decoded !== "unknown fault") return decoded;
+  const text = new TextDecoder().decode(bytes).trim();
+  return text.length > 0 ? text : decoded;
 }
 
 /** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
@@ -334,35 +349,70 @@ function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8Array | 
  * the MICROKERNEL program's `sdk-flip`/`wit-flip` packets, forbidden here) — this is therefore a
  * type-level migration only, matching this whole boundary's own doc ("UNVERIFIED against a real
  * compiled artifact... no plugin has migrated onto `world actor` yet"). */
-type PatchOp =
-  | { readonly kind: "Replace"; readonly path: readonly number[]; readonly snapshot: UiSnapshot }
-  | { readonly kind: "InsertChild"; readonly path: readonly number[]; readonly index: number; readonly record: UiNodeRecord }
-  | { readonly kind: "RemoveChild"; readonly path: readonly number[]; readonly index: number }
-  | { readonly kind: "SetProps"; readonly path: readonly number[]; readonly props: unknown };
-
-function decodeWirePatchOps(ops: readonly WireVariant[]): readonly PatchOp[] {
-  const decoded: PatchOp[] = [];
+export function decodeWirePatchOps(ops: readonly WireVariant[]): readonly UiPatchOp[] {
+  const decoded: UiPatchOp[] = [];
   for (const op of ops) {
     const val = (op.val ?? {}) as Record<string, unknown>;
-    const path = Array.isArray(val.path) ? (val.path as number[]) : [];
     switch (op.tag) {
-      case "replace":
-        decoded.push({ kind: "Replace", path, snapshot: decodePackValue(coerceWireBytes(val.snapshot)) as UiSnapshot });
+      case "upsert":
+        decoded.push({ type: "upsert", ...normalizeWireUiNodeRecord(decodePackValue(coerceWireBytes(val.node))) });
         break;
-      case "insert-child":
-        decoded.push({ kind: "InsertChild", path, index: Number(val.index ?? 0), record: decodePackValue(coerceWireBytes(val.record)) as UiNodeRecord });
+      case "set-component":
+        decoded.push({ type: "setComponent", id: wireNatural(val.node), component: decodePackValue(coerceWireBytes(val.component)) as Extract<UiPatchOp, { type: "setComponent" }>["component"] });
         break;
-      case "remove-child":
-        decoded.push({ kind: "RemoveChild", path, index: Number(val.index ?? 0) });
+      case "set-layout":
+        decoded.push({ type: "setLayout", id: wireNatural(val.node), layout: decodePackValue(coerceWireBytes(val.layout)) as Extract<UiPatchOp, { type: "setLayout" }>["layout"] });
         break;
-      case "set-props":
-        decoded.push({ kind: "SetProps", path, props: val.props !== undefined ? decodePackValue(coerceWireBytes(val.props)) : undefined });
+      case "set-activity": {
+        const activity = decodePackValue(coerceWireBytes(val.activity)) as Pick<Extract<UiPatchOp, { type: "setActivity" }>, "activity" | "disabled">;
+        decoded.push({ type: "setActivity", id: wireNatural(val.node), activity: activity.activity, disabled: activity.disabled });
+        break;
+      }
+      case "set-children":
+        decoded.push({ type: "setChildren", id: wireNatural(val.node), children: Array.isArray(val.children) ? val.children.map(wireNatural) : [] });
+        break;
+      case "set-style":
+        decoded.push({ type: "setStyle", id: wireNatural(val.node), style: decodePackValue(coerceWireBytes(val.style)) as Extract<UiPatchOp, { type: "setStyle" }>["style"] });
+        break;
+      case "set-accessibility":
+        decoded.push({ type: "setAccessibility", id: wireNatural(val.node), accessibility: decodePackValue(coerceWireBytes(val.accessibility)) as Extract<UiPatchOp, { type: "setAccessibility" }>["accessibility"] });
+        break;
+      case "set-bindings":
+        decoded.push({ type: "setBindings", id: wireNatural(val.node), bindings: decodePackValue(coerceWireBytes(val.bindings)) as Extract<UiPatchOp, { type: "setBindings" }>["bindings"] });
+        break;
+      case "set-menu":
+        decoded.push({ type: "setMenu", id: wireNatural(val.node), menu: decodePackValue(coerceWireBytes(val.menu)) as Extract<UiPatchOp, { type: "setMenu" }>["menu"] });
+        break;
+      case "remove":
+        decoded.push({ type: "remove", id: wireNatural(op.val) });
+        break;
+      case "set-root":
+        decoded.push({ type: "setRoot", id: wireNatural(op.val) });
         break;
       default:
         break;
     }
   }
   return decoded;
+}
+
+function wireNatural(raw: unknown): number {
+  const value = Number(raw ?? 0);
+  if (!Number.isSafeInteger(value) || value < 0) throw new Error(`[DEBUG] actor WIT integer is outside the JavaScript safe range: ${String(raw)}`);
+  return value;
+}
+
+function normalizeWireUiNodeRecord(raw: unknown): UiNodeRecord {
+  const record = raw as Partial<UiNodeRecord>;
+  return {
+    ...(record as UiNodeRecord),
+    id: wireNatural(record.id),
+    disabled: record.disabled ?? false,
+    transition: record.transition ?? null,
+    bindings: Array.isArray(record.bindings) ? record.bindings : [],
+    menu: record.menu ?? null,
+    children: Array.isArray(record.children) ? record.children.map(wireNatural) : [],
+  };
 }
 
 /** 🗄️ The retained per-actor document — a `UiDocumentStore`-shaped state, not the store class itself
@@ -375,25 +425,24 @@ export type RetainedSurface = UiDocumentState;
 /**
  * @emoji 🖼️ H1-react (design-runtime.md §1 `SceneStore` / packet brief item 2) — reconciles one
  * `UiPatch`'s ops onto `previous` (the last body this file retained for the surface), so the UI
- * thread reads an already-reconciled tree instead of awaiting a plugin turn. Only a root
- * `PatchOp::Replace` (path `[]`) is applied — the only shape any guest emits this wave (see
- * `PatchOp`'s doc above); anything else, or a `baseRevision` that doesn't match `previous.revision`
- * on a NON-full-replace patch, is an honest desync — `previous` is kept rather than an unverified
- * partial walk applied, mirroring `📦️glue.rs`'s native `KernelThreadState.retained` exactly (H3).
+ * thread reads an already-reconciled tree instead of awaiting a plugin turn. Reuses the transactional
+ * `UiDocumentStore` patch applicator so revision checks, graph validation, quotas, and every semantic
+ * operation stay identical to the renderer's subscribed document store.
  */
-export function applyUiPatchToRetained(previous: RetainedSurface | null, patch: { readonly revision: number; readonly baseRevision: number; readonly ops: readonly PatchOp[] }): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
-  let state: UiDocumentState | null = previous ?? null;
-  let sawFullReplace = false;
-  for (const op of patch.ops) {
-    if (op.kind === "Replace" && op.path.length === 0) {
-      state = uiDocumentStateFromSnapshot(op.snapshot);
-      sawFullReplace = true;
-    } else {
-      return { surface: previous, desynced: true };
-    }
-  }
-  if (!sawFullReplace && previous && patch.baseRevision !== previous.revision) return { surface: previous, desynced: true };
-  return { surface: state !== null ? { ...state, revision: patch.revision } : previous, desynced: false };
+export function applyUiPatchToRetained(
+  previous: RetainedSurface | null,
+  patch: { readonly surface?: string; readonly revision: number | bigint; readonly baseRevision: number | bigint; readonly ops: readonly UiPatchOp[] },
+): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
+  const surfaceId = patch.surface ?? previous?.surface ?? "window";
+  if (previous && previous.surface !== surfaceId) return { surface: previous, desynced: true };
+  const state = previous ?? emptyUiDocumentState(surfaceId);
+  const applied = applyUiPatch(state, {
+    surface: surfaceId,
+    revision: wireNatural(patch.revision),
+    baseRevision: wireNatural(patch.baseRevision),
+    ops: [...patch.ops],
+  });
+  return applied.ok ? { surface: applied.state, desynced: false } : { surface: previous, desynced: true };
 }
 
 /** 🔁️ Rebuilds a plain `UiSnapshot` (nodes flattened back to an array) from a retained
@@ -401,6 +450,32 @@ export function applyUiPatchToRetained(previous: RetainedSurface | null, patch: 
  * store's own consumers read `.nodes` directly and never need this round trip. */
 function retainedSurfaceToSnapshot(surface: RetainedSurface): UiSnapshot {
   return { surface: surface.surface, revision: surface.revision, root: surface.root ?? 0, nodes: [...surface.nodes.values()], layoutEpoch: 0n };
+}
+
+function retainedSurfaceHash(snapshot: UiSnapshot): string {
+  const json = JSON.stringify(snapshot, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
+  return fnv1aHex(new TextEncoder().encode(json)) + ":" + String(snapshot.revision);
+}
+
+function retainedSurfaceToBuiltNode(surface: RetainedSurface): BuiltNode | null {
+  if (surface.root === null) return null;
+  const build = (id: number): BuiltNode => {
+    const record = surface.nodes.get(id);
+    if (!record) throw new Error(`[DEBUG] retained UI surface ${surface.surface} references missing node ${id}`);
+    return {
+      key: record.key,
+      component: record.component,
+      layout: record.layout,
+      style: record.style,
+      activity: record.activity,
+      disabled: record.disabled,
+      accessibility: record.accessibility,
+      bindings: record.bindings,
+      menu: record.menu,
+      children: record.children.map(build),
+    };
+  };
+  return build(surface.root);
 }
 //#endregion 🔖️RetainedUiPatch
 
@@ -642,14 +717,84 @@ function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[]
     if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
   });
 }
+
+function wireTurnStatusTag(status: unknown): string {
+  const raw =
+    typeof status === "string"
+      ? status
+      : status && typeof status === "object" && "tag" in status
+        ? String((status as { readonly tag?: unknown }).tag ?? "")
+        : "";
+  return raw.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+}
+
+function wirePatchSurfaceId(patch: WireUiPatch): string | null {
+  return patch.surface ? retainedSurfaceId(wireNatural(patch.surface.instance), patch.surface.surface ?? "window") : null;
+}
+
+function hasRequiredUiPatches(results: readonly WireTurnResult[], requiredSurfaceIds?: ReadonlySet<string>): boolean {
+  if (!requiredSurfaceIds) return results.some((result) => result.uiPatches.length > 0);
+  if (requiredSurfaceIds.size === 0) return true;
+  const published = new Set(results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null)));
+  return [...requiredSurfaceIds].every((surface) => published.has(surface));
+}
+
+const PLUGIN_UI_CONTINUATION_LIMIT = 4_096;
+const PLUGIN_UI_CONTINUATION_BATCH_SIZE = 8;
+
+async function yieldPluginUiContinuation(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+/** 🔄️ Drives a reactor-owned continuation until its requested patch set is published or it
+ * quiesces. UI reconciliation is deliberately incremental: the turn that marks surfaces dirty may
+ * publish them across multiple MoreWork frames. A supplied empty `requiredSurfaceIds` means every
+ * requested surface is already retained, so an unchanged refresh needs no continuation at all. */
+async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>): Promise<WireTurnResult> {
+  const results: WireTurnResult[] = [initial];
+  for (let continuation = 0; !hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work" && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
+    results.push(await submitPluginTurn(actorId, [], lane));
+    if ((continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && !hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work") {
+      await yieldPluginUiContinuation();
+    }
+  }
+  if (!hasRequiredUiPatches(results, requiredSurfaceIds) && wireTurnStatusTag(results.at(-1)?.status) === "more-work") {
+    const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
+    throw new Error(
+      `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
+        `(required=${JSON.stringify([...(requiredSurfaceIds ?? [])])}, published=${JSON.stringify(published)}, ` +
+        `effects=${results.reduce((count, result) => count + result.effects.length, 0)}, status=${wireTurnStatusTag(results.at(-1)?.status)})`,
+    );
+  }
+  return {
+    uiPatches: results.flatMap((result) => result.uiPatches),
+    effects: results.flatMap((result) => result.effects),
+    nextWake: [...results].reverse().find((result) => result.nextWake !== null)?.nextWake ?? null,
+    status: results.at(-1)?.status,
+    commandIngress: results.at(-1)?.commandIngress,
+  };
+}
 //#endregion 🔖️PluginTurnScheduler
 
-/** 🖼️ Last reconciled "window" body per actor — the ONE surface `⚛️reactor/🦀️component.rs`'s
- * `dirty_render` loop renders this wave (hardcoded `plugin_render(instance, "window", "{}")`
- * regardless of which surface key a `surface-visible` event names — a real, upstream limitation of
- * this wave's reactor, not invented here). Keyed by `actorId` so a suspend+resume (fresh checkpoint
- * restore) naturally starts a new entry. */
-const retainedWindowByActor = new Map<string, RetainedSurface>();
+/** 🖼️ Last reconciled UI document per actor and exact `(instance, body-key)` surface. Keyed by
+ * `actorId` so a suspend+resume (fresh checkpoint restore) naturally starts a new entry. */
+const retainedWindowByActor = new Map<string, Map<string, RetainedSurface>>();
+
+function pluginSurfaceRef(instance: number, bodyKey: string): { readonly instance: number; readonly surface: string } {
+  return { instance, surface: bodyKey };
+}
+
+function retainedSurfaceId(instance: number, bodyKey: string): string {
+  return `${instance}:${bodyKey}`;
+}
+
+function retainedSurfacesForActor(actorId: string): Map<string, RetainedSurface> {
+  const existing = retainedWindowByActor.get(actorId);
+  if (existing) return existing;
+  const created = new Map<string, RetainedSurface>();
+  retainedWindowByActor.set(actorId, created);
+  return created;
+}
 
 //#endregion 🔖️ActorAdapter
 
@@ -718,7 +863,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           let terminal = results.at(-1)?.commandIngress?.tag;
           const observedStatuses = new Set([terminal ?? "missing"]);
           for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
-            if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault`);
+            if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
             if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
             const continued = await submitTurn(actorId, []);
             results.push(continued);
@@ -727,12 +872,15 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           }
           if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations (observed statuses: ${[...observedStatuses].join(", ")})`);
         }
-        return {
+        const result = {
           uiPatches: results.flatMap((turn) => turn.uiPatches),
           effects: results.flatMap((turn) => turn.effects),
           nextWake: [...results].reverse().find((turn) => turn.nextWake !== null)?.nextWake ?? null,
           commandIngress: results.at(-1)?.commandIngress,
         };
+        const ackEvents = patchAckEvents(retainTurnUiPatches(actorId, result));
+        if (ackEvents.length > 0) await submitTurn(actorId, ackEvents);
+        return result;
       });
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
@@ -742,7 +890,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         else leftover.push(effect);
       }
       pendingTurnEffects.set(instanceId, leftover);
-      if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
       turnOutcomes.push({ instanceId, frames: outFrames });
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
@@ -758,12 +905,19 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       actorIdByInstance.set(instanceId, actorId);
       await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
       eventSeq += 1;
-      await submitTurn(actorId, [
-        {
-          kind: "instance-open",
-          payload: { instance: instanceId, appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) },
-        },
-      ]);
+      const opened = await settlePluginTurn(
+        actorId,
+        await submitTurn(actorId, [
+          {
+            kind: "instance-open",
+            payload: { instance: instanceId, appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) },
+          },
+        ]),
+        "Interactive",
+        new Set(),
+      );
+      const ackEvents = patchAckEvents(retainTurnUiPatches(actorId, opened));
+      if (ackEvents.length > 0) await submitTurn(actorId, ackEvents);
       return instanceId;
     },
     destroyApp: async (instanceId) => {
@@ -794,29 +948,46 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   /** 🔁️ H1-react item 2 — window-body refresh no longer goes through `AppCommand::RefreshUi`
    * (deleted, channel v12): it submits `Event::SurfaceVisible` directly and reads back whatever this
    * SAME turn's `TurnResult.uiPatches` produced (or the retained tree if nothing changed — the
-   * `PatchTracker` on the guest side emits nothing for an unchanged body). Panels/engagements/
-   * measures/tools/labels have no wire path yet — `⚛️reactor/🦀️component.rs`'s `dirty_render` loop
-   * only ever renders the ONE "window" surface this wave, an upstream limitation reported honestly
-   * (matching `ProgramBridge/🧊️component.rs`'s native `window_engagements`/`window_measures` stubs,
-   * H3-wgpu-native) rather than guessed at here. */
+   * `PatchTracker` on the guest side emits nothing for an unchanged body). Every requested window is
+   * identified by its schema-owned body key; continuations drain until all surfaces missing from the
+   * retained actor state publish their first patch. Panels/engagements/measures/tools/labels have no
+   * wire path yet (matching `ProgramBridge/🧊️component.rs`'s native stubs, H3-wgpu-native). */
   const refreshUi = async (instanceId: number, request: PluginUiRefreshRequest): Promise<PluginUiRefreshResponse> => {
     const windowTargets = request.windows ?? [];
     if (windowTargets.length === 0) return {};
     const actorId = requireActorId(instanceId);
     eventSeq += 1;
+    const retainedBeforeRefresh = retainedWindowByActor.get(actorId);
+    const missingSurfaceIds = new Set(windowTargets.map((target) => retainedSurfaceId(instanceId, target.bodyKey ?? target.key)).filter((surfaceId) => !retainedBeforeRefresh?.has(surfaceId)));
     // 🎯️ H1-react (terra-web-plugin-runtime) — a pointer-move-driven redraw burst hits this call
     // repeatedly for the SAME actor; "UserVisible" (below "Interactive", above "Background") lets a
     // real command preempt it, and the `"surface-visible"` coalesce key collapses the burst to the
     // single latest probe rather than queuing every intermediate one (see `submitPluginTurn`'s doc).
-    const result = await serializeCommandIngressForActor(actorId, () =>
-      submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }], { lane: "UserVisible", coalesceKey: "surface-visible" }),
-    );
-    if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
+    const result = await serializeCommandIngressForActor(actorId, async () => {
+      const settled = await settlePluginTurn(
+        actorId,
+        await submitTurn(
+          actorId,
+          windowTargets.map((target) => ({ kind: "surface-visible", payload: { surface: pluginSurfaceRef(instanceId, target.bodyKey ?? target.key) } })),
+          { lane: "UserVisible", coalesceKey: "surface-visible" },
+        ),
+        "UserVisible",
+        missingSurfaceIds,
+      );
+      const ackEvents = patchAckEvents(retainTurnUiPatches(actorId, settled));
+      if (ackEvents.length > 0) await submitTurn(actorId, ackEvents, { lane: "UserVisible" });
+      return settled;
+    });
     const retained = retainedWindowByActor.get(actorId);
     if (!retained) return {};
-    const retainedSnapshot = retainedSurfaceToSnapshot(retained);
-    const hash = fnv1aHex(new TextEncoder().encode(JSON.stringify(retainedSnapshot))) + ":" + String(retained.revision);
-    const windows = windowTargets.map((target) => ({ key: target.key, hash, value: retainedSnapshot }));
+    const windows = [];
+    for (const target of windowTargets) {
+      const surface = retained.get(retainedSurfaceId(instanceId, target.bodyKey ?? target.key));
+      if (!surface) continue;
+      const retainedRoot = retainedSurfaceToBuiltNode(surface);
+      if (!retainedRoot) continue;
+      windows.push({ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value: retainedRoot });
+    }
     return { windows };
   };
 
@@ -840,17 +1011,35 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   return { ...richHandle, refreshUi, completeExtensionInvoke };
 }
 
-function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiPatch[]): void {
+function patchAckEvents(uiPatches: readonly WireUiPatch[]): ShardEventEnvelope[] {
+  return uiPatches.flatMap((patch) => (patch.surface ? [{ kind: "patch-ack", payload: { surface: patch.surface, revision: patch.revision ?? 0 } }] : []));
+}
+
+function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiPatch[]): WireUiPatch[] {
+  const retained = retainedSurfacesForActor(actorId);
+  const accepted: WireUiPatch[] = [];
   for (const patch of uiPatches) {
     const ops = decodeWirePatchOps(patch.ops ?? []);
-    const previous = retainedWindowByActor.get(actorId) ?? null;
-    const { surface, desynced } = applyUiPatchToRetained(previous, { revision: patch.revision ?? 0, baseRevision: patch.baseRevision ?? 0, ops });
+    const surfaceId = wirePatchSurfaceId(patch) ?? "window";
+    const previous = retained.get(surfaceId) ?? null;
+    const { surface, desynced } = applyUiPatchToRetained(previous, { surface: surfaceId, revision: patch.revision ?? 0, baseRevision: patch.baseRevision ?? 0, ops });
     if (desynced) {
       console.warn(`[DEBUG] applyRetainedWindowPatches: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
       continue;
     }
-    if (surface) retainedWindowByActor.set(actorId, surface);
+    if (surface) {
+      retained.set(surfaceId, surface);
+      accepted.push(patch);
+    }
   }
+  return accepted;
+}
+
+/** 🪟️ Captures every render-producing turn, including instance-open: a later
+ * surface-visible probe may legitimately emit no patch when the guest tree is unchanged, so
+ * dropping the first turn's patch would leave the shell on its loading placeholder forever. */
+function retainTurnUiPatches(actorId: string, result: Pick<WireTurnResult, "uiPatches">): WireUiPatch[] {
+  return result.uiPatches.length > 0 ? applyRetainedWindowPatches(actorId, result.uiPatches) : [];
 }
 
 /** 📇️ H1-react — reads the build-time `🔣️descriptor.json` (design-abi.md §3, packet E1-describe's
@@ -1593,6 +1782,57 @@ if (import.meta.vitest) {
     return encodePackValue({ origin: "os", code, severity: "error", message: code, scope: {}, retryable: false });
   }
 
+  describe("command-ingress fault diagnostics", () => {
+    it("decodes the normalized scalar-wire fault payload instead of hiding the terminal cause", () => {
+      const bytes = encodeFaultBytes("plugin.command-rejected");
+      expect(commandIngressFaultDisplay({ tag: "fault", val: { cursor: {}, fault: { tag: "fault", val: Array.from(bytes) } } })).toBe("plugin.command-rejected: plugin.command-rejected");
+    });
+  });
+
+  describe("instance-open retained UI lifecycle", () => {
+    it("acknowledges only patches that identify the exact retained surface", () => {
+      expect(
+        patchAckEvents([
+          { surface: pluginSurfaceRef(4, "workflow"), revision: 9n, baseRevision: 8n, ops: [] },
+          { revision: 1n, baseRevision: 0n, ops: [] },
+        ]),
+      ).toEqual([{ kind: "patch-ack", payload: { surface: pluginSurfaceRef(4, "workflow"), revision: 9n } }]);
+    });
+
+    it("retains the first render patch so an unchanged surface-visible probe can reuse it", () => {
+      const actorId = "initial-render-retention-test#1";
+      expect(pluginSurfaceRef(1, "workflow")).toEqual({ instance: 1, surface: "workflow" });
+      const root: UiNodeRecord = {
+        id: 0,
+        key: "root",
+        component: { type: "text", value: "ready", emphasize: null, dataAttributes: null },
+        layout: { kind: "leaf", width: "hug", height: "hug" },
+        style: {},
+        activity: "idle",
+        disabled: false,
+        transition: null,
+        accessibility: {},
+        bindings: [],
+        menu: null,
+        children: [],
+      };
+      retainedWindowByActor.delete(actorId);
+      try {
+        retainTurnUiPatches(actorId, {
+          uiPatches: [{ revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: Array.from(encodePackValue(root)) } }, { tag: "set-root", val: 0n }] }],
+          effects: [],
+          nextWake: null,
+        });
+        const retained = retainedWindowByActor.get(actorId)?.get("window");
+        expect(retained).toMatchObject({ surface: "window", revision: 1, root: 0 });
+        expect(() => retainedSurfaceHash(retainedSurfaceToSnapshot(retained!))).not.toThrow();
+        expect(retainedSurfaceToBuiltNode(retained!)).toMatchObject({ key: "root", component: { type: "text", value: "ready" }, children: [] });
+      } finally {
+        retainedWindowByActor.delete(actorId);
+      }
+    });
+  });
+
   type FakeHandleOptions = {
     readonly prepareForeign?: (instanceId: number) => readonly Uint8Array[];
     readonly prepareRejection?: Uint8Array;
@@ -2076,6 +2316,147 @@ if (import.meta.vitest) {
         sharedShardClient = previous;
       });
     }
+
+    it("drains an actor's more-work turns until the reconciled UI patch is publishable", async () => {
+      let continuationCount = 0;
+      await withFakeShardClient(
+        async () => {
+          continuationCount += 1;
+          return { uiPatches: [{ revision: 1, baseRevision: 0, ops: [] }], effects: [], nextWake: null, status: { tag: "idle" } };
+        },
+        async () => {
+          const actorId = "turn-test-more-work-actor";
+          const result = await settlePluginTurn(actorId, { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult, "UserVisible");
+          expect(continuationCount).toBe(1);
+          expect(result.uiPatches).toHaveLength(1);
+        },
+      );
+    });
+
+    it("does not chase background work during instance-open before a UI surface is requested", async () => {
+      let continuationCount = 0;
+      await withFakeShardClient(
+        async () => {
+          continuationCount += 1;
+          return { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } };
+        },
+        async () => {
+          const result = await settlePluginTurn(
+            "instance-open-with-background-work#1",
+            { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+            "Interactive",
+            new Set(),
+          );
+          expect(continuationCount).toBe(0);
+          expect(result.uiPatches).toHaveLength(0);
+        },
+      );
+    });
+
+    it("drains until every missing requested surface has published its first patch", async () => {
+      let continuationCount = 0;
+      await withFakeShardClient(
+        async () => {
+          continuationCount += 1;
+          const surface = continuationCount === 1 ? "workflow" : "preview";
+          return {
+            uiPatches: [{ surface: pluginSurfaceRef(7, surface), revision: 1, baseRevision: 0, ops: [] }],
+            effects: [],
+            nextWake: null,
+            status: { tag: continuationCount === 1 ? "more-work" : "idle" },
+          };
+        },
+        async () => {
+          const actorId = "turn-test-multiple-surfaces-actor";
+          const result = await settlePluginTurn(
+            actorId,
+            { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+            "UserVisible",
+            new Set([retainedSurfaceId(7, "workflow"), retainedSurfaceId(7, "preview")]),
+          );
+          expect(continuationCount).toBe(2);
+          expect(result.uiPatches.map((patch) => patch.surface?.surface)).toEqual(["workflow", "preview"]);
+        },
+      );
+    });
+
+    it("allows a large retained surface to reconcile beyond the former continuation ceiling", async () => {
+      let continuationCount = 0;
+      await withFakeShardClient(
+        async () => {
+          continuationCount += 1;
+          return {
+            uiPatches: continuationCount === 1_025 ? [{ surface: pluginSurfaceRef(9, "large"), revision: 1, baseRevision: 0, ops: [] }] : [],
+            effects: [],
+            nextWake: null,
+            status: { tag: continuationCount === 1_025 ? "idle" : "more-work" },
+          };
+        },
+        async () => {
+          const result = await settlePluginTurn(
+            "turn-test-large-surface-actor",
+            { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+            "UserVisible",
+            new Set([retainedSurfaceId(9, "large")]),
+          );
+          expect(continuationCount).toBe(1_025);
+          expect(result.uiPatches).toHaveLength(1);
+        },
+      );
+    });
+
+    it("yields the browser event loop while a retained surface needs several continuation batches", async () => {
+      let continuationCount = 0;
+      let browserTaskObserved = false;
+      const browserTask = new Promise<void>((resolve) =>
+        setTimeout(() => {
+          browserTaskObserved = true;
+          resolve();
+        }, 0),
+      );
+      await withFakeShardClient(
+        async () => {
+          continuationCount += 1;
+          return {
+            uiPatches: continuationCount === PLUGIN_UI_CONTINUATION_BATCH_SIZE + 1 ? [{ surface: pluginSurfaceRef(9, "cooperative"), revision: 1, baseRevision: 0, ops: [] }] : [],
+            effects: [],
+            nextWake: null,
+            status: { tag: continuationCount === PLUGIN_UI_CONTINUATION_BATCH_SIZE + 1 ? "idle" : "more-work" },
+          };
+        },
+        async () => {
+          const result = await settlePluginTurn(
+            "turn-test-cooperative-surface-actor",
+            { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+            "UserVisible",
+            new Set([retainedSurfaceId(9, "cooperative")]),
+          );
+          expect(browserTaskObserved).toBe(true);
+          expect(result.uiPatches).toHaveLength(1);
+        },
+      );
+      await browserTask;
+    });
+
+    it("does not poll for an unchanged refresh when every requested surface is already retained", async () => {
+      let continuationCount = 0;
+      await withFakeShardClient(
+        async () => {
+          continuationCount += 1;
+          return { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } };
+        },
+        async () => {
+          const result = await settlePluginTurn(
+            "turn-test-retained-surfaces-actor",
+            { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult,
+            "UserVisible",
+            new Set(),
+          );
+          expect(continuationCount).toBe(0);
+          expect(result.uiPatches).toHaveLength(0);
+        },
+      );
+    });
 
     it("dispatches a queued Interactive-lane turn before an already-queued UserVisible-lane turn for the SAME actor, regardless of arrival order", async () => {
       const dispatchOrder: string[] = [];

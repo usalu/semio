@@ -72,6 +72,7 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
     pages: new Map(),
     canvases: new Map(),
     surfaces: new Map(),
+    blockedInbound: undefined,
     pumping: false,
     closing: false,
     closePromise: undefined,
@@ -112,42 +113,60 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
     }
   };
 
-  const acknowledgeEvent = (event) => transfer(encodeReply(event.requestId, event.generation, 0, new Uint8Array()));
-  const acknowledgePage = (page) => transfer(encodeAcknowledge(page.handle, page.index));
+  const transferControl = (bytes, commit) => {
+    try {
+      transfer(bytes);
+    } catch {
+      return false;
+    }
+    commit();
+    return true;
+  };
 
   const accept = (message) => {
     if (message.tag === 3) {
-      acknowledgeEvent(message);
-      if (message.event === 2400) {
-        const pending = state.pending.get(message.requestId ^ (BigInt(message.sequence) << 32n));
-        if (pending) pending.operationHandle = readHandle(new Reader(message.body));
-      } else if (message.event === 2406) {
+      const origin = message.requestId ^ (BigInt(message.sequence) << 32n);
+      let operationHandle;
+      let output;
+      if (message.event === 2400) operationHandle = readHandle(new Reader(message.body));
+      else if (message.event === 2406) {
         const reader = new Reader(message.body);
         const handle = readHandle(reader);
         const total = Number(reader.u64());
-        state.pages.set(handleKey(handle), { total, chunks: [], length: 0 });
+        reader.finish();
+        if (total > SEQUENCE_MAX_TRANSFER_BYTES) throw new Error("Sequence transfer exceeds its admitted length");
+        output = { handle, total };
       }
-      return;
+      return transferControl(encodeReply(message.requestId, message.generation, 0, new Uint8Array()), () => {
+        if (operationHandle) {
+          const pending = state.pending.get(origin);
+          if (pending) pending.operationHandle = operationHandle;
+        }
+        if (output) state.pages.set(handleKey(output.handle), { total: output.total, chunks: [], length: 0 });
+        const pending = state.pending.get(origin);
+        if (pending) for (const observer of pending.observers) try { observer(message); } catch {}
+      });
     }
     if (message.tag === 4) {
       if (message.body.length > SEQUENCE_MAX_PAGE_BYTES) throw new Error("Sequence page exceeds its bound");
       const key = handleKey(message.handle);
-      const transferState = state.pages.get(key) ?? { total: message.body.length, chunks: [], length: 0 };
+      const transferState = state.pages.get(key);
+      if (!transferState) throw new Error("Sequence page has no admitted output");
       if (message.index !== transferState.chunks.length) throw new Error("Sequence page out of order");
-      transferState.chunks.push(message.body);
-      transferState.length += message.body.length;
-      if (transferState.length > transferState.total || transferState.length > SEQUENCE_MAX_TRANSFER_BYTES) throw new Error("Sequence transfer exceeds its admitted length");
-      state.pages.set(key, transferState);
-      acknowledgePage(message);
-      return;
+      const nextLength = transferState.length + message.body.length;
+      if (nextLength > transferState.total || nextLength > SEQUENCE_MAX_TRANSFER_BYTES) throw new Error("Sequence transfer exceeds its admitted length");
+      return transferControl(encodeAcknowledge(message.handle, message.index), () => {
+        transferState.chunks.push(message.body);
+        transferState.length = nextLength;
+      });
     }
     if (message.tag !== 2) throw new Error("Unexpected Sequence message");
     const pending = state.pending.get(message.requestId);
-    if (!pending) return;
+    if (!pending) return true;
     state.pending.delete(message.requestId);
     if (message.status !== 0) {
       pending.reject(new Error(message.errorMessage || `Sequence status ${message.status}`));
-      return;
+      return true;
     }
     let body = message.body;
     if (pending.operationHandle) {
@@ -159,6 +178,7 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
       }
     }
     pending.resolve(body);
+    return true;
   };
 
   const pump = () => {
@@ -168,13 +188,27 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
       try {
         let advanced = 0;
         while (advanced < 64) {
+          const retained = state.blockedInbound;
+          if (retained) {
+            if (!accept(retained)) break;
+            state.blockedInbound = undefined;
+            advanced += 1;
+            continue;
+          }
           const result = pollExact();
           if (result.length < 0) {
+            const error = new Error("Sequence bridge closed while requests were pending");
+            for (const pending of state.pending.values()) pending.reject(error);
+            state.pending.clear();
             state.closed = true;
             break;
           }
           if (result.length === 0) break;
-          accept(decodeMessage(result.bytes));
+          const message = decodeMessage(result.bytes);
+          if (!accept(message)) {
+            state.blockedInbound = message;
+            break;
+          }
           advanced += 1;
         }
       } catch (error) {
@@ -182,34 +216,60 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
         state.pending.clear();
         state.closed = true;
       } finally {
-        if (!state.closed && !state.closing && state.pending.size > 0) schedule(step);
+        if (!state.closed && !state.closing && (state.pending.size > 0 || state.blockedInbound)) schedule(step);
         else state.pumping = false;
       }
     };
     schedule(step);
   };
 
-  const request = (operation, payload = new Uint8Array(), session) => {
-    if (state.closed || state.closing) return Promise.reject(new Error("Sequence host is closed"));
-    if (state.pending.size >= maximumInFlight) return Promise.reject(new Error("Sequence in-flight limit"));
-    const requestId = state.nextRequest++;
-    const body = session ? concat(encodeHandle(session), payload) : payload;
-    if (body.length > SEQUENCE_MAX_REQUEST_BYTES) return Promise.reject(new Error("Sequence request exceeds its bound"));
-    const promise = new Promise((resolve, reject) => state.pending.set(requestId, { resolve, reject, operationHandle: undefined }));
+  const start = (operation, payload = new Uint8Array(), session) => {
+    if (state.closed || state.closing) return rejectedTask(new Error("Sequence host is closed"));
+    if (state.pending.size >= maximumInFlight) return rejectedTask(new Error("Sequence in-flight limit"));
+    const requestId = state.nextRequest;
+    let message;
     try {
-      transfer(encodeRequest(operation, requestId, state.generation, body));
+      const body = session ? concat(encodeHandle(session), payload) : payload;
+      if (body.length > SEQUENCE_MAX_REQUEST_BYTES) throw new Error("Sequence request exceeds its bound");
+      message = encodeRequest(operation, requestId, state.generation, body);
+      transfer(message);
+    } catch (error) {
+      return rejectedTask(error);
+    }
+    state.nextRequest += 1n;
+    let settle;
+    const result = new Promise((resolve, reject) => { settle = { resolve, reject, operationHandle: undefined, observers: new Set() }; });
+    state.pending.set(requestId, settle);
+    try {
       pump();
     } catch (error) {
       state.pending.delete(requestId);
-      return Promise.reject(error);
+      settle.reject(error);
+      try { transfer(encodeCancel(requestId, state.generation)); } catch {}
     }
-    return promise;
+    return {
+      requestId,
+      result,
+      cancel: () => cancel(requestId),
+      subscribe(observer) {
+        settle.observers.add(observer);
+        return () => settle.observers.delete(observer);
+      },
+    };
   };
 
   const cancel = (requestId) => {
-    if (!state.pending.has(requestId)) return false;
-    transfer(encodeCancel(requestId, state.generation));
+    const pending = state.pending.get(requestId);
+    if (!pending) return false;
+    try {
+      transfer(encodeCancel(requestId, state.generation));
+    } catch (error) { throw error; }
     pump();
+    return true;
+  };
+
+  const closeHandle = (handle) => {
+    transfer(encodeClose(handle));
     return true;
   };
 
@@ -225,25 +285,39 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
   const close = () => {
     if (state.closePromise) return state.closePromise;
     if (state.closed) return Promise.resolve();
-    state.closing = true;
     exports.sequence_bridge_begin_close();
+    state.closing = true;
     state.canvases.clear();
     state.surfaces.clear();
     for (const pending of state.pending.values()) pending.reject(new Error("Sequence host closed"));
     state.pending.clear();
-    state.pages.clear();
     state.closePromise = new Promise((resolve, reject) => {
       const drain = () => {
         try {
           for (let advanced = 0; advanced < 64; advanced += 1) {
+            const retained = state.blockedInbound;
+            if (retained) {
+              if (!accept(retained)) break;
+              state.blockedInbound = undefined;
+              continue;
+            }
             if (exports.sequence_bridge_terminal_is_empty() === 1) {
+              state.pages.clear();
+              state.blockedInbound = undefined;
               state.closed = true;
               state.closing = false;
               resolve();
               return;
             }
             const result = pollExact();
-            if (result.length > 0) accept(decodeMessage(result.bytes));
+            if (result.length > 0) {
+              const message = decodeMessage(result.bytes);
+              if (!accept(message)) {
+                state.blockedInbound = message;
+                break;
+              }
+            }
+            else if (result.length < 0) throw new Error("Sequence bridge closed before terminal-empty");
             else break;
           }
           schedule(drain);
@@ -258,97 +332,108 @@ export function createSequenceHost({ exports, memory, resolveCanvas, render = de
     return state.closePromise;
   };
 
-  return { state, request, cancel, registerCanvas, resolveCanvas, render, close, terminalIsEmpty: () => exports.sequence_bridge_terminal_is_empty() === 1 };
+  return { state, start, cancel, closeHandle, registerCanvas, resolveCanvas, render, close, terminalIsEmpty: () => exports.sequence_bridge_terminal_is_empty() === 1 };
 }
 
 //#endregion 🌉️LinearMemoryHost
 
-//#region 🔖️CompatibilityConsumer
+//#region 🧩️ReactiveFeatures
 
-export class SequenceSession {
-  constructor(host) {
-    if (!host) throw new Error("Sequence host is required");
-    this.host = host;
-    this.session = undefined;
-    this.surface = undefined;
-    this.ready = host.request(SequenceOperation.open).then((bytes) => {
-      this.session = readHandle(new Reader(bytes));
-      return this.session;
-    });
-  }
+export async function createSequenceFeatures(host) {
+  if (!host) throw new Error("Sequence host is required");
+  const opened = host.start(SequenceOperation.open);
+  const session = readHandle(new Reader(await opened.result));
+  const task = (operation, payload, decode = identity) => mapTask(host.start(operation, payload, session), decode);
+  let surface;
 
-  async invoke(operation, payload = new Uint8Array()) {
-    const session = await this.ready;
-    return this.host.request(operation, payload, session);
-  }
-
-  async loadFixtureJson(json) { await this.invoke(SequenceOperation.loadFixtureJson, encoder.encode(json)); }
-  async fixtureJson() { return decoder.decode(await this.invoke(SequenceOperation.fixtureJson)); }
-  async catalogueJson() { return decoder.decode(await this.invoke(SequenceOperation.catalogueJson)); }
-  async addStep(kind, x, y) { return decoder.decode(await this.invoke(SequenceOperation.addStep, fields((w) => { w.text(kind); w.f64(x); w.f64(y); }))); }
-  async addStepDropped(kind, x, y, picked) { return decoder.decode(await this.invoke(SequenceOperation.addStepDropped, fields((w) => { w.text(kind); w.f64(x); w.f64(y); w.optionalText(picked); }))); }
-  async addStepToSlot(kind, x, y, owner, name) { return decoder.decode(await this.invoke(SequenceOperation.addStepToSlot, fields((w) => { w.text(kind); w.f64(x); w.f64(y); w.text(owner); w.text(name); }))); }
-  async setStepCollapsed(id, value) { return (await this.invoke(SequenceOperation.setStepCollapsed, fields((w) => { w.text(id); w.u8(value ? 1 : 0); })))[0] === 1; }
-  async pickStepIdAtScreen(x, y) { return optionalString(await this.invoke(SequenceOperation.pickStepIdAtScreen, pointFields(x, y))); }
-  async buildPathJson() { return decoder.decode(await this.invoke(SequenceOperation.buildPathJson)); }
-  async removeStep(id) { return (await this.invoke(SequenceOperation.removeStep, textField(id)))[0] === 1; }
-  async setStepParamsJson(id, json) { await this.invoke(SequenceOperation.setStepParamsJson, twoTextFields(id, json)); }
-  async connectSteps(from, to) { return decoder.decode(await this.invoke(SequenceOperation.connectSteps, twoTextFields(from, to))); }
-  async disconnectSteps(from, to) { return (await this.invoke(SequenceOperation.disconnectSteps, twoTextFields(from, to)))[0] === 1; }
-  async compileText() { return decoder.decode(await this.invoke(SequenceOperation.compileText)); }
-  async compiledWireLiteral() { return decoder.decode(await this.invoke(SequenceOperation.compiledWireLiteral)); }
-  async run() { return decoder.decode(await this.invoke(SequenceOperation.run)); }
-
-  async attachCanvas(canvas, logicalWidth, logicalHeight, dpr) {
-    const owned = this.host.registerCanvas(canvas ?? this.host.resolveCanvas?.());
-    this.surface = owned;
-    await this.invoke(SequenceOperation.attachSurface, fields((w) => { w.u32(owned.surfaceId); w.u32(owned.canvasId); }));
-    await this.setSize(logicalWidth, logicalHeight, dpr);
-  }
-
-  async gpuReady() { return (await this.invoke(SequenceOperation.gpuReady))[0] === 1; }
-  async setSize(width, height, dpr) { await this.invoke(SequenceOperation.setSize, fields((w) => { w.u32(Math.max(1, width)); w.u32(Math.max(1, height)); w.f64(Math.max(1, dpr)); })); }
-  async renderFrame() {
-    if (!this.surface) throw new Error("Sequence canvas is unavailable");
-    const bytes = await this.invoke(SequenceOperation.renderFrame);
-    this.host.render(this.host.state.canvases.get(this.surface.canvasId), JSON.parse(decoder.decode(bytes)));
-  }
-  async worldFromScreen(x, y) { return decoder.decode(await this.invoke(SequenceOperation.worldFromScreen, pointFields(x, y))); }
-  async pointerDownScreen(x, y, button, shift, ctrl, alt) { await this.invoke(SequenceOperation.pointerDownScreen, fields((w) => { w.f64(x); w.f64(y); w.u8(button); w.bool(shift); w.bool(ctrl); w.bool(alt); })); }
-  async pointerMoveScreen(x, y, shift, ctrl, alt) { await this.invoke(SequenceOperation.pointerMoveScreen, pointerFields(x, y, shift, ctrl, alt)); }
-  async pointerUpScreen(x, y, shift, ctrl, alt) { await this.invoke(SequenceOperation.pointerUpScreen, pointerFields(x, y, shift, ctrl, alt)); }
-  async wheelScreen(x, y, deltaY) { await this.invoke(SequenceOperation.wheelScreen, fields((w) => { w.f64(x); w.f64(y); w.f64(deltaY); })); }
-  async reorganize(json) { await this.invoke(SequenceOperation.reorganize, encoder.encode(json)); }
-  async lodScaleJson() { return decoder.decode(await this.invoke(SequenceOperation.lodScaleJson)); }
-  async setAutomaticLod(value) { await this.invoke(SequenceOperation.setAutomaticLod, Uint8Array.of(value ? 1 : 0)); }
-  async setForcedDrawLodLabel(value) { await this.invoke(SequenceOperation.setForcedDrawLodLabel, textField(value)); }
-  async drawLodLabel() { return decoder.decode(await this.invoke(SequenceOperation.drawLodLabel)); }
-  async setCanvasThemeJson(json) { await this.invoke(SequenceOperation.setCanvasThemeJson, encoder.encode(json)); }
-  async selectedNodeIds() { return JSON.parse(decoder.decode(await this.invoke(SequenceOperation.selectedNodeIds))); }
-  async setSelection(ids) { await this.invoke(SequenceOperation.setSelection, fields((w) => { w.u32(ids.length); for (const id of ids) w.text(id); })); }
-  async labelOverlayPaintStateJson() { return decoder.decode(await this.invoke(SequenceOperation.labelOverlayPaintStateJson)); }
-  async hoveredNodeId() { return optionalString(await this.invoke(SequenceOperation.hoveredNodeId)); }
-  async preselectNodeIdsJson() { return decoder.decode(await this.invoke(SequenceOperation.preselectNodeIdsJson)); }
-  async selectionPreviewPointsJson() { return decoder.decode(await this.invoke(SequenceOperation.selectionPreviewPointsJson)); }
-  async selectionPreviewCrossing() { return (await this.invoke(SequenceOperation.selectionPreviewCrossing))[0] === 1; }
-  async selectionPreviewMethod() { return decoder.decode(await this.invoke(SequenceOperation.selectionPreviewMethod)); }
-  async selectionUnionBoundsScreenJson() { return decoder.decode(await this.invoke(SequenceOperation.selectionUnionBoundsScreenJson)); }
-  async setSelectionOptions(method, mode) { await this.invoke(SequenceOperation.setSelectionOptions, twoTextFields(method, mode)); }
-  async setGhostStep(kind, x, y) { await this.invoke(SequenceOperation.setGhostStep, fields((w) => { w.text(kind); w.f64(x); w.f64(y); })); }
-  async clearGhostStep() { await this.invoke(SequenceOperation.clearGhostStep); }
-  async play() { await this.invoke(SequenceOperation.play); }
-  async pause() { await this.invoke(SequenceOperation.pause); }
-  async stop() { await this.invoke(SequenceOperation.stop); }
-  close() { return this.host.close(); }
+  const document = {
+    loadFixtureJson: (json) => task(SequenceOperation.loadFixtureJson, encoder.encode(json)),
+    fixtureJson: () => task(SequenceOperation.fixtureJson, undefined, text),
+    catalogueJson: () => task(SequenceOperation.catalogueJson, undefined, text),
+  };
+  const editing = {
+    addStep: (kind, x, y) => task(SequenceOperation.addStep, fields((w) => { w.text(kind); w.f64(x); w.f64(y); }), text),
+    addStepDropped: (kind, x, y, picked) => task(SequenceOperation.addStepDropped, fields((w) => { w.text(kind); w.f64(x); w.f64(y); w.optionalText(picked); }), text),
+    addStepToSlot: (kind, x, y, owner, name) => task(SequenceOperation.addStepToSlot, fields((w) => { w.text(kind); w.f64(x); w.f64(y); w.text(owner); w.text(name); }), text),
+    setStepCollapsed: (id, value) => task(SequenceOperation.setStepCollapsed, fields((w) => { w.text(id); w.u8(value ? 1 : 0); }), boolean),
+    pickStepIdAtScreen: (x, y) => task(SequenceOperation.pickStepIdAtScreen, pointFields(x, y), optionalString),
+    buildPathJson: () => task(SequenceOperation.buildPathJson, undefined, text),
+    removeStep: (id) => task(SequenceOperation.removeStep, textField(id), boolean),
+    setStepParamsJson: (id, json) => task(SequenceOperation.setStepParamsJson, twoTextFields(id, json)),
+    connectSteps: (from, to) => task(SequenceOperation.connectSteps, twoTextFields(from, to), text),
+    disconnectSteps: (from, to) => task(SequenceOperation.disconnectSteps, twoTextFields(from, to), boolean),
+  };
+  const execution = {
+    compileText: () => task(SequenceOperation.compileText, undefined, text),
+    compiledWireLiteral: () => task(SequenceOperation.compiledWireLiteral, undefined, text),
+    run: () => task(SequenceOperation.run, undefined, text),
+  };
+  const viewport = {
+    attach(canvas) {
+      const owned = host.registerCanvas(canvas ?? host.resolveCanvas?.());
+      const attached = task(SequenceOperation.attachSurface, fields((w) => { w.u32(owned.surfaceId); w.u32(owned.canvasId); }));
+      attached.result = attached.result.then((value) => { surface = owned; return value; });
+      return attached;
+    },
+    gpuReady: () => task(SequenceOperation.gpuReady, undefined, boolean),
+    setSize: (width, height, dpr) => task(SequenceOperation.setSize, fields((w) => { w.u32(Math.max(1, width)); w.u32(Math.max(1, height)); w.f64(Math.max(1, dpr)); })),
+    renderFrame() {
+      if (!surface) return rejectedTask(new Error("Sequence canvas is unavailable"));
+      return task(SequenceOperation.renderFrame, undefined, (bytes) => {
+        const state = JSON.parse(text(bytes));
+        host.render(host.state.canvases.get(surface.canvasId), state);
+        return state;
+      });
+    },
+  };
+  const input = {
+    worldFromScreen: (x, y) => task(SequenceOperation.worldFromScreen, pointFields(x, y), text),
+    pointerDownScreen: (x, y, button, shift, ctrl, alt) => task(SequenceOperation.pointerDownScreen, fields((w) => { w.f64(x); w.f64(y); w.u8(button); w.bool(shift); w.bool(ctrl); w.bool(alt); })),
+    pointerMoveScreen: (x, y, shift, ctrl, alt) => task(SequenceOperation.pointerMoveScreen, pointerFields(x, y, shift, ctrl, alt)),
+    pointerUpScreen: (x, y, shift, ctrl, alt) => task(SequenceOperation.pointerUpScreen, pointerFields(x, y, shift, ctrl, alt)),
+    wheelScreen: (x, y, deltaY) => task(SequenceOperation.wheelScreen, fields((w) => { w.f64(x); w.f64(y); w.f64(deltaY); })),
+  };
+  const layout = {
+    reorganize: (json) => task(SequenceOperation.reorganize, encoder.encode(json)),
+    lodScaleJson: () => task(SequenceOperation.lodScaleJson, undefined, text),
+    setAutomaticLod: (value) => task(SequenceOperation.setAutomaticLod, Uint8Array.of(value ? 1 : 0)),
+    setForcedDrawLodLabel: (value) => task(SequenceOperation.setForcedDrawLodLabel, textField(value)),
+    drawLodLabel: () => task(SequenceOperation.drawLodLabel, undefined, text),
+    setCanvasThemeJson: (json) => task(SequenceOperation.setCanvasThemeJson, encoder.encode(json)),
+  };
+  const selection = {
+    selectedNodeIds: () => task(SequenceOperation.selectedNodeIds, undefined, json),
+    setSelection: (ids) => task(SequenceOperation.setSelection, fields((w) => { w.u32(ids.length); for (const id of ids) w.text(id); })),
+    labelOverlayPaintStateJson: () => task(SequenceOperation.labelOverlayPaintStateJson, undefined, text),
+    hoveredNodeId: () => task(SequenceOperation.hoveredNodeId, undefined, optionalString),
+  };
+  const preview = {
+    preselectNodeIdsJson: () => task(SequenceOperation.preselectNodeIdsJson, undefined, text),
+    selectionPreviewPointsJson: () => task(SequenceOperation.selectionPreviewPointsJson, undefined, text),
+    selectionPreviewCrossing: () => task(SequenceOperation.selectionPreviewCrossing, undefined, boolean),
+    selectionPreviewMethod: () => task(SequenceOperation.selectionPreviewMethod, undefined, text),
+    selectionUnionBoundsScreenJson: () => task(SequenceOperation.selectionUnionBoundsScreenJson, undefined, text),
+    setSelectionOptions: (method, mode) => task(SequenceOperation.setSelectionOptions, twoTextFields(method, mode)),
+    setGhostStep: (kind, x, y) => task(SequenceOperation.setGhostStep, fields((w) => { w.text(kind); w.f64(x); w.f64(y); })),
+    clearGhostStep: () => task(SequenceOperation.clearGhostStep),
+  };
+  const playback = {
+    play: () => task(SequenceOperation.play),
+    pause: () => task(SequenceOperation.pause),
+    stop: () => task(SequenceOperation.stop),
+  };
+  const lifetime = {
+    session,
+    async close() {
+      host.closeHandle(session);
+      await host.close();
+    },
+    terminalIsEmpty: host.terminalIsEmpty,
+  };
+  return { document, editing, execution, viewport, input, layout, selection, preview, playback, lifetime };
 }
 
-export async function createSequenceSession(options) {
-  const session = new SequenceSession(createSequenceHost(options));
-  await session.ready;
-  return session;
-}
-
-//#endregion 🔖️CompatibilityConsumer
+//#endregion 🧩️ReactiveFeatures
 
 //#region 🧱️Codec
 
@@ -369,6 +454,10 @@ function encodeCancel(requestId, generation) {
 
 function encodeAcknowledge(handle, index) {
   return fields((writer) => { writer.u8(1); writer.u8(5); writer.u8(3); writer.handle(handle); writer.u32(index); });
+}
+
+function encodeClose(handle) {
+  return fields((writer) => { writer.u8(1); writer.u8(5); writer.u8(2); writer.handle(handle); });
 }
 
 export function decodeMessage(bytes) {
@@ -441,6 +530,12 @@ function encodeHandle(handle) { return fields((writer) => writer.handle(handle))
 function readHandle(reader) { return { slot: reader.u32(), generation: reader.u32() }; }
 function handleKey(handle) { return `${handle.slot}:${handle.generation}`; }
 function optionalString(bytes) { return bytes.length === 0 ? undefined : decoder.decode(bytes); }
+function identity(value) { return value; }
+function text(bytes) { return decoder.decode(bytes); }
+function json(bytes) { return JSON.parse(text(bytes)); }
+function boolean(bytes) { return bytes[0] === 1; }
+function mapTask(task, decode) { return { ...task, result: task.result.then(decode) }; }
+function rejectedTask(error) { return { requestId: undefined, result: Promise.reject(error), cancel: () => false, subscribe: () => () => {} }; }
 function concat(...values) { const length = values.reduce((total, value) => total + value.length, 0); const bytes = new Uint8Array(length); let cursor = 0; for (const value of values) { bytes.set(value, cursor); cursor += value.length; } return bytes; }
 function joinBytes(values, length) { const bytes = new Uint8Array(length); let cursor = 0; for (const value of values) { bytes.set(value, cursor); cursor += value.length; } return bytes; }
 

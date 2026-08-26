@@ -5,7 +5,7 @@ use crate::artifacts::din18599::mutations::change_h_t::mutation::ChangeHT;
 use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeHT, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+pub fn diff(payload: &ChangeHT, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
     if !payload.new_h_t.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Ht must be a finite number.", Vec::<String>::new());
     }

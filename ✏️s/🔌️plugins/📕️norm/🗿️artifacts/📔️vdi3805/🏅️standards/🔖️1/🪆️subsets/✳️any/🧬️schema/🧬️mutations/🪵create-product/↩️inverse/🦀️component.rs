@@ -6,7 +6,7 @@ use crate::artifacts::vdi3805::mutations::delete_product;
 use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &CreateProduct, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &CreateProduct, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
     if base.catalog.products.iter().any(|p| p.identity.article_number == payload.product.identity.article_number) {
         return Vec::new();
     }

@@ -7,7 +7,7 @@ use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::CreatePropertyDefinition;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &CreatePropertyDefinition, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &CreatePropertyDefinition, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
     if base.catalogue.property_definitions.iter().any(|definition| definition.id == payload.property_definition.id) {
         return Vec::new();
     }

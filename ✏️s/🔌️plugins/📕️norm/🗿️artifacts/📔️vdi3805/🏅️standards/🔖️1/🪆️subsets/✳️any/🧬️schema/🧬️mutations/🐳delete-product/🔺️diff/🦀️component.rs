@@ -4,7 +4,7 @@ use super::mutation::DeleteProduct;
 use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &DeleteProduct, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
+pub fn diff(payload: &DeleteProduct, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     if !base.catalog.products.iter().any(|p| p.identity.article_number == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Product \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

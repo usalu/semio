@@ -1,0 +1,3 @@
+[test] level=exhaustive cases=1 executed=68 passed=66 failed=2 errored=0 parity=32/34
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio::mutate-semio-model::mutate-set-snapshot::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio::mutate-semio-model::inverse-set-snapshot::rust::subject (1 differences)

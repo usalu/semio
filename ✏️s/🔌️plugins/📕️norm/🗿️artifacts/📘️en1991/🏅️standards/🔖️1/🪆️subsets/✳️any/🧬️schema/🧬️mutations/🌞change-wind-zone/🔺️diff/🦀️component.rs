@@ -4,7 +4,7 @@ use super::mutation::ChangeWindZone;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeWindZone, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub fn diff(payload: &ChangeWindZone, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.wind_zone == payload.new_wind_zone {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Wind zone already has this value.");
     }

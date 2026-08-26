@@ -1,0 +1,3028 @@
+{
+ "oracleScen": 3739,
+ "diffScen": 3126,
+ "nonDiff": 613,
+ "cases": 117,
+ "rows": [
+  {
+   "owner": "🌦️epw",
+   "case": "mutate-epw-energyplus",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🧪️tests/mutate-epw-energyplus",
+   "scenarios": 27,
+   "byMode": {
+    "differential": 4,
+    "property": 22,
+    "round-trip": 1
+   },
+   "nonDiff": 23,
+   "oracle": "csv-epw-energyplus-mutate",
+   "ecosystem": "rust",
+   "pkg": "csv",
+   "ver": "1",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-set-snapshot",
+    "property:mutate-set-location",
+    "property:mutate-set-design-conditions",
+    "property:mutate-set-typical-extreme-periods",
+    "property:mutate-set-ground-temperatures",
+    "property:mutate-set-holidays-dst",
+    "property:mutate-set-comments-1",
+    "property:mutate-set-comments-2",
+    "property:mutate-set-data-periods",
+    "property:inverse-no-mutation",
+    "property:inverse-insert-record",
+    "property:inverse-remove-record",
+    "property:inverse-set-record-field",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-location",
+    "property:inverse-set-design-conditions",
+    "property:inverse-set-typical-extreme-periods",
+    "property:inverse-set-ground-temperatures",
+    "property:inverse-set-holidays-dst",
+    "property:inverse-set-comments-1",
+    "property:inverse-set-comments-2",
+    "property:inverse-set-data-periods",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🏗️ifc",
+   "case": "mutate-ifc-4",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-4",
+   "scenarios": 23,
+   "byMode": {
+    "property": 22,
+    "round-trip": 1
+   },
+   "nonDiff": 23,
+   "oracle": "ruststep-ifc-4-any-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-description",
+    "property:mutate-set-file-name",
+    "property:mutate-set-file-schema",
+    "property:mutate-insert-entity",
+    "property:mutate-remove-entity",
+    "property:mutate-set-entity-name",
+    "property:mutate-set-entity-arg",
+    "property:mutate-insert-entity-arg",
+    "property:mutate-remove-entity-arg",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-description",
+    "property:inverse-set-file-name",
+    "property:inverse-set-file-schema",
+    "property:inverse-insert-entity",
+    "property:inverse-remove-entity",
+    "property:inverse-set-entity-name",
+    "property:inverse-set-entity-arg",
+    "property:inverse-insert-entity-arg",
+    "property:inverse-remove-entity-arg",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧊️obj",
+   "case": "mutate-obj-3-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🧪️tests/mutate-obj-3-0",
+   "scenarios": 45,
+   "byMode": {
+    "differential": 22,
+    "property": 22,
+    "round-trip": 1
+   },
+   "nonDiff": 23,
+   "oracle": "tobj-obj-3-0-mutate",
+   "ecosystem": "rust",
+   "pkg": "tobj",
+   "ver": "4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-insert-vertex",
+    "property:inverse-remove-vertex",
+    "property:inverse-set-vertex",
+    "property:inverse-insert-texcoord",
+    "property:inverse-remove-texcoord",
+    "property:inverse-set-texcoord",
+    "property:inverse-insert-normal",
+    "property:inverse-remove-normal",
+    "property:inverse-set-normal",
+    "property:inverse-insert-face",
+    "property:inverse-remove-face",
+    "property:inverse-set-face",
+    "property:inverse-set-group",
+    "property:inverse-remove-group",
+    "property:inverse-set-object",
+    "property:inverse-remove-object",
+    "property:inverse-set-mtllib",
+    "property:inverse-set-usemtl",
+    "property:inverse-set-smoothing-groups",
+    "property:inverse-set-unknown-statements",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📐️step",
+   "case": "mutate-step-ap214",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214",
+   "scenarios": 23,
+   "byMode": {
+    "property": 22,
+    "round-trip": 1
+   },
+   "nonDiff": 23,
+   "oracle": "ruststep-step-ap214-any-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-description",
+    "property:mutate-set-file-name",
+    "property:mutate-set-file-schema",
+    "property:mutate-insert-entity",
+    "property:mutate-remove-entity",
+    "property:mutate-set-entity-name",
+    "property:mutate-set-entity-arg",
+    "property:mutate-insert-entity-arg",
+    "property:mutate-remove-entity-arg",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-description",
+    "property:inverse-set-file-name",
+    "property:inverse-set-file-schema",
+    "property:inverse-insert-entity",
+    "property:inverse-remove-entity",
+    "property:inverse-set-entity-name",
+    "property:inverse-set-entity-arg",
+    "property:inverse-insert-entity-arg",
+    "property:inverse-remove-entity-arg",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎞️gif",
+   "case": "mutate-gif-89a",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/mutate-gif-89a",
+   "scenarios": 43,
+   "byMode": {
+    "differential": 21,
+    "property": 21,
+    "round-trip": 1
+   },
+   "nonDiff": 22,
+   "oracle": "gif-89a-any-mutate",
+   "ecosystem": "rust",
+   "pkg": "gif",
+   "ver": "0.13",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-screen-size",
+    "property:inverse-set-global-color-table",
+    "property:inverse-set-background-color-index",
+    "property:inverse-set-pixel-aspect-ratio",
+    "property:inverse-set-loop-count",
+    "property:inverse-insert-frame",
+    "property:inverse-remove-frame",
+    "property:inverse-move-frame",
+    "property:inverse-set-frame-geometry",
+    "property:inverse-set-frame-pixels",
+    "property:inverse-set-frame-interlace",
+    "property:inverse-set-frame-delay",
+    "property:inverse-set-frame-disposal",
+    "property:inverse-set-frame-transparency",
+    "property:inverse-set-frame-user-input",
+    "property:inverse-insert-comment",
+    "property:inverse-remove-comment",
+    "property:inverse-add-app-extension",
+    "property:inverse-remove-app-extension",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-7-vt",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-vt",
+   "scenarios": 41,
+   "byMode": {
+    "differential": 20,
+    "property": 20,
+    "round-trip": 1
+   },
+   "nonDiff": 21,
+   "oracle": "lopdf-pdf-1-7-vt-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-insert-encryption-dictionary",
+    "property:inverse-remove-encryption-dictionary",
+    "property:inverse-set-output-intent",
+    "property:inverse-remove-output-intent",
+    "property:inverse-set-trim-box",
+    "property:inverse-remove-trim-box",
+    "property:inverse-embed-font-file",
+    "property:inverse-remove-font-file",
+    "property:inverse-insert-javascript-action",
+    "property:inverse-remove-javascript-action",
+    "property:inverse-insert-launch-action",
+    "property:inverse-remove-launch-action",
+    "property:inverse-insert-media-annotation",
+    "property:inverse-remove-media-annotation",
+    "property:inverse-set-dpart-root",
+    "property:inverse-remove-dpart-root",
+    "property:inverse-set-dpart-metadata",
+    "property:inverse-remove-dpart-metadata",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📷️png",
+   "case": "mutate-png-1-2",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/mutate-png-1-2",
+   "scenarios": 35,
+   "byMode": {
+    "differential": 17,
+    "property": 17,
+    "round-trip": 1
+   },
+   "nonDiff": 18,
+   "oracle": "png-png-1-2-mutate",
+   "ecosystem": "rust",
+   "pkg": "png",
+   "ver": "0.18",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-header",
+    "property:inverse-set-palette",
+    "property:inverse-set-transparency",
+    "property:inverse-set-gamma",
+    "property:inverse-set-chromaticities",
+    "property:inverse-set-srgb-intent",
+    "property:inverse-set-physical-dims",
+    "property:inverse-set-timestamp",
+    "property:inverse-set-background",
+    "property:inverse-insert-text-chunk",
+    "property:inverse-remove-text-chunk",
+    "property:inverse-set-text-chunk",
+    "property:inverse-set-pixels",
+    "property:inverse-insert-unknown-chunk",
+    "property:inverse-remove-unknown-chunk",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-7-a",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-a",
+   "scenarios": 33,
+   "byMode": {
+    "differential": 16,
+    "property": 16,
+    "round-trip": 1
+   },
+   "nonDiff": 17,
+   "oracle": "lopdf-pdf-1-7-a-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-insert-encryption-dictionary",
+    "property:inverse-remove-encryption-dictionary",
+    "property:inverse-insert-javascript-action",
+    "property:inverse-remove-javascript-action",
+    "property:inverse-insert-launch-action",
+    "property:inverse-remove-launch-action",
+    "property:inverse-insert-embedded-file",
+    "property:inverse-remove-embedded-file",
+    "property:inverse-set-af-relationship",
+    "property:inverse-remove-af-relationship",
+    "property:inverse-set-output-intent",
+    "property:inverse-remove-output-intent",
+    "property:inverse-embed-font-file",
+    "property:inverse-remove-font-file",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-7-x",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-x",
+   "scenarios": 33,
+   "byMode": {
+    "differential": 16,
+    "property": 16,
+    "round-trip": 1
+   },
+   "nonDiff": 17,
+   "oracle": "lopdf-pdf-1-7-x-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-insert-encryption-dictionary",
+    "property:inverse-remove-encryption-dictionary",
+    "property:inverse-set-output-intent",
+    "property:inverse-remove-output-intent",
+    "property:inverse-set-trim-box",
+    "property:inverse-remove-trim-box",
+    "property:inverse-embed-font-file",
+    "property:inverse-remove-font-file",
+    "property:inverse-insert-javascript-action",
+    "property:inverse-remove-javascript-action",
+    "property:inverse-insert-launch-action",
+    "property:inverse-remove-launch-action",
+    "property:inverse-insert-media-annotation",
+    "property:inverse-remove-media-annotation",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🏗️ifc",
+   "case": "mutate-ifc-2x3-cobie",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cobie",
+   "scenarios": 15,
+   "byMode": {
+    "property": 14,
+    "round-trip": 1
+   },
+   "nonDiff": 15,
+   "oracle": "ruststep-ifc-2x3-cobie-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-view-definition",
+    "property:mutate-set-facility-name",
+    "property:mutate-set-floor-elevation",
+    "property:mutate-set-space",
+    "property:mutate-set-type-assignment",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-view-definition",
+    "property:inverse-set-facility-name",
+    "property:inverse-set-floor-elevation",
+    "property:inverse-set-space",
+    "property:inverse-set-type-assignment",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-7-e",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-e",
+   "scenarios": 29,
+   "byMode": {
+    "differential": 14,
+    "property": 14,
+    "round-trip": 1
+   },
+   "nonDiff": 15,
+   "oracle": "lopdf-pdf-1-7-e-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-insert-encryption-dictionary",
+    "property:inverse-remove-encryption-dictionary",
+    "property:inverse-insert-javascript-action",
+    "property:inverse-remove-javascript-action",
+    "property:inverse-insert-launch-action",
+    "property:inverse-remove-launch-action",
+    "property:inverse-insert-media-annotation",
+    "property:inverse-remove-media-annotation",
+    "property:inverse-set-output-intent",
+    "property:inverse-remove-output-intent",
+    "property:inverse-embed-font-file",
+    "property:inverse-remove-font-file",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-7-ua",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-ua",
+   "scenarios": 27,
+   "byMode": {
+    "differential": 13,
+    "property": 13,
+    "round-trip": 1
+   },
+   "nonDiff": 14,
+   "oracle": "lopdf-pdf-1-7-ua-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-mark-info",
+    "property:inverse-remove-mark-info",
+    "property:inverse-set-struct-tree-root",
+    "property:inverse-remove-struct-tree-root",
+    "property:inverse-set-lang",
+    "property:inverse-remove-lang",
+    "property:inverse-set-display-doc-title",
+    "property:inverse-remove-display-doc-title",
+    "property:inverse-set-info-title",
+    "property:inverse-embed-font-file",
+    "property:inverse-remove-font-file",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🏗️ifc",
+   "case": "mutate-ifc-2x3-cv20",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-cv20",
+   "scenarios": 13,
+   "byMode": {
+    "property": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 13,
+   "oracle": "ruststep-ifc-2x3-cv20-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-view-definition",
+    "property:mutate-set-structural-entity",
+    "property:mutate-set-project-units",
+    "property:mutate-set-product-placement",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-view-definition",
+    "property:inverse-set-structural-entity",
+    "property:inverse-set-project-units",
+    "property:inverse-set-product-placement",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🏗️ifc",
+   "case": "mutate-ifc-2x3-sav",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3-sav",
+   "scenarios": 13,
+   "byMode": {
+    "property": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 13,
+   "oracle": "ruststep-ifc-2x3-sav-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-view-definition",
+    "property:mutate-set-analysis-model",
+    "property:mutate-set-load-group",
+    "property:mutate-set-group-assignment",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-view-definition",
+    "property:inverse-set-analysis-model",
+    "property:inverse-set-load-group",
+    "property:inverse-set-group-assignment",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-7-h",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7-h",
+   "scenarios": 25,
+   "byMode": {
+    "differential": 12,
+    "property": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 13,
+   "oracle": "lopdf-pdf-1-7-h-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-info-title",
+    "property:inverse-set-info-author",
+    "property:inverse-insert-javascript-action",
+    "property:inverse-remove-javascript-action",
+    "property:inverse-insert-launch-action",
+    "property:inverse-remove-launch-action",
+    "property:inverse-insert-signature-field",
+    "property:inverse-remove-signature-field",
+    "property:inverse-embed-font-file",
+    "property:inverse-remove-font-file",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📐️step",
+   "case": "mutate-step-ap214-cc2",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc2",
+   "scenarios": 13,
+   "byMode": {
+    "property": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 13,
+   "oracle": "ruststep-step-ap214-cc2-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-schema",
+    "property:mutate-set-product-identity",
+    "property:mutate-set-shape-representation",
+    "property:mutate-demote-shape-representation",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-schema",
+    "property:inverse-set-product-identity",
+    "property:inverse-set-shape-representation",
+    "property:inverse-demote-shape-representation",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📐️step",
+   "case": "mutate-step-ap214-cc3",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc3",
+   "scenarios": 13,
+   "byMode": {
+    "property": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 13,
+   "oracle": "ruststep-step-ap214-cc3-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-schema",
+    "property:mutate-set-product-identity",
+    "property:mutate-set-shape-representation",
+    "property:mutate-demote-shape-representation",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-schema",
+    "property:inverse-set-product-identity",
+    "property:inverse-set-shape-representation",
+    "property:inverse-demote-shape-representation",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📐️step",
+   "case": "mutate-step-ap214-cc4",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc4",
+   "scenarios": 13,
+   "byMode": {
+    "property": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 13,
+   "oracle": "ruststep-step-ap214-cc4-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-schema",
+    "property:mutate-set-product-identity",
+    "property:mutate-set-shape-representation",
+    "property:mutate-demote-shape-representation",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-schema",
+    "property:inverse-set-product-identity",
+    "property:inverse-set-shape-representation",
+    "property:inverse-demote-shape-representation",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📐️step",
+   "case": "mutate-step-ap214-cc5",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc5",
+   "scenarios": 13,
+   "byMode": {
+    "property": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 13,
+   "oracle": "ruststep-step-ap214-cc5-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-schema",
+    "property:mutate-set-product-identity",
+    "property:mutate-set-shape-representation",
+    "property:mutate-demote-shape-representation",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-schema",
+    "property:inverse-set-product-identity",
+    "property:inverse-set-shape-representation",
+    "property:inverse-demote-shape-representation",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎞️pptx",
+   "case": "mutate-pptx-ecma-376-strict",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376-strict",
+   "scenarios": 23,
+   "byMode": {
+    "differential": 11,
+    "property": 11,
+    "round-trip": 1
+   },
+   "nonDiff": 12,
+   "oracle": "pptx-ecma-376-strict-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-main-namespace",
+    "property:inverse-set-drawing-namespace",
+    "property:inverse-set-relationship-base",
+    "property:inverse-set-conformance-attribute",
+    "property:inverse-remove-conformance-attribute",
+    "property:inverse-insert-vml-part",
+    "property:inverse-remove-vml-part",
+    "property:inverse-insert-alternate-content",
+    "property:inverse-remove-alternate-content",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📜️docx",
+   "case": "mutate-docx-ecma-376-strict",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376-strict",
+   "scenarios": 21,
+   "byMode": {
+    "differential": 10,
+    "property": 10,
+    "round-trip": 1
+   },
+   "nonDiff": 11,
+   "oracle": "docx-ecma-376-strict-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-main-namespace",
+    "property:inverse-set-relationship-base",
+    "property:inverse-set-conformance-attribute",
+    "property:inverse-remove-conformance-attribute",
+    "property:inverse-insert-vml-part",
+    "property:inverse-remove-vml-part",
+    "property:inverse-insert-alternate-content",
+    "property:inverse-remove-alternate-content",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🏗️ifc",
+   "case": "mutate-ifc-2x3",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/mutate-ifc-2x3",
+   "scenarios": 11,
+   "byMode": {
+    "property": 10,
+    "round-trip": 1
+   },
+   "nonDiff": 11,
+   "oracle": "ruststep-ifc-2x3-any-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-upsert-instance",
+    "property:mutate-remove-instance",
+    "property:mutate-set-header",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-upsert-instance",
+    "property:inverse-remove-instance",
+    "property:inverse-set-header",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎥️mp4",
+   "case": "mutate-mp4-isobmff",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧪️tests/mutate-mp4-isobmff",
+   "scenarios": 21,
+   "byMode": {
+    "differential": 10,
+    "property": 10,
+    "round-trip": 1
+   },
+   "nonDiff": 11,
+   "oracle": "mp4-isobmff-mutate",
+   "ecosystem": "rust",
+   "pkg": "mp4",
+   "ver": "0.14",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-ftyp",
+    "property:inverse-insert-track",
+    "property:inverse-remove-track",
+    "property:inverse-set-track-dimensions",
+    "property:inverse-set-track-codec",
+    "property:inverse-insert-sample",
+    "property:inverse-remove-sample",
+    "property:inverse-set-sample-sync",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "☁️ply",
+   "case": "mutate-ply-1-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🧪️tests/mutate-ply-1-0",
+   "scenarios": 21,
+   "byMode": {
+    "differential": 10,
+    "property": 10,
+    "round-trip": 1
+   },
+   "nonDiff": 11,
+   "oracle": "ply-rs-ply-1-0-mutate",
+   "ecosystem": "rust",
+   "pkg": "ply-rs",
+   "ver": "0.1.3",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-format",
+    "property:inverse-insert-comment",
+    "property:inverse-remove-comment",
+    "property:inverse-add-element",
+    "property:inverse-remove-element",
+    "property:inverse-insert-row",
+    "property:inverse-remove-row",
+    "property:inverse-set-row-property",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📐️step",
+   "case": "mutate-step-ap214-cc1",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc1",
+   "scenarios": 11,
+   "byMode": {
+    "property": 10,
+    "round-trip": 1
+   },
+   "nonDiff": 11,
+   "oracle": "ruststep-step-ap214-cc1-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-schema",
+    "property:mutate-set-product-identity",
+    "property:mutate-remove-shape-representation",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-schema",
+    "property:inverse-set-product-identity",
+    "property:inverse-remove-shape-representation",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📐️step",
+   "case": "mutate-step-ap214-cc6",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧪️tests/mutate-step-ap214-cc6",
+   "scenarios": 11,
+   "byMode": {
+    "property": 10,
+    "round-trip": 1
+   },
+   "nonDiff": 11,
+   "oracle": "ruststep-step-ap214-cc6-mutate",
+   "ecosystem": "rust",
+   "pkg": "ruststep",
+   "ver": "0.4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:mutate-no-mutation",
+    "property:mutate-set-snapshot",
+    "property:mutate-set-file-schema",
+    "property:mutate-set-product-identity",
+    "property:mutate-set-shape-representation",
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-file-schema",
+    "property:inverse-set-product-identity",
+    "property:inverse-set-shape-representation",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎞️pptx",
+   "case": "mutate-pptx-ecma-376",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376",
+   "scenarios": 19,
+   "byMode": {
+    "differential": 9,
+    "property": 9,
+    "round-trip": 1
+   },
+   "nonDiff": 10,
+   "oracle": "pptx-ecma-376-mutate",
+   "ecosystem": "rust",
+   "pkg": "zip",
+   "ver": "6",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-insert-slide",
+    "property:inverse-remove-slide",
+    "property:inverse-move-slide",
+    "property:inverse-insert-shape",
+    "property:inverse-remove-shape",
+    "property:inverse-set-shape-text",
+    "property:inverse-set-shape-position",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📕️xlsx",
+   "case": "mutate-xlsx-ecma-376-strict",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376-strict",
+   "scenarios": 19,
+   "byMode": {
+    "differential": 9,
+    "property": 9,
+    "round-trip": 1
+   },
+   "nonDiff": 10,
+   "oracle": "xlsx-ecma-376-strict-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-main-namespace",
+    "property:inverse-set-relationships-namespace",
+    "property:inverse-set-conformance-attribute",
+    "property:inverse-remove-conformance-attribute",
+    "property:inverse-insert-vml-part",
+    "property:inverse-remove-vml-part",
+    "property:inverse-set-worksheet-content-type",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📰xml",
+   "case": "mutate-xml-1-0-valid",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧪️tests/mutate-xml-1-0-valid",
+   "scenarios": 19,
+   "byMode": {
+    "differential": 9,
+    "property": 9,
+    "round-trip": 1
+   },
+   "nonDiff": 10,
+   "oracle": "quick-xml-xml-1-0-valid-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-declare-doctype",
+    "property:inverse-rename-document-element",
+    "property:inverse-set-external-subset",
+    "property:inverse-set-standalone",
+    "property:inverse-declare-entity",
+    "property:inverse-set-internal-subset",
+    "property:inverse-set-text",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎒️zip",
+   "case": "mutate-zip-2-0-iso21320",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/mutate-zip-2-0-iso21320",
+   "scenarios": 17,
+   "byMode": {
+    "differential": 8,
+    "property": 8,
+    "round-trip": 1
+   },
+   "nonDiff": 9,
+   "oracle": "zip-2-0-iso21320-mutate",
+   "ecosystem": "rust",
+   "pkg": "zip",
+   "ver": "6",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-archive-comment",
+    "property:inverse-add-stored-entry",
+    "property:inverse-add-deflated-entry",
+    "property:inverse-remove-entry",
+    "property:inverse-rename-entry",
+    "property:inverse-set-entry-data",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🖼️bmp",
+   "case": "mutate-bmp-v3",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🧪️tests/mutate-bmp-v3",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 7,
+    "property": 7,
+    "round-trip": 1
+   },
+   "nonDiff": 8,
+   "oracle": "image-bmp-3-mutate",
+   "ecosystem": "rust",
+   "pkg": "image",
+   "ver": "0.25",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-header-fields",
+    "property:inverse-insert-palette-entry",
+    "property:inverse-remove-palette-entry",
+    "property:inverse-set-palette-entry",
+    "property:inverse-set-pixel-data",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧊️gltf",
+   "case": "mutate-gltf-2-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/mutate-gltf-2-0",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 7,
+    "property": 7,
+    "round-trip": 1
+   },
+   "nonDiff": 8,
+   "oracle": "json-rust-gltf-2-0-mutate",
+   "ecosystem": "rust",
+   "pkg": "json",
+   "ver": "0.12",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-bind-node-child",
+    "property:inverse-bind-scene-root-node",
+    "property:inverse-change-material-alpha-mode",
+    "property:inverse-change-material-double-sided",
+    "property:inverse-create-scene",
+    "property:inverse-unbind-node-child",
+    "property:inverse-unbind-scene-root-node",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎞️pptx",
+   "case": "mutate-pptx-ecma-376-transitional",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🧪️tests/mutate-pptx-ecma-376-transitional",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 7,
+    "property": 7,
+    "round-trip": 1
+   },
+   "nonDiff": 8,
+   "oracle": "pptx-ecma-376-transitional-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-main-namespace",
+    "property:inverse-set-drawing-namespace",
+    "property:inverse-set-relationship-base",
+    "property:inverse-set-conformance-attribute",
+    "property:inverse-remove-conformance-attribute",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📕️xlsx",
+   "case": "mutate-xlsx-ecma-376-transitional",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376-transitional",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 7,
+    "property": 7,
+    "round-trip": 1
+   },
+   "nonDiff": 8,
+   "oracle": "xlsx-ecma-376-transitional-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-main-namespace",
+    "property:inverse-set-relationships-namespace",
+    "property:inverse-set-conformance-attribute",
+    "property:inverse-remove-conformance-attribute",
+    "property:inverse-set-worksheet-content-type",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎒️zip",
+   "case": "mutate-zip-2-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/mutate-zip-2-0",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 7,
+    "property": 7,
+    "round-trip": 1
+   },
+   "nonDiff": 8,
+   "oracle": "zip-2-0-mutate",
+   "ecosystem": "rust",
+   "pkg": "zip",
+   "ver": "6",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-archive-comment",
+    "property:inverse-add-entry",
+    "property:inverse-remove-entry",
+    "property:inverse-rename-entry",
+    "property:inverse-set-entry-data",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📜️docx",
+   "case": "mutate-docx-ecma-376-transitional",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376-transitional",
+   "scenarios": 13,
+   "byMode": {
+    "differential": 6,
+    "property": 6,
+    "round-trip": 1
+   },
+   "nonDiff": 7,
+   "oracle": "docx-ecma-376-transitional-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-main-namespace",
+    "property:inverse-set-relationship-base",
+    "property:inverse-set-conformance-attribute",
+    "property:inverse-remove-conformance-attribute",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📝️md",
+   "case": "mutate-md-commonmark",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🧪️tests/mutate-md-commonmark",
+   "scenarios": 13,
+   "byMode": {
+    "differential": 6,
+    "property": 6,
+    "round-trip": 1
+   },
+   "nonDiff": 7,
+   "oracle": "comrak-md-commonmark-mutate",
+   "ecosystem": "rust",
+   "pkg": "comrak",
+   "ver": "0.54",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-insert-block",
+    "property:inverse-remove-block",
+    "property:inverse-replace-block",
+    "property:inverse-set-inlines",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🗜️deflate",
+   "case": "mutate-deflate-rfc1950",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🧪️tests/mutate-deflate-rfc1950",
+   "scenarios": 11,
+   "byMode": {
+    "differential": 5,
+    "property": 5,
+    "round-trip": 1
+   },
+   "nonDiff": 6,
+   "oracle": "flate2-deflate-rfc1950-mutate",
+   "ecosystem": "rust",
+   "pkg": "flate2",
+   "ver": "1",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-compression-params",
+    "property:inverse-set-preset-dictionary",
+    "property:inverse-set-payload",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎵️mp3",
+   "case": "mutate-mp3-mpeg1-layer3",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🧪️tests/mutate-mp3-mpeg1-layer3",
+   "scenarios": 11,
+   "byMode": {
+    "differential": 5,
+    "property": 5,
+    "round-trip": 1
+   },
+   "nonDiff": 6,
+   "oracle": "id3-mpeg1-layer3-mutate",
+   "ecosystem": "rust",
+   "pkg": "id3",
+   "ver": "1.17",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-id3v2",
+    "property:inverse-set-frames",
+    "property:inverse-set-id3v1",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🔊️wav",
+   "case": "mutate-wav-riff-pcm",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🧪️tests/mutate-wav-riff-pcm",
+   "scenarios": 11,
+   "byMode": {
+    "differential": 5,
+    "property": 5,
+    "round-trip": 1
+   },
+   "nonDiff": 6,
+   "oracle": "hound-wav-riff-pcm-mutate",
+   "ecosystem": "rust",
+   "pkg": "hound",
+   "ver": "3",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-fmt",
+    "property:inverse-set-data",
+    "property:inverse-set-other-chunks",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-4-a",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-a",
+   "scenarios": 9,
+   "byMode": {
+    "differential": 4,
+    "property": 4,
+    "round-trip": 1
+   },
+   "nonDiff": 5,
+   "oracle": "lopdf-pdf-1-4-a-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-page-text",
+    "property:inverse-clear-page-text",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-4-x",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4-x",
+   "scenarios": 9,
+   "byMode": {
+    "differential": 4,
+    "property": 4,
+    "round-trip": 1
+   },
+   "nonDiff": 5,
+   "oracle": "lopdf-pdf-1-4-x-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "property:inverse-no-mutation",
+    "property:inverse-set-snapshot",
+    "property:inverse-set-page-size",
+    "property:inverse-collapse-page-size",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📕️xlsx",
+   "case": "mutate-xlsx-ecma-376",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧪️tests/mutate-xlsx-ecma-376",
+   "scenarios": 21,
+   "byMode": {
+    "differential": 17,
+    "round-trip": 4
+   },
+   "nonDiff": 4,
+   "oracle": "xlsx-ecma-376-mutate",
+   "ecosystem": "rust",
+   "pkg": "calamine",
+   "ver": "0.36",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:mutate-insert-shared-string",
+    "round-trip:mutate-remove-shared-string",
+    "round-trip:mutate-set-shared-string",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🗜️deflate",
+   "case": "zlib-round-trip",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🧪️tests/zlib-round-trip",
+   "scenarios": 3,
+   "byMode": {
+    "round-trip": 3
+   },
+   "nonDiff": 3,
+   "oracle": "flate2",
+   "ecosystem": "rust",
+   "pkg": "flate2",
+   "ver": "1",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:inflates-what-the-reference-deflated",
+    "round-trip:handles-an-empty-payload",
+    "round-trip:handles-incompressible-bytes"
+   ]
+  },
+  {
+   "owner": "📷️png",
+   "case": "create-and-round-trip-png",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/create-and-round-trip-png",
+   "scenarios": 3,
+   "byMode": {
+    "round-trip": 3
+   },
+   "nonDiff": 3,
+   "oracle": "png",
+   "ecosystem": "rust",
+   "pkg": "png",
+   "ver": "0.18",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:rgba-gradient-round-trips",
+    "round-trip:non-square-image-round-trips",
+    "round-trip:single-pixel-round-trips"
+   ]
+  },
+  {
+   "owner": "🖼️bmp",
+   "case": "create-and-round-trip-bmp",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🧪️tests/create-and-round-trip-bmp",
+   "scenarios": 2,
+   "byMode": {
+    "round-trip": 2
+   },
+   "nonDiff": 2,
+   "oracle": "image-bmp",
+   "ecosystem": "rust",
+   "pkg": "image",
+   "ver": "0.25",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:gradient-round-trips",
+    "round-trip:non-square-round-trips"
+   ]
+  },
+  {
+   "owner": "🎞️gif",
+   "case": "create-and-round-trip-gif",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/create-and-round-trip-gif",
+   "scenarios": 2,
+   "byMode": {
+    "round-trip": 2
+   },
+   "nonDiff": 2,
+   "oracle": "gif",
+   "ecosystem": "rust",
+   "pkg": "gif",
+   "ver": "0.13",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:single-frame-round-trips",
+    "round-trip:non-square-frame-round-trips"
+   ]
+  },
+  {
+   "owner": "📷️jpg",
+   "case": "create-and-read-jpeg",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/create-and-read-jpeg",
+   "scenarios": 2,
+   "byMode": {
+    "round-trip": 2
+   },
+   "nonDiff": 2,
+   "oracle": "image-jpeg",
+   "ecosystem": "rust",
+   "pkg": "image",
+   "ver": "0.25",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:gradient-round-trips",
+    "round-trip:non-square-round-trips"
+   ]
+  },
+  {
+   "owner": "🔣️json",
+   "case": "mutate-json-rfc8259-i-json",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧪️tests/mutate-json-rfc8259-i-json",
+   "scenarios": 22,
+   "byMode": {
+    "differential": 20,
+    "conformance": 1,
+    "round-trip": 1
+   },
+   "nonDiff": 2,
+   "oracle": "simplejson-json-rfc8259-i-json-mutate",
+   "ecosystem": "python",
+   "pkg": "simplejson",
+   "ver": "4.1.1",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "conformance:i-json-conformance",
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧊️obj",
+   "case": "create-and-round-trip-obj",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🧪️tests/create-and-round-trip-obj",
+   "scenarios": 2,
+   "byMode": {
+    "round-trip": 2
+   },
+   "nonDiff": 2,
+   "oracle": "tobj",
+   "ecosystem": "rust",
+   "pkg": "tobj",
+   "ver": "4",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:tetrahedron-round-trips",
+    "round-trip:quad-round-trips"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "extract-text-pdf-1-4",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/extract-text-pdf-1-4",
+   "scenarios": 2,
+   "byMode": {
+    "conformance": 1,
+    "property": 1
+   },
+   "nonDiff": 2,
+   "oracle": "pypdf-pdf-1-4-text",
+   "ecosystem": "python",
+   "pkg": "pypdf",
+   "ver": "6.14.2",
+   "adapters": [
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "conformance:declared-pages-carry-their-printed-text",
+    "property:every-page-yields-text"
+   ]
+  },
+  {
+   "owner": "🟪️stl",
+   "case": "create-and-round-trip-stl",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🧪️tests/create-and-round-trip-stl",
+   "scenarios": 2,
+   "byMode": {
+    "round-trip": 2
+   },
+   "nonDiff": 2,
+   "oracle": "stl-io",
+   "ecosystem": "rust",
+   "pkg": "stl_io",
+   "ver": "0.8",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:tetrahedron-round-trips",
+    "round-trip:quad-round-trips"
+   ]
+  },
+  {
+   "owner": "🖼️tiff",
+   "case": "create-and-round-trip-tiff",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/create-and-round-trip-tiff",
+   "scenarios": 2,
+   "byMode": {
+    "round-trip": 2
+   },
+   "nonDiff": 2,
+   "oracle": "image-tiff",
+   "ecosystem": "rust",
+   "pkg": "image",
+   "ver": "0.25",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:gradient-round-trips",
+    "round-trip:non-square-round-trips"
+   ]
+  },
+  {
+   "owner": "🔊️wav",
+   "case": "create-and-retune-wave",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🧪️tests/create-and-retune-wave",
+   "scenarios": 3,
+   "byMode": {
+    "round-trip": 2,
+    "differential": 1
+   },
+   "nonDiff": 2,
+   "oracle": "hound",
+   "ecosystem": "rust",
+   "pkg": "hound",
+   "ver": "3",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:mono-sawtooth-round-trips",
+    "round-trip:stereo-round-trips"
+   ]
+  },
+  {
+   "owner": "🎒️zip",
+   "case": "create-and-edit-archive",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧪️tests/create-and-edit-archive",
+   "scenarios": 3,
+   "byMode": {
+    "round-trip": 2,
+    "differential": 1
+   },
+   "nonDiff": 2,
+   "oracle": "zip",
+   "ecosystem": "rust",
+   "pkg": "zip",
+   "ver": "6",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:three-members-round-trip",
+    "round-trip:empty-archive-round-trips"
+   ]
+  },
+  {
+   "owner": "🏛️program",
+   "case": "mutate-program-1",
+   "caseDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🧪️tests/mutate-program-1",
+   "scenarios": 533,
+   "byMode": {
+    "differential": 532,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "architect-program-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "◻2d",
+   "case": "mutate-block-2d-1",
+   "caseDir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🧪️tests/mutate-block-2d-1",
+   "scenarios": 79,
+   "byMode": {
+    "differential": 78,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "block-2d-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "◻2d",
+   "case": "mutate-fem2d-1",
+   "caseDir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🧪️tests/mutate-fem2d-1",
+   "scenarios": 76,
+   "byMode": {
+    "differential": 75,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "fem2d-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧊️3d",
+   "case": "mutate-fem3d-1",
+   "caseDir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🧪️tests/mutate-fem3d-1",
+   "scenarios": 76,
+   "byMode": {
+    "differential": 75,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "fem3d-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🗺️gismap",
+   "case": "mutate-gismap-1",
+   "caseDir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/mutate-gismap-1",
+   "scenarios": 37,
+   "byMode": {
+    "differential": 36,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "gismap-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🏔️gisterrain",
+   "case": "mutate-gisterrain-1",
+   "caseDir": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🧪️tests/mutate-gisterrain-1",
+   "scenarios": 7,
+   "byMode": {
+    "differential": 6,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "gisterrain-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📗️din16798",
+   "case": "mutate-din16798-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🧪️tests/mutate-din16798-1",
+   "scenarios": 125,
+   "byMode": {
+    "differential": 124,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "din16798-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📙️din18599",
+   "case": "mutate-din18599-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🧪️tests/mutate-din18599-1",
+   "scenarios": 27,
+   "byMode": {
+    "differential": 26,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "din18599-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📕️din4108",
+   "case": "mutate-din4108-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🧪️tests/mutate-din4108-1",
+   "scenarios": 45,
+   "byMode": {
+    "differential": 44,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "din4108-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1990",
+   "case": "mutate-en1990-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🧪️tests/mutate-en1990-1",
+   "scenarios": 21,
+   "byMode": {
+    "differential": 20,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1990-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1991",
+   "case": "mutate-en1991-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🧪️tests/mutate-en1991-1",
+   "scenarios": 65,
+   "byMode": {
+    "differential": 64,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1991-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1992",
+   "case": "mutate-en1992-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🧪️tests/mutate-en1992-1",
+   "scenarios": 71,
+   "byMode": {
+    "differential": 70,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1992-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1993",
+   "case": "mutate-en1993-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🧪️tests/mutate-en1993-1",
+   "scenarios": 35,
+   "byMode": {
+    "differential": 34,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1993-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1994",
+   "case": "mutate-en1994-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🧪️tests/mutate-en1994-1",
+   "scenarios": 45,
+   "byMode": {
+    "differential": 44,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1994-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1995",
+   "case": "mutate-en1995-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🧪️tests/mutate-en1995-1",
+   "scenarios": 41,
+   "byMode": {
+    "differential": 40,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1995-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1996",
+   "case": "mutate-en1996-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🧪️tests/mutate-en1996-1",
+   "scenarios": 45,
+   "byMode": {
+    "differential": 44,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1996-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1997",
+   "case": "mutate-en1997-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🧪️tests/mutate-en1997-1",
+   "scenarios": 45,
+   "byMode": {
+    "differential": 44,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1997-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1998",
+   "case": "mutate-en1998-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🧪️tests/mutate-en1998-1",
+   "scenarios": 99,
+   "byMode": {
+    "differential": 98,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1998-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📘️en1999",
+   "case": "mutate-en1999-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🧪️tests/mutate-en1999-1",
+   "scenarios": 53,
+   "byMode": {
+    "differential": 52,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "en1999-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📓️iso16757",
+   "case": "mutate-iso16757-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🧪️tests/mutate-iso16757-1",
+   "scenarios": 43,
+   "byMode": {
+    "differential": 42,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "iso16757-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📔️vdi3805",
+   "case": "mutate-vdi3805-1",
+   "caseDir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🧪️tests/mutate-vdi3805-1",
+   "scenarios": 39,
+   "byMode": {
+    "differential": 38,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "vdi3805-1-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🖨️raster",
+   "case": "mutate-raster-1",
+   "caseDir": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🧪️tests/mutate-raster-1",
+   "scenarios": 37,
+   "byMode": {
+    "differential": 36,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "raster-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🗂️curate",
+   "case": "mutate-curate-1",
+   "caseDir": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🧪️tests/mutate-curate-1",
+   "scenarios": 10,
+   "byMode": {
+    "differential": 9,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "curate-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📼️avi",
+   "case": "mutate-avi-1-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🧪️tests/mutate-avi-1-0",
+   "scenarios": 27,
+   "byMode": {
+    "differential": 26,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "riff-avi-1-0-mutate",
+   "ecosystem": "rust",
+   "pkg": "riff",
+   "ver": "2.0",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "💬️bcf",
+   "case": "mutate-bcf-2-1",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🧪️tests/mutate-bcf-2-1",
+   "scenarios": 29,
+   "byMode": {
+    "differential": 28,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "zip-quick-xml-bcf-2-1-mutate",
+   "ecosystem": "rust",
+   "pkg": "zip",
+   "ver": "6",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📊️csv",
+   "case": "mutate-csv-rfc4180",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🧪️tests/mutate-csv-rfc4180",
+   "scenarios": 13,
+   "byMode": {
+    "differential": 12,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "csv-rfc4180-mutate",
+   "ecosystem": "rust",
+   "pkg": "csv",
+   "ver": "1",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📜️docx",
+   "case": "mutate-docx-ecma-376",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧪️tests/mutate-docx-ecma-376",
+   "scenarios": 27,
+   "byMode": {
+    "differential": 26,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "zip-quick-xml-docx-ecma-376-mutate",
+   "ecosystem": "rust",
+   "pkg": "zip",
+   "ver": "6",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🖊️dxf",
+   "case": "mutate-dxf-r12",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🧪️tests/mutate-dxf-r12",
+   "scenarios": 39,
+   "byMode": {
+    "differential": 38,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "dxf-crate-r12-mutate",
+   "ecosystem": "rust",
+   "pkg": "dxf",
+   "ver": "0.6",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎞️gif",
+   "case": "mutate-gif-87a",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧪️tests/mutate-gif-87a",
+   "scenarios": 25,
+   "byMode": {
+    "differential": 24,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "gif-87a-mutate",
+   "ecosystem": "rust",
+   "pkg": "gif",
+   "ver": "0.13",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🌐️html",
+   "case": "mutate-html-5",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🧪️tests/mutate-html-5",
+   "scenarios": 21,
+   "byMode": {
+    "differential": 20,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "html5ever-html-5-mutate",
+   "ecosystem": "rust",
+   "pkg": "html5ever",
+   "ver": "0.39",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📷️jpg",
+   "case": "mutate-jpg-jfif-1-01",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01",
+   "scenarios": 25,
+   "byMode": {
+    "differential": 24,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "image-jpeg-jfif-1-01-mutate",
+   "ecosystem": "rust",
+   "pkg": "image",
+   "ver": "0.25",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🔣️json",
+   "case": "mutate-json-rfc8259",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🧪️tests/mutate-json-rfc8259",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 14,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "json-rust-rfc8259-mutate",
+   "ecosystem": "rust",
+   "pkg": "json",
+   "ver": "0.12",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "☁️las",
+   "case": "mutate-las-1-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🧪️tests/mutate-las-1-0",
+   "scenarios": 31,
+   "byMode": {
+    "differential": 30,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "las-1-0-any-mutate",
+   "ecosystem": "rust",
+   "pkg": "las",
+   "ver": "0.11",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-4",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-4",
+   "scenarios": 5,
+   "byMode": {
+    "differential": 4,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "lopdf-pdf-1-4-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📄️pdf",
+   "case": "mutate-pdf-1-7",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/mutate-pdf-1-7",
+   "scenarios": 37,
+   "byMode": {
+    "differential": 36,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "lopdf-pdf-1-7-mutate",
+   "ecosystem": "rust",
+   "pkg": "lopdf",
+   "ver": "0.44",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-animation",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-animation",
+   "scenarios": 40,
+   "byMode": {
+    "differential": 39,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-animation-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-audio",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-audio",
+   "scenarios": 31,
+   "byMode": {
+    "differential": 30,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-audio-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-brep",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep",
+   "scenarios": 40,
+   "byMode": {
+    "differential": 39,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-brep-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-cad",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-cad",
+   "scenarios": 49,
+   "byMode": {
+    "differential": 48,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-cad-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-document",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-document",
+   "scenarios": 55,
+   "byMode": {
+    "differential": 54,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-document-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-drawing",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-drawing",
+   "scenarios": 52,
+   "byMode": {
+    "differential": 51,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-drawing-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-flow",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-flow",
+   "scenarios": 40,
+   "byMode": {
+    "differential": 39,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-flow-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-graph",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-graph",
+   "scenarios": 34,
+   "byMode": {
+    "differential": 33,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-graph-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-image",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image",
+   "scenarios": 40,
+   "byMode": {
+    "differential": 39,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-image-python-pillow-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-kit",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-kit",
+   "scenarios": 46,
+   "byMode": {
+    "differential": 45,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-kit-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-mesh",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-mesh",
+   "scenarios": 52,
+   "byMode": {
+    "differential": 51,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-mesh-typescript-three-independent",
+   "ecosystem": "javascript",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "typescript"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-model",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-model",
+   "scenarios": 34,
+   "byMode": {
+    "differential": 33,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-model-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-object",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-object",
+   "scenarios": 28,
+   "byMode": {
+    "differential": 27,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-object-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-presentation",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-presentation",
+   "scenarios": 46,
+   "byMode": {
+    "differential": 45,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-presentation-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-table",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-table",
+   "scenarios": 26,
+   "byMode": {
+    "differential": 25,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-table-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-text",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text",
+   "scenarios": 22,
+   "byMode": {
+    "differential": 21,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-text-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-value",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-value",
+   "scenarios": 29,
+   "byMode": {
+    "differential": 28,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-value-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🧿️semio",
+   "case": "mutate-semio-video",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-video",
+   "scenarios": 28,
+   "byMode": {
+    "differential": 27,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "semio-video-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": null,
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🟪️stl",
+   "case": "mutate-stl-ascii",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🧪️tests/mutate-stl-ascii",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 14,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "stl-io-ascii-mutate",
+   "ecosystem": "rust",
+   "pkg": "stl_io",
+   "ver": "0.8",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎨️svg",
+   "case": "mutate-svg-1-1",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1",
+   "scenarios": 23,
+   "byMode": {
+    "differential": 22,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "quick-xml-svg-1-1-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎨️svg",
+   "case": "mutate-svg-1-1-basic",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-basic",
+   "scenarios": 23,
+   "byMode": {
+    "differential": 22,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "quick-xml-svg-1-1-basic-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🎨️svg",
+   "case": "mutate-svg-1-1-tiny",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-tiny",
+   "scenarios": 21,
+   "byMode": {
+    "differential": 20,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "quick-xml-svg-1-1-tiny-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🖼️tiff",
+   "case": "mutate-tiff-6-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0",
+   "scenarios": 17,
+   "byMode": {
+    "differential": 16,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "image-tiff-6-0-mutate",
+   "ecosystem": "rust",
+   "pkg": "image",
+   "ver": "0.25",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📑️tsv",
+   "case": "mutate-tsv-iana",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🧪️tests/mutate-tsv-iana",
+   "scenarios": 15,
+   "byMode": {
+    "differential": 14,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "tsv-iana-mutate",
+   "ecosystem": "rust",
+   "pkg": "csv",
+   "ver": "1",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "📰xml",
+   "case": "mutate-xml-1-0",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🧪️tests/mutate-xml-1-0",
+   "scenarios": 17,
+   "byMode": {
+    "differential": 16,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "quick-xml-1-0-mutate",
+   "ecosystem": "rust",
+   "pkg": "quick-xml",
+   "ver": "0.42",
+   "adapters": [
+    "rust"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "🔌️jack",
+   "case": "mutate-jack-1",
+   "caseDir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/mutate-jack-1",
+   "scenarios": 25,
+   "byMode": {
+    "differential": 24,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "jack-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  },
+  {
+   "owner": "♻️rewrite",
+   "case": "mutate-rewrite-1",
+   "caseDir": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🧪️tests/mutate-rewrite-1",
+   "scenarios": 22,
+   "byMode": {
+    "differential": 21,
+    "round-trip": 1
+   },
+   "nonDiff": 1,
+   "oracle": "rewrite-python-independent",
+   "ecosystem": "python",
+   "pkg": "",
+   "ver": "",
+   "adapters": [
+    "rust",
+    "python"
+   ],
+   "nonDiffScenarios": [
+    "round-trip:identity-round-trip"
+   ]
+  }
+ ]
+}

@@ -18,13 +18,13 @@ pub struct UpdateSiloShellInputs {
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateSiloShellInputs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "silo-shell-inputs", kind: "update-silo-shell-inputs", record: "UpdatedSiloShellInputs" };
 
-    async fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+    fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Update EN 1993-1-6/-4-1 shell and silo wall inputs".to_string()
     }
 }

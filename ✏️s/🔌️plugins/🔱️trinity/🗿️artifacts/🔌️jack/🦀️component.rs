@@ -172,21 +172,21 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schem
 /// `📓️wave4-reports/dag-report.md`).
 const JACK_NODE_JSON_PROPERTY: &str = "jack.node";
 
-async fn semio_port_kind_from_direction(direction: PortDirection) -> SemioGraphPortKind {
+fn semio_port_kind_from_direction(direction: PortDirection) -> SemioGraphPortKind {
     match direction {
         PortDirection::In => SemioGraphPortKind::In,
         PortDirection::Out => SemioGraphPortKind::Out,
     }
 }
 
-async fn port_direction_from_semio_port_kind(kind: SemioGraphPortKind) -> PortDirection {
+fn port_direction_from_semio_port_kind(kind: SemioGraphPortKind) -> PortDirection {
     match kind {
         SemioGraphPortKind::In | SemioGraphPortKind::InOut => PortDirection::In,
         SemioGraphPortKind::Out => PortDirection::Out,
     }
 }
 
-async fn semio_node_from_jack_node(node: &Node) -> SemioGraphNode {
+fn semio_node_from_jack_node(node: &Node) -> SemioGraphNode {
     let ports = node.ports.iter().map(|port| SemioGraphPort { name: port.id.clone(), kind: semio_port_kind_from_direction(port.direction) }).collect();
     SemioGraphNode {
         id: SemioGraphNodeId::new(node.id.clone()),
@@ -202,7 +202,7 @@ async fn semio_node_from_jack_node(node: &Node) -> SemioGraphNode {
 /// JSON property. Falls back to a minimal node built from the graph-native `id`/`kind`/`label`/
 /// `position`/`ports` fields only if the property is missing (content authored outside this plugin,
 /// e.g. a hand-written `graph` doc) — never panics.
-async fn jack_node_from_semio_node(node: &SemioGraphNode) -> Node {
+fn jack_node_from_semio_node(node: &SemioGraphNode) -> Node {
     for property in &node.properties {
         if property.key == JACK_NODE_JSON_PROPERTY {
             if let SemioValue::Str { value } = &property.value {
@@ -231,7 +231,7 @@ async fn jack_node_from_semio_node(node: &SemioGraphNode) -> Node {
 /// source of truth on decode. `source`/`target`/`kind` are also projected onto their native fields
 /// (node-id only, port suffix stripped via [`crate::artifacts::jack::port_node_id`]) for genuine
 /// graph-shape tooling.
-async fn semio_edge_from_jack_edge(edge: &Edge) -> SemioGraphEdge {
+fn semio_edge_from_jack_edge(edge: &Edge) -> SemioGraphEdge {
     let source_node = port_node_id(&edge.source).unwrap_or(&edge.source);
     let target_node = port_node_id(&edge.target).unwrap_or(&edge.target);
     SemioGraphEdge {
@@ -245,26 +245,26 @@ async fn semio_edge_from_jack_edge(edge: &Edge) -> SemioGraphEdge {
 
 /// 🌉 Inverse of [`semio_edge_from_jack_edge`] — falls back to a bare node-id (no port qualifier)
 /// edge if `label` isn't valid `Edge` JSON (content authored outside this plugin) — never panics.
-async fn jack_edge_from_semio_edge(edge: &SemioGraphEdge) -> Edge {
+fn jack_edge_from_semio_edge(edge: &SemioGraphEdge) -> Edge {
     serde_json::from_str::<Edge>(&edge.label).unwrap_or_else(|_| Edge { id: edge.id.value.clone(), kind: edge.kind.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), properties: PropertyBag::new() })
 }
 
 /// 🌉 REAL bidirectional converter between jack's own live `Node`/`Edge` editing state and the
 /// composed child's `SemioGraphSnapshot` node/edge graph (the "ModelBridge"/"DocumentBridge" pattern
 /// — see `📓️wave3-reports/cad-report.md` and `📓️wave4-reports/dag-report.md`).
-pub async fn jack_content_snapshot_from_working(nodes: &[Node], edges: &[Edge]) -> SemioGraphSnapshot {
+pub fn jack_content_snapshot_from_working(nodes: &[Node], edges: &[Edge]) -> SemioGraphSnapshot {
     SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(semio_node_from_jack_node).collect(), edges: edges.iter().map(semio_edge_from_jack_edge).collect() }
 }
 
 /// 🌉 Inverse of [`jack_content_snapshot_from_working`].
-pub async fn working_from_jack_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<Node>, Vec<Edge>) {
+pub fn working_from_jack_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<Node>, Vec<Edge>) {
     (content.nodes.iter().map(jack_node_from_semio_node).collect(), content.edges.iter().map(jack_edge_from_semio_edge).collect())
 }
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the jack content — same `(child_id, target)`
 /// for identical `(nodes, edges)`, a different pair once the content actually changes; mirrors
 /// `dag_content_child_handle`/`flow_content_child_handle`/`document_child_handle`.
-pub async fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentChild {
+pub fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = jack_content_snapshot_from_working(nodes, edges);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -307,20 +307,20 @@ thread_local! {
 /// 📝 Seeds the scratch cache for a handle — call whenever new nodes/edges content is about to become
 /// a document's `content` field (every mutation-diff/fixture builder in this plugin does, via
 /// [`jack_content_child_handle_and_cache`]).
-pub async fn cache_jack_content(child_id: &str, nodes: Vec<Node>, edges: Vec<Edge>) {
+pub fn cache_jack_content(child_id: &str, nodes: Vec<Node>, edges: Vec<Edge>) {
     JACK_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), JackWorkingScene { nodes, edges }));
 }
 
 /// 🔎 Reads the cached live scene for a content child handle — an empty scene (never a panic) when
 /// nothing has cached it yet.
-pub async fn jack_working_scene_for_handle(handle: &JackContentChild) -> JackWorkingScene {
+pub fn jack_working_scene_for_handle(handle: &JackContentChild) -> JackWorkingScene {
     JACK_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned()).unwrap_or_default()
 }
 
 /// 🔎 Reads the current document's live nodes/edges off its `content` child handle — the single read
 /// call site every mutation diff/inverse/app command in this plugin uses instead of the old
 /// `snapshot.nodes`/`.edges` field access.
-pub async fn jack_working_scene(snapshot: &JackSnapshot) -> JackWorkingScene {
+pub fn jack_working_scene(snapshot: &JackSnapshot) -> JackWorkingScene {
     jack_working_scene_for_handle(&snapshot.content)
 }
 
@@ -328,7 +328,7 @@ pub async fn jack_working_scene(snapshot: &JackSnapshot) -> JackWorkingScene {
 /// the standard way every mutation-diff/fixture builder in this plugin creates a `content` field
 /// value; never construct a handle without also caching, or [`jack_working_scene`] will read back
 /// empty.
-pub async fn jack_content_child_handle_and_cache(nodes: Vec<Node>, edges: Vec<Edge>) -> JackContentChild {
+pub fn jack_content_child_handle_and_cache(nodes: Vec<Node>, edges: Vec<Edge>) -> JackContentChild {
     let handle = jack_content_child_handle(&nodes, &edges);
     cache_jack_content(&handle.child_id, nodes, edges);
     handle
@@ -399,7 +399,7 @@ pub use super::snapshot::schema::JackSnapshot;
 impl JackSnapshot {
     pub const SCHEMA: &'static str = "trinity.graph";
 
-    pub async fn validate_schema(&self) -> Result<(), TrinityRamError> {
+    pub fn validate_schema(&self) -> Result<(), TrinityRamError> {
         if self.schema != Self::SCHEMA {
             return Err(TrinityRamError::SchemaMismatch { expected: Self::SCHEMA, actual: self.schema.clone() });
         }
@@ -413,7 +413,7 @@ impl JackSnapshot {
     /// matching the same "wire format carries real content, not just the handle" fix the hand-rolled
     /// `ArtifactDsl`/`ArtifactPack` codecs use (see `📸️snapshot/📝️text/🦀️component.rs`'s own doc
     /// comment for the full rationale).
-    pub async fn to_json(&self) -> Result<String, TrinityRamError> {
+    pub fn to_json(&self) -> Result<String, TrinityRamError> {
         let scene = jack_working_scene(self);
         let value = serde_json::json!({
             "schema": self.schema,
@@ -427,7 +427,7 @@ impl JackSnapshot {
         Ok(serde_json::to_string_pretty(&value)?)
     }
 
-    pub async fn resolve_manifest(&mut self) -> Result<(), TrinityRamError> {
+    pub fn resolve_manifest(&mut self) -> Result<(), TrinityRamError> {
         if let Some(id) = self.manifest_id.as_deref() {
             self.manifest = manifest_by_id(id).ok_or_else(|| TrinityRamError::UnknownManifestId(id.to_string()))?.to_trinity_manifest();
             return Ok(());
@@ -441,7 +441,7 @@ impl JackSnapshot {
     /// 📥️ Inverse of [`Self::to_json`] — parses the real `nodes`/`edges` JSON arrays and mints+caches
     /// a fresh content-addressed handle from them (deterministic: identical `(nodes, edges)` always
     /// re-derives the same handle, so peers replaying the same JSON text converge).
-    pub async fn from_json(json: &str) -> Result<Self, TrinityRamError> {
+    pub fn from_json(json: &str) -> Result<Self, TrinityRamError> {
         let value: serde_json::Value = serde_json::from_str(json)?;
         let schema = value.get("schema").and_then(|v| v.as_str()).unwrap_or_default().to_string();
         let name = value.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string();
@@ -460,18 +460,18 @@ impl JackSnapshot {
     /// — mints+caches the composed content child so every existing fixture-builder call site becomes
     /// a mechanical `JackSnapshot { .., nodes, edges, .. }` → `JackSnapshot::with_content(.., nodes,
     /// edges, ..)` rewrite instead of a hand-rolled handle mint at each site.
-    pub async fn with_content(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, nodes: Vec<Node>, edges: Vec<Edge>, root_node_id: Option<String>) -> Self {
+    pub fn with_content(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, nodes: Vec<Node>, edges: Vec<Edge>, root_node_id: Option<String>) -> Self {
         Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_handle_and_cache(nodes, edges), root_node_id }
     }
 
     /// 🔎 Live node list, read through the working-scene cache — replaces the old direct `.nodes`
     /// field access (see `🔖️WorkingScene`'s module doc for why this indirection exists).
-    pub async fn nodes(&self) -> Vec<Node> {
+    pub fn nodes(&self) -> Vec<Node> {
         jack_working_scene(self).nodes
     }
 
     /// 🔎 Live edge list, read through the working-scene cache.
-    pub async fn edges(&self) -> Vec<Edge> {
+    pub fn edges(&self) -> Vec<Edge> {
         jack_working_scene(self).edges
     }
 }
@@ -488,7 +488,7 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub async fn from_fixture(mut fixture: JackSnapshot) -> Result<Self, TrinityRamError> {
+    pub fn from_fixture(mut fixture: JackSnapshot) -> Result<Self, TrinityRamError> {
         fixture.validate_schema()?;
         fixture.resolve_manifest()?;
         if let Some(id) = fixture.manifest_id.as_deref() {
@@ -508,7 +508,7 @@ impl Graph {
         Ok(Self { name: fixture.name, manifest: fixture.manifest, camera: fixture.camera, nodes, edges, root_node_id: fixture.root_node_id })
     }
 
-    pub async fn to_fixture(&self) -> JackSnapshot {
+    pub fn to_fixture(&self) -> JackSnapshot {
         JackSnapshot::with_content(
             JackSnapshot::SCHEMA.to_string(),
             self.name.clone(),
@@ -521,39 +521,39 @@ impl Graph {
         )
     }
 
-    pub async fn load_json(json: &str) -> Result<Self, TrinityRamError> {
+    pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
         Self::from_fixture(JackSnapshot::from_json(json)?)
     }
 
-    pub async fn fixture_json(&self) -> Result<String, TrinityRamError> {
+    pub fn fixture_json(&self) -> Result<String, TrinityRamError> {
         self.to_fixture().to_json()
     }
 
     /// 🧩️ Build a `trinity.graph` fixture containing only the given node and edge ids.
-    pub async fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> JackSnapshot {
+    pub fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> JackSnapshot {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
         let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
         JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), format!("{} subgraph", self.name), Some("nakagin".into()), self.manifest.clone(), self.camera.clone(), nodes, edges, root_node_id)
     }
 
-    pub async fn node(&self, id: &str) -> Option<&Node> {
+    pub fn node(&self, id: &str) -> Option<&Node> {
         self.nodes.get(id)
     }
 
-    pub async fn node_mut(&mut self, id: &str) -> Option<&mut Node> {
+    pub fn node_mut(&mut self, id: &str) -> Option<&mut Node> {
         self.nodes.get_mut(id)
     }
 
-    pub async fn edge(&self, id: &str) -> Option<&Edge> {
+    pub fn edge(&self, id: &str) -> Option<&Edge> {
         self.edges.get(id)
     }
 
-    pub async fn add_node(&mut self, node: Node) {
+    pub fn add_node(&mut self, node: Node) {
         self.nodes.insert(node.id.clone(), node);
     }
 
-    pub async fn remove_node(&mut self, id: &str) -> bool {
+    pub fn remove_node(&mut self, id: &str) -> bool {
         if self.nodes.remove(id).is_none() {
             return false;
         }
@@ -567,15 +567,15 @@ impl Graph {
         true
     }
 
-    pub async fn add_edge(&mut self, edge: Edge) {
+    pub fn add_edge(&mut self, edge: Edge) {
         self.edges.insert(edge.id.clone(), edge);
     }
 
-    pub async fn remove_edge(&mut self, id: &str) -> bool {
+    pub fn remove_edge(&mut self, id: &str) -> bool {
         self.edges.remove(id).is_some()
     }
 
-    pub async fn set_property(&mut self, entity: EntityRef, key: &str, value: PropertyValue) -> Result<(), TrinityRamError> {
+    pub fn set_property(&mut self, entity: EntityRef, key: &str, value: PropertyValue) -> Result<(), TrinityRamError> {
         match entity {
             EntityRef::Node(id) => {
                 let node = self.nodes.get_mut(&id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
@@ -591,7 +591,7 @@ impl Graph {
 }
 
 /// 🛡️ Validates trinity fixture instances against a compile-time graph manifest.
-async fn validate_trinity_fixture(gm: &GraphManifest, fixture: &JackSnapshot) -> Result<(), TrinityRamError> {
+fn validate_trinity_fixture(gm: &GraphManifest, fixture: &JackSnapshot) -> Result<(), TrinityRamError> {
     let validator = ManifestValidator::new(gm);
     let scene = jack_working_scene(fixture);
     for node in &scene.nodes {
@@ -622,7 +622,7 @@ pub enum EntityRef {
 }
 
 /// 🔑️ Parse `nodeId@portId` port key (`@` is the unified syntax's one port sigil — `:` is reserved for typing).
-pub async fn parse_port_key(key: &str) -> Option<(&str, &str)> {
+pub fn parse_port_key(key: &str) -> Option<(&str, &str)> {
     let (node, port) = key.split_once('@')?;
     if node.is_empty() || port.is_empty() {
         return None;
@@ -631,17 +631,17 @@ pub async fn parse_port_key(key: &str) -> Option<(&str, &str)> {
 }
 
 /// 🧩️ Node id from a port key.
-pub async fn port_node_id(key: &str) -> Option<&str> {
+pub fn port_node_id(key: &str) -> Option<&str> {
     parse_port_key(key).map(|(n, _)| n)
 }
 
 /// 🔌️ Port id from a port key.
-pub async fn port_port_id(key: &str) -> Option<&str> {
+pub fn port_port_id(key: &str) -> Option<&str> {
     parse_port_key(key).map(|(_, p)| p)
 }
 
 /// 🏗️ Build a port key.
-pub async fn port_key(node_id: &str, port_id: &str) -> String {
+pub fn port_key(node_id: &str, port_id: &str) -> String {
     format!("{node_id}@{port_id}")
 }
 
@@ -656,7 +656,7 @@ pub const TRINITY_GRAPH_SCHEMA: &str = JackSnapshot::SCHEMA;
 /// `s.trinity.jack@1/*#editor` / `s.trinity.jack@1/*#viewer` (contract §1 grammar).
 pub const TRINITY_JACK_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.trinity.jack", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
-pub async fn empty_trinity_graph_fixture() -> JackSnapshot {
+pub fn empty_trinity_graph_fixture() -> JackSnapshot {
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), Vec::new(), Vec::new(), None)
 }
 
@@ -755,7 +755,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `crate::editor::jack::config::schema::register_app_schema()` is the one exception, kept alive via
 /// the plugin root's own narrowed `.setup()`: it registers the `TrinityJackPlayApp` CONFIG/PRESENCE
 /// schema, an app-scope concern neither the old nor the new declaration type has a field for.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -817,7 +817,7 @@ mod tests {
     use crate::artifacts::jack::op::{dispatch_trinity_graph_mutations, validate_trinity_graph_operation};
     use store::ArtifactCommand;
 
-    async fn mini_fixture() -> JackSnapshot {
+    fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),

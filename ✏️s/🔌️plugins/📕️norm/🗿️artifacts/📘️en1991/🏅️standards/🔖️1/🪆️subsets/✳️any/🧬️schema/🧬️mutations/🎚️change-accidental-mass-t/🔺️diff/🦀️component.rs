@@ -4,7 +4,7 @@ use super::mutation::ChangeAccidentalMassT;
 use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeAccidentalMassT, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+pub fn diff(payload: &ChangeAccidentalMassT, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if !payload.new_accidental_mass_t.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Accidental mass t must be a finite number.", Vec::<String>::new());
     }

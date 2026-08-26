@@ -2819,11 +2819,10 @@ pub mod ui {
         canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal,
         canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc, encode as encode_surface_doc, world3d_snapshot_abort_write, world3d_snapshot_abort_write_step,
         world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page,
-        world3d_snapshot_write_terminal_is_empty,
-        BlockListScene, Board2dScene, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, DiffViewScene, EventFeedScene,
-        GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord,
-        NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor, World3dSnapshotFault, World3dSnapshotItem,
-        World3dSnapshotDrawPermit, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken,
+        world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken,
+        DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+        NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene,
+        World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

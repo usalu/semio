@@ -53,7 +53,7 @@ pub struct Din4108Artifact {
 //#region 🔖️Conversions
 impl Din4108Artifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::din4108::Din4108Snapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::din4108::Din4108Snapshot {
         crate::artifacts::din4108::Din4108Snapshot {
             category: self.category.clone(),
             layers: self.layers.clone(),
@@ -77,7 +77,7 @@ impl Din4108Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::din4108::Din4108Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::din4108::Din4108Snapshot) -> Self {
         Self {
             category: snapshot.category.clone(),
             layers: snapshot.layers.clone(),
@@ -101,7 +101,7 @@ impl Din4108Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::din4108::Din4108Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::din4108::Din4108Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -112,7 +112,7 @@ impl Din4108Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.din4108` — twenty handcrafted schema leaves.
-pub async fn din4108_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn din4108_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.din4108",
         artifact: schema::FacetLeaves {
@@ -161,19 +161,19 @@ pub mod derived_construction {
         type Snapshot = Din4108Snapshot;
         type Mutation = Din4108Mutation;
         type Diff = Din4108Diff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: Din4108Snapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Din4108Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Din4108Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -181,12 +181,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <Din4108Diff as protocol::MutationDiff<Din4108Snapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -214,11 +214,11 @@ pub mod derived_analysis {
         type Parts = Din4108Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.din4108", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Din4108Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -301,7 +301,7 @@ pub mod part_1 {
     }
 
     /// 📋️ Human-readable scope statement per part (DIN 4108-1 definitions).
-    pub async fn part_scope(part: NormPart) -> &'static str {
+    pub fn part_scope(part: NormPart) -> &'static str {
         match part {
             NormPart::Part1 => "definitions, symbols, and applicability of the DIN 4108 series",
             NormPart::Part2 => "minimum thermal protection requirements for heated buildings",
@@ -315,7 +315,7 @@ pub mod part_1 {
     }
 
     /// ✅️ Whether a DIN 4108 part applies to the given building element.
-    pub async fn applies_to_element(part: NormPart, element: BuildingElement) -> bool {
+    pub fn applies_to_element(part: NormPart, element: BuildingElement) -> bool {
         match part {
             NormPart::Part1 | NormPart::Part8 => true,
             NormPart::Part7 => !matches!(element, BuildingElement::Window),
@@ -329,7 +329,7 @@ pub mod part_1 {
     }
 
     /// 📑️ Clause trace for scope verification.
-    pub async fn scope_check(part: NormPart, element: BuildingElement) -> CheckResult {
+    pub fn scope_check(part: NormPart, element: BuildingElement) -> CheckResult {
         let applies = applies_to_element(part, element);
         CheckResult {
             clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
@@ -346,7 +346,7 @@ pub mod part_1 {
     pub const U_VALUE_PLAUSIBLE_MAX_W_M2K: f64 = 5.0;
 
     /// ✅️ Basic input-plausibility validation for an envelope Document (λ>0, R_T>0, U within a sane range), replacing DIN 4108-1's withdrawn definitions role.
-    pub async fn check_input_plausibility(layers: &[part_2::Layer], u_value: f64) -> CheckResult {
+    pub fn check_input_plausibility(layers: &[part_2::Layer], u_value: f64) -> CheckResult {
         if layers.is_empty() {
             return CheckResult {
                 clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
@@ -397,7 +397,7 @@ pub mod part_2 {
     }
 
     /// 📐️ Total thermal resistance R_T = R_si + Σ(d/λ) + R_se [m²K/W].
-    pub async fn total_resistance(layers: &[Layer], r_si: f64, r_se: f64) -> f64 {
+    pub fn total_resistance(layers: &[Layer], r_si: f64, r_se: f64) -> f64 {
         let mut r = r_si + r_se;
         for layer in layers {
             if layer.lambda_w_mk > 0.0 {
@@ -408,14 +408,14 @@ pub mod part_2 {
     }
 
     /// 📉️ U-value from resistance [W/(m²K)].
-    pub async fn u_value_from_resistance(r_total: f64) -> f64 {
+    pub fn u_value_from_resistance(r_total: f64) -> f64 {
         if r_total <= 0.0 {
             return f64::INFINITY;
         }
         1.0 / r_total
     }
 
-    async fn base_limit_u_w_m2k(category: BuildingCategory) -> f64 {
+    fn base_limit_u_w_m2k(category: BuildingCategory) -> f64 {
         match category {
             BuildingCategory::Residential => 0.28,
             BuildingCategory::Office => 0.28,
@@ -425,7 +425,7 @@ pub mod part_2 {
     }
 
     /// 🌡️ Climate-adjusted U-limit: colder zones (higher HDD) allow slightly higher U [W/(m²K)].
-    pub async fn climate_adjusted_u_limit(category: BuildingCategory, climate: ClimateZoneDe) -> f64 {
+    pub fn climate_adjusted_u_limit(category: BuildingCategory, climate: ClimateZoneDe) -> f64 {
         let base = base_limit_u_w_m2k(category);
         let hdd = climate.heating_degree_days();
         let table = [TableEntry1D { x: 2000.0, y: 1.00 }, TableEntry1D { x: 2600.0, y: 1.03 }, TableEntry1D { x: 3200.0, y: 1.06 }, TableEntry1D { x: 3800.0, y: 1.10 }];
@@ -433,7 +433,7 @@ pub mod part_2 {
     }
 
     /// ✅️ Check minimum thermal protection per DIN 4108-2 §4.
-    pub async fn check_minimum_thermal_protection(category: BuildingCategory, layers: &[Layer], climate: ClimateZoneDe) -> Result<CheckResult, NormError> {
+    pub fn check_minimum_thermal_protection(category: BuildingCategory, layers: &[Layer], climate: ClimateZoneDe) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
             return Err(NormError::IncompleteInput { field: "layers".into() });
         }
@@ -458,12 +458,12 @@ pub mod part_3 {
     }
 
     /// 🌫️ Saturation vapor pressure via Magnus formula [Pa], T in °C.
-    pub async fn saturation_vapor_pressure_pa(t_c: f64) -> f64 {
+    pub fn saturation_vapor_pressure_pa(t_c: f64) -> f64 {
         611.2 * (17.67 * t_c / (t_c + 243.5)).exp()
     }
 
     /// 💧️ Vapor diffusion resistance R_μ = d / (μ · λ) [m²·h·Pa/kg].
-    pub async fn vapor_resistance(layer: &MoistureLayer) -> f64 {
+    pub fn vapor_resistance(layer: &MoistureLayer) -> f64 {
         if layer.mu <= 0.0 || layer.lambda_w_mk <= 0.0 {
             return f64::INFINITY;
         }
@@ -471,7 +471,7 @@ pub mod part_3 {
     }
 
     /// 🌡️ Temperature at each layer interface [°C], including interior and exterior surfaces.
-    pub async fn interface_temperatures_c(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64) -> Vec<f64> {
+    pub fn interface_temperatures_c(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64) -> Vec<f64> {
         let r_layers: Vec<f64> = layers.iter().map(|l| if l.lambda_w_mk > 0.0 { l.thickness_m / l.lambda_w_mk } else { 0.0 }).collect();
         let r_total: f64 = r_si + r_se + r_layers.iter().sum::<f64>();
         let mut temps = Vec::with_capacity(layers.len() + 1);
@@ -485,7 +485,7 @@ pub mod part_3 {
     }
 
     /// 💧️ Vapor pressure at each interface [Pa] assuming linear drop through R_μ.
-    pub async fn interface_vapor_pressures_pa(layers: &[MoistureLayer], t_int_c: f64, rh_int: f64) -> Vec<f64> {
+    pub fn interface_vapor_pressures_pa(layers: &[MoistureLayer], t_int_c: f64, rh_int: f64) -> Vec<f64> {
         let p_int = rh_int * saturation_vapor_pressure_pa(t_int_c);
         let r_mu: Vec<f64> = layers.iter().map(vapor_resistance).collect();
         let r_mu_total: f64 = r_mu.iter().sum();
@@ -504,7 +504,7 @@ pub mod part_3 {
     }
 
     /// 🧊️ Dew-point temperature from vapor pressure via inverse Magnus [°C].
-    pub async fn dew_point_temperature_c(vapor_pressure_pa: f64) -> f64 {
+    pub fn dew_point_temperature_c(vapor_pressure_pa: f64) -> f64 {
         if vapor_pressure_pa <= 0.0 {
             return -273.15;
         }
@@ -513,14 +513,14 @@ pub mod part_3 {
     }
 
     /// ❄️ True when condensation risk exists at any interface (Glaser steady-state).
-    pub async fn condensation_at_interfaces(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> bool {
+    pub fn condensation_at_interfaces(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> bool {
         let temps = interface_temperatures_c(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, t_int_c, t_ext_c);
         let pressures = interface_vapor_pressures_pa(layers, t_int_c, rh_int);
         temps.iter().zip(pressures.iter()).any(|(&t, &p)| p > saturation_vapor_pressure_pa(t) + 1.0)
     }
 
     /// 🌡️ Interior surface temperature factor f_Rsi with DIN 4108-3 humidity correction.
-    pub async fn interior_surface_temperature_factor(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64, rh_int: f64) -> f64 {
+    pub fn interior_surface_temperature_factor(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64, rh_int: f64) -> f64 {
         let mut r_total = r_si + r_se;
         for layer in layers {
             if layer.lambda_w_mk > 0.0 {
@@ -538,7 +538,7 @@ pub mod part_3 {
     }
 
     /// ✅️ Check interior surface temperature factor against limit 0.25 (DIN 4108-3).
-    pub async fn check_surface_temperature(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> Result<CheckResult, NormError> {
+    pub fn check_surface_temperature(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
             return Err(NormError::IncompleteInput { field: "layers".into() });
         }
@@ -553,7 +553,7 @@ pub mod part_3 {
     }
 
     /// ✅️ Glaser dew-point check at every layer interface (DIN 4108-3).
-    pub async fn check_glaser_moisture(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> Result<CheckResult, NormError> {
+    pub fn check_glaser_moisture(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
             return Err(NormError::IncompleteInput { field: "layers".into() });
         }
@@ -582,7 +582,7 @@ pub mod part_4 {
     }
 
     /// 📋️ Lookup material design values by identifier.
-    pub async fn material_design(material: &str) -> Result<MaterialDesign, NormError> {
+    pub fn material_design(material: &str) -> Result<MaterialDesign, NormError> {
         let props = match material {
             "mineral_wool" => MaterialDesign { lambda_dry_w_mk: 0.035, moisture_factor: 1.10 },
             "glass_wool" => MaterialDesign { lambda_dry_w_mk: 0.037, moisture_factor: 1.10 },
@@ -609,18 +609,18 @@ pub mod part_4 {
     }
 
     /// 📊️ Design thermal conductivity λ = λ_dry · moisture_factor (DIN 4108-4).
-    pub async fn design_lambda(lambda_dry: f64, moisture_factor: f64) -> f64 {
+    pub fn design_lambda(lambda_dry: f64, moisture_factor: f64) -> f64 {
         lambda_dry * moisture_factor
     }
 
     /// 📊️ Design λ from catalog material name.
-    pub async fn design_lambda_for_material(material: &str) -> Result<f64, NormError> {
+    pub fn design_lambda_for_material(material: &str) -> Result<f64, NormError> {
         let m = material_design(material)?;
         Ok(design_lambda(m.lambda_dry_w_mk, m.moisture_factor))
     }
 
     /// ✅️ Verify design value within tabulated bounds.
-    pub async fn check_design_lambda(material: &str, lambda_design: f64) -> Result<CheckResult, NormError> {
+    pub fn check_design_lambda(material: &str, lambda_design: f64) -> Result<CheckResult, NormError> {
         let limit = design_lambda_for_material(material)?;
         Ok(CheckResult::from_utilization(
             ClauseId::new("DIN 4108-4", "Table 1", "λ"),
@@ -639,7 +639,7 @@ pub mod part_5 {
     use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 
     /// ☀️ Peak summer heat flux through opaque element [W/m²].
-    pub async fn peak_summer_heat_flux_w_m2(layers: &[Layer], climate: ClimateZoneDe, t_int_c: f64, solar_absorptance: f64, irradiance_w_m2: f64) -> f64 {
+    pub fn peak_summer_heat_flux_w_m2(layers: &[Layer], climate: ClimateZoneDe, t_int_c: f64, solar_absorptance: f64, irradiance_w_m2: f64) -> f64 {
         let u = u_value_from_resistance(total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let t_summer = climate.summer_design_temperature_c();
         let conductive = u * (t_summer - t_int_c).max(0.0);
@@ -647,13 +647,13 @@ pub mod part_5 {
     }
 
     /// 🌡️ Climate-dependent peak heat flux limit [W/m²] (DIN 4108-5 simplified).
-    pub async fn summer_heat_flux_limit_w_m2(climate: ClimateZoneDe) -> f64 {
+    pub fn summer_heat_flux_limit_w_m2(climate: ClimateZoneDe) -> f64 {
         let table = [TableEntry1D { x: 26.0, y: 45.0 }, TableEntry1D { x: 28.0, y: 50.0 }, TableEntry1D { x: 30.0, y: 55.0 }, TableEntry1D { x: 32.0, y: 60.0 }];
         table_lookup_linear(&table, climate.summer_design_temperature_c())
     }
 
     /// ✅️ Check summer heat protection per DIN 4108-5.
-    pub async fn check_summer_heat_protection(layers: &[Layer], climate: ClimateZoneDe, t_int_c: f64, solar_absorptance: f64, irradiance_w_m2: f64) -> Result<CheckResult, NormError> {
+    pub fn check_summer_heat_protection(layers: &[Layer], climate: ClimateZoneDe, t_int_c: f64, solar_absorptance: f64, irradiance_w_m2: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
             return Err(NormError::IncompleteInput { field: "layers".into() });
         }
@@ -670,12 +670,12 @@ pub mod part_6 {
     use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 
     /// 🔗️ U-value including linear thermal bridge correction U' = U + Σ(ψ·l) [W/(m²K)].
-    pub async fn u_value_with_thermal_bridges(u_element: f64, psi_times_l_sum: f64) -> f64 {
+    pub fn u_value_with_thermal_bridges(u_element: f64, psi_times_l_sum: f64) -> f64 {
         u_element + psi_times_l_sum
     }
 
     /// ✅️ U-value proof per DIN 4108-6.
-    pub async fn check_u_value(layers: &[Layer], limit_u: f64) -> Result<CheckResult, NormError> {
+    pub fn check_u_value(layers: &[Layer], limit_u: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
             return Err(NormError::IncompleteInput { field: "layers".into() });
         }
@@ -684,7 +684,7 @@ pub mod part_6 {
     }
 
     /// ✅️ U-value proof with thermal bridge correction ψ·l per DIN 4108-6 §5.
-    pub async fn check_u_value_with_bridges(layers: &[Layer], psi_times_l_sum: f64, limit_u: f64) -> Result<CheckResult, NormError> {
+    pub fn check_u_value_with_bridges(layers: &[Layer], psi_times_l_sum: f64, limit_u: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
             return Err(NormError::IncompleteInput { field: "layers".into() });
         }
@@ -708,7 +708,7 @@ pub mod part_7 {
     }
 
     impl AirtightnessClass {
-        pub async fn n50_limit_h(self) -> f64 {
+        pub fn n50_limit_h(self) -> f64 {
             match self {
                 Self::Class1 => 1.0,
                 Self::Class2 => 3.0,
@@ -718,7 +718,7 @@ pub mod part_7 {
     }
 
     /// ✅️ Check blower-door n50 against class limit.
-    pub async fn check_airtightness(n50_measured: f64, class: AirtightnessClass) -> CheckResult {
+    pub fn check_airtightness(n50_measured: f64, class: AirtightnessClass) -> CheckResult {
         let limit = class.n50_limit_h();
         CheckResult::from_utilization(
             ClauseId::new("DIN 4108-7", "§4", "4.2"),
@@ -756,12 +756,12 @@ pub mod part_8 {
     ];
 
     /// 🔍️ Lookup catalog entry by component reference id.
-    pub async fn catalog_entry(id: &str) -> Result<&'static CatalogEntry, NormError> {
+    pub fn catalog_entry(id: &str) -> Result<&'static CatalogEntry, NormError> {
         CATALOG.iter().find(|e| e.id == id).ok_or_else(|| NormError::InvalidValue { field: "catalog_id".into(), reason: format!("unknown catalog reference: {id}") })
     }
 
     /// ✅️ Verify computed U-value against catalog reference (DIN 4108-8).
-    pub async fn check_against_catalog(id: &str, u_computed: f64) -> Result<CheckResult, NormError> {
+    pub fn check_against_catalog(id: &str, u_computed: f64) -> Result<CheckResult, NormError> {
         let entry = catalog_entry(id)?;
         Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-8", "Table 1", id), Quantity::u_value_w_m2k(u_computed), Quantity::u_value_w_m2k(entry.u_typical_w_m2k), format!("catalog reference {}", entry.description), AnnexChoice::De))
     }
@@ -784,7 +784,7 @@ pub mod part_10 {
     }
 
     /// 📋️ Human-readable usage per application type (DIN 4108-10 Table 1).
-    pub async fn application_description(application: ApplicationType) -> &'static str {
+    pub fn application_description(application: ApplicationType) -> &'static str {
         match application {
             ApplicationType::Dad => "roof insulation above rafters",
             ApplicationType::Daa => "roof insulation between rafters",
@@ -804,7 +804,7 @@ pub mod part_10 {
     }
 
     /// 📋️ Minimum required application class per usage (DIN 4108-10 Table 1).
-    pub async fn minimum_class(application: ApplicationType) -> ApplicationClass {
+    pub fn minimum_class(application: ApplicationType) -> ApplicationClass {
         match application {
             ApplicationType::Dad | ApplicationType::Daa | ApplicationType::Di => ApplicationClass::Dm,
             ApplicationType::Deo => ApplicationClass::Dk,
@@ -813,7 +813,7 @@ pub mod part_10 {
     }
 
     /// ✅️ Check that a declared product application class is admissible for its declared usage (DIN 4108-10).
-    pub async fn check_application_class(application: ApplicationType, declared_class: ApplicationClass) -> CheckResult {
+    pub fn check_application_class(application: ApplicationType, declared_class: ApplicationClass) -> CheckResult {
         let required = minimum_class(application);
         let admissible = declared_class >= required;
         CheckResult {
@@ -840,7 +840,7 @@ pub mod bb_2 {
     pub const DELTA_U_WB_FLAT_RATE_W_M2K: f64 = 0.10;
 
     /// 📐️ Area-normalised thermal-bridge surcharge ΔU_WB,actual = Σ(ψ·l) / A [W/(m²K)] (DIN 4108 Beiblatt 2).
-    pub async fn delta_u_wb_actual_w_m2k(psi_l_sum_w_k: f64, envelope_area_m2: f64) -> f64 {
+    pub fn delta_u_wb_actual_w_m2k(psi_l_sum_w_k: f64, envelope_area_m2: f64) -> f64 {
         if envelope_area_m2 <= 0.0 {
             return f64::INFINITY;
         }
@@ -848,7 +848,7 @@ pub mod bb_2 {
     }
 
     /// ✅️ Beiblatt 2 equivalence check: ΔU_WB,actual against the conform detail allowance, or the flat-rate surcharge if details are not Beiblatt-2-conform.
-    pub async fn check_beiblatt_2_equivalence(psi_l_sum_w_k: f64, envelope_area_m2: f64, details_conform: bool) -> Result<CheckResult, NormError> {
+    pub fn check_beiblatt_2_equivalence(psi_l_sum_w_k: f64, envelope_area_m2: f64, details_conform: bool) -> Result<CheckResult, NormError> {
         if envelope_area_m2 <= 0.0 {
             return Err(NormError::InvalidValue { field: "envelope_area_m2".into(), reason: "must be positive".into() });
         }
@@ -865,16 +865,16 @@ pub mod bb_2 {
 mod compliance_helpers_tests {
     use super::*;
 
-    async fn sample_wall() -> Vec<part_2::Layer> {
+    fn sample_wall() -> Vec<part_2::Layer> {
         vec![part_2::Layer { thickness_m: 0.24, lambda_w_mk: 0.81 }, part_2::Layer { thickness_m: 0.14, lambda_w_mk: 0.035 }]
     }
 
-    async fn sample_moisture_wall() -> Vec<part_3::MoistureLayer> {
+    fn sample_moisture_wall() -> Vec<part_3::MoistureLayer> {
         vec![part_3::MoistureLayer { thickness_m: 0.24, lambda_w_mk: 0.81, mu: 15.0 }, part_3::MoistureLayer { thickness_m: 0.14, lambda_w_mk: 0.035, mu: 1.3 }]
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn worked_example_u_value_known_wall() {
+    fn worked_example_u_value_known_wall() {
         let layers = sample_wall();
         let r = part_2::total_resistance(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W);
         let u = part_2::u_value_from_resistance(r);
@@ -883,7 +883,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn worked_example_f_rsi_above_minimum() {
+    fn worked_example_f_rsi_above_minimum() {
         let layers = sample_moisture_wall();
         let f = part_3::interior_surface_temperature_factor(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.5);
         assert!(f > F_RSI_MINIMUM, "f_Rsi = {f}, must exceed {F_RSI_MINIMUM}");
@@ -892,7 +892,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn worked_example_glaser_no_condensation_insulated_wall() {
+    fn worked_example_glaser_no_condensation_insulated_wall() {
         let layers = sample_moisture_wall();
         assert!(!part_3::condensation_at_interfaces(&layers, 20.0, -14.0, 0.5));
         let check = part_3::check_glaser_moisture(&layers, 20.0, -14.0, 0.5).unwrap();
@@ -900,13 +900,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn worked_example_magnus_saturation_at_zero_c() {
+    fn worked_example_magnus_saturation_at_zero_c() {
         let e = part_3::saturation_vapor_pressure_pa(0.0);
         assert!((e - 611.2).abs() < 1.0, "e_sat(0°C) = {e}");
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn worked_example_vapor_resistance_formula() {
+    fn worked_example_vapor_resistance_formula() {
         let layer = part_3::MoistureLayer { thickness_m: 0.14, lambda_w_mk: 0.035, mu: 1.3 };
         let r_mu = part_3::vapor_resistance(&layer);
         let expected = 0.14 / (1.3 * 0.035);
@@ -914,7 +914,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_2_colder_zone_allows_higher_u_limit() {
+    fn part_2_colder_zone_allows_higher_u_limit() {
         let limit_warm = part_2::climate_adjusted_u_limit(part_2::BuildingCategory::Residential, ClimateZoneDe::Zone4);
         let limit_cold = part_2::climate_adjusted_u_limit(part_2::BuildingCategory::Residential, ClimateZoneDe::Zone1);
         assert!(limit_cold > limit_warm, "zone1={limit_cold}, zone4={limit_warm}");
@@ -922,7 +922,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_4_mineral_wool_lambda() {
+    fn part_4_mineral_wool_lambda() {
         let r = part_4::check_design_lambda("mineral_wool", 0.038).unwrap();
         assert_eq!(r.status, crate::document::CheckStatus::Pass);
         let design = part_4::design_lambda_for_material("mineral_wool").unwrap();
@@ -930,7 +930,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_4_has_fifteen_plus_materials() {
+    fn part_4_has_fifteen_plus_materials() {
         let materials = ["mineral_wool", "glass_wool", "eps", "xps", "pur", "pir", "wood_fibre", "cellulose", "concrete", "aerated_concrete", "brick", "sand_lime_brick", "timber", "plywood", "gypsum_plaster", "lime_plaster", "clay_plaster"];
         assert!(materials.len() >= 15);
         for m in materials {
@@ -939,7 +939,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_5_summer_heat_zone_dependent() {
+    fn part_5_summer_heat_zone_dependent() {
         let layers = sample_wall();
         let flux_z2 = part_5::peak_summer_heat_flux_w_m2(&layers, ClimateZoneDe::Zone2, 26.0, 0.6, 600.0);
         let flux_z4 = part_5::peak_summer_heat_flux_w_m2(&layers, ClimateZoneDe::Zone4, 26.0, 0.6, 600.0);
@@ -949,7 +949,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_6_thermal_bridge_increases_u() {
+    fn part_6_thermal_bridge_increases_u() {
         let layers = sample_wall();
         let u_element = part_2::u_value_from_resistance(part_2::total_resistance(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let u_bridged = part_6::u_value_with_thermal_bridges(u_element, 0.05);
@@ -959,7 +959,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_8_catalog_lookup() {
+    fn part_8_catalog_lookup() {
         let entry = part_8::catalog_entry("AW-01").unwrap();
         assert!((entry.u_typical_w_m2k - 0.24).abs() < 0.01);
         let u = part_2::u_value_from_resistance(part_2::total_resistance(&sample_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
@@ -968,7 +968,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_1_plausibility_flags_implausible_u_value() {
+    fn part_1_plausibility_flags_implausible_u_value() {
         let layers = sample_wall();
         let ok = part_1::check_input_plausibility(&layers, 0.224);
         assert_eq!(ok.status, crate::document::CheckStatus::Pass);
@@ -979,7 +979,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn part_10_application_class_admissibility() {
+    fn part_10_application_class_admissibility() {
         let admissible = part_10::check_application_class(part_10::ApplicationType::Deo, part_10::ApplicationClass::Dk);
         assert_eq!(admissible.status, crate::document::CheckStatus::Pass);
         let inadmissible = part_10::check_application_class(part_10::ApplicationType::Duk, part_10::ApplicationClass::Dm);
@@ -988,7 +988,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn bb2_worked_example_conform_details_pass() {
+    fn bb2_worked_example_conform_details_pass() {
         let psi_l_sum = 18.0;
         let area = 400.0;
         let delta = bb_2::delta_u_wb_actual_w_m2k(psi_l_sum, area);
@@ -998,7 +998,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn bb2_non_conform_details_fall_back_to_flat_rate_surcharge() {
+    fn bb2_non_conform_details_fall_back_to_flat_rate_surcharge() {
         let psi_l_sum = 32.0;
         let area = 400.0;
         let check = bb_2::check_beiblatt_2_equivalence(psi_l_sum, area, false).unwrap();

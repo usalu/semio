@@ -283,6 +283,7 @@ type WorldBrushPreviewRecord = {
   readonly orientation?: readonly [number, number, number, number];
   readonly scale?: readonly [number, number, number] | number;
   readonly color?: string;
+  readonly opacity?: number;
   readonly fillBuildPreview?: WorldFillDiagnosticRecord;
 };
 
@@ -293,6 +294,7 @@ type WorldFillDiagnosticRecord = {
   readonly sequence: number;
   readonly generation: number;
   readonly stage: string;
+  readonly statusLabel: string;
   readonly targetVortexFullId: string | null;
   readonly candidateObjectKindId: string | null;
   readonly candidateGhost: WorldBrushPreviewRecord | null;
@@ -311,6 +313,48 @@ type WorldFillDiagnosticRecord = {
   readonly searchCount: number;
   readonly rejectedCount: number;
 };
+
+const WORLD_FILL_STATUS_LABEL_MAX_BYTES = 256;
+const WORLD_FILL_COLOR_MAX_BYTES = 128;
+const WORLD_FILL_PREVIEW_JSON_MAX_BYTES = 4 * 1024;
+const WORLD_FILL_ROOT_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "color", "opacity", "fillBuildPreview"]);
+const WORLD_FILL_DIAGNOSTIC_KEYS: ReadonlySet<string> = new Set([
+  "operation",
+  "baseRevision",
+  "registryGeneration",
+  "sequence",
+  "generation",
+  "stage",
+  "statusLabel",
+  "targetVortexFullId",
+  "candidateObjectKindId",
+  "candidateGhost",
+  "currentPairObjectId",
+  "collisionCount",
+  "sampleCursor",
+  "insideBoth",
+  "lastSample",
+  "candidatePage",
+  "truncated",
+  "rejectionReason",
+  "targetCursor",
+  "candidateCursor",
+  "acceptedCount",
+  "totalCount",
+  "searchCount",
+  "rejectedCount",
+]);
+const WORLD_FILL_GHOST_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation"]);
+
+function censusAllowedOwnKeys(value: object, allowed: ReadonlySet<string>): number {
+  let count = 0;
+  for (const key in value) {
+    if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+    if (!allowed.has(key)) return -1;
+    count += 1;
+  }
+  return count;
+}
 
 /** ☁️ One point-cloud rendering layer (`World3dScene.pointsJson` entries) — the cheap path for
  * 10^5-10^6 points, distinct from per-point meshes. `positionsB64` is base64 of little-endian f32 xyz
@@ -1103,52 +1147,95 @@ function parseLod(lodJson: string | undefined): WorldLodRecord {
   }
 }
 
-function parseBrushPreview(brushPreviewJson: string | undefined): WorldBrushPreviewRecord | null {
+export function parseWorldBrushPreview(brushPreviewJson: string | undefined): WorldBrushPreviewRecord | null {
   if (!brushPreviewJson) return null;
   try {
     const parsed = JSON.parse(brushPreviewJson) as WorldBrushPreviewRecord;
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+    const hasFillDiagnostic = Object.prototype.hasOwnProperty.call(parsed, "fillBuildPreview");
     const diagnostic = parsed.fillBuildPreview;
+    if (!hasFillDiagnostic) return parsed;
+    if (typeof diagnostic !== "object" || diagnostic === null || Array.isArray(diagnostic)) return null;
+    if (censusAllowedOwnKeys(parsed, WORLD_FILL_ROOT_KEYS) < 0 || censusAllowedOwnKeys(diagnostic, WORLD_FILL_DIAGNOSTIC_KEYS) !== WORLD_FILL_DIAGNOSTIC_KEYS.size) return null;
     const nullableString = (value: unknown) => value === null || typeof value === "string";
     const nonnegativeInteger = (value: unknown) => Number.isSafeInteger(value) && (value as number) >= 0;
+    const finiteTuple = (value: unknown, length: number) => Array.isArray(value) && value.length === length && value.every((item) => typeof item === "number" && Number.isFinite(item));
+    const equalTuple = (left: unknown, right: unknown) => Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((item, index) => item === right[index]);
+    const boundedUtf8 = (value: string, maximumBytes: number) => {
+      let bytes = 0;
+      for (const scalar of value) {
+        const point = scalar.codePointAt(0) ?? 0;
+        bytes += point <= 0x7f ? 1 : point <= 0x7ff ? 2 : point <= 0xffff ? 3 : 4;
+        if (bytes > maximumBytes) return false;
+      }
+      return true;
+    };
+    if (!boundedUtf8(brushPreviewJson, WORLD_FILL_PREVIEW_JSON_MAX_BYTES)) return null;
     if (
-      diagnostic &&
-      (!Number.isSafeInteger(diagnostic.operation) ||
-        diagnostic.operation <= 0 ||
-        !Number.isSafeInteger(diagnostic.baseRevision) ||
-        diagnostic.baseRevision <= 0 ||
-        !Number.isSafeInteger(diagnostic.registryGeneration) ||
-        diagnostic.registryGeneration <= 0 ||
-        !Number.isSafeInteger(diagnostic.generation) ||
-        diagnostic.generation <= 0 ||
-        !Number.isSafeInteger(diagnostic.sequence) ||
-        diagnostic.sequence < 0 ||
-        typeof diagnostic.stage !== "string" ||
-        !nullableString(diagnostic.targetVortexFullId) ||
-        !nullableString(diagnostic.candidateObjectKindId) ||
-        !nullableString(diagnostic.currentPairObjectId) ||
-        !nullableString(diagnostic.rejectionReason) ||
-        !nonnegativeInteger(diagnostic.collisionCount) ||
-        !nonnegativeInteger(diagnostic.sampleCursor) ||
-        !nonnegativeInteger(diagnostic.insideBoth) ||
-        !nonnegativeInteger(diagnostic.targetCursor) ||
-        !nonnegativeInteger(diagnostic.candidateCursor) ||
-        !nonnegativeInteger(diagnostic.acceptedCount) ||
-        !nonnegativeInteger(diagnostic.totalCount) ||
-        !nonnegativeInteger(diagnostic.searchCount) ||
-        !nonnegativeInteger(diagnostic.rejectedCount) ||
-        typeof diagnostic.truncated !== "boolean" ||
-        !Array.isArray(diagnostic.candidatePage) ||
-        diagnostic.candidatePage.length > 8 ||
-        !diagnostic.candidatePage.every(nullableString) ||
-        (diagnostic.lastSample !== null && (!Array.isArray(diagnostic.lastSample) || diagnostic.lastSample.length !== 3 || !diagnostic.lastSample.every(Number.isFinite))) ||
-        (diagnostic.candidateGhost !== null && typeof diagnostic.candidateGhost !== "object") ||
-        (diagnostic.candidateGhost !== null &&
-          (diagnostic.candidateGhost.targetVortexFullId !== parsed.targetVortexFullId ||
-            diagnostic.candidateGhost.objectKindId !== parsed.objectKindId ||
-            diagnostic.candidateGhost.meshUrl !== parsed.meshUrl ||
-            JSON.stringify(diagnostic.candidateGhost.origin) !== JSON.stringify(parsed.origin) ||
-            JSON.stringify(diagnostic.candidateGhost.orientation) !== JSON.stringify(parsed.orientation) ||
-            JSON.stringify(diagnostic.candidateGhost.scale) !== JSON.stringify(parsed.scale))))
+      (Object.prototype.hasOwnProperty.call(parsed, "targetVortexFullId") && typeof parsed.targetVortexFullId !== "string") ||
+      (Object.prototype.hasOwnProperty.call(parsed, "objectKindId") && typeof parsed.objectKindId !== "string") ||
+      (Object.prototype.hasOwnProperty.call(parsed, "sourceVortexIndex") && !nonnegativeInteger(parsed.sourceVortexIndex)) ||
+      (Object.prototype.hasOwnProperty.call(parsed, "meshUrl") && typeof parsed.meshUrl !== "string") ||
+      (Object.prototype.hasOwnProperty.call(parsed, "origin") && !finiteTuple(parsed.origin, 3)) ||
+      (Object.prototype.hasOwnProperty.call(parsed, "orientation") && !finiteTuple(parsed.orientation, 4)) ||
+      (Object.prototype.hasOwnProperty.call(parsed, "color") && (typeof parsed.color !== "string" || !boundedUtf8(parsed.color, WORLD_FILL_COLOR_MAX_BYTES))) ||
+      (Object.prototype.hasOwnProperty.call(parsed, "opacity") && parsed.opacity !== 0.35)
+    ) {
+      return null;
+    }
+    const candidateGhost = diagnostic?.candidateGhost;
+    const candidateGhostRecord =
+      candidateGhost === null ||
+      (typeof candidateGhost === "object" &&
+        !Array.isArray(candidateGhost) &&
+        censusAllowedOwnKeys(candidateGhost, WORLD_FILL_GHOST_KEYS) === WORLD_FILL_GHOST_KEYS.size &&
+        typeof candidateGhost.targetVortexFullId === "string" &&
+        typeof candidateGhost.objectKindId === "string" &&
+        nonnegativeInteger(candidateGhost.sourceVortexIndex) &&
+        typeof candidateGhost.meshUrl === "string" &&
+        finiteTuple(candidateGhost.origin, 3) &&
+        finiteTuple(candidateGhost.orientation, 4));
+    if (
+      !Number.isSafeInteger(diagnostic.operation) ||
+      diagnostic.operation <= 0 ||
+      !Number.isSafeInteger(diagnostic.baseRevision) ||
+      diagnostic.baseRevision <= 0 ||
+      !Number.isSafeInteger(diagnostic.registryGeneration) ||
+      diagnostic.registryGeneration <= 0 ||
+      !Number.isSafeInteger(diagnostic.generation) ||
+      diagnostic.generation <= 0 ||
+      !Number.isSafeInteger(diagnostic.sequence) ||
+      diagnostic.sequence < 0 ||
+      typeof diagnostic.stage !== "string" ||
+      typeof diagnostic.statusLabel !== "string" ||
+      diagnostic.statusLabel.length === 0 ||
+      !boundedUtf8(diagnostic.statusLabel, WORLD_FILL_STATUS_LABEL_MAX_BYTES) ||
+      !nullableString(diagnostic.targetVortexFullId) ||
+      !nullableString(diagnostic.candidateObjectKindId) ||
+      !nullableString(diagnostic.currentPairObjectId) ||
+      !nullableString(diagnostic.rejectionReason) ||
+      !nonnegativeInteger(diagnostic.collisionCount) ||
+      !nonnegativeInteger(diagnostic.sampleCursor) ||
+      !nonnegativeInteger(diagnostic.insideBoth) ||
+      !nonnegativeInteger(diagnostic.targetCursor) ||
+      !nonnegativeInteger(diagnostic.candidateCursor) ||
+      !nonnegativeInteger(diagnostic.acceptedCount) ||
+      !nonnegativeInteger(diagnostic.totalCount) ||
+      !nonnegativeInteger(diagnostic.searchCount) ||
+      !nonnegativeInteger(diagnostic.rejectedCount) ||
+      typeof diagnostic.truncated !== "boolean" ||
+      !Array.isArray(diagnostic.candidatePage) ||
+      diagnostic.candidatePage.length !== 8 ||
+      !diagnostic.candidatePage.every(nullableString) ||
+      (diagnostic.lastSample !== null && (!Array.isArray(diagnostic.lastSample) || diagnostic.lastSample.length !== 3 || !diagnostic.lastSample.every(Number.isFinite))) ||
+      !candidateGhostRecord ||
+      (diagnostic.candidateGhost !== null &&
+        (diagnostic.candidateGhost.targetVortexFullId !== parsed.targetVortexFullId ||
+          diagnostic.candidateGhost.objectKindId !== parsed.objectKindId ||
+          diagnostic.candidateGhost.sourceVortexIndex !== parsed.sourceVortexIndex ||
+          diagnostic.candidateGhost.meshUrl !== parsed.meshUrl ||
+          !equalTuple(diagnostic.candidateGhost.origin, parsed.origin) ||
+          !equalTuple(diagnostic.candidateGhost.orientation, parsed.orientation)))
     ) {
       return null;
     }
@@ -2845,14 +2932,15 @@ function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillD
   const page = diagnostic.candidatePage.filter((value): value is string => typeof value === "string").join(", ");
   const sample = diagnostic.lastSample?.join(",") ?? "—";
   const label = [
+    diagnostic.statusLabel,
     diagnostic.stage,
     String(diagnostic.acceptedCount) + "/" + String(diagnostic.totalCount),
-    "target " + target,
-    "candidate " + candidate,
-    "collisions " + String(diagnostic.collisionCount),
-    "rejection " + rejection,
-    "candidates " + (page || "—"),
-    "sample " + sample,
+    target,
+    candidate,
+    String(diagnostic.collisionCount),
+    rejection,
+    page || "—",
+    sample,
   ].join("; ");
   return (
     <div
@@ -2875,11 +2963,12 @@ function FillDiagnosticOverlay({ diagnostic }: { readonly diagnostic: WorldFillD
       role="status"
       aria-label={label}
     >
-      <span>{diagnostic.stage}</span>
+      <span>{diagnostic.statusLabel}</span>
+      <span className="ml-2">{diagnostic.stage}</span>
       <span className="ml-2">
         {diagnostic.acceptedCount}/{diagnostic.totalCount}
       </span>
-      <span className="ml-2">{diagnostic.rejectionReason ?? String(diagnostic.collisionCount) + " collisions"}</span>
+      <span className="ml-2">{diagnostic.rejectionReason ?? String(diagnostic.collisionCount)}</span>
       {diagnostic.truncated ? <span className="ml-2">…</span> : null}
     </div>
   );
@@ -3817,7 +3906,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const interaction = useMemo(() => parseInteraction(scene?.interactionJson), [scene?.interactionJson]);
   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
-  const brushPreview = useMemo(() => parseBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
+  const brushPreview = useMemo(() => parseWorldBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
   const latestFillIdentityRef = useRef<readonly [number, number, number, number, number] | null>(null);
   const suppliedFillDiagnostic = brushPreview?.fillBuildPreview ?? null;
   let fillDiagnostic: WorldFillDiagnosticRecord | null = null;

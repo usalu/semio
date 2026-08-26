@@ -15,15 +15,15 @@ pub struct ChangeThetaEC {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeThetaEC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "theta-ec", kind: "change-theta-ec", record: "ChangedThetaEC" };
 
-    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_theta_e_c::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_theta_e_c::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change outdoor design temperature to {}", self.new_theta_e_c)
     }
 }

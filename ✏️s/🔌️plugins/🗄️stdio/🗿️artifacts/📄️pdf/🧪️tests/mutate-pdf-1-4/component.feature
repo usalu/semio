@@ -7,47 +7,43 @@ Feature: Apply every typed PDF 1.4 mutation to a real-world document
   examples directory, not a synthetic fixture. Every scenario copies it into the case work
   directory before touching it; the committed document is never written to.
 
-  This subset's own `PdfSnapshot` is `{schema, page: {width, height, text}}` — one page, no object
-  graph — and its `decode_pdf` never reads a real page's width/height (hardcoded to 612/792 for
-  every input; confirmed against this fixture's true `MediaBox [0 0 595.276 841.89]`). Both
-  mutation kinds it declares (`NoMutation`, `SetSnapshot`) are real end to end regardless: applying
-  either one, undoing it, and decoding/re-encoding the real document all genuinely exercise the
-  subset's whole codec on genuinely large, genuinely real input. The oracle and subject projections
-  below compare `width`/`height`/`text` — everything `PdfSnapshot` itself carries — through an
-  independent `lopdf` reader on both sides, never against each other's own writing.
+  WHAT THIS SUBSET CARRIES. PDF 1.4 has a real page TREE — ISO 32000-1 §7.7.3's catalog pointing at
+  a `/Pages` node whose `/Kids` recursively resolve to `/Page` leaves, each with its own inheritable
+  `/MediaBox` and content stream — and this subset's `PdfSnapshot` is that tree walked flat:
+  `pages: Vec<PageDoc>`, one `{width, height, text}` entry per leaf, in reading order. The two
+  mutation kinds it declares are `NoMutation` and `SetSnapshot`, because this standard's document
+  vocabulary is "replace the page tree" and nothing finer; the per-page conformance axes belong to
+  the `✳️a` and `✳️x` subsets, which own their own vocabularies over the same snapshot.
+
+  WHAT CHANGED, STATED PLAINLY BECAUSE IT WAS REPORTED GREEN FOR SIX WAVES. Until the first full
+  differential run of ticket 26/08/23/END-TO-END-TESTING-REFACTOR the snapshot was
+  `{schema, page: PageDoc}` — ONE page — and `decode_pdf` hardcoded `612×792` for every input
+  instead of reading a real `/MediaBox`. Fed this 65-page thesis it produced a 607-byte one-page
+  skeleton whose only text was `SemIO`: 64 pages destroyed on write. This case was written to mirror
+  that stub — the oracle rebuilt every document as one synthetic 612×792 page, and every law was
+  measured against that rebuild rather than against the committed bytes, precisely so the geometry
+  gap could not fail anything. Both halves are gone. The reader walks the real page tree with real
+  `/MediaBox` inheritance, the writer emits every page, and the laws below are measured against the
+  REAL DOCUMENT's own projection.
+
+  WHAT THE PROJECTION IS. The page count, and per page the `/MediaBox` extent and the shown text —
+  the operand bytes of ISO 32000-1 §9.4.3's four text-showing operators (`Tj`, `TJ`, `'`, `"`) in
+  content-stream order, lossily decoded. Exactly what `PdfSnapshot` itself carries, nothing more.
+  Both sides are read back by the SAME independent `lopdf` reader — its own page-tree walk and
+  content-stream decoder, never this repository's `decode_pdf` — so neither producer is ever checked
+  against its own writing. The document VERSION is deliberately not projected: this snapshot does
+  not retain it, and the committed file in fact declares `%PDF-1.5` while this standard's writer
+  emits `%PDF-1.4`, so recording it would report a divergence about a field neither producer was
+  asked to carry.
 
   ALL THREE LAWS ARE ASSERTED IN ROLE, through the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law module,
   so no scenario can pass merely because `lopdf` declined to error. `mutate-<kind>` fails unless the
-  mutation MOVES the compared projection — with two declared kinds that is a small claim, but it is
-  the difference between measuring `set-snapshot` and merely running it, and until this wave neither
-  row was measured at all. `inverse-<kind>` applies the mutation, applies its algebraic inverse, and
-  fails with the first diverging field unless the result projects onto exactly what the un-mutated
-  document projects onto. `identity-round-trip` fails unless the re-encoded bytes differ from the
-  input AND the independent reader recovers exactly the text the real input carries.
-
-  WHAT THE LAWS ARE MEASURED AGAINST, AND WHY IT IS THE REBUILD RATHER THAN THE COMMITTED BYTES. The
-  oracle is a rebuild-from-text writer that pins `MediaBox [0 0 612 792]` for every document,
-  mirroring `decode_pdf`, which hardcodes the same constant and never reads a real page's geometry
-  (confirmed against this fixture's true `[0 0 595.276 841.89]`). Measured against the committed
-  input, `set-snapshot` would be credited with a `595.276 → 612` move the REBUILD made and the
-  mutation did not — a green for something never observed. Measured against the reference's own
-  `no-mutation` output, the only field that can move is `text`, the one this subset genuinely reads
-  out of a document, and it has to. Geometry therefore carries no round-trip information on either
-  side; that is a documented property of the subset, not a softened law, and demanding the real page
-  size would be a contrived check rather than a true one. Both laws are proven again at unit level
-  against the same real document by
-  `every_declared_kind_is_observable_and_its_inverse_restores_the_document` in
-  ../../🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs.
-
-  WHAT THE DIFFERENTIAL RUN ACTUALLY REPORTS. The oracle-against-subject comparison ran for the
-  first time in ticket 26/08/23/END-TO-END-TESTING-REFACTOR and scored parity 5 of 5: both mutate
-  rows, both inverse rows and the identity round trip agree on the whole projection, with nothing
-  ignored beyond `semantic-pdf-v1`'s own declared writer freedom. The sibling `mutate-pdf-1-7` case
-  scored 24 of 37 on its first run over the very same document, and the ten-failure cluster there
-  was a defect in the 1.7 writer's handling of a retained COS graph — a graph this subset's own
-  `PdfSnapshot` does not carry, which is why the same run came back clean here. Its subject-side
-  handlers do NOT yet assert the three laws in role the way the oracle-side ones do; parity carries
-  those two rows today, and closing that gap is open work rather than a claim already made.
+  mutation MOVES the compared projection. `inverse-<kind>` applies the mutation, applies its
+  algebraic inverse — for `set-snapshot` a `set-snapshot` carrying the base document's own 65-page
+  tree, read back out of the input by the independent reader — and fails with the first diverging
+  field unless the result projects onto exactly what the un-mutated document projects onto.
+  `identity-round-trip` fails unless the re-encoded bytes differ from the input AND the whole page
+  tree survives. Nothing is exempt; there is no longer any field the laws step around.
 
   @id-mutate
   @level-exhaustive
@@ -60,13 +56,13 @@ Feature: Apply every typed PDF 1.4 mutation to a real-world document
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id           | params                                                                                                     |
-      | no-mutation  | {}                                                                                                         |
-      | set-snapshot | {"snapshot": {"schema": "s.stdio.pdf", "page": {"width": 612, "height": 792, "text": "Wave seven replaced this page."}}} |
+      | id           | params                                                                                                                                                                                                            |
+      | no-mutation  | {}                                                                                                                                                                                                                |
+      | set-snapshot | {"snapshot": {"schema": "s.stdio.pdf", "pages": [{"width": 595.276, "height": 841.89, "text": "A replacement page tree, written from the model alone."}, {"width": 419.528, "height": 595.276, "text": "Its second page is A5."}]}} |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document asset://🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf
     When the <id> mutation is applied and then undone
@@ -75,9 +71,9 @@ Feature: Apply every typed PDF 1.4 mutation to a real-world document
       """
     Then the oracle and the subject agree on the semantic projection
     Examples:
-      | id           | params                                                                                                     |
-      | no-mutation  | {}                                                                                                         |
-      | set-snapshot | {"snapshot": {"schema": "s.stdio.pdf", "page": {"width": 612, "height": 792, "text": "Wave seven replaced this page."}}} |
+      | id           | params                                                                                                                                                                                                            |
+      | no-mutation  | {}                                                                                                                                                                                                                |
+      | set-snapshot | {"snapshot": {"schema": "s.stdio.pdf", "pages": [{"width": 595.276, "height": 841.89, "text": "A replacement page tree, written from the model alone."}, {"width": 419.528, "height": 595.276, "text": "Its second page is A5."}]}} |
 
   @id-identity-round-trip
   @level-long

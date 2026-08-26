@@ -12,23 +12,23 @@ pub struct DeleteEdge {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_edge(id: String) -> TrinityGraphMutation {
+pub fn delete_edge(id: String) -> TrinityGraphMutation {
     TrinityGraphMutation::DeleteEdge(DeleteEdge { id })
 }
 
 impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for DeleteEdge {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "edge", kind: "delete-edge", record: "DeletedEdge" };
 
-    async fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
+    fn diff(&self, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
+    fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete edge \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

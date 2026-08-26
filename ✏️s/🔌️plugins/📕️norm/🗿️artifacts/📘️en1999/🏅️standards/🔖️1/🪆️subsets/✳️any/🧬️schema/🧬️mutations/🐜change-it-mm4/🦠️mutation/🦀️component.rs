@@ -15,15 +15,15 @@ pub struct ChangeITMm4 {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeITMm4 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "it-mm4", kind: "change-it-mm4", record: "ChangedITMm4" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_i_t_mm4::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_i_t_mm4::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change torsion constant I_t [mm4] to {}", self.new_i_t_mm4)
     }
 }

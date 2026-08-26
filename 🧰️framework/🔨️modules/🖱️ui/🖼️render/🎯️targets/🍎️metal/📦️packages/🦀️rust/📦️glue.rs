@@ -6,10 +6,10 @@
 //! clipping decisions of its own; all of that already happened in `Scene::finish`, which is precisely
 //! what lets four independently hand-written backends agree pixel-for-pixel.
 //!
-//! **Every module below is `target_os = "macos"`-gated.** `Cargo.toml` puts `objc2`/`objc2-metal`/
-//! `objc2-foundation` (and friends) behind `[target.'cfg(target_os = "macos")'.dependencies]`, so on any
+//! **Every module below is `target_os = "macos"`-gated.** `Cargo.toml` puts `objc2-metal` and
+//! `raw-window-handle` behind `[target.'cfg(target_os = "macos")'.dependencies]`, so on any
 //! other host those crates are not even in the dependency graph — ungated `mod` declarations would still
-//! try to resolve `use objc2::…;` and fail with cascading "can't find crate" errors.
+//! try to resolve the platform ABI and fail with cascading framework-link errors.
 //!
 //! **On a non-macOS host this crate compiles to an empty, zero-item lib — deliberately, not an
 //! oversight.** It used to gate on a hard `compile_error!` instead, but that made `cargo check
@@ -36,6 +36,9 @@ mod frame_buffers;
 #[cfg(target_os = "macos")]
 #[path = "🦀️msl.rs"]
 mod msl;
+#[cfg(target_os = "macos")]
+#[path = "🦀️objective_c.rs"]
+mod objective_c;
 #[cfg(target_os = "macos")]
 #[path = "🦀️pipelines.rs"]
 mod pipelines;

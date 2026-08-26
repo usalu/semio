@@ -15,7 +15,7 @@ use crate::wgpu::chrome::push_control_border;
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{HitKind, HitTarget};
 use crate::wgpu::input_element::render_input;
-use crate::wgpu::widgets::{StepperMeta, WidgetContext, draw_text, register_input_meta};
+use crate::wgpu::widgets::{draw_text, register_input_meta, StepperMeta, WidgetContext};
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
 pub(crate) fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, _uniform: bool, on_absolute: Option<E>, on_delta: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {

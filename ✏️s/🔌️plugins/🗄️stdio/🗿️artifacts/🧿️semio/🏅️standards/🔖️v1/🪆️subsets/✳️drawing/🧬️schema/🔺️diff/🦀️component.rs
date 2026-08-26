@@ -1315,12 +1315,12 @@ mod tests {
         let cases = vec![SemioDrawingDiff::default(), SemioDrawingDiff::between(&a, &b), SemioDrawingDiff::between(&b, &a), SemioDrawingDiff::between(&a, &c), SemioDrawingDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioDrawingDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioDrawingDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioDrawingDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = SemioDrawingDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

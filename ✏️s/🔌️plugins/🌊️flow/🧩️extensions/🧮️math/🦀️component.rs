@@ -1,7 +1,6 @@
 //! ➕️ Flow math module: schema-dispatched arithmetic operators.
 
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VariadicSpec};
-use std::cell::Cell;
 
 // #region 🔖️Add
 /// ➕️ Adds numbers, points, or vectors.
@@ -288,10 +287,6 @@ impl std::ops::Sub for Vec3 {
     }
 }
 
-thread_local! {
-    static ENTROPY_SEED: Cell<u64> = const { Cell::new(0) };
-}
-
 fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
@@ -366,15 +361,7 @@ fn entropy_seed() -> u64 {
 }
 
 fn next_random_unit(explicit_seed: Option<u64>) -> f64 {
-    if let Some(seed) = explicit_seed {
-        return random_unit(seed);
-    }
-    ENTROPY_SEED.with(|cell| {
-        let seed = cell.get();
-        let next = if seed == 0 { entropy_seed() } else { splitmix64(seed) };
-        cell.set(next);
-        random_unit(next)
-    })
+    random_unit(explicit_seed.unwrap_or_else(entropy_seed))
 }
 
 fn number_channel(id: &str, operator_id: &str) -> ChannelSpec {

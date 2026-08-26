@@ -15,15 +15,15 @@ pub struct ChangeHV {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeHV {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "hv", kind: "change-hv", record: "ChangedHV" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_h_v::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_h_v::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change ventilation heat transfer coefficient H_V [W/K] to {}", self.new_h_v)
     }
 }

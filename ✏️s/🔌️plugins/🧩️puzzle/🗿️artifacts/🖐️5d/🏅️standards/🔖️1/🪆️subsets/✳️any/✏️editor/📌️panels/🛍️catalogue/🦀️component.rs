@@ -52,12 +52,9 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> Value {
 }
 
 fn add_part_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    let kind = UiText::try_from_str(kind_id)
-        .map(UiValue::Text)
-        .ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue kind admission failed"))?;
+    let kind = UiText::try_from_str(kind_id).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue kind admission failed"))?;
     let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue action map admission failed"))?;
-    args.push("partKind".into(), kind)
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue action entry admission failed"))?;
+    args.push("partKind".into(), kind).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue action entry admission failed"))?;
     Ok(UiValue::Map(args.finish()))
 }
 
@@ -69,13 +66,7 @@ fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&s
         let item = match add_action {
             Some(action) => {
                 let drag_data = puzzle5d_catalog_item_drag_data(kind_id, entry);
-                tree_item_with_action_draggable(
-                    format!("{section_id}.{index}.{kind_id}"),
-                    ui_label(catalog_kind_label(entry))?,
-                    Some(kind_id.into()),
-                    actions.action(action, Some(add_part_args(kind_id)?))?,
-                    &drag_data,
-                )?
+                tree_item_with_action_draggable(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), actions.action(action, Some(add_part_args(kind_id)?))?, &drag_data)?
             }
             None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()))?,
         };

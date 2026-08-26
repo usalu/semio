@@ -1,14 +1,17 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.brep` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.brep` is a semio-NATIVE format that no third party reads or writes, so the reference is a second IMPLEMENTATION in another language, written from this subset's own committed specification documents.",
+  "oracles": [
     {
-      "id": "semio-brep-mutation-semantics",
+      "id": "semio-brep-python-independent",
+      "ecosystem": "python",
+      "package": "",
       "capabilities": ["semio-v1-brep-mutate"],
-      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, let alone one authoritative over this subset's `SemioBrepMutation` vocabulary (the thirteen entity-lifecycle and replacement verbs: create/delete-vertex, create/delete-edge, create/delete-face, create/delete-shell, create/delete-solid, replace-curve, replace-surface, move-vertex) — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. Confidence instead comes from the committed, independently handcrafted per-kind fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff)` specification vector per kind, authored by hand and already unit-tested inside the production crate itself (`kinds_match_the_enum_and_the_catalog`, `produces_committed_diff`, `committed_diff_applies_to_after`, `committed_json_is_canonical` per leaf), including the cascade-delete behaviour `delete-vertex` exercises against its dependent edges — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture (as a set, since the six id-keyed collections carry no user-meaningful order). This feature re-exercises those SAME committed fixtures end-to-end through `apply_semio_brep_mutation`, the entry point this ticket added, rather than calling `Mutation::diff`/`inverse` directly as the in-crate unit tests do.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-brep/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, both tagged geometry unions, the JSON projection and all thirteen verbs of `SemioBrepMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` for the record grammar and its `L|C|E|N` curve and `P|C|O|S|T|N` surface tags with their exact field lists, `…/📸️snapshot/💾️binary/📡️component.protocol.semio` for the pack header and the sentence naming its per-collection payload, `…/📸️snapshot/🔣️component.json` for the projection's member names, `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` for the thirteen verbs and their argument lists, and `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs` for the semio envelope. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🧊️solid` `🎒️example.pack.semio` byte for byte, a file carrying a line, a circle, a NURBS curve and a NURBS surface, which a misreading could not do."
     }
   ],
   "mutationCatalogs": [

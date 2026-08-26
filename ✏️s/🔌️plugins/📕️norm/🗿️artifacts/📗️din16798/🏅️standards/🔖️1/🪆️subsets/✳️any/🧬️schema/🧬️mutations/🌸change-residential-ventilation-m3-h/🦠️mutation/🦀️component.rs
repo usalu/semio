@@ -15,15 +15,15 @@ pub struct ChangeResidentialVentilationM3H {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeResidentialVentilationM3H {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "residential-ventilation-m3-h", kind: "change-residential-ventilation-m3-h", record: "ChangedResidentialVentilationM3H" };
 
-    async fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_residential_ventilation_m3_h::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
+    fn inverse(&self, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {
         crate::artifacts::din16798::mutations::change_residential_ventilation_m3_h::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change residential ventilation air flow to {}", self.new_residential_ventilation_m3_h)
     }
 }

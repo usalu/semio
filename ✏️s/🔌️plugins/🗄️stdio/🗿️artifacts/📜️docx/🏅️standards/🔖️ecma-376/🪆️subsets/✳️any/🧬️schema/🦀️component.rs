@@ -337,20 +337,20 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn builder_produces_minimal_valid_package_that_decodes_back() {
-        let snap = build_minimal_docx(sample_document());
+        let snap = build_minimal_docx(sample_document().await);
         let bytes = encode_docx(&snap).expect("encode minimal package");
         assert!(crate::artifacts::zip::opc::sniff_opc_bytes(&bytes));
         assert!(sniff_docx_bytes(&bytes));
         let decoded = decode_docx(&bytes).expect("decode minimal package");
-        assert_eq!(decoded.document, sample_document());
+        assert_eq!(decoded.document, sample_document().await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn tables_and_styles_round_trip() {
-        let snap = build_minimal_docx(sample_document_with_table_and_styles());
+        let snap = build_minimal_docx(sample_document_with_table_and_styles().await);
         let bytes = encode_docx(&snap).expect("encode");
         let decoded = decode_docx(&bytes).expect("decode");
-        assert_eq!(decoded.document, sample_document_with_table_and_styles());
+        assert_eq!(decoded.document, sample_document_with_table_and_styles().await);
         let DocxBlock::Table(table) = &decoded.document.body[1] else { panic!("expected table") };
         assert_eq!(table.rows[0].cells.len(), 2);
     }
@@ -395,7 +395,7 @@ mod tests {
         let mut opc = OpcPackage::empty();
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, xml_document_to_text(&document_to_xml(&sample_document())).into_bytes());
+        opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, xml_document_to_text(&document_to_xml(&sample_document().await)).into_bytes());
         opc.set_part("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml", b"<w:numbering/>".to_vec());
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, MAIN_DOCUMENT_PART);
         let bytes = crate::artifacts::zip::opc::encode_opc(&opc).expect("encode");
@@ -405,7 +405,7 @@ mod tests {
         let re_encoded = encode_docx(&decoded).expect("re-encode");
         let re_decoded = decode_docx(&re_encoded).expect("re-decode");
         assert_eq!(re_decoded.opc.part_bytes("word/numbering.xml"), Some(b"<w:numbering/>".as_slice()));
-        assert_eq!(re_decoded.document, sample_document());
+        assert_eq!(re_decoded.document, sample_document().await);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -430,7 +430,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn analyzer_builder_round_trip() {
-        let original = build_minimal_docx(sample_document_with_table_and_styles());
+        let original = build_minimal_docx(sample_document_with_table_and_styles().await);
         // Analyzer: real decode of the encoded bytes.
         let bytes = encode_docx(&original).expect("encode");
         let analyzed = decode_docx(&bytes).expect("decode");
@@ -486,7 +486,7 @@ mod tests {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
 
-            let demo = demo_docx_snapshot();
+            let demo = demo_docx_snapshot().await;
             let bytes = encode_docx(&demo).expect("encode demo docx");
             let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode zip");
 
@@ -539,7 +539,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-            let demo = demo_docx_snapshot();
+            let demo = demo_docx_snapshot().await;
             let packed = store::ArtifactPack::encode_pack(&demo);
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
             let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
@@ -561,7 +561,7 @@ mod tests {
         }
 
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
-        /// `print_dsl`/`encode_pack` output of `demo_docx_snapshot()` -- `parse_dsl(fixture) ==
+        /// `print_dsl`/`encode_pack` output of `demo_docx_snapshot().await` -- `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
         /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
         /// (see this ticket's own recon note on the pre-FG-wave state of these two files).
@@ -570,15 +570,15 @@ mod tests {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
-            let demo = demo_docx_snapshot();
+            let demo = demo_docx_snapshot().await;
 
             let parsed = <DocxSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
-            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_docx_snapshot()");
-            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_docx_snapshot()) drifted from the shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_docx_snapshot().await");
+            assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_docx_snapshot().await) drifted from the shipped .dsl.semio fixture");
 
             let decoded = <DocxSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
-            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_docx_snapshot()");
-            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_docx_snapshot()) drifted from the shipped .pack.semio fixture");
+            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_docx_snapshot().await");
+            assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_docx_snapshot().await) drifted from the shipped .pack.semio fixture");
 
             let native = encode_docx(&demo).expect("encode native docx");
             assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/📜️example.docx"), "encode_docx(demo) drifted from 📜️example.docx");
@@ -587,7 +587,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         #[ignore]
         async fn zzz_write_native_docx_fixture() {
-            let demo = demo_docx_snapshot();
+            let demo = demo_docx_snapshot().await;
             let native = encode_docx(&demo).expect("encode");
             let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/📜️example.docx");
             std::fs::write(path, native).expect("write 📜️example.docx");

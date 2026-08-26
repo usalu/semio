@@ -1,4 +1,0 @@
-before_direct_source_lines=44
-before_consumer_files=22
-after_direct_manifest_source_lines=0
-after_owned_consumer_files=22

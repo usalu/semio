@@ -26,7 +26,7 @@ fn mutation() -> En1991Mutation {
 
 /// ▶️ `change-accidental-mass-t` carries `accidental_mass_t` from 30.0 to 12.5 and lands on the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = outcome.diff().apply(&base).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: mutation applies to its committed before-snapshot");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ The inverse re-states the pre-edit `accidental_mass_t` (30.0) and restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let outcome = forward.diff(&base);
@@ -52,7 +52,7 @@ async fn inverse_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1991Snapshot = serde_json::from_str(text).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: snapshot encodes");
@@ -66,7 +66,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared `applied` outcome holds — a clean 30.0→12.5 edit of `accidental_mass_t` raises no diagnostic.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: this fixture declares an applied outcome");
     let base = before();
@@ -77,7 +77,7 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ The sparse delta is exactly the committed diff: `accidentalMassT` set, every other field left null.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert_eq!(outcome.diff().accidental_mass_t, Some(12.5), "change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: the diff must carry `accidental_mass_t` = 12.5");
@@ -89,7 +89,7 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff is canonical and decodes to `En1991Diff`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: committed diff decodes");
     assert_eq!(decoded.accidental_mass_t, Some(12.5), "change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: the committed diff must name `accidental_mass_t` = 12.5");
     let reencoded = serde_json::to_value(&decoded).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: diff re-encodes");
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff to `before` yields `after` — the 12.5 `accidental_mass_t` edit is complete on its own.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: committed diff decodes");
     let produced = decoded.apply(&base).expect("change-accidental-mass-t/lightens-impact-vehicle-to-12-5-t: committed diff applies to the before-snapshot");

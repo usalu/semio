@@ -6,7 +6,7 @@
 //! clipping decisions of its own; all of that already happened in `Scene::finish`, which is precisely
 //! what lets four independently hand-written backends agree pixel-for-pixel.
 //!
-//! **Every module below is `target_os = "linux"`-gated.** `Cargo.toml` puts `ash`/`ash-window`/
+//! **Every module below is `target_os = "linux"`-gated.** `Cargo.toml` puts `ash`/
 //! `raw-window-handle` behind `[target.'cfg(target_os = "linux")'.dependencies]`, so on any other host
 //! those crates are not even in the dependency graph — ungated `mod` declarations would still try to
 //! resolve `use ash::vk;` and fail with cascading "can't find crate" errors.
@@ -39,6 +39,9 @@ mod memory;
 #[cfg(target_os = "linux")]
 #[path = "🦀️resources.rs"]
 mod resources;
+#[cfg(target_os = "linux")]
+#[path = "🦀️surface.rs"]
+mod surface;
 #[cfg(target_os = "linux")]
 #[path = "🦀️swapchain_support.rs"]
 mod swapchain_support;

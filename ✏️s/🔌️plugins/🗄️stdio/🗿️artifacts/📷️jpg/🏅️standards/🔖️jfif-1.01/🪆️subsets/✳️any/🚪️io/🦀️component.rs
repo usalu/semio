@@ -588,17 +588,68 @@ fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
     out
 }
 
-/// 🖨️ Encodes an RGBA raster as baseline sequential JPEG, 3-component
-/// (Y/Cb/Cr, ids 1/2/3) 4:2:0 subsampled, Annex K example tables scaled by
-/// `snap.re_encode_quality` (IJG convention, default 90) — chosen so the round trip through our
-/// own decoder stays well under a visually-lossless error budget. Edges are replicated (not
-/// zero-padded) up to the next MCU (16x16) boundary to avoid ringing. Writes a real JFIF APP0
-/// from `snap.jfif_*` and re-emits `snap.other_segments` verbatim right after it — always
-/// canonicalizes to fresh Annex K DQT/DHT tables at the chosen quality (documented normal form,
-/// matches png's pixel-canonicalization precedent: `quant_tables`/`huffman_tables` are typed
-/// RETENTION of a decoded file's actual tables, not necessarily what a subsequent re-encode
-/// emits) — `restart_interval` is retained but this encoder never emits `DRI`/restart markers
-/// (documented deviation, `## deviations`).
+/// 📐️ The SOF0 component list this encoder writes: the decoded frame's OWN ids and sampling
+/// factors when the snapshot carries a frame, so a 4:4:4 document stays 4:4:4 across a
+/// decode/re-encode, and the historical `1:2x2, 2:1x1, 3:1x1` default when it does not.
+///
+/// The quantization-table selector is NOT carried through: this encoder always emits exactly two
+/// fresh Annex K DQT tables (0 luma, 1 chroma), so the first component is bound to 0 and every
+/// other to 1 — the same canonicalization `encode_jpg`'s own doc comment already declares for the
+/// DQT/DHT tables themselves. A sampling factor outside T.81 §B.2.2's 1..=4, or one that does not
+/// divide the frame's maximum, is refused rather than silently rounded: both would make the MCU
+/// geometry unrepresentable.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn frame_components_of(snap: &JpgSnapshot) -> Result<Vec<JpgFrameComponent>, JpgError> {
+    let declared = snap.frame.as_ref().map(|frame| frame.components.clone()).unwrap_or_default();
+    if declared.is_empty() {
+        return Ok(vec![
+            JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 },
+            JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
+            JpgFrameComponent { id: 3, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
+        ]);
+    }
+    if declared.len() != 1 && declared.len() != 3 {
+        return Err(JpgError::Unsupported(format!("this encoder writes a single-component grayscale frame or a three-component Y/Cb/Cr frame; the snapshot declares {}", declared.len())));
+    }
+    for component in &declared {
+        if !(1..=4).contains(&component.h_sampling) || !(1..=4).contains(&component.v_sampling) {
+            return Err(JpgError::Unsupported(format!("T.81 B.2.2 confines a component's sampling factors to 1..=4; component {} declares {}x{}", component.id, component.h_sampling, component.v_sampling)));
+        }
+    }
+    let hmax = declared.iter().map(|component| component.h_sampling).max().unwrap_or(1);
+    let vmax = declared.iter().map(|component| component.v_sampling).max().unwrap_or(1);
+    for component in &declared {
+        if hmax % component.h_sampling != 0 || vmax % component.v_sampling != 0 {
+            return Err(JpgError::Unsupported(format!("component {}'s {}x{} sampling does not divide the frame maximum {hmax}x{vmax}, so its plane has no integral resolution", component.id, component.h_sampling, component.v_sampling)));
+        }
+    }
+    Ok(declared
+        .into_iter()
+        .enumerate()
+        .map(|(index, component)| JpgFrameComponent { quant_table_id: if index == 0 { 0 } else { 1 }, ..component })
+        .collect())
+}
+
+/// 🖨️ Encodes an RGBA raster as baseline sequential JPEG (Y/Cb/Cr, ids 1/2/3, or a single Y
+/// component for a grayscale frame), Annex K example tables scaled by `snap.re_encode_quality`
+/// (IJG convention, default 90) — chosen so the round trip through our own decoder stays well
+/// under a visually-lossless error budget. Edges are replicated (not zero-padded) up to the next
+/// MCU boundary to avoid ringing. Writes a real JFIF APP0 from `snap.jfif_*` and re-emits
+/// `snap.other_segments` verbatim right after it — always canonicalizes to fresh Annex K DQT/DHT
+/// tables at the chosen quality (documented normal form, matches png's pixel-canonicalization
+/// precedent: `quant_tables`/`huffman_tables` are typed RETENTION of a decoded file's actual
+/// tables, not necessarily what a subsequent re-encode emits) — `restart_interval` is retained but
+/// this encoder never emits `DRI`/restart markers (documented deviation, `## deviations`).
+///
+/// 📐️ The SOF0 SAMPLING FACTORS come from `snap.frame`, not from a fixed 4:2:0 choice. T.81 §B.2.2
+/// makes `H`/`V` per-component frame parameters in 1..=4, and the ✳️baseline subset's
+/// `check_baseline_conformance` reads them as one of its five class axes — so an encoder that
+/// stamped every frame 4:2:0 was silently resampling the chroma of every 4:4:4 document it
+/// re-serialized and moving a conformance axis while doing it. Each component's plane is box-
+/// filtered by `(hmax / h, vmax / v)` and emitted as `h * v` blocks per MCU, which reduces to the
+/// previous behaviour exactly when the frame really is `1:2x2, 2:1x1, 3:1x1`. A frame with no
+/// components at all (a snapshot that was never decoded from a real file) keeps that 4:2:0 default,
+/// since there is nothing to honour.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     if snap.width == 0 || snap.height == 0 {
@@ -612,8 +663,9 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     }
     let (width, height): (u16, u16) = (snap.width as u16, snap.height as u16);
     let quality = snap.re_encode_quality.map(|q| q as i32).unwrap_or(90);
-    let hmax = 2usize;
-    let vmax = 2usize;
+    let comps = frame_components_of(snap)?;
+    let hmax = comps.iter().map(|c| c.h_sampling as usize).max().unwrap_or(1);
+    let vmax = comps.iter().map(|c| c.v_sampling as usize).max().unwrap_or(1);
     let mcu_w = 8 * hmax;
     let mcu_h = 8 * vmax;
     let mcus_x = (width as usize + mcu_w - 1) / mcu_w;
@@ -621,29 +673,37 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     let pw = mcus_x * mcu_w;
     let ph = mcus_y * mcu_h;
 
-    let mut yfull = vec![0f64; pw * ph];
-    let mut cbfull = vec![0f64; pw * ph];
-    let mut crfull = vec![0f64; pw * ph];
+    let mut full: Vec<Vec<f64>> = vec![vec![0f64; pw * ph]; comps.len()];
     for y in 0..ph {
         let sy = y.min(height as usize - 1);
         for x in 0..pw {
             let sx = x.min(width as usize - 1);
             let idx = (sy * width as usize + sx) * 4;
             let (yy, cb, cr) = rgb_to_ycbcr(snap.pixels[idx], snap.pixels[idx + 1], snap.pixels[idx + 2]);
-            yfull[y * pw + x] = yy;
-            cbfull[y * pw + x] = cb;
-            crfull[y * pw + x] = cr;
+            let channels = [yy, cb, cr];
+            for (plane, value) in full.iter_mut().zip(channels) {
+                plane[y * pw + x] = value;
+            }
         }
     }
-    let (cbplane, cpw, _cph) = box_downsample(&cbfull, pw, ph, hmax, vmax);
-    let (crplane, _, _) = box_downsample(&crfull, pw, ph, hmax, vmax);
+    // 📐️ One plane per component at that component's own resolution: `hmax / h` by `vmax / v`
+    // box-filtered. A component already at the frame maximum keeps its full-resolution buffer by
+    // MOVE rather than being box-filtered 1:1 into a second copy of it — on a 2275x2560 scan that
+    // is 46 MB of `f64` per component not allocated twice.
+    let planes: Vec<(Vec<f64>, usize)> = comps
+        .iter()
+        .zip(full)
+        .map(|(component, source)| {
+            let (fx, fy) = (hmax / component.h_sampling as usize, vmax / component.v_sampling as usize);
+            if fx == 1 && fy == 1 {
+                return (source, pw);
+            }
+            let (plane, plane_width, _) = box_downsample(&source, pw, ph, fx, fy);
+            (plane, plane_width)
+        })
+        .collect();
 
-    let comps: [JpgFrameComponent; 3] = [
-        JpgFrameComponent { id: 1, h_sampling: hmax as u8, v_sampling: vmax as u8, quant_table_id: 0 },
-        JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
-        JpgFrameComponent { id: 3, h_sampling: 1, v_sampling: 1, quant_table_id: 1 },
-    ];
-    let frame = JpgFrameHeader { precision: 8, width, height, components: comps.to_vec() };
+    let frame = JpgFrameHeader { precision: 8, width, height, components: comps.clone() };
 
     let luma_q = quant_zigzag(&scale_quality(&STD_LUMA_Q, quality));
     let chroma_q = quant_zigzag(&scale_quality(&STD_CHROMA_Q, quality));
@@ -693,7 +753,8 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     write_dht(&mut out, 0, 1, &DC_CHROMA_BITS, &dc_chroma_values());
     write_dht(&mut out, 1, 1, &AC_CHROMA_BITS, &ac_chroma_values());
 
-    let scan_comps: Vec<JpgScanComponent> = vec![JpgScanComponent { id: 1, dc_table_id: 0, ac_table_id: 0 }, JpgScanComponent { id: 2, dc_table_id: 1, ac_table_id: 1 }, JpgScanComponent { id: 3, dc_table_id: 1, ac_table_id: 1 }];
+    let scan_comps: Vec<JpgScanComponent> =
+        comps.iter().enumerate().map(|(index, component)| JpgScanComponent { id: component.id, dc_table_id: if index == 0 { 0 } else { 1 }, ac_table_id: if index == 0 { 0 } else { 1 } }).collect();
     let mut sos = vec![0xFFu8, 0xDA];
     let sos_len = 6 + 2 * scan_comps.len();
     sos.push((sos_len >> 8) as u8);
@@ -709,44 +770,33 @@ pub fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     out.extend_from_slice(&sos);
 
     let mut bw = BitWriter::new();
-    let mut dc_pred = [0i32; 3];
+    let mut dc_pred = vec![0i32; comps.len()];
     for my in 0..mcus_y {
         for mx in 0..mcus_x {
-            // component 0 (Y): full-res 2x2 blocks per MCU
-            for by in 0..vmax {
-                for bx in 0..hmax {
-                    let ox = (mx * hmax + bx) * 8;
-                    let oy = (my * vmax + by) * 8;
-                    let mut block = [0f64; 64];
-                    for r in 0..8 {
-                        for c in 0..8 {
-                            block[r * 8 + c] = yfull[(oy + r) * pw + (ox + c)] - 128.0;
+            // 🧩️ T.81 §A.2.3 MCU interleave: every component contributes `h * v` blocks per MCU, in
+            // component order, row-major within the component — which is one block for a 1x1
+            // component and four for a 2x2 one.
+            for (index, component) in comps.iter().enumerate() {
+                let (plane, plane_width) = &planes[index];
+                let (table_q, dc_table, ac_table) = if index == 0 { (&luma_q, &dc_luma, &ac_luma) } else { (&chroma_q, &dc_chroma, &ac_chroma) };
+                for by in 0..component.v_sampling as usize {
+                    for bx in 0..component.h_sampling as usize {
+                        let ox = (mx * component.h_sampling as usize + bx) * 8;
+                        let oy = (my * component.v_sampling as usize + by) * 8;
+                        let mut block = [0f64; 64];
+                        for r in 0..8 {
+                            for c in 0..8 {
+                                block[r * 8 + c] = plane[(oy + r) * plane_width + (ox + c)] - 128.0;
+                            }
                         }
-                    }
-                    let coeff = fdct_8x8(&block);
-                    let mut zz = [0i32; 64];
-                    for z in 0..64 {
-                        zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / luma_q[z] as f64).round() as i32;
-                    }
-                    encode_block(&mut bw, &zz, &mut dc_pred[0], &dc_luma, &ac_luma)?;
-                }
-            }
-            // Cb, Cr: one block per MCU (already half-res)
-            for (ci, plane) in [&cbplane, &crplane].iter().enumerate() {
-                let ox = mx * 8;
-                let oy = my * 8;
-                let mut block = [0f64; 64];
-                for r in 0..8 {
-                    for c in 0..8 {
-                        block[r * 8 + c] = plane[(oy + r) * cpw + (ox + c)] - 128.0;
+                        let coeff = fdct_8x8(&block);
+                        let mut zz = [0i32; 64];
+                        for z in 0..64 {
+                            zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / table_q[z] as f64).round() as i32;
+                        }
+                        encode_block(&mut bw, &zz, &mut dc_pred[index], dc_table, ac_table)?;
                     }
                 }
-                let coeff = fdct_8x8(&block);
-                let mut zz = [0i32; 64];
-                for z in 0..64 {
-                    zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / chroma_q[z] as f64).round() as i32;
-                }
-                encode_block(&mut bw, &zz, &mut dc_pred[1 + ci], &dc_chroma, &ac_chroma)?;
             }
         }
     }
@@ -1259,7 +1309,8 @@ mod tests {
             bw.put_bits(c, l);
         }
         bw.flush();
-        let mut br = BitReader::new(&bw.bytes, 0);
+        let source: &[u8] = &bw.bytes;
+        let mut br = BitReader::new(&source, 0);
         for v in 0u8..=11 {
             assert_eq!(br.decode_symbol(&table).unwrap(), v);
         }
@@ -1278,7 +1329,8 @@ mod tests {
         let mut dc_pred = 0i32;
         encode_block(&mut bw, &zz, &mut dc_pred, &dc_table, &ac_table).unwrap();
         bw.flush();
-        let mut br = BitReader::new(&bw.bytes, 0);
+        let source: &[u8] = &bw.bytes;
+        let mut br = BitReader::new(&source, 0);
         let mut dc_pred2 = 0i32;
         let decoded = decode_block(&mut br, &mut dc_pred2, &dc_table, &ac_table).unwrap();
         assert_eq!(decoded, zz);

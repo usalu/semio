@@ -1,0 +1,8 @@
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧪️tests/mutate-binary-raw (recorded no-oracle decision raw-buffer-no-format — its evidence is discharged by the subject phase)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1018 (recorded no-oracle decision dwg-ac1018-proprietary-container — its evidence is discharged by the subject phase)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1024 (recorded no-oracle decision dwg-ac1024-proprietary-container — its evidence is discharged by the subject phase)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01-baseline (recorded no-oracle decision jpg-jfif-1-01-baseline-conformance-class-semantics — its evidence is discharged by the subject phase)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-any (recorded no-oracle decision semio-envelope-routing — its evidence is discharged by the subject phase)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0-baseline (recorded no-oracle decision tiff-6-0-baseline-conformance-class-semantics — its evidence is discharged by the subject phase)
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧪️tests/mutate-txt-utf-8 (recorded no-oracle decision txt-utf-8-line-structure — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=101 executed=2013 passed=2013 failed=0 errored=0 parity=0/0 not-exercised=7

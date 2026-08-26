@@ -44,7 +44,7 @@ impl ArtifactSerializer for SemioImageToTiff {
             }
         }
         entries.sort_by_key(|t| t.tag);
-        Ok(TiffSnapshot { schema: crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: Default::default(), ifds: vec![TiffIfd { entries }], pixels: frame.rgba8.clone() })
+        Ok(TiffSnapshot { schema: crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: Default::default(), ifds: vec![TiffIfd { pixels: Vec::new(), entries }], pixels: frame.rgba8.clone() })
     }
 }
 //#endregion 🔖️Serializer

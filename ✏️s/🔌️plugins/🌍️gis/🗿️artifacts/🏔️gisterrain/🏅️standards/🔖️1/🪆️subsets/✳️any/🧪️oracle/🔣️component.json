@@ -1,19 +1,22 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `s.gis.gisterrain` persists exactly two scalars and derives its mesh child handle from them, so both mutation kinds are root-scalar setters with an indirect, content-addressed effect. Semio-NATIVE, no oracle; the geospatial libraries surveyed and declined are named below.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.gis.gisterrain` persists exactly two fields — an `f64` exaggeration and an opaque imported-features string — plus a content-addressed `mesh` child handle derived from both. No third party reads `.dsl.semio`, and `geo`, `geojson` and `gdal` were surveyed and declined, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schema, grammar and specification vectors.",
+  "oracles": [
     {
-      "id": "gisterrain-mutation-semantics",
+      "id": "gisterrain-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
       "capabilities": [
         "gisterrain-1-mutate"
       ],
-      "rationale": "`s.gis.gisterrain` is a semio-NATIVE artifact — `.dsl.semio`/`.pack.semio`, read by nobody else — and it persists exactly two fields: an `f64` vertical exaggeration and a raw `imported_features_json` string that is `map:in`'s insertion point. A third slot, `mesh`, is not persisted content but a CONTENT-ADDRESSED child handle derived from those two fields alone. The geospatial ecosystem's real libraries were surveyed and DECLINED: `geo`/`geo-types` and `geojson` model geometry and features, and `gdal` models raster/vector datasets, but this vocabulary's two verbs do not edit geometry at all — `change-exaggeration` scales a display factor and `change-imported-features` swaps an opaque JSON payload the artifact never interprets — so a geometry library put in the position of judging them would be adjudicating a field it cannot see. Evidence is the two committed specification vectors (`raises-the-exaggeration-from-one-to-two-and-a-half`, `imports-a-single-harbor-position-descriptor`) plus the inverse law, which here is unusually sharp: both inverses are BASE-derived value restores, and because `mesh` is content-addressed off `(exaggeration, imported_features_json)`, an implementation that forgot to re-derive the handle after undoing leaves a stale `childId` behind and fails.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.gis.gisterrain` document and both typed mutations, in Python, at `../../../../../🧪️tests/mutate-gisterrain-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (an `f64` `exaggeration` and a raw `importedFeaturesJson` string, `additionalProperties: false`), `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the two verbs) and the two committed specification vectors (the externally tagged wire form of each, and their demonstration that the two setters move their fields independently). It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `geo`, `geojson` and `gdal` neither read `.dsl.semio` nor hold any authority over a vertical exaggeration factor or over a payload string this artifact never parses; `gdal` additionally is a system library with a C dependency. This reference deliberately does NOT read the carrier: unlike its `gismap` sibling, whose members are plainly hex-encoded JSON and whose layout can be derived from committed bytes and pinned by byte-exact re-encoding, this artifact's only committed example carries an EMPTY `importedFeaturesJson`, so the encoding of a non-empty string value cannot be read off it and no prose document states it. The carrier's fixpoint and pack-agreement laws therefore stay asserted in role on the Rust side. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
   "mutationCatalogs": [

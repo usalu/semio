@@ -17,13 +17,13 @@ consumes = ["forms.questionKind", "flow.extension"]
 
 [[package.metadata.semio.playground]]
 variant = "procedural2d"
-app = "procedural2d-play"
+app = "s.procedural.procedural2d@1/*#editor"
 aliases = ["procedural 2d"]
 ports = { react = 6021, wgpu = 6121 }
 
 [[package.metadata.semio.playground]]
 variant = "procedural3d"
-app = "procedural3d-play"
+app = "s.procedural.procedural3d@1/*#editor"
 aliases = ["procedural 3d"]
 ports = { react = 6018, wgpu = 6118 }
 
@@ -65,8 +65,8 @@ serde.workspace = true
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+semio-framework-async = { workspace = true }
 wasm-bindgen = "0.2.106"
-wasm-bindgen-futures = "0.4.71"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

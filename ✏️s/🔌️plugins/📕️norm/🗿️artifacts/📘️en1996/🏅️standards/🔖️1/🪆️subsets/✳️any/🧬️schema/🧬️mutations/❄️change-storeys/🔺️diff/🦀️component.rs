@@ -5,7 +5,7 @@ use crate::artifacts::en1996::mutations::change_storeys::mutation::ChangeStoreys
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeStoreys, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+pub fn diff(payload: &ChangeStoreys, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if base.storeys == payload.new_storeys {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Storeys already has this value.");
     }

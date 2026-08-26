@@ -1,0 +1,18 @@
+{
+  "beforeFixtureJson": "{\n  \"schema\": \"trinity.graph\",\n  \"name\": \"Nakagin Capsule Tower — Ground Floor\",\n  \"manifestId\": \"nakagin\",\n  \"camera\": { \"x\": 0.0, \"y\": 0.0, \"zoom\": 1.0 },\n  \"nodes\": [\n    {\n      \"id\": \"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\",\n      \"kind\": \"Piece\",\n      \"name\": \"b\",\n      \"x\": 0.0,\n      \"y\": 0.0,\n      \"width\": 96.0,\n      \"height\": 48.0,\n      \"properties\": { \"label\": \"tower-core\", \"position\": { \"x\": 0.0, \"y\": 0.0, \"z\": 0.0 }, \"tier\": 0.0 },\n      \"ports\": [\n        { \"id\": \"c5465220-19ba-4443-8f1d-617c832dd13c\", \"kind\": \"Connector\", \"direction\": \"out\", \"properties\": {} }\n      ]\n    },\n    {\n      \"id\": \"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952\",\n      \"kind\": \"Piece\",\n      \"name\": \"t_f0_b_c0\",\n      \"x\": -140.0,\n      \"y\": 80.0,\n      \"width\": 88.0,\n      \"height\": 40.0,\n      \"properties\": { \"label\": \"floor0-left\", \"position\": { \"x\": -1.2, \"y\": 1.2, \"z\": 0.0 }, \"tier\": 0.0 },\n      \"ports\": [\n        { \"id\": \"7be6cfda-db1b-47e4-bcea-cd011e516e2e\", \"kind\": \"Connector\", \"direction\": \"in\", \"properties\": {} }\n      ]\n    }\n  ],\n  \"edges\": [\n    {\n      \"id\": \"cc0d14f5-11b2-4258-ac52-287d0d46b23b\",\n      \"kind\": \"Connection\",\n      \"source\": \"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@c5465220-19ba-4443-8f1d-617c832dd13c\",\n      \"target\": \"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@7be6cfda-db1b-47e4-bcea-cd011e516e2e\",\n      \"properties\": { \"gap\": 0.0, \"rise\": 0.0, \"rotation\": 270.0, \"shift\": 0.0, \"tilt\": 0.0, \"turn\": 0.0, \"u\": -1.2, \"v\": 1.2 }\n    }\n  ],\n  \"rootNodeId\": \"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\"\n}",
+  "lhsJson": "{\n  \"pattern\": {\n    \"leftVar\": \"a\",\n    \"leftKind\": \"Piece\",\n    \"edgeVar\": \"r\",\n    \"edgeKind\": \"Connection\",\n    \"rightVar\": \"b\",\n    \"rightKind\": \"Piece\"\n  },\n  \"whereClause\": \"a.name = 'b'\"\n}",
+  "rhsJson": "{\n  \"create\": [],\n  \"delete\": [],\n  \"set\": [{ \"var\": \"a\", \"prop\": \"label\", \"value\": \"$label\" }],\n  \"merge\": [],\n  \"parameters\": [{ \"name\": \"label\", \"kind\": \"string\", \"default\": \"nakagin-core\" }]\n}",
+  "parameterBindings": {
+    "label": "nakagin-core"
+  },
+  "ruleLayout": {
+    "a": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "b": {
+      "x": -140.0,
+      "y": 80.0
+    }
+  }
+}

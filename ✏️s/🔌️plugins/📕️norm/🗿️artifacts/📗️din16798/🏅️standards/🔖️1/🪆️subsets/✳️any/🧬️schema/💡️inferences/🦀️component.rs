@@ -24,19 +24,19 @@ pub struct Din16798Inference {
 }
 
 impl protocol::Inference<Din16798Snapshot> for Din16798Inference {
-    async fn infer(snapshot: &Din16798Snapshot) -> Self {
+    fn infer(snapshot: &Din16798Snapshot) -> Self {
         Self { outline: Din16798Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Din16798Snapshot> for Din16798Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.norm.din16798.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.din16798.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::din16798::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din16798.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `din16798_artifact_schema_descriptor`'s registration.
-pub async fn din16798_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn din16798_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.din16798.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    fn inference_determinism_law() {
         let snapshot = Din16798Snapshot::default();
         assert_eq!(Din16798Inference::infer(&snapshot), Din16798Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    fn inference_default_law() {
         assert_eq!(Din16798Inference::infer(&Din16798Snapshot::default()), Din16798Inference::default());
     }
 }
@@ -94,7 +94,7 @@ use crate::artifacts::din16798::standards::v1::subsets::any::schema::{annex_para
 use crate::document::CheckReport;
 
 /// 📋️ End-to-end residential indoor environment check.
-pub async fn check_residential_environment(floor_area_m2: f64, occupants: u32, ventilation_m3_h: f64, t_op_c: f64, l_aeq_db: f64) -> CheckReport {
+pub fn check_residential_environment(floor_area_m2: f64, occupants: u32, ventilation_m3_h: f64, t_op_c: f64, l_aeq_db: f64) -> CheckReport {
     let mut report = CheckReport::default();
     report.push(part_1::check_operative_temperature(crate::document::OccupancyType::Residential, t_op_c));
     report.push(part_3::check_residential_ventilation(floor_area_m2, occupants, ventilation_m3_h));
@@ -102,7 +102,7 @@ pub async fn check_residential_environment(floor_area_m2: f64, occupants: u32, v
     report
 }
 
-async fn parse_occupancy(occupancy: &str) -> crate::document::OccupancyType {
+fn parse_occupancy(occupancy: &str) -> crate::document::OccupancyType {
     match occupancy.to_ascii_lowercase().as_str() {
         "office" => crate::document::OccupancyType::Office,
         "meeting" => crate::document::OccupancyType::Meeting,
@@ -114,7 +114,7 @@ async fn parse_occupancy(occupancy: &str) -> crate::document::OccupancyType {
     }
 }
 
-async fn parse_comfort_category(category: &str) -> part_1::ComfortCategory {
+fn parse_comfort_category(category: &str) -> part_1::ComfortCategory {
     match category.to_ascii_uppercase().as_str() {
         "I" => part_1::ComfortCategory::I,
         "III" => part_1::ComfortCategory::III,
@@ -122,7 +122,7 @@ async fn parse_comfort_category(category: &str) -> part_1::ComfortCategory {
     }
 }
 
-async fn parse_ida_class(class: &str) -> part_3::IdaClass {
+fn parse_ida_class(class: &str) -> part_3::IdaClass {
     match class {
         "1" => part_3::IdaClass::Ida1,
         "3" => part_3::IdaClass::Ida3,
@@ -131,7 +131,7 @@ async fn parse_ida_class(class: &str) -> part_3::IdaClass {
     }
 }
 
-async fn parse_duct_class(class: &str) -> part_17::DuctLeakageClass {
+fn parse_duct_class(class: &str) -> part_17::DuctLeakageClass {
     match class.to_ascii_uppercase().as_str() {
         "A" => part_17::DuctLeakageClass::A,
         "C" => part_17::DuctLeakageClass::C,
@@ -140,7 +140,7 @@ async fn parse_duct_class(class: &str) -> part_17::DuctLeakageClass {
     }
 }
 
-async fn parse_chiller_type(chiller_type: &str) -> part_13::ChillerType {
+fn parse_chiller_type(chiller_type: &str) -> part_13::ChillerType {
     match chiller_type.to_ascii_lowercase().as_str() {
         "water_cooled" => part_13::ChillerType::WaterCooled,
         "absorption" => part_13::ChillerType::Absorption,
@@ -149,7 +149,7 @@ async fn parse_chiller_type(chiller_type: &str) -> part_13::ChillerType {
 }
 
 /// 📋️ Full EN 16798 normative parts (1, 3, 5-1, 5-2, 7, 9, 13, 15, 17) plus DE-NA divergent checks.
-pub async fn check_full_environment(document: &Din16798Snapshot) -> CheckReport {
+pub fn check_full_environment(document: &Din16798Snapshot) -> CheckReport {
     let occupancy = parse_occupancy(&document.occupancy);
     let category = parse_comfort_category(&document.comfort_category);
     let ida_class = parse_ida_class(&document.ida_class);
@@ -207,7 +207,7 @@ pub async fn check_full_environment(document: &Din16798Snapshot) -> CheckReport 
 }
 
 /// 📋️ `Din16798Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub async fn evaluate(document: &Din16798Snapshot) -> CheckReport {
+pub fn evaluate(document: &Din16798Snapshot) -> CheckReport {
     check_full_environment(document)
 }
 //#endregion 🔖️ComplianceReport
@@ -218,14 +218,14 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn residential_environment_e2e_with_acoustic() {
+    fn residential_environment_e2e_with_acoustic() {
         let report = check_residential_environment(85.0, 3, 40.0, 21.0, 24.0);
         assert!(report.all_pass());
         assert_eq!(report.checks.len(), 3);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn full_environment_evaluate_covers_all_nine_parts() {
+    fn full_environment_evaluate_covers_all_nine_parts() {
         let document = Din16798Snapshot::default();
         let report = evaluate(&document);
         assert_eq!(report.checks.len(), 25, "checks: {:?}", report.checks);

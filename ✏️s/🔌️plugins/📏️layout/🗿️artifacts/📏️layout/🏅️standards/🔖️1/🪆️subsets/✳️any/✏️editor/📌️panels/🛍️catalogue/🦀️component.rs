@@ -1,8 +1,10 @@
 //! 🛍️ Layout play app panel — the catalogue: draggable page/frame-kind creation items.
 
-use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use crate::editor::layout::terminology::{catalogue_kind_label, LayoutLabels};
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiFixedMap, UiText, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
+use semio_framework_plugin::{
+    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiFixedMap, UiText, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+};
 
 //#region 🔖️Constants
 pub(crate) const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";

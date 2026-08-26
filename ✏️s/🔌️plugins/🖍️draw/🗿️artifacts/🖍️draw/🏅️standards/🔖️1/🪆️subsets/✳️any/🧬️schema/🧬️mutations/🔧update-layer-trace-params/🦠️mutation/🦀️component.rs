@@ -17,23 +17,23 @@ pub struct UpdateLayerTraceParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn update_layer_trace_params(layer_id: String, params: DrawTraceParams) -> DrawMutation {
+pub fn update_layer_trace_params(layer_id: String, params: DrawTraceParams) -> DrawMutation {
     DrawMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id, params })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for UpdateLayerTraceParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer-trace-params", record: "UpdatedLayerTraceParams" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Update layer \"{}\" trace params", self.layer_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

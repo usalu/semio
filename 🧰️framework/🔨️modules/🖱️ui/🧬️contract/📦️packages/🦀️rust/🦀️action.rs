@@ -11,7 +11,7 @@ use std::sync::{LazyLock, Mutex};
 
 pub const UI_TEXT_MAX_BYTES: usize = 512;
 pub const UI_FIXED_LIST_ITEMS: usize = 32;
-pub const UI_FIXED_BYTES: usize = 16 * 1_024;
+pub const UI_FIXED_BYTES: usize = 32 * 1_024;
 pub const UI_VALUE_PAGE_ITEMS: usize = 1;
 pub const UI_VALUE_MAX_ITEMS: usize = 256;
 pub const UI_VALUE_ADMISSION_SLOTS: usize = 256;
@@ -1420,6 +1420,14 @@ mod tests {
         assert!(size_of::<UiFixedBytes>() <= size_of::<usize>() * 3);
         assert!(size_of::<UiFixedList<UiFixedBytes>>() <= size_of::<usize>() * 3);
         assert!(size_of::<UiValueArena>() <= size_of::<usize>() * 24);
+    }
+
+    #[test]
+    fn fixed_bytes_admit_the_scene_packet_census_exactly() {
+        let admitted = vec![7; UI_FIXED_BYTES];
+        assert_eq!(UiFixedBytes::try_from_vec(admitted).expect("exact scene packet census").len(), UI_FIXED_BYTES);
+        let rejected = vec![7; UI_FIXED_BYTES + 1];
+        assert_eq!(UiFixedBytes::try_from_vec(rejected).expect_err("scene packet over census").len(), UI_FIXED_BYTES + 1);
     }
 
     #[allow(clippy::needless_pass_by_value)]

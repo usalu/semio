@@ -143,12 +143,31 @@ fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
 //#endregion 🔖️TagsTriple
 
 //#region 🔖️IfdsTriple
-/// 🗂️ One `ifds.modified[]` entity — the recursive per-IFD tag-triple.
+/// 🗂️ The per-IFD delta: the recursive tag-triple plus a whole-value slot for that directory's own
+/// raw strip payload (`TiffIfd::pixels` — a weak value, replaced wholesale, never sub-diffed, the
+/// same treatment `TiffDiff::pixels` gives the primary raster).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TiffIfdDiff {
+    #[serde(default, skip_serializing_if = "TiffTagsDiff::is_empty")]
+    pub entries: TiffTagsDiff,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pixels: Option<Vec<u8>>,
+}
+
+impl TiffIfdDiff {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty() && self.pixels.is_none()
+    }
+}
+
+/// 🗂️ One `ifds.modified[]` entity — the recursive per-IFD delta.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TiffIfdModified {
     pub index: usize,
-    pub diff: TiffTagsDiff,
+    pub diff: TiffIfdDiff,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -219,7 +238,7 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
     let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
     let mut final_removed: Vec<usize> = d1.removed;
-    let mut modified_map: BTreeMap<usize, TiffTagsDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
+    let mut modified_map: BTreeMap<usize, TiffIfdDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
     let mut added_alive: Vec<Option<TiffIfdAdded>> = d1.added.into_iter().map(Some).collect();
 
     for mid_idx in &d2.removed {
@@ -238,11 +257,17 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
         match mid_slots.get(m2.index) {
             Some(Slot::Base(b)) => {
                 let entry = modified_map.entry(*b).or_default();
-                *entry = absorb_tags(entry.clone(), m2.diff.clone());
+                entry.entries = absorb_tags(entry.entries.clone(), m2.diff.entries.clone());
+                if m2.diff.pixels.is_some() {
+                    entry.pixels = m2.diff.pixels.clone();
+                }
             }
             Some(Slot::Added(ai)) => {
                 if let Some(a) = added_alive[*ai].as_mut() {
-                    a.ifd.entries = apply_tags(&a.ifd.entries, &m2.diff);
+                    a.ifd.entries = apply_tags(&a.ifd.entries, &m2.diff.entries);
+                    if let Some(pixels) = &m2.diff.pixels {
+                        a.ifd.pixels = pixels.clone();
+                    }
                 }
             }
             None => {}
@@ -298,7 +323,10 @@ fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
     let mut items = base.to_vec();
     for m in &d.modified {
         if let Some(it) = items.get_mut(m.index) {
-            it.entries = apply_tags(&it.entries, &m.diff);
+            it.entries = apply_tags(&it.entries, &m.diff.entries);
+            if let Some(pixels) = &m.diff.pixels {
+                it.pixels = pixels.clone();
+            }
         }
     }
     let mut removed_desc = d.removed.clone();
@@ -323,8 +351,9 @@ fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
-        if let Some(d) = between_tags(&a[i].entries, &b[i].entries) {
-            modified.push(TiffIfdModified { index: i, diff: d });
+        let diff = TiffIfdDiff { entries: between_tags(&a[i].entries, &b[i].entries).unwrap_or_default(), pixels: (a[i].pixels != b[i].pixels).then(|| b[i].pixels.clone()) };
+        if !diff.is_empty() {
+            modified.push(TiffIfdModified { index: i, diff });
         }
     }
     let removed: Vec<usize> = (min..a.len()).collect();
@@ -419,7 +448,7 @@ fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyRes
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
             return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF IFD modification is missing, duplicated, or removed").at(["ifds", "modified"]));
         }
-        validate_tiff_tags(&base[entry.index].entries, &entry.diff)?;
+        validate_tiff_tags(&base[entry.index].entries, &entry.diff.entries)?;
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
@@ -511,12 +540,20 @@ pub fn diff_set_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16, kind: TiffF
             return TiffDiff::default();
         }
         TiffDiff {
-            ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![], modified: vec![TiffTagModified { tag, kind, values }], added: vec![] } }], added: vec![] }),
+            ifds: Some(TiffIfdsDiff {
+                removed: vec![],
+                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![TiffTagModified { tag, kind, values }], added: vec![] }, pixels: None } }],
+                added: vec![],
+            }),
             ..Default::default()
         }
     } else {
         TiffDiff {
-            ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![], modified: vec![], added: vec![TiffTagAdded { tag, kind, values }] } }], added: vec![] }),
+            ifds: Some(TiffIfdsDiff {
+                removed: vec![],
+                modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![], modified: vec![], added: vec![TiffTagAdded { tag, kind, values }] }, pixels: None } }],
+                added: vec![],
+            }),
             ..Default::default()
         }
     }
@@ -528,7 +565,14 @@ pub fn diff_remove_tag(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffD
     if !ifd.entries.iter().any(|t| t.tag == tag) {
         return TiffDiff::default();
     }
-    TiffDiff { ifds: Some(TiffIfdsDiff { removed: vec![], modified: vec![TiffIfdModified { index: ifd_index, diff: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] } }], added: vec![] }), ..Default::default() }
+    TiffDiff {
+        ifds: Some(TiffIfdsDiff {
+            removed: vec![],
+            modified: vec![TiffIfdModified { index: ifd_index, diff: TiffIfdDiff { entries: TiffTagsDiff { removed: vec![tag], modified: vec![], added: vec![] }, pixels: None } }],
+            added: vec![],
+        }),
+        ..Default::default()
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -727,14 +771,18 @@ pub(crate) fn dec_tag(s: &str) -> Result<TiffTag, String> {
     let [tag, kind, values] = parts.as_slice() else { return Err(format!("tag: expected 3 fields, got {}", parts.len())) };
     Ok(TiffTag { tag: parse_num::<u16>(tag)?, kind: dec_field_type(kind)?, values: dec_values(values)? })
 }
-/// 🗂️ One IFD: bracketed list of `enc_tag` entries.
+/// 🗂️ One IFD: `[<entries-list>,<pixels-hex>]` — the bracketed list of `enc_tag` entries followed
+/// by this directory's own raw strip bytes as hex (empty for a metadata-only directory and for
+/// IFD 0, whose raster is the snapshot's own `pixels`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_ifd(ifd: &TiffIfd) -> String {
-    enc_list(&ifd.entries, enc_tag)
+    format!("[{},{}]", enc_list(&ifd.entries, enc_tag), hex_encode(&ifd.pixels))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ifd(s: &str) -> Result<TiffIfd, String> {
-    Ok(TiffIfd { entries: dec_list(s, dec_tag)? })
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [entries, pixels] = parts.as_slice() else { return Err(format!("ifd: expected 2 fields, got {}", parts.len())) };
+    Ok(TiffIfd { entries: dec_list(entries, dec_tag)?, pixels: hex_decode(pixels)? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -898,6 +946,7 @@ pub(crate) fn dec_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffTag,
 pub(crate) fn enc_ifd_bin(ifd: &TiffIfd, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, ifd.entries.len() as u64);
     ifd.entries.iter().for_each(|t| enc_tag_bin(t, out));
+    write_bytes_lp(out, &ifd.pixels);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ifd_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfd, String> {
@@ -906,7 +955,8 @@ pub(crate) fn dec_ifd_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffIfd,
     for _ in 0..n {
         entries.push(dec_tag_bin(reader)?);
     }
-    Ok(TiffIfd { entries })
+    let pixels = read_bytes_lp(reader)?;
+    Ok(TiffIfd { entries, pixels })
 }
 //#endregion 🔖️ValueBinaryCodecs
 
@@ -947,12 +997,33 @@ fn dec_tags_diff(body: &str) -> Result<TiffTagsDiff, String> {
     Ok(TiffTagsDiff { removed, modified, added })
 }
 
+/// 🔺️ One IFD's own delta: `[<tags-triple>];<pixels>` — the bracketed (so `split_top_level(_, ';')`
+/// sees it as ONE section) tag triple, then `-` for "strip bytes unchanged" or the new bytes as hex.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_ifd_diff(d: &TiffIfdDiff) -> String {
+    let pixels = match &d.pixels {
+        Some(bytes) => format!("#{}", hex_encode(bytes)),
+        None => "-".to_string(),
+    };
+    format!("[{}];{pixels}", enc_tags_diff(&d.entries))
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_ifd_diff(body: &str) -> Result<TiffIfdDiff, String> {
+    let two = split_top_level(body, ';');
+    let [entries_s, pixels_s] = two.as_slice() else { return Err(format!("ifd diff: expected 2 sections, got {}", two.len())) };
+    let pixels = match *pixels_s {
+        "-" => None,
+        other => Some(hex_decode(other.strip_prefix('#').ok_or_else(|| format!("ifd diff: bad pixels slot {other:?}"))?)?),
+    };
+    Ok(TiffIfdDiff { entries: dec_tags_diff(strip_brackets(entries_s)?)?, pixels })
+}
+
 /// 🗂️ Index-keyed `ifds` triple: `[removed];[modified];[added]`, `modified` entries are
-/// `index:<tags-triple>` (recursive), `added` entries are `index:<ifd>`.
+/// `index:<ifd-diff>` (recursive), `added` entries are `index:<ifd>`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_ifds_diff(d: &TiffIfdsDiff) -> String {
     let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
-    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_tags_diff(&m.diff))).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_ifd_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_ifd(&a.ifd))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
@@ -966,7 +1037,7 @@ pub(crate) fn dec_ifds_diff(body: &str) -> Result<TiffIfdsDiff, String> {
         .filter(|s| !s.is_empty())
         .map(|entry| {
             let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("ifd modified: bad entry {entry:?}"))?;
-            Ok(TiffIfdModified { index: parse_num::<usize>(idx)?, diff: dec_tags_diff(rest)? })
+            Ok(TiffIfdModified { index: parse_num::<usize>(idx)?, diff: dec_ifd_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
     let added = split_top_level(strip_brackets(added_s)?, ',')
@@ -1036,7 +1107,14 @@ pub(crate) fn enc_ifds_diff_bin(d: &TiffIfdsDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
     for m in &d.modified {
         store::pack_rt::write_varint_u64(out, m.index as u64);
-        enc_tags_diff_bin(&m.diff, out);
+        enc_tags_diff_bin(&m.diff.entries, out);
+        match &m.diff.pixels {
+            Some(bytes) => {
+                out.push(1);
+                write_bytes_lp(out, bytes);
+            }
+            None => out.push(0),
+        }
     }
     store::pack_rt::write_varint_u64(out, d.added.len() as u64);
     for a in &d.added {
@@ -1055,8 +1133,9 @@ pub(crate) fn dec_ifds_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Ti
     let mut modified = Vec::with_capacity(mn as usize);
     for _ in 0..mn {
         let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_tags_diff_bin(reader)?;
-        modified.push(TiffIfdModified { index, diff });
+        let entries = dec_tags_diff_bin(reader)?;
+        let pixels = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+        modified.push(TiffIfdModified { index, diff: TiffIfdDiff { entries, pixels } });
     }
     let an = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(an as usize);
@@ -1179,7 +1258,7 @@ pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
     let a = TiffSnapshot {
         schema: "stdio.tiff".into(),
         byte_order: TiffByteOrder::LittleEndian,
-        ifds: vec![TiffIfd {
+        ifds: vec![TiffIfd { pixels: Vec::new(),
             entries: vec![
                 tag(256, TiffFieldType::Long, TiffValues::Long(vec![4])),
                 tag(258, TiffFieldType::Short, TiffValues::Short(vec![8, 8, 8])),
@@ -1195,7 +1274,7 @@ pub(crate) fn demo_diff_cases() -> Vec<TiffDiff> {
     b.ifds[0].entries.iter_mut().find(|t| t.tag == 315).unwrap().values = TiffValues::Ascii("New Author".into()); // modify
     b.ifds[0].entries.push(tag(37380, TiffFieldType::SRational, TiffValues::SRational(vec![(-3, 10)]))); // add
     b.ifds[0].entries.push(tag(50003, TiffFieldType::Float, TiffValues::Float(vec![1.5, -2.25])));
-    b.ifds.push(TiffIfd { entries: vec![tag(2, TiffFieldType::Long, TiffValues::Long(vec![9]))] }); // whole IFD added
+    b.ifds.push(TiffIfd { pixels: Vec::new(), entries: vec![tag(2, TiffFieldType::Long, TiffValues::Long(vec![9]))] }); // whole IFD added
     b.pixels = vec![9u8; 16];
     let c = TiffSnapshot { schema: "stdio.tiff".into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![], pixels: vec![] };
     vec![TiffDiff::default(), TiffDiff::between(&a, &b), TiffDiff::between(&b, &a), TiffDiff::between(&a, &c), TiffDiff::between(&c, &a)]
@@ -1223,7 +1302,7 @@ mod handcrafted_diff_codec_tests {
             schema: "stdio.tiff".into(),
             byte_order: TiffByteOrder::LittleEndian,
             ifds: vec![
-                TiffIfd {
+                TiffIfd { pixels: Vec::new(),
                     entries: vec![
                         tag(256, TiffFieldType::Long, TiffValues::Long(vec![4])),
                         tag(258, TiffFieldType::Short, TiffValues::Short(vec![8, 8, 8])),
@@ -1232,7 +1311,7 @@ mod handcrafted_diff_codec_tests {
                         tag(700, TiffFieldType::Undefined, TiffValues::Undefined(vec![0xde, 0xad])),
                     ],
                 },
-                TiffIfd { entries: vec![tag(1, TiffFieldType::Byte, TiffValues::Byte(vec![1, 2, 3]))] },
+                TiffIfd { pixels: Vec::new(), entries: vec![tag(1, TiffFieldType::Byte, TiffValues::Byte(vec![1, 2, 3]))] },
             ],
             pixels: vec![0u8; 16],
         };
@@ -1246,19 +1325,19 @@ mod handcrafted_diff_codec_tests {
         b.ifds[0].entries.push(tag(50002, TiffFieldType::SLong, TiffValues::SLong(vec![-100000])));
         b.ifds[0].entries.push(tag(50003, TiffFieldType::Float, TiffValues::Float(vec![1.5, -2.25])));
         b.ifds[0].entries.push(tag(50004, TiffFieldType::Double, TiffValues::Double(vec![3.14159265358979])));
-        b.ifds.push(TiffIfd { entries: vec![tag(2, TiffFieldType::Long, TiffValues::Long(vec![9]))] }); // whole IFD added
+        b.ifds.push(TiffIfd { pixels: Vec::new(), entries: vec![tag(2, TiffFieldType::Long, TiffValues::Long(vec![9]))] }); // whole IFD added
         b.pixels = vec![9u8; 16];
         let c = TiffSnapshot { schema: "stdio.tiff".into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![], pixels: vec![] };
 
         let cases = vec![TiffDiff::default(), TiffDiff::between(&a, &b), TiffDiff::between(&b, &a), TiffDiff::between(&a, &c), TiffDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = TiffDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = TiffDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = TiffDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = TiffDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

@@ -29,10 +29,10 @@ pub struct NormConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for NormConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -40,7 +40,7 @@ impl store::ArtifactDsl for NormConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -49,12 +49,12 @@ impl store::ArtifactDsl for NormConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for NormConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -62,7 +62,7 @@ impl store::ArtifactPack for NormConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -74,10 +74,10 @@ impl store::ConfigRecord for NormConfig {}
 /// 🧮️ Whole-record diff for `NormConfigMutation` — `apply` ignores `base` entirely, since
 /// `NormConfigMutation::Snapshot` already carries the full post-op config.
 impl protocol::MutationDiff<NormConfig> for NormConfig {
-    async fn apply(&self, _base: &NormConfig) -> protocol::MutationApplyResult<NormConfig> {
+    fn apply(&self, _base: &NormConfig) -> protocol::MutationApplyResult<NormConfig> {
         Ok({ self.clone() })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         *self = other;
     }
 }
@@ -100,7 +100,7 @@ pub enum NormConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for NormConfigMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -111,7 +111,7 @@ impl protocol::OpText for NormConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -121,7 +121,7 @@ impl protocol::OpText for NormConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for NormConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -134,7 +134,7 @@ impl protocol::OpBinary for NormConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -156,7 +156,7 @@ impl protocol::OpBinary for NormConfigMutation {
 impl Mutation<NormConfig> for NormConfigMutation {
     type Diff = NormConfig;
 
-    async fn diff(&self, base: &NormConfig) -> protocol::MutationOutcome<NormConfig> {
+    fn diff(&self, base: &NormConfig) -> protocol::MutationOutcome<NormConfig> {
         match self {
             NormConfigMutation::Snapshot { config } => {
                 if config == base {
@@ -173,7 +173,7 @@ impl Mutation<NormConfig> for NormConfigMutation {
         }
     }
 
-    async fn inverse(&self, base: &NormConfig) -> Vec<Self> {
+    fn inverse(&self, base: &NormConfig) -> Vec<Self> {
         vec![NormConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -185,19 +185,19 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn norm_config_dsl_round_trips() {
+    fn norm_config_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&NormConfig::default());
         store::os_store::test_support::assert_dsl_round_trip(&NormConfig { selected_check_index: Some(3) });
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn norm_config_dsl_pack_equivalence() {
+    fn norm_config_dsl_pack_equivalence() {
         store::os_store::test_support::assert_dsl_pack_equivalence(&NormConfig::default());
         store::os_store::test_support::assert_dsl_pack_equivalence(&NormConfig { selected_check_index: Some(7) });
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn norm_config_operation_snapshot_is_a_real_inverse() {
+    fn norm_config_operation_snapshot_is_a_real_inverse() {
         let base = NormConfig { selected_check_index: Some(1) };
         let op = NormConfigMutation::SetSelectedCheckIndex { index: Some(5) };
         let next = op.diff(&base).diff().clone();
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn norm_config_operation_op_text_round_trips() {
+    fn norm_config_operation_op_text_round_trips() {
         store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: Some(2) });
         store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::SetSelectedCheckIndex { index: None });
         store::os_store::test_support::assert_op_line_round_trip(&NormConfigMutation::Snapshot { config: NormConfig { selected_check_index: Some(9) } });
@@ -218,7 +218,7 @@ mod tests {
     /// 🧷️ Pins the config operations' exact pre-migration wire bytes (from the ticket's
     /// `🧪️wire-baseline-before.txt`) — `NormConfig` moved file but must not move format.
     #[semio_framework_async_macros::async_test]
-    async fn config_mutations_keep_their_pre_migration_bytes() {
+    fn config_mutations_keep_their_pre_migration_bytes() {
         let hex = |op: &NormConfigMutation| protocol::OpBinary::encode_op(op).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hex(&NormConfigMutation::Snapshot { config: NormConfig::default() }), "01000001000e0d00");
         assert_eq!(hex(&NormConfigMutation::Snapshot { config: NormConfig { selected_check_index: Some(9) } }), "01000001000e0d01000409");

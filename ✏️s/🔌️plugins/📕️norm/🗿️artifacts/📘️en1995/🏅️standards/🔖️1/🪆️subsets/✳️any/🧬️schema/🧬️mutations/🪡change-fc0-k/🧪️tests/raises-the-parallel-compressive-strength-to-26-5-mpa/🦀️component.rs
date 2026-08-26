@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// ▶️ Raising f_c,0,k from 21.0 MPa to 26.5 MPa rewrites `f_c_0_k` alone — the bending strength that shares the
 /// §6.2.4 interaction expression with it is a separate declared property.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_parallel_compressive_strength_to_26_5_mpa() {
+fn raises_the_parallel_compressive_strength_to_26_5_mpa() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-fc0-k applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-fc0-k/raises-the-parallel-compressive-strength-to-26-5-mpa: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.f_c_0_k, 26.5, "change-fc0-k/raises-the-parallel-compressive-strength-to-26-5-mpa: f_c_0_k must read 26.5 MPa once the change lands");
@@ -43,7 +43,7 @@ async fn raises_the_parallel_compressive_strength_to_26_5_mpa() {
 /// ↩️ `change-fc0-k`'s inverse reads the OLD 21.0 MPa out of BASE, so replaying it puts the 21.0 MPa compressive
 /// strength back on `f_c_0_k`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_21_mpa_restores_before() {
+fn restoring_21_mpa_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-fc0-k applies");
@@ -62,7 +62,7 @@ async fn restoring_21_mpa_restores_before() {
 /// underscore-separated segment, and the digit segment `0` survives untouched is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 26.5 MPa is finite and differs from the committed 21.0 MPa, so `change-fc0-k` (whose guard
 /// message reads "Fc0 k") stays silent.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-fc0-k/raises-the-parallel-compressive-strength-to-26-5-mpa: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `fC0K` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-fc0-k diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-fc0-k/raises-the-parallel-compressive-strength-to-26-5-mpa: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the parallel-to-grain
 /// compressive strength and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-fc0-k diff decodes");
     assert_eq!(decoded.f_c_0_k, Some(26.5), "change-fc0-k/raises-the-parallel-compressive-strength-to-26-5-mpa: the committed diff must carry fC0K = 26.5 MPa");
     assert!(decoded.f_m_k.is_none(), "change-fc0-k/raises-the-parallel-compressive-strength-to-26-5-mpa: change-fc0-k writes fC0K and must leave `f_m_k` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the compressive-strength change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-fc0-k diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-fc0-k/raises-the-parallel-compressive-strength-to-26-5-mpa: the committed diff did not carry before to after");

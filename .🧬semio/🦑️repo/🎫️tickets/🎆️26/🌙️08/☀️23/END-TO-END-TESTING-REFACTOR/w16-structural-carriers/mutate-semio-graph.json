@@ -1,0 +1,292 @@
+{
+ "rows": {
+  "create-node": {
+   "prepare": [],
+   "mutation": {
+    "CreateNode": {
+     "id": {
+      "value": "n3"
+     },
+     "kind": "filter",
+     "label": "Filtre",
+     "position": {
+      "x": -12.5,
+      "y": 64.0
+     },
+     "ports": [
+      {
+       "name": "in",
+       "kind": "in"
+      },
+      {
+       "name": "out",
+       "kind": "out"
+      },
+      {
+       "name": "bus",
+       "kind": "inOut"
+      }
+     ],
+     "properties": [
+      {
+       "key": "gain",
+       "value": {
+        "kind": "float",
+        "lexeme": "0.25"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "delete-node": {
+   "prepare": [],
+   "mutation": {
+    "DeleteNode": {
+     "id": {
+      "value": "n2"
+     }
+    }
+   }
+  },
+  "change-node-kind": {
+   "prepare": [],
+   "mutation": {
+    "ChangeNodeKind": {
+     "id": {
+      "value": "n1"
+     },
+     "new_kind": "generator"
+    }
+   }
+  },
+  "change-node-label": {
+   "prepare": [],
+   "mutation": {
+    "ChangeNodeLabel": {
+     "id": {
+      "value": "n1"
+     },
+     "new_label": "Quelle"
+    }
+   }
+  },
+  "move-node": {
+   "prepare": [],
+   "mutation": {
+    "MoveNode": {
+     "id": {
+      "value": "n2"
+     },
+     "new_position": {
+      "x": -1.5,
+      "y": 88.25
+     }
+    }
+   }
+  },
+  "add-node-port": {
+   "prepare": [],
+   "mutation": {
+    "AddNodePort": {
+     "node_id": {
+      "value": "n1"
+     },
+     "index": 0,
+     "port": {
+      "name": "reset",
+      "kind": "inOut"
+     }
+    }
+   }
+  },
+  "remove-node-port": {
+   "prepare": [],
+   "mutation": {
+    "RemoveNodePort": {
+     "node_id": {
+      "value": "n2"
+     },
+     "index": 0
+    }
+   }
+  },
+  "add-node-property": {
+   "prepare": [],
+   "mutation": {
+    "AddNodeProperty": {
+     "node_id": {
+      "value": "n1"
+     },
+     "index": 0,
+     "property": {
+      "key": "extent",
+      "value": {
+       "kind": "list",
+       "items": [
+        {
+         "kind": "int",
+         "lexeme": "3"
+        },
+        {
+         "kind": "map",
+         "entries": [
+          {
+           "key": "unit",
+           "value": {
+            "kind": "str",
+            "value": "mm"
+           }
+          }
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "remove-node-property": {
+   "prepare": [],
+   "mutation": {
+    "RemoveNodeProperty": {
+     "node_id": {
+      "value": "n2"
+     },
+     "index": 0
+    }
+   }
+  },
+  "create-edge": {
+   "prepare": [],
+   "mutation": {
+    "CreateEdge": {
+     "id": {
+      "value": "e2"
+     },
+     "source": {
+      "value": "n2"
+     },
+     "target": {
+      "value": "n1"
+     },
+     "kind": "feedback",
+     "label": "Back"
+    }
+   }
+  },
+  "delete-edge": {
+   "prepare": [],
+   "mutation": {
+    "DeleteEdge": {
+     "id": {
+      "value": "e1"
+     }
+    }
+   }
+  }
+ },
+ "vectors": {
+  "create-node": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🏗️create-node/🧪️tests/appends-a-filter-node-to-the-end-of-the-node-set/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🏗️create-node/🧪️tests/appends-a-filter-node-to-the-end-of-the-node-set/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🏗️create-node/🧪️tests/appends-a-filter-node-to-the-end-of-the-node-set/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-node": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/removes-the-sink-node-and-severs-the-edge-into-it/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/removes-the-sink-node-and-severs-the-edge-into-it/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/removes-the-sink-node-and-severs-the-edge-into-it/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "change-node-kind": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔧change-node-kind/🧪️tests/retypes-the-source-node-without-relabelling-it/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔧change-node-kind/🧪️tests/retypes-the-source-node-without-relabelling-it/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔧change-node-kind/🧪️tests/retypes-the-source-node-without-relabelling-it/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "change-node-label": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🖍️change-node-label/🧪️tests/relabels-the-source-node-without-retyping-it/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🖍️change-node-label/🧪️tests/relabels-the-source-node-without-retyping-it/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🖍️change-node-label/🧪️tests/relabels-the-source-node-without-retyping-it/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "move-node": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/📍move-node/🧪️tests/moves-the-sink-node-to-a-new-canvas-position/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/📍move-node/🧪️tests/moves-the-sink-node-to-a-new-canvas-position/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/📍move-node/🧪️tests/moves-the-sink-node-to-a-new-canvas-position/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "add-node-port": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔌add-node-port/🧪️tests/inserts-an-in-port-ahead-of-the-existing-out-port/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔌add-node-port/🧪️tests/inserts-an-in-port-ahead-of-the-existing-out-port/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔌add-node-port/🧪️tests/inserts-an-in-port-ahead-of-the-existing-out-port/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "remove-node-port": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔚remove-node-port/🧪️tests/detaches-the-trailing-out-port-from-the-source-node/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔚remove-node-port/🧪️tests/detaches-the-trailing-out-port-from-the-source-node/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔚remove-node-port/🧪️tests/detaches-the-trailing-out-port-from-the-source-node/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "add-node-property": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/➕add-node-property/🧪️tests/inserts-a-weight-property-ahead-of-the-colour-property/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/➕add-node-property/🧪️tests/inserts-a-weight-property-ahead-of-the-colour-property/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/➕add-node-property/🧪️tests/inserts-a-weight-property-ahead-of-the-colour-property/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "remove-node-property": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/➖remove-node-property/🧪️tests/detaches-the-trailing-weight-property-from-the-source-node/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/➖remove-node-property/🧪️tests/detaches-the-trailing-weight-property-from-the-source-node/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/➖remove-node-property/🧪️tests/detaches-the-trailing-weight-property-from-the-source-node/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-edge": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔗create-edge/🧪️tests/connects-the-source-node-to-the-sink-node/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔗create-edge/🧪️tests/connects-the-source-node-to-the-sink-node/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/🔗create-edge/🧪️tests/connects-the-source-node-to-the-sink-node/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-edge": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/removes-the-feedback-edge-and-keeps-both-endpoints/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/removes-the-feedback-edge-and-keeps-both-endpoints/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/removes-the-feedback-edge-and-keeps-both-endpoints/📸️snapshot/➡️after/🔣️component.json"
+  ]
+ },
+ "dirs": {
+  "create-node": [
+   "🏗️create-node",
+   "appends-a-filter-node-to-the-end-of-the-node-set"
+  ],
+  "delete-node": [
+   "🗑️delete-node",
+   "removes-the-sink-node-and-severs-the-edge-into-it"
+  ],
+  "change-node-kind": [
+   "🔧change-node-kind",
+   "retypes-the-source-node-without-relabelling-it"
+  ],
+  "change-node-label": [
+   "🖍️change-node-label",
+   "relabels-the-source-node-without-retyping-it"
+  ],
+  "move-node": [
+   "📍move-node",
+   "moves-the-sink-node-to-a-new-canvas-position"
+  ],
+  "add-node-port": [
+   "🔌add-node-port",
+   "inserts-an-in-port-ahead-of-the-existing-out-port"
+  ],
+  "remove-node-port": [
+   "🔚remove-node-port",
+   "detaches-the-trailing-out-port-from-the-source-node"
+  ],
+  "add-node-property": [
+   "➕add-node-property",
+   "inserts-a-weight-property-ahead-of-the-colour-property"
+  ],
+  "remove-node-property": [
+   "➖remove-node-property",
+   "detaches-the-trailing-weight-property-from-the-source-node"
+  ],
+  "create-edge": [
+   "🔗create-edge",
+   "connects-the-source-node-to-the-sink-node"
+  ],
+  "delete-edge": [
+   "✂️delete-edge",
+   "removes-the-feedback-edge-and-keeps-both-endpoints"
+  ]
+ }
+}

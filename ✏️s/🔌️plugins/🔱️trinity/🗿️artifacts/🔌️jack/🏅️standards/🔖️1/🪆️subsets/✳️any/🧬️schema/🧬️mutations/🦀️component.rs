@@ -82,7 +82,7 @@ pub fn inverse_trinity_graph_mutation_steps(mutation: &TrinityGraphMutation, bas
 pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>;
 pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
 
-pub async fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
+pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
     create_document_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
 }
 //#endregion 🔖️Store
@@ -91,7 +91,7 @@ pub async fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> T
 /// 🛡️ Pre-flight manifest/reference validation for one operation against `fixture` — distinct from
 /// `diff`/`inverse` (which assume a validated operation); kept centralized because it cross-checks
 /// against the compile-time `Manifest`, not a single sparse-diff concern.
-pub async fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     match operation {
@@ -156,7 +156,7 @@ pub async fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, 
     Ok(())
 }
 
-async fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     match entity {
@@ -171,7 +171,7 @@ async fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef
     Ok(())
 }
 
-async fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::TrinityRamError;
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     let (defs, path_prefix) = match entity {
@@ -195,7 +195,7 @@ async fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, 
     validate_property_bag_trinity(&path_prefix, defs, &bag)
 }
 
-async fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if manifest.node_kind(kind).is_some() {
         Ok(())
     } else {
@@ -203,7 +203,7 @@ async fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest,
     }
 }
 
-async fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if manifest.edge_kind(kind).is_some() {
         Ok(())
     } else {
@@ -211,7 +211,7 @@ async fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest,
     }
 }
 
-async fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if manifest.port_kind(kind).is_some() {
         Ok(())
     } else {
@@ -219,14 +219,14 @@ async fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest,
     }
 }
 
-async fn validate_edge_properties_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_edge_properties_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     let Some(def) = manifest.edge_kind(kind) else {
         return validate_edge_kind_trinity(manifest, kind);
     };
     validate_property_bag_trinity(&format!("edges/{kind}/properties"), &def.properties, properties)
 }
 
-async fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::PropertyDef], bag: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::PropertyDef], bag: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     use crate::artifacts::jack::{PropertyKind, TrinityRamError};
     for def in defs {
         if def.kind == PropertyKind::Derived {
@@ -247,7 +247,7 @@ async fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jac
     Ok(())
 }
 
-async fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artifacts::jack::PropertyDef) -> bool {
+fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artifacts::jack::PropertyDef) -> bool {
     match value {
         PropertyValue::Null => def.value_type.id() == "null",
         PropertyValue::Bool(_) => def.value_type.id() == "boolean",
@@ -271,19 +271,19 @@ async fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate:
 //#region 🔖️BatchHelpers
 /// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `MutationDiff::apply` delegate (P6:
 /// no per-variant hand match here anymore; each kind's real logic lives in its own triad `🔺️diff` leaf).
-pub async fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
+pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> protocol::MutationApplyResult<()> {
     let outcome = mutation.diff(snapshot);
     let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
     *snapshot = next;
     Ok(())
 }
 
-pub async fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
+pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
     mutation.inverse(projection)
 }
 
 /// ▶️ Validates then applies a batch of operations, failing atomically on the first invalid one.
-pub async fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::artifacts::jack::TrinityRamError> {
+pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::artifacts::jack::TrinityRamError> {
     let mut snapshot = fixture;
     for operation in operations {
         validate_trinity_graph_operation(operation, &snapshot)?;
@@ -293,7 +293,7 @@ pub async fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[
 }
 
 /// ▶️ Validates a batch incrementally, then dispatches it as one VCS edit.
-pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+pub fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::artifacts::jack::TrinityRamError> {
     if operations.is_empty() {
         return Ok(());
     }
@@ -332,7 +332,7 @@ mod tests {
         assert!(!manifest.contains("\"set-snapshot\""), "whole-document replace is not a mutation here — the catalog must not smuggle it back in");
     }
 
-    async fn mini_fixture() -> JackSnapshot {
+    fn mini_fixture() -> JackSnapshot {
         JackSnapshot::with_content(
             JackSnapshot::SCHEMA.into(),
             "mini".into(),
@@ -379,7 +379,7 @@ mod tests {
         )
     }
 
-    async fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
+    fn mini_node(id: &str, x: f64, y: f64, ports: Vec<Port>) -> Node {
         Node { id: id.into(), kind: "Piece".into(), name: id.into(), x, y, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports }
     }
 

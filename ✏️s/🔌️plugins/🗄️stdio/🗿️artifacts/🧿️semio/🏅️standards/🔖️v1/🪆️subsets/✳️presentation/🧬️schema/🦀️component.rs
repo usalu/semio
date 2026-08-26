@@ -129,12 +129,12 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn empty_from_snapshot_and_build_round_trip() {
-            let builder = SemioPresentationBuilderConstruction::empty();
-            assert_eq!(builder.clone().build().unwrap(), SemioPresentationSnapshot::default());
+            let builder = SemioPresentationBuilderConstruction::empty().await;
+            assert_eq!(builder.clone().build().await.unwrap(), SemioPresentationSnapshot::default());
 
             let populated = SemioPresentationSnapshot { masters: vec![SlideMaster { id: "m1".into(), shapes: Vec::new() }], ..Default::default() };
-            let builder2 = SemioPresentationBuilderConstruction::from_snapshot(populated.clone());
-            assert_eq!(builder2.build().unwrap(), populated);
+            let builder2 = SemioPresentationBuilderConstruction::from_snapshot(populated.clone()).await;
+            assert_eq!(builder2.build().await.unwrap(), populated);
         }
 
         #[semio_framework_async_macros::async_test]
@@ -145,11 +145,11 @@ pub mod derived_construction {
             snap.slides.push(Slide { id: "s1".into(), layout_id: Some("l1".into()), shapes: Vec::new(), notes: Vec::new() });
 
             let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-            let from_text = SemioPresentationBuilderConstruction::from_text(&text).unwrap().build().unwrap();
+            let from_text = SemioPresentationBuilderConstruction::from_text(&text).await.unwrap().build().await.unwrap();
             assert_eq!(from_text, snap);
 
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-            let from_binary = SemioPresentationBuilderConstruction::from_binary(&bytes).unwrap().build().unwrap();
+            let from_binary = SemioPresentationBuilderConstruction::from_binary(&bytes).await.unwrap().build().await.unwrap();
             assert_eq!(from_binary, snap);
         }
 
@@ -157,12 +157,12 @@ pub mod derived_construction {
         async fn mutate_then_absorb_matches_direct_apply() {
             let builder = SemioPresentationBuilderConstruction::empty();
             let mutation = SemioPresentationMutation::InsertMaster { master: SlideMaster { id: "m1".into(), shapes: Vec::new() } };
-            let (builder, diff) = builder.mutate(mutation);
-            let mutated_snapshot = builder.clone().build().unwrap();
+            let (builder, diff) = builder.await.mutate(mutation).await;
+            let mutated_snapshot = builder.clone().build().await.unwrap();
             assert_eq!(mutated_snapshot.masters.len(), 1);
 
-            let reabsorbed = SemioPresentationBuilderConstruction::empty().absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
-            assert_eq!(reabsorbed.build().unwrap(), mutated_snapshot);
+            let reabsorbed = SemioPresentationBuilderConstruction::empty().await.absorb(diff.diff().clone()).await.expect("absorb must succeed for a well-formed fixture");
+            assert_eq!(reabsorbed.build().await.unwrap(), mutated_snapshot);
         }
     }
     //#endregion 🧪️Tests
@@ -246,30 +246,30 @@ pub mod derived_analysis {
         #[semio_framework_async_macros::async_test]
         async fn sniff_reports_high_for_real_payloads_low_for_garbage() {
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&sample());
-            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
-            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a presentation")), IoConfidence::Low);
+            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)).await, IoConfidence::High);
+            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a presentation")).await, IoConfidence::Low);
 
             let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&sample());
-            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
-            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text("garbage")), IoConfidence::Low);
+            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)).await, IoConfidence::High);
+            assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text("garbage")).await, IoConfidence::Low);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_binary_and_text_sources() {
             let snap = sample();
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-            let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
+            let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]).await;
             assert_eq!(analysis.confidence, IoConfidence::High);
             assert_eq!(analysis.parts.snapshot, Some(snap.clone()));
 
             let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-            let analysis2 = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(&text)]);
+            let analysis2 = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(&text)]).await;
             assert_eq!(analysis2.parts.snapshot, Some(snap));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_flags_low_confidence_on_undecodable_source() {
-            let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(b"garbage")]);
+            let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(b"garbage")]).await;
             assert_eq!(analysis.confidence, IoConfidence::Low);
             assert!(!analysis.diagnostics.is_empty());
         }

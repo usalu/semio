@@ -2,20 +2,24 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
   "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.note.note` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "oracles": [
     {
-      "id": "note-document-mutation-semantics",
+      "id": "note-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
       "capabilities": [
         "note-1-mutate"
       ],
-      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `NoteMutation` in any case: the 33 kinds ARE this subset's specification — 9 document-root scalars (the title plus the eight grid/snap/tool settings), 3 id-keyed image-asset kinds, and 21 kinds over an id-keyed, z-ordered, group-NESTABLE block tree whose leaves carry four different typed contents (text, math, ink strokes and tables). No external reader has a model of that tree to check ours against. What stands in its place is the committed, independently handcrafted `(before, mutation, after, diff, outcome)` specification vector under each of the 33 `🧬️mutations/<slug>/🧪️tests/<fixture>/` leaves — every one of which moves the document, which is not true of any other artifact covered in this wave — plus the inverse law as a metamorphic property: applying a kind and then its OWN computed inverse must restore the exact pre-mutation vector, POSITION in the block tree included and not merely membership.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.note.note` document and all thirty-three typed mutations, in Python, at `../../../../../🧪️tests/mutate-note-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the document's members and the six block kinds), rules 1, 2, 3, 5 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — including rule 5's `move-to-<container>` for re-parenting and rule 7's absolute `move`/`resize` against relative `drag` — and the thirty-three committed `(before, mutation, after, outcome)` vectors, which are the only statement of five things: that `drag-blocks` translates a named block AND ITS WHOLE SUBTREE; that `delete-asset` removes the `assets` MEMBER outright when it empties the table; that `insert-table-column` names the appended column by its spreadsheet letter; that the two `insert-table-*` verbs append BLANK cells, which is what makes their inverses exact against the committed trailing-blank vectors; and how `duplicate-blocks` places its copies. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `note-document-mutation-semantics` no-oracle decision, whose argument was refuted in this same wave by `mutate-semio-drawing`, `mutate-semio-mesh` and the fifteen `📕️norm` references, all of which took Python second implementations over this same carrier. A THIRD-PARTY library was declined, not merely absent: no canvas or whiteboard format models a z-ORDERED tree whose leaves are six differently-shaped typed blocks reached by different verbs, and none of them reads this carrier. TWO FINDINGS THE REFERENCE MADE WHILE BEING WRITTEN. First, `duplicate-blocks` computes each copy's insertion index against the PRE-MUTATION list and does not re-base it as earlier copies land: its committed vector duplicates `blk-ink` (root index 1) and `blk-table` (root index 2) in one mutation, and the committed after-snapshot orders the root `blk-text, blk-ink, blk-ink-copy, blk-table-COPY, blk-table, …` — the second copy lands BEFORE its own source, where the singular `duplicate-block` places its copy after. The reference reproduces the committed order and names the behaviour rather than quietly re-basing it. Second, the committed grammar and the committed artifact disagree, which is why `identity-round-trip` is refused below. THREE SCENARIOS THE REFERENCE REFUSES BY CLAUSE, and says so in role. `edit-block-text` in both roles: a text block does not hold its paragraphs, it holds a composed child handle into an `s.stdio.semio@v1/text` document, and the committed vector's whole observable effect is that handle's `childId` moving to a content address of the child AFTER the new paragraphs are written — a function no document in this repository states. Every OTHER verb over that same block is implemented. And `identity-round-trip`: unlike its `✒️writer`, `🌿️vcs` and `🔌️wires` siblings this subset commits a REAL grammar rather than the repository-wide `payload = OCTET+` placeholder, and grammar and artifact disagree on three points — `block = text-block | image-block | shape-block` covers three of the SIX declared block kinds, leaving stroke, table, math and group with no production at all; `block-field` names `paragraphs` and `asset-id` while the artifact writes neither and writes `content=child_id=… target=\"…\"`, a flattened nested record nothing bounds; and `artifact-mark = \"note.note\"` is contradicted by the artifact's own first line `semio note.note.dsl v1`. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "note-1-any",

@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-tower-is-chimney` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `tower_is_chimney` from true to false, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_is_chimney_applies_to_committed_after() {
+fn change_tower_is_chimney_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-tower-is-chimney applies to its committed before-snapshot");
     assert!(!applied.tower_is_chimney, "change-tower-is-chimney/turns-tower-is-chimney-off: tower_is_chimney must read false after the change");
     assert_eq!(applied, expected_after(), "change-tower-is-chimney/turns-tower-is-chimney-off: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_tower_is_chimney_applies_to_committed_after() {
 /// ↩️ `change-tower-is-chimney` is its own inverse partner: the inverse step restores `tower_is_chimney` to its pre-change
 /// true and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_is_chimney_inverse_restores_before() {
+fn change_tower_is_chimney_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-tower-is-chimney applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_tower_is_chimney_inverse_restores_before() {
 /// decode then encode is a fixed point, so `towerIsChimney` and `newTowerIsChimney` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_is_chimney_committed_json_is_canonical() {
+fn change_tower_is_chimney_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-tower-is-chimney snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-tower-is-chimney snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_tower_is_chimney_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-tower-is-chimney` at false is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_is_chimney_declared_outcome_holds() {
+fn change_tower_is_chimney_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-tower-is-chimney outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-tower-is-chimney/turns-tower-is-chimney-off: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_tower_is_chimney_declared_outcome_holds() {
 /// assertion: it pins that only `towerIsChimney` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `towerQNominal`.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_is_chimney_produces_committed_diff() {
+fn change_tower_is_chimney_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().tower_is_chimney, Some(false), "change-tower-is-chimney/turns-tower-is-chimney-off: the diff must set tower_is_chimney to false");
     assert!(outcome.diff().artifact.is_none(), "change-tower-is-chimney/turns-tower-is-chimney-off: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_tower_is_chimney_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-tower-is-chimney`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_is_chimney_committed_diff_is_canonical() {
+fn change_tower_is_chimney_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-tower-is-chimney committed diff decodes");
     assert_eq!(decoded.tower_is_chimney, Some(false), "change-tower-is-chimney/turns-tower-is-chimney-off: the committed diff must carry tower_is_chimney at false");
     assert!(decoded.selected_check_index.is_none(), "change-tower-is-chimney/turns-tower-is-chimney-off: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_tower_is_chimney_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the true to false delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_tower_is_chimney_committed_diff_applies_to_after() {
+fn change_tower_is_chimney_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-tower-is-chimney committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-tower-is-chimney committed diff applies to the before-snapshot");
     assert!(!produced.tower_is_chimney, "change-tower-is-chimney/turns-tower-is-chimney-off: the committed diff must leave tower_is_chimney reading false");

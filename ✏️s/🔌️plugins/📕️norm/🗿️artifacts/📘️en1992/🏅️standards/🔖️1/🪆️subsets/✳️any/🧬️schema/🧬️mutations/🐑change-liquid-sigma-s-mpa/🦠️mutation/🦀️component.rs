@@ -15,15 +15,15 @@ pub struct ChangeLiquidSigmaSMpa {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidSigmaSMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "liquid-sigma-s-mpa", kind: "change-liquid-sigma-s-mpa", record: "ChangedLiquidSigmaSMpa" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_liquid_sigma_s_mpa::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_liquid_sigma_s_mpa::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change liquid sigma s mpa to {:?}", self.new_liquid_sigma_s_mpa)
     }
 }

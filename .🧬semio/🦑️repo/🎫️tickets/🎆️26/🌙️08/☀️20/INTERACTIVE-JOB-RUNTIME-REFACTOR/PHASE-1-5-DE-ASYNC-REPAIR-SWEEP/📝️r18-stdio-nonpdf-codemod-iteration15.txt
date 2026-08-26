@@ -1,4 +1,0 @@
-[run r13-lixhaxna] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=/📄️pdf/
-[run r13-lixhaxna] iteration 1: total errors=289, async-class=197
-[run r13-lixhaxna] iteration 1: planned 3 edits (195 residue)
-[run r13-lixhaxna] reached max-iterations=1 without reaching a fixpoint.

@@ -1,0 +1,68 @@
+# Wave 16 — verbatim verification. All commands run from 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test.
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-gismap-1
+[test] level=exhaustive cases=1 executed=37 passed=37 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-gisterrain-1
+[test] level=exhaustive cases=1 executed=7 passed=7 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-curate-1
+[test] level=exhaustive cases=1 executed=10 passed=10 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-raster-1
+[test] level=exhaustive cases=1 executed=37 passed=37 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-jack-1
+[test] level=exhaustive cases=1 executed=25 passed=24 failed=1 errored=0 parity=0/0
+  exit=1
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-rewrite-1
+[test] level=exhaustive cases=1 executed=22 passed=22 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-fem2d-1
+[test] level=exhaustive cases=1 executed=76 passed=76 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-fem3d-1
+[test] level=exhaustive cases=1 executed=76 passed=76 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts oracle exhaustive --case mutate-block-2d-1
+[test] level=exhaustive cases=1 executed=79 passed=79 failed=0 errored=0 parity=0/0
+  exit=0
+
+$ bun ./📜️script.ts contract --case mutate-block-2d-1   # contract runs repo-wide even with --case
+2 high-priority breach(es) across 1 rule(s):
+      2  testing/discovery
+
+  testing/discovery  🧰️framework  42 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s  4 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json
+  exit=1
+
+$ bun ./📜️script.ts dependency
+[dependency] ecosystems=4 entries=232 production-reachable=151 test-oracle=30
+  exit=0
+
+$ bun ./📜️script.ts parity exhaustive --case mutate-gismap-1 --implementation rust
+[test] level=exhaustive cases=1 executed=74 passed=73 failed=1 errored=0 parity=30/37
+[test] parity failed: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap::mutate-gismap-1::mutate-create-position::rust::subject (10 differences)
+[test] parity failed: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap::mutate-gismap-1::mutate-create-route::rust::subject (19 differences)
+[test] parity failed: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap::mutate-gismap-1::mutate-create-region::rust::subject (34 differences)
+[test] parity failed: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap::mutate-gismap-1::inverse-create-position::rust::subject (10 differences)
+[test] parity failed: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap::mutate-gismap-1::inverse-delete-position::rust::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap::mutate-gismap-1::inverse-create-route::rust::subject (19 differences)
+[test] parity failed: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap::mutate-gismap-1::inverse-create-region::rust::subject (34 differences)
+  exit=1
+
+$ bun ./📜️script.ts parity exhaustive --case mutate-curate-1 --implementation rust   # and mutate-gisterrain-1
+[budget] cargo run … exceeded 900000ms — killed. Likely shared cargo target-dir lock contention
+from another concurrent session — investigate before retrying.
+  (three attempts, ~45 min wall clock, no result — see §5 of the wave note)
+  (a fourth run, re-verifying mutate-gismap-1, was killed with SIGTERM exit=143 at 7 minutes)

@@ -1,152 +1,151 @@
 @capability-en1991-1-mutate
-@no-oracle-en1991-1-mutation-semantics
+@oracle-en1991-1-python-independent
 @comparison-ordered-json-v1
 @mutations-en1991-1-any
-Feature: Apply every typed EN 1991 mutation to its committed specification fixtures
-  `s.norm.en1991` is a semio-NATIVE artifact — no third party reads or writes its
-  `.dsl.semio`/`.pack.semio` envelope — so there is no reference implementation to register as an
-  oracle. That is recorded as the `en1991-1-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and it means the runner
-  executes NO oracle role for this case: every assertion below lives inside the subject handler,
-  which compares the applied document against the committed after-snapshot and the undone document
-  against the committed before-snapshot, and fails with both documents printed. A handler that
-  merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed EN 1991 mutation against an independent Python implementation
+  `s.norm.en1991` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  assumed: PyPI serves no `en1991` distribution, and none for `eurocode`, `vdi3805` or `iso16757`
+  either, and the nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`)
+  implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
+  authoritative over this subset's `En1991Mutation` vocabulary. The second producer a differential
+  comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is
+  it: all 32 kinds of this vocabulary, written in Python from the repository's own written
+  specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
+  ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
+  `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape
+  rules — plus this subset's committed catalog for the closed list of kinds. It imports nothing from
+  the Rust it judges and transliterates none of it: the document field a `new*` argument names is
+  resolved by normalised spelling against the document's own keys, which is what the naming mechanic
+  states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the
+  spellings in THIS subset where that resolution can genuinely go wrong. The recorded no-oracle
+  decision it replaces is gone from
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a
+  reference to compare against.
 
-  Thirty-two document-root scalars, one `change-<field>` each, spanning the whole of Eurocode 1:
-  loaded area and imposed-load category, national annex, self-weight (material and layer
-  thickness, plus an assumed characteristic value), fire (curve, required resistance, member
-  capacity), snow (zone, altitude, characteristic load), wind (zone, basic speed), thermal delta
-  T, construction activity, accidental impact (vehicle mass and speed), bridge traffic (notional
-  lanes, span, lane width, moment resistance), crane and hoist classes with hoisting speed, silo
-  bulk material (density, height, hydraulic radius, wall friction mu, lateral pressure ratio K)
-  and the size and dynamic factors c_s and c_d.
+  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path below is a declared `asset://` fixture, so neither side holds a transcription that could
+  drift. All thirty-two kinds are flat `change-<field>` edits, but the field set is the most
+  HETEROGENEOUS in the plugin: one document carries snow (`change-snow-zone`,
+  `change-snow-altitude-m`), wind (`change-wind-zone`, `change-en-vbms`, `change-cd`, `change-cs`),
+  thermal (`change-delta-tk`), crane (`change-crane-class`, `change-hoist-class`,
+  `change-hoisting-speed-ms`), silo (`change-silo-k`, `change-silo-mu`,
+  `change-silo-bulk-density-kn-m3`), bridge, accidental-impact and fire families side by side. The
+  reading risk here is not spelling but SCOPE — an argument resolved into the wrong action family
+  still names a real key. Each side then asserts the same three laws in role — the applied document
+  must BE the committed after-snapshot; an `applied` vector must move the document and a `rejected`
+  one must leave it bit-identical; and the mutation followed by its OWN computed inverse must
+  restore the before-snapshot exactly. What `parity` adds on top is the only thing a single
+  implementation can never provide: that two implementations, in two languages, written from one
+  written specification, reach the same document.
 
-  This vocabulary is the one whose SPELLING is load-bearing, and its own module header says why:
-  the derive's `to_kebab` merges adjacent all-caps runs when no lowercase letter anchors a word
-  boundary, so `ChangeEnVBMS` becomes `change-en-vbms` and not `change-en-v-b-m-s`,
-  `ChangeEnSKKnM2` becomes `change-en-sk-kn-m2`, `ChangeCS` becomes `change-cs` and `ChangeCD`
-  becomes `change-cd` — while the payload's own Rust field still addresses `en_v_b_m_s`. The
-  catalog beside this feature is generated from each leaf's own `SemanticDescriptor.kind`, not
-  from a hand-transliteration of the variant name, and `kinds_match_the_enum_and_the_catalog`
-  fails the moment those two spellings part company.
-    The committed fixture chosen for the identity scenario is a REAL retail hydrocarbon-fire case,
-    not a default document: `switches-fire-curve-to-hydrocarbon` and
-    `extends-fire-resistance-to-120-min` are the same design decision the example asset records.
+  `inverse-` projects BOTH the mutated and the restored document. Every kind is scalar, so the
+  restored document is the before-document on all thirty-two rows; the mutated projection is the
+  only half that tells the snow row from the silo row.
 
-  Each of the 32 kinds carries its own independently handcrafted `(before, mutation, after, diff,
-  outcome)` quintet under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, and this
-  feature re-exercises those SAME committed bytes end to end through `apply_en1991_mutation`
-  rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture tests do.
-  The committed `🎯️outcome` decides which contract a row is held to: `applied` demands the
-  observability law (the document must MOVE), `rejected` demands the opposite and stricter one —
-  the mutation must be refused and the document must come back bit-identical. All 32 committed
-  vectors declare `applied`, so every row below is held to the observability law: a kind that left
-  the document bit-for-bit unchanged would fail rather than pass silently.
-
-  The identity scenario reads the real committed EN 1991 document at
-  `📚️examples/📕️retail-hydrocarbon-fire`, not a fixture authored for this case. Its DSL carrier is
-  deliberately byte-preserving — the committed file IS this codec's own canonical printer output,
-  so reproducing it exactly is the correct answer and anything else is the defect — which is why
-  that half of the identity law is asserted as `carrier_is_exact` rather than as the usual
-  no-byte-pass-through inequality. The evidence that the document was genuinely PARSED rather than
-  copied comes from the other half: the same snapshot is round-tripped through two further,
-  independently written codecs — the binary `.pack.semio` protocol and the JSON projection — and
-  all three must agree on one document. The committed binary twin
-  `🎒️retail-hydrocarbon-fire.pack.semio` is decoded and cross-checked against the text artifact as
-  well, so two separately committed files written by two separate codecs have to describe the same
-  EN 1991 document.
+  ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
+  `📚️examples/📕️retail-hydrocarbon-fire/🖼️assets/🗣️retail-hydrocarbon-fire.dsl.semio` — a named
+  hydrocarbon-fire retail case rather than a generic demo, so the fire family (`change-fire-curve`,
+  `change-fire-resistance-min`, `change-fire-member-capacity-c`) is exercised against a document
+  that actually motivates it. It is still an authored case, not a submitted design. The carrier has
+  no published grammar: the committed `📖️component.grammar.semio` is the repository-wide `payload =
+  OCTET+` placeholder, so the two implementations are compared at the envelope preamble, the ordered
+  `key=value` fields and the digest and length of what each re-emitted — never at a
+  carrier-token-to-enum mapping this repository nowhere states.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot, mutation and outcome fixture for the <id> kind
-    When <id> is applied through apply_en1991_mutation
-    Then the resulting document matches the committed after-snapshot fixture for <id> and honours the committed outcome status
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id |
-      | change-area-m2 |
-      | change-category |
-      | change-annex |
-      | change-self-weight-material |
-      | change-self-weight-thickness-m |
-      | change-assumed-gk-kn-m2 |
-      | change-fire-curve |
-      | change-fire-resistance-min |
-      | change-fire-member-capacity-c |
-      | change-snow-zone |
-      | change-snow-altitude-m |
-      | change-en-sk-kn-m2 |
-      | change-wind-zone |
-      | change-en-vbms |
-      | change-delta-tk |
-      | change-construction-activity |
-      | change-accidental-mass-t |
-      | change-accidental-speed-km-h |
-      | change-bridge-lane |
-      | change-bridge-span-m |
-      | change-bridge-lane-width-m |
-      | change-bridge-moment-resistance-knm |
-      | change-crane-class |
-      | change-hoist-class |
-      | change-hoisting-speed-ms |
-      | change-silo-bulk-density-kn-m3 |
-      | change-silo-height-m |
-      | change-silo-hydraulic-radius-m |
-      | change-silo-mu |
-      | change-silo-k |
-      | change-cs |
-      | change-cd |
+      | id                                  | dir                                  | fixture                                           |
+      | change-area-m2                      | 🧪change-area-m2                      | enlarges-loaded-area-to-360-m2                    |
+      | change-category                     | 🧭change-category                     | reclassifies-imposed-load-to-category-d           |
+      | change-annex                        | 🧫change-annex                        | switches-national-annex-to-en                     |
+      | change-self-weight-material         | 🏷️change-self-weight-material        | switches-self-weight-material-to-structural-steel |
+      | change-self-weight-thickness-m      | 🧮change-self-weight-thickness-m      | thickens-self-weight-layer-to-0-375-m             |
+      | change-assumed-gk-kn-m2             | 🎢change-assumed-gk-kn-m2             | raises-assumed-gk-to-7-5-kn-m2                    |
+      | change-fire-curve                   | 🔭change-fire-curve                   | switches-fire-curve-to-hydrocarbon                |
+      | change-fire-resistance-min          | 🧱change-fire-resistance-min          | extends-fire-resistance-to-120-min                |
+      | change-fire-member-capacity-c       | 🏛️change-fire-member-capacity-c      | raises-fire-member-capacity-to-700-c              |
+      | change-snow-zone                    | 💧change-snow-zone                    | moves-site-to-snow-zone-3                         |
+      | change-snow-altitude-m              | 🌡️change-snow-altitude-m             | lifts-snow-altitude-to-780-m                      |
+      | change-en-sk-kn-m2                  | 🏗️change-en-sk-kn-m2                 | raises-en-characteristic-snow-load-to-1-25-kn-m2  |
+      | change-wind-zone                    | 🌞change-wind-zone                    | moves-site-to-wind-zone-4                         |
+      | change-en-vbms                      | 📈change-en-vbms                      | raises-en-basic-wind-speed-to-30-m-s              |
+      | change-delta-tk                     | ⚡change-delta-tk                     | raises-thermal-delta-tk-to-45-k                   |
+      | change-construction-activity        | 🪟change-construction-activity        | switches-construction-activity-to-concreting      |
+      | change-accidental-mass-t            | 🎚️change-accidental-mass-t           | lightens-impact-vehicle-to-12-5-t                 |
+      | change-accidental-speed-km-h        | 🕹️change-accidental-speed-km-h       | lowers-impact-speed-to-50-km-h                    |
+      | change-bridge-lane                  | ❄️change-bridge-lane                 | widens-carriageway-to-3-notional-lanes            |
+      | change-bridge-span-m                | 🎯change-bridge-span-m                | lengthens-bridge-span-to-36-m                     |
+      | change-bridge-lane-width-m          | 🗺️change-bridge-lane-width-m         | widens-notional-lane-to-3-5-m                     |
+      | change-bridge-moment-resistance-knm | 📡change-bridge-moment-resistance-knm | raises-bridge-moment-resistance-to-4500-knm       |
+      | change-crane-class                  | 🔀change-crane-class                  | upgrades-crane-to-class-hc3                       |
+      | change-hoist-class                  | 🧊change-hoist-class                  | upgrades-hoist-to-class-hc4                       |
+      | change-hoisting-speed-ms            | 🌬️change-hoisting-speed-ms           | speeds-hoisting-to-1-25-m-s                       |
+      | change-silo-bulk-density-kn-m3      | 🌗change-silo-bulk-density-kn-m3      | raises-silo-bulk-density-to-10-5-kn-m3            |
+      | change-silo-height-m                | 🎛️change-silo-height-m               | raises-silo-to-18-m                               |
+      | change-silo-hydraulic-radius-m      | 📊change-silo-hydraulic-radius-m      | widens-silo-hydraulic-radius-to-2-25-m            |
+      | change-silo-mu                      | 📉change-silo-mu                      | raises-silo-wall-friction-mu-to-0-625             |
+      | change-silo-k                       | 🔬change-silo-k                       | raises-silo-lateral-pressure-ratio-k-to-0-625     |
+      | change-cs                           | 🔥change-cs                           | raises-size-factor-cs-to-1-125                    |
+      | change-cd                           | 🔆change-cd                           | lowers-dynamic-factor-cd-to-0-875                 |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_en1991_mutation
-    And the mutation's own computed inverse is applied through apply_en1991_mutation
-    Then the document matches the committed before-snapshot fixture again
+  @mode-differential
+  Scenario Outline: Undoing <id> restores its committed before-snapshot
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When each implementation applies the committed mutation and then its OWN computed inverse
+    Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id |
-      | change-area-m2 |
-      | change-category |
-      | change-annex |
-      | change-self-weight-material |
-      | change-self-weight-thickness-m |
-      | change-assumed-gk-kn-m2 |
-      | change-fire-curve |
-      | change-fire-resistance-min |
-      | change-fire-member-capacity-c |
-      | change-snow-zone |
-      | change-snow-altitude-m |
-      | change-en-sk-kn-m2 |
-      | change-wind-zone |
-      | change-en-vbms |
-      | change-delta-tk |
-      | change-construction-activity |
-      | change-accidental-mass-t |
-      | change-accidental-speed-km-h |
-      | change-bridge-lane |
-      | change-bridge-span-m |
-      | change-bridge-lane-width-m |
-      | change-bridge-moment-resistance-knm |
-      | change-crane-class |
-      | change-hoist-class |
-      | change-hoisting-speed-ms |
-      | change-silo-bulk-density-kn-m3 |
-      | change-silo-height-m |
-      | change-silo-hydraulic-radius-m |
-      | change-silo-mu |
-      | change-silo-k |
-      | change-cs |
-      | change-cd |
+      | id                                  | dir                                  | fixture                                           |
+      | change-area-m2                      | 🧪change-area-m2                      | enlarges-loaded-area-to-360-m2                    |
+      | change-category                     | 🧭change-category                     | reclassifies-imposed-load-to-category-d           |
+      | change-annex                        | 🧫change-annex                        | switches-national-annex-to-en                     |
+      | change-self-weight-material         | 🏷️change-self-weight-material        | switches-self-weight-material-to-structural-steel |
+      | change-self-weight-thickness-m      | 🧮change-self-weight-thickness-m      | thickens-self-weight-layer-to-0-375-m             |
+      | change-assumed-gk-kn-m2             | 🎢change-assumed-gk-kn-m2             | raises-assumed-gk-to-7-5-kn-m2                    |
+      | change-fire-curve                   | 🔭change-fire-curve                   | switches-fire-curve-to-hydrocarbon                |
+      | change-fire-resistance-min          | 🧱change-fire-resistance-min          | extends-fire-resistance-to-120-min                |
+      | change-fire-member-capacity-c       | 🏛️change-fire-member-capacity-c      | raises-fire-member-capacity-to-700-c              |
+      | change-snow-zone                    | 💧change-snow-zone                    | moves-site-to-snow-zone-3                         |
+      | change-snow-altitude-m              | 🌡️change-snow-altitude-m             | lifts-snow-altitude-to-780-m                      |
+      | change-en-sk-kn-m2                  | 🏗️change-en-sk-kn-m2                 | raises-en-characteristic-snow-load-to-1-25-kn-m2  |
+      | change-wind-zone                    | 🌞change-wind-zone                    | moves-site-to-wind-zone-4                         |
+      | change-en-vbms                      | 📈change-en-vbms                      | raises-en-basic-wind-speed-to-30-m-s              |
+      | change-delta-tk                     | ⚡change-delta-tk                     | raises-thermal-delta-tk-to-45-k                   |
+      | change-construction-activity        | 🪟change-construction-activity        | switches-construction-activity-to-concreting      |
+      | change-accidental-mass-t            | 🎚️change-accidental-mass-t           | lightens-impact-vehicle-to-12-5-t                 |
+      | change-accidental-speed-km-h        | 🕹️change-accidental-speed-km-h       | lowers-impact-speed-to-50-km-h                    |
+      | change-bridge-lane                  | ❄️change-bridge-lane                 | widens-carriageway-to-3-notional-lanes            |
+      | change-bridge-span-m                | 🎯change-bridge-span-m                | lengthens-bridge-span-to-36-m                     |
+      | change-bridge-lane-width-m          | 🗺️change-bridge-lane-width-m         | widens-notional-lane-to-3-5-m                     |
+      | change-bridge-moment-resistance-knm | 📡change-bridge-moment-resistance-knm | raises-bridge-moment-resistance-to-4500-knm       |
+      | change-crane-class                  | 🔀change-crane-class                  | upgrades-crane-to-class-hc3                       |
+      | change-hoist-class                  | 🧊change-hoist-class                  | upgrades-hoist-to-class-hc4                       |
+      | change-hoisting-speed-ms            | 🌬️change-hoisting-speed-ms           | speeds-hoisting-to-1-25-m-s                       |
+      | change-silo-bulk-density-kn-m3      | 🌗change-silo-bulk-density-kn-m3      | raises-silo-bulk-density-to-10-5-kn-m3            |
+      | change-silo-height-m                | 🎛️change-silo-height-m               | raises-silo-to-18-m                               |
+      | change-silo-hydraulic-radius-m      | 📊change-silo-hydraulic-radius-m      | widens-silo-hydraulic-radius-to-2-25-m            |
+      | change-silo-mu                      | 📉change-silo-mu                      | raises-silo-wall-friction-mu-to-0-625             |
+      | change-silo-k                       | 🔬change-silo-k                       | raises-silo-lateral-pressure-ratio-k-to-0-625     |
+      | change-cs                           | 🔥change-cs                           | raises-size-factor-cs-to-1-125                    |
+      | change-cd                           | 🔆change-cd                           | lowers-dynamic-factor-cd-to-0-875                 |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed EN 1991 document through every encoding it has
+  Scenario: Re-emit the real committed EN 1991 document from the parsed carrier
     Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️retail-hydrocarbon-fire/🖼️assets/🗣️retail-hydrocarbon-fire.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️retail-hydrocarbon-fire/🖼️assets/🎒️retail-hydrocarbon-fire.pack.semio
-    When the text artifact is parsed, printed back to DSL and parsed again, and the same document is round-tripped through the binary pack protocol and the JSON projection
-    Then the canonical DSL rendering is reproduced byte for byte and every decoding agrees on one EN 1991 document
+    When each implementation parses the artifact and prints it back to its canonical carrier bytes
+    Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

@@ -181,14 +181,14 @@ mod tests {
         let snapshot_87a = real_87a_snapshot();
         let pack_87a = <Gif87aSnapshot as store::ArtifactPack>::encode_pack(&snapshot_87a);
 
-        let pack_89a = store::migrate_document(&from, &to, &pack_87a).expect("a registered (87a -> 89a) migration must be found and must succeed");
+        let pack_89a = store::migrate_document(&from, &to, &pack_87a).await.expect("a registered (87a -> 89a) migration must be found and must succeed");
         let snapshot_89a = <Gif89aSnapshot as store::ArtifactPack>::decode_pack(&pack_89a).expect("migrated pack bytes must decode as a real 89a snapshot");
 
         assert_eq!(snapshot_89a.frames.len(), 1);
         assert_eq!(snapshot_89a.frames[0].indices, snapshot_87a.images[0].indices, "indices must be byte-identical end-to-end through the registry");
 
         let unregistered_to = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "99z".into(), subset: "*".into() };
-        assert!(store::migrate_document(&from, &unregistered_to, &pack_87a).is_err(), "an unregistered (from, to) pair must return a clear Err, not panic or silently succeed");
+        assert!(store::migrate_document(&from, &unregistered_to, &pack_87a).await.is_err(), "an unregistered (from, to) pair must return a clear Err, not panic or silently succeed");
     }
 }
 //#endregion Tests

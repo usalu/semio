@@ -15,15 +15,15 @@ pub struct ChangeAnchorASMm2 {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorASMm2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "anchor-as-mm2", kind: "change-anchor-as-mm2", record: "ChangedAnchorASMm2" };
 
-    async fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_anchor_a_s_mm2::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
+    fn inverse(&self, base: &En1992Snapshot) -> Vec<En1992Mutation> {
         crate::artifacts::en1992::mutations::change_anchor_a_s_mm2::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change anchor a s mm2 to {:?}", self.new_anchor_a_s_mm2)
     }
 }

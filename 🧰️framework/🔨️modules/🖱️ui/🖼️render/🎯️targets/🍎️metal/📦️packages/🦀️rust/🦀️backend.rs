@@ -20,16 +20,17 @@
 compile_error!("semio-framework-ui-backend-metal builds only on macOS.");
 
 use crate::frame_buffers::FrameBuffers;
+use crate::objective_c::{
+    system_default_device, with_appkit_view, CAMetalLayer as MetalLayer, MTLBuffer as MetalBuffer, MTLCommandBuffer as CommandBuffer, MTLCommandQueue as Queue,
+    AutoreleasePool, MTLDevice as Device, MTLRenderCommandEncoder as Encoder, MTLRenderPassDescriptor, MTLTexture as MetalTexture, MTLTextureDescriptor, Owned,
+};
+#[cfg(test)]
+use crate::objective_c::{retain_count, CoreGraphicsSize};
 use crate::pipelines::{Pipelines, DEPTH_STENCIL_FORMAT};
 use crate::resources::GpuResources;
 use crate::scene_target::SceneTarget;
 use crate::world3d::WorldGlobalsRing;
-use objc2::rc::Retained;
-use objc2::runtime::{AnyObject, ProtocolObject};
-use objc2_metal::{
-    MTLBlitCommandEncoder, MTLBuffer, MTLCommandBuffer, MTLCommandEncoder, MTLCommandQueue, MTLDevice, MTLLoadAction, MTLOrigin, MTLPixelFormat, MTLPrimitiveType, MTLRenderCommandEncoder, MTLRenderPassDescriptor, MTLStoreAction, MTLTexture,
-};
-use objc2_quartz_core::{CAMetalDrawable, CAMetalLayer};
+use objc2_metal::{MTLLoadAction, MTLOrigin, MTLPixelFormat, MTLPrimitiveType, MTLStoreAction};
 use raw_window_handle::{RawWindowHandle, WindowHandle};
 use ui_render::{
     BackendError, DeviceCapabilities, DeviceStatus, DrawBatch, FrameStats, GpuTier, GraphicsBackend, LossReason, MemoryClass, PhysicalSize, PipelineKind, RecoveredResources, RenderPacket, RenderReport, ResourceKind, ResourceOp, SurfaceFormat,
@@ -46,14 +47,10 @@ use ui_render::ReadbackImage;
 #[link(name = "CoreGraphics", kind = "framework")]
 extern "C" {}
 
-//#region 🔖️Backend
+#[link(name = "QuartzCore", kind = "framework")]
+extern "C" {}
 
-type Device = ProtocolObject<dyn MTLDevice>;
-type Queue = ProtocolObject<dyn MTLCommandQueue>;
-type MetalTexture = ProtocolObject<dyn MTLTexture>;
-type CommandBuffer = ProtocolObject<dyn MTLCommandBuffer>;
-type Encoder = ProtocolObject<dyn MTLRenderCommandEncoder>;
-type MetalBuffer = ProtocolObject<dyn MTLBuffer>;
+//#region 🔖️Backend
 
 //#region ⚠️MetalGraphicsError
 
@@ -86,27 +83,27 @@ impl From<MetalGraphicsError> for BackendError {
 /// interface — nothing here appears in a public signature outside this crate (CLAUDE.md's "external
 /// libraries behind an interface" rule).
 pub struct MetalBackend {
-    device: Retained<Device>,
-    queue: Retained<Queue>,
-    layer: Retained<CAMetalLayer>,
+    device: Owned<Device>,
+    queue: Owned<Queue>,
+    layer: Owned<MetalLayer>,
     size: PhysicalSize,
     dpr: f32,
     surface_format: MTLPixelFormat,
     pipelines: Pipelines,
     resources: GpuResources,
     scene_target: SceneTarget,
-    depth_texture: Option<Retained<MetalTexture>>,
+    depth_texture: Option<Owned<MetalTexture>>,
     world_ring: WorldGlobalsRing,
     frame_buffers: FrameBuffers,
     status: DeviceStatus,
     /// 📐️ The static 6-corner unit-quad `buffer(0)` every UI/vector/glass pipeline's vertex function
     /// reads — created once, never rewritten.
-    quad_vertex_buffer: Retained<MetalBuffer>,
+    quad_vertex_buffer: Owned<MetalBuffer>,
     /// 🌐️ The tiny `{screen_size, _pad}` uniform UI/vector/glass share at `buffer(2)` — rewritten via
     /// its `Shared`-storage `contents()` pointer once per frame by `update_globals`.
-    ui_globals_buffer: Retained<MetalBuffer>,
+    ui_globals_buffer: Owned<MetalBuffer>,
     #[cfg(feature = "backend-testing")]
-    readback: Option<Retained<MetalTexture>>,
+    readback: Option<Owned<MetalTexture>>,
 }
 
 //#region Construction
@@ -119,17 +116,17 @@ const SURFACE_FORMAT: MTLPixelFormat = MTLPixelFormat::BGRA8Unorm_sRGB;
 /// final `scene_blit_pipeline` write into the sRGB swapchain view.
 const SCENE_FORMAT: MTLPixelFormat = MTLPixelFormat::BGRA8Unorm;
 
-// 🔓️ SAFETY (module-wide note for every `objc2::msg_send!` call below — only `setWantsLayer:`/
-// `setLayer:` in `new` remain; `setDrawableSize:` no longer needs one, see `set_drawable_size`):
-// each call targets a plain AppKit `NSView` selector with no return value, on a pointer this crate
-// received from a `raw_window_handle::AppKitWindowHandle` (whose contract guarantees a live `NSView`)
-// — never a dangling or type-mismatched receiver.
+// 🔓️ SAFETY: the private QuartzCore ABI above exactly records every selector, argument,
+// return, nullability, and ownership contract exercised by this backend. AppKit messages below target
+// the live `NSView` supplied by `raw_window_handle`; QuartzCore messages target owned objects created
+// by `CAMetalLayer +new` or retained returns from `nextDrawable`/`texture`.
 impl MetalBackend {
     /// 🏗️ Builds a device, command queue, and a `CAMetalLayer` attached to `window_handle`'s
     /// `NSView`. Only construction is async per U1 — the body below performs no real `.await` because
     /// Metal's device/queue/layer creation is synchronous, unlike wgpu's adapter/device request.
     // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new(window_handle: WindowHandle<'_>, size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
+        let _pool = AutoreleasePool::new();
         let RawWindowHandle::AppKit(handle) = window_handle.as_raw() else {
             return Err(BackendError::UnsupportedFormat("metal backend requires an AppKit window handle"));
         };
@@ -139,9 +136,10 @@ impl MetalBackend {
         // `setLayer:` are ordinary AppKit calls with no return value, called on the main thread (the
         // same thread constraint `raw_window_handle` documents for `AppKitWindowHandle` itself).
         unsafe {
-            let view: &AnyObject = &*handle.ns_view.as_ptr().cast::<AnyObject>();
-            let _: () = objc2::msg_send![view, setWantsLayer: true];
-            let _: () = objc2::msg_send![view, setLayer: &*layer];
+            with_appkit_view(handle.ns_view.as_ptr().cast(), |view| {
+                view.setWantsLayer(true);
+                view.setLayer(&layer);
+            });
         }
         Ok(Self::from_parts(device, queue, layer, size, dpr))
     }
@@ -152,12 +150,13 @@ impl MetalBackend {
     #[cfg(feature = "backend-testing")]
     // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new_headless(size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
+        let _pool = AutoreleasePool::new();
         let (device, queue, layer) = create_device_queue_layer(size, dpr)?;
         Ok(Self::from_parts(device, queue, layer, size, dpr))
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn from_parts(device: Retained<Device>, queue: Retained<Queue>, layer: Retained<CAMetalLayer>, size: PhysicalSize, dpr: f32) -> Self {
+    fn from_parts(device: Owned<Device>, queue: Owned<Queue>, layer: Owned<MetalLayer>, size: PhysicalSize, dpr: f32) -> Self {
         let pipelines = Pipelines::new(&device, SURFACE_FORMAT, SCENE_FORMAT);
         let resources = GpuResources::new(&device);
         let scene_target = SceneTarget::new(&device, size.width.max(1), size.height.max(1), SCENE_FORMAT);
@@ -223,31 +222,29 @@ impl MetalBackend {
 /// 🏗️ Shared by `new`/`new_headless`: device, queue, and a fully-configured (but not-yet-attached)
 /// `CAMetalLayer`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn create_device_queue_layer(size: PhysicalSize, _dpr: f32) -> Result<(Retained<Device>, Retained<Queue>, Retained<CAMetalLayer>), BackendError> {
-    let device = objc2_metal::MTLCreateSystemDefaultDevice().ok_or(BackendError::DeviceLost(LossReason::Device))?;
+fn create_device_queue_layer(size: PhysicalSize, _dpr: f32) -> Result<(Owned<Device>, Owned<Queue>, Owned<MetalLayer>), BackendError> {
+    let device = system_default_device().ok_or(BackendError::DeviceLost(LossReason::Device))?;
     let queue = device.newCommandQueue().ok_or(BackendError::DeviceLost(LossReason::Device))?;
-    let layer = CAMetalLayer::new();
-    layer.setDevice(Some(&device));
-    layer.setPixelFormat(SURFACE_FORMAT);
-    layer.setFramebufferOnly(true);
+    let layer = MetalLayer::new();
+    layer.set_device(Some(&device));
+    layer.set_pixel_format(SURFACE_FORMAT);
+    layer.set_framebuffer_only(true);
     set_drawable_size(&layer, size.width.max(1), size.height.max(1));
     Ok((device, queue, layer))
 }
 
-/// 📐️ `CAMetalLayer::setDrawableSize` is a plain safe method taking `objc2_core_foundation::CGSize`
-/// by value (confirmed in `objc2-quartz-core-0.3.2/src/generated/CAMetalLayer.rs:105-107`:
-/// `pub fn setDrawableSize(&self, drawable_size: CGSize);`, no `unsafe` marker) — no `msg_send!` needed
-/// at all once the real typed `CGSize` is available (`objc2-core-foundation-0.3.2/src/geometry.rs:112`:
-/// `pub struct CGSize { pub width: CGFloat, pub height: CGFloat }`, `CGFloat = f64` on 64-bit targets,
-/// `Encode`/`RefEncode` implemented under its default-on `"objc2"` feature).
+/// 📐️ Updates the layer's typed drawable-size value without naming its provider crate.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn set_drawable_size(layer: &CAMetalLayer, width: u32, height: u32) {
-    layer.setDrawableSize(objc2_core_foundation::CGSize::new(width as f64, height as f64));
+fn set_drawable_size(layer: &MetalLayer, width: u32, height: u32) {
+    let mut size = layer.drawable_size();
+    size.width = width as f64;
+    size.height = height as f64;
+    layer.set_drawable_size(size);
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn allocate_depth_texture(device: &Device, width: u32, height: u32) -> Retained<MetalTexture> {
-    let descriptor = objc2_metal::MTLTextureDescriptor::new();
+fn allocate_depth_texture(device: &Device, width: u32, height: u32) -> Owned<MetalTexture> {
+    let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(DEPTH_STENCIL_FORMAT);
     unsafe {
         descriptor.setWidth(width.max(1) as _);
@@ -428,7 +425,7 @@ impl MetalBackend {
 /// depth+stencil attachment (`depth`/`depth_load`) — every render pass in this backend is one of
 /// these two shapes.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn make_render_pass_descriptor(color: &MetalTexture, level: usize, load: MTLLoadAction, clear: Option<(f64, f64, f64, f64)>, depth: Option<&MetalTexture>, depth_load: MTLLoadAction) -> Retained<MTLRenderPassDescriptor> {
+fn make_render_pass_descriptor(color: &MetalTexture, level: usize, load: MTLLoadAction, clear: Option<(f64, f64, f64, f64)>, depth: Option<&MetalTexture>, depth_load: MTLLoadAction) -> Owned<MTLRenderPassDescriptor> {
     let descriptor = MTLRenderPassDescriptor::renderPassDescriptor();
     // 🔓️ SAFETY: index `0` is always in bounds — every pass in this backend uses exactly one color
     // attachment.
@@ -610,6 +607,7 @@ impl GraphicsBackend for MetalBackend {
     /// → `SkippedZeroSize`), so the staleness is never observed.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resize(&mut self, size: PhysicalSize, dpr: f32) -> Result<(), BackendError> {
+        let _pool = AutoreleasePool::new();
         self.size = size;
         self.dpr = dpr;
         set_drawable_size(&self.layer, size.width.max(1), size.height.max(1));
@@ -622,11 +620,13 @@ impl GraphicsBackend for MetalBackend {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn apply_resources(&mut self, ops: &[ResourceOp]) -> Result<(), BackendError> {
+        let _pool = AutoreleasePool::new();
         self.resources.apply(&self.device, ops).map_err(Into::into)
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, packet: &RenderPacket, time_seconds: f32) -> Result<RenderReport, BackendError> {
+        let _pool = AutoreleasePool::new();
         if let DeviceStatus::Lost(reason) = self.status {
             return Err(BackendError::DeviceLost(reason));
         }
@@ -634,7 +634,7 @@ impl GraphicsBackend for MetalBackend {
             return Ok(RenderReport::SkippedZeroSize);
         }
         self.validate_known_resources(packet)?;
-        let Some(drawable) = self.layer.nextDrawable() else {
+        let Some(drawable) = self.layer.next_drawable() else {
             return Ok(RenderReport::SkippedOutOfDate);
         };
         let drawable_texture = drawable.texture();
@@ -645,7 +645,7 @@ impl GraphicsBackend for MetalBackend {
         self.encode_composite_pass(&command_buffer, &drawable_texture, packet);
         #[cfg(feature = "backend-testing")]
         self.capture_readback(&command_buffer, &drawable_texture);
-        command_buffer.presentDrawable(drawable.as_ref());
+        command_buffer.presentDrawable(&drawable);
         command_buffer.commit();
         let stats =
             FrameStats { encode_duration_seconds: 0.0, submit_duration_seconds: 0.0, present_duration_seconds: 0.0, draw_call_count: packet.batches.len() as u32, instance_count: (packet.quad_instances.len() + packet.vector_vertices.len()) as u32 };
@@ -664,6 +664,7 @@ impl GraphicsBackend for MetalBackend {
     /// frame's `apply_resources` repopulates them for real.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError> {
+        let _pool = AutoreleasePool::new();
         let (lost_textures, lost_meshes, lost_atlases) = self.resources.drain_known();
         self.resources = GpuResources::new(&self.device);
         self.status = DeviceStatus::Healthy;
@@ -687,6 +688,7 @@ impl GraphicsBackend for MetalBackend {
     #[cfg(feature = "backend-testing")]
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_back(&mut self) -> Result<ReadbackImage, BackendError> {
+        let _pool = AutoreleasePool::new();
         if self.size.is_zero() {
             return Err(BackendError::ZeroSizeSurface);
         }
@@ -755,8 +757,8 @@ impl MetalBackend {
 
 #[cfg(feature = "backend-testing")]
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn allocate_readback_texture(device: &Device, width: u32, height: u32, format: MTLPixelFormat) -> Retained<MetalTexture> {
-    let descriptor = objc2_metal::MTLTextureDescriptor::new();
+fn allocate_readback_texture(device: &Device, width: u32, height: u32, format: MTLPixelFormat) -> Owned<MetalTexture> {
+    let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(format);
     unsafe {
         descriptor.setWidth(width.max(1) as _);
@@ -772,6 +774,58 @@ fn allocate_readback_texture(device: &Device, width: u32, height: u32, format: M
 //#endregion 🍎️MetalBackend
 
 //#region Tests
+
+#[cfg(test)]
+mod drawable_size_tests {
+    use super::*;
+    use std::mem::{align_of, offset_of, size_of};
+
+    #[test]
+    fn inferred_drawable_size_matches_recorded_typed_oracle() {
+        let layer = MetalLayer::new();
+        set_drawable_size(&layer, 4096, 2160);
+        let actual = layer.drawable_size();
+        assert_eq!((actual.width, actual.height), (4096.0, 2160.0));
+    }
+
+    #[test]
+    fn owned_size_abi_and_boundary_cases_match_the_language_neutral_fixture() {
+        assert_eq!(size_of::<CoreGraphicsSize>(), 16);
+        assert_eq!(align_of::<CoreGraphicsSize>(), 8);
+        assert_eq!(offset_of!(CoreGraphicsSize, width), 0);
+        assert_eq!(offset_of!(CoreGraphicsSize, height), 8);
+        assert_eq!(CoreGraphicsSize::OBJECTIVE_C_ENCODING, "{CGSize=dd}");
+
+        let layer = MetalLayer::new();
+        for (width, height) in [(0, 0), (1, 1), (4096, 2160), (16384, 16384)] {
+            set_drawable_size(&layer, width, height);
+            let actual = layer.drawable_size();
+            assert_eq!((actual.width, actual.height), (width as f64, height as f64));
+        }
+        for hostile in [16385, u32::MAX] {
+            set_drawable_size(&layer, hostile, hostile);
+            let actual = layer.drawable_size();
+            assert_eq!((actual.width, actual.height), (16384.0, 16384.0));
+        }
+    }
+
+    #[test]
+    fn owned_layer_retains_exactly_one_owner_and_accepts_nullable_device() {
+        let layer = MetalLayer::new();
+        layer.set_pixel_format(SURFACE_FORMAT);
+        layer.set_framebuffer_only(true);
+        let before = retain_count(&*layer);
+        let retained = layer.clone();
+        let during = retain_count(&*layer);
+        drop(retained);
+        let after = retain_count(&*layer);
+        assert_eq!(during, before + 1);
+        assert_eq!(after, before);
+        layer.set_device(None);
+        assert!(layer.next_drawable().is_none());
+        println!("abi=16/8/{{CGSize=dd}} dimensions=6 maxPlusOne=clamped retainDelta=1 restored=true nullDevice=true nextDrawable=nil");
+    }
+}
 
 /// 🧪️ Every test here needs a live Metal device — `MetalBackend::new_headless` itself reports
 /// `BackendError::DeviceLost` when `MTLCreateSystemDefaultDevice` finds none (a genuinely possible

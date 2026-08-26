@@ -13,23 +13,18 @@
 //! exactly (never a per-draw atlas choice).
 
 use crate::backend::MetalGraphicsError;
+use crate::objective_c::{MTLBuffer as MetalBuffer, MTLDevice as Device, MTLTexture as MetalTexture, MTLTextureDescriptor, Owned};
 use crate::types::World3dGpuVertex;
-use objc2::rc::Retained;
-use objc2::runtime::ProtocolObject;
-use objc2_metal::{MTLBuffer, MTLDevice, MTLPixelFormat, MTLRegion, MTLResourceOptions, MTLSize, MTLTexture, MTLTextureDescriptor, MTLTextureUsage};
+use objc2_metal::{MTLPixelFormat, MTLRegion, MTLResourceOptions, MTLSize, MTLTextureUsage};
 use std::collections::{HashMap, HashSet};
 use ui_render::{AtlasId, MeshId, ResourceOp, TextureId};
 
 //#region 🔖️Resources
 
-type Device = ProtocolObject<dyn MTLDevice>;
-type MetalTexture = ProtocolObject<dyn MTLTexture>;
-type MetalBuffer = ProtocolObject<dyn MTLBuffer>;
-
 /// 🧊️ One resident world3d mesh: interleaved position+normal vertex buffer, u32 index buffer.
 pub struct MeshBuffers {
-    pub vertex_buffer: Retained<MetalBuffer>,
-    pub index_buffer: Retained<MetalBuffer>,
+    pub vertex_buffer: Owned<MetalBuffer>,
+    pub index_buffer: Owned<MetalBuffer>,
     pub index_count: u32,
 }
 
@@ -37,9 +32,9 @@ pub struct MeshBuffers {
 /// only mutator; everything else is a lookup a render pass consults while replaying batches.
 #[derive(Default)]
 pub struct GpuResources {
-    glyph_atlas: Option<Retained<MetalTexture>>,
-    icon_atlas: Option<Retained<MetalTexture>>,
-    raster_textures: HashMap<TextureId, Retained<MetalTexture>>,
+    glyph_atlas: Option<Owned<MetalTexture>>,
+    icon_atlas: Option<Owned<MetalTexture>>,
+    raster_textures: HashMap<TextureId, Owned<MetalTexture>>,
     meshes: HashMap<MeshId, MeshBuffers>,
     known_textures: HashSet<TextureId>,
     known_meshes: HashSet<MeshId>,
@@ -186,7 +181,7 @@ impl GpuResources {
 /// default resolution — explicit `Shared` keeps `replaceRegion` valid on every Mac (unlike
 /// `Private`, which requires a blit upload).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn create_texture(device: &Device, format: MTLPixelFormat, width: u32, height: u32, mip_levels: u32, label: &str) -> Retained<MetalTexture> {
+fn create_texture(device: &Device, format: MTLPixelFormat, width: u32, height: u32, mip_levels: u32, label: &str) -> Owned<MetalTexture> {
     let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(format);
     // 🔓️ SAFETY: width/height/mipmapLevelCount are ordinary dimension setters; Metal validates and
@@ -221,7 +216,7 @@ fn replace_region(texture: &MetalTexture, width: u32, height: u32, pixels: &[u8]
 
 /// 🏗️ A `Shared`-storage buffer initialized by copy — mirrors `wgpu::util::DeviceExt::create_buffer_init`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-pub fn new_buffer_with_bytes(device: &Device, bytes: &[u8], label: &str) -> Result<Retained<MetalBuffer>, MetalGraphicsError> {
+pub fn new_buffer_with_bytes(device: &Device, bytes: &[u8], label: &str) -> Result<Owned<MetalBuffer>, MetalGraphicsError> {
     if bytes.is_empty() {
         return device.newBufferWithLength_options(16, MTLResourceOptions::StorageModeShared).ok_or(MetalGraphicsError::AllocationFailed(label.to_string()));
     }

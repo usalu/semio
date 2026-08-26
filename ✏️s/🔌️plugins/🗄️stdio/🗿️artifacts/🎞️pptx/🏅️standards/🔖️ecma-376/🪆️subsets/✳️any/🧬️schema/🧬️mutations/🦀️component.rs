@@ -579,13 +579,13 @@ mod tests {
             for inverse_mutation in <PptxMutation as Mutation<PptxSnapshot>>::inverse(&mutation, &base) {
                 apply_pptx_mutation(&mut round_tripped, &inverse_mutation);
             }
-            assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
+            assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
             let next = MutationDiff::apply(diff.diff(), &base).unwrap();
             let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
             let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
-            assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
+            assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
         }
     }
     //#endregion 🔖️InverseLaw

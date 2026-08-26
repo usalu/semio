@@ -1,88 +1,45 @@
-//! 🦀️ Semio VIDEO exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
-//! REFACTOR. Recorded no-oracle decision `semio-video-mutation-semantics` (`../../🏅️standards/
-//! 🔖️v1/🪆️subsets/✳️video/🧪️oracle/🔣️component.json`): `s.stdio.semio.video` is a semio-NATIVE
-//! format with no third-party reader or writer in any ecosystem, so `oracle` here reads the
-//! committed per-kind specification vectors in `🧫️fixtures/` literally — no recomputation, no
-//! reimplementation of mutation semantics. `subject` decodes the SAME committed bytes into real
-//! `SemioVideoSnapshot`/`SemioVideoMutation` values and drives this repository's own
-//! `apply_semio_video_mutation`/`inverse_semio_video_mutation` over the full 9-kind vocabulary.
-//! Both sides project to structural JSON and `ordered-json-v1` compares them.
+//! 🦀️ Semio VIDEO exhaustive mutation case — Rust SUBJECT adapter. Ticket 26/08/23/END-TO-END-
+//! TESTING-REFACTOR.
 //!
-//! Every vector's BEFORE snapshot is the decoded content of this standard's own committed real
-//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio`
-//! — an h264 video track of two samples beside an aac audio track — and the identity round trip
-//! parses that very file through the subset's own DSL codec, so the real artifact is in the loop
-//! rather than described. A sample's opaque payload is carried as the same lowercase hex the DSL
-//! itself writes, so a vector and the real file read alike.
+//! This file registers the SUBJECT role only. The reference answer comes from `🐍️component.py`
+//! beside it — an independent Python implementation of the same carrier and the same
+//! nine verbs, written from the committed grammars, registered as the oracle
+//! `semio-video-python-independent` in
+//! `../../🏅️standards/🔖️v1/🪆️subsets/✳️video/🧪️oracle/🔣️component.json`. Registering oracle
+//! handlers here as well would put this repository's own answer on both sides of the comparison,
+//! which is the one failure the platform exists to prevent, so the registrations this file used to
+//! carry are gone rather than merely unused.
 //!
-//! The subject half is gated behind the generated host's `sut` feature so the oracle-only run never
-//! compiles the local implementation; the Rust SUBJECT phase RUNS. The os-kernel blocker earlier waves
-//! recorded here was cleared on 2026-08-24 — `cargo check -p semio-framework-os-kernel --lib` exits 0 and
-//! `semio-s-plugin-stdio` builds — so `bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case
-//! mutate-semio-video` really executes every scenario below. The gate keeps the two BUILDS apart; it has
-//! never been a reason the subject half goes unmeasured, and for this recorded no-oracle case the subject
-//! phase is the only phase that runs at all.
+//! Every scenario drives this repository's own production entry points — `parse_semio_video_dsl`/`print_semio_video_dsl` for
+//! the carrier and `apply_semio_video_mutation`/`inverse_semio_video_mutation` for the vocabulary — over the real committed clip
+//! artifact `../../🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio`, and projects the resulting snapshot as structural JSON for
+//! `ordered-json-v1` to compare against the Python side's.
 //!
-//! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role — the runner
-//! resolves an oracle implementation from the feature's `@oracle-` tag and this feature has none, so
-//! the comparison profile never receives two sides to compare and the `oracle` handlers below are
-//! the written statement of the reference answer rather than a second running party. Every law this
-//! case claims is therefore asserted INSIDE the subject handler, which fails with both documents
-//! printed. A handler that merely ran the mutation and returned would report a pass having checked
-//! nothing.
+//! The mutation parameters and the specification-vector paths live in `component.feature`, so both
+//! implementations read one physical copy of each and cannot drift apart. The laws are asserted
+//! here IN ROLE as well as compared: `inverse-` requires the clip back, `spec-vector-` requires
+//! the committed after-snapshot, and `identity-round-trip` requires byte-exact re-emission through
+//! `law::carrier_is_exact`.
+//!
+//! The subject half is gated behind the generated host's `sut` feature so a non-subject build never
+//! compiles the local implementation.
 
-use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_repo_test_host::Adapter;
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `SemioVideoMutation::KINDS` (`../../🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/
-/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the oracle-only build must not
-/// link the subject crate. The contract's mutation-coverage gate keeps this list honest against the
-/// catalog; `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against
-/// the enum.
+/// 🧬️mutations/🦀️component.rs`) — duplicated, not imported, because the registration loop runs in
+/// builds where the subject crate is not linked. The contract's mutation-coverage gate keeps this
+/// list honest against the catalog; `kinds_match_the_enum_and_the_catalog` in that production file
+/// keeps it honest against the enum.
+#[cfg_attr(not(feature = "sut"), allow(dead_code))]
 const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
 //#endregion 🔖️Kinds
-
-//#region 🔖️Vectors
-/// 🧫️ The committed `(before, mutation, after)` specification vector for one kind, read through the
-/// plan so the URI the feature declares is the only way in.
-fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
-    ctx.fixture_json(&format!("local://🦠️{kind}.json"))
-}
-
-/// 🔎️ One required member of a vector — an absent member is an error, never a silent default.
-fn member(vector: &Json, key: &str) -> Result<Json, String> {
-    vector.get(key).cloned().ok_or_else(|| format!("specification vector is missing its {key:?} member"))
-}
-
-/// 🎯️ Both roles emit the same shape: the projection, plus its canonical bytes.
-fn outcome(projection: Json) -> Outcome {
-    Outcome::with_raw(projection.to_string().into_bytes(), projection)
-}
-//#endregion 🔖️Vectors
-
-//#region 🔖️Oracle
-/// 🔮️ The forward reference answer: the committed AFTER snapshot, read literally.
-fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |ctx: &Context| Ok(outcome(member(&vector(ctx, kind)?, "after")?))
-}
-
-/// 🔮️ The inverse reference answer: the committed BEFORE snapshot — undoing any mutation must
-/// return to exactly where the specification vector started.
-fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |ctx: &Context| Ok(outcome(member(&vector(ctx, kind)?, "before")?))
-}
-
-/// 🔮️ The identity reference answer: what the real committed clip artifact decodes to, which is the
-/// BEFORE snapshot every other vector starts from.
-fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    Ok(outcome(member(&vector(ctx, "no-mutation")?, "before")?))
-}
-//#endregion 🔖️Oracle
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law::carrier_is_exact;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::mutations::semio_mutation_refusals;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, inverse_semio_video_mutation, SemioVideoMutation};
@@ -254,44 +211,71 @@ mod subject {
     }
     //#endregion 🔖️Projection
 
-    //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed
-    /// after-snapshot — frame geometry, timebase and the track/clip arrangement together, so a retimed clip
-    /// that landed on the right track at the wrong offset still fails. The assertion lives here rather than in the
-    /// comparison because a recorded no-oracle case runs no oracle role: a handler that merely
-    /// returned `Ok` would report a pass having checked nothing.
-    pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |ctx: &Context| {
-            let (mut current, mutation, expected) = vector_of(ctx, kind)?;
-            let applied = apply_semio_video_mutation(&mut current, &mutation);
-            if !semio_mutation_refusals(&applied).is_empty() {
-                return Err(format!("mutate-{kind}: mutation rejected: {:?}", semio_mutation_refusals(&applied)));
-            }
-            if current != expected {
-                return Err(disagreement(&format!("mutate-{kind}: the applied snapshot does not match the vector's after-snapshot"), &current, &expected));
-            }
-            Ok(outcome(snapshot_json(&current)))
-        }
+    //#region 🔖️Inputs
+    /// 🎬️ The document every mutation row runs on: two real streams of the real "Bauen mit Bestand"
+    /// recording — eight real MJPEG frames of the committed AVI and twenty-four real MPEG-1 Layer III
+    /// frames of the committed mp3 — derived ONCE by `🐍️derive-video-fixture.py` in the ticket folder.
+    const RECORDING_DSL: &str = "local://🗣️bauen-mit-bestand-ausschnitt.dsl.semio";
+    const CLIP_DSL: &str = "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio";
+
+    /// 🎬️ The real recording, parsed by this repository's own DSL codec.
+    fn artifact(ctx: &Context) -> Result<SemioVideoSnapshot, String> {
+        let bytes = ctx.fixture_bytes(RECORDING_DSL)?;
+        let source = String::from_utf8(bytes).map_err(|error| format!("the recording artifact must be UTF-8: {error}"))?;
+        parse_semio_video_dsl(&source)
     }
 
-    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must
-    /// restore the committed before-snapshot exactly — the source offset a moved clip carried included, not merely its track membership.
-    pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+    /// 🦠️ The verb the scenario declares, read from the feature's own doc string.
+    fn declared(ctx: &Context) -> Result<SemioVideoMutation, String> {
+        mutation_of(&ctx.doc_json()?)
+    }
+
+    fn run(current: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation, what: &str) -> Result<(), String> {
+        let applied = apply_semio_video_mutation(current, mutation);
+        let refusals = semio_mutation_refusals(&applied);
+        if refusals.is_empty() {
+            return Ok(());
+        }
+        Err(format!("{what}: mutation rejected: {refusals:?}"))
+    }
+    //#endregion 🔖️Inputs
+
+    //#region 🔖️Handlers
+    /// 🎯️ One verb applied to the real committed clip through the production entry point.
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let mut current = artifact(ctx)?;
+        run(&mut current, &declared(ctx)?, ctx.scenario.id.as_str())?;
+        Ok(outcome(snapshot_json(&current)))
+    }
+
+    /// ↩️ The metamorphic inverse law on the real committed clip: applying the verb and then its
+    /// OWN computed inverse must restore the artifact exactly. The MUTATED snapshot travels in the
+    /// projection alongside the restored one, so the rows cannot all project the same restored
+    /// value and compare vacuously.
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let base = artifact(ctx)?;
+        let mutation = declared(ctx)?;
+        let mut current = base.clone();
+        run(&mut current, &mutation, ctx.scenario.id.as_str())?;
+        let mutated = snapshot_json(&current);
+        for step in &inverse_semio_video_mutation(&mutation, &base) {
+            run(&mut current, step, ctx.scenario.id.as_str())?;
+        }
+        if current != base {
+            return Err(disagreement(&format!("{}: undoing the mutation did not restore the real committed clip", ctx.scenario.id), &current, &base));
+        }
+        Ok(outcome(Json::Object(vec![("mutated".to_string(), mutated), ("restored".to_string(), snapshot_json(&current))])))
+    }
+
+    /// 🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
+    /// what the verb means, independent of both implementations, kept from before this oracle
+    /// existed rather than replaced by it.
+    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let (base, mutation, _expected) = vector_of(ctx, kind)?;
-            let mut current = base.clone();
-            let applied = apply_semio_video_mutation(&mut current, &mutation);
-            if !semio_mutation_refusals(&applied).is_empty() {
-                return Err(format!("inverse-{kind}: forward mutation rejected: {:?}", semio_mutation_refusals(&applied)));
-            }
-            for step in &inverse_semio_video_mutation(&mutation, &base) {
-                let undone = apply_semio_video_mutation(&mut current, step);
-                if !semio_mutation_refusals(&undone).is_empty() {
-                    return Err(format!("inverse-{kind}: inverse step rejected: {:?}", semio_mutation_refusals(&undone)));
-                }
-            }
-            if current != base {
-                return Err(disagreement(&format!("inverse-{kind}: undoing the mutation did not restore the vector's before-snapshot"), &current, &base));
+            let (mut current, mutation, expected) = vector_of(ctx, kind)?;
+            run(&mut current, &mutation, ctx.scenario.id.as_str())?;
+            if current != expected {
+                return Err(disagreement(&format!("{}: the applied snapshot does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
             }
             Ok(outcome(snapshot_json(&current)))
         }
@@ -300,53 +284,67 @@ mod subject {
     /// 🔁️ The real committed artifact, parsed into the typed snapshot, printed back to DSL text and
     /// parsed again — the only channel from input to output is the model, so nothing of the source
     /// bytes can be smuggled into the projection.
-    /// 🔒️ **The byte half of the identity law — asserted, and asserted as `carrier_is_exact`.**
-    /// `.dsl.semio` is a fixed-layout record grammar and the committed example artifact this
-    /// scenario reads was produced by this very printer, so reproducing it BYTE FOR BYTE is the
-    /// correct answer here and `law::reparsed_not_copied` would be exactly backwards — the same
-    /// reading `mutate-dag-1` records for `.dag.dsl.semio` and `mutate-bmp-v3` for its own
-    /// reference-authored fixture. Saying so in prose alone would leave the claim an excuse;
-    /// asserting it makes it checkable, and it fails with the offset of the first differing byte
-    /// the moment the printer drifts. Nor is it a self-comparison: one side is a file committed to
-    /// the repository, the other is computed now. This subset's committed `.pack.semio` twin is NOT
-    /// read here — no `encode`/`decode_semio_<subset>_pack` bridge is exported for it — so the byte
-    /// claim this scenario makes is about the text carrier alone, and says nothing about the binary
-    /// one.
-    pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let bytes = ctx.fixture_bytes("asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🖼️assets/🗣️example.dsl.semio")?;
-        let source = String::from_utf8(bytes).map_err(|error| format!("the committed clip artifact must be UTF-8: {error}"))?;
+    /// 🔒️ **The byte half of the identity law — asserted as `carrier_is_exact`.** `.dsl.semio` is a
+    /// fixed-layout record grammar and the committed artifact was produced by this very printer, so
+    /// reproducing it BYTE FOR BYTE is the correct answer here and `law::reparsed_not_copied` would
+    /// be exactly backwards. Nor is it a self-comparison: the Python oracle re-emits the same file
+    /// from the grammar alone and the two digests are compared. This subset's committed
+    /// `.pack.semio` twin is NOT read here — no pack bridge is exported for it — so the byte claim
+    /// is about the text carrier alone.
+    /// 🔁️ One document, re-emitted from the parsed snapshot and required back byte for byte.
+    fn carrier_once(ctx: &Context, uri: &str, what: &str) -> Result<(SemioVideoSnapshot, Json), String> {
+        let committed = ctx.fixture_bytes(uri)?;
+        let source = String::from_utf8(committed.clone()).map_err(|error| format!("{what} must be UTF-8: {error}"))?;
         let once = parse_semio_video_dsl(&source)?;
         let printed = print_semio_video_dsl(&once);
-        carrier_is_exact(printed.as_bytes(), source.as_bytes())?;
+        carrier_is_exact(printed.as_bytes(), &committed)?;
         let twice = parse_semio_video_dsl(&printed)?;
         if twice != once {
-            return Err(disagreement("identity-round-trip: re-parsing the printed DSL did not reproduce the parsed snapshot", &twice, &once));
+            return Err(disagreement(&format!("identity-round-trip: re-parsing the printed DSL of {what} did not reproduce the parsed snapshot"), &twice, &once));
         }
-        let (declared, _mutation, _after) = vector_of(ctx, "no-mutation")?;
-        if once != declared {
-            return Err(disagreement("identity-round-trip: the real committed clip artifact does not decode to the before-snapshot every specification vector starts from — the vectors describe a document this codec does not produce", &once, &declared));
-        }
-        Ok(outcome(snapshot_json(&twice)))
+        let report = Json::Object(vec![
+            ("document".to_string(), snapshot_json(&twice)),
+            ("dslDigest".to_string(), Json::String(digest(printed.as_bytes()))),
+            ("dslLength".to_string(), Json::Number(printed.len() as f64)),
+        ]);
+        Ok((once, report))
     }
+
+    pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let (clip, clip_report) = carrier_once(ctx, CLIP_DSL, "the committed clip")?;
+        let (declared, _mutation, _after) = vector_of(ctx, "no-mutation")?;
+        if clip != declared {
+            return Err(disagreement("identity-round-trip: the real committed clip artifact does not decode to the before-snapshot every specification vector starts from", &clip, &declared));
+        }
+        let (recording, recording_report) = carrier_once(ctx, RECORDING_DSL, "the recording")?;
+        if recording.streams.len() != 2 || recording.streams[0].samples.len() != 8 || recording.streams[1].samples.len() != 24 {
+            return Err(format!(
+                "identity-round-trip: the recording is the two-stream 8+24-sample document this case describes, but decoded as {} stream(s)",
+                recording.streams.len()
+            ));
+        }
+        Ok(outcome(Json::Object(vec![("clip".to_string(), clip_report), ("recording".to_string(), recording_report)])))
+    }
+
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
 /// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario
-/// id, so both roles are registered in one loop over the declared vocabulary.
+/// id, so the whole vocabulary is registered in one loop. Subject only — the oracle role belongs to
+/// `🐍️component.py`.
 pub fn adapter() -> Adapter {
+    #[allow(unused_mut)]
     let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
-        }
-    }
-    built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
+        for kind in KINDS {
+            built = built
+                .subject(&format!("mutate-{kind}"), subject::mutate)
+                .subject(&format!("inverse-{kind}"), subject::inverse)
+                .subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+        }
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

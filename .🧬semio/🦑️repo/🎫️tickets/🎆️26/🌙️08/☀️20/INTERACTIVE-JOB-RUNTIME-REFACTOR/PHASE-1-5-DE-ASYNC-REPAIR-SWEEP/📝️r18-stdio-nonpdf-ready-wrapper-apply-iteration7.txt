@@ -1,4 +1,0 @@
-[run r13-ul7godh1] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=/🗿️artifacts/📄️pdf/
-[run r13-ul7godh1] iteration 1: total errors=1539, async-class=1239
-[run r13-ul7godh1] iteration 1: planned 1028 edits (725 residue)
-[run r13-ul7godh1] reached max-iterations=1 without reaching a fixpoint.

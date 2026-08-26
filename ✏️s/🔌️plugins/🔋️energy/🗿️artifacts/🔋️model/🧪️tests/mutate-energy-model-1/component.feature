@@ -4,11 +4,27 @@
 @mutations-energy-model-1-any
 Feature: Apply the one typed s.energy.model mutation to its committed specification vector
 
-  `s.energy.model` is a semio-NATIVE artifact and no third party reads `.dsl.semio` (recorded as the
-  `energy-model-mutation-semantics` no-oracle decision in
+  `s.energy.model` is a semio-NATIVE artifact and no third party reads `.dsl.semio`, so no reference
+  library is registered — recorded as the `energy-model-mutation-semantics` no-oracle decision in
   `🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which also records why EnergyPlus and
   OpenStudio were surveyed and DECLINED, and why the `energyplus` weather reader already registered
-  under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately NOT reused here).
+  under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is deliberately NOT reused here.
+
+  ⚠️ THIS NO-ORACLE DECISION IS A DEBT, NOT A VERDICT, and is recorded as one. Declining a third-party
+  LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and only the first was ever
+  made here. `mutate-cad-1` and `mutate-lowpoly-1` took Python second
+  implementations over this same `.dsl.semio` carrier in this wave, so the same is writable for this
+  subset from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, the rules of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` and the
+  committed vectors this feature already replays. What blocks it TODAY is stated in the decision and
+  is one edit: this case's vectors are not declared as `asset://` fixtures — the `Examples` table
+  carries the payloads inline and the adapter reads the committed files through `include_str!` — so
+  the plan pins none of their digests and a Python reference cannot read them at all. Separately, `identity-round-trip` would still be refused: this subset's committed
+  snapshot text grammar is the repository-wide placeholder `payload = OCTET+`, whose header production
+  declares `"schema" SP "stdio.json"` against an artifact whose own first line says otherwise.
+  Until that is done, every assertion below still lives in the SUBJECT role, and the ceiling is the
+  one this decision has always had: no second producer runs beside it, so a mistake shared by the
+  handcrafted vector and the production code passes unseen.
 
   What distinguishes this subset is that it persists no content model of its own. Its entire
   substantive body is two composed CHILD HANDLES — `structure` pointing at `s.stdio.semio.value` and

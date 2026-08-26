@@ -27,24 +27,19 @@
 //! content, rather than interleaved layer-by-layer.
 
 use crate::frame_buffers::FrameBuffers;
+use crate::objective_c::{MTLBuffer as MetalBuffer, MTLDevice as Device, MTLRenderCommandEncoder as Encoder, Owned};
 use crate::pipelines::Pipelines;
 use crate::resources::GpuResources;
 use crate::types::{World3dGpuInstance, WorldGlobalsGpu, WorldLineGpuVertex, WORLD_GLOBALS_SLOT_SIZE};
-use objc2::rc::Retained;
-use objc2::runtime::ProtocolObject;
-use objc2_metal::{MTLBuffer, MTLDevice, MTLIndexType, MTLPrimitiveType, MTLRenderCommandEncoder, MTLResourceOptions};
+use objc2_metal::{MTLIndexType, MTLPrimitiveType, MTLResourceOptions};
 use ui_render::SurfacePass;
 
 //#region 🔖️World3d
 
-type Device = ProtocolObject<dyn MTLDevice>;
-type MetalBuffer = ProtocolObject<dyn MTLBuffer>;
-type Encoder = ProtocolObject<dyn MTLRenderCommandEncoder>;
-
 /// 🌐️ The globals ring buffer every `SurfacePass` writes its `view_proj`/`light_dir` into at a
 /// `WORLD_GLOBALS_SLOT_SIZE`-strided offset. Mirrors `WorldGlobalsRing`.
 pub struct WorldGlobalsRing {
-    buffer: Option<Retained<MetalBuffer>>,
+    buffer: Option<Owned<MetalBuffer>>,
     capacity_slots: u32,
 }
 

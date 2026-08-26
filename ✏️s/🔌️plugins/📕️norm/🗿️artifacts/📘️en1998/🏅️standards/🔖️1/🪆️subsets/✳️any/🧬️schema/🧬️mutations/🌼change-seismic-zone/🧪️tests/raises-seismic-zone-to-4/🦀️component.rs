@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-seismic-zone` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `seismic_zone` from 2 to 4, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_seismic_zone_applies_to_committed_after() {
+fn change_seismic_zone_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-seismic-zone applies to its committed before-snapshot");
     assert_eq!(applied.seismic_zone, 4, "change-seismic-zone/raises-seismic-zone-to-4: seismic_zone must read 4 after the change");
     assert_eq!(applied, expected_after(), "change-seismic-zone/raises-seismic-zone-to-4: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_seismic_zone_applies_to_committed_after() {
 /// ↩️ `change-seismic-zone` is its own inverse partner: the inverse step restores `seismic_zone` to its pre-change
 /// 2 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_seismic_zone_inverse_restores_before() {
+fn change_seismic_zone_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-seismic-zone applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_seismic_zone_inverse_restores_before() {
 /// decode then encode is a fixed point, so `seismicZone` and `newSeismicZone` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_seismic_zone_committed_json_is_canonical() {
+fn change_seismic_zone_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-seismic-zone snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-seismic-zone snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_seismic_zone_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-seismic-zone` at 4 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_seismic_zone_declared_outcome_holds() {
+fn change_seismic_zone_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-seismic-zone outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-seismic-zone/raises-seismic-zone-to-4: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_seismic_zone_declared_outcome_holds() {
 /// assertion: it pins that only `seismicZone` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `groundType`.
 #[semio_framework_async_macros::async_test]
-async fn change_seismic_zone_produces_committed_diff() {
+fn change_seismic_zone_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().seismic_zone, Some(4), "change-seismic-zone/raises-seismic-zone-to-4: the diff must set seismic_zone to 4");
     assert!(outcome.diff().artifact.is_none(), "change-seismic-zone/raises-seismic-zone-to-4: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_seismic_zone_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-seismic-zone`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_seismic_zone_committed_diff_is_canonical() {
+fn change_seismic_zone_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-seismic-zone committed diff decodes");
     assert_eq!(decoded.seismic_zone, Some(4), "change-seismic-zone/raises-seismic-zone-to-4: the committed diff must carry seismic_zone at 4");
     assert!(decoded.selected_check_index.is_none(), "change-seismic-zone/raises-seismic-zone-to-4: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_seismic_zone_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 2 to 4 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_seismic_zone_committed_diff_applies_to_after() {
+fn change_seismic_zone_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-seismic-zone committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-seismic-zone committed diff applies to the before-snapshot");
     assert_eq!(produced.seismic_zone, 4, "change-seismic-zone/raises-seismic-zone-to-4: the committed diff must leave seismic_zone reading 4");

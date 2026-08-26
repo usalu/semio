@@ -4,7 +4,7 @@ use crate::artifacts::draw::schema::find_draw_layer;
 use crate::artifacts::draw::{DrawLayerNode, DrawSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::SetLayerBooleanOperation, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+pub fn diff(payload: &super::mutation::SetLayerBooleanOperation, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
     match find_draw_layer(base, &payload.layer_id) {
         None => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]),
         Some(DrawLayerNode::Boolean(boolean)) if boolean.operation == payload.boolean_operation => {

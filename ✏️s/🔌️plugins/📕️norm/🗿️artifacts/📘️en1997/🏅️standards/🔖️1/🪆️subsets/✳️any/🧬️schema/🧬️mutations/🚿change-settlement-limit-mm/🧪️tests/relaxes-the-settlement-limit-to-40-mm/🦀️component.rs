@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// stiffness that determines the COMPUTED settlement is untouched, so the utilisation moves only because the
 /// acceptance criterion moved.
 #[semio_framework_async_macros::async_test]
-async fn relaxes_the_settlement_limit_to_40_mm() {
+fn relaxes_the_settlement_limit_to_40_mm() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-settlement-limit-mm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-settlement-limit-mm/relaxes-the-settlement-limit-to-40-mm: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.settlement_limit_mm, 40.0, "change-settlement-limit-mm/relaxes-the-settlement-limit-to-40-mm: settlement_limit_mm must read 40.0 mm once the change lands");
@@ -44,7 +44,7 @@ async fn relaxes_the_settlement_limit_to_40_mm() {
 /// ↩️ `change-settlement-limit-mm`'s inverse reads the OLD 25.0 mm out of BASE, so replaying it puts the 25.0 mm
 /// limit back on `settlement_limit_mm`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_25_mm_limit_restores_before() {
+fn restoring_the_25_mm_limit_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-settlement-limit-mm applies");
@@ -62,7 +62,7 @@ async fn restoring_the_25_mm_limit_restores_before() {
 /// decode → encode is a fixed point, so `newSettlementLimitMm` (serde camelCase over
 /// `new_settlement_limit_mm`) is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 40.0 mm is finite and differs from the committed 25.0 mm, so `change-settlement-limit-mm`
 /// returns a message-free outcome.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-settlement-limit-mm/relaxes-the-settlement-limit-to-40-mm: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `settlementLimitMm` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-settlement-limit-mm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-settlement-limit-mm/relaxes-the-settlement-limit-to-40-mm: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the settlement limit and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-settlement-limit-mm diff decodes");
     assert_eq!(decoded.settlement_limit_mm, Some(40.0), "change-settlement-limit-mm/relaxes-the-settlement-limit-to-40-mm: the committed diff must carry settlementLimitMm = 40.0 mm");
     assert!(decoded.e_s_mpa.is_none(), "change-settlement-limit-mm/relaxes-the-settlement-limit-to-40-mm: change-settlement-limit-mm writes settlementLimitMm and must leave `e_s_mpa` untouched");
@@ -112,7 +112,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the settlement-limit change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-settlement-limit-mm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-settlement-limit-mm/relaxes-the-settlement-limit-to-40-mm: the committed diff did not carry before to after");

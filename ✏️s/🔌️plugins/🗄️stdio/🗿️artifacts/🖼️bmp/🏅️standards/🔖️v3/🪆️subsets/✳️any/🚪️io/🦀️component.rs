@@ -1153,16 +1153,16 @@ mod tests {
         }
 
         /// ✅️ `schema_spec_registration_resolves`: `register_schema_specs` genuinely resolves
-        /// both the snapshot AND diff schema ids through `dsl::registry::full_resolver()` once
+        /// both the snapshot AND diff schema ids through `dsl::registry::full_resolver().await` once
         /// called (real `BmpSnapshot::__dsl_spec`/`BmpDiff::__dsl_diff_spec`, not fabricated).
         #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn schema_spec_registration_resolves() {
             use dsl::os_pack::cli::SchemaResolver;
             register_schema_specs();
-            let resolver = dsl::registry::full_resolver();
-            assert!(resolver.resolve("stdio.bmp").is_some(), "stdio.bmp must resolve");
-            assert!(resolver.resolve("stdio.bmp#diff").is_some(), "stdio.bmp#diff must resolve");
+            let resolver = dsl::registry::full_resolver().await;
+            assert!(resolver.resolve("stdio.bmp").await.is_some(), "stdio.bmp must resolve");
+            assert!(resolver.resolve("stdio.bmp#diff").await.is_some(), "stdio.bmp#diff must resolve");
         }
     }
     //#endregion 🔖️ConformanceLaws

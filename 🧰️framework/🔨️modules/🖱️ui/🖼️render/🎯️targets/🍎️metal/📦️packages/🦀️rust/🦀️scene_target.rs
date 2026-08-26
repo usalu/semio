@@ -10,9 +10,8 @@
 //! `TextureView`s for either sampling or rendering. Same pixels, see `🦀️msl.rs`'s header for the full
 //! reasoning.
 
-use objc2::rc::Retained;
-use objc2::runtime::ProtocolObject;
-use objc2_metal::{MTLDevice, MTLPixelFormat, MTLTexture, MTLTextureDescriptor, MTLTextureUsage};
+use crate::objective_c::{MTLDevice as Device, MTLTexture as MetalTexture, MTLTextureDescriptor, Owned};
+use objc2_metal::{MTLPixelFormat, MTLTextureUsage};
 
 //#region 🔖️SceneTarget
 
@@ -21,17 +20,14 @@ use objc2_metal::{MTLDevice, MTLPixelFormat, MTLTexture, MTLTextureDescriptor, M
 /// `0..=max_mip`).
 pub const SCENE_MIP_LEVELS: u32 = 5;
 
-type Device = ProtocolObject<dyn MTLDevice>;
-type MetalTexture = ProtocolObject<dyn MTLTexture>;
-
 /// 🌫️ Owns the two textures `composite_to_swapchain`'s blur/glass pass needs: the scene's own
 /// full-mip-chain color target, and a same-shaped scratch texture the blur downsample copies into
 /// before reading from it (Metal, like wgpu, cannot bind a texture as both a render-target attachment
 /// and a shader-read source within the same texture at once — hence the scratch copy, ported from
 /// `SceneColorTarget::copy_mip_to_blur_scratch`).
 pub struct SceneTarget {
-    texture: Retained<MetalTexture>,
-    blur_scratch: Retained<MetalTexture>,
+    texture: Owned<MetalTexture>,
+    blur_scratch: Owned<MetalTexture>,
     width: u32,
     height: u32,
     format: MTLPixelFormat,
@@ -100,7 +96,7 @@ pub fn supported_mip_levels(width: u32, height: u32) -> u32 {
     available.min(SCENE_MIP_LEVELS).max(1)
 }
 
-fn allocate(device: &Device, format: MTLPixelFormat, width: u32, height: u32, label: &str) -> Retained<MetalTexture> {
+fn allocate(device: &Device, format: MTLPixelFormat, width: u32, height: u32, label: &str) -> Owned<MetalTexture> {
     let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(format);
     // 🔓️ SAFETY: plain dimension/mip-count setters; Metal validates rather than reading OOB, and

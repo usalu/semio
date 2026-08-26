@@ -1,2 +1,0 @@
-E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2780	the `?` operator can only be used in a function that returns `Result` or `Option` (or another type that implements `FromResidual`)
-E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2791	mismatched types

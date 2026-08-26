@@ -5,10 +5,10 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.iso16757` dialect only.
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
 //#region 🎹️DerivedComposition
@@ -25,11 +25,11 @@ pub mod derived_composition {
         type Snapshot = Iso16757Snapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -57,15 +57,15 @@ use crate::document::NormError;
 pub mod io {
     use super::*;
 
-    pub async fn catalogue_to_json(catalogue: &crate::artifacts::iso16757::part_1::Catalogue) -> Result<String, NormError> {
+    pub fn catalogue_to_json(catalogue: &crate::artifacts::iso16757::part_1::Catalogue) -> Result<String, NormError> {
         serde_json::to_string_pretty(catalogue).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
     }
 
-    pub async fn catalogue_from_json(json: &str) -> Result<crate::artifacts::iso16757::part_1::Catalogue, NormError> {
+    pub fn catalogue_from_json(json: &str) -> Result<crate::artifacts::iso16757::part_1::Catalogue, NormError> {
         serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
     }
 
-    pub async fn dictionary_to_json(dictionary: &crate::artifacts::iso16757::part_4::Dictionary) -> Result<String, NormError> {
+    pub fn dictionary_to_json(dictionary: &crate::artifacts::iso16757::part_4::Dictionary) -> Result<String, NormError> {
         serde_json::to_string_pretty(dictionary).map_err(|e| NormError::InvalidValue { field: "dictionary".into(), reason: e.to_string() })
     }
 }
@@ -82,7 +82,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<Iso16757AnyComposer>()]).as_slice()
     }
 }
@@ -95,7 +95,7 @@ mod json_serializers_tests {
     use crate::artifacts::iso16757::Iso16757Snapshot;
 
     #[semio_framework_async_macros::async_test]
-    async fn catalogue_json_round_trip() {
+    fn catalogue_json_round_trip() {
         let doc = Iso16757Snapshot::default();
         let json = io::catalogue_to_json(&doc.catalogue).expect("json");
         let restored = io::catalogue_from_json(&json).expect("restore");
@@ -103,7 +103,7 @@ mod json_serializers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn dictionary_json_round_trip() {
+    fn dictionary_json_round_trip() {
         let doc = Iso16757Snapshot::default();
         let json = io::dictionary_to_json(&doc.dictionary).expect("json");
         assert!(json.contains("hvac-dict"));

@@ -12,7 +12,7 @@
 
 use semio_framework_async::Lane;
 use semio_framework_job::{
-    BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, root_cancel_token,
+    root_cancel_token, BatchDriveConfig, BatchJobParams, BatchJobSession, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, WorkerJobSessionAdmissionRejected, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
 };
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::sync::Arc;
@@ -93,7 +93,11 @@ impl InteractiveJob for FrameBuildJob {
         if maximum_items == 0 && self.complete.is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if FrameBuildJob::close_step(self) { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 } }
+        if FrameBuildJob::close_step(self) {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {

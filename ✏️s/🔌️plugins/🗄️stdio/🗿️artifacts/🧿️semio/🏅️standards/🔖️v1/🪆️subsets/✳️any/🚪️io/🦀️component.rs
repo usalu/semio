@@ -164,7 +164,7 @@ pub mod derived_composition {
         async fn clean_audio_snapshot_delegates_and_reports_no_errors() {
             let snapshot = SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() };
             let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().all(|d| d.severity != dsl::Severity::Error), "clean snapshot must not report hard errors: {diagnostics:?}");
         }
 
@@ -175,7 +175,7 @@ pub mod derived_composition {
         async fn invalid_audio_snapshot_surfaces_the_delegated_subsets_own_diagnostic() {
             let snapshot = SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 0, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() };
             let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(!diagnostics.is_empty(), "zero sample_rate must be flagged");
         }
 
@@ -183,7 +183,7 @@ pub mod derived_composition {
         /// soft warning, never a panic.
         #[semio_framework_async_macros::async_test]
         async fn undecodable_payload_returns_soft_warning_not_panic() {
-            let diagnostics = SemioValidator::validate(&IoPayload::Binary(vec![0xff, 0x00, 0x01]));
+            let diagnostics = SemioValidator::validate(&IoPayload::Binary(vec![0xff, 0x00, 0x01])).await;
             assert_eq!(diagnostics.len(), 1);
             assert_eq!(diagnostics[0].severity, dsl::Severity::Warning);
         }

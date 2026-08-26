@@ -24,6 +24,779 @@ use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, 
 use std::collections::HashMap;
 use std::sync::Arc;
 
+//#region 🔭️RetainedPreviewJson
+pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024;
+pub(crate) const FILL_PREVIEW_JSON_MAX_COLOR_BYTES: usize = 128;
+pub(crate) const FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES: usize = 256;
+pub(crate) const FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX: u64 = 9_007_199_254_740_991;
+pub(crate) const FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER: u64 = 9_007_199_254_740_991;
+
+fn preview_json_wire_u64(value: u64, minimum: u64) -> Result<u64, ()> {
+    (value >= minimum && value <= FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER).then_some(value).ok_or(())
+}
+
+fn preview_json_wire_usize(value: usize) -> Result<u64, ()> {
+    preview_json_wire_u64(u64::try_from(value).map_err(|_| ())?, 0)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct FillPreviewJsonIdentity {
+    operation: u64,
+    base_revision: u64,
+    registry_generation: u64,
+    generation: u64,
+    sequence: u64,
+}
+
+impl FillPreviewJsonIdentity {
+    fn read(preview: &FillBuildPreview) -> Option<Self> {
+        (preview_json_wire_u64(preview.operation, 1).is_ok()
+            && preview_json_wire_u64(preview.base_revision, 1).is_ok()
+            && preview_json_wire_u64(preview.registry_generation, 1).is_ok()
+            && preview_json_wire_u64(preview.generation, 1).is_ok()
+            && preview_json_wire_u64(preview.sequence, 0).is_ok())
+        .then_some(Self { operation: preview.operation, base_revision: preview.base_revision, registry_generation: preview.registry_generation, generation: preview.generation, sequence: preview.sequence })
+    }
+}
+
+#[derive(Clone, Copy)]
+struct FillPreviewJsonSourceAuthority {
+    root: u64,
+    candidate_ghost: u64,
+}
+
+impl FillPreviewJsonSourceAuthority {
+    fn field(value: usize) -> Result<u64, ()> {
+        let value = preview_json_wire_usize(value)?;
+        (value <= FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX).then_some(value).ok_or(())
+    }
+
+    fn read(preview: &FillBuildPreview) -> Result<Option<Self>, ()> {
+        let Some(ghost) = preview.candidate_ghost.as_ref() else {
+            return Ok(None);
+        };
+        Ok(Some(Self { root: Self::field(ghost.source_vortex_index)?, candidate_ghost: Self::field(ghost.source_vortex_index)? }))
+    }
+}
+
+struct FillPreviewJsonDiagnosticAuthority;
+
+impl FillPreviewJsonDiagnosticAuthority {
+    fn read(preview: &FillBuildPreview) -> Result<Self, ()> {
+        preview_json_wire_u64(preview.operation, 1)?;
+        preview_json_wire_u64(preview.base_revision, 1)?;
+        preview_json_wire_u64(preview.registry_generation, 1)?;
+        preview_json_wire_u64(preview.sequence, 0)?;
+        preview_json_wire_u64(preview.generation, 1)?;
+        preview_json_wire_usize(preview.collision_count)?;
+        preview_json_wire_usize(preview.sample_cursor)?;
+        preview_json_wire_usize(preview.inside_both)?;
+        preview_json_wire_usize(preview.target_cursor)?;
+        preview_json_wire_usize(preview.candidate_cursor)?;
+        preview_json_wire_usize(preview.accepted_count)?;
+        preview_json_wire_usize(preview.total_count)?;
+        preview_json_wire_u64(preview.search_count, 0)?;
+        preview_json_wire_u64(preview.rejected_count, 0)?;
+        Ok(Self)
+    }
+}
+
+struct FillPreviewJsonAdmission;
+
+impl FillPreviewJsonAdmission {
+    fn read(preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<Self, ()> {
+        FillPreviewJsonSourceAuthority::read(preview)?;
+        FillPreviewJsonDiagnosticAuthority::read(preview)?;
+        if color.len() > FILL_PREVIEW_JSON_MAX_COLOR_BYTES || status_label.is_empty() || status_label.len() > FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES {
+            return Err(());
+        }
+        if preview.candidate_ghost.as_ref().is_some_and(|ghost| ghost.origin.into_iter().chain(ghost.orientation).any(|value| !value.is_finite())) || preview.last_sample.is_some_and(|sample| sample.into_iter().any(|value| !value.is_finite())) {
+            return Err(());
+        }
+        fill_preview_json_wire_bytes(preview, color, status_label)?;
+        Ok(Self)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FillPreviewJsonPhase {
+    Idle,
+    RetireSuperseded,
+    Census,
+    Reserve,
+    Encode,
+    Validate,
+    Ready,
+    Rejected,
+    Closing,
+    Terminal,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FillPreviewJsonStep {
+    Pending { progress: u64, checkpoint: [u64; 6] },
+    Ready,
+    Rejected,
+    Cancelled,
+    Terminal,
+}
+
+#[derive(Clone, Copy)]
+enum FillPreviewString {
+    RootTarget,
+    RootKind,
+    RootMesh,
+    Color,
+    Stage,
+    StatusLabel,
+    Target,
+    Candidate,
+    GhostTarget,
+    GhostKind,
+    GhostMesh,
+    CurrentPair,
+    CandidatePage(usize),
+    Rejection,
+}
+
+#[derive(Default)]
+struct FillPreviewJsonPass {
+    field: u8,
+    subfield: u8,
+    item: usize,
+    string_phase: u8,
+    string_byte: usize,
+}
+
+struct FillPreviewJsonUnit {
+    bytes: [u8; 128],
+    len: usize,
+}
+
+impl FillPreviewJsonUnit {
+    fn empty() -> Self {
+        Self { bytes: [0; 128], len: 0 }
+    }
+
+    fn extend(&mut self, source: &[u8]) -> Result<(), ()> {
+        self.bytes.get_mut(self.len..self.len.checked_add(source.len()).ok_or(())?).ok_or(())?.copy_from_slice(source);
+        self.len += source.len();
+        Ok(())
+    }
+
+    fn bytes(source: &[u8]) -> Result<Self, ()> {
+        let mut unit = Self::empty();
+        unit.extend(source)?;
+        Ok(unit)
+    }
+
+    fn formatted(arguments: std::fmt::Arguments<'_>) -> Result<Self, ()> {
+        let mut unit = Self::empty();
+        std::fmt::write(&mut unit, arguments).map_err(|_| ())?;
+        Ok(unit)
+    }
+
+    fn escaped(byte: u8) -> Self {
+        let mut unit = Self { bytes: [0; 128], len: 1 };
+        match byte {
+            b'"' => {
+                unit.bytes[..2].copy_from_slice(b"\\\"");
+                unit.len = 2;
+            }
+            b'\\' => {
+                unit.bytes[..2].copy_from_slice(b"\\\\");
+                unit.len = 2;
+            }
+            0x08 => {
+                unit.bytes[..2].copy_from_slice(b"\\b");
+                unit.len = 2;
+            }
+            0x0c => {
+                unit.bytes[..2].copy_from_slice(b"\\f");
+                unit.len = 2;
+            }
+            b'\n' => {
+                unit.bytes[..2].copy_from_slice(b"\\n");
+                unit.len = 2;
+            }
+            b'\r' => {
+                unit.bytes[..2].copy_from_slice(b"\\r");
+                unit.len = 2;
+            }
+            b'\t' => {
+                unit.bytes[..2].copy_from_slice(b"\\t");
+                unit.len = 2;
+            }
+            value @ 0x00..=0x1f => {
+                const HEX: &[u8; 16] = b"0123456789abcdef";
+                unit.bytes[..6].copy_from_slice(&[b'\\', b'u', b'0', b'0', HEX[(value >> 4) as usize], HEX[(value & 0x0f) as usize]]);
+                unit.len = 6;
+            }
+            _ => unit.bytes[0] = byte,
+        }
+        unit
+    }
+}
+
+impl std::fmt::Write for FillPreviewJsonUnit {
+    fn write_str(&mut self, source: &str) -> std::fmt::Result {
+        self.extend(source.as_bytes()).map_err(|_| std::fmt::Error)
+    }
+}
+
+fn preview_json_float(unit: &mut FillPreviewJsonUnit, value: f64) -> Result<(), ()> {
+    if !value.is_finite() {
+        return Err(());
+    }
+    let start = unit.len;
+    std::fmt::write(unit, format_args!("{value}")).map_err(|_| ())?;
+    if !unit.bytes[start..unit.len].iter().any(|byte| matches!(*byte, b'.' | b'e' | b'E')) {
+        unit.extend(b".0")?;
+    }
+    Ok(())
+}
+
+fn preview_json_vec3(prefix: &str, value: [f64; 3]) -> Result<FillPreviewJsonUnit, ()> {
+    let mut unit = FillPreviewJsonUnit::empty();
+    unit.extend(prefix.as_bytes())?;
+    unit.extend(b"[")?;
+    preview_json_float(&mut unit, value[0])?;
+    unit.extend(b",")?;
+    preview_json_float(&mut unit, value[1])?;
+    unit.extend(b",")?;
+    preview_json_float(&mut unit, value[2])?;
+    unit.extend(b"]")?;
+    Ok(unit)
+}
+
+fn preview_json_quat(prefix: &str, value: [f64; 4]) -> Result<FillPreviewJsonUnit, ()> {
+    let mut unit = FillPreviewJsonUnit::empty();
+    unit.extend(prefix.as_bytes())?;
+    unit.extend(b"[")?;
+    preview_json_float(&mut unit, value[0])?;
+    unit.extend(b",")?;
+    preview_json_float(&mut unit, value[1])?;
+    unit.extend(b",")?;
+    preview_json_float(&mut unit, value[2])?;
+    unit.extend(b",")?;
+    preview_json_float(&mut unit, value[3])?;
+    unit.extend(b"]")?;
+    Ok(unit)
+}
+
+impl FillPreviewJsonPass {
+    fn advance_field(&mut self) {
+        self.field = self.field.saturating_add(1);
+        self.subfield = 0;
+        self.item = 0;
+        self.string_phase = 0;
+        self.string_byte = 0;
+    }
+
+    fn string<'a>(&self, preview: &'a FillBuildPreview, color: &'a str, status_label: &'a str, source: FillPreviewString) -> Option<&'a str> {
+        let ghost = preview.candidate_ghost.as_ref();
+        match source {
+            FillPreviewString::RootTarget | FillPreviewString::GhostTarget => ghost.map(|value| value.target_vortex_full_id.as_str()),
+            FillPreviewString::RootKind | FillPreviewString::GhostKind => ghost.map(|value| value.object_kind_id.as_str()),
+            FillPreviewString::RootMesh | FillPreviewString::GhostMesh => ghost.map(|value| value.mesh_url.as_str()),
+            FillPreviewString::Color => Some(color),
+            FillPreviewString::Stage => Some(preview.stage.as_str()),
+            FillPreviewString::StatusLabel => Some(status_label),
+            FillPreviewString::Target => preview.target_vortex_full_id.as_deref(),
+            FillPreviewString::Candidate => preview.candidate_object_kind_id.as_deref(),
+            FillPreviewString::CurrentPair => preview.current_pair_object_id.as_deref(),
+            FillPreviewString::CandidatePage(index) => preview.candidate_page.get(index).and_then(Option::as_deref),
+            FillPreviewString::Rejection => preview.rejection_reason.as_deref(),
+        }
+    }
+
+    fn quoted(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str, prefix: &'static [u8], source: FillPreviewString, optional: bool, advance: bool) -> Result<FillPreviewJsonUnit, ()> {
+        let value = self.string(preview, color, status_label, source);
+        match self.string_phase {
+            0 => {
+                self.string_phase = 1;
+                FillPreviewJsonUnit::bytes(prefix)
+            }
+            1 if optional && value.is_none() => {
+                if advance {
+                    self.advance_field();
+                } else {
+                    self.string_phase = 0;
+                }
+                FillPreviewJsonUnit::bytes(b"null")
+            }
+            1 => {
+                self.string_phase = 2;
+                FillPreviewJsonUnit::bytes(b"\"")
+            }
+            2 => {
+                let bytes = value.ok_or(())?.as_bytes();
+                if let Some(byte) = bytes.get(self.string_byte).copied() {
+                    self.string_byte += 1;
+                    Ok(FillPreviewJsonUnit::escaped(byte))
+                } else {
+                    if advance {
+                        self.advance_field();
+                    } else {
+                        self.string_phase = 0;
+                        self.string_byte = 0;
+                    }
+                    FillPreviewJsonUnit::bytes(b"\"")
+                }
+            }
+            _ => Err(()),
+        }
+    }
+
+    fn candidate_ghost(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<FillPreviewJsonUnit, ()> {
+        let Some(ghost) = preview.candidate_ghost.as_ref() else {
+            self.advance_field();
+            return FillPreviewJsonUnit::bytes(b",\"candidateGhost\":null");
+        };
+        match self.subfield {
+            0 => {
+                self.subfield = 1;
+                FillPreviewJsonUnit::bytes(b",\"candidateGhost\":{")
+            }
+            1 => self.quoted(preview, color, status_label, b"\"targetVortexFullId\":", FillPreviewString::GhostTarget, false, false),
+            2 => self.quoted(preview, color, status_label, b",\"objectKindId\":", FillPreviewString::GhostKind, false, false),
+            3 => {
+                self.subfield = 4;
+                let source_vortex_index = FillPreviewJsonSourceAuthority::read(preview)?.ok_or(())?.candidate_ghost;
+                FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))
+            }
+            4 => self.quoted(preview, color, status_label, b",\"meshUrl\":", FillPreviewString::GhostMesh, false, false),
+            5 => {
+                self.subfield = 6;
+                preview_json_vec3(",\"origin\":", ghost.origin)
+            }
+            6 => {
+                self.subfield = 7;
+                preview_json_quat(",\"orientation\":", ghost.orientation)
+            }
+            _ => {
+                self.advance_field();
+                FillPreviewJsonUnit::bytes(b"}")
+            }
+        }
+        .map(|unit| {
+            if self.string_phase == 0 && matches!(self.subfield, 1 | 2 | 4) {
+                self.subfield += 1;
+            }
+            unit
+        })
+    }
+
+    fn candidate_page(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<FillPreviewJsonUnit, ()> {
+        if self.subfield == 0 {
+            self.subfield = 1;
+            return FillPreviewJsonUnit::bytes(b",\"candidatePage\":[");
+        }
+        if self.item == preview.candidate_page.len() {
+            self.advance_field();
+            return FillPreviewJsonUnit::bytes(b"]");
+        }
+        let prefix = if self.item == 0 { b"".as_slice() } else { b",".as_slice() };
+        let item = self.item;
+        let unit = self.quoted(preview, color, status_label, prefix, FillPreviewString::CandidatePage(item), true, false)?;
+        if self.string_phase == 0 {
+            self.item += 1;
+        }
+        Ok(unit)
+    }
+
+    fn next_unit(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<Option<FillPreviewJsonUnit>, ()> {
+        let ghost = preview.candidate_ghost.as_ref();
+        let unit = match self.field {
+            0 => {
+                self.field = if ghost.is_some() { 1 } else { 9 };
+                FillPreviewJsonUnit::bytes(b"{")?
+            }
+            1 => self.quoted(preview, color, status_label, b"\"targetVortexFullId\":", FillPreviewString::RootTarget, false, true)?,
+            2 => self.quoted(preview, color, status_label, b",\"objectKindId\":", FillPreviewString::RootKind, false, true)?,
+            3 => {
+                self.advance_field();
+                let source_vortex_index = FillPreviewJsonSourceAuthority::read(preview)?.ok_or(())?.root;
+                FillPreviewJsonUnit::formatted(format_args!(",\"sourceVortexIndex\":{source_vortex_index}"))?
+            }
+            4 => self.quoted(preview, color, status_label, b",\"meshUrl\":", FillPreviewString::RootMesh, false, true)?,
+            5 => {
+                self.advance_field();
+                preview_json_vec3(",\"origin\":", ghost.ok_or(())?.origin)?
+            }
+            6 => {
+                self.advance_field();
+                preview_json_quat(",\"orientation\":", ghost.ok_or(())?.orientation)?
+            }
+            7 => self.quoted(preview, color, status_label, b",\"color\":", FillPreviewString::Color, false, true)?,
+            8 => {
+                self.advance_field();
+                FillPreviewJsonUnit::bytes(b",\"opacity\":0.35")?
+            }
+            9 => {
+                self.advance_field();
+                FillPreviewJsonUnit::bytes(if ghost.is_some() { b",\"fillBuildPreview\":{" } else { b"\"fillBuildPreview\":{" })?
+            }
+            10 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!("\"operation\":{}", preview.operation))?
+            }
+            11 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"baseRevision\":{}", preview.base_revision))?
+            }
+            12 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"registryGeneration\":{}", preview.registry_generation))?
+            }
+            13 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"sequence\":{}", preview.sequence))?
+            }
+            14 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"generation\":{}", preview.generation))?
+            }
+            15 => self.quoted(preview, color, status_label, b",\"stage\":", FillPreviewString::Stage, false, true)?,
+            16 => self.quoted(preview, color, status_label, b",\"statusLabel\":", FillPreviewString::StatusLabel, false, true)?,
+            17 => self.quoted(preview, color, status_label, b",\"targetVortexFullId\":", FillPreviewString::Target, true, true)?,
+            18 => self.quoted(preview, color, status_label, b",\"candidateObjectKindId\":", FillPreviewString::Candidate, true, true)?,
+            19 => self.candidate_ghost(preview, color, status_label)?,
+            20 => self.quoted(preview, color, status_label, b",\"currentPairObjectId\":", FillPreviewString::CurrentPair, true, true)?,
+            21 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"collisionCount\":{}", preview.collision_count))?
+            }
+            22 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"sampleCursor\":{}", preview.sample_cursor))?
+            }
+            23 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"insideBoth\":{}", preview.inside_both))?
+            }
+            24 => {
+                self.advance_field();
+                match preview.last_sample {
+                    Some(value) => preview_json_vec3(",\"lastSample\":", value.map(f64::from))?,
+                    None => FillPreviewJsonUnit::bytes(b",\"lastSample\":null")?,
+                }
+            }
+            25 => self.candidate_page(preview, color, status_label)?,
+            26 => {
+                self.advance_field();
+                FillPreviewJsonUnit::bytes(if preview.truncated { b",\"truncated\":true" } else { b",\"truncated\":false" })?
+            }
+            27 => self.quoted(preview, color, status_label, b",\"rejectionReason\":", FillPreviewString::Rejection, true, true)?,
+            28 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"targetCursor\":{}", preview.target_cursor))?
+            }
+            29 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"candidateCursor\":{}", preview.candidate_cursor))?
+            }
+            30 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"acceptedCount\":{}", preview.accepted_count))?
+            }
+            31 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"totalCount\":{}", preview.total_count))?
+            }
+            32 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"searchCount\":{}", preview.search_count))?
+            }
+            33 => {
+                self.advance_field();
+                FillPreviewJsonUnit::formatted(format_args!(",\"rejectedCount\":{}}}}}", preview.rejected_count))?
+            }
+            _ => return Ok(None),
+        };
+        Ok(Some(unit))
+    }
+}
+
+fn fill_preview_json_wire_bytes(preview: &FillBuildPreview, color: &str, status_label: &str) -> Result<usize, ()> {
+    let mut pass = FillPreviewJsonPass::default();
+    let mut exact_bytes = 0usize;
+    while let Some(unit) = pass.next_unit(preview, color, status_label)? {
+        exact_bytes = exact_bytes.checked_add(unit.len).filter(|bytes| *bytes <= FILL_PREVIEW_JSON_MAX_BYTES).ok_or(())?;
+    }
+    Ok(exact_bytes)
+}
+
+pub(crate) struct FillPreviewJsonCursor {
+    phase: FillPreviewJsonPhase,
+    identity: Option<FillPreviewJsonIdentity>,
+    color: String,
+    status_label: String,
+    census: FillPreviewJsonPass,
+    encode: FillPreviewJsonPass,
+    exact_bytes: usize,
+    output: Option<Vec<u8>>,
+    ready: Option<String>,
+    ready_identity: Option<FillPreviewJsonIdentity>,
+    retiring_bytes: Option<Vec<u8>>,
+    retiring_ready: Option<String>,
+    retiring_color: Option<String>,
+    retiring_status_label: Option<String>,
+    progress: u64,
+}
+
+impl Default for FillPreviewJsonCursor {
+    fn default() -> Self {
+        Self {
+            phase: FillPreviewJsonPhase::Idle,
+            identity: None,
+            color: String::new(),
+            status_label: String::new(),
+            census: FillPreviewJsonPass::default(),
+            encode: FillPreviewJsonPass::default(),
+            exact_bytes: 0,
+            output: None,
+            ready: None,
+            ready_identity: None,
+            retiring_bytes: None,
+            retiring_ready: None,
+            retiring_color: None,
+            retiring_status_label: None,
+            progress: 0,
+        }
+    }
+}
+
+impl FillPreviewJsonCursor {
+    fn checkpoint(&self) -> [u64; 6] {
+        let identity = self.identity.unwrap_or(FillPreviewJsonIdentity { operation: 0, base_revision: 0, registry_generation: 0, generation: 0, sequence: 0 });
+        [identity.operation, identity.base_revision, identity.registry_generation, identity.generation, identity.sequence, self.progress]
+    }
+
+    fn pending(&self) -> FillPreviewJsonStep {
+        FillPreviewJsonStep::Pending { progress: self.progress, checkpoint: self.checkpoint() }
+    }
+
+    fn begin(&mut self, identity: FillPreviewJsonIdentity, color: &str, status_label: &str) -> FillPreviewJsonStep {
+        if color.len() > FILL_PREVIEW_JSON_MAX_COLOR_BYTES || status_label.is_empty() || status_label.len() > FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES {
+            self.phase = FillPreviewJsonPhase::Rejected;
+            return FillPreviewJsonStep::Rejected;
+        }
+        self.identity = Some(identity);
+        self.census = FillPreviewJsonPass::default();
+        self.encode = FillPreviewJsonPass::default();
+        self.exact_bytes = 0;
+        self.progress = 0;
+        if let Some(output) = self.output.take() {
+            self.retiring_bytes = Some(output);
+        }
+        if self.color != color {
+            let retiring = std::mem::take(&mut self.color);
+            self.retiring_color = (retiring.capacity() != 0).then_some(retiring);
+            if self.color.try_reserve_exact(color.len()).is_err() {
+                self.phase = FillPreviewJsonPhase::Rejected;
+                return FillPreviewJsonStep::Rejected;
+            }
+            self.color.push_str(color);
+        }
+        if self.status_label != status_label {
+            let retiring = std::mem::take(&mut self.status_label);
+            self.retiring_status_label = (retiring.capacity() != 0).then_some(retiring);
+            if self.status_label.try_reserve_exact(status_label.len()).is_err() {
+                self.phase = FillPreviewJsonPhase::Rejected;
+                return FillPreviewJsonStep::Rejected;
+            }
+            self.status_label.push_str(status_label);
+        }
+        self.phase = if self.retiring_bytes.is_some() || self.retiring_color.as_ref().is_some_and(|value| value.capacity() != 0) || self.retiring_status_label.as_ref().is_some_and(|value| value.capacity() != 0) {
+            FillPreviewJsonPhase::RetireSuperseded
+        } else {
+            FillPreviewJsonPhase::Census
+        };
+        self.pending()
+    }
+
+    pub(crate) fn step(&mut self, preview: &FillBuildPreview, color: &str, status_label: &str, fuel: &mut u32, cancelled: bool, deadline_reached: bool) -> FillPreviewJsonStep {
+        if matches!(self.phase, FillPreviewJsonPhase::Closing | FillPreviewJsonPhase::Terminal) {
+            return if self.phase == FillPreviewJsonPhase::Terminal { FillPreviewJsonStep::Terminal } else { self.pending() };
+        }
+        if FillPreviewJsonAdmission::read(preview, color, status_label).is_err() {
+            return FillPreviewJsonStep::Rejected;
+        }
+        if cancelled {
+            if let Some(output) = self.output.take() {
+                self.retiring_bytes = Some(output);
+            }
+            self.phase = FillPreviewJsonPhase::RetireSuperseded;
+            return FillPreviewJsonStep::Cancelled;
+        }
+        if deadline_reached {
+            return self.pending();
+        }
+        let Some(next_fuel) = fuel.checked_sub(1) else {
+            return self.pending();
+        };
+        *fuel = next_fuel;
+        let Some(identity) = FillPreviewJsonIdentity::read(preview) else {
+            self.phase = FillPreviewJsonPhase::Rejected;
+            return FillPreviewJsonStep::Rejected;
+        };
+        if self.identity != Some(identity) || self.color != color || self.status_label != status_label {
+            let result = self.begin(identity, color, status_label);
+            self.progress = self.progress.saturating_add(1);
+            return result;
+        }
+        let result = match self.phase {
+            FillPreviewJsonPhase::Idle => self.begin(identity, color, status_label),
+            FillPreviewJsonPhase::RetireSuperseded => {
+                if self.retiring_bytes.take().is_none() {
+                    if self.retiring_color.take().is_none() {
+                        self.retiring_status_label.take();
+                    }
+                }
+                if self.retiring_bytes.is_none() && self.retiring_color.is_none() && self.retiring_status_label.is_none() {
+                    self.phase = FillPreviewJsonPhase::Census;
+                }
+                self.pending()
+            }
+            FillPreviewJsonPhase::Census => match self.census.next_unit(preview, &self.color, &self.status_label) {
+                Ok(Some(unit)) => match self.exact_bytes.checked_add(unit.len) {
+                    Some(bytes) if bytes <= FILL_PREVIEW_JSON_MAX_BYTES => {
+                        self.exact_bytes = bytes;
+                        self.pending()
+                    }
+                    _ => {
+                        self.phase = FillPreviewJsonPhase::Rejected;
+                        FillPreviewJsonStep::Rejected
+                    }
+                },
+                Ok(None) => {
+                    self.phase = FillPreviewJsonPhase::Reserve;
+                    self.pending()
+                }
+                Err(()) => {
+                    self.phase = FillPreviewJsonPhase::Rejected;
+                    FillPreviewJsonStep::Rejected
+                }
+            },
+            FillPreviewJsonPhase::Reserve => {
+                let mut output = Vec::new();
+                if output.try_reserve_exact(self.exact_bytes).is_err() {
+                    self.phase = FillPreviewJsonPhase::Rejected;
+                    FillPreviewJsonStep::Rejected
+                } else {
+                    self.output = Some(output);
+                    self.phase = FillPreviewJsonPhase::Encode;
+                    self.pending()
+                }
+            }
+            FillPreviewJsonPhase::Encode => match self.encode.next_unit(preview, &self.color, &self.status_label) {
+                Ok(Some(unit)) => {
+                    let Some(output) = self.output.as_mut() else {
+                        self.phase = FillPreviewJsonPhase::Rejected;
+                        return FillPreviewJsonStep::Rejected;
+                    };
+                    if output.len().saturating_add(unit.len) > self.exact_bytes {
+                        self.phase = FillPreviewJsonPhase::Rejected;
+                        return FillPreviewJsonStep::Rejected;
+                    }
+                    output.extend_from_slice(&unit.bytes[..unit.len]);
+                    self.pending()
+                }
+                Ok(None) if self.output.as_ref().is_some_and(|output| output.len() == self.exact_bytes) => {
+                    self.phase = FillPreviewJsonPhase::Validate;
+                    self.pending()
+                }
+                _ => {
+                    self.phase = FillPreviewJsonPhase::Rejected;
+                    FillPreviewJsonStep::Rejected
+                }
+            },
+            FillPreviewJsonPhase::Validate => {
+                if self.identity != FillPreviewJsonIdentity::read(preview) {
+                    return self.begin(identity, color, status_label);
+                }
+                let Some(output) = self.output.take() else {
+                    self.phase = FillPreviewJsonPhase::Rejected;
+                    return FillPreviewJsonStep::Rejected;
+                };
+                let Ok(text) = String::from_utf8(output) else {
+                    self.phase = FillPreviewJsonPhase::Rejected;
+                    return FillPreviewJsonStep::Rejected;
+                };
+                if let Some(ready) = self.ready.replace(text) {
+                    self.retiring_ready = Some(ready);
+                }
+                self.ready_identity = self.identity;
+                self.phase = FillPreviewJsonPhase::Ready;
+                FillPreviewJsonStep::Ready
+            }
+            FillPreviewJsonPhase::Ready => {
+                self.retiring_ready.take();
+                FillPreviewJsonStep::Ready
+            }
+            FillPreviewJsonPhase::Rejected => FillPreviewJsonStep::Rejected,
+            FillPreviewJsonPhase::Closing | FillPreviewJsonPhase::Terminal => unreachable!(),
+        };
+        self.progress = self.progress.saturating_add(1);
+        result
+    }
+
+    pub(crate) fn ready(&self) -> Option<&str> {
+        self.ready.as_deref()
+    }
+
+    pub(crate) fn ready_identity(&self) -> Option<[u64; 5]> {
+        self.ready_identity.map(|identity| [identity.operation, identity.base_revision, identity.registry_generation, identity.generation, identity.sequence])
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        self.phase = FillPreviewJsonPhase::Closing;
+        if self.output.take().is_some() {
+            return false;
+        }
+        if self.retiring_bytes.take().is_some() {
+            return false;
+        }
+        if self.ready.take().is_some() {
+            return false;
+        }
+        if self.retiring_ready.take().is_some() {
+            return false;
+        }
+        if self.retiring_color.take().is_some() {
+            return false;
+        }
+        if self.retiring_status_label.take().is_some() {
+            return false;
+        }
+        if !self.color.is_empty() {
+            drop(std::mem::take(&mut self.color));
+            return false;
+        }
+        if !self.status_label.is_empty() {
+            drop(std::mem::take(&mut self.status_label));
+            return false;
+        }
+        self.identity = None;
+        self.ready_identity = None;
+        self.phase = FillPreviewJsonPhase::Terminal;
+        true
+    }
+
+    fn terminal_owners_empty(&self) -> bool {
+        self.output.is_none()
+            && self.ready.is_none()
+            && self.retiring_bytes.is_none()
+            && self.retiring_ready.is_none()
+            && self.retiring_color.is_none()
+            && self.retiring_status_label.is_none()
+            && self.color.capacity() == 0
+            && self.status_label.capacity() == 0
+    }
+}
+//#endregion 🔭️RetainedPreviewJson
+
 /// 🧱️ One already-placed object's collision footprint, kept alongside the plan so each new fill step
 /// only has to test the candidate against bodies it can actually hit.
 #[derive(Clone)]
@@ -288,6 +1061,7 @@ pub(crate) struct FillBuilder {
     pub(crate) operation: Operation,
     pub(crate) stage: FillJobStage,
     pub(crate) preview: FillBuildPreview,
+    preview_json: FillPreviewJsonCursor,
     catalogs: FixedCatalogOwner,
     weights: RetainedBrushKindWeights,
     kind_compatibility: FixedOwnerVec<KindCompatEntry>,
@@ -2025,8 +2799,9 @@ impl FillBuilderRetirementCursor {
                 true
             }),
             17 => fill.collision.take().is_some(),
-            18 => !retire_fill_preview(&mut fill.preview),
-            19 => match fill.fixed_rejection.as_mut() {
+            18 => !fill.preview_json.close_step(),
+            19 => !retire_fill_preview(&mut fill.preview),
+            20 => match fill.fixed_rejection.as_mut() {
                 Some(rejected) => {
                     if retire_retained_owner(rejected) {
                         fill.fixed_rejection.take();
@@ -2035,20 +2810,20 @@ impl FillBuilderRetirementCursor {
                 }
                 None => false,
             },
-            20 => retire_fixed_collection_backing(fill),
-            21 => {
+            21 => retire_fixed_collection_backing(fill),
+            22 => {
                 if !fill.spatial_index.retire_one_owner() {
                     true
                 } else {
                     false
                 }
             }
-            22 if fill.collection_over_capacity => {
+            23 if fill.collection_over_capacity => {
                 fill.collection_over_capacity = false;
                 true
             }
-            22 => false,
-            23 => match fill.preparation_spatial.as_mut() {
+            23 => false,
+            24 => match fill.preparation_spatial.as_mut() {
                 Some(mutation) => {
                     if mutation.retire_one_owner() {
                         fill.preparation_spatial.take();
@@ -2057,7 +2832,7 @@ impl FillBuilderRetirementCursor {
                 }
                 None => false,
             },
-            24 => match fill.pending_spatial.as_mut() {
+            25 => match fill.pending_spatial.as_mut() {
                 Some(mutation) => {
                     if mutation.retire_one_owner() {
                         fill.pending_spatial.take();
@@ -2066,10 +2841,10 @@ impl FillBuilderRetirementCursor {
                 }
                 None => false,
             },
-            25 if fill.preparation_roots.take().is_some() => true,
-            25 => false,
-            26 if fill.preparation_capacity_refusal.take().is_some() => true,
+            26 if fill.preparation_roots.take().is_some() => true,
             26 => false,
+            27 if fill.preparation_capacity_refusal.take().is_some() => true,
+            27 => false,
             _ => {
                 if !fill.terminal_owners_empty() {
                     return false;
@@ -2213,6 +2988,7 @@ impl FillBuilder {
             && self.candidate_seen.terminal_owners_empty()
             && self.candidate_cross.terminal_owners_empty()
             && self.candidate_same.terminal_owners_empty()
+            && self.preview_json.terminal_owners_empty()
             && preview_terminal_owners_empty(&self.preview)
     }
 
@@ -2243,7 +3019,7 @@ impl FillBuilder {
             preview: FillBuildPreview {
                 operation: operation.operation.0,
                 base_revision: operation.base_revision.0,
-                registry_generation: 0,
+                registry_generation: operation.generation.0,
                 sequence: 0,
                 generation: operation.generation.0,
                 stage: "prepare-fixture".into(),
@@ -2265,6 +3041,7 @@ impl FillBuilder {
                 search_count: 0,
                 rejected_count: 0,
             },
+            preview_json: FillPreviewJsonCursor::default(),
             catalogs: FixedCatalogOwner::new(),
             weights: RetainedBrushKindWeights::new(),
             kind_compatibility: FixedOwnerVec::new(),
@@ -2340,6 +3117,19 @@ impl FillBuilder {
         }
     }
 
+    pub(crate) fn preview_json_step(&mut self, color: &str, status_label: &str, fuel: &mut u32, cancelled: bool, deadline_reached: bool) -> FillPreviewJsonStep {
+        self.preview_json.step(&self.preview, color, status_label, fuel, cancelled, deadline_reached)
+    }
+
+    pub(crate) fn preview_json_ready(&self) -> Option<&str> {
+        self.preview_json.ready()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn preview_json_ready_identity(&self) -> Option<[u64; 5]> {
+        self.preview_json.ready_identity()
+    }
+
     fn retire_one_close_owner(&mut self) -> bool {
         if let Some(current) = self.close_current.as_mut() {
             if retire_retained_owner(current) {
@@ -2393,8 +3183,9 @@ impl FillBuilder {
                 true
             }),
             17 => self.collision.take().is_some(),
-            18 => !retire_fill_preview(&mut self.preview),
-            19 => match self.fixed_rejection.as_mut() {
+            18 => !self.preview_json.close_step(),
+            19 => !retire_fill_preview(&mut self.preview),
+            20 => match self.fixed_rejection.as_mut() {
                 Some(rejected) => {
                     if retire_retained_owner(rejected) {
                         self.fixed_rejection.take();
@@ -2403,14 +3194,14 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            20 => retire_fixed_collection_backing(self),
-            21 => !self.spatial_index.retire_one_owner(),
-            22 if self.collection_over_capacity => {
+            21 => retire_fixed_collection_backing(self),
+            22 => !self.spatial_index.retire_one_owner(),
+            23 if self.collection_over_capacity => {
                 self.collection_over_capacity = false;
                 true
             }
-            22 => false,
-            23 => match self.preparation_spatial.as_mut() {
+            23 => false,
+            24 => match self.preparation_spatial.as_mut() {
                 Some(mutation) => {
                     if mutation.retire_one_owner() {
                         self.preparation_spatial.take();
@@ -2419,7 +3210,7 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            24 => match self.pending_spatial.as_mut() {
+            25 => match self.pending_spatial.as_mut() {
                 Some(mutation) => {
                     if mutation.retire_one_owner() {
                         self.pending_spatial.take();
@@ -2428,10 +3219,10 @@ impl FillBuilder {
                 }
                 None => false,
             },
-            25 if self.preparation_roots.take().is_some() => true,
-            25 => false,
-            26 if self.preparation_capacity_refusal.take().is_some() => true,
+            26 if self.preparation_roots.take().is_some() => true,
             26 => false,
+            27 if self.preparation_capacity_refusal.take().is_some() => true,
+            27 => false,
             _ => return self.terminal_owners_empty() && self.close_current.is_none(),
         };
         self.close_current = current;
@@ -3235,10 +4026,7 @@ impl FillBuilder {
                 if self.stage == FillJobStage::Complete {
                     return self.complete();
                 }
-                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState),
-                    applied_progress: self.applied_count as u64,
-                })
+                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: self.applied_count as u64 })
             }
         }
     }
@@ -3347,11 +4135,7 @@ impl FillBuilder {
         self.preview.candidate_cursor = self.candidate_cursor;
         self.preview.search_count = self.transition_count;
         self.preview.rejected_count = self.rejected_count;
-        let bytes = serde_json::to_vec(&self.preview).unwrap_or_default();
-        let payload = context
-            .payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &bytes)
-            .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview));
-        StepOutcome::PreviewReady(payload)
+        StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))
     }
 
     fn complete(&self) -> StepOutcome {
@@ -3389,9 +4173,7 @@ impl InteractiveJob for FillBuilder {
             return StepOutcome::Cancelled;
         }
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            let detail = context
-                .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"stale-fill-operation")
-                .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"stale-fill-operation").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
             return StepOutcome::Fault(JobFault { detail });
         }
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
@@ -3401,15 +4183,11 @@ impl InteractiveJob for FillBuilder {
                 self.preview.rejection_reason = Some(format!("preparation-capacity:{}", refusal.branch.label()));
                 return self.publish_preview(context);
             }
-            let detail = context
-                .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-preparation-capacity")
-                .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-preparation-capacity").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
             return StepOutcome::Fault(JobFault { detail });
         }
         if self.collection_over_capacity || self.fixed_rejection.is_some() {
-            let detail = context
-                .payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-fixed-collection-capacity")
-                .unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-fixed-collection-capacity").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
             return StepOutcome::Fault(JobFault { detail });
         }
         if context.should_yield() {
@@ -3526,6 +4304,580 @@ mod tests {
             0
         }
         StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10), cancel, now, sequence)
+    }
+
+    #[derive(serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct OracleGhost<'a> {
+        target_vortex_full_id: &'a str,
+        object_kind_id: &'a str,
+        source_vortex_index: usize,
+        mesh_url: &'a str,
+        origin: [f64; 3],
+        orientation: [f64; 4],
+    }
+
+    #[derive(serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct OracleDiagnostic<'a> {
+        operation: u64,
+        base_revision: u64,
+        registry_generation: u64,
+        sequence: u64,
+        generation: u64,
+        stage: &'a str,
+        status_label: &'a str,
+        target_vortex_full_id: Option<&'a str>,
+        candidate_object_kind_id: Option<&'a str>,
+        candidate_ghost: Option<OracleGhost<'a>>,
+        current_pair_object_id: Option<&'a str>,
+        collision_count: usize,
+        sample_cursor: usize,
+        inside_both: usize,
+        last_sample: Option<[f32; 3]>,
+        candidate_page: &'a [Option<String>; 8],
+        truncated: bool,
+        rejection_reason: Option<&'a str>,
+        target_cursor: usize,
+        candidate_cursor: usize,
+        accepted_count: usize,
+        total_count: usize,
+        search_count: u64,
+        rejected_count: u64,
+    }
+
+    #[derive(serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct OracleRoot<'a> {
+        target_vortex_full_id: &'a str,
+        object_kind_id: &'a str,
+        source_vortex_index: usize,
+        mesh_url: &'a str,
+        origin: [f64; 3],
+        orientation: [f64; 4],
+        color: &'a str,
+        opacity: f64,
+        fill_build_preview: OracleDiagnostic<'a>,
+    }
+
+    fn oracle_ghost(ghost: &BrushPreviewState) -> OracleGhost<'_> {
+        OracleGhost { target_vortex_full_id: &ghost.target_vortex_full_id, object_kind_id: &ghost.object_kind_id, source_vortex_index: ghost.source_vortex_index, mesh_url: &ghost.mesh_url, origin: ghost.origin, orientation: ghost.orientation }
+    }
+
+    fn oracle_json_scalar_admits(preview: &FillBuildPreview, color: &str, status_label: &str) -> bool {
+        let safe_u64 = |value: u64, minimum: u64| value >= minimum && value <= 9_007_199_254_740_991;
+        let safe_usize = |value: usize| value as u128 <= 9_007_199_254_740_991;
+        let source_authority = preview.candidate_ghost.as_ref().map_or(true, |ghost| {
+            let root_source_vortex_index = ghost.source_vortex_index as u128;
+            let candidate_ghost_source_vortex_index = ghost.source_vortex_index as u128;
+            root_source_vortex_index <= 9_007_199_254_740_991 && candidate_ghost_source_vortex_index <= 9_007_199_254_740_991
+        });
+        color.len() <= 128
+            && !status_label.is_empty()
+            && status_label.len() <= 256
+            && source_authority
+            && safe_u64(preview.operation, 1)
+            && safe_u64(preview.base_revision, 1)
+            && safe_u64(preview.registry_generation, 1)
+            && safe_u64(preview.sequence, 0)
+            && safe_u64(preview.generation, 1)
+            && safe_usize(preview.collision_count)
+            && safe_usize(preview.sample_cursor)
+            && safe_usize(preview.inside_both)
+            && safe_usize(preview.target_cursor)
+            && safe_usize(preview.candidate_cursor)
+            && safe_usize(preview.accepted_count)
+            && safe_usize(preview.total_count)
+            && safe_u64(preview.search_count, 0)
+            && safe_u64(preview.rejected_count, 0)
+    }
+
+    fn oracle_json_unfenced(preview: &FillBuildPreview, color: &str, status_label: &str) -> String {
+        let ghost = preview.candidate_ghost.as_ref().expect("oracle case ghost");
+        serde_json::to_string(&OracleRoot {
+            target_vortex_full_id: &ghost.target_vortex_full_id,
+            object_kind_id: &ghost.object_kind_id,
+            source_vortex_index: ghost.source_vortex_index,
+            mesh_url: &ghost.mesh_url,
+            origin: ghost.origin,
+            orientation: ghost.orientation,
+            color,
+            opacity: 0.35,
+            fill_build_preview: OracleDiagnostic {
+                operation: preview.operation,
+                base_revision: preview.base_revision,
+                registry_generation: preview.registry_generation,
+                sequence: preview.sequence,
+                generation: preview.generation,
+                stage: &preview.stage,
+                status_label,
+                target_vortex_full_id: preview.target_vortex_full_id.as_deref(),
+                candidate_object_kind_id: preview.candidate_object_kind_id.as_deref(),
+                candidate_ghost: preview.candidate_ghost.as_ref().map(oracle_ghost),
+                current_pair_object_id: preview.current_pair_object_id.as_deref(),
+                collision_count: preview.collision_count,
+                sample_cursor: preview.sample_cursor,
+                inside_both: preview.inside_both,
+                last_sample: preview.last_sample,
+                candidate_page: &preview.candidate_page,
+                truncated: preview.truncated,
+                rejection_reason: preview.rejection_reason.as_deref(),
+                target_cursor: preview.target_cursor,
+                candidate_cursor: preview.candidate_cursor,
+                accepted_count: preview.accepted_count,
+                total_count: preview.total_count,
+                search_count: preview.search_count,
+                rejected_count: preview.rejected_count,
+            },
+        })
+        .expect("test-only serde oracle")
+    }
+
+    fn oracle_json_admits(preview: &FillBuildPreview, color: &str, status_label: &str) -> bool {
+        oracle_json_scalar_admits(preview, color, status_label) && oracle_json_unfenced(preview, color, status_label).len() <= FILL_PREVIEW_JSON_MAX_BYTES
+    }
+
+    fn oracle_json(preview: &FillBuildPreview, color: &str, status_label: &str) -> String {
+        assert!(oracle_json_scalar_admits(preview, color, status_label), "owned scalar schema semantics guard the test-only serde oracle");
+        let text = oracle_json_unfenced(preview, color, status_label);
+        assert!(text.len() <= 4096, "owned full-wire byte semantics guard the test-only serde oracle");
+        text
+    }
+
+    fn drive_preview_json(builder: &mut FillBuilder, color: &str, status_label: &str) -> FillPreviewJsonStep {
+        for _ in 0..20_000 {
+            let mut fuel = 1;
+            let step = builder.preview_json_step(color, status_label, &mut fuel, false, false);
+            if !matches!(step, FillPreviewJsonStep::Pending { .. }) {
+                return step;
+            }
+        }
+        panic!("preview cursor did not reach a bounded terminal observation")
+    }
+
+    fn fixture_preview() -> (FillBuildPreview, String, String, String, String, String) {
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let preview = serde_json::from_value(law["preview"].clone()).expect("schema-first preview");
+        let color = law["color"].as_str().expect("color").to_string();
+        let english = law["locales"]["en"]["statusLabel"].as_str().expect("English status label").to_string();
+        let german = law["locales"]["de"]["statusLabel"].as_str().expect("German status label").to_string();
+        let expected_english = law["locales"]["en"]["expected"].as_str().expect("English expected bytes").to_string();
+        let expected_german = law["locales"]["de"]["expected"].as_str().expect("German expected bytes").to_string();
+        (preview, color, english, german, expected_english, expected_german)
+    }
+
+    fn assert_preview_ready_matches_oracle(preview: FillBuildPreview, color: &str, status_label: &str) {
+        assert!(oracle_json_admits(&preview, color, status_label));
+        let expected = oracle_json(&preview, color, status_label);
+        let mut builder = empty_builder();
+        builder.preview = preview;
+        assert_eq!(drive_preview_json(&mut builder, color, status_label), FillPreviewJsonStep::Ready);
+        assert_eq!(builder.preview_json_ready(), Some(expected.as_str()));
+    }
+
+    fn assert_preflight_rejection_preserves_ready(builder: &mut FillBuilder, color: &str, status_label: &str) {
+        let ready_pointer = builder.preview_json.ready.as_ref().expect("retained page").as_ptr();
+        let ready_page = builder.preview_json_ready().expect("retained page").to_string();
+        let ready_identity = builder.preview_json_ready_identity();
+        let color_pointer = builder.preview_json.color.as_ptr();
+        let retained_color = builder.preview_json.color.clone();
+        let status_label_pointer = builder.preview_json.status_label.as_ptr();
+        let retained_status_label = builder.preview_json.status_label.clone();
+        let checkpoint = builder.preview_json.checkpoint();
+        let phase = builder.preview_json.phase;
+        let mut fuel = 1;
+        assert_eq!(builder.preview_json_step(color, status_label, &mut fuel, false, false), FillPreviewJsonStep::Rejected);
+        assert_eq!(fuel, 1, "preflight rejects before consuming a semantic grant");
+        assert_eq!(builder.preview_json.checkpoint(), checkpoint);
+        assert_eq!(builder.preview_json.phase, phase);
+        assert_eq!(builder.preview_json.ready.as_ref().expect("same owner").as_ptr(), ready_pointer);
+        assert_eq!(builder.preview_json_ready(), Some(ready_page.as_str()));
+        assert_eq!(builder.preview_json_ready_identity(), ready_identity);
+        assert_eq!(builder.preview_json.color.as_ptr(), color_pointer);
+        assert_eq!(builder.preview_json.color, retained_color);
+        assert_eq!(builder.preview_json.status_label.as_ptr(), status_label_pointer);
+        assert_eq!(builder.preview_json.status_label, retained_status_label);
+        assert!(
+            builder.preview_json.output.is_none()
+                && builder.preview_json.retiring_bytes.is_none()
+                && builder.preview_json.retiring_ready.is_none()
+                && builder.preview_json.retiring_color.is_none()
+                && builder.preview_json.retiring_status_label.is_none()
+        );
+    }
+
+    #[test]
+    fn retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle() {
+        let schema: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json.schema.json")).expect("schema-first preview fixture");
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        assert!(schema["$defs"]["diagnostic"]["required"].as_array().is_some_and(|fields| fields.iter().any(|field| field.as_str() == Some("statusLabel"))));
+        assert_eq!(schema["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
+        assert_eq!(schema["$defs"]["ghost"]["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
+        assert_eq!(schema["properties"]["color"]["maxLength"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
+        assert_eq!(schema["properties"]["color"]["x-semio-maxUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
+        assert_eq!(schema["x-semio-maxEncodedUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_BYTES as u64));
+        assert_eq!(schema["$defs"]["diagnostic"]["properties"]["statusLabel"]["x-semio-maxUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES as u64));
+        assert_eq!(law["limits"]["maximumSourceVortexIndex"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
+        assert_eq!(law["limits"]["maximumDiagnosticInteger"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER));
+        assert_eq!(law["limits"]["maximumColorBytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
+        assert_eq!(law["limits"]["maximumStatusLabelBytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES as u64));
+        assert_eq!(law["limits"]["maximumBytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_BYTES as u64));
+        let numeric_fields = law["diagnosticNumericFields"].as_array().expect("diagnostic numeric laws");
+        assert_eq!(numeric_fields.len(), 14);
+        for field in numeric_fields {
+            let name = field["field"].as_str().expect("numeric field");
+            assert_eq!(schema["$defs"]["diagnostic"]["properties"][name]["minimum"], field["minimum"]);
+            assert_eq!(schema["$defs"]["diagnostic"]["properties"][name]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER));
+        }
+        let (preview, color, english, german, expected_english, expected_german) = fixture_preview();
+        assert_eq!(oracle_json(&preview, &color, &english), expected_english, "English fixture and third-party oracle are byte-identical");
+        assert_eq!(oracle_json(&preview, &color, &german), expected_german, "German fixture and third-party oracle are byte-identical");
+        let mut builder = empty_builder();
+        builder.preview = preview;
+        assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
+        assert_eq!(builder.preview_json_ready(), Some(expected_english.as_str()));
+        assert_eq!(builder.preview_json_ready().map(str::len), Some(expected_english.len()));
+        assert_eq!(drive_preview_json(&mut builder, &color, &german), FillPreviewJsonStep::Ready);
+        assert_eq!(builder.preview_json_ready(), Some(expected_german.as_str()));
+    }
+
+    #[test]
+    fn retained_preview_json_safe_index_boundary_is_schema_first_portable_and_preflighted() {
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let boundaries = law["boundaryLaws"]["sourceVortexIndex"].as_array().expect("source index laws");
+        let safe_maximum = boundaries[0]["value"].as_u64().expect("safe maximum");
+        let maximum_plus_one = boundaries[1]["value"].as_u64().expect("safe maximum plus one");
+        assert_eq!((boundaries[0]["admitted"].as_bool(), boundaries[1]["admitted"].as_bool()), (Some(true), Some(false)));
+        assert_eq!(safe_maximum, FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX);
+        assert_eq!(maximum_plus_one, FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX + 1);
+
+        if let Ok(source_vortex_index) = usize::try_from(safe_maximum) {
+            let (mut preview, color, english, _, _, _) = fixture_preview();
+            preview.candidate_ghost.as_mut().expect("fixture ghost").source_vortex_index = source_vortex_index;
+            assert!(oracle_json_admits(&preview, &color, &english));
+            let expected = oracle_json(&preview, &color, &english);
+            let mut builder = empty_builder();
+            builder.preview = preview;
+            assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
+            assert_eq!(builder.preview_json_ready(), Some(expected.as_str()));
+        } else {
+            assert!((usize::MAX as u128) <= safe_maximum as u128, "narrow usize platforms admit every representable source index");
+        }
+
+        if let Ok(source_vortex_index) = usize::try_from(maximum_plus_one) {
+            let (preview, color, english, _, _, _) = fixture_preview();
+            let mut builder = empty_builder();
+            builder.preview = preview;
+            assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
+            let ready_pointer = builder.preview_json.ready.as_ref().expect("retained page").as_ptr();
+            let ready_page = builder.preview_json_ready().expect("retained page").to_string();
+            let ready_identity = builder.preview_json_ready_identity();
+            let color_pointer = builder.preview_json.color.as_ptr();
+            let status_label_pointer = builder.preview_json.status_label.as_ptr();
+            let checkpoint = builder.preview_json.checkpoint();
+            let phase = builder.preview_json.phase;
+            builder.preview.candidate_ghost.as_mut().expect("fixture ghost").source_vortex_index = source_vortex_index;
+            assert!(!oracle_json_admits(&builder.preview, &color, &english));
+            let mut fuel = 1;
+            assert_eq!(builder.preview_json_step("#000", "Füllfortschritt", &mut fuel, false, false), FillPreviewJsonStep::Rejected);
+            assert_eq!(fuel, 1, "preflight rejects before consuming a semantic grant");
+            assert_eq!(builder.preview_json.checkpoint(), checkpoint);
+            assert_eq!(builder.preview_json.phase, phase);
+            assert_eq!(builder.preview_json.ready.as_ref().expect("same owner").as_ptr(), ready_pointer);
+            assert_eq!(builder.preview_json_ready(), Some(ready_page.as_str()));
+            assert_eq!(builder.preview_json_ready_identity(), ready_identity);
+            assert_eq!(builder.preview_json.color.as_ptr(), color_pointer);
+            assert_eq!(builder.preview_json.status_label.as_ptr(), status_label_pointer);
+            assert!(builder.preview_json.output.is_none() && builder.preview_json.retiring_bytes.is_none() && builder.preview_json.retiring_ready.is_none());
+        } else {
+            assert!((usize::MAX as u128) <= safe_maximum as u128, "maximum plus one is unrepresentable only where every usize is wire-safe");
+        }
+    }
+
+    #[test]
+    fn retained_preview_json_all_diagnostic_numeric_boundaries_are_preflighted() {
+        type U64Setter = fn(&mut FillBuildPreview, u64);
+        type UsizeSetter = fn(&mut FillBuildPreview, usize);
+        let u64_fields: [(&str, U64Setter); 7] = [
+            ("operation", |preview, value| preview.operation = value),
+            ("baseRevision", |preview, value| preview.base_revision = value),
+            ("registryGeneration", |preview, value| preview.registry_generation = value),
+            ("sequence", |preview, value| preview.sequence = value),
+            ("generation", |preview, value| preview.generation = value),
+            ("searchCount", |preview, value| preview.search_count = value),
+            ("rejectedCount", |preview, value| preview.rejected_count = value),
+        ];
+        let usize_fields: [(&str, UsizeSetter); 7] = [
+            ("collisionCount", |preview, value| preview.collision_count = value),
+            ("sampleCursor", |preview, value| preview.sample_cursor = value),
+            ("insideBoth", |preview, value| preview.inside_both = value),
+            ("targetCursor", |preview, value| preview.target_cursor = value),
+            ("candidateCursor", |preview, value| preview.candidate_cursor = value),
+            ("acceptedCount", |preview, value| preview.accepted_count = value),
+            ("totalCount", |preview, value| preview.total_count = value),
+        ];
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let mut declared = law["diagnosticNumericFields"].as_array().expect("diagnostic numeric laws").iter().map(|field| field["field"].as_str().expect("field")).collect::<Vec<_>>();
+        let mut tested = u64_fields.iter().map(|(field, _)| *field).chain(usize_fields.iter().map(|(field, _)| *field)).collect::<Vec<_>>();
+        declared.sort_unstable();
+        tested.sort_unstable();
+        assert_eq!(tested, declared);
+        let maximum = law["limits"]["maximumDiagnosticInteger"].as_u64().expect("diagnostic maximum");
+        let maximum_plus_one = maximum + 1;
+
+        for (_, set) in u64_fields {
+            let (mut preview, color, english, _, _, _) = fixture_preview();
+            set(&mut preview, maximum);
+            assert_preview_ready_matches_oracle(preview, &color, &english);
+
+            let (preview, color, english, _, _, _) = fixture_preview();
+            let mut builder = empty_builder();
+            builder.preview = preview;
+            assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
+            set(&mut builder.preview, maximum_plus_one);
+            assert!(!oracle_json_admits(&builder.preview, &color, &english));
+            assert_preflight_rejection_preserves_ready(&mut builder, "#000", "Füllfortschritt");
+        }
+
+        if let Ok(maximum) = usize::try_from(maximum) {
+            for (_, set) in usize_fields {
+                let (mut preview, color, english, _, _, _) = fixture_preview();
+                set(&mut preview, maximum);
+                assert_preview_ready_matches_oracle(preview, &color, &english);
+            }
+        } else {
+            assert!((usize::MAX as u128) <= FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER as u128);
+            for (_, set) in usize_fields {
+                let (mut preview, color, english, _, _, _) = fixture_preview();
+                set(&mut preview, usize::MAX);
+                assert_preview_ready_matches_oracle(preview, &color, &english);
+            }
+        }
+
+        if let Ok(maximum_plus_one) = usize::try_from(maximum_plus_one) {
+            for (_, set) in usize_fields {
+                let (preview, color, english, _, _, _) = fixture_preview();
+                let mut builder = empty_builder();
+                builder.preview = preview;
+                assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
+                set(&mut builder.preview, maximum_plus_one);
+                assert!(!oracle_json_admits(&builder.preview, &color, &english));
+                assert_preflight_rejection_preserves_ready(&mut builder, "#000", "Füllfortschritt");
+            }
+        } else {
+            assert!((usize::MAX as u128) <= FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER as u128, "unrepresentable plus one means every usize is wire-safe");
+        }
+    }
+
+    #[test]
+    fn retained_preview_json_status_label_byte_boundary_matches_owned_serde_oracle() {
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        for boundary in law["boundaryLaws"]["statusLabel"].as_array().expect("status label laws") {
+            let unit = boundary["unit"].as_str().expect("status label unit");
+            let repeat = boundary["repeat"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("status label repeat");
+            let expected_bytes = boundary["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("status label bytes");
+            let admitted = boundary["admitted"].as_bool().expect("status label admission");
+            let status_label = unit.repeat(repeat);
+            assert_eq!(status_label.len(), expected_bytes, "fixture declares UTF-8 bytes");
+            let (preview, color, english, _, _, _) = fixture_preview();
+            assert_eq!(oracle_json_admits(&preview, &color, &status_label), admitted);
+            if admitted {
+                assert_preview_ready_matches_oracle(preview, &color, &status_label);
+            } else {
+                let mut builder = empty_builder();
+                builder.preview = preview;
+                assert_eq!(drive_preview_json(&mut builder, &color, &english), FillPreviewJsonStep::Ready);
+                assert_preflight_rejection_preserves_ready(&mut builder, &color, &status_label);
+            }
+        }
+    }
+
+    #[test]
+    fn retained_preview_json_color_byte_boundary_matches_owned_serde_oracle() {
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        for boundary in law["boundaryLaws"]["color"].as_array().expect("color laws") {
+            let unit = boundary["unit"].as_str().expect("color unit");
+            let repeat = boundary["repeat"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("color repeat");
+            let expected_bytes = boundary["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("color bytes");
+            let admitted = boundary["admitted"].as_bool().expect("color admission");
+            let color = unit.repeat(repeat);
+            assert_eq!(color.len(), expected_bytes, "fixture declares UTF-8 bytes");
+            let (preview, _, english, _, _, _) = fixture_preview();
+            assert_eq!(oracle_json_admits(&preview, &color, &english), admitted);
+            let mut builder = empty_builder();
+            builder.preview = preview;
+            let step = drive_preview_json(&mut builder, &color, &english);
+            if admitted {
+                assert_eq!(step, FillPreviewJsonStep::Ready);
+                let expected = oracle_json(&builder.preview, &color, &english);
+                assert_eq!(builder.preview_json_ready(), Some(expected.as_str()));
+            } else {
+                assert_eq!(step, FillPreviewJsonStep::Rejected);
+                assert!(builder.preview_json.output.is_none() && builder.preview_json.ready().is_none(), "oversized color never reserves or publishes");
+            }
+        }
+    }
+
+    #[test]
+    fn retained_preview_json_exact_cap_and_plus_one_fail_closed_before_reserve() {
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let boundaries = law["boundaryLaws"]["fullWire"].as_array().expect("full-wire laws");
+        let maximum_bytes = boundaries[0]["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("maximum bytes");
+        let maximum_plus_one_bytes = boundaries[1]["utf8Bytes"].as_u64().and_then(|value| usize::try_from(value).ok()).expect("maximum plus one bytes");
+        assert_eq!((boundaries[0]["admitted"].as_bool(), boundaries[1]["admitted"].as_bool()), (Some(true), Some(false)));
+        assert_eq!((boundaries[0]["sourceField"].as_str(), boundaries[1]["sourceField"].as_str()), (Some("stage"), Some("stage")));
+        assert_eq!(boundaries[0]["oracle"].as_str(), Some("serde_json"));
+        assert_eq!(
+            boundaries[1]["preserves"].as_array().expect("plus-one preservation law").iter().map(|owner| owner.as_str().expect("preserved owner")).collect::<Vec<_>>(),
+            ["fuel", "checkpoint", "phase", "ready", "readyIdentity", "colorOwner", "statusLabelOwner", "transientOwners"]
+        );
+        assert_eq!((maximum_bytes, maximum_plus_one_bytes), (FILL_PREVIEW_JSON_MAX_BYTES, FILL_PREVIEW_JSON_MAX_BYTES + 1));
+        let (mut maximum, color, english, _, _, _) = fixture_preview();
+        maximum.stage.clear();
+        let fixed_bytes = oracle_json_unfenced(&maximum, &color, &english).len();
+        maximum.stage = "x".repeat(maximum_bytes - fixed_bytes);
+        let maximum_oracle = oracle_json_unfenced(&maximum, &color, &english);
+        assert_eq!(maximum_oracle.len(), maximum_bytes);
+        assert_eq!(fill_preview_json_wire_bytes(&maximum, &color, &english), Ok(maximum_bytes));
+        assert_preview_ready_matches_oracle(maximum, &color, &english);
+
+        let (preview, color, english, _, _, _) = fixture_preview();
+        let mut retained = empty_builder();
+        retained.preview = preview;
+        assert_eq!(drive_preview_json(&mut retained, &color, &english), FillPreviewJsonStep::Ready);
+        retained.preview.stage.clear();
+        let fixed_bytes = oracle_json_unfenced(&retained.preview, &color, &english).len();
+        retained.preview.stage = "x".repeat(maximum_plus_one_bytes - fixed_bytes);
+        assert!(oracle_json_scalar_admits(&retained.preview, &color, &english));
+        assert_eq!(oracle_json_unfenced(&retained.preview, &color, &english).len(), maximum_plus_one_bytes);
+        assert!(!oracle_json_admits(&retained.preview, &color, &english));
+        assert_eq!(fill_preview_json_wire_bytes(&retained.preview, &color, &english), Err(()));
+        assert_preflight_rejection_preserves_ready(&mut retained, &color, &english);
+    }
+
+    #[test]
+    fn retained_preview_json_all_native_string_sources_enforce_wire_cap_before_mutation() {
+        type Setter = fn(&mut FillBuildPreview, String);
+        let setters: [(&str, Setter); 9] = [
+            ("stage", |preview, value| preview.stage = value),
+            ("targetVortexFullId", |preview, value| preview.target_vortex_full_id = Some(value)),
+            ("candidateObjectKindId", |preview, value| preview.candidate_object_kind_id = Some(value)),
+            ("candidateGhost.targetVortexFullId", |preview, value| preview.candidate_ghost.as_mut().expect("fixture ghost").target_vortex_full_id = value),
+            ("candidateGhost.objectKindId", |preview, value| preview.candidate_ghost.as_mut().expect("fixture ghost").object_kind_id = value),
+            ("candidateGhost.meshUrl", |preview, value| preview.candidate_ghost.as_mut().expect("fixture ghost").mesh_url = value),
+            ("currentPairObjectId", |preview, value| preview.current_pair_object_id = Some(value)),
+            ("candidatePage[0]", |preview, value| preview.candidate_page[0] = Some(value)),
+            ("rejectionReason", |preview, value| preview.rejection_reason = Some(value)),
+        ];
+        let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔭️preview-json-law.json")).expect("language-neutral law fixture");
+        let mut declared = law["boundaryLaws"]["aggregateSourceStrings"].as_array().expect("aggregate source strings").iter().map(|field| field.as_str().expect("source string")).collect::<Vec<_>>();
+        let mut covered = setters.iter().map(|(field, _)| *field).chain(["color", "statusLabel"]).collect::<Vec<_>>();
+        declared.sort_unstable();
+        covered.sort_unstable();
+        assert_eq!(covered, declared);
+
+        for (_, set) in setters {
+            let (preview, color, english, _, _, _) = fixture_preview();
+            let mut retained = empty_builder();
+            retained.preview = preview;
+            assert_eq!(drive_preview_json(&mut retained, &color, &english), FillPreviewJsonStep::Ready);
+            set(&mut retained.preview, "x".repeat(FILL_PREVIEW_JSON_MAX_BYTES + 1));
+            assert!(oracle_json_scalar_admits(&retained.preview, &color, &english));
+            assert!(oracle_json_unfenced(&retained.preview, &color, &english).len() > FILL_PREVIEW_JSON_MAX_BYTES);
+            assert_eq!(fill_preview_json_wire_bytes(&retained.preview, &color, &english), Err(()));
+            assert_preflight_rejection_preserves_ready(&mut retained, &color, &english);
+        }
+    }
+
+    #[test]
+    fn retained_preview_json_rejects_malformed_and_omitted_schema_fields() {
+        assert!(serde_json::from_str::<FillBuildPreview>(r#"{"operation":1}"#).is_err());
+        let mut nine_items = serde_json::to_value(fixture_preview().0).expect("fixture value");
+        nine_items["candidatePage"].as_array_mut().expect("candidate page").push(serde_json::Value::Null);
+        assert!(serde_json::from_value::<FillBuildPreview>(nine_items).is_err());
+        let mut malformed = empty_builder();
+        malformed.preview.last_sample = Some([f32::NAN, 0.0, 0.0]);
+        assert_eq!(drive_preview_json(&mut malformed, "#fff", "Fill progress"), FillPreviewJsonStep::Rejected);
+        assert!(malformed.preview_json.ready().is_none());
+        let mut missing_locale = empty_builder();
+        assert_eq!(drive_preview_json(&mut missing_locale, "#fff", ""), FillPreviewJsonStep::Rejected);
+        let mut oversized_locale = empty_builder();
+        assert_eq!(drive_preview_json(&mut oversized_locale, "#fff", &"x".repeat(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES + 1)), FillPreviewJsonStep::Rejected);
+    }
+
+    #[test]
+    fn retained_preview_json_zero_fuel_deadline_and_stale_generation_make_no_publication() {
+        let mut builder = empty_builder();
+        let mut fuel = 0;
+        let before = builder.preview_json.checkpoint();
+        assert!(matches!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false), FillPreviewJsonStep::Pending { .. }));
+        assert_eq!(builder.preview_json.checkpoint(), before);
+        fuel = 1;
+        assert!(matches!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, true), FillPreviewJsonStep::Pending { .. }));
+        assert_eq!(builder.preview_json.checkpoint(), before);
+        for _ in 0..32 {
+            fuel = 1;
+            let _ = builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false);
+        }
+        assert!(matches!(builder.preview_json.phase, FillPreviewJsonPhase::Census | FillPreviewJsonPhase::Reserve | FillPreviewJsonPhase::Encode));
+        builder.preview.sequence += 1;
+        fuel = 1;
+        let _ = builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false);
+        assert!(builder.preview_json.ready().is_none());
+        assert_eq!(builder.preview_json.identity.map(|identity| identity.sequence), Some(builder.preview.sequence));
+    }
+
+    #[test]
+    fn retained_preview_json_cancellation_at_each_transfer_preserves_last_valid_page() {
+        for target in [FillPreviewJsonPhase::Census, FillPreviewJsonPhase::Reserve, FillPreviewJsonPhase::Encode, FillPreviewJsonPhase::Validate] {
+            let mut builder = empty_builder();
+            for _ in 0..20_000 {
+                if builder.preview_json.phase == target {
+                    break;
+                }
+                let mut fuel = 1;
+                let _ = builder.preview_json_step("#fff", "Fill progress", &mut fuel, false, false);
+            }
+            let mut fuel = 1;
+            assert_eq!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, true, false), FillPreviewJsonStep::Cancelled);
+            assert!(builder.preview_json.ready().is_none());
+        }
+        let mut builder = empty_builder();
+        assert_eq!(drive_preview_json(&mut builder, "#fff", "Fill progress"), FillPreviewJsonStep::Ready);
+        let ready = builder.preview_json_ready().expect("ready page").to_string();
+        builder.preview.sequence += 1;
+        let mut fuel = 1;
+        assert_eq!(builder.preview_json_step("#fff", "Fill progress", &mut fuel, true, false), FillPreviewJsonStep::Cancelled);
+        assert_eq!(builder.preview_json_ready(), Some(ready.as_str()));
+    }
+
+    #[test]
+    fn retained_preview_json_reuses_exact_ready_page_during_locale_invalidated_encode_and_closes_idempotently() {
+        let mut builder = empty_builder();
+        assert_eq!(drive_preview_json(&mut builder, "#fff", "Fill progress"), FillPreviewJsonStep::Ready);
+        let old_pointer = builder.preview_json.ready.as_ref().expect("ready").as_ptr();
+        let old_page = builder.preview_json_ready().expect("English page").to_string();
+        assert!(old_page.contains("\"statusLabel\":\"Fill progress\""));
+        let old_identity = builder.preview_json_ready_identity().expect("identity");
+        for _ in 0..32 {
+            let mut fuel = 1;
+            assert!(matches!(builder.preview_json_step("#fff", "Füllfortschritt", &mut fuel, false, false), FillPreviewJsonStep::Pending { .. }));
+            assert_eq!(builder.preview_json.ready.as_ref().expect("last valid page retained").as_ptr(), old_pointer);
+            assert_eq!(builder.preview_json_ready(), Some(old_page.as_str()));
+            assert_eq!(builder.preview_json_ready_identity(), Some(old_identity));
+        }
+        assert_eq!(drive_preview_json(&mut builder, "#fff", "Füllfortschritt"), FillPreviewJsonStep::Ready);
+        assert!(builder.preview_json_ready().is_some_and(|page| page.contains("\"statusLabel\":\"Füllfortschritt\"")));
+        assert_eq!(builder.preview_json_ready_identity(), Some(old_identity), "locale invalidates bytes without inventing a fill generation");
+        assert!(!builder.preview_json.close_step(), "interrupted close releases one owner");
+        for _ in 0..8 {
+            if builder.preview_json.close_step() {
+                break;
+            }
+        }
+        assert!(builder.preview_json.close_step());
+        assert!(builder.preview_json.close_step(), "terminal close is idempotent");
+        assert!(builder.preview_json.terminal_owners_empty());
     }
 
     #[test]

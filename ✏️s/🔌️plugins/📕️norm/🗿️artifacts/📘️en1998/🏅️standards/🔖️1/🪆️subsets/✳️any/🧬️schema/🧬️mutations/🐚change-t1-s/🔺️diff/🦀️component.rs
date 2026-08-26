@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_t1_s::mutation::ChangeT1S;
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeT1S, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeT1S, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_t1_s.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fundamental period T1 [s] must be a finite number, got {}.", payload.new_t1_s), Vec::<String>::new());
     }

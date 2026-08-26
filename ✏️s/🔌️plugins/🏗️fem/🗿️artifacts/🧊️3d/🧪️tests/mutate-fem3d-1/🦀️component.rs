@@ -1,31 +1,23 @@
-//! 🧊️ `fem.fem3d` exhaustive mutation case — Rust adapter. Ticket 26/08/23/END-TO-END-TESTING-
-//! REFACTOR. Recorded no-oracle decision `fem3d-mutation-semantics`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, which surveys the same solver
-//! families as the 2D artifact and DECLINES them for the same reason, but is recorded separately
-//! because this vocabulary genuinely differs).
+//! 🧊 `s.fem.fem3d` exhaustive mutation case — Rust SUBJECT adapter. Ticket
+//! 26/08/23/END-TO-END-TESTING-REFACTOR.
 //!
-//! What separates this catalog from `fem2d-1-any` is more than a coordinate: the spatial noun is a
-//! SOLID extruded from a base elevation through a height in layers, materials carry a shear modulus
-//! `g`, sections carry `iz` and a torsion constant `j`, frames carry a `roll` angle about their own
-//! axis, supports fix six degrees of freedom rather than three, and combinations are written as a
-//! `terms:MAP` block.
+//! This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` beside this file —
+//! a second implementation of the structural model and all twenty-five typed mutations, written in
+//! Python from this subset's committed snapshot schema, mutation grammar and specification vectors.
+//! This adapter registers the SUBJECT half only: keeping oracle registrations here would put this
+//! repository's answer on both sides of the comparison.
 //!
-//! The 25 committed vectors are authored against 3D-specific hazards. `replace-element` ROLLS a column
-//! about its own axis — invisible in every projection except the element record. `replace-support`
-//! FREES the three rotations at a clamped base while leaving the translations fixed, which a support
-//! codec storing a boolean cannot express. `replace-material` softens only the shear modulus, the one
-//! material field the 2D artifact has no slot for. `replace-solid` thickens the slab AND adds a mesh
-//! layer, so replacing geometry while keeping the old layer count fails.
+//! What the vocabulary edits is the MODEL, not the analysis: nine id-keyed collections and one
+//! settings record. No finite-element solver defines this document and none reads `.dsl.semio`.
 //!
-//! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves an
-//! oracle implementation from the feature's `@oracle-` tag and this feature has none — so every law this
-//! case claims is asserted inside the SUBJECT handlers, through the shared law module
-//! `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law/🦀️component.rs` that the stdio subsets use. The oracle handlers
-//! below still answer with the committed vector read literally, so the reference side exists the moment a
-//! second producer ever does. The subject half is gated behind the generated host's `sut` feature so the
-//! oracle-only run never compiles the local implementation.
+//! **What the two roles each hold.** The cross-language projection is the whole model; this artifact
+//! composes no digest-derived child, so nothing has to be held back. The committed `🔺️diff` — which
+//! pins WHICH fields a mutation was allowed to touch — and the committed `🎯️outcome` are Rust-side
+//! report shapes rather than parts of the document, so they stay asserted HERE, in role, in
+//! [`subject::spec_vector`], exactly as before the conversion. So does the `.dsl.semio` carrier's
+//! fixpoint law and its agreement with the binary pack codec.
 
-use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
+use semio_repo_test_host::{parse_json, Adapter, Json};
 
 //#region 🔖️Kinds
 /// 🏷️ Mirrors `KINDS` in `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` — duplicated, not
@@ -70,6 +62,12 @@ const UNOBSERVABLE: &[&str] = &[
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]
 const DSL_ASSET: &str = "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio";
+
+/// 🧫️ That same frame as a snapshot, with six unreferenced spares appended so every `delete-` and
+/// `replace-` verb has an unambiguous trailing target. Derived once, provenance recorded in the
+/// feature description; every spare comes from a committed specification vector of this subset.
+#[cfg(feature = "sut")]
+const DERIVED_ASSET: &str = "local://🧊️steel-frame.snapshot.json";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -266,34 +264,16 @@ fn vector(kind: &str) -> Vector {
 }
 
 /// 🔎️ Parses one embedded fixture file into the framework's own dependency-free `Json`.
+#[cfg(feature = "sut")]
 fn canonical(text: &str) -> Json {
     parse_json(text).unwrap_or_else(|error| panic!("mutate-fem3d-1: a committed fixture must be valid JSON: {error}"))
 }
 //#endregion 🔖️Fixtures
 
-//#region 🔖️Oracle
-/// 🔮️ The forward reference answer: the committed after-snapshot, read literally.
-fn mutate_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |_ctx: &Context| {
-        let after = vector(kind).after;
-        Ok(Outcome::with_raw(after.as_bytes().to_vec(), canonical(after)))
-    }
-}
-
-/// 🔮️ The inverse reference answer: the committed before-snapshot — undoing a mutation must land back
-/// exactly where the specification vector started.
-fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-    move |_ctx: &Context| {
-        let before = vector(kind).before;
-        Ok(Outcome::with_raw(before.as_bytes().to_vec(), canonical(before)))
-    }
-}
-//#endregion 🔖️Oracle
-
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
+    use super::{canonical, vector, DERIVED_ASSET, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
     use semio_s_plugin_fem::artifacts::fem3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
@@ -380,91 +360,180 @@ mod subject {
     }
     //#endregion 🔖️Report
 
+    //#region 🔖️Plan
+    /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.
+    fn uri_in(ctx: &Context, needle: &str) -> Result<String, String> {
+        ctx.scenario
+            .steps
+            .iter()
+            .flat_map(|(_, step)| step.split_whitespace())
+            .find(|token| (token.starts_with("asset://") || token.starts_with("local://") || token.starts_with("shared://")) && token.contains(needle))
+            .map(|token| token.to_string())
+            .ok_or_else(|| format!("scenario {} declares no fixture URI containing {needle:?}", ctx.scenario.id))
+    }
+
+    /// 🧫️ The declared fixture's bytes as UTF-8 text.
+    fn fixture_text(ctx: &Context, needle: &str) -> Result<String, String> {
+        let uri = uri_in(ctx, needle)?;
+        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
+    }
+
+    /// 🔀️ Each verb writes exactly ONE of the nine members. That is the check an after-snapshot
+    /// comparison cannot make on its own: an implementation that re-derived a sibling collection on
+    /// every edit — renumbering ids, re-sorting sections — would still land on the right value for
+    /// the member it meant to write.
+    fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
+        let written = match kind {
+            "update-analysis-settings" => "analysis",
+            "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",
+            _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
+                "node" => "nodes",
+                "element" => "elements",
+                "solid" => "solids",
+                "material" => "materials",
+                "section" => "sections",
+                "support" => "supports",
+                "combination" => "combinations",
+                other => return Err(format!("{scenario}: no collection is declared for the noun {other:?}")),
+            },
+        };
+        let moved: Vec<String> = ["nodes", "elements", "materials", "sections", "solids", "supports", "loadCases", "combinations", "analysis"]
+            .iter()
+            .filter(|name| before.get(name) != after.get(name))
+            .map(|name| (*name).to_string())
+            .collect();
+        if moved != vec![written.to_string()] {
+            return Err(format!("{scenario}: this verb writes {written} and nothing else, but {moved:?} moved"));
+        }
+        Ok(())
+    }
+
+    /// 🧭️ The one report the production bridge produces for a `(base, mutation)` pair. The bridge's
+    /// third argument only feeds its `expectedSnapshot` member, which the real-model scenarios do not
+    /// consult, so they pass the base for it.
+    fn report_of(scenario: &str, base: &str, mutation: &str, after: &str) -> Result<Json, String> {
+        parse_json(&fem3d_mutation_report_json(base, mutation, after).map_err(|error| format!("{scenario}: the input did not reach this subset's own codec: {error}"))?)
+    }
+    //#endregion 🔖️Plan
+
     //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to its committed before-snapshot and asserts THREE things the vector commits
-    /// to: the resulting document is the committed after-snapshot, the produced delta is the committed
-    /// `🔺️diff` (which pins WHICH fields the mutation was allowed to touch, not merely where it ended
-    /// up), and the diagnostics are the ones the committed `🎯️outcome` declares. A kind the vector shows
-    /// moving is additionally held to the observability law, so a mutation that quietly did nothing
-    /// cannot pass by agreeing with an unchanged document.
+    /// 🎯️ Applies one kind to the REAL derived steel frame with the parameters the feature
+    /// states, and asserts in role that it moved the model and wrote exactly one member.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |_ctx: &Context| {
-            let committed = vector(kind);
-            let report = parse_json(&fem3d_mutation_report_json(committed.before, committed.mutation, committed.after).map_err(|error| format!("mutate-{kind}: the committed vector did not reach this subset's own codec: {error}"))?)?;
+        move |ctx: &Context| {
+            let base = fixture_text(ctx, "steel-frame")?;
+            let report = report_of(&format!("mutate-{kind}"), &base, ctx.doc_string()?, &base)?;
             let applied = member(&report, "snapshot")?;
-            let expected = member(&report, "expectedSnapshot")?;
-            if let Some(first) = law::divergence(applied, expected) {
-                return Err(format!("mutate-{kind}: the applied document is not the committed after-snapshot — {first}"));
+            let faults: Vec<String> = members(&report, "messages")?.iter().filter(|message| { let level = message.str("level"); level == "error" || level == "fatal" }).map(|message| message.str("code")).collect();
+            if !faults.is_empty() {
+                return Err(format!("mutate-{kind}: the feature's parameters were rejected with {faults:?}"));
             }
-            if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
-                return Err(format!("mutate-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
-            }
-            declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
-            law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, &[])?;
+            touches_one(&format!("mutate-{kind}"), kind, member(&report, "base")?, applied)?;
             Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
         }
     }
 
-    /// ↩️ The metamorphic inverse law: applying the kind and then its OWN computed inverse must restore
-    /// the committed before-snapshot exactly. Asserted in role through `law::inverse_restores`, so a
-    /// divergence is reported by JSON path rather than as a bare inequality, and an inverse step that
-    /// was itself rejected fails here rather than silently leaving the document where it was.
+    /// ↩️ Applies one kind to the REAL derived frame and then EVERY step of its OWN computed inverse.
+    /// The projection carries BOTH models: projecting only the restored one would make all
+    /// twenty-five rows project the same value and the differential would be vacuous.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
-        move |_ctx: &Context| {
-            let committed = vector(kind);
-            let report = parse_json(&fem3d_mutation_report_json(committed.before, committed.mutation, committed.after).map_err(|error| format!("inverse-{kind}: the committed vector did not reach this subset's own codec: {error}"))?)?;
+        move |ctx: &Context| {
+            let base = fixture_text(ctx, "steel-frame")?;
+            let report = report_of(&format!("inverse-{kind}"), &base, ctx.doc_string()?, &base)?;
             let faults: Vec<String> = members(&report, "inverseMessages")?.iter().filter(|message| { let level = message.str("level"); level == "error" || level == "fatal" }).map(|message| message.str("code")).collect();
             if !faults.is_empty() {
-                return Err(format!("inverse-{kind}: an inverse step was rejected with {faults:?}, so the document never got the chance to return"));
+                return Err(format!("inverse-{kind}: an inverse step was rejected with {faults:?}, so the model never got the chance to return"));
             }
+            let applied = member(&report, "snapshot")?;
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, &[])?;
             let restored = member(&report, "inverseSnapshot")?;
             law::inverse_restores(kind, restored, member(&report, "base")?)?;
-            Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored.clone()))
+            let projection = Json::Object(vec![("mutated".to_string(), applied.clone()), ("restored".to_string(), restored.clone())]);
+            Ok(Outcome::with_raw(projection.to_string().into_bytes(), projection))
         }
     }
 
-    /// 🔁️ The real committed document through this subset's own two codecs. The semantic half is
-    /// `law::round_trip_preserves`: parsing, printing back and parsing again must not move the
-    /// projection. The byte half is `law::carrier_is_exact` rather than the wave's usual
-    /// no-pass-through tripwire, and deliberately so — `store::ArtifactDsl`'s own documented LAW is that
-    /// canonical `print_dsl` output is a `parse_dsl` fixpoint, so the correct answer for a second
-    /// printing IS byte identity and anything else is the defect. Neither printing is compared against
-    /// the committed file, which the same law explicitly allows to normalize on the way in. The pack
-    /// decoding is a separate binary codec, so agreeing on one snapshot cannot be reached by carrying
-    /// text bytes across.
+    /// 📐️ Replays one committed handcrafted specification vector. This is where the evidence the case
+    /// carried before the conversion still lives, undiminished: the applied model is held to the
+    /// committed after-snapshot, the produced delta to the committed `🔺️diff`, and the diagnostics to
+    /// the committed `🎯️outcome`.
+    pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
+        move |_ctx: &Context| {
+            let committed = vector(kind);
+            let report = report_of(&format!("spec-vector-{kind}"), committed.before, committed.mutation, committed.after)?;
+            let applied = member(&report, "snapshot")?;
+            if let Some(first) = law::divergence(applied, member(&report, "expectedSnapshot")?) {
+                return Err(format!("spec-vector-{kind}: the applied model is not the committed after-snapshot — {first}"));
+            }
+            if let Some(first) = law::divergence(member(&report, "diff")?, &canonical(committed.diff)) {
+                return Err(format!("spec-vector-{kind}: the produced delta is not the committed 🔺️diff — {first}"));
+            }
+            declared_outcome_holds(kind, &members(&report, "messages")?, &canonical(committed.outcome))?;
+            law::mutation_is_observable(kind, applied, member(&report, "base")?, UNOBSERVABLE)?;
+            touches_one(&format!("spec-vector-{kind}"), kind, member(&report, "base")?, applied)?;
+            law::inverse_restores(kind, member(&report, "inverseSnapshot")?, member(&report, "base")?)?;
+            Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied.clone()))
+        }
+    }
+
+    /// 🔁️ Two identities in one scenario, because they can only be asserted in two different places.
+    ///
+    /// The CARRIER identity is Rust-only and asserted here in role, on the artifact's own committed
+    /// example: `law::round_trip_preserves` for the semantic half, `law::carrier_is_exact` for the
+    /// byte half — deliberately the fixpoint law rather than the wave's no-pass-through tripwire,
+    /// because `store::ArtifactDsl` documents canonical `print_dsl` output as a `parse_dsl` fixpoint.
+    /// The pack decoding is a separate binary codec, so agreeing on one model cannot be reached by
+    /// carrying text bytes across.
+    ///
+    /// The MODEL identity is what the Python reference can also produce: the nine members this
+    /// subset's own JSON codec reads out of the derived real frame. The feature's doc string is
+    /// absent here, so the derived model is read through the bridge's `base` member with the
+    /// committed `update-analysis-settings` vector's own payload, which this scenario then requires
+    /// to have left the model where it was.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
-        let report = parse_json(&fem3d_identity_report_json(&text).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
+        let committed = fixture_text(ctx, "📚️examples")?;
+        let report = parse_json(&fem3d_identity_report_json(&committed).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;
         law::round_trip_preserves(member(&report, "reparsed")?, parsed)?;
         law::carrier_is_exact(text(&report, "canonicalTextAgain")?.as_bytes(), text(&report, "canonicalText")?.as_bytes())?;
         if let Some(first) = law::divergence(member(&report, "packDecoded")?, parsed) {
             return Err(format!("identity-round-trip: the binary codec decodes to a different document than the text codec — {first}"));
         }
-        Ok(Outcome::with_raw(parsed.to_string().into_bytes(), parsed.clone()))
+        let derived = fixture_text(ctx, "steel-frame")?;
+        let probe = report_of("identity-round-trip", &derived, IDENTITY_PROBE, &derived)?;
+        let base = member(&probe, "base")?;
+        Ok(Outcome::with_raw(base.to_string().into_bytes(), base.clone()))
     }
+
+    /// 🧭️ A payload that reaches the bridge's decode without applying an edit: it names the analysis
+    /// settings the derived model already holds, so `base` and `snapshot` agree and only the decode
+    /// is exercised.
+    const IDENTITY_PROBE: &str = "{\"mutation\":\"updateAnalysisSettings\",\"settings\":{\"modalCount\":3,\"bucklingCount\":3,\"deformationScale\":300.0}}";
     //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. Registration is by FULL expanded scenario id,
-/// so the loop mirrors the feature's `Examples` tables exactly; `identity-round-trip` is subject-only
-/// because turning the committed example's DSL bytes into a document needs this subset's own codec,
-/// which the oracle-only build must not link.
+/// 🧭️ Registration entry point the generated host calls, by FULL expanded scenario id. SUBJECT only:
+/// the reference for every scenario here is the Python implementation beside this file, and
+/// registering an oracle handler as well would put this repository's answer on both sides.
 pub fn adapter() -> Adapter {
-    let mut built = Adapter::new("rust");
-    for kind in KINDS {
-        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle_for(kind)).oracle(&format!("inverse-{kind}"), inverse_oracle_for(kind));
-        #[cfg(feature = "sut")]
-        {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind));
-        }
-    }
+    let built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        built = built.subject("identity-round-trip", subject::round_trip);
+        let mut built = built;
+        for kind in KINDS {
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
+            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind));
+            built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
+        }
+        return built.subject("identity-round-trip", subject::round_trip);
     }
-    built
+    #[cfg(not(feature = "sut"))]
+    {
+        let _ = (KINDS, UNOBSERVABLE, vector as fn(&str) -> Vector);
+        built
+    }
 }
 //#endregion 🔖️Registration

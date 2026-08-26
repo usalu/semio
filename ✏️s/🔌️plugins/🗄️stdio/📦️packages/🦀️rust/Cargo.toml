@@ -50,6 +50,7 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [[bench]]
 name = "brep_kernel"

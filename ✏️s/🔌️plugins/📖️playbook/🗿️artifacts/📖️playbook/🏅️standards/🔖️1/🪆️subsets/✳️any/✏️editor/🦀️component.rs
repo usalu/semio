@@ -21,7 +21,7 @@ use crate::editor::playbook::modes::builder::windows::builder as builder_window;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+    InteractionRef, InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
 use store::EngineHandles;
 
@@ -106,6 +106,16 @@ impl ArtifactEditor for PlaybookPlayApp {
 
     const DIALECT: Dialect = PLAYBOOK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<PlaybookPlayApp>,
+        owner_file: "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.playbook.playbook@1/*#editor",
+        document_schema: "playbook.program",
+        factory: "BoundedFirstStepCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 64, 32, 131_072, 2_000),
+        tools: ["addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock", "updatePlaybook", "setLocale", "setContributions"]
+    }
 
     async fn app_schema() -> Option<schema::AppSchemaDescriptor> {
         Some(crate::editor::playbook::config::schema::app_schema_descriptor())
@@ -198,6 +208,15 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .mutation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
         .mutation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
         .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
+        .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
+        .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addBlock", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeBlock", InteractiveJobClassification::Migrated)
+        .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
+        .action_interactive_job("updatePlaybook", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
         .action_args("addBlock", vec![
             ActionArgDef::select(
@@ -328,6 +347,25 @@ mod tests {
             let printed = protocol::OpText::print_op(&command);
             assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
         }
+    }
+
+    /// 🌐️ The language-neutral job catalog has the same row order through an owned minimal
+    /// parser and the test-only third-party JSON oracle, then matches the schema-generated command enum.
+    #[semio_framework_async_macros::async_test]
+    async fn interactive_job_catalog_matches_owned_and_json_oracle_projections() {
+        let source = include_str!("🧪️fixtures/🎯️interactive-jobs.json");
+        let owned = source.lines().filter_map(|line| line.trim().strip_prefix("{\"id\":\"").and_then(|tail| tail.split_once('"')).map(|(id, _)| id.to_string())).collect::<Vec<_>>();
+        let oracle = serde_json::from_str::<serde_json::Value>(source)
+            .expect("language-neutral interactive job fixture")
+            .get("tools")
+            .and_then(serde_json::Value::as_array)
+            .expect("tool rows")
+            .iter()
+            .map(|row| row.get("id").and_then(serde_json::Value::as_str).expect("tool id").to_string())
+            .collect::<Vec<_>>();
+        let generated = every_command().into_iter().map(|command| command.command_id().to_string()).collect::<Vec<_>>();
+        assert_eq!(owned, oracle);
+        assert_eq!(owned, generated);
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.

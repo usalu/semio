@@ -401,22 +401,13 @@ pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &
 }
 
 /// 🪣️ Latest-wins bounded fill diagnostic, with an optional ghost projection.
-pub fn world_fill_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
+pub fn world_fill_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Option<String> {
     if envelope.active_utility != "fill" {
         return None;
     }
-    let build = session.fill_progress().preview?;
-    if build.operation == 0 || build.registry_generation == 0 || build.generation == 0 || build.stage == "complete" {
-        return None;
-    }
-    let mut value = build.candidate_ghost.as_ref().map_or_else(|| json!({}), |ghost| serde_json::to_value(ghost).unwrap_or_else(|_| json!({})));
-    let object = value.as_object_mut()?;
-    if let Some(ghost) = build.candidate_ghost.as_ref() {
-        object.insert("color".into(), json!(object_kind_color(&envelope.fixture.meta, Some(ghost.object_kind_id.as_str()))));
-        object.insert("opacity".into(), json!(0.35));
-    }
-    object.insert("fillBuildPreview".into(), serde_json::to_value(build).ok()?);
-    serde_json::to_string(&value).ok()
+    let object_kind = session.fill_preview_object_kind();
+    let color = object_kind_color(&envelope.fixture.meta, object_kind.as_deref());
+    session.fill_preview_json_page(&color, labels.fill_progress.as_str())
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/hover ids,
@@ -466,8 +457,8 @@ pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
 //#region 🔖️Render
 /// 🖼️ The world-3d surface node for this window — `instances_json`/`meshes_json` come pre-computed
 /// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
-pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, instances_json: String, meshes_json: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let brush_preview = world_fill_preview_json(precompute, envelope).or_else(|| world_brush_preview_json(precompute, envelope));
+pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels, instances_json: String, meshes_json: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope));
     let scene = world3d_scene_extended(
         camera_json(&envelope.runtime),
         meshes_json,

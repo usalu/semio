@@ -843,8 +843,10 @@ type ToolJobCoverageReport = {
   factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[];
   frameworkReservedRoutes: { id: string; status: "failClosedPendingFactory" }[];
   reservedImporterOwners: { owner: string; file: string; id: "import-media"; status: "failClosedPendingFactory" }[];
-  globalPayloadStores: { file: string; line: number; text: string }[];
+  globalPayloadStores: GlobalPayloadStoreInventoryRow[];
   literalRegistrations: number;
+  acceptedCommandRows: ToolJobStaticRow[];
+  acceptedReservedRoutes: string[];
   remainingCommands: { file: string; id: string; reason: string; source: "literal" | "macro" }[];
   selfTests: number;
   failures: string[];
@@ -901,6 +903,10 @@ function toolJobRustBlock(source: string, open: number): { body: string; end: nu
 
 type ToolJobStaticRow = { file: string; id: string; source: "literal" | "macro" };
 
+type GlobalPayloadStoreKind = "child-content-scratch" | "resizable-operation-registry" | "fixed-operation-registry" | "abi-bridge-retention" | "mutable-entropy" | "mutable-payload";
+type GlobalPayloadStoreOwner = { name: string; rustType: string; kind: GlobalPayloadStoreKind };
+type GlobalPayloadStoreInventoryRow = { file: string; line: number; text: string; owners: GlobalPayloadStoreOwner[] };
+
 const TOOL_JOB_FRAMEWORK_RESERVED_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "revertToCommand", "configuration-binary"] as const;
 const TOOL_JOB_PLUGIN_RESERVED_IDS = ["copy", "cut", "paste", "import-media"] as const;
 const TOOL_JOB_RESERVED_IDS = [...TOOL_JOB_FRAMEWORK_RESERVED_IDS, ...TOOL_JOB_PLUGIN_RESERVED_IDS] as const;
@@ -921,15 +927,66 @@ function toolJobProductionProtocolSource(raw: string): string {
     const match = marker.exec(source);
     if (!match) return source;
     const item = match.index + match[0].length;
-    const semicolon = source.indexOf(";", item);
-    const open = source.indexOf("{", item);
-    let end: number;
-    if (semicolon >= 0 && (open < 0 || semicolon < open)) end = semicolon + 1;
-    else if (open >= 0) end = toolJobRustBlock(source, open)?.end ?? source.length;
-    else end = source.length;
+    let parentheses = 0;
+    let brackets = 0;
+    let end = source.length;
+    for (let index = item; index < source.length; index += 1) {
+      const char = source[index]!;
+      if (char === "(") parentheses += 1;
+      else if (char === ")") parentheses -= 1;
+      else if (char === "[") brackets += 1;
+      else if (char === "]") brackets -= 1;
+      else if (char === ";" && parentheses === 0 && brackets === 0) {
+        end = index + 1;
+        break;
+      } else if (char === "{" && parentheses === 0 && brackets === 0) {
+        end = toolJobRustBlock(source, index)?.end ?? source.length;
+        break;
+      }
+    }
     source = `${source.slice(0, match.index)}${" ".repeat(end - match.index)}${source.slice(end)}`;
     marker.lastIndex = 0;
   }
+}
+
+function toolJobGlobalPayloadStoreInventory(files: ReadonlyMap<string, string>): GlobalPayloadStoreInventoryRow[] {
+  const kindOf = (name: string, rustType: string): GlobalPayloadStoreKind => {
+    if (/BRIDGE|RETAINED/.test(name)) return "abi-bridge-retention";
+    if (/SCRATCH|STAGING|BLOBS|BATCHES/.test(name)) return "child-content-scratch";
+    if (/ENTROPY|SEED/.test(name) && /Cells*</.test(rustType)) return "mutable-entropy";
+    if (/HashMap|BTreeMap|Vecs*</.test(rustType)) return "resizable-operation-registry";
+    if (/\[[^\]]*;[^\]]+\]|Registry|Recovery|ArenaProcessState/.test(rustType)) return "fixed-operation-registry";
+    return "mutable-payload";
+  };
+  const ownersOf = (source: string): GlobalPayloadStoreOwner[] => {
+    const owners: GlobalPayloadStoreOwner[] = [];
+    for (const owner of source.matchAll(/\bstatic\s+([A-Z][A-Z0-9_]*)\s*:\s*([^=]+?)\s*=/g)) {
+      const rustType = owner[2]!.trim().replaceAll(/\s+/g, " ");
+      owners.push({ name: owner[1]!, rustType, kind: kindOf(owner[1]!, rustType) });
+    }
+    return owners;
+  };
+  const rows: GlobalPayloadStoreInventoryRow[] = [];
+  for (const [file, source] of files) {
+    const threadLocal = /thread_local!\s*\{/g;
+    let match: RegExpExecArray | null;
+    while ((match = threadLocal.exec(source))) {
+      const open = source.indexOf("{", match.index);
+      const block = toolJobRustBlock(source, open);
+      if (!block) break;
+      rows.push({ file, line: source.slice(0, match.index).split("\n").length, text: match[0], owners: ownersOf(block.body) });
+      threadLocal.lastIndex = block.end;
+    }
+    const locked = /(?:OnceLock|LazyLock)\s*<\s*(?:std::sync::)?Mutex\s*</g;
+    while ((match = locked.exec(source))) {
+      const start = source.lastIndexOf("static ", match.index);
+      const initializer = source.indexOf("=", match.index);
+      const end = initializer < 0 ? -1 : source.indexOf(";", initializer);
+      const declaration = start < 0 || end < 0 ? "" : source.slice(start, end + 1);
+      rows.push({ file, line: source.slice(0, match.index).split("\n").length, text: match[0], owners: ownersOf(declaration) });
+    }
+  }
+  return rows;
 }
 
 /** 🎯️ Enumerates macro and ordinary builder registrations without trusting a manifest disposition. */
@@ -977,19 +1034,28 @@ type ToolJobProof = { sourceFile: string; ownerFile: string; ownerTypeName: stri
 /** 📐️ Reads only owner-local typed bounded-first-step proof catalogs. */
 function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
   const proofs: ToolJobProof[] = [];
+  const valuesOf = (source: string): number[] => source.split(",").map((value) => Number(value.trim().replaceAll("_", "")));
+  const validValues = (values: readonly number[]) => (values.length === 5 || values.length === 7) && values.every((value) => Number.isFinite(value) && value > 0) && values[4]! < 8_000;
   for (const [sourceFile, source] of files) {
     const invocation = /(?:semio_framework_plugin::)?bounded_first_step_tool_proofs!\s*\{/g;
     let match: RegExpExecArray | null;
     while ((match = invocation.exec(source))) {
       const block = toolJobRustBlock(source, source.indexOf("{", match.index));
       if (!block) break;
-      const header = block.body.match(/owner:\s*([^,]+),\s*owner_file:\s*"([^"]+)",\s*controller:\s*"([^"]+)",\s*document_schema:\s*"([^"]+)",\s*factory:\s*"([^"]+)",\s*tools:\s*\{/s);
+      const header = block.body.match(/owner:\s*([^,]+),\s*owner_file:\s*"([^"]+)",\s*controller:\s*"([^"]+)",\s*document_schema:\s*"([^"]+)",\s*factory:\s*"([^"]+)"/s);
       if (header) {
-        const rows = /"([^"]+)"\s*=>\s*semio_framework::ToolExecutionContract::bounded_first_step\(([^)]*)\)/g;
-        for (const row of block.body.matchAll(rows)) {
-          const values = row[2]!.split(",").map((value) => Number(value.trim().replaceAll("_", "")));
-          if (values.length === 5 && values.every((value) => Number.isFinite(value) && value > 0) && values[4]! < 8_000) {
-            proofs.push({ sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]!, toolId: row[1]!, values });
+        const common = { sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]! };
+        const mappedRows = [...block.body.matchAll(/"([^"]+)"\s*=>\s*semio_framework::ToolExecutionContract::(?:bounded_first_step|resumable)\(([^)]*)\)/g)];
+        for (const row of mappedRows) {
+          const values = valuesOf(row[2]!);
+          if (validValues(values)) proofs.push({ ...common, toolId: row[1]!, values });
+        }
+        if (mappedRows.length === 0) {
+          const sharedContract = block.body.match(/contract:\s*semio_framework::ToolExecutionContract::bounded_first_step\(([^)]*)\)/);
+          const sharedTools = block.body.match(/tools:\s*\[([^\]]*)\]/s);
+          const values = valuesOf(sharedContract?.[1] ?? "");
+          if (sharedTools && validValues(values)) {
+            for (const tool of sharedTools[1]!.matchAll(/"([^"]+)"/g)) proofs.push({ ...common, toolId: tool[1]!, values });
           }
         }
       }
@@ -1025,7 +1091,17 @@ function toolJobProofCatalogFailures(files: ReadonlyMap<string, string>, rows: r
     const declaredSchema = schemaExpression?.[1] ?? constants.get(schemaExpression?.[2] ?? "");
     if (proof.sourceFile !== proof.ownerFile || !ownerImpl) failures.push(`forged bounded reducer owner/file authority ${identity}`);
     if (declaredSchema !== proof.documentSchema) failures.push(`forged bounded reducer document schema ${identity}`);
-    if (proof.factory !== "BoundedFirstStepCommandJobFactory") failures.push(`forged bounded reducer factory ${identity}`);
+    const factoryPattern = new RegExp(`impl\\s+semio_framework::ToolJobFactory\\s+for\\s+${proof.factory.replaceAll(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}\\s*\\{`);
+    const factoryStart = source.search(factoryPattern);
+    const factoryOpen = factoryStart < 0 ? -1 : source.indexOf("{", factoryStart);
+    const factoryImpl = factoryOpen < 0 ? undefined : toolJobRustBlock(source, factoryOpen);
+    const concreteFactoryExact =
+      !!factoryImpl &&
+      factoryImpl.body.includes("type Job =") &&
+      source.includes(`impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ${proof.factory}`) &&
+      source.includes(`type Owner = ${proof.ownerTypeName};`) &&
+      source.includes(`registry.register(${proof.factory}::new(&controller))`);
+    if (proof.factory !== "BoundedFirstStepCommandJobFactory" && !concreteFactoryExact) failures.push(`forged bounded reducer factory ${identity}`);
     if (!rows.some((row) => row.file === proof.ownerFile && row.id === proof.toolId) || dispositions.get(`${proof.ownerFile}\0${proof.toolId}`) !== "Migrated") failures.push(`extra bounded reducer proof lacks its exact Migrated declaration ${identity}`);
   }
   for (const row of rows) {
@@ -1049,7 +1125,7 @@ function toolJobReservedSpecs(source: string): ToolJobReservedSpec[] {
 }
 
 function toolJobFrameworkReservedRoutesExact(source: string): boolean {
-  const start = source.indexOf("async fn dispatch_action");
+  const start = source.lastIndexOf("async fn dispatch_action");
   const open = start < 0 ? -1 : source.indexOf("{", start);
   const block = open < 0 ? undefined : toolJobRustBlock(source, open);
   const macroIds = TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter((id) => id !== "configuration-binary");
@@ -1058,10 +1134,10 @@ function toolJobFrameworkReservedRoutesExact(source: string): boolean {
   const uniqueJobs = new Set(specs.map((spec) => spec.job));
   const uniqueFactories = new Set(specs.map((spec) => spec.factory));
   if (!block || specs.length !== macroIds.length || ids.size !== macroIds.length || uniqueJobs.size !== macroIds.length || uniqueFactories.size !== macroIds.length || macroIds.some((id) => !ids.has(id))) return false;
-  const reservedStart = source.indexOf("async fn dispatch_framework_reserved_action");
+  const reservedStart = source.lastIndexOf("async fn dispatch_framework_reserved_action");
   const reservedOpen = reservedStart < 0 ? -1 : source.indexOf("{", reservedStart);
   const reserved = reservedOpen < 0 ? undefined : toolJobRustBlock(source, reservedOpen);
-  const runnerStart = source.indexOf("async fn run_framework_reserved_job");
+  const runnerStart = source.lastIndexOf("async fn run_framework_reserved_job");
   const runnerOpen = runnerStart < 0 ? -1 : source.indexOf("{", runnerStart);
   const runner = runnerOpen < 0 ? undefined : toolJobRustBlock(source, runnerOpen);
   if (!reserved || !runner) return false;
@@ -1088,12 +1164,18 @@ function toolJobFrameworkReservedRoutesExact(source: string): boolean {
     !source.includes("registry.register(FrameworkPasteJobFactory::<A>::new(&controller_id))") &&
     !source.includes("registry.register(FrameworkImportMediaJobFactory::<A>::new(&controller_id))");
   const routeStateMachines = !/impl\s+FrameworkReservedCursor\s*\{[\s\S]*?fn\s+step\s*\(/.test(source) && source.includes('cx.set_stage(concat!("framework-reserved-", $route, "-envelope"))');
-  const exactRunner = runner.body.includes("admit_exact_wire") && runner.body.includes("proof.admits::<A>") && runner.body.includes("WorkerJobSession::new") && runner.body.includes("session.step(&pool") && runner.body.includes("CheckpointReady(checkpoint)") && runner.body.includes("candidate.output.len() > proof.contract().max_output_bytes");
+  const exactRunner =
+    runner.body.includes("admit_exact_wire") &&
+    runner.body.includes("proof.admits::<A>") &&
+    ((runner.body.includes("WorkerJobSession::new") && runner.body.includes("session.step(&pool")) ||
+      (runner.body.includes("MountedWorkerJobSession::try_new") && runner.body.includes("session.pump_one(&pool") && runner.body.includes("session.close_step("))) &&
+    runner.body.includes("CheckpointReady(checkpoint)") &&
+    runner.body.includes("candidate.output.len() > proof.contract().max_output_bytes");
   const commitPermit = source.includes("struct FrameworkReservedCommitPermit") && source.includes("validate_framework_reserved_commit(action, &permit).await?") && source.indexOf("permit.finish();", reservedStart) > source.indexOf("let result = if HISTORY_ACTION_IDS", reservedStart);
-  const importStart = source.indexOf("async fn dispatch_import_media");
+  const importStart = source.lastIndexOf("async fn dispatch_import_media");
   const importOpen = importStart < 0 ? -1 : source.indexOf("{", importStart);
   const importBlock = importOpen < 0 ? undefined : toolJobRustBlock(source, importOpen);
-  const configStart = source.indexOf("async fn dispatch_config_command_inner");
+  const configStart = source.lastIndexOf("async fn dispatch_config_command_inner");
   const configOpen = configStart < 0 ? -1 : source.indexOf("{", configStart);
   const configBlock = configOpen < 0 ? undefined : toolJobRustBlock(source, configOpen);
   const binaryFailClosed =
@@ -1106,31 +1188,36 @@ function toolJobFrameworkReservedRoutesExact(source: string): boolean {
     configBlock.body.includes('run_framework_reserved_job("configuration-binary"') &&
     !configBlock.body.includes("decode_op(") &&
     source.includes("ArtifactCommand<A::ConfigMutation> as ::protocol::OpBinary>::decode_op(&self.raw)");
-  const ownsRealWork =
-    !source.includes("envelope_cursor") &&
-    !source.includes("Ok(self.raw.clone())") &&
-    !source.includes("decode_op(&self.raw)") &&
+  const boundedPreparationAndHeldCommit =
+    source.includes("FrameworkReservedStage::Admitted") &&
+    source.includes("FrameworkReservedStage::Cursor") &&
+    source.includes("FrameworkReservedStage::Retiring") &&
+    reserved.body.includes("framework_reserved_work_items(action, args).await?") &&
+    reserved.body.includes("validate_framework_reserved_commit(action, &permit).await?") &&
+    reserved.body.includes("permit.finish()") &&
+    source.includes("if permit.is_cancelled().await") &&
     !reserved.body.includes("dispatch_history_action(") &&
     !reserved.body.includes("dispatch_clipboard_action(") &&
-    !source.includes("ensure_reserved_emit_bounded") &&
-    !importBlock?.body.includes("serde_json::to_vec(&(port, media))");
-  return block.body.includes("interactive-job.unknown-key") && noDirectBranches && exactGuard && exactRoutes && configurationExact && pluginSeamExact && routeStateMachines && exactRunner && commitPermit && binaryFailClosed && ownsRealWork;
+    !importBlock?.body.includes("serde_json::to_vec(&(port, media))") &&
+    !importBlock?.body.includes("media.clone()") &&
+    source.includes("framework reserved mounted worker transition was rejected") &&
+    source.includes("framework route '{verb}' completed against a stale revision or generation");
+  return block.body.includes("interactive-job.unknown-key") && noDirectBranches && exactGuard && exactRoutes && configurationExact && pluginSeamExact && routeStateMachines && exactRunner && commitPermit && binaryFailClosed && boundedPreparationAndHeldCommit;
 }
 
 function toolJobImportPreparationBounded(source: string): boolean {
-  const start = source.indexOf("async fn dispatch_import_media");
+  const start = source.lastIndexOf("async fn dispatch_import_media");
   const open = start < 0 ? -1 : source.indexOf("{", start);
   const block = open < 0 ? undefined : toolJobRustBlock(source, open);
   return !!block && !block.body.includes("serde_json::to_vec(&(port, media))") && !block.body.includes("raw.clone()") && block.body.includes("build_artifact_reserved_media_job(port, media");
 }
 
 function toolJobFullOperationBounded(source: string): boolean {
-  const start = source.indexOf("async fn dispatch_typed_command_inner");
+  const start = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const open = start < 0 ? -1 : source.indexOf("{", start);
   const block = open < 0 ? undefined : toolJobRustBlock(source, open);
   if (!block) return false;
   const worker = block.body.indexOf("WorkerJobSession::new");
-  if (worker < 0) return false;
   const before = block.body.slice(0, worker);
   const after = block.body.slice(worker);
   const preJobWork = ["refresh_cache().await", "draft_store.snapshot().await", "interaction_store.snapshot().await", "ChildContentView::new", "presence_store.peers().await", "transient_store.current().await", "store.content_revision().await", "store.envelope().await"];
@@ -1143,11 +1230,52 @@ function toolJobFullOperationBounded(source: string): boolean {
   const boundedControl = !!operation && operation.body.includes("cx.is_cancelled()") && operation.body.includes("cx.should_yield()") && operation.body.includes("max_decoded_items") && operation.body.includes("max_output_bytes") && operation.body.includes("PreviewReady") && operation.body.includes("CheckpointReady");
   const freshness = !!operation && operation.body.includes("validate_commit") && operation.body.includes("base_revision") && operation.body.includes("generation");
   const monolithicOutput = !!operation && ["serde_json::to_vec(&emit.effects)", "serde_json::to_vec(&emit.events)", "for child in emit.child_emits.iter()", "bounded_command_output_bytes"].some((needle) => operation.body.includes(needle));
-  return operationJob && exactStages && boundedControl && freshness && !monolithicOutput && preJobWork.every((needle) => !before.includes(needle)) && postJobWork.every((needle) => !after.includes(needle));
+  const invokesGenericReducer = !!operation && ["resolve_ready(A::ephemeral(", "resolve_ready(A::handle(", "A::ephemeral(command", "A::handle(command"].some((needle) => operation.body.includes(needle));
+  const boundedFirstStepReducer =
+    !!operation &&
+    operation.body.includes("ToolExecutionShape::BoundedFirstStep") &&
+    operation.body.includes("max_work_units_per_step") &&
+    operation.body.includes("max_step_micros") &&
+    source.includes("QualifiedToolProof::Bounded(_) => {") &&
+    source.includes("TypedCommandFullOperationJob::<A>");
+  const monolithicReducer = invokesGenericReducer && !boundedFirstStepReducer;
+  const legacyMountedOperation = worker >= 0 && operationJob && exactStages && boundedControl && freshness && !monolithicOutput && !monolithicReducer && preJobWork.every((needle) => !before.includes(needle)) && postJobWork.every((needle) => !after.includes(needle));
+  const publisherStart = source.lastIndexOf("async fn publish_mounted_typed_operation_unit");
+  const publisherOpen = publisherStart < 0 ? -1 : source.indexOf("{", publisherStart);
+  const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(source, publisherOpen);
+  const retainedMountedOperation =
+    block.body.includes("MountedWorkerJobSession::try_new") &&
+    block.body.includes("dispatch_wire_retained_with_spec") &&
+    block.body.includes("self.tool_operations.insert_admitted(") &&
+    block.body.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
+    block.body.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
+    block.body.includes("let presence_local = self.presence_store.local_root()") &&
+    block.body.includes("let presence_peers = self.presence_store.peers_root()") &&
+    block.body.includes("let transient = self.transient_store.current_root()") &&
+    source.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
+    source.includes("fn acknowledge_result_page") &&
+    source.includes("if page.token != token") &&
+    source.includes("advance_typed_operation_publication_one") &&
+    source.includes("let mut mounted = self") &&
+    source.includes(".remove(operation_id)") &&
+    source.includes("self.tool_operations.insert_admitted(operation_id, mounted)") &&
+    !!publisher &&
+    publisher.body.includes(".last().cloned()") &&
+    publisher.body.includes(".apply_one(") &&
+    publisher.body.includes(".pop()") &&
+    publisher.body.includes("validate_commit") &&
+    publisher.body.includes("content_revision_now()") &&
+    !publisher.body.includes("while ") &&
+    operationJob &&
+    exactStages &&
+    boundedControl &&
+    freshness &&
+    !monolithicOutput;
+  return legacyMountedOperation || retainedMountedOperation;
 }
 
 function toolJobTypedRouteFailsClosedBeforePreparation(source: string): boolean {
-  const start = source.indexOf("async fn dispatch_typed_command_inner");
+  const start = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const open = start < 0 ? -1 : source.indexOf("{", start);
   const block = open < 0 ? undefined : toolJobRustBlock(source, open);
   const guard = block?.body.indexOf("require_complete_tool_operation_pipeline(&admission)?") ?? -1;
@@ -1164,7 +1292,9 @@ function toolJobTypedPersistentFoundation(source: string): boolean {
     const open = start < 0 ? -1 : source.indexOf("{", start);
     return open < 0 ? undefined : toolJobRustBlock(source, open);
   };
-  const dispatch = blockOf("async fn dispatch_typed_command_inner");
+  const dispatchStart = source.lastIndexOf("async fn dispatch_typed_command_inner");
+  const dispatchOpen = dispatchStart < 0 ? -1 : source.indexOf("{", dispatchStart);
+  const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(source, dispatchOpen);
   const active = blockOf("impl<A: ArtifactApp> ActiveToolCommand<A>");
   const maintenanceStart = source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp for VcsArtifactApp");
   const maintenanceName = source.indexOf("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize)", maintenanceStart);
@@ -1215,7 +1345,7 @@ function toolJobImmutableOperationRootsExact(store: string): boolean {
     store.includes("current: Arc<P>") &&
     local.body.trim() === "self.local.clone()" &&
     transient.body.trim() === "self.current.clone()" &&
-    snapshot.body.trim() === "self.current.clone()" &&
+    (snapshot.body.trim() === "self.current.clone()" || snapshot.body.trim() === "Arc::clone(&*self.current)") &&
     store.includes("self.local = Arc::new(candidate)") &&
     store.includes("self.current = Arc::new(candidate)") &&
     store.includes("pub fn content_revision_now(&self) -> [u8; 32]") &&
@@ -1232,7 +1362,7 @@ function toolJobChildContentRootExact(store: string, plugin: string): boolean {
   const start = plugin.indexOf("pub struct ChildContentView");
   const open = start < 0 ? -1 : plugin.indexOf("{", start);
   const view = open < 0 ? undefined : toolJobRustBlock(plugin, open);
-  const dispatchStart = plugin.indexOf("async fn dispatch_typed_command_inner");
+  const dispatchStart = plugin.lastIndexOf("async fn dispatch_typed_command_inner");
   const dispatchOpen = dispatchStart < 0 ? -1 : plugin.indexOf("{", dispatchStart);
   const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(plugin, dispatchOpen);
   return (
@@ -1341,8 +1471,8 @@ function toolJobMemberStoreOwnerExact(store: string, semio: string): boolean {
     store.includes("artifact store string retirement reached Drop before its exact byte owner was terminal-empty") &&
     store.includes("artifact store history metadata retirement reached Drop before every nested owner was terminal-empty") &&
     store.includes("artifact store message-ledger retirement reached Drop before every nested owner was terminal-empty") &&
-    store.includes("struct ArtifactEditMessageIndex") &&
-    store.includes("edit_messages: std::mem::ManuallyDrop<ArtifactEditMessageIndex>") &&
+    store.includes("pub struct ArtifactEditMessageLedger") &&
+    store.includes("pub edit_messages: ArtifactEditMessageLedger") &&
     store.includes("const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = 8_192") &&
     !store.includes("edit_messages: BTreeMap<String, Vec<crate::os_spr::MutationMessage>>") &&
     !store.includes("edit_messages: HashMap<String, Vec<crate::os_spr::MutationMessage>>") &&
@@ -1350,6 +1480,11 @@ function toolJobMemberStoreOwnerExact(store: string, semio: string): boolean {
     store.includes("fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;") &&
     (store.match(/ArtifactPack \+ MemberStoreOwner<Mutation>/g) ?? []).length >= 3 &&
     (store.match(/install_member_store_owners_exact\(P::member_store_owners\(\)\)/g) ?? []).length === 2 &&
+    store.includes("create_member_store(kind, id, dialect, initial_pack).await") &&
+    store.includes("open_member_store(envelope_pack).await") &&
+    store.includes("typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child") &&
+    store.includes("member_close_rejects_missing_owner_and_preserves_the_installed_blocked_disposer") &&
+    store.includes("member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog") &&
     exactInstall.body.includes("self.snapshot_retirement_factory = Some(owners.snapshot_retirement)") &&
     exactInstall.body.includes("self.initial_snapshot_retirement_factory = Some(owners.initial_snapshot_retirement)") &&
     exactInstall.body.includes("self.mutation_retirement_factory = Some(owners.mutation_retirement)") &&
@@ -1411,11 +1546,19 @@ function toolJobArtifactEditMessageLedgerExact(store: string): boolean {
 }
 
 function toolJobArtifactEnvelopeOwnedCodecExact(store: string, rust: Map<string, string>): boolean {
+  const artifactEnvelopeAliases = new Set<string>(["ArtifactEnvelope"]);
+  for (const source of rust.values()) {
+    for (const match of source.matchAll(/\btype\s+([A-Za-z0-9_]+Envelope)\s*=\s*(?:store::|crate::os_store::)?ArtifactEnvelope\b/g)) artifactEnvelopeAliases.add(match[1]!);
+  }
+  const envelopeType = [...artifactEnvelopeAliases].map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  const directEnvelopePattern = new RegExp(
+    `(?:let\\s+[A-Za-z0-9_]+\\s*:\\s*(?:${envelopeType})(?:<[^;\\n]+>)?[^;\\n]*=\\s*serde_json::from_(?:str|slice|value)|serde_json::from_(?:str|slice|value)::<[^;\\n>]*(?:${envelopeType}))`,
+  );
   const directEnvelopeSerde = [...rust.entries()].filter(
     ([file, source]) =>
       !file.includes("/🧪️tests/") &&
       file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs" &&
-      /(?:let\s+[A-Za-z0-9_]+\s*:\s*(?:ArtifactEnvelope(?:<[^;\n]+>)?|[A-Za-z0-9_]+Envelope)[^;\n]*=\s*serde_json::from_(?:str|slice|value)|serde_json::from_(?:str|slice|value)::<[^;\n>]*Envelope)/.test(source),
+      directEnvelopePattern.test(source),
   );
   const placeholderEnvelopeIngress = [...rust.entries()].filter(
     ([file, source]) => file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs" && source.includes("reject_whole_buffer_artifact_envelope_ingress"),
@@ -1460,7 +1603,7 @@ function toolJobArtifactEnvelopeOwnedCodecExact(store: string, rust: Map<string,
     store.includes("struct ArtifactEnvelopeDecodePage") &&
     store.includes("impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactEnvelopeDecodeAuthority<P, Mutation>") &&
     store.includes("struct ArtifactEnvelopeDecodeRejected") &&
-    store.includes("impl ErasedSnapshotRetirement for ArtifactEnvelopeDecodeRejected") &&
+    store.includes("impl<P, Mutation> ErasedSnapshotRetirement for ArtifactEnvelopeDecodeRejected<P, Mutation>") &&
     store.includes("artifact envelope decode authority reached Drop before terminal publication or retained close") &&
     store.includes("artifact envelope decode rejection reached Drop before every exact page owner was cursor-retired") &&
     toolJobArtifactEnvelopeRejectionTransferExact(store) &&
@@ -1590,9 +1733,10 @@ function toolJobPresentEnvelopeCallerRetainedExact(present: string, wasm: string
     present.includes("pub fn close_step(") &&
     present.includes("Present envelope materialize handle reached Drop before worker, result, and fault owners were terminal empty") &&
     present.includes("Present envelope materialize registry reached Drop before every retained caller was closed and reclaimed") &&
-    present.includes("retained_present_envelope_caller_faults_and_closes_malformed_pack") &&
-    present.includes("retained_present_envelope_caller_cancels_and_closes_without_output") &&
+    present.includes("retained_present_envelope_caller_faults_and_zero_grant_closes_malformed_pack") &&
+    present.includes("retained_present_envelope_caller_cancels_and_zero_grant_closes_without_output") &&
     present.includes("retained_present_envelope_registry_preserves_collision_capacity_and_exact_rejected_pages") &&
+    present.includes("retained_present_envelope_wrong_owner_abort_and_interrupted_close_preserve_live_slot") &&
     present.includes("retained_present_envelope_publication_retries_backpressure_exactly_once") &&
     present.includes("retained_present_envelope_stale_generation_cancels_and_unpublished_output_closes") &&
     present.includes("retained_present_envelope_materializes_populated_history_in_order") &&
@@ -1616,6 +1760,16 @@ function toolJobPresentEnvelopeCallerRetainedExact(present: string, wasm: string
     !wasm.includes("createPresentEnvelopeJson") &&
     !wasm.includes("envelope_json") &&
     !wasm.includes("reject_whole_buffer_artifact_envelope_ingress")
+  );
+}
+
+function toolJobStoreInitializerRetainedExact(plugin: string): boolean {
+  return (
+    plugin.includes("session: std::mem::ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>") &&
+    plugin.includes("session_rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ArtifactStoreInitializationJob<P, Mutation>>>>") &&
+    plugin.includes("MountedWorkerJobSession::try_new(job, params)") &&
+    plugin.includes("self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job))") &&
+    plugin.includes("artifact store replacement reached Drop before initializer/candidate/displaced-store ownership was terminal empty")
   );
 }
 
@@ -1656,7 +1810,7 @@ function toolJobWriterEnvelopeCallerRetainedExact(writer: string, editor: string
     plugin.includes("pub fn advance_artifact_envelope_load(") &&
     plugin.includes("fn drive_envelope_ingress(") &&
     plugin.includes("saturated decoder keeps the sealed ingress owner in its original fixed slot for retry") &&
-    plugin.includes("self.retain_initializer_for_close(job)") &&
+    toolJobStoreInitializerRetainedExact(plugin) &&
     plugin.includes("artifact envelope ingress reached Drop before every admitted page was transferred or bounded-closed") &&
     plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
     plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
@@ -1714,7 +1868,7 @@ function toolJobJackEnvelopeCallerRetainedExact(store: string, jack: string, edi
     wasm.includes("pub fn cancel_envelope_load(") &&
     wasm.includes("pub fn close_step(&self)") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
-    plugin.includes("self.retain_initializer_for_close(job)") &&
+    toolJobStoreInitializerRetainedExact(plugin) &&
     !wasm.includes("envelope_json: &str") &&
     !wasm.includes("reject_whole_buffer_artifact_envelope_ingress") &&
     !wasm.includes("ArtifactStore::new") &&
@@ -1790,7 +1944,7 @@ function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, jack: s
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
     plugin.includes("pub fn preflight_artifact_envelope_ingress_page(") &&
     plugin.includes("pub fn construct_and_admit_artifact_envelope_ingress_page<Build>(") &&
-    plugin.includes("self.retain_initializer_for_close(job)") &&
+    toolJobStoreInitializerRetainedExact(plugin) &&
     plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
     plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
     !rewrite.includes("envelope_json: Option<String>") &&
@@ -1876,7 +2030,7 @@ function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: string,
     wasm.includes("pub fn cancel_envelope_load(") &&
     wasm.includes("pub fn close_step(&self)") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
-    plugin.includes("self.retain_initializer_for_close(job)") &&
+    toolJobStoreInitializerRetainedExact(plugin) &&
     !wasm.includes("envelope_json: &str") &&
     !wasm.includes("reject_whole_buffer_artifact_envelope_ingress") &&
     !wasm.includes("ArtifactStore::new") &&
@@ -2111,7 +2265,7 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
     wasm.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
     wasm.includes("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
-    plugin.includes("self.retain_initializer_for_close(job)") &&
+    toolJobStoreInitializerRetainedExact(plugin) &&
     plugin.includes("artifact store initialization job reached Drop before exact candidate handoff or terminal retained close") &&
     plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
     plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
@@ -2216,7 +2370,7 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     store.includes("self.scalar_entry") &&
     store.includes("artifact-spr.mutation-array-cancelled") &&
     store.includes("id_digest: [u8; 32]") &&
-    store.includes('Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", &id, edit_digest)') &&
+    store.includes('Self::push_revision_record(&mut self.revision.applied, identity_digest, b"applied", &id, edit_digest)?') &&
     draw.includes("pub struct DrawEnvelopeOwnedFieldCatalog") &&
     draw.includes("artifact_owned_spr_edit_history_decoder") &&
     draw.includes("DrawSnapshotDecodeAuthority") &&
@@ -2397,7 +2551,7 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     !defaultBlock.includes("try_reserve_exact") &&
     !defaultBlock.includes("initialize_draw_mutation_arena_pool") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
-    plugin.includes("self.retain_initializer_for_close(job)") &&
+    toolJobStoreInitializerRetainedExact(plugin) &&
     !editor.includes("reject_whole_buffer_artifact_envelope_ingress") &&
     !editor.includes("envelope_json: Option<String>") &&
     !editor.includes("while let") &&
@@ -2411,6 +2565,7 @@ function toolJobHistoryLedgerAdmissionExact(store: string, vcs: string): boolean
   const checkpointArm = checkpointStart < 0 ? "" : store.slice(checkpointStart, store.indexOf("ArtifactCommand::CreateAlternative { name } => {", checkpointPending));
   const pendingHash = checkpointArm.indexOf("content_addressed_checkpoint_id_with_pending_change(");
   const reservation = checkpointArm.indexOf("let change_reservation = self.reserve_change_history_slot()?");
+  const reservationCommit = checkpointArm.indexOf("self.insert_reserved_checkpoint_history(checkpoint_reservation, checkpoint)?", reservation);
   return (
     vcs.includes("pub struct ArtifactHistoryReservation") &&
     vcs.includes("pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ()>") &&
@@ -2432,7 +2587,8 @@ function toolJobHistoryLedgerAdmissionExact(store: string, vcs: string): boolean
     store.includes("rejected_history_mutation_and_metadata_owners_close_under_one_item_grants") &&
     pendingHash >= 0 &&
     reservation > pendingHash &&
-    !checkpointArm.slice(reservation).includes(".await")
+    reservationCommit > reservation &&
+    !checkpointArm.slice(reservation, reservationCommit).includes(".await")
   );
 }
 
@@ -2454,7 +2610,7 @@ function toolJobArtifactStoreStructuralOwnersExact(store: string, semio: string,
     store.includes("fn commit_document_roots_retained(") &&
     store.includes("fn replace_current_retained(&mut self, next: Arc<P>)") &&
     store.includes("fn replace_causal_dag_retained(&mut self, next: crate::os_spr::MutationDag)") &&
-    store.includes("ArtifactStoreMessageLedgerRetirement::new(String::new(), previous)") &&
+    store.includes("ArtifactStoreMessageLedgerRetirement::new(previous.edit_id, previous.messages)") &&
     store.includes("artifact store displaced-owner authority reached Drop before bounded retirement completed") &&
     store.includes("artifact store backbone retirement reached Drop before every exact URI, queue, message, channel, and byte owner was terminal-empty") &&
     causal.includes("pub fn terminal_is_empty(&self) -> bool") &&
@@ -2469,7 +2625,7 @@ function toolJobArtifactStoreStructuralOwnersExact(store: string, semio: string,
     vcs.includes("pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = 64") &&
     vcs.includes("pub struct ArtifactHistoryLedger<T>") &&
     vcs.includes("slots: std::mem::ManuallyDrop<Vec<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>>") &&
-    vcs.includes("slot.generation.checked_add(1)") &&
+    vcs.includes("self.slot(index).generation.checked_add(1)") &&
     vcs.includes("pub fn try_push(&mut self, value: T) -> Result<ArtifactHistoryKey, T>") &&
     vcs.includes("pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey>") &&
     vcs.includes("artifact history ledger reached Drop before every exact entry owner was retired") &&
@@ -2492,7 +2648,8 @@ function toolJobArtifactStoreStructuralOwnersExact(store: string, semio: string,
     !store.includes("edit_messages: BTreeMap<String, Vec<crate::os_spr::MutationMessage>>") &&
     !store.includes("edit_messages: HashMap<String, Vec<crate::os_spr::MutationMessage>>") &&
     toolJobArtifactEditMessageLedgerExact(store) &&
-    store.includes("edit_messages: std::mem::ManuallyDrop<ArtifactEditMessageLedger>") &&
+    store.includes("pub edit_messages: ArtifactEditMessageLedger") &&
+    store.includes("artifact edit-message fixed ledger reached Drop before every exact payload owner was cursor-retired") &&
     store.includes("ArtifactEditMessageTicket") &&
     store.includes("ARTIFACT_EDIT_MESSAGE_INDEX_TOMBSTONE") &&
     !store.includes("self.envelope.edit_messages.remove(") &&
@@ -2501,6 +2658,7 @@ function toolJobArtifactStoreStructuralOwnersExact(store: string, semio: string,
     !store.includes("self.applied_edit_ids.remove(") &&
     !store.includes("self.redo_edit_ids.remove(") &&
     !store.includes("self.redo_edit_ids.clear(") &&
+    store.includes("fn take_string_at_retained(target: &mut std::mem::ManuallyDrop<Vec<String>>, position: usize) -> String") &&
     toolJobArtifactResolutionCandidateExact(store) &&
     semio.includes("SemioStoreClosePhase::CausalIndex") &&
     semio.includes("SemioStoreClosePhase::DisplacedOwners") &&
@@ -2513,7 +2671,12 @@ function toolJobArtifactStoreStructuralOwnersExact(store: string, semio: string,
     store.includes("applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>") &&
     store.includes("pending_report: std::mem::ManuallyDrop<PendingCommandReport>") &&
     !store.includes("*self.current =") &&
-    !store.includes("*self.envelope =")
+    !store.includes("*self.envelope = next") &&
+    store.includes("fixed_edit_message_ledger_rejects_duplicate_and_capacity_plus_one_with_exact_retained_owners") &&
+    store.includes("displaced_owner_reservations_preserve_capacity_generation_and_interrupted_close") &&
+    store.includes("artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_close_order") &&
+    causal.includes("fixed_causal_authority_rejects_capacity_plus_one_with_exact_identity_and_closes_one_owner_at_a_time") &&
+    causal.includes("mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_without_meta")
   );
 }
 
@@ -2562,7 +2725,7 @@ function toolJobChildRetirementInventoryExact(root: string, files: ReadonlyMap<s
 }
 
 function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel: string): boolean {
-  const dispatchStart = plugin.indexOf("async fn dispatch_typed_command_inner");
+  const dispatchStart = plugin.lastIndexOf("async fn dispatch_typed_command_inner");
   const dispatchOpen = dispatchStart < 0 ? -1 : plugin.indexOf("{", dispatchStart);
   const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(plugin, dispatchOpen);
   return (
@@ -2575,17 +2738,20 @@ function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel
     plugin.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") &&
     plugin.includes("struct PeerRosterPublication") &&
     plugin.includes("fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault>") &&
-    plugin.includes("fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor") &&
-    plugin.includes("fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: Vec<u8>, fault: Fault)") &&
+    plugin.includes("fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64)") &&
+    plugin.includes("fn push_presence_ingress(&mut self, generation: u64, page_index: u32, page: semio_framework::kernel::FixedCommandPage)") &&
+    plugin.includes("fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: semio_framework::kernel::FixedCommandPage, fault: Fault)") &&
     plugin.includes("PeerRosterPublication::<A>::rejected(admission, command, fault)") &&
     plugin.includes("peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS]") &&
     plugin.includes("self.validate_peer_roster_publication(seq, generation, &cancel)") &&
     plugin.includes("resolve_ready(cancel.is_cancelled())") &&
     plugin.includes("self.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault })") &&
-    plugin.includes("protocol::presence_command_sequence(&bytes)") &&
-    plugin.includes("protocol::PresenceCommandCursor::admit(bytes)") &&
-    plugin.includes("struct PresenceIngressOwnerReturn") &&
-    plugin.includes("presence_ingress_retry_fifo") &&
+    plugin.includes("pub async fn plugin_reserve_presence_ingress<PA: PluginApp>") &&
+    plugin.includes("pub async fn plugin_admit_reserved_presence<PA: PluginApp>") &&
+    plugin.includes("protocol::PresenceCommandCursor::admit_page(seq, own_color, item_count, page)") &&
+    plugin.includes("pub async fn plugin_push_reserved_presence_page<PA: PluginApp>") &&
+    plugin.includes("Result<(), (Fault, semio_framework::kernel::FixedCommandPage)>") &&
+    plugin.includes("self.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::rejected(admission, command, fault))") &&
     plugin.includes('AppCommand::Presence { .. } => unreachable!("Presence commands are admitted from their fixed header before whole-command decoding")') &&
     !plugin.includes("async fn adopt_presence") &&
     !plugin.includes("PeerPresenceRoot::from_peers") &&
@@ -2594,7 +2760,7 @@ function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel
     store.includes("pub struct PresencePeersRoot<P>") &&
     store.includes("pub fn peers_root(&self) -> Arc<PresencePeersRoot<P>>") &&
     store.includes("pub struct PresencePeersCommit<P>") &&
-    store.includes("pub(crate) fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>)") &&
+    store.includes("pub fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>)") &&
     !store.includes("pub async fn adopt_peer(") &&
     !store.includes("pub async fn remove_peer(") &&
     !store.includes("pub async fn expire_peers(") &&
@@ -2602,14 +2768,21 @@ function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel
     channel.includes("pub const PRESENCE_ROSTER_MAXIMUM_ITEMS: usize = 64") &&
     channel.includes("pub const PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES: usize = 4_096") &&
     channel.includes("pub struct PresenceCommandCursor") &&
-    channel.includes("pub fn take_next(&mut self) -> Result<Option<Box<[u8]>>") &&
+    channel.includes("pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage)") &&
+    channel.includes("pub fn push_page(&mut self, page_index: u32, page: FixedCommandPage)") &&
+    channel.includes("pub fn take_next(&mut self) -> Result<Option<FixedCommandPage>") &&
     channel.includes("pub fn close_release(&mut self, maximum_bytes: usize) -> (bool, usize)") &&
     !channel.includes("raw.truncate(raw.len() - released)") &&
     channel.includes('28 => return Err(malformed("channel presence command"') &&
     !channel.includes("async fn read_presence_roster") &&
     !channel.includes("#[derive(Clone, Debug, PartialEq)]\npub struct PresenceRosterWire") &&
     dispatch.body.includes("let peer_presence = std::sync::Arc::clone(&self.peer_presence)") &&
+    dispatch.body.includes("let draft_snapshot = self.draft_store.snapshot_root()") &&
+    dispatch.body.includes("let interaction_state = self.interaction_store.snapshot_root()") &&
+    dispatch.body.includes("let presence_local = self.presence_store.local_root()") &&
     dispatch.body.includes("let presence_peers = self.presence_store.peers_root()") &&
+    dispatch.body.includes("let transient = self.transient_store.current_root()") &&
+    plugin.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority") &&
     !dispatch.body.includes("self.presence_store.peers().await") &&
     !plugin.includes("let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len())")
   );
@@ -2617,26 +2790,27 @@ function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel
 
 function toolJobPagedIngressExact(kernel: string, reactor: string, plugin: string, host: string, channel: string, wit: string, mcp: string, run: string, wgpu: string): boolean {
   return (
-    kernel.includes("pub struct FixedCommandPage") &&
-    kernel.includes("bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES]") &&
-    kernel.includes("pages: std::collections::VecDeque<FixedCommandPage>") &&
-    kernel.includes("pub struct CommandEnvelopeSet") &&
-    kernel.includes("commands.try_reserve_exact(COMMAND_BATCH_MAXIMUM_ITEMS)") &&
-    kernel.includes("struct CommandBatchEntry") &&
-    kernel.includes("pages: std::collections::VecDeque<FixedCommandPage>") &&
-    kernel.includes("pub struct CommandDriverRegistry") &&
-    kernel.includes("CommandDriverRetentionState::Suspended") &&
-    kernel.includes("pub fn prepare_suspend") &&
-    kernel.includes("pub struct RejectedCommandBuildRegistry") &&
-    !kernel.includes("commands: std::collections::VecDeque<CommandEnvelope>") &&
-    kernel.includes("pub instance: u32") &&
-    kernel.includes("Result<Option<(CommandPageCursor, FixedCommandPage)>, Fault>") &&
-    kernel.includes("pub struct PagedCommandReader") &&
-    kernel.includes("pub fn read_bounded_bytes(&mut self, maximum: usize)") &&
-    !kernel.includes("VecDeque<Vec<u8>>") &&
-    !kernel.includes("contiguous_if_single_page") &&
-    !kernel.includes("pub instance: PluginInstanceId") &&
-    channel.includes("current: [u8; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]") &&
+    channel.includes("pub struct FixedCommandPage") &&
+    channel.includes("bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES]") &&
+    channel.includes("pages: std::collections::VecDeque<FixedCommandPage>") &&
+    channel.includes("pub struct CommandEnvelopeSet") &&
+    /commands\s*\.\s*try_reserve_exact\(COMMAND_BATCH_MAXIMUM_ITEMS\)/.test(channel) &&
+    channel.includes("struct CommandBatchEntry") &&
+    channel.includes("pub struct CommandDriverRegistry") &&
+    channel.includes("CommandDriverRetentionState::Suspended") &&
+    channel.includes("pub fn prepare_suspend") &&
+    channel.includes("pub struct RejectedCommandBuildRegistry") &&
+    !channel.includes("commands: std::collections::VecDeque<CommandEnvelope>") &&
+    channel.includes("pub instance: u32") &&
+    channel.includes("Result<Option<(CommandPageCursor, FixedCommandPage)>, crate::Fault>") &&
+    channel.includes("pub struct PagedCommandReader") &&
+    channel.includes("pub fn read_bounded_bytes(&mut self, maximum: usize)") &&
+    !channel.includes("VecDeque<Vec<u8>>") &&
+    !channel.includes("contiguous_if_single_page") &&
+    !channel.includes("pub instance: PluginInstanceId") &&
+    channel.includes("paged_generic_decoder_crosses_a_two_page_field_boundary_without_concatenation") &&
+    channel.includes("paged_generic_decoder_faults_hostile_field_length_and_closes_exact_owner") &&
+    channel.includes("current: [u8; COMMAND_PAGE_MAXIMUM_BYTES]") &&
     channel.includes("pub struct PagedAppCommandDecodeCursor") &&
     channel.includes("pub struct DecodedAppCommandOwner") &&
     channel.includes("PagedAppCommandDecodeState::RejectedFields") &&
@@ -2691,7 +2865,8 @@ function toolJobPagedIngressExact(kernel: string, reactor: string, plugin: strin
     wgpu.includes("Result<(), Arc<KernelCloseSubmission>>") &&
     wgpu.includes("pub(crate) struct KernelCloseHandle") &&
     wgpu.includes("#[must_use = \"kernel close ownership must be polled through terminal completion\"]") &&
-    wgpu.includes("pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle") &&
+    (wgpu.includes("pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle") ||
+      wgpu.includes("pub(crate) fn begin_destroy_app(&self, instance: u32) -> Result<KernelCloseHandle, String>")) &&
     wgpu.includes("owner: Arc<KernelCloseSubmission>") &&
     wgpu.includes("KernelRequest::DestroyApp { owner: self.clone() }") &&
     wgpu.includes("owner.finish(KernelCloseStatus::Complete)") &&
@@ -2766,13 +2941,26 @@ function toolJobMediaExportBounded(source: string): boolean {
   const submitStart = source.indexOf("async fn submit_owned_media_export");
   const submitOpen = submitStart < 0 ? -1 : source.indexOf("{", submitStart);
   const submit = submitOpen < 0 ? undefined : toolJobRustBlock(source, submitOpen);
-  const worker = submit?.body.indexOf("WorkerJobSession::new") ?? -1;
+  const exactPreflight = submit?.body.indexOf("!self.media_exports.can_insert(operation_id.0)") ?? -1;
+  const outputOwner = submit?.body.indexOf("ArtifactOutputChunks::new(proof.contract().max_output_bytes)") ?? -1;
+  const persistentOwner = submit?.body.indexOf("self.media_closures.insert_admitted(") ?? -1;
+  const mountedWorker = submit?.body.indexOf("MountedWorkerJobSession::try_new(dispatch.job, params)") ?? -1;
+  const retainedWorker = submit?.body.indexOf("active.session = session", mountedWorker) ?? -1;
+  const liveExposure = submit?.body.indexOf("self.media_exports.insert_admitted(operation_id.0, active)", retainedWorker) ?? -1;
   return (
     !!poll &&
     !!submit &&
-    worker >= 0 &&
-    !submit.body.slice(0, worker).includes("ArtifactOutputChunks::new") &&
-    poll.body.includes("pending_step.try_recv()") &&
+    exactPreflight >= 0 &&
+    outputOwner > exactPreflight &&
+    persistentOwner > outputOwner &&
+    mountedWorker > persistentOwner &&
+    retainedWorker > mountedWorker &&
+    liveExposure > retainedWorker &&
+    !submit.body.includes("WorkerJobSession::new") &&
+    poll.body.includes("session.pump_one(&pool, semio_framework_async::Lane::Interactive)") &&
+    poll.body.includes("MountedWorkerJobSession::take_checked_out_outcome") &&
+    poll.body.includes("self.media_exports.insert_admitted(handle.operation_id.0, active)") &&
+    !poll.body.includes("pending_step.try_recv()") &&
     poll.body.includes("active.output_credit.validate_terminal()") &&
     poll.body.includes("validate_media_export_structure(&result, &active.output_chunks") &&
     !poll.body.includes("serde_json::to_vec") &&
@@ -2788,10 +2976,11 @@ function toolJobMediaExportBounded(source: string): boolean {
     source.includes("plugin_take_segmented_download_chunk") &&
     source.includes("semio-segmented-handle-v1") &&
     source.includes("segmented_output_accepts_exact_cap_and_rejects_plus_one_or_foreign_authority") &&
+    source.includes("final_poll_credit_accepts_maximum_and_rejects_plus_one_without_allocating_media") &&
     source.includes("struct RuntimeAppCell<PA: PluginApp>") &&
-    source.includes("dropping_a_pending_owner_restores_the_instance_collection_and_wakes_the_waiter") &&
-    source.includes("a_pending_instance_does_not_block_an_unrelated_instance_cell") &&
-    source.includes("submitted_first_step_can_be_polled_pending_without_panicking_or_double_submitting") &&
+    source.includes("media_construction_failure_at_each_fallible_seam_keeps_exact_close_authority") &&
+    source.includes("media_registry_detach_preserves_unrelated_live_owner_and_exact_close_handoff") &&
+    source.includes("worker_session_contention_rejection_take_resume_terminal_drop_and_close_are_exact") &&
     !/plugin_(?:submit|poll|cancel)_media_export[\s\S]{0,700}?resolve_ready/.test(source)
   );
 }
@@ -2807,8 +2996,13 @@ function toolJobDetachedOutputOwnershipExact(source: string): boolean {
   const finish = blockOf("fn finish_media_poll");
   const poll = blockOf("async fn poll_owned_media_export");
   const cancel = blockOf("async fn cancel_owned_media_export");
-  const typed = blockOf("async fn dispatch_typed_command_inner");
-  if (!registry || !submit || !finish || !poll || !cancel || !typed) return false;
+  const typedStart = source.lastIndexOf("async fn dispatch_typed_command_inner");
+  const typedOpen = typedStart < 0 ? -1 : source.indexOf("{", typedStart);
+  const typed = typedOpen < 0 ? undefined : toolJobRustBlock(source, typedOpen);
+  const ackStart = source.lastIndexOf("fn acknowledge_typed_operation_result(&mut self");
+  const ackOpen = ackStart < 0 ? -1 : source.indexOf("{", ackStart);
+  const ack = ackOpen < 0 ? undefined : toolJobRustBlock(source, ackOpen);
+  if (!registry || !submit || !finish || !poll || !cancel || !typed || !ack) return false;
   const registryRejectsOccupied =
     registry.body.includes("if self.entry(index).is_some()") &&
     registry.body.includes("return Err(value)") &&
@@ -2823,8 +3017,8 @@ function toolJobDetachedOutputOwnershipExact(source: string): boolean {
   const builder = submit.body.indexOf("A::build_media_export_job(request)", mediaOperation);
   const retainedJob = submit.body.indexOf("closing_job = Some(job.clone())", mediaOperation);
   const dispatch = submit.body.indexOf("self.tool_jobs.dispatch(", mediaOperation);
-  const retainedSession = submit.body.indexOf("active.session = Some(session)", mediaOperation);
-  const pool = submit.body.indexOf("process_worker_pool", mediaOperation);
+  const sessionConstruction = submit.body.indexOf("MountedWorkerJobSession::try_new(dispatch.job, params)", mediaOperation);
+  const retainedSession = submit.body.indexOf("active.session = session", mediaOperation);
   const exposeLive = submit.body.indexOf("self.media_closures.remove(operation_id.0)", mediaOperation);
   const mediaExact =
     mediaOperation >= 0 &&
@@ -2838,13 +3032,12 @@ function toolJobDetachedOutputOwnershipExact(source: string): boolean {
     builder > persistentConstruction &&
     retainedJob > builder &&
     dispatch > retainedJob &&
-    retainedSession > dispatch &&
-    pool > retainedSession &&
-    exposeLive > pool &&
+    sessionConstruction > dispatch &&
+    retainedSession > sessionConstruction &&
+    exposeLive > retainedSession &&
     submit.body.includes("!self.media_closures.can_insert(operation_id.0)") &&
     submit.body.includes("!self.snapshot_retirements.can_insert(operation_id.0)") &&
     submit.body.includes("self.snapshot_retirements.insert_admitted(operation_id.0, snapshot_retention)") &&
-    submit.body.includes("pending_step = Some(pending_step)") &&
     submit.body.includes(".media_exports") &&
     submit.body.includes(".insert_admitted(") &&
     source.includes("#[derive(Clone)]\n    pub struct ArtifactReservedToolJob") &&
@@ -2873,8 +3066,10 @@ function toolJobDetachedOutputOwnershipExact(source: string): boolean {
     segmentedPreAdmission > segmentedOperation &&
     segmentedConstruction > segmentedPreAdmission &&
     typed.body.includes("!self.segmented_closures.can_insert(operation_id.0)") &&
-    typed.body.includes("self.segmented_downloads.insert_admitted(operation_id.0, download)") &&
-    !typed.body.includes("segmented_downloads.insert(operation_id.0, download).is_err()") &&
+    ack.body.indexOf("!self.segmented_downloads.can_insert(token.operation)") < ack.body.indexOf("operation.acknowledge_result_page(token)?") &&
+    ack.body.includes("!self.segmented_closures.can_insert(token.operation)") &&
+    ack.body.indexOf("operation.acknowledge_result_page(token)?") < ack.body.indexOf("self.segmented_downloads.insert_admitted(token.operation, download)") &&
+    !ack.body.includes("drop(download)") &&
     source.includes("segmented_closures: ArtifactFixedRegistry<ArtifactDownloadOutput>") &&
     source.includes("close_segment_cleanup_cursor: usize") &&
     source.includes("duplicate_id_never_drops_active_media_snapshot_or_segmented_download_ownership");
@@ -2887,54 +3082,51 @@ function toolJobLiveConstructionCleanupExact(plugin: string, reactor: string): b
     const open = start < 0 ? -1 : plugin.indexOf("{", start);
     return open < 0 ? undefined : toolJobRustBlock(plugin, open);
   };
-  const appImpl = plugin.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp for VcsArtifactApp");
+  const appImpl = plugin.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp");
   const maintenance = blockOf("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize)", appImpl);
   const job = blockOf("impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA>");
   const run = blockOf("fn run_runtime_live_cleanup_turn<");
+  const pump = blockOf("fn runtime_live_cleanup_pump_one<");
   const schedule = blockOf("pub fn plugin_step_live_cleanup<");
   const destroy = blockOf("pub async fn plugin_destroy_app<");
-  if (!maintenance || !job || !run || !schedule || !destroy) return false;
+  if (!maintenance || !job || !run || !pump || !schedule || !destroy) return false;
   const generationAdmission = destroy.body.indexOf("checked_runtime_close_generation(runtime.close_generation.get())?");
   const ownerDetach = destroy.body.indexOf("instances.take(instance_id)");
-  return (
-    plugin.includes("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;") &&
-    maintenance.body.includes("self.media_closures.next_id_from(self.maintenance_media_cursor)") &&
-    maintenance.body.includes("self.media_closures.remove(operation_id)") &&
-    maintenance.body.includes("active.terminal_is_empty()?") &&
-    maintenance.body.includes("self.segmented_closures.next_id_from(self.maintenance_segment_cursor)") &&
-    maintenance.body.includes("close_take_chunk()?") &&
-    maintenance.body.includes("self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor)") &&
-    maintenance.body.includes("self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some()") &&
-    maintenance.body.includes("ArtifactSnapshotCloseRetention::terminal_is_empty") &&
-    plugin.includes("struct RuntimeLiveCleanupJob<PA: PluginApp>") &&
-    job.body.includes("self.cell.instance.try_lock()") &&
-    job.body.includes("cx.consume_fuel(1)") &&
-    job.body.includes("instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP)") &&
-    job.body.includes("released_items <= 1 && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP") &&
-    run.body.includes('"plugin_runtime_live_cleanup"') &&
-    run.body.includes("semio_framework_job::StepBudget::new(1") &&
-    run.body.includes("saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)") &&
-    run.body.includes("started.elapsed().as_micros()") &&
-    run.body.includes("elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US") &&
-    schedule.body.includes("runtime.live_cleanup_cursor") &&
-    schedule.body.includes(".entry_at(index)") &&
-    schedule.body.includes("maintenance_generation") &&
-    schedule.body.includes("std::sync::Arc::downgrade(&cell)") &&
-    schedule.body.includes("pool.try_submit(semio_framework_async::Lane::Maintenance, job)") &&
-    schedule.body.includes("RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_READY") &&
-    schedule.body.includes("drop(error.into_job())") &&
-    reactor.includes("plugin_step_live_cleanup(runtime)") &&
-    generationAdmission >= 0 &&
-    ownerDetach > generationAdmission &&
-    plugin.includes("media_construction_failure_at_each_fallible_seam_keeps_exact_close_authority") &&
-    plugin.includes("erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority") &&
-    plugin.includes("exhausted_close_generation_is_rejected_before_exact_owner_detachment") &&
-    plugin.includes("permanently_blocked_live_cleanup_faults_without_claiming_released_ownership") &&
-    plugin.includes("contended_live_cleanup_does_not_consume_structural_stall_credit") &&
-    !job.body.includes(".lock()") &&
-    !maintenance.body.includes("while ") &&
-    !maintenance.body.includes("for ")
-  );
+  const checks = {
+    trait: plugin.includes("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;"),
+    mediaNext: maintenance.body.includes("self.media_closures.next_id_from(self.maintenance_media_cursor)"),
+    mediaRemove: maintenance.body.includes("self.media_closures.remove(operation_id)"),
+    mediaTerminal: maintenance.body.includes("active.terminal_is_empty()?"),
+    segmentNext: maintenance.body.includes("self.segmented_closures.next_id_from(self.maintenance_segment_cursor)"),
+    chunk: maintenance.body.includes("close_take_chunk()?"),
+    snapshotNext: maintenance.body.includes("self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor)"),
+    snapshotLive: maintenance.body.includes("self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some()"),
+    snapshotTerminal: maintenance.body.includes("ArtifactSnapshotCloseRetention::terminal_is_empty"),
+    jobType: plugin.includes("struct RuntimeLiveCleanupJob<PA: PluginApp>"),
+    jobLock: job.body.includes("cell.instance.try_lock()"),
+    jobFuel: job.body.includes("cx.consume_fuel(1)"),
+    jobStep: job.body.includes("instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP)"),
+    jobLimit: job.body.includes("released_items <= 1 && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP"),
+    pumpSite: pump.body.includes('site: "plugin_runtime_live_cleanup"'),
+    pumpFuel: pump.body.includes("fuel_per_step: 1"),
+    pumpBudget: pump.body.includes("step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS"),
+    pumpSession: pump.body.includes("BatchJobSession::try_new(job, params)"),
+    runElapsed: run.body.includes("started.elapsed().as_micros()"),
+    runWall: run.body.includes("elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US"),
+    scheduleCursor: schedule.body.includes("runtime.live_cleanup_cursor"),
+    scheduleEntry: schedule.body.includes(".entry_at(index)"),
+    scheduleGeneration: schedule.body.includes("maintenance_generation"),
+    scheduleWeak: schedule.body.includes("std::sync::Arc::downgrade(&cell)"),
+    scheduleSubmit: schedule.body.includes("pool.try_submit(semio_framework_async::Lane::Maintenance, job)"),
+    scheduleReturn: schedule.body.includes("RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_READY"),
+    scheduleHandback: schedule.body.includes("drop(error.into_job())"),
+    reactor: reactor.includes("plugin_step_live_cleanup(runtime)"),
+    generation: generationAdmission >= 0 && ownerDetach > generationAdmission,
+    hostile: ["media_construction_failure_at_each_fallible_seam_keeps_exact_close_authority", "erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority", "exhausted_close_generation_is_rejected_before_exact_owner_detachment", "permanently_blocked_live_cleanup_faults_without_claiming_released_ownership", "contended_live_cleanup_does_not_consume_structural_stall_credit"].every((name) => plugin.includes(name)),
+    noBlockingLock: !job.body.includes(".lock()"),
+    noMaintenanceLoop: !/(?:^|\n)\s*(?:while|for)\s+/.test(maintenance.body),
+  };
+  return Object.values(checks).every(Boolean);
 }
 
 type ToolJobImporterInventory = {
@@ -2983,10 +3175,22 @@ function toolJobDecodeAfterAdmission(source: string): boolean {
     const block = open < 0 ? undefined : toolJobRustBlock(source, open);
     return !!block && block.body.indexOf(admission) >= 0 && block.body.indexOf(admission) < block.body.indexOf(decode);
   };
+  const rejectsUndecodedIntent = (() => {
+    const start = source.lastIndexOf("async fn handle_intent_frame(&mut self");
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+    return (
+      !!block &&
+      block.body.includes("qualified_tool_proof(verb)") &&
+      block.body.includes('FaultCode::new("interactive-job.intent-raw-owner-required")') &&
+      !block.body.includes("A::command_from_intent(intent).await") &&
+      !block.body.includes("serde_json::to_value")
+    );
+  })();
   return (
     ordered("async fn dispatch_action", "admit_command_json", "A::command_from_action(action, args).await") &&
     ordered("async fn dispatch_command(&mut self", "admit_command_json", "A::command_from_action(command_id, Some(&args)).await") &&
-    ordered("async fn handle_intent_frame(&mut self", "admit_command_wire", "A::command_from_intent(intent).await")
+    (ordered("async fn handle_intent_frame(&mut self", "admit_command_wire", "A::command_from_intent(intent).await") || rejectsUndecodedIntent)
   );
 }
 
@@ -2999,10 +3203,7 @@ function toolJobRuntimeProofQualified(source: string): boolean {
     source.includes("std::any::TypeId::of::<A>()") &&
     source.includes("std::any::type_name::<A>()") &&
     source.includes("for row in A::bounded_first_step_tool_proofs()") &&
-    source.includes("row.owner != owner") &&
-    source.includes("row.controller_id != runtime_controller_id") &&
-    source.includes("row.document_schema != document_schema") &&
-    source.includes("row.factory != BOUNDED_FIRST_STEP_FACTORY") &&
+    source.includes("row.owner == owner && row.controller_id == runtime_controller_id && row.document_schema == document_schema && row.factory == BOUNDED_FIRST_STEP_FACTORY") &&
     source.includes("seen != expected") &&
     /tool_job_registration\s*::<A>\s*\(\s*&app_id,\s*A::DOCUMENT_SCHEMA,/.test(source) &&
     source.includes("fn qualified_tool_proof(&self, verb: &str)") &&
@@ -3010,7 +3211,9 @@ function toolJobRuntimeProofQualified(source: string): boolean {
     source.includes("runtime_controller_id: &str") &&
     source.includes("addressed_controller_id: &str") &&
     source.includes("async fn tool_owner_witness(&self) -> ToolOwnerWitness") &&
-    source.includes("admission.factory_type_id == std::any::TypeId::of::<BoundedFirstStepCommandJobFactory<A>>()") &&
+    source.includes("admission.factory_type_id == std::any::TypeId::of::<TypedCommandFullOperationJobFactory<A>>()") &&
+    source.includes("admission.factory_type_name == std::any::type_name::<TypedCommandFullOperationJobFactory<A>>()") &&
+    source.includes("TypedCommandFullOperationJobFactory::<A>::from_proof(proof.clone())") &&
     source.includes("bounded_tool_contracts") &&
     !source.includes("bounded_first_step_contract(document_schema, id)") &&
     !source.includes("const BOUNDED_FIRST_STEP_PROOFS")
@@ -3048,7 +3251,47 @@ function toolJobQualifiedProofBeforeDecode(source: string): boolean {
     const block = open < 0 ? undefined : toolJobRustBlock(source, open);
     return !!block && block.body.indexOf(proof) >= 0 && block.body.indexOf(proof) < block.body.indexOf(decode);
   };
-  return ordered("async fn admit_command_json", "qualified_tool_proof", "bounded_json_items") && ordered("async fn handle_intent_frame", "qualified_tool_proof", "serde_json::to_value");
+  const intentStart = source.lastIndexOf("async fn handle_intent_frame");
+  const intentOpen = intentStart < 0 ? -1 : source.indexOf("{", intentStart);
+  const intent = intentOpen < 0 ? undefined : toolJobRustBlock(source, intentOpen);
+  const admissionStart = source.lastIndexOf("async fn admit_command_json");
+  const admissionOpen = admissionStart < 0 ? -1 : source.indexOf("{", admissionStart);
+  const admission = admissionOpen < 0 ? undefined : toolJobRustBlock(source, admissionOpen);
+  const hostAdmissionStart = source.lastIndexOf("async fn admit_host_configuration_json");
+  const hostAdmissionOpen = hostAdmissionStart < 0 ? -1 : source.indexOf("{", hostAdmissionStart);
+  const hostAdmission = hostAdmissionOpen < 0 ? undefined : toolJobRustBlock(source, hostAdmissionOpen);
+  const helperStart = source.lastIndexOf("async fn admit_command_json_with_proof");
+  const helperOpen = helperStart < 0 ? -1 : source.indexOf("{", helperStart);
+  const helper = helperOpen < 0 ? undefined : toolJobRustBlock(source, helperOpen);
+  const delegatedAfterQualifiedAdmission =
+    !!admission &&
+    admission.body.indexOf("let proof = self.qualified_tool_proof(verb)?") >= 0 &&
+    admission.body.indexOf("let proof = self.qualified_tool_proof(verb)?") < admission.body.indexOf("admit_command_json_with_proof(proof, verb, args)") &&
+    !!hostAdmission &&
+    hostAdmission.body.indexOf("let proof = self.qualified_host_configuration_tool_proof(verb)?") >= 0 &&
+    hostAdmission.body.indexOf("let proof = self.qualified_host_configuration_tool_proof(verb)?") < hostAdmission.body.indexOf("admit_command_json_with_proof(proof, verb, args)") &&
+    !!helper &&
+    helper.body.indexOf("let key = proof.key()") >= 0 &&
+    helper.body.indexOf("let key = proof.key()") < helper.body.indexOf("begin_exact_wire") &&
+    helper.body.indexOf("begin_exact_wire") < helper.body.indexOf("serde_json::to_writer") &&
+    helper.body.indexOf("serde_json::to_writer") < helper.body.indexOf("proof.admits::<A>(&admission)") &&
+    !helper.body.includes("bounded_json_items") &&
+    !helper.body.includes("serde_json::to_vec");
+  const streamsOnlyAfterQualifiedAdmission =
+    delegatedAfterQualifiedAdmission ||
+    (!!admission &&
+      admission.body.indexOf("qualified_tool_proof(verb)") >= 0 &&
+      admission.body.indexOf("qualified_tool_proof(verb)") < admission.body.indexOf("begin_exact_wire") &&
+      admission.body.indexOf("begin_exact_wire") < admission.body.indexOf("serde_json::to_writer") &&
+      !admission.body.includes("bounded_json_items") &&
+      !admission.body.includes("serde_json::to_vec"));
+  const rejectsUndecodedIntent =
+    !!intent &&
+    intent.body.includes("qualified_tool_proof(verb)") &&
+    intent.body.includes('FaultCode::new("interactive-job.intent-raw-owner-required")') &&
+    !intent.body.includes("serde_json::to_value") &&
+    !intent.body.includes("A::command_from_intent");
+  return (ordered("async fn admit_command_json", "qualified_tool_proof", "bounded_json_items") || streamsOnlyAfterQualifiedAdmission) && (ordered("async fn handle_intent_frame", "qualified_tool_proof", "serde_json::to_value") || rejectsUndecodedIntent);
 }
 
 function toolJobLimitsMatch(proofs: readonly ToolJobProof[], publicLimits: ReadonlyMap<string, number>): boolean {
@@ -3098,7 +3341,7 @@ function toolJobVcsOwnedDisposalExplicit(plugin: string): boolean {
   const driverStart = plugin.indexOf("fn drive_artifact_owned_disposer");
   const driverOpen = driverStart < 0 ? -1 : plugin.indexOf("{", driverStart);
   const driver = driverOpen < 0 ? undefined : toolJobRustBlock(plugin, driverOpen);
-  const closeStart = plugin.indexOf("fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>", plugin.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp"));
+  const closeStart = plugin.indexOf("fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>", plugin.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp"));
   const closeOpen = closeStart < 0 ? -1 : plugin.indexOf("{", closeStart);
   const close = closeOpen < 0 ? undefined : toolJobRustBlock(plugin, closeOpen);
   if (!driver || !close) return false;
@@ -3117,8 +3360,16 @@ function toolJobVcsOwnedDisposalExplicit(plugin: string): boolean {
     plugin.includes("close_draft_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore") &&
     plugin.includes("close_presence_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore") &&
     plugin.includes("close_transient_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore") &&
-    ["document-store", "config-store", "draft-store", "presence-store", "transient-store"].every((lane) => close.body.includes(`drive_artifact_owned_disposer("${lane}"`)) &&
-    close.body.includes('FaultCode::new("interactive-job.close-app-retained-fields-missing")')
+    plugin.includes("close_interaction_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ConfigStore<protocol::InteractionState, InteractionConfigMutation>>>>>") &&
+    ["document-store", "config-store", "draft-store", "presence-store", "transient-store", "interaction-store"].every((lane) => close.body.includes(`drive_artifact_owned_disposer("${lane}"`)) &&
+    close.body.includes("self.close_retained_fields_step(maximum_items, maximum_bytes)") &&
+    plugin.includes("fn retained_fields_terminal_is_empty(&self) -> bool") &&
+    plugin.includes("self.close_owned_stage >= 6") &&
+    plugin.includes("self.retained_fields_terminal_is_empty()") &&
+    plugin.includes("ArtifactCacheRetirement<A: ArtifactApp>") &&
+    plugin.includes("self.composition.close_step(maximum_items.min(1), maximum_bytes)") &&
+    plugin.includes("retained_field_maximum_and_maximum_plus_one_are_language_neutral") &&
+    !close.body.includes('FaultCode::new("interactive-job.close-app-retained-fields-missing")')
   );
 }
 
@@ -3131,15 +3382,20 @@ function toolJobRuntimeCloseCallbackBounded(plugin: string): boolean {
   const job = blockOf("impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA>");
   const inner = blockOf("fn run_runtime_close_turn_inner");
   const whole = blockOf("fn run_runtime_close_turn<");
+  const pump = blockOf("fn runtime_close_cleanup_pump_one<");
   const nonterminal = blockOf("fn runtime_close_nonterminal_status");
   return (
     !!job &&
     !!inner &&
     !!whole &&
+    !!pump &&
     !!nonterminal &&
     plugin.includes("const RUNTIME_CLOSE_INNER_GRANT_MS: u64 = 2") &&
     plugin.includes("const RUNTIME_CLOSE_CALLBACK_WALL_US: u64 = 8_000") &&
-    inner.body.includes("saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)") &&
+    pump.body.includes('site: "plugin_runtime_close_cleanup"') &&
+    pump.body.includes("fuel_per_step: 1") &&
+    pump.body.includes("step_budget_ms: RUNTIME_CLOSE_INNER_GRANT_MS") &&
+    pump.body.includes("BatchJobSession::try_new(job, params)") &&
     whole.body.indexOf("std::time::Instant::now()") < whole.body.indexOf("run_runtime_close_turn_inner(state)") &&
     whole.body.indexOf("run_runtime_close_turn_inner(state)") < whole.body.indexOf("started.elapsed().as_micros()") &&
     whole.body.includes("elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US") &&
@@ -3201,7 +3457,7 @@ function toolJobRuntimeRegistryFixedClose(plugin: string, reactor: string): bool
     !plugin.includes("instances: LocalAsyncMutex<Vec<std::sync::Arc<RuntimeAppCell<PA>>>>") &&
     !plugin.includes("struct LocalAsyncMutex") &&
     destroy.body.includes("instances.take(instance_id)") &&
-    destroy.body.includes("quarantine.insert(instance_id, RuntimeCloseEntry") &&
+    destroy.body.includes("quarantine.insert_admitted(instance_id, RuntimeCloseEntry") &&
     !destroy.body.includes(".iter()") &&
     !destroy.body.includes(".position(") &&
     !destroy.body.includes("list.remove(") &&
@@ -3300,7 +3556,7 @@ function toolJobActorProgressOverlayExact(actor: string, shard: string, wgpu: st
   const destroyStart = wgpu.indexOf("async fn destroy_app_step(&mut self");
   const destroyOpen = destroyStart < 0 ? -1 : wgpu.indexOf("{", destroyStart);
   const destroy = destroyOpen < 0 ? undefined : toolJobRustBlock(wgpu, destroyOpen);
-  const publishStart = wgpu.indexOf("fn publish_job_progress(&mut self");
+  const publishStart = wgpu.indexOf("fn publish_captured_job_progress(&mut self");
   const publishOpen = publishStart < 0 ? -1 : wgpu.indexOf("{", publishStart);
   const publish = publishOpen < 0 ? undefined : toolJobRustBlock(wgpu, publishOpen);
   return (
@@ -3328,16 +3584,23 @@ function toolJobActorProgressOverlayExact(actor: string, shard: string, wgpu: st
     !overlay.includes("HashMap<") &&
     !overlay.includes("VecDeque<") &&
     shard.includes("authority: JobTurn,") &&
-    shard.includes("job_authorities: HashMap<(u64, u64), JobTurn>") &&
-    shard.includes("self.job_authorities.insert((actor_id, *job), authority)") &&
-    shard.indexOf("self.job_authorities.insert((actor_id, *job), authority)") < shard.indexOf("self.runtime.start_job(instance, *job, kind, input.clone()).await") &&
-    shard.includes("ShardOutcome::Job { actor: actor_id, authority, publication: JobPublication") &&
+    shard.includes("job_authorities: HashMap<(u64, u64), JobAuthority>") &&
+    shard.includes("replay_seeds: [Option<MountedReplaySeed>; JOB_REPLAY_SEED_SLOT_CAPACITY]") &&
+    shard.includes("MountedReplaySeed::new(actor_id, job, authority, request, placement, kind, input)") &&
+    shard.includes("*slot = Some(seed)") &&
+    shard.includes("self.runtime.start_job(instance, job, &kind, input).await") &&
+    shard.includes("self.job_authorities.insert((actor, seed.job), JobAuthority { turn: seed.authority, request:") &&
+    shard.includes("ShardOutcome::Job { actor: actor_id, authority: authority.turn, request: authority.request, placement, publication: JobPublication") &&
+    shard.includes("replay_seed_max_plus_one_returns_the_exact_spawn_owners_unchanged") &&
+    shard.includes("mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_work_and_closes_one_owner_per_sub_eight_ms_opportunity") &&
     !!publish &&
     publish.body.includes("stable_identity_matches") &&
     publish.body.includes("self.job_progress.begin_operation(actor, authority.job, live)") &&
     !publish.body.includes("self.job_progress.acknowledge(receipt)") &&
     !!outcomes &&
-    outcomes.body.includes("ShardOutcome::Job { actor: reported, authority, publication } => self.publish_job_progress(ActorId(reported), authority, publication)") &&
+    outcomes.body.includes("ShardOutcome::Job { actor: reported, authority, request, placement, publication }") &&
+    outcomes.body.includes("self.begin_job_replay_capture(ActorId(reported), authority, request, placement, self.worker_count, worker_slot, publication)") &&
+    wgpu.includes("self.publish_captured_job_progress(actor, authority, publication)") &&
     !!destroy &&
     destroy.body.includes("self.pending_job_progress_presentations") &&
     destroy.body.includes("self.job_progress.actor_terminal_is_empty") &&
@@ -4129,7 +4392,8 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
     session.includes("pub fn maintenance_step(") &&
     session.includes("pub fn close_step(") &&
     session.includes("pub fn terminal_is_empty(") &&
-    session.includes("visual_candidate: Option<Fem2dMountedVisualBuild>") &&
+    session.includes("visual_job_candidate: Option<Fem2dVisualJob>") &&
+    session.includes("visual_rejected: Option<Fem2dVisualJob>") &&
     session.includes("visual_current: Option<Fem2dMountedVisualLease>") &&
     session.includes("visual_displaced: Option<Fem2dMountedVisualLease>") &&
     session.includes("fn publish_visual_candidate(&mut self, candidate: Fem2dMountedVisualLease) -> Result<(), Fem2dMountedVisualLease>") &&
@@ -4159,25 +4423,34 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
     editor.includes("fn mounted_jobs_terminal_is_empty(") &&
     editor.includes("fn mounted_job_prepare_snapshot_read(") &&
     !!render &&
-    render.body.includes("Fem2dMountedVisualLease::layers_json") &&
+    render.body.includes("progress.map(Fem2dMountedVisualLease::snapshot)") &&
     !render.body.includes("fem2d_live_visual_layers") &&
     !render.body.includes("fem2d_structure_layers") &&
     !render.body.includes("fem2d_region_triangles") &&
     !render.body.includes("serde_json") &&
     !render.body.includes("sort") &&
     !render.body.includes("collect") &&
-    model.includes("pub struct Fem2dMountedVisualBuild") &&
-    model.includes("Fem2dMountedVisualStage::ReserveOutput") &&
-    model.includes("Fem2dMountedVisualStage::ObserveOutput") &&
-    model.includes("Fem2dMountedVisualStage::OrderRegionKey") &&
-    model.includes("Fem2dMountedVisualStage::OrderAssemblyKey") &&
-    model.includes("Fem2dMountedVisualStage::OrderFieldKey =>") &&
-    model.includes("Fem2dMountedVisualStage::RegionPoint") &&
+    model.includes("pub struct Fem2dVisualJob") &&
+    model.includes("Fem2dVisualJobStage::ReserveSnapshot") &&
+    model.includes("canvas2d_snapshot_begin(") &&
+    model.includes("self.output.admit_page(") &&
+    model.includes("canvas2d_snapshot_seal(token)") &&
+    model.includes("Fem2dVisualJobStage::OrderRegionKey") &&
+    model.includes("Fem2dVisualJobStage::OrderElementKey") &&
+    model.includes("fn order_field_one(&mut self, visual: &Fem2dLiveVisual)") &&
+    model.includes("Fem2dVisualJobStage::BuildRegion") &&
     model.includes("fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize)") &&
-    model.includes("mounted_visual_output_exact_maximum_plus_one_and_displacement_handback") &&
-    classify.includes("triangulation.triangles.get(self.face_cursor)") &&
+    model.includes("mounted_visual_output_exact_maximum_plus_one_and_page_handback") &&
+    model.includes("fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer") &&
+    model.includes("fem2d_visual_job_stale_cancel_fault_and_device_close_preserve_last_valid") &&
+    model.includes("fem2d_visual_job_replay_accessibility_and_each_step_are_bounded") &&
+    model.includes("assert!(packet_equal(&first, &second))") &&
+    model.includes("started.elapsed().as_micros() < 8_000") &&
+    classify.includes("self.advance_face_classification()") &&
     !classify.includes("collect(") &&
     !classify.includes("Vec<") &&
+    mesh.includes("fn advance_face_classification(&mut self)") &&
+    mesh.includes("triangulation.triangles.get(self.face_cursor)") &&
     mesh.includes("MeshJobStage::ReservePreparation") &&
     mesh.includes("MeshJobStage::ReserveEdgeAuthorities") &&
     mesh.includes("mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly") &&
@@ -4214,7 +4487,7 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
     !step.body.includes("PcgJob::new(") &&
     reactor.includes("Event::JobProgress { job, .. }") &&
     reactor.includes("JOB_RENDER_BINDINGS.with") &&
-    reactor.includes("dirty_render.push((binding.instance") &&
+    reactor.includes(".try_surface(binding.instance, surface)") &&
     store.includes("pub fn commit_authority_matches") &&
     store.includes("fn publish_authority") &&
     store.includes("pub struct SnapshotReadReturn") &&
@@ -4307,7 +4580,8 @@ function toolJobUniversalRetainedOwnershipExact(jobRuntime: string, nativeIo: st
   const layoutWasm = [...rustFiles.values()].find((source) => source.includes("pub struct LayoutExportOperation"));
   const pluginHost = [...rustFiles.values()].find((source) => source.includes("struct GuestColdRelayJob"));
   const layoutColdRelay = layoutExport === undefined && layoutWasm === undefined && pluginHost === undefined ? true : layoutExport !== undefined && layoutWasm !== undefined && pluginHost !== undefined && toolJobLayoutColdRelayRetainedExact(layoutExport, layoutWasm, pluginHost);
-  const animate = [...rustFiles.values()].map(toolJobProductionProtocolSource).find((source) => source.includes("pub struct PresentEnvelopeMaterializeHandle"));
+  const animateRaw = [...rustFiles.values()].find((source) => source.includes("pub struct PresentEnvelopeMaterializeHandle"));
+  const animate = animateRaw === undefined ? undefined : toolJobProductionProtocolSource(animateRaw);
   const futureStart = wgpu.indexOf("impl std::future::Future for RendererIoHandle");
   const future = futureStart < 0 ? undefined : toolJobRustBlock(wgpu, wgpu.indexOf("{", futureStart));
   const presenterStart = wgpu.indexOf("pub(crate) fn present_step(&mut self)");
@@ -4382,9 +4656,10 @@ function toolJobUniversalRetainedOwnershipExact(jobRuntime: string, nativeIo: st
     animate.includes("fault_writer: std::mem::ManuallyDrop<Option<semio_framework_job::RetainedJobPayloadWriter>>") &&
     animate.includes("retained_nested_outcome: std::mem::ManuallyDrop<Option<semio_framework_job::StepOutcome>>") &&
     animate.includes("WorkerJobSession::try_new(job, params)") &&
-    animate.includes("retained_present_envelope_caller_faults_and_zero_grant_closes_malformed_pack") &&
-    animate.includes("retained_present_envelope_caller_cancels_and_zero_grant_closes_without_output") &&
-    animate.includes("registry.close_step(operation, generation, &pool, 0, 0)") &&
+    animateRaw !== undefined &&
+    animateRaw.includes("retained_present_envelope_caller_faults_and_zero_grant_closes_malformed_pack") &&
+    animateRaw.includes("retained_present_envelope_caller_cancels_and_zero_grant_closes_without_output") &&
+    animateRaw.includes("registry.close_step(operation, generation, &pool, 0, 0)") &&
     !animate.includes("oneshot::Receiver")
   );
 }
@@ -4705,6 +4980,29 @@ function toolJobCoverageSelfTests(): number {
     ["default-migrated-builder", { "manifest.rs": 'fn bounded_catalog() { definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated; }', "plugin.rs": 'app_commands! { "solve" => solve::Payload }' }],
   ];
   for (const [name, sources] of fixtures) if (evaluate(sources).length === 0) throw new Error(`[verify interactivity tool-jobs] self-test ${name} was falsely accepted.`);
+  const globalStoreFixture = toolJobProductionProtocolSource(`
+thread_local! {
+  static SCRATCH: RefCell<HashMap<String, Vec<u8>>> = RefCell::new(HashMap::new());
+  static RETAINED_BRIDGE: RefCell<Option<Vec<u8>>> = RefCell::new(None);
+}
+
+static LIVE_LEASES: OnceLock<Mutex<[Option<Lease>; 4]>> = OnceLock::new();
+#[cfg(test)]
+fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
+  static HOSTILES: OnceLock<Mutex<[Option<Vec<u8>>; 4]>> = OnceLock::new();
+  HOSTILES.get_or_init(|| Mutex::new([None, None, None, None]))
+}
+`);
+  const globalStoreInventory = toolJobGlobalPayloadStoreInventory(new Map([["fixture.rs", globalStoreFixture]]));
+  const globalStoreOwners = globalStoreInventory.flatMap((row) => row.owners.map((owner) => `${owner.name}:${owner.kind}`));
+  if (
+    globalStoreInventory.length !== 2 ||
+    !globalStoreOwners.includes("SCRATCH:child-content-scratch") ||
+    !globalStoreOwners.includes("RETAINED_BRIDGE:abi-bridge-retention") ||
+    !globalStoreOwners.includes("LIVE_LEASES:fixed-operation-registry") ||
+    globalStoreOwners.some((owner) => owner.startsWith("HOSTILES:"))
+  )
+    throw new Error("[verify interactivity tool-jobs] process-global payload owner inventory lost exact kind or production/test separation.");
   const actorProgress = [
     "//#region 🎨️JobProgressOverlay",
     "pub const JOB_PROGRESS_ACTIVE_CAPACITY: usize = 64",
@@ -4736,10 +5034,15 @@ function toolJobCoverageSelfTests(): number {
   ].join("\n");
   const shardProgress = [
     "authority: JobTurn,",
-    "job_authorities: HashMap<(u64, u64), JobTurn>",
-    "self.job_authorities.insert((actor_id, *job), authority)",
-    "self.runtime.start_job(instance, *job, kind, input.clone()).await",
-    "ShardOutcome::Job { actor: actor_id, authority, publication: JobPublication",
+    "job_authorities: HashMap<(u64, u64), JobAuthority>",
+    "replay_seeds: [Option<MountedReplaySeed>; JOB_REPLAY_SEED_SLOT_CAPACITY]",
+    "MountedReplaySeed::new(actor_id, job, authority, request, placement, kind, input)",
+    "*slot = Some(seed)",
+    "self.runtime.start_job(instance, job, &kind, input).await",
+    "self.job_authorities.insert((actor, seed.job), JobAuthority { turn: seed.authority, request:",
+    "ShardOutcome::Job { actor: actor_id, authority: authority.turn, request: authority.request, placement, publication: JobPublication",
+    "replay_seed_max_plus_one_returns_the_exact_spawn_owners_unchanged",
+    "mounted_replay_rejects_wrong_route_seed_generation_and_worker_before_work_and_closes_one_owner_per_sub_eight_ms_opportunity",
   ].join("\n");
   const wgpuProgress = [
     "job_progress: JobProgressOverlayStore",
@@ -4763,15 +5066,16 @@ function toolJobCoverageSelfTests(): number {
     "mounted_job_progress_presentation_bridge_is_fixed_fifo_and_generation_checked",
     "cancelled_head_does_not_strand_later_ready_presentations",
     "self.job_progress.abort(receipt)",
-    "fn publish_job_progress(&mut self, actor: ActorId, authority: JobTurn, publication: JobPublication) { stable_identity_matches; self.job_progress.begin_operation(actor, authority.job, live); self.job_progress.preflight(&mut context, actor, &publication, live); self.job_progress.publish_reserved(&mut context, admission, publication, live); }",
+    "fn publish_captured_job_progress(&mut self, actor: ActorId, authority: JobTurn, publication: JobPublication) { stable_identity_matches; self.job_progress.begin_operation(actor, authority.job, live); self.job_progress.preflight(&mut context, actor, &publication, live); self.job_progress.publish_reserved(&mut context, admission, publication, live); }",
     "async fn destroy_app_step(&mut self, instance: u32) { self.pending_job_progress_presentations; self.job_progress.actor_terminal_is_empty(actor); }",
-    "for outcome in outcomes { match outcome { ShardOutcome::Job { actor: reported, authority, publication } => self.publish_job_progress(ActorId(reported), authority, publication), _ => {} } }",
+    "for outcome in outcomes { match outcome { ShardOutcome::Job { actor: reported, authority, request, placement, publication } => { self.begin_job_replay_capture(ActorId(reported), authority, request, placement, self.worker_count, worker_slot, publication); } _ => {} } }",
+    "self.publish_captured_job_progress(actor, authority, publication)",
   ].join("\n");
   if (!toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-valid was falsely rejected.");
   if (toolJobActorProgressOverlayExact(actorProgress.replace("active: [JobProgressSlot; JOB_PROGRESS_ACTIVE_CAPACITY]", "active: HashMap<(ActorId, u64), JobProgressSlot>"), shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-resizable-active-registry was falsely accepted.");
   if (toolJobActorProgressOverlayExact(actorProgress.replace("cx.generation().0 != identity.generation", "false"), shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-missing-generation-validation was falsely accepted.");
   if (toolJobActorProgressOverlayExact(actorProgress.replace("job_progress_mounted_aggregate_item_and_byte_caps_reject_plus_one_exactly", "job_progress_aggregate_caps_unmounted"), shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-unmounted-aggregate-caps was falsely accepted.");
-  if (toolJobActorProgressOverlayExact(actorProgress, shardProgress.replace("self.job_authorities.insert((actor_id, *job), authority)", ""), wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test autonomous-shard-job-without-independent-authority was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress, shardProgress.replace("self.job_authorities.insert((actor, seed.job), JobAuthority { turn: seed.authority, request:", ""), wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test autonomous-shard-job-without-independent-authority was falsely accepted.");
   if (toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress.replace("AppPresentPhase::ProgressAcknowledge", "AppPresentPhase::Fullscreen"))) throw new Error("[verify interactivity tool-jobs] self-test progress-ACK-before-presenter-adoption was falsely accepted.");
   if (toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress.replace("self.job_progress.begin_close_all()", ""))) throw new Error("[verify interactivity tool-jobs] self-test realm-close-without-progress-retirement was falsely accepted.");
   if (toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress.replace('job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").terminal_is_empty()', "true"))) throw new Error("[verify interactivity tool-jobs] self-test realm-close-without-presentation-terminal-witness was falsely accepted.");
@@ -4798,7 +5102,7 @@ function toolJobCoverageSelfTests(): number {
     "fn step_one(&mut self, snapshot: &Fem2dSnapshot) {}",
     "credit_items: [usize; SESSION_SHELL_CAPACITY],",
     "credit_bytes: [usize; SESSION_SHELL_CAPACITY],",
-    "visual_candidate: Option<Fem2dMountedVisualBuild>, visual_current: Option<Fem2dMountedVisualLease>, visual_displaced: Option<Fem2dMountedVisualLease>,",
+    "visual_job_candidate: Option<Fem2dVisualJob>, visual_rejected: Option<Fem2dVisualJob>, visual_current: Option<Fem2dMountedVisualLease>, visual_displaced: Option<Fem2dMountedVisualLease>,",
     "fn publish_visual_candidate(&mut self, candidate: Fem2dMountedVisualLease) -> Result<(), Fem2dMountedVisualLease> {}",
     "snapshot.return_to_registry_witness(); witness.terminal_is_empty();",
     "register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND, factory);",
@@ -4815,13 +5119,13 @@ function toolJobCoverageSelfTests(): number {
     "mounted_close_and_capacity_are_fixed_and_terminal_witnessed",
   ].join("\n");
   const femMountedEditor = "async fn pending_effects() { crate::editor::fem2d::session::reconcile(doc); } fn mounted_job_maintenance_step() {} fn mounted_job_close_step() {} fn mounted_jobs_terminal_is_empty() {} fn mounted_job_prepare_snapshot_read() {} session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));";
-  const femMountedModel = "pub struct Fem2dMountedVisualBuild {} Fem2dMountedVisualStage::ReserveOutput; Fem2dMountedVisualStage::ObserveOutput; Fem2dMountedVisualStage::OrderRegionKey; Fem2dMountedVisualStage::OrderAssemblyKey; Fem2dMountedVisualStage::OrderFieldKey => {} Fem2dMountedVisualStage::RegionPoint; fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {} fn mounted_visual_output_exact_maximum_plus_one_and_displacement_handback() {} pub fn render_with_progress() { Fem2dMountedVisualLease::layers_json; }";
-  const femMountedMesh = "MeshJobStage::ReservePreparation; MeshJobStage::ReserveEdgeAuthorities; MeshJobStage::Classify => { triangulation.triangles.get(self.face_cursor); } MeshJobStage::Finalize => {} fn mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly() {}";
+  const femMountedModel = "pub struct Fem2dVisualJob {} Fem2dVisualJobStage::ReserveSnapshot; canvas2d_snapshot_begin(); self.output.admit_page(); canvas2d_snapshot_seal(token); Fem2dVisualJobStage::OrderRegionKey; Fem2dVisualJobStage::OrderElementKey; fn order_field_one(&mut self, visual: &Fem2dLiveVisual) {} Fem2dVisualJobStage::BuildRegion; fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {} fn mounted_visual_output_exact_maximum_plus_one_and_page_handback() {} fn fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer() {} fn fem2d_visual_job_stale_cancel_fault_and_device_close_preserve_last_valid() {} fn fem2d_visual_job_replay_accessibility_and_each_step_are_bounded() { assert!(packet_equal(&first, &second)); assert!(started.elapsed().as_micros() < 8_000); } pub fn render_with_progress() { progress.map(Fem2dMountedVisualLease::snapshot); }";
+  const femMountedMesh = "MeshJobStage::ReservePreparation; MeshJobStage::ReserveEdgeAuthorities; fn advance_face_classification(&mut self) { triangulation.triangles.get(self.face_cursor); } MeshJobStage::Classify => { self.advance_face_classification(); } MeshJobStage::Finalize => {} fn mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly() {}";
   const femMountedRoot = 'pub fn plugin() { crate::editor::fem2d::session::initialize(); Plugin::<FemApps>::builder("fem"); }';
   const femMountedGlue = "✏️editor/🧵️session/🦀️component.rs";
   const femMountedJobs = "pub trait BoundedJob {} JobBody::Bounded(owner); #[cfg(not(test))]; JobBody::ExplicitStateMachineRequired;";
   const femMountedAnalyses = "pub struct AssemblyJobConstruction {} AssemblyConstructionStage::ValidateNodePairs; AssemblyConstructionStage::DiscoverDofs; AssemblyConstructionStage::CommitDofOwner; struct PendingElementBuild {} PendingElementBuildStage::ReserveIndices; PendingElementBuildStage::ReservePositions; PendingElementBuildStage::ReserveStiffnessCredit; PendingElementBuildStage::AllocateStiffness; PendingElementBuildStage::ObserveStiffnessBacking => {} PendingElementBuildStage::AdmitStiffnessBacking; fn advance_element_build(&mut self) {} fn reclaim_element_owner(&mut self) {} fn mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn() {} fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {} pub struct AssemblyCsrBuild {}";
-  const femMountedReactor = "Event::JobProgress { job, .. }; JOB_RENDER_BINDINGS.with; dirty_render.push((binding.instance);";
+  const femMountedReactor = "Event::JobProgress { job, .. }; JOB_RENDER_BINDINGS.with; .try_surface(binding.instance, surface);";
   const femMountedStore = "pub fn commit_authority_matches() {} fn publish_authority() {} pub struct SnapshotReadReturn {} pub fn return_to_registry_witness() {}";
   const femMountedFramework = "let snapshot_is_admitted = { A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref()) }; self.store.snapshot_read().await;";
   const femExact = (session = femMountedSession, editor = femMountedEditor, reactor = femMountedReactor, store = femMountedStore, framework = femMountedFramework, analyses = femMountedAnalyses, model = femMountedModel, mesh = femMountedMesh) =>
@@ -4835,7 +5139,7 @@ function toolJobCoverageSelfTests(): number {
   if (femExact(femMountedSession.replace("Effect::CancelJob;", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-revision-restart-without-cancel was falsely accepted.");
   if (femExact(femMountedSession, femMountedEditor.replace("session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));", "model_window::render_with_progress(doc.snapshot, camera, None);"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-live-visual-not-consumed was falsely accepted.");
   if (femExact(femMountedSession.replace("pcg.step(&mut cx);", "while pcg.running() { pcg.step(&mut cx); }"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-run-to-completion-child was falsely accepted.");
-  if (femExact(femMountedSession, femMountedEditor, femMountedReactor.replace("dirty_render.push((binding.instance);", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-progress-without-render-invalidation was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor.replace(".try_surface(binding.instance, surface);", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-progress-without-render-invalidation was falsely accepted.");
   if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework.replace("A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref())", "true"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-snapshot-issued-before-retained-census was falsely accepted.");
   if (femExact(femMountedSession.replace("assembly_build.close_step(maximum_bytes);", "self.assembly_build = None;"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-interrupted-builder-close-was-wholesale was falsely accepted.");
   if (femExact(femMountedSession.replace("AssemblyJobConstruction::new_owned(model)", "AssemblyJob::new_owned(model)"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-monolithic-assembly-plan-constructor was falsely accepted.");
@@ -4846,10 +5150,18 @@ function toolJobCoverageSelfTests(): number {
   if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses.replace("struct PendingElementBuild {}", "fn begin_element() { let node_ids = element.node_ids(); }"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-whole-element-constructor-was falsely accepted.");
   if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses.replace("AssemblyConstructionStage::CommitDofOwner;", "plan.dof_map.order.push((node_id.clone(), dof));"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-dof-owner-clone-and-commit-collapsed-was falsely accepted.");
   if (femExact(femMountedSession.replace("fn process_owner_inventory_admits_exact_maximum_and_returns_exact_credit() {}", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-process-credit-boundary-handback-fixture-was falsely accepted.");
-  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("Fem2dMountedVisualLease::layers_json", "fem2d_live_visual_layers(doc, progress)")))
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("progress.map(Fem2dMountedVisualLease::snapshot)", "fem2d_live_visual_layers(doc, progress)")))
     throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-whole-visual-encoder-restored-was falsely accepted.");
-  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("Fem2dMountedVisualStage::OrderFieldKey", "fields.sort()")))
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("fn order_field_one(&mut self, visual: &Fem2dLiveVisual)", "fn fields_sort()")))
     throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-visual-stable-order-cursor-removed-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("mounted_visual_output_exact_maximum_plus_one_and_page_handback", "mounted_visual_capacity_smoke")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-visual-max-plus-one-law-removed-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("fem2d_visual_job_stale_cancel_fault_and_device_close_preserve_last_valid", "visual_close_smoke")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-stale-cancel-close-law-removed-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("assert!(packet_equal(&first, &second))", "assert!(true)")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-replay-law-removed-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("started.elapsed().as_micros() < 8_000", "true")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-timing-law-removed-was falsely accepted.");
   if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel, femMountedMesh.replace("triangulation.triangles.get(self.face_cursor)", "triangulation.triangles.iter().collect()")))
     throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-mesh-classification-collect-restored-was falsely accepted.");
   if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses.replace("PendingElementBuildStage::ObserveStiffnessBacking", "PendingElementBuildStage::Complete")))
@@ -4870,6 +5182,12 @@ function toolJobCoverageSelfTests(): number {
   if (duplicateRemaining.length !== 2) throw new Error("[verify interactivity tool-jobs] self-test declaration-without-proof was falsely accepted.");
   const validCatalog = { "owner.rs": `app_commands! { "bounded" => bounded::Payload }\n.action_interactive_job("bounded", InteractiveJobClassification::Migrated)\n${exactProof("owner.rs", "owner@1/*#editor", "bounded")}` };
   if (evaluate(validCatalog).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test exact-dynamic-proof-catalog was falsely rejected.");
+  const sharedProof = exactProof("owner.rs", "owner@1/*#editor", "bounded").replace(
+    /tools:\s*\{\s*"bounded"\s*=>\s*(semio_framework::ToolExecutionContract::bounded_first_step\([^)]*\)),\s*\}/,
+    'contract: $1, tools: ["bounded"]',
+  );
+  const sharedCatalog = { "owner.rs": `app_commands! { "bounded" => bounded::Payload }\n.action_interactive_job("bounded", InteractiveJobClassification::Migrated)\n${sharedProof}` };
+  if (evaluate(sharedCatalog).length !== 0) throw new Error("[verify interactivity tool-jobs] self-test shared-contract-proof-catalog was falsely rejected.");
   const duplicateCatalog = { "owner.rs": validCatalog["owner.rs"]!.replace('tools: { "bounded" =>', 'tools: { "bounded" => semio_framework::ToolExecutionContract::bounded_first_step(64, 1, 1, 64, 100), "bounded" =>') };
   if (evaluate(duplicateCatalog).length === 0) throw new Error("[verify interactivity tool-jobs] self-test duplicate-proof was falsely accepted.");
   const forgedOwner = { "owner.rs": validCatalog["owner.rs"]!.replace("EditorApp<Ownerownerrs>", "EditorApp<ForgedOwner>") };
@@ -4892,6 +5210,15 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobRuntimeProofQualified(unqualifiedRuntime)) throw new Error("[verify interactivity tool-jobs] self-test runtime-owner-proof-drop was falsely accepted.");
   const proofAfterDecode = "async fn admit_command_json() { bounded_json_items(); qualified_tool_proof(); } async fn handle_intent_frame() { serde_json::to_value(); qualified_tool_proof(); }";
   if (toolJobQualifiedProofBeforeDecode(proofAfterDecode)) throw new Error("[verify interactivity tool-jobs] self-test qualified-proof-after-decode was falsely accepted.");
+  const delegatedQualifiedProof =
+    'async fn admit_command_json_with_proof(proof: QualifiedToolProof) { let key = proof.key(); begin_exact_wire(); serde_json::to_writer(); proof.admits::<A>(&admission); } async fn admit_command_json() { let proof = self.qualified_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args); } async fn admit_host_configuration_json() { let proof = self.qualified_host_configuration_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args); } async fn handle_intent_frame() { qualified_tool_proof(verb); FaultCode::new("interactive-job.intent-raw-owner-required"); }';
+  if (!toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof)) throw new Error("[verify interactivity tool-jobs] self-test delegated-qualified-proof route was falsely rejected.");
+  if (toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof.replace("let proof = self.qualified_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args);", "admit_command_json_with_proof(proof, verb, args); let proof = self.qualified_tool_proof(verb)?;")))
+    throw new Error("[verify interactivity tool-jobs] self-test delegated app proof after helper was falsely accepted.");
+  if (toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof.replace("let proof = self.qualified_host_configuration_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args);", "admit_command_json_with_proof(proof, verb, args); let proof = self.qualified_host_configuration_tool_proof(verb)?;")))
+    throw new Error("[verify interactivity tool-jobs] self-test delegated host proof after helper was falsely accepted.");
+  if (toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof.replace("begin_exact_wire(); serde_json::to_writer();", "serde_json::to_writer(); begin_exact_wire();")))
+    throw new Error("[verify interactivity tool-jobs] self-test delegated helper decode before wire admission was falsely accepted.");
   const copiedOwnerStrings = 'struct QualifiedBoundedFirstStepProof; fn bounded_first_step_proof(controller_id: &str, factory: &str, tool_id: &str, document_schema: &str) { proof.owner_file != ""; } tool_job_registration(A::APP_ID, A::DOCUMENT_SCHEMA);';
   if (toolJobRuntimeProofQualified(copiedOwnerStrings)) throw new Error("[verify interactivity tool-jobs] self-test copied-owner-without-compiler-witness was falsely accepted.");
   const controllerScopedOperation = 'let app_id = app.instance_id().await.to_string(); format!("{}/{verb}/{}", self.tool_job_controller_id, base_revision.0); app_instance_id: meta.instance_id;';
@@ -4920,6 +5247,12 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobFullOperationBounded(fakePhaseCursor)) throw new Error("[verify interactivity tool-jobs] self-test fake-full-operation-phase-cursor was falsely accepted.");
   const monolithicHugeOutput = 'struct TypedCommandFullOperationJob; impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> { fn step() { cx.is_cancelled(); cx.should_yield(); max_decoded_items; max_output_bytes; PreviewReady; CheckpointReady; validate_commit(base_revision, generation); set_stage("typed-command-prepare"); set_stage("typed-command-reducer"); set_stage("typed-command-output-validation"); serde_json::to_vec(&emit.effects); for child in emit.child_emits.iter() {} set_stage("typed-command-ephemeral"); set_stage("typed-command-emit"); set_stage("typed-command-expose"); } } async fn dispatch_typed_command_inner() { let session = WorkerJobSession::new(job); }';
   if (toolJobFullOperationBounded(monolithicHugeOutput)) throw new Error("[verify interactivity tool-jobs] self-test monolithic-huge-output-and-child-validation was falsely accepted.");
+  const monolithicReducer = 'struct TypedCommandFullOperationJob; impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> { fn step() { cx.is_cancelled(); cx.should_yield(); max_decoded_items; max_output_bytes; PreviewReady; CheckpointReady; validate_commit(base_revision, generation); set_stage("typed-command-prepare"); set_stage("typed-command-reducer"); resolve_ready(A::ephemeral(command, doc)); resolve_ready(A::handle(command, doc)); set_stage("typed-command-output-validation"); set_stage("typed-command-ephemeral"); set_stage("typed-command-emit"); set_stage("typed-command-expose"); } } async fn dispatch_typed_command_inner() { let session = WorkerJobSession::new(job); }';
+  if (toolJobFullOperationBounded(monolithicReducer)) throw new Error("[verify interactivity tool-jobs] self-test one-shot-generic-reducer-inside-worker was falsely accepted.");
+  const boundedFirstStepReducer = monolithicReducer
+    .replace("max_decoded_items; max_output_bytes;", "max_decoded_items; max_work_units_per_step; max_output_bytes; max_step_micros; ToolExecutionShape::BoundedFirstStep;")
+    .replace("async fn dispatch_typed_command_inner()", "fn construct() { match proof { QualifiedToolProof::Bounded(_) => { TypedCommandFullOperationJob::<A>; } } } async fn dispatch_typed_command_inner()");
+  if (!toolJobFullOperationBounded(boundedFirstStepReducer)) throw new Error("[verify interactivity tool-jobs] self-test exact bounded-first-step generic reducer was falsely rejected.");
   const noStageWatchdog = monolithicHugeOutput.replace("cx.is_cancelled(); cx.should_yield();", "").replace("serde_json::to_vec(&emit.effects); for child in emit.child_emits.iter() {}", "");
   if (toolJobFullOperationBounded(noStageWatchdog)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stage-watchdog was falsely accepted.");
   const staleExposure = noStageWatchdog.replace("validate_commit(base_revision, generation);", "").replace("fn step() { ", "fn step() { cx.is_cancelled(); cx.should_yield(); ");
@@ -5116,7 +5449,11 @@ function toolJobCoverageSelfTests(): number {
     "pub fn advance_artifact_envelope_load(",
     "fn drive_envelope_ingress(",
     "saturated decoder keeps the sealed ingress owner in its original fixed slot for retry",
-    "self.retain_initializer_for_close(job)",
+    "session: std::mem::ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>",
+    "session_rejected: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ArtifactStoreInitializationJob<P, Mutation>>>>",
+    "MountedWorkerJobSession::try_new(job, params)",
+    "self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job))",
+    "artifact store replacement reached Drop before initializer/candidate/displaced-store ownership was terminal empty",
     "artifact store initialization job reached Drop before exact candidate handoff or terminal retained close",
     "artifact envelope ingress reached Drop before every admitted page was transferred or bounded-closed",
     "artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots",
@@ -5125,14 +5462,14 @@ function toolJobCoverageSelfTests(): number {
   if (!toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Writer-envelope-route was falsely rejected.");
   if (toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Writer-post-lift-dynamic-page was falsely accepted.");
   if (toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Writer-completion-without-exact-ack was falsely accepted.");
-  if (toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Writer-false-terminal-initializer-drop was falsely accepted.");
+  if (toolJobWriterEnvelopeCallerRetainedExact(retainedWriterInitializer, retainedWriterEditor, retainedWriterWasm, retainedWriterPlugin.replace("self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job))", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Writer-false-terminal-initializer-drop was falsely accepted.");
   const retainedJackStore = [
     "pub fn artifact_owned_spr_edit_history_decoder",
     "struct ArtifactOwnedSprMutationArrayAuthority",
     "self.scalar_entry",
     "artifact-spr.mutation-array-cancelled",
     "id_digest: [u8; 32]",
-    'Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", &id, edit_digest)',
+    'Self::push_revision_record(&mut self.revision.applied, identity_digest, b"applied", &id, edit_digest)?',
     "SPR edit decode reached Drop before exact publication or bounded retirement",
     "pub fn preflight_page_bytes(&self, page_bytes: usize)",
     "pub fn admit_preflighted_page(&mut self, page: OwnedSchemaDecodePage)",
@@ -5162,7 +5499,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec.replace("artifact_owned_spr_edit_history_decoder", "artifact_bounded_history_entry_decoder"), retainedJackEditor, retainedJackWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-domain-only-whole-edit-decoder was falsely accepted.");
   if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-post-lift-dynamic-page was falsely accepted.");
   if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-completion-without-exact-ack was falsely accepted.");
-  if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Jack-false-terminal-initializer-drop was falsely accepted.");
+  if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin.replace("self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job))", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Jack-false-terminal-initializer-drop was falsely accepted.");
   if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore.replace("self.scalar_entry", "let raw = serde_json::from_slice(bytes)"), retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-string-mutation-whole-buffer-bypass was falsely accepted.");
   const retainedTrinityRewrite = [
     "type TrinityRewriteApp = VcsArtifactApp<EditorApp<TrinityJackPlayApp>>",
@@ -5280,7 +5617,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("artifact_owned_spr_edit_history_decoder", "artifact_bounded_history_entry_decoder"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-domain-only-whole-edit-decoder was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-post-lift-dynamic-page was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-completion-without-exact-ack was falsely accepted.");
-  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-false-terminal-initializer-drop was falsely accepted.");
+  if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin.replace("self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job))", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-false-terminal-initializer-drop was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("self.generation.0.checked_add(1)", "self.generation.0 + 1"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-unchecked-generation-publication was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("Self::child_step(&mut value.drawing", "drop(value.drawing)"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-drawing-child-deep-drop was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("dsl::DslValue::Object(values)", "drop(value)"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-nested-value-deep-drop was falsely accepted.");
@@ -5994,7 +6331,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-post-lift-dynamic-page was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-completion-without-exact-ack was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, `${retainedDrawEditor}\nenvelope_json: Option<String>`, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-whole-buffer-constructor-bypass was falsely accepted.");
-  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Draw-false-terminal-initializer-drop was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor, retainedWriterPlugin.replace("self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation, self.generation, job))", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Draw-false-terminal-initializer-drop was falsely accepted.");
   const synchronousPeerRoster = "struct PeerPresenceRoot; struct VcsArtifactApp { peer_presence: Arc<PeerPresenceRoot> } impl PluginApp for VcsArtifactApp { async fn adopt_presence(&mut self, peers: &[PresencePeer]) { self.peer_presence = Arc::new(PeerPresenceRoot::from_peers(peers)); } } async fn dispatch_typed_command_inner() { let presence_peers = self.presence_store.peers().await.into_iter().map(|(actor, presence)| (actor.to_string(), presence.clone())).collect(); } let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len());";
   if (toolJobPeerInteractionRootsExact(synchronousPeerRoster, synchronousPeerRoster, synchronousPeerRoster)) throw new Error("[verify interactivity tool-jobs] self-test synchronous-whole-peer-roster-publication was falsely accepted.");
   const preadmissionRosterDecode = "pub struct PresenceRosterWire; async fn plugin_exchange(commands: &[Vec<u8>]) { let command = decode_app_command(bytes).await; reserve_presence_ingress(seq); }";
@@ -6170,7 +6507,411 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("const GUEST_RELAY_MOUNTED_SLOTS: usize = 16", "slots: Vec<GuestRelayMountedSession>"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-fixed-mounted-registry-removal was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("self.relay_registry.mount(index, mounted_generation, owner);", "loop { session.step().await; }"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-run-loop-restoration was falsely accepted.");
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
-  return fixtures.length + 360;
+  return fixtures.length + 365;
+}
+
+function toolJobFixedOperationRegistryExact(source: string): boolean {
+  const required = [
+    "pub trait FixedOperationOwner",
+    "fn retained_bytes(&self) -> usize",
+    "pub struct FixedOperationKey",
+    "pub operation: OperationId",
+    "pub generation: Generation",
+    "pub struct FixedOperationAdmissionRejected<T>",
+    "pub owner: T",
+    "pub struct FixedOperationRegistry<T, const CAPACITY: usize>",
+    "maximum_bytes: usize",
+    "retained_bytes: usize",
+    "slots.try_reserve_exact(CAPACITY)",
+    "CAPACITY <= Self::MAXIMUM_SLOTS",
+    "self.retained_bytes.checked_add(retained_bytes)",
+    "next_retained_bytes > self.maximum_bytes",
+    "occupied: usize",
+    "self.occupied == CAPACITY",
+    "self.occupied == 0",
+    "entry.key == key && !entry.closing",
+    "entry.owner.cancel()",
+    "entry.owner.begin_close()",
+    "pub fn cancel_stale_step",
+    "entry.key.generation == live_generation",
+    "entry.owner.close_step(1, maximum_bytes)",
+    "if entry.owner.terminal_is_empty()",
+    "assert_eq!(self.occupied, 0, \"fixed operation registry reached Drop before every exact owner was terminal-empty\")",
+    "maximum_plus_one_and_saturation_return_the_exact_owner",
+    "stale_generation_interrupted_close_and_aba_preserve_exact_authority",
+    "assert!(registry.take(stale).is_none())",
+    "assert_eq!(byte_rejected.owner.identity, 12)",
+    "assert_eq!(capacity_rejected.owner.identity, 16)",
+    "assert!(!registry.is_empty(), \"interrupted close must retain the exact owner\")",
+    "maximum_registry_backing_initializes_inside_one_interactive_ceiling_under_concurrent_load",
+    "median < u128::from(semio_framework_trace::INTERACTIVE_STEP_CEILING_US)",
+    "assert!(matches!(registry.close_step(1, 1), InteractiveJobCloseStep::Complete))",
+  ];
+  return required.every((anchor) => source.includes(anchor));
+}
+
+function toolJobFixedOperationRegistrySelfTests(source: string): number {
+  if (!toolJobFixedOperationRegistryExact(source)) throw new Error("[verify interactivity tool-jobs fixed-operation-registry] valid scheduler authority source was rejected.");
+  const anchors = [
+    "pub operation: OperationId",
+    "pub generation: Generation",
+    "pub owner: T",
+    "slots.try_reserve_exact(CAPACITY)",
+    "CAPACITY <= Self::MAXIMUM_SLOTS",
+    "self.retained_bytes.checked_add(retained_bytes)",
+    "next_retained_bytes > self.maximum_bytes",
+    "occupied: usize",
+    "self.occupied == CAPACITY",
+    "self.occupied == 0",
+    "entry.key == key && !entry.closing",
+    "entry.owner.cancel()",
+    "entry.owner.begin_close()",
+    "pub fn cancel_stale_step",
+    "entry.key.generation == live_generation",
+    "entry.owner.close_step(1, maximum_bytes)",
+    "if entry.owner.terminal_is_empty()",
+    "assert_eq!(self.occupied, 0, \"fixed operation registry reached Drop before every exact owner was terminal-empty\")",
+    "maximum_plus_one_and_saturation_return_the_exact_owner",
+    "stale_generation_interrupted_close_and_aba_preserve_exact_authority",
+    "assert!(registry.take(stale).is_none())",
+    "assert_eq!(byte_rejected.owner.identity, 12)",
+    "assert_eq!(capacity_rejected.owner.identity, 16)",
+    "assert!(!registry.is_empty(), \"interrupted close must retain the exact owner\")",
+    "maximum_registry_backing_initializes_inside_one_interactive_ceiling_under_concurrent_load",
+    "median < u128::from(semio_framework_trace::INTERACTIVE_STEP_CEILING_US)",
+  ];
+  for (const anchor of anchors) {
+    const mutated = source.replaceAll(anchor, "HOSTILE_REMOVED_ANCHOR");
+    if (mutated === source || toolJobFixedOperationRegistryExact(mutated)) throw new Error(`[verify interactivity tool-jobs fixed-operation-registry] hostile mutation was falsely accepted: ${anchor}`);
+  }
+  return anchors.length;
+}
+
+type FixedOperationFixtureStep =
+  | { action: "admit"; owner: string; operation: number; generation: number; bytes: number }
+  | { action: "take" | "cancel"; operation: number; generation: number }
+  | { action: "cancelStaleStep"; operation: number; liveGeneration: number }
+  | { action: "close"; maximumItems: number; maximumBytes: number }
+  | { action: "inspect" };
+
+type FixedOperationFixtureCase = {
+  id: string;
+  capacity: number;
+  maximumBytes: number;
+  steps: FixedOperationFixtureStep[];
+  expected: string[];
+};
+
+type FixedOperationFixture = {
+  schema: string;
+  cases: FixedOperationFixtureCase[];
+};
+
+type FixedOperationFixtureOutput = {
+  schema: string;
+  results: { id: string; output: string[] }[];
+};
+
+function toolJobFixedOperationFixtureAssertInteger(value: unknown, minimum: number, maximum: number, field: string): asserts value is number {
+  if (!Number.isSafeInteger(value) || Number(value) < minimum || Number(value) > maximum) throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] invalid ${field}.`);
+}
+
+function toolJobFixedOperationFixtureAssertKeys(value: Record<string, unknown>, keys: string[], field: string): void {
+  if (Object.keys(value).sort().join("\0") !== [...keys].sort().join("\0")) throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] invalid ${field} fields.`);
+}
+
+function toolJobFixedOperationFixtureIndex(operation: number, generation: number, capacity: number): number {
+  const operation64 = BigInt.asUintN(64, BigInt(operation));
+  const generation64 = BigInt.asUintN(64, BigInt(generation));
+  const rotated = BigInt.asUintN(64, (generation64 << 17n) | (generation64 >> 47n));
+  return Number(BigInt.asUintN(64, operation64 ^ rotated) % BigInt(capacity));
+}
+
+function toolJobFixedOperationFixtureRun(root: string): FixedOperationFixtureOutput {
+  const fixturePath = "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-law.json";
+  const schemaPath = "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry.schema.json";
+  const fixture = JSON.parse(policyReadFileSafe(root, fixturePath)) as FixedOperationFixture;
+  const schema = JSON.parse(policyReadFileSafe(root, schemaPath)) as Record<string, unknown>;
+  if (schema.$id !== "semio://framework/job/fixed-operation-registry-law/v1" || schema.$schema !== "https://json-schema.org/draft/2020-12/schema")
+    throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] schema identity is not exact.");
+  if (!fixture || fixture.schema !== "semio.framework.job.fixed-operation-registry-law.v1" || !Array.isArray(fixture.cases))
+    throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] fixture root is not exact.");
+  const requiredIds = ["aba", "byte-maximum-plus-one", "cancel-stale", "collision", "empty", "interrupted-repeated-close", "maximum-plus-one", "single"];
+  if (fixture.cases.map((entry) => entry.id).sort().join("\0") !== requiredIds.join("\0"))
+    throw new Error("[verify interactivity tool-jobs fixed-operation-fixture] law case identities are not an exact bijection.");
+  const results = fixture.cases.map((testCase) => {
+    toolJobFixedOperationFixtureAssertKeys(testCase as unknown as Record<string, unknown>, ["id", "capacity", "maximumBytes", "steps", "expected"], `case ${testCase.id}`);
+    toolJobFixedOperationFixtureAssertInteger(testCase.capacity, 1, 64, `${testCase.id}.capacity`);
+    toolJobFixedOperationFixtureAssertInteger(testCase.maximumBytes, 0, 65_536, `${testCase.id}.maximumBytes`);
+    if (!Array.isArray(testCase.steps) || testCase.steps.length === 0 || !Array.isArray(testCase.expected) || testCase.expected.some((entry) => typeof entry !== "string" || entry.length === 0 || entry.length > 128))
+      throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] invalid ${testCase.id} steps or expected output.`);
+    type Owner = { owner: string; operation: number; generation: number; admittedBytes: number; remainingBytes: number; closing: boolean; cancelled: boolean };
+    const slots: (Owner | undefined)[] = Array.from({ length: testCase.capacity });
+    let retainedBytes = 0;
+    let occupied = 0;
+    let closeCursor = 0;
+    const output: string[] = [];
+    for (const step of testCase.steps) {
+      if (!step || typeof step !== "object" || typeof step.action !== "string") throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] invalid ${testCase.id} step.`);
+      if (step.action === "admit") {
+        toolJobFixedOperationFixtureAssertKeys(step, ["action", "owner", "operation", "generation", "bytes"], `${testCase.id}.admit`);
+        if (typeof step.owner !== "string" || step.owner.length === 0 || step.owner.length > 64) throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] invalid ${testCase.id}.owner.`);
+        toolJobFixedOperationFixtureAssertInteger(step.operation, 0, Number.MAX_SAFE_INTEGER, `${testCase.id}.operation`);
+        toolJobFixedOperationFixtureAssertInteger(step.generation, 0, Number.MAX_SAFE_INTEGER, `${testCase.id}.generation`);
+        toolJobFixedOperationFixtureAssertInteger(step.bytes, 0, 65_536, `${testCase.id}.bytes`);
+        const index = toolJobFixedOperationFixtureIndex(step.operation, step.generation, testCase.capacity);
+        const nextBytes = retainedBytes + step.bytes;
+        if (!Number.isSafeInteger(nextBytes) || occupied === testCase.capacity || nextBytes > testCase.maximumBytes || slots[index]) {
+          output.push(`admit:rejected:${step.owner}`);
+        } else {
+          slots[index] = { owner: step.owner, operation: step.operation, generation: step.generation, admittedBytes: step.bytes, remainingBytes: step.bytes, closing: false, cancelled: false };
+          retainedBytes = nextBytes;
+          occupied += 1;
+          output.push(`admit:accepted:${step.owner}`);
+        }
+      } else if (step.action === "take" || step.action === "cancel") {
+        toolJobFixedOperationFixtureAssertKeys(step, ["action", "operation", "generation"], `${testCase.id}.${step.action}`);
+        toolJobFixedOperationFixtureAssertInteger(step.operation, 0, Number.MAX_SAFE_INTEGER, `${testCase.id}.operation`);
+        toolJobFixedOperationFixtureAssertInteger(step.generation, 0, Number.MAX_SAFE_INTEGER, `${testCase.id}.generation`);
+        const index = toolJobFixedOperationFixtureIndex(step.operation, step.generation, testCase.capacity);
+        const owner = slots[index];
+        const exact = owner?.operation === step.operation && owner.generation === step.generation;
+        if (step.action === "take") {
+          if (!exact || owner!.closing) output.push("take:none");
+          else {
+            slots[index] = undefined;
+            retainedBytes -= owner!.admittedBytes;
+            occupied -= 1;
+            output.push(`take:${owner!.owner}`);
+          }
+        } else {
+          if (exact) {
+            owner!.cancelled = true;
+            owner!.closing = true;
+          }
+          output.push(`cancel:${exact ? "true" : "false"}`);
+        }
+      } else if (step.action === "cancelStaleStep") {
+        toolJobFixedOperationFixtureAssertKeys(step, ["action", "operation", "liveGeneration"], `${testCase.id}.cancelStaleStep`);
+        toolJobFixedOperationFixtureAssertInteger(step.operation, 0, Number.MAX_SAFE_INTEGER, `${testCase.id}.operation`);
+        toolJobFixedOperationFixtureAssertInteger(step.liveGeneration, 0, Number.MAX_SAFE_INTEGER, `${testCase.id}.liveGeneration`);
+        const owner = slots[closeCursor];
+        closeCursor = (closeCursor + 1) % testCase.capacity;
+        const stale = owner?.operation === step.operation && owner.generation !== step.liveGeneration;
+        if (stale) {
+          owner!.cancelled = true;
+          owner!.closing = true;
+        }
+        output.push(`stale:${stale ? "true" : "false"}`);
+      } else if (step.action === "close") {
+        toolJobFixedOperationFixtureAssertKeys(step, ["action", "maximumItems", "maximumBytes"], `${testCase.id}.close`);
+        toolJobFixedOperationFixtureAssertInteger(step.maximumItems, 0, 1, `${testCase.id}.maximumItems`);
+        toolJobFixedOperationFixtureAssertInteger(step.maximumBytes, 0, 1, `${testCase.id}.closeMaximumBytes`);
+        if (step.maximumItems === 0) {
+          output.push("close:blocked");
+          continue;
+        }
+        const index = closeCursor;
+        closeCursor = (closeCursor + 1) % testCase.capacity;
+        const owner = slots[index];
+        if (!owner) output.push(occupied === 0 ? "close:complete" : "close:pending");
+        else if (!owner.closing || step.maximumBytes === 0) output.push(owner.closing ? "close:blocked" : "close:pending");
+        else {
+          if (owner.remainingBytes > 0) owner.remainingBytes -= 1;
+          if (owner.remainingBytes === 0) {
+            slots[index] = undefined;
+            retainedBytes -= owner.admittedBytes;
+            occupied -= 1;
+          }
+          output.push(occupied === 0 ? "close:complete" : "close:pending");
+        }
+      } else if (step.action === "inspect") {
+        toolJobFixedOperationFixtureAssertKeys(step, ["action"], `${testCase.id}.inspect`);
+        output.push(`state:${occupied}:${retainedBytes}:${slots.reduce((sum, owner) => sum + (owner?.remainingBytes ?? 0), 0)}`);
+      } else {
+        throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] unsupported ${testCase.id} action.`);
+      }
+    }
+    if (output.join("\0") !== testCase.expected.join("\0")) throw new Error(`[verify interactivity tool-jobs fixed-operation-fixture] ${testCase.id} output differs from the schema-first law.`);
+    return { id: testCase.id, output };
+  });
+  return { schema: fixture.schema, results };
+}
+
+function toolJobFixedOperationRustFixtureSource(root: string): string {
+  toolJobFixedOperationFixtureRun(root);
+  const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-law.json")) as FixedOperationFixture;
+  const lines = [
+    "// 🧪️ Generated from fixed-operation-registry-law.json by the root verifier.",
+    "#[test]",
+    "fn language_neutral_fixed_operation_registry_laws_execute_production_registry() {",
+  ];
+  let identity = 100;
+  for (const testCase of fixture.cases) {
+    lines.push("    {", `        let mut registry = FixedOperationRegistry::<Owner, ${testCase.capacity}>::new(${testCase.maximumBytes});`, "        let mut output = Vec::new();");
+    for (const step of testCase.steps) {
+      if (step.action === "admit") {
+        lines.push(`        fixture_admit(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}), ${step.bytes}, ${identity}, ${JSON.stringify(step.owner)});`);
+        identity += 1;
+      } else if (step.action === "take") {
+        lines.push(`        fixture_take(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}));`);
+      } else if (step.action === "cancel") {
+        lines.push(`        fixture_cancel(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.generation}));`);
+      } else if (step.action === "cancelStaleStep") {
+        lines.push(`        fixture_cancel_stale(&mut registry, &mut output, OperationId(${step.operation}), Generation(${step.liveGeneration}));`);
+      } else if (step.action === "close") {
+        lines.push(`        fixture_close(&mut registry, &mut output, ${step.maximumItems}, ${step.maximumBytes});`);
+      } else if (step.action === "inspect") {
+        lines.push("        fixture_inspect(&registry, &mut output);");
+      }
+    }
+    lines.push(`        fixture_assert(${JSON.stringify(testCase.id)}, &mut registry, output, &[${testCase.expected.map((entry) => JSON.stringify(entry)).join(", ")}]);`, "    }");
+  }
+  lines.push("}", "");
+  return lines.join("\n");
+}
+
+function toolJobDrawGestureOperationOwnerExact(drawEditor: string, drawConfig: string, drawConfigProto: string, frameworkPlugin: string): boolean {
+  const persisted = `${drawConfig}\n${drawConfigProto}`;
+  const forbiddenPersisted = [
+    /gesture_checkpoint_json/,
+    /SetGestureCheckpoint/,
+    /gesture_(?:operation|generation|session|checkpoint)/,
+    /(?:Config|Draft|Snapshot)[\s\S]{0,400}?(?:gesture|pointer)[_A-Za-z0-9]*(?:session|checkpoint)/i,
+  ];
+  const requiredOwner = [
+    "struct DrawGestureOperationOwner",
+    "FixedOperationRegistry<DrawGestureOperationOwner, 64>",
+    "impl semio_framework_job::FixedOperationOwner for DrawGestureOperationOwner",
+    "struct DrawInstanceOperationOwner",
+    "struct DrawGestureOperationJob",
+    "type Job = DrawGestureOperationJob",
+    "type Owner = semio_framework_plugin::EditorApp<DrawPlayApp>",
+    "fn build_instance_operation_owner()",
+    "DrawInstanceOperationOwner::new()",
+    "registry.register(DrawGestureOperationJobFactory::new(&controller))",
+    "instance_owner: request.instance_operation_owner",
+    "fn preview_projection(&mut self, canonical_base_revision: [u8; 32], active_utility: &str)",
+    "async fn render_with_instance_operation_owner(",
+    "owner.preview_projection(operation.canonical_base_revision, &cfg.snapshot.active_utility_id)",
+    "DrawGesturePreview",
+    "DRAW_GESTURE_PREVIEW_POINT_CAPACITY",
+    "if observed_revision != base_revision",
+    "DrawRetainedCommandDecoder",
+    "decoder.feed(*byte)",
+    "UiFixedList<TracePointerWork, TRACE_POINTER_WORK_CAPACITY>",
+    "struct DrawDraftQuery",
+    "query.advance(snapshot)",
+    "TracePointerJob::new_marquee",
+    "DrawQueryPublication",
+    "query.publication_step()",
+    "interaction_select_effect_from_targets",
+    "session.trace_pointer",
+    "session.point_query",
+    "session.draft_query",
+    "DrawCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle",
+    "if DRAW_GESTURE_TOOL_IDS.contains(&command.command_id())",
+    "Draw gesture commands are reachable only through their exact retained factory owner",
+    "if session.gesture.matches(\"idle\") && session.trace_pointer.is_none()",
+    "base_revision",
+    "fn cancel(&mut self)",
+    "fn terminal_is_empty(&self) -> bool",
+  ];
+  const frameworkOwner = [
+    "fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner>",
+    "instance_operation_owner: ArtifactInstanceOperationOwnerHandle",
+    "A::render_with_instance_operation_owner(&self.instance_operation_owner",
+    "MountedWorkerJobSession::try_new",
+  ];
+  return (
+    forbiddenPersisted.every((pattern) => !pattern.test(persisted)) &&
+    requiredOwner.every((anchor) => drawEditor.includes(anchor)) &&
+    frameworkOwner.every((anchor) => frameworkPlugin.includes(anchor)) &&
+    !drawEditor.includes("static DRAW_SESSIONS") &&
+    !drawEditor.includes("static ACTIVE_DRAW_SESSIONS") &&
+    !drawEditor.includes("checkpoint_from_config") &&
+    !drawEditor.includes("raw_bytes: Vec<u8>") &&
+    !drawEditor.includes("serde_json::from_slice") &&
+    !drawEditor.includes("command.dispatch(&doc") &&
+    !drawEditor.includes("owner.session.clone()") &&
+    !drawEditor.includes("flatten_draw_layers(&doc.layers)") &&
+    !drawEditor.includes("fn resolve_point_pick") &&
+    !drawEditor.includes("fn marquee_layer_hits") &&
+    !drawEditor.includes("fn commit_draft(") &&
+    !drawEditor.includes("Vec<TracePointerWork>") &&
+    !drawEditor.includes("draw_gesture_preview_payload") &&
+    !drawEditor.includes("interaction_targets_json") &&
+    !drawEditor.includes("TRACE_POINTER_JOBS") &&
+    !drawEditor.includes("ACTIVE_TRACE_POINTER_JOBS")
+  );
+}
+
+function toolJobDrawGestureOperationOwnerSelfTests(): number {
+  const editor = `
+struct DrawGestureOperationOwner { base_revision: String }
+struct DrawInstanceOperationOwner { operations: FixedOperationRegistry<DrawGestureOperationOwner, 64> }
+struct DrawGestureOperationJob;
+impl ToolJobFactory for DrawGestureOperationJobFactory { type Job = DrawGestureOperationJob; }
+impl ArtifactOwnedToolJobFactory for DrawGestureOperationJobFactory { type Owner = semio_framework_plugin::EditorApp<DrawPlayApp>; }
+impl semio_framework_job::FixedOperationOwner for DrawGestureOperationOwner {
+  fn cancel(&mut self) {}
+  fn terminal_is_empty(&self) -> bool { true }
+}
+impl DrawInstanceOperationOwner {
+  fn new() -> Self { todo!() }
+  fn preview_projection(&mut self, canonical_base_revision: [u8; 32], active_utility: &str) { owner.preview_projection(operation.canonical_base_revision, &cfg.snapshot.active_utility_id); }
+  fn dispatch(&mut self) {
+    if observed_revision != base_revision {}
+    let mut decoder = DrawRetainedCommandDecoder; decoder.feed(*byte);
+    let work: UiFixedList<TracePointerWork, TRACE_POINTER_WORK_CAPACITY>;
+    struct DrawDraftQuery; query.advance(snapshot); TracePointerJob::new_marquee();
+    enum DrawQueryPublication {} query.publication_step(); interaction_select_effect_from_targets();
+    session.trace_pointer; session.point_query; session.draft_query;
+    DrawCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle;
+    if DRAW_GESTURE_TOOL_IDS.contains(&command.command_id()) { "Draw gesture commands are reachable only through their exact retained factory owner"; }
+    if session.gesture.matches("idle") && session.trace_pointer.is_none() {}
+  }
+}
+impl ArtifactEditor for DrawPlayApp {
+  fn build_instance_operation_owner() { DrawInstanceOperationOwner::new(); }
+  fn register_tool_job_factories(registry: &mut Registry) { registry.register(DrawGestureOperationJobFactory::new(&controller)); }
+  fn payload(request: Request) { instance_owner: request.instance_operation_owner; }
+  async fn render_with_instance_operation_owner() { DrawGesturePreview; DRAW_GESTURE_PREVIEW_POINT_CAPACITY; }
+}
+`;
+  const framework = `
+trait ArtifactApp { fn build_instance_operation_owner() -> Box<dyn ArtifactInstanceOperationOwner>; }
+struct VcsArtifactApp { instance_operation_owner: ArtifactInstanceOperationOwnerHandle }
+struct Request { instance_operation_owner: request.instance_operation_owner }
+fn render() { A::render_with_instance_operation_owner(&self.instance_operation_owner); }
+fn mount() { MountedWorkerJobSession::try_new(); }
+`;
+  const config = "struct DrawConfig { locale: String } enum DrawConfigMutation { SetLocale(String) }";
+  const proto = "message DrawConfig { string locale = 1; }";
+  if (!toolJobDrawGestureOperationOwnerExact(editor, config, proto, framework)) throw new Error("[verify interactivity tool-jobs] valid Draw transient operation owner was rejected.");
+  const hostile = [
+    [editor.replace("struct DrawGestureOperationOwner", "struct DrawGestureOwner"), config, proto, framework],
+    [editor.replace("type Owner = semio_framework_plugin::EditorApp<DrawPlayApp>", "type Owner = WrongApp"), config, proto, framework],
+    [editor.replace("if observed_revision != base_revision", "if active != key"), config, proto, framework],
+    [editor.replace("owner.preview_projection(operation.canonical_base_revision, &cfg.snapshot.active_utility_id)", "DrawGesturePreview::default()"), config, proto, framework],
+    [editor, `${config} struct DrawConfigCheckpoint { gesture_checkpoint_json: String }`, proto, framework],
+    [editor, `${config} enum DrawConfigMutation { SetGestureCheckpoint { json: String } }`, proto, framework],
+    [editor, config, `${proto} message DrawDraft { string gesture_session = 2; }`, framework],
+    [`${editor}\nstatic DRAW_SESSIONS: OnceLock<Mutex<Map>> = OnceLock::new();`, config, proto, framework],
+    [`${editor}\nfn checkpoint_from_config() {}`, config, proto, framework],
+    [`${editor}\nfn decode() { serde_json::from_slice(bytes); }`, config, proto, framework],
+    [`${editor}\nfn dispatch() { command.dispatch(&doc); }`, config, proto, framework],
+    [`${editor}\nfn decode() { let raw_bytes: Vec<u8> = Vec::new(); }`, config, proto, framework],
+    [`${editor}\nfn pick() { flatten_draw_layers(&doc.layers); }`, config, proto, framework],
+    [`${editor}\nfn interaction_targets_json() {}`, config, proto, framework],
+    [editor.replace("if DRAW_GESTURE_TOOL_IDS.contains(&command.command_id())", "if false"), config, proto, framework],
+    [`${editor}\nstatic TRACE_POINTER_JOBS: OnceLock<Map> = OnceLock::new();`, config, proto, framework],
+    [editor, config, proto, framework.replace("A::render_with_instance_operation_owner(&self.instance_operation_owner", "A::render")],
+  ] as const;
+  for (const [hostileEditor, hostileConfig, hostileProto, hostileFramework] of hostile) {
+    if (toolJobDrawGestureOperationOwnerExact(hostileEditor, hostileConfig, hostileProto, hostileFramework)) throw new Error("[verify interactivity tool-jobs] Draw persisted-operation hostile fixture was falsely accepted.");
+  }
+  return hostile.length + 1;
 }
 
 // 👁️ Exact mounted FEM 2D/3D fixed-page visual construction and prepared publication contract.
@@ -6861,7 +7602,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
     seenRows.add(key);
   }
   const intentionalWriterDuplicates = duplicateRows.filter((row) => row.file.includes("✏️s/🔌️plugins/✒️writer/") && row.id === "setEditorSetting");
-  const productionFiles = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionSource(policyReadFileSafe(root, file))]));
+  const productionFiles = new Map(policyAllRustFiles(root).filter((file) => file.includes("✏️s/🔌️plugins/") && !file.includes("/🧪️tests/")).map((file) => [file, toolJobProductionProtocolSource(policyReadFileSafe(root, file))]));
   const staticRows = toolJobStaticRows(productionFiles);
   const dispositions = toolJobDispositions(productionFiles);
   const batchOnlyRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite").length;
@@ -6930,11 +7671,28 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const rasterEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const rasterWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs");
-  const drawEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const drawEditor = [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🦀️component.rs",
+  ]
+    .map((file) => toolJobProductionSource(policyReadFileSafe(root, file)))
+    .join("\n");
+  const drawConfig = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs");
+  const drawConfigProto = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️component.proto");
   const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
   const proofs = toolJobProofs(productionFiles);
   const proofIdentities = new Set(proofs.map(toolJobProofIdentity));
-  const selfTests = toolJobCoverageSelfTests();
+  let fixedOperationFixture: FixedOperationFixtureOutput | undefined;
+  let fixedOperationRustFixtureFresh = false;
+  try {
+    fixedOperationFixture = toolJobFixedOperationFixtureRun(root);
+    fixedOperationRustFixtureFresh =
+      policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-cases.rs") === toolJobFixedOperationRustFixtureSource(root);
+  } catch {
+    fixedOperationFixture = undefined;
+  }
+  const selfTests = toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawGestureOperationOwnerSelfTests() + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
   const factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[] = [];
   for (const [file, source] of allRustFiles) {
     const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework::)?ToolJobFactory\s+for\s+([^\s<{]+(?:<[^>{]+>)?)\s*\{/g;
@@ -6946,14 +7704,12 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
       implementation.lastIndex = block.end;
     }
   }
-  const globalPayloadStores: { file: string; line: number; text: string }[] = [];
-  for (const [file, source] of productionFiles) {
-    for (const pattern of [/thread_local!\s*\{/g, /(?:OnceLock|LazyLock)\s*<\s*(?:std::sync::)?Mutex\s*</g]) {
-      let match: RegExpExecArray | null;
-      while ((match = pattern.exec(source))) globalPayloadStores.push({ file, line: source.slice(0, match.index).split("\n").length, text: match[0] });
-    }
-  }
+  const globalPayloadStores = toolJobGlobalPayloadStoreInventory(productionFiles);
   const failures: string[] = [];
+  if (!toolJobFixedOperationRegistryExact(jobRuntime)) failures.push("fixed operation scheduler authority lacks exact operation/generation admission, owner handback, bounded close, or hostile laws");
+  if (!fixedOperationFixture) failures.push("fixed operation scheduler authority lacks its schema-first empty/single/max/max+1/collision/cancel/stale/ABA/interrupted-close executable fixture");
+  if (!fixedOperationRustFixtureFresh) failures.push("production FixedOperationRegistry does not execute the exact generated language-neutral law stream");
+  if (!toolJobDrawGestureOperationOwnerExact(drawEditor, drawConfig, drawConfigProto, plugin)) failures.push("Draw gesture operation state remains process-global or persisted through Config/Draft/document lanes instead of one instance-retained worker owner");
   if (staticRows.length < commandRows.length) failures.push(`literal registration census regressed below macro census (${staticRows.length} < ${commandRows.length})`);
   if (!plugin.includes("pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];")) failures.push("app_commands! does not generate the exact ToolCommandCatalog row list");
   if ((plugin.match(/const TOOL_JOB_IDS: &'static \[&'static str\] = Self::TOOL_JOB_IDS;/g) ?? []).length !== 6) failures.push("app_commands! does not publish every generated row list through both typed catalog traits");
@@ -7010,15 +7766,33 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (proofIdentities.size !== proofs.length) failures.push("bounded reducer proof identities are not unique");
   if (!toolJobRuntimeProofQualified(plugin)) failures.push("runtime activation or public DFF admission drops the compiler-derived owner witness or exact controller/owner/factory/tool/schema proof identity");
   if (proofs.some((proof, index) => proofs.slice(index + 1).some((other) => other.controllerId === proof.controllerId && other.toolId === proof.toolId && other.values[0] !== proof.values[0]))) failures.push("same-controller/tool qualified proofs disagree on their public raw-wire limit");
-  const innerStart = plugin.indexOf("async fn dispatch_typed_command_inner");
+  const innerStart = plugin.lastIndexOf("async fn dispatch_typed_command_inner");
   const innerOpen = innerStart < 0 ? -1 : plugin.indexOf("{", innerStart);
   const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
   if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
-  if (!inner?.body.includes("WorkerJobSession::new") || inner.body.includes("run_on_worker_async") || inner.body.includes("run_to_completion") || inner.body.includes("thread_local!")) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
-  const jobStart = plugin.indexOf("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for BoundedFirstStepCommandJob<A>");
+  if (
+    !inner?.body.includes("MountedWorkerJobSession::try_new") ||
+    !inner.body.includes("dispatch_wire_retained_with_spec") ||
+    !inner.body.includes("active.drive_worker_step(&pool)") ||
+    (inner.body.match(/MountedWorkerJobSession::try_new/g) ?? []).length !== 1 ||
+    inner.body.includes("run_on_worker_async") ||
+    inner.body.includes("run_to_completion") ||
+    inner.body.includes("thread_local!")
+  ) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
+  const jobStart = plugin.indexOf("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
   const jobOpen = jobStart < 0 ? -1 : plugin.indexOf("{", jobStart);
   const job = jobOpen < 0 ? undefined : toolJobRustBlock(plugin, jobOpen);
-  if (!job || !job.body.includes("self.contract.max_decoded_items") || !job.body.includes("self.contract.max_work_units_per_step") || !job.body.includes("self.contract.max_step_micros") || !job.body.includes("self.contract.max_output_bytes") || !job.body.includes("bounded_command_output_bytes")) failures.push("bounded command worker does not enforce decoded, work, step-time, and output contract limits");
+  if (
+    !job ||
+    !job.body.includes("self.decoded_items > self.contract.max_decoded_items") ||
+    !job.body.includes("self.contract.max_work_units_per_step == 0") ||
+    !job.body.includes("self.contract.max_output_bytes") ||
+    !inner?.body.includes("fuel_per_step: admission.proof.contract().max_work_units_per_step") ||
+    !inner.body.includes("step_budget_ms: u64::from(admission.proof.contract().max_step_micros) / 1_000") ||
+    !inner.body.includes("ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)") ||
+    !plugin.includes("TypedOperationResultPageWriter") ||
+    !plugin.includes("one typed-operation result exceeds its fixed incremental encoder authority")
+  ) failures.push("bounded command worker does not enforce decoded, work, step-time, and output contract limits");
   const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
   const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
   const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);
@@ -7027,7 +7801,12 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (factoryContracts.some((factory) => factory.status === "missing")) failures.push(`${factoryContracts.filter((factory) => factory.status === "missing").length} ToolJobFactory implementation(s) lack explicit execution contracts`);
   if (globalPayloadStores.length > 0) failures.push(`${globalPayloadStores.length} process-global payload store candidate(s) require operation-owned state or an explicit static exemption`);
   if (/"typed-command"\.to_string\(\)/.test(inner?.body ?? "")) failures.push("typed-command dispatch fallback remains");
-  if (!inner?.body.includes("validate_commit(&operation") || inner.body.indexOf("validate_commit(&operation") > inner.body.indexOf("self.presence_store.apply")) failures.push("commit freshness is not validated immediately before result exposure");
+  const publisherStart = plugin.lastIndexOf("async fn publish_mounted_typed_operation_unit");
+  const publisherOpen = publisherStart < 0 ? -1 : plugin.indexOf("{", publisherStart);
+  const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(plugin, publisherOpen);
+  const freshness = publisher?.body.indexOf("validate_commit(&mounted.operation") ?? -1;
+  const firstApply = publisher?.body.indexOf("self.presence_store.apply_one") ?? -1;
+  if (!publisher || freshness < 0 || firstApply < 0 || freshness > firstApply || !publisher.body.includes("mounted.canonical_revision != live_revision")) failures.push("commit freshness is not validated immediately before result exposure");
   const remainingCommands = staticRows
     .filter((row) => {
       const disposition = dispositions.get(`${row.file}\0${row.id}`);
@@ -7035,6 +7814,15 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
       return !["BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"].includes(disposition ?? "") && !(fullToolOperationBounded && disposition === "Migrated" && proof && proofIdentities.has(toolJobProofIdentity(proof)));
     })
     .map((row) => ({ ...row, reason: dispositions.get(`${row.file}\0${row.id}`) === "Migrated" ? "owner-local handler proof exists but full prepare/job/commit operation is not bounded" : "no explicit factory, bounded-first-step proof, or fail-closed disposition" }));
+  const remainingCommandKeys = new Set(remainingCommands.map((row) => `${row.file}\0${row.id}`));
+  const acceptedCommandRows = [
+    ...staticRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Migrated" && !remainingCommandKeys.has(`${row.file}\0${row.id}`)),
+    ...(puzzleReservedExact ? TOOL_JOB_PLUGIN_RESERVED_IDS.map((id) => ({
+      file: "✏️s/🔌️plugins/🧩️puzzle/🗀️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      id,
+      source: "literal" as const,
+    })) : []),
+  ];
   const frameworkReservedRoutes = [
     ...(frameworkReservedExact ? [] : TOOL_JOB_FRAMEWORK_RESERVED_IDS),
     ...(puzzleReservedExact ? [] : TOOL_JOB_PLUGIN_RESERVED_IDS),
@@ -7047,7 +7835,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!actionBus.includes("duplicate_key_inside_one_factory_is_rejected_atomically")) failures.push("factory key ownership lacks an atomic duplicate/bijection test");
   if (!plugin.includes("generated_tool_job_catalog_is_an_exact_bijection_with_rows")) failures.push("generated command rows lack an exact catalog bijection test");
   if (!plugin.includes("activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations")) failures.push("activation lacks an exact migrated-declaration/factory-key bijection test");
-  if (!plugin.includes("copied_app_type_cannot_inherit_same_controller_schema_and_id_proof") || !plugin.includes("BoundedFirstStepCommandJobFactory::<CopyDrawApp>::from_proof")) failures.push("activation lacks an executable copied-owner compiler-witness fail-closed proof");
+  if (!plugin.includes("copied_app_type_cannot_inherit_same_controller_schema_and_id_proof") || !plugin.includes("TypedCommandFullOperationJobFactory::<CopyDrawApp>::from_proof")) failures.push("activation lacks an executable copied-owner compiler-witness fail-closed proof");
   if (!plugin.includes("unproved_command_fails_before_an_overrun_reducer_can_start")) failures.push("unproved typed operations lack executable fail-closure before reducer watchdog work starts");
   return {
     macroHostFiles: macroFiles.size,
@@ -7071,6 +7859,10 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
     reservedImporterOwners: reservedImporters.pending,
     globalPayloadStores,
     literalRegistrations: staticRows.filter((row) => row.source === "literal").length,
+    acceptedCommandRows,
+    acceptedReservedRoutes: [
+      ...(frameworkReservedExact ? TOOL_JOB_FRAMEWORK_RESERVED_IDS : []),
+    ],
     remainingCommands,
     selfTests,
     failures,
@@ -7095,6 +7887,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "interactivity" && segments[1] === "tool-jobs") {
       this.runToolJobCoverage(segments.slice(2));
+      return;
+    }
+    if (segments[0] === "interactivity" && segments[1] === "apps") {
+      await this.runInteractivityApps(segments.slice(2));
       return;
     }
     if (segments[0] === "interactivity" && segments[1] === "p1q-b1-b6") {
@@ -7130,7 +7926,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "interactivity") {
-      this.runInteractivityAudit();
+      await this.runInteractivityAudit();
       return;
     }
     if (segments[0] === "dependencies") {
@@ -7209,7 +8005,12 @@ export class VerifyScript extends Script {
    * direct thread construction/scoped threads/Rayon/Tokio runtime construction. WARN in Phase 0 (report,
    * exit 0); flip [[INTERACTIVITY_AUDIT_SEVERITY]] to `"deny"` at Phase 3 packet P3c.
    */
-  private runInteractivityAudit(): void {
+  private async runInteractivityAudit(): Promise<void> {
+    const apps = interactivityAllAppDiscovery(this.root);
+    const appSelfTests = await interactivityAllAppDiscoverySelfTests();
+    console.log(`[verify interactivity apps] ${apps.descriptors.length} descriptor(s), ${apps.appCount} app declaration(s), ${apps.launchOnlyProducts.length} launch-only product surface(s), ${apps.surfaceCount} total surface(s), ${apps.actionCount} action row(s), ${apps.launchCoveredAppCount} launch-covered app context(s), ${apps.launchMissingAppCount} missing launch context(s), ${apps.launches.length} dev launch surface(s), ${appSelfTests} hostile/oracle self-test(s).`);
+    for (const failure of apps.failures.slice(0, 25)) console.log(`  ${failure}`);
+    if (apps.failures.length > 25) console.log(`  ${apps.failures.length - 25} additional all-app discovery failure(s) omitted.`);
     const report = interactivityAuditRun(this.root);
     console.log(`[verify interactivity] severity=${INTERACTIVITY_AUDIT_SEVERITY} scope: ${INTERACTIVITY_AUDIT_UI_ROOTS.length} UI root(s), ${INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.length} runtime-sanctioned root(s) exempt from the thread-pool rule.`);
     console.log(`[verify interactivity] ${report.findings.length} finding(s) total:`);
@@ -7241,9 +8042,33 @@ export class VerifyScript extends Script {
       console.log("[verify interactivity] WARN mode — reporting only, exit 0.");
       return;
     }
-    const failures = report.blockingBridgeUnlisted.length + report.staleAllowlistEntries.length + otherCategoryFindings;
-    if (failures > 0) throw new Error(`[verify interactivity] DENY mode — ${failures} failure(s) (unlisted block_on/run_blocking, stale allowlist entries, or any sync-fs/net/clipboard/process/db/thread-pool finding).`);
+    const failures = apps.failures.length + report.blockingBridgeUnlisted.length + report.staleAllowlistEntries.length + otherCategoryFindings;
+    if (failures > 0) throw new Error(`[verify interactivity] DENY mode — ${failures} failure(s) (all-app discovery/launch registration, unlisted blocking bridges, stale allowlist entries, or sync-fs/net/clipboard/process/db/thread-pool findings).`);
     console.log("[verify interactivity] DENY mode — clean.");
+  }
+
+  /** 🧭️Prints the metadata-derived all-app ledger and enforces its bounded discovery contract. */
+  private async runInteractivityApps(args: string[]): Promise<void> {
+    const report = interactivityAllAppDiscovery(this.root);
+    const selfTests = await interactivityAllAppDiscoverySelfTests();
+    if (args.includes("--json")) console.log(JSON.stringify({ ...report, selfTests }, null, 2));
+    else console.log(`[verify interactivity apps] descriptors=${report.descriptors.length} extensions=${report.descriptors.filter((descriptor) => descriptor.kind === "extension").length} apps=${report.appCount} launchOnlyProducts=${report.launchOnlyProducts.length} surfaces=${report.surfaceCount} actions=${report.actionCount} migratedActions=${report.migratedActionCount} missingActions=${report.missingActionCount} launchCoveredApps=${report.launchCoveredAppCount} launchMissingApps=${report.launchMissingAppCount} launches=${report.launches.length} failures=${report.failures.length} selfTests=${selfTests}`);
+    for (const failure of report.failures.slice(0, 25)) console.error(`[verify interactivity apps] ${failure}`);
+    if (report.failures.length > 25) console.error(`[verify interactivity apps] ${report.failures.length - 25} additional discovery or launch-registration failure(s) omitted.`);
+    if (report.failures.length > 0) throw new Error(`[verify interactivity apps] ${report.failures.length} discovery or launch-registration failure(s).`);
+    if (args.includes("--actions")) {
+      const toolJobs = toolJobCoverageRun(this.root);
+      const dispositionFailures = interactivityAllAppActionDispositionFailures(report.descriptors);
+      const productionFailures = interactivityAllAppActionProductionFailures(report.descriptors, toolJobs.acceptedCommandRows, toolJobs.acceptedReservedRoutes);
+      const actionFailures = [...dispositionFailures, ...productionFailures];
+      console.error(`[verify interactivity apps actions] dispositionFailures=${dispositionFailures.length} productionJoinFailures=${productionFailures.length} acceptedCommands=${toolJobs.acceptedCommandRows.length} acceptedSharedRoutes=${toolJobs.acceptedReservedRoutes.length}`);
+      for (const failure of dispositionFailures.slice(0, 12)) console.error(`[verify interactivity apps actions] ${failure}`);
+      for (const failure of productionFailures.slice(0, 12)) console.error(`[verify interactivity apps actions] ${failure}`);
+      const printedFailures = Math.min(dispositionFailures.length, 12) + Math.min(productionFailures.length, 12);
+      if (actionFailures.length > printedFailures) console.error(`[verify interactivity apps actions] ${actionFailures.length - printedFailures} additional action failure(s) omitted from console output.`);
+      if (actionFailures.length > 0) throw new Error(`[verify interactivity apps actions] ${actionFailures.length} descriptor action disposition or production-reachability join failure(s).`);
+      console.log(`[verify interactivity apps actions] ${report.actionCount} descriptor action row(s) joined to ${toolJobs.acceptedCommandRows.length} accepted production command row(s) and ${toolJobs.acceptedReservedRoutes.length} shared reserved route(s).`);
+    }
   }
 
   /** 🗄️ Runs the isolated P1q B1–B6 retained DB I/O source and hostile-mutation gate. */
@@ -7376,6 +8201,14 @@ export class VerifyScript extends Script {
 
   /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
   private runToolJobCoverage(args: string[]): void {
+    if (args.includes("--fixed-operation-rust-fixture-source-only")) {
+      process.stdout.write(toolJobFixedOperationRustFixtureSource(this.root));
+      return;
+    }
+    if (args.includes("--fixed-operation-fixture-only")) {
+      console.log(JSON.stringify(toolJobFixedOperationFixtureRun(this.root)));
+      return;
+    }
     if (args.includes("--p2c-only")) {
       const actor = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs");
       const shard = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
@@ -7438,7 +8271,11 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--self-test")) {
-      console.log(`[verify interactivity tool-jobs] self-tests=${toolJobCoverageSelfTests()} clean.`);
+      const jobRuntime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
+      const fixture = toolJobFixedOperationFixtureRun(this.root);
+      const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/fixed-operation-registry-cases.rs");
+      if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs] generated fixed-operation Rust fixture is stale.");
+      console.log(`[verify interactivity tool-jobs] self-tests=${toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawGestureOperationOwnerSelfTests() + fixture.results.length + 1} clean.`);
       return;
     }
     const formatIndex = args.indexOf("--format");
@@ -7865,6 +8702,375 @@ export class VerifyScript extends Script {
  */
 const INTERACTIVITY_AUDIT_UI_ROOTS = ["🧰️framework/🔨️modules/🖱️ui/", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/", "🧰️framework/🛍️products/💻️os/🖥️host/", "✏️s/🔌️plugins/"] as const;
 
+//#region 🧭️AllAppDiscovery
+const INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY = 256;
+const INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY = 64;
+const INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY = 512;
+const INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY = 512;
+const INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME = "🔣️descriptor.json";
+const INTERACTIVITY_ALL_APP_LAUNCH_FILE = ".vscode/launch.json";
+const INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE = ".vscode/🧩️launch.seed.jsonc";
+const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
+const INTERACTIVITY_ALL_APP_REQUIRED_GATES = [
+  { name: "⚖️gate⚡️interactivity", command: "bun ./📜️script.ts verify interactivity" },
+  { name: "⚖️gate⚡️interactivity🎯️tool-jobs", command: "bun ./📜️script.ts verify interactivity tool-jobs" },
+  { name: "⚖️gate⚡️interactivity🧭️apps", command: "bun ./📜️script.ts verify interactivity apps" },
+  { name: "⚖️gate⚡️interactivity🧭️apps🎛️actions", command: "bun ./📜️script.ts verify interactivity apps --actions" },
+  { name: "⚖️gate📦️dependencies", command: "bun ./📜️script.ts verify dependencies" },
+  { name: "⚖️gate📦️dependencies0️⃣", command: "bun ./📜️script.ts verify dependencies literal-external" },
+] as const;
+
+type InteractivityAllAppAction = { appId: string; windowId: string; actionId: string; disposition?: string };
+type InteractivityAllAppDescriptor = { file: string; kind: "app" | "extension"; pluginId: string; parentPluginId?: string; appIds: string[]; actions: InteractivityAllAppAction[] };
+type InteractivityAllAppLaunch = { name: string; command: string; cwd: string; env: Readonly<Record<string, string>> };
+type InteractivityAllAppPlayground = { variant: string; pluginId: string; appId?: string };
+type InteractivityAllAppDiscovery = {
+  descriptors: InteractivityAllAppDescriptor[];
+  appCount: number;
+  surfaceCount: number;
+  actionCount: number;
+  migratedActionCount: number;
+  missingActionCount: number;
+  launchCoveredAppCount: number;
+  launchMissingAppCount: number;
+  duplicateAppIds: { id: string; files: string[] }[];
+  launches: InteractivityAllAppLaunch[];
+  launchOnlyProducts: InteractivityAllAppLaunch[];
+  failures: string[];
+};
+
+/** 🌐️Returns whether a descriptor label exposes equivalent English and German text without a default-language field. */
+function interactivityAllAppLocalizedLabelExact(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const label = value as Record<string, unknown>;
+  if (Object.hasOwn(label, "default")) return false;
+  const localized = [label.native, label.reuse].filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object");
+  return localized.length > 0 && localized.every((entry) => typeof entry.en === "string" && entry.en.length > 0 && typeof entry.de === "string" && entry.de.length > 0 && !Object.hasOwn(entry, "default"));
+}
+
+/** 🧩️Parses one schema-first descriptor through an owned primitive-only discovery boundary. */
+function interactivityAllAppDescriptorFromSource(file: string, source: string, extensionSource = ""): { row?: InteractivityAllAppDescriptor; failures: string[] } {
+  const failures: string[] = [];
+  let descriptor: Record<string, unknown>;
+  try {
+    descriptor = JSON.parse(source) as Record<string, unknown>;
+  } catch {
+    return { failures: [`${file}: descriptor is not valid JSON`] };
+  }
+  if (descriptor.descriptorVersion !== 1) failures.push(`${file}: descriptorVersion must be 1`);
+  if (descriptor.role !== "plugin") failures.push(`${file}: role must be plugin`);
+  const manifest = descriptor.manifest && typeof descriptor.manifest === "object" ? descriptor.manifest as Record<string, unknown> : undefined;
+  if (!manifest) return { failures: [...failures, `${file}: manifest is missing`] };
+  const apps = Array.isArray(manifest.apps) ? manifest.apps : undefined;
+  if (!apps) return { failures: [...failures, `${file}: manifest.apps is missing`] };
+  if (file.includes("/🧩️extensions/")) {
+    const pluginId = extensionSource.match(/const\s+EXTENSION_ID\s*:\s*&str\s*=\s*"([^"]+)"/)?.[1] ?? "";
+    const parentPluginId = extensionSource.match(/\.extends\(\s*"([^"]+)"\s*\)/)?.[1] ?? "";
+    if (pluginId === "") failures.push(`${file}: extension source has no owned EXTENSION_ID`);
+    if (parentPluginId === "") failures.push(`${file}: extension source has no parent .extends(...) activation`);
+    if (!extensionSource.includes("ExtensionBundle::new(EXTENSION_ID")) failures.push(`${file}: extension source does not construct its declared EXTENSION_ID`);
+    if (apps.length !== 0) failures.push(`${file}: extension descriptor must delegate app activation to its parent instead of duplicating apps`);
+    return { row: { file, kind: "extension", pluginId, ...(parentPluginId ? { parentPluginId } : {}), appIds: [], actions: [] }, failures };
+  }
+  const pluginId = typeof manifest.pluginId === "string" ? manifest.pluginId.trim() : "";
+  if (pluginId === "" || pluginId === "empty") failures.push(`${file}: pluginId must be a non-placeholder owned identifier`);
+  if (apps.length === 0) failures.push(`${file}: manifest.apps is empty and has no parent activation evidence`);
+  if (apps.length > INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY) failures.push(`${file}: ${apps.length} apps exceed fixed capacity ${INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY}`);
+  const appIds: string[] = [];
+  const actions: InteractivityAllAppAction[] = [];
+  for (const [index, appValue] of apps.slice(0, INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY).entries()) {
+    const app = appValue && typeof appValue === "object" ? appValue as Record<string, unknown> : undefined;
+    if (!app) {
+      failures.push(`${file}: app ${index} is not an object`);
+      continue;
+    }
+    const id = typeof app.id === "string" ? app.id.trim() : "";
+    if (id === "") failures.push(`${file}: app ${index} has no owned id`);
+    else appIds.push(id);
+    if (!interactivityAllAppLocalizedLabelExact(app.label)) failures.push(`${file}: app ${id || index} lacks equivalent en/de labels or declares a default language`);
+    const windows = Array.isArray(app.windowKinds) ? app.windowKinds : [];
+    let actionCount = 0;
+    for (const [windowIndex, windowValue] of windows.entries()) {
+      const window = windowValue && typeof windowValue === "object" ? windowValue as Record<string, unknown> : undefined;
+      if (!window) {
+        failures.push(`${file}: app ${id || index} window ${windowIndex} is not an object`);
+        continue;
+      }
+      const windowId = typeof window.id === "string" ? window.id.trim() : "";
+      const windowActions = Array.isArray(window.actions) ? window.actions : [];
+      actionCount += windowActions.length;
+      for (const [actionIndex, actionValue] of windowActions.slice(0, INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY).entries()) {
+        const action = actionValue && typeof actionValue === "object" ? actionValue as Record<string, unknown> : undefined;
+        if (!action) {
+          failures.push(`${file}: app ${id || index} window ${windowId || windowIndex} action ${actionIndex} is not an object`);
+          continue;
+        }
+        const actionId = typeof action.id === "string" ? action.id.trim() : "";
+        if (actionId === "") failures.push(`${file}: app ${id || index} window ${windowId || windowIndex} action ${actionIndex} has no owned id`);
+        if (!interactivityAllAppLocalizedLabelExact(action.label)) failures.push(`${file}: action ${id || index}/${windowId || windowIndex}/${actionId || actionIndex} lacks equivalent en/de labels or declares a default language`);
+        const semantics = action.semantics && typeof action.semantics === "object" ? action.semantics as Record<string, unknown> : undefined;
+        const execution = semantics?.execution && typeof semantics.execution === "object" ? semantics.execution as Record<string, unknown> : undefined;
+        const disposition = typeof execution?.interactiveJob === "string" ? execution.interactiveJob : undefined;
+        actions.push({ appId: id, windowId, actionId, ...(disposition ? { disposition } : {}) });
+      }
+    }
+    if (actionCount > INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY) failures.push(`${file}: app ${id || index} has ${actionCount} action rows exceeding fixed capacity ${INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY}`);
+  }
+  return { row: { file, kind: "app", pluginId, appIds, actions }, failures };
+}
+
+/** 🎛️Fails every UI-declared action that has not joined the bounded production job migration. */
+function interactivityAllAppActionDispositionFailures(descriptors: InteractivityAllAppDescriptor[]): string[] {
+  return descriptors.flatMap((descriptor) => descriptor.actions
+    .filter((action) => action.disposition !== "migrated")
+    .map((action) => `${descriptor.file}: ${action.appId}/${action.windowId}/${action.actionId} has interactiveJob=${JSON.stringify(action.disposition ?? "missing")}`));
+}
+
+/** 🧷️Joins truthful descriptor dispositions to the exact owner-local production command census. */
+function interactivityAllAppActionProductionFailures(descriptors: InteractivityAllAppDescriptor[], acceptedCommands: readonly ToolJobStaticRow[], acceptedReservedRoutes: readonly string[]): string[] {
+  const acceptedShared = new Set(acceptedReservedRoutes);
+  const acceptedOwned = new Set(acceptedCommands.map((row) => `${row.file.split("/").slice(0, 3).join("/")}\0${row.id}`));
+  return descriptors.flatMap((descriptor) => {
+    const owner = descriptor.file.split("/").slice(0, 3).join("/");
+    return descriptor.actions
+      .filter((action) => action.disposition === "migrated" && !acceptedShared.has(action.actionId) && !acceptedOwned.has(`${owner}\0${action.actionId}`))
+      .map((action) => `${descriptor.file}: ${action.appId}/${action.windowId}/${action.actionId} declares migrated without an accepted owner-local production command or shared reserved route`);
+  });
+}
+
+/** 🎮️Reads the generated one-line playground catalog without executing generated source. */
+function interactivityAllAppPlaygroundsFromSource(source: string): { rows: InteractivityAllAppPlayground[]; failures: string[] } {
+  const rows: InteractivityAllAppPlayground[] = [];
+  const failures: string[] = [];
+  for (const line of source.split("\n")) {
+    if (!line.includes("{ variant:")) continue;
+    const variant = line.match(/\bvariant:\s*"([^"]+)"/)?.[1] ?? "";
+    const pluginId = line.match(/\bpluginId:\s*"([^"]+)"/)?.[1] ?? "";
+    const appId = line.match(/\bapp:\s*"([^"]+)"/)?.[1];
+    if (variant === "" || pluginId === "") failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: malformed generated playground row`);
+    else rows.push({ variant, pluginId, ...(appId ? { appId } : {}) });
+  }
+  if (rows.length === 0) failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: no generated playground rows discovered`);
+  const identities = new Set<string>();
+  for (const row of rows) {
+    if (identities.has(row.variant)) failures.push(`${INTERACTIVITY_ALL_APP_PLAYGROUND_FILE}: duplicate variant ${JSON.stringify(row.variant)}`);
+    identities.add(row.variant);
+  }
+  return { rows, failures };
+}
+
+/** 🧭️Derives generated playground launch identities from the schema-owned launch seed. */
+function interactivityAllAppPlaygroundLaunchNames(playgrounds: readonly InteractivityAllAppPlayground[], seedSource: string): Set<string> {
+  let seed: Record<string, unknown> = {};
+  try {
+    seed = Bun.JSONC.parse(seedSource) as Record<string, unknown>;
+  } catch {
+    return new Set();
+  }
+  const launchers = seed.devLaunchers && typeof seed.devLaunchers === "object" ? seed.devLaunchers as Record<string, unknown> : {};
+  const names = new Set<string>();
+  for (const playground of playgrounds) {
+    const value = launchers[playground.variant];
+    const launcher = value && typeof value === "object" ? value as Record<string, unknown> : undefined;
+    const prefix = typeof launcher?.namePrefix === "string" ? launcher.namePrefix : `🧩️${playground.variant}`;
+    names.add(`🛠️dev${prefix}⚛️react`);
+    names.add(`🛠️dev${prefix}🧊️wgpu🌐️wasm`);
+    names.add(`🛠️dev${prefix}🧊️wgpu🖥️native`);
+  }
+  return names;
+}
+
+/** 🚀️Proves every owner-qualified app context has React, Wasm, and native launch surfaces. */
+function interactivityAllAppLaunchCoverageFailures(descriptors: readonly InteractivityAllAppDescriptor[], playgrounds: readonly InteractivityAllAppPlayground[], seedSource: string, launches: readonly InteractivityAllAppLaunch[]): string[] {
+  let seed: Record<string, unknown>;
+  try {
+    seed = Bun.JSONC.parse(seedSource) as Record<string, unknown>;
+  } catch {
+    return [`${INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE}: invalid JSONC prevents app launch coverage`];
+  }
+  const launchers = seed.devLaunchers && typeof seed.devLaunchers === "object" ? seed.devLaunchers as Record<string, unknown> : {};
+  const byName = new Map(launches.map((launch) => [launch.name, launch]));
+  const completeVariants = new Set<string>();
+  for (const playground of playgrounds) {
+    const value = launchers[playground.variant];
+    const launcher = value && typeof value === "object" ? value as Record<string, unknown> : undefined;
+    const prefix = typeof launcher?.namePrefix === "string" ? launcher.namePrefix : `🧩️${playground.variant}`;
+    const browserCommand = typeof launcher?.command === "string" ? launcher.command : `bun ./📜️script.ts dev ${playground.variant}`;
+    const nativeCommand = `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native ${playground.variant}`;
+    const expected = [
+      { name: `🛠️dev${prefix}⚛️react`, command: browserCommand, renderer: "react" },
+      { name: `🛠️dev${prefix}🧊️wgpu🌐️wasm`, command: browserCommand, renderer: "wgpu" },
+      { name: `🛠️dev${prefix}🧊️wgpu🖥️native`, command: nativeCommand },
+    ];
+    if (expected.every(({ name, command, renderer }) => {
+      const row = byName.get(name);
+      return row?.command === command && row.cwd === "${workspaceFolder}" && (!renderer || row.env.SEMIO_RENDERER === renderer);
+    })) completeVariants.add(playground.variant);
+  }
+  const roleNeutral = (id: string) => id.replace(/#(?:editor|viewer)$/u, "#surface");
+  const failures: string[] = [];
+  for (const descriptor of descriptors.filter((row) => row.kind === "app")) for (const appId of descriptor.appIds) {
+    const candidates = playgrounds.filter((playground) => playground.pluginId === descriptor.pluginId && (!playground.appId || roleNeutral(playground.appId) === roleNeutral(appId)));
+    if (!candidates.some((playground) => completeVariants.has(playground.variant))) failures.push(`${descriptor.file}: ${appId} has no owner-qualified React + WGPU Wasm + WGPU native launch variant`);
+  }
+  return failures;
+}
+
+/** 🚀️Parses bounded launch metadata and proves every interactivity gate remains registered. */
+function interactivityAllAppLaunchesFromSource(source: string): { rows: InteractivityAllAppLaunch[]; failures: string[] } {
+  const failures: string[] = [];
+  let root: Record<string, unknown>;
+  try {
+    root = Bun.JSONC.parse(source) as Record<string, unknown>;
+  } catch {
+    return { rows: [], failures: [`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: invalid JSONC`] };
+  }
+  const configurations = Array.isArray(root.configurations) ? root.configurations : undefined;
+  if (!configurations) return { rows: [], failures: [`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: configurations is missing`] };
+  if (configurations.length > INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: ${configurations.length} configurations exceed fixed capacity ${INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY}`);
+  const records = configurations.slice(0, INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY).filter((value): value is Record<string, unknown> => Boolean(value) && typeof value === "object");
+  const names = new Map<string, number>();
+  for (const configuration of records) {
+    const name = typeof configuration.name === "string" ? configuration.name : "";
+    names.set(name, (names.get(name) ?? 0) + 1);
+  }
+  for (const [name, count] of names) if (name !== "" && count > 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: duplicate configuration name ${JSON.stringify(name)}`);
+  for (const gate of INTERACTIVITY_ALL_APP_REQUIRED_GATES) {
+    const matches = records.filter((configuration) => configuration.name === gate.name && configuration.command === gate.command && configuration.cwd === "${workspaceFolder}" && (configuration.presentation as Record<string, unknown> | undefined)?.group === "4_gate");
+    if (matches.length !== 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: expected one exact ${gate.name} registration, found ${matches.length}`);
+  }
+  const rows: InteractivityAllAppLaunch[] = [];
+  for (const configuration of records) {
+    const name = typeof configuration.name === "string" ? configuration.name : "";
+    if (!name.includes("🛠️dev")) continue;
+    const command = typeof configuration.command === "string" ? configuration.command.trim() : "";
+    const cwd = typeof configuration.cwd === "string" ? configuration.cwd.trim() : "";
+    const envValue = configuration.env && typeof configuration.env === "object" ? configuration.env as Record<string, unknown> : {};
+    const env = Object.fromEntries(Object.entries(envValue).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+    if (command === "" || cwd === "") failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: ${name || "unnamed dev surface"} lacks command or cwd`);
+    rows.push({ name, command, cwd, env });
+  }
+  if (rows.length === 0) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: no production dev launch surfaces discovered`);
+  return { rows: rows.sort((left, right) => left.name.localeCompare(right.name)), failures };
+}
+
+/** 🧭️Discovers every plugin descriptor and every launch-derived product without a maintained product allowlist. */
+function interactivityAllAppDiscovery(repoRoot: string): InteractivityAllAppDiscovery {
+  const failures: string[] = [];
+  const files = policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (_path, name) => name === INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME);
+  if (files.length === 0) failures.push("no plugin descriptors discovered");
+  if (files.length > INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY) failures.push(`${files.length} descriptors exceed fixed capacity ${INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY}`);
+  const descriptors: InteractivityAllAppDescriptor[] = [];
+  const pluginOwners = new Map<string, string[]>();
+  const appOwners = new Map<string, string[]>();
+  for (const file of files.slice(0, INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY)) {
+    const extensionSource = file.includes("/🧩️extensions/") ? policyReadFileSafe(repoRoot, `${dirname(file)}/🦀️component.rs`) : "";
+    const parsed = interactivityAllAppDescriptorFromSource(file, policyReadFileSafe(repoRoot, file), extensionSource);
+    failures.push(...parsed.failures);
+    if (!parsed.row) continue;
+    descriptors.push(parsed.row);
+    pluginOwners.set(parsed.row.pluginId, [...(pluginOwners.get(parsed.row.pluginId) ?? []), file]);
+    for (const id of parsed.row.appIds) appOwners.set(id, [...(appOwners.get(id) ?? []), file]);
+  }
+  for (const [pluginId, owners] of pluginOwners) if (pluginId !== "" && owners.length > 1) failures.push(`pluginId ${JSON.stringify(pluginId)} is ambiguous across ${owners.join(", ")}`);
+  const appPlugins = new Set(descriptors.filter((descriptor) => descriptor.kind === "app" && descriptor.appIds.length > 0).map((descriptor) => descriptor.pluginId));
+  for (const extension of descriptors.filter((descriptor) => descriptor.kind === "extension")) if (!extension.parentPluginId || !appPlugins.has(extension.parentPluginId)) failures.push(`${extension.file}: parent ${JSON.stringify(extension.parentPluginId ?? "")} has no discovered app activation`);
+  const duplicateAppIds = [...appOwners]
+    .filter(([, owners]) => owners.length > 1)
+    .map(([id, owners]) => ({ id, files: owners }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const launch = interactivityAllAppLaunchesFromSource(policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_LAUNCH_FILE));
+  failures.push(...launch.failures);
+  const seedSource = policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE);
+  const seed = interactivityAllAppLaunchesFromSource(seedSource);
+  failures.push(...seed.failures.map((failure) => failure.replaceAll(INTERACTIVITY_ALL_APP_LAUNCH_FILE, INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE)));
+  const playgrounds = interactivityAllAppPlaygroundsFromSource(policyReadFileSafe(repoRoot, INTERACTIVITY_ALL_APP_PLAYGROUND_FILE));
+  failures.push(...playgrounds.failures);
+  const launchCoverageFailures = interactivityAllAppLaunchCoverageFailures(descriptors, playgrounds.rows, seedSource, launch.rows);
+  failures.push(...launchCoverageFailures);
+  const generatedLaunchNames = interactivityAllAppPlaygroundLaunchNames(playgrounds.rows, seedSource);
+  const launchOnlyProducts = launch.rows.filter((row) => !generatedLaunchNames.has(row.name));
+  const descriptorAppCount = descriptors.reduce((count, descriptor) => count + descriptor.appIds.length, 0);
+  return {
+    descriptors: descriptors.sort((left, right) => left.file.localeCompare(right.file)),
+    appCount: descriptorAppCount,
+    surfaceCount: descriptorAppCount + launchOnlyProducts.length,
+    actionCount: descriptors.reduce((count, descriptor) => count + descriptor.actions.length, 0),
+    migratedActionCount: descriptors.reduce((count, descriptor) => count + descriptor.actions.filter((action) => action.disposition === "migrated").length, 0),
+    missingActionCount: descriptors.reduce((count, descriptor) => count + descriptor.actions.filter((action) => action.disposition !== "migrated").length, 0),
+    launchCoveredAppCount: descriptors.reduce((count, descriptor) => count + descriptor.appIds.length, 0) - launchCoverageFailures.length,
+    launchMissingAppCount: launchCoverageFailures.length,
+    duplicateAppIds,
+    launches: launch.rows,
+    launchOnlyProducts,
+    failures: [...new Set(failures)].sort(),
+  };
+}
+
+/** 🔮️Returns canonical JSON through the test-only TypeScript parser behind an owned string boundary. */
+async function interactivityAllAppOracleJson(source: string): Promise<string> {
+  const typescript = await import("typescript");
+  const parsed = typescript.parseConfigFileTextToJson("interactivity-all-app-oracle.json", source);
+  if (parsed.error) throw new Error("[verify interactivity apps] TypeScript oracle rejected the fixture");
+  return JSON.stringify(parsed.config);
+}
+
+/** 🧪️Runs empty/single/max/max-plus-one, mutation, JSONC, and third-party-oracle discovery laws. */
+async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
+  const action = (id: string, disposition?: string) => ({ id, label: { native: { en: "Action", de: "Aktion" }, reuse: { en: "Action", de: "Aktion" } }, semantics: { execution: { ...(disposition ? { interactiveJob: disposition } : {}) } } });
+  const app = (id: string, actions: unknown[] = []) => ({ id, label: { native: { en: "Editor", de: "Editor" }, reuse: { en: "Editor", de: "Editor" } }, windowKinds: actions.length > 0 ? [{ id: "main", actions }] : [] });
+  const descriptor = (apps: unknown[]) => JSON.stringify({ descriptorVersion: 1, role: "plugin", manifest: { pluginId: "fixture", apps } });
+  const gates = INTERACTIVITY_ALL_APP_REQUIRED_GATES.map((gate) => ({ ...gate, cwd: "${workspaceFolder}", presentation: { group: "4_gate" } }));
+  const launch = (configurations: unknown[]) => JSON.stringify({ version: "0.2.0", configurations });
+  const single = descriptor([app("s.fixture.fixture@1/*#editor")]);
+  if ((interactivityAllAppDescriptorFromSource("single.json", single).failures.length) !== 0) throw new Error("[verify interactivity apps] single descriptor self-test was falsely rejected");
+  if (JSON.stringify(JSON.parse(single)) !== await interactivityAllAppOracleJson(single)) throw new Error("[verify interactivity apps] owned descriptor parse disagrees with the TypeScript oracle");
+  if (!interactivityAllAppDescriptorFromSource("empty.json", descriptor([])).failures.some((failure) => failure.includes("manifest.apps is empty"))) throw new Error("[verify interactivity apps] empty descriptor self-test was falsely accepted");
+  const extensionSource = `const EXTENSION_ID: &str = "fixture-extension"; fn bundle() { ExtensionBundle::new(EXTENSION_ID, "Fixture", "1.0.0").extends("fixture"); }`;
+  if (interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/one/🔣️descriptor.json", descriptor([]), extensionSource).failures.length !== 0) throw new Error("[verify interactivity apps] parent-activated extension self-test was falsely rejected");
+  const maximum = Array.from({ length: INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY }, (_, index) => app(`s.fixture.${index}@1/*#editor`));
+  if (interactivityAllAppDescriptorFromSource("maximum.json", descriptor(maximum)).failures.length !== 0) throw new Error("[verify interactivity apps] maximum descriptor self-test was falsely rejected");
+  if (!interactivityAllAppDescriptorFromSource("plus-one.json", descriptor([...maximum, app("s.fixture.plus-one@1/*#editor")])).failures.some((failure) => failure.includes("exceed fixed capacity"))) throw new Error("[verify interactivity apps] maximum-plus-one descriptor self-test was falsely accepted");
+  const missingGerman = JSON.stringify({ descriptorVersion: 1, role: "plugin", manifest: { pluginId: "fixture", apps: [{ id: "fixture", label: { native: { en: "Editor" } } }] } });
+  if (!interactivityAllAppDescriptorFromSource("missing-de.json", missingGerman).failures.some((failure) => failure.includes("lacks equivalent en/de labels"))) throw new Error("[verify interactivity apps] missing German label self-test was falsely accepted");
+  const migratedAction = interactivityAllAppDescriptorFromSource("migrated-action.json", descriptor([app("s.fixture.fixture@1/*#editor", [action("run", "migrated")])])).row!;
+  if (interactivityAllAppActionDispositionFailures([migratedAction]).length !== 0) throw new Error("[verify interactivity apps] migrated action self-test was falsely rejected");
+  const ownedMigratedAction = { ...migratedAction, file: "✏️s/🔌️plugins/fixture/🔣️descriptor.json" };
+  if (interactivityAllAppActionProductionFailures([ownedMigratedAction], [{ file: "✏️s/🔌️plugins/fixture/🦀️component.rs", id: "run", source: "literal" }], []).length !== 0) throw new Error("[verify interactivity apps] owner-local accepted production action self-test was falsely rejected");
+  if (!interactivityAllAppActionProductionFailures([ownedMigratedAction], [{ file: "✏️s/🔌️plugins/other/🦀️component.rs", id: "run", source: "literal" }], []).some((failure) => failure.includes("without an accepted owner-local production command"))) throw new Error("[verify interactivity apps] wrong-owner production action self-test was falsely accepted");
+  if (interactivityAllAppActionProductionFailures([ownedMigratedAction], [], ["run"]).length !== 0) throw new Error("[verify interactivity apps] accepted shared reserved action self-test was falsely rejected");
+  const missingAction = interactivityAllAppDescriptorFromSource("missing-action.json", descriptor([app("s.fixture.fixture@1/*#editor", [action("run")])])).row!;
+  if (!interactivityAllAppActionDispositionFailures([missingAction]).some((failure) => failure.includes("interactiveJob=\"missing\""))) throw new Error("[verify interactivity apps] missing action disposition self-test was falsely accepted");
+  const actionMaximum = Array.from({ length: INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY }, (_, index) => action(`run-${index}`, "migrated"));
+  if (!interactivityAllAppDescriptorFromSource("action-plus-one.json", descriptor([app("s.fixture.fixture@1/*#editor", [...actionMaximum, action("plus-one", "migrated")])])).failures.some((failure) => failure.includes("action rows exceeding fixed capacity"))) throw new Error("[verify interactivity apps] maximum-plus-one action self-test was falsely accepted");
+  const validLaunch = launch([...gates, { name: "🛠️dev fixture", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}" }]);
+  if (interactivityAllAppLaunchesFromSource(validLaunch).failures.length !== 0) throw new Error("[verify interactivity apps] valid launch self-test was falsely rejected");
+  if (JSON.stringify(Bun.JSONC.parse(validLaunch)) !== await interactivityAllAppOracleJson(validLaunch)) throw new Error("[verify interactivity apps] owned launch parse disagrees with the TypeScript oracle");
+  if (!interactivityAllAppLaunchesFromSource(launch([...gates.slice(1), { name: "🛠️dev fixture", command: "true", cwd: "${workspaceFolder}" }])).failures.some((failure) => failure.includes(INTERACTIVITY_ALL_APP_REQUIRED_GATES[0].name))) throw new Error("[verify interactivity apps] missing gate self-test was falsely accepted");
+  const overCapacity = [...gates, ...Array.from({ length: INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY + 1 - gates.length }, (_, index) => ({ name: `fixture-${index}`, command: "true", cwd: "${workspaceFolder}" }))];
+  if (!interactivityAllAppLaunchesFromSource(launch(overCapacity)).failures.some((failure) => failure.includes("exceed fixed capacity"))) throw new Error("[verify interactivity apps] maximum-plus-one launch self-test was falsely accepted");
+  const fixtureDescriptor = { ...interactivityAllAppDescriptorFromSource("fixture.json", descriptor([app("s.fixture.fixture@1/*#editor")])).row!, file: "✏️s/🔌️plugins/fixture/🔣️descriptor.json" };
+  const fixturePlayground = [{ variant: "fixture", pluginId: "fixture", appId: "s.fixture.fixture@1/*#editor" }];
+  const fixtureSeed = JSON.stringify({ devLaunchers: { fixture: { namePrefix: "🧪️fixture" } } });
+  const fixtureLaunches = [
+    { name: "🛠️dev🧪️fixture⚛️react", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "react" } },
+    { name: "🛠️dev🧪️fixture🧊️wgpu🌐️wasm", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "wgpu" } },
+    { name: "🛠️dev🧪️fixture🧊️wgpu🖥️native", command: "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native fixture", cwd: "${workspaceFolder}", env: {} },
+  ];
+  if (interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches).length !== 0) throw new Error("[verify interactivity apps] complete owner-qualified launch self-test was falsely rejected");
+  if (!interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches.slice(0, 2)).some((failure) => failure.includes("WGPU native"))) throw new Error("[verify interactivity apps] missing native launch self-test was falsely accepted");
+  if (!interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], [{ ...fixturePlayground[0]!, pluginId: "other" }], fixtureSeed, fixtureLaunches).some((failure) => failure.includes("owner-qualified"))) throw new Error("[verify interactivity apps] wrong-owner launch self-test was falsely accepted");
+  if (!interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches.map((row, index) => index === 0 ? { ...row, command: "true" } : row)).some((failure) => failure.includes("owner-qualified"))) throw new Error("[verify interactivity apps] wrong-command launch self-test was falsely accepted");
+  if (!interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches.map((row, index) => index === 1 ? { ...row, env: { SEMIO_RENDERER: "react" } } : row)).some((failure) => failure.includes("owner-qualified"))) throw new Error("[verify interactivity apps] wrong-renderer launch self-test was falsely accepted");
+  const viewerDescriptor = { ...fixtureDescriptor, appIds: ["s.fixture.fixture@1/*#viewer"] };
+  if (interactivityAllAppLaunchCoverageFailures([viewerDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches).length !== 0) throw new Error("[verify interactivity apps] shared dialect editor/viewer launch self-test was falsely rejected");
+  const fixtureLaunchNames = interactivityAllAppPlaygroundLaunchNames(fixturePlayground, fixtureSeed);
+  if (fixtureLaunchNames.size !== 3 || fixtureLaunches.some((row) => !fixtureLaunchNames.has(row.name))) throw new Error("[verify interactivity apps] generated playground launches were falsely classified as launch-only products");
+  if (fixtureLaunchNames.has("🛠️dev🧪️launch-only-product")) throw new Error("[verify interactivity apps] launch-only product was falsely classified as a generated playground launch");
+  return 25;
+}
+//#endregion 🧭️AllAppDiscovery
+
 const INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs"] as const;
 
 const INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️component.rs";
@@ -7904,6 +9110,12 @@ const INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE = "✏️s/🔌️plugins/🧩
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx";
+const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️fixtures/🔭️preview-json-law.json";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts";
 const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs";
 const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️action.rs";
 const INTERACTIVITY_AUDIT_UI_LAYOUT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🦀️layout.rs";
@@ -7933,6 +9145,7 @@ const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/�
 const INTERACTIVITY_AUDIT_UI_ENGINE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs";
 const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs";
 const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs";
+const INTERACTIVITY_AUDIT_OS_SERVICES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs";
 const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs";
 const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️component.rs";
 
@@ -8257,11 +9470,24 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const puzzleFillRenderer = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE);
   interactivityPuzzleFillP4eSelfTests(repoRoot);
   for (const failure of interactivityPuzzleFillP4eFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillGeometry, puzzleFillSchema, puzzleFillTransport, puzzleFillRenderer)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
+  const puzzle5dFillPrecompute = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE);
+  const puzzle5dFillWindow = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE);
+  const puzzle3dTerminology = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE);
+  const puzzle5dTerminology = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE);
+  const puzzleFillPreviewFixture = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE);
+  const puzzleFillRendererTest = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE);
+  interactivityPuzzleFillPreviewJsonSelfTests(repoRoot);
+  for (const failure of interactivityPuzzleFillPreviewJsonFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillTransport, puzzle5dFillPrecompute, puzzle5dFillWindow, puzzleFillRenderer, puzzle3dTerminology, puzzle5dTerminology, puzzleFillPreviewFixture, puzzleFillRendererTest)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
   interactivityLiveReconcileSelfTests(repoRoot);
   const uiReconcile = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
   const uiValue = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
   const kernel = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
   const kernelTurn = kernel.slice(kernel.indexOf("//#region 🔖️TurnResult"), kernel.indexOf("//#endregion 🔖️TurnResult"));
+  const pluginCentral = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE);
+  const tableKit = pluginCentral.slice(pluginCentral.indexOf("pub const TABLE_WINDOW_COLUMNS"), pluginCentral.indexOf("//#endregion 🔖️TableWindowKit"));
+  const tableKitFixtures = ["table_rows_max_plus_one_returns_the_exact_row_owner", "abandoned_table_rows_retire_one_row_action_or_cell_per_opportunity"].filter((fixture) => pluginCentral.includes(`fn ${fixture}`)).join("\n");
+  const commandBridge = pluginCentral.slice(pluginCentral.indexOf("pub const UI_COMMAND_VALUE_DEPTH"), pluginCentral.indexOf("//#endregion 🔖️ActionFactory"));
+  const commandBridgeFixtures = ["retained_ui_value_bridge_cancel_and_deadline_preserve_the_original_owner", "retained_ui_value_bridge_rejects_depth_plus_one_without_consuming_the_original"].filter((fixture) => pluginCentral.includes(`fn ${fixture}`)).join("\n");
   const uiSchema = [
     INTERACTIVITY_AUDIT_UI_BUILDER_FILE,
     INTERACTIVITY_AUDIT_UI_COMPONENT_FILE,
@@ -8269,10 +9495,11 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
     INTERACTIVITY_AUDIT_UI_SURFACE_FILE,
     INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE,
     INTERACTIVITY_AUDIT_UI_LIMITS_FILE,
+    INTERACTIVITY_AUDIT_UI_LAYOUT_FILE,
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
-  ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn;
+  ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
   const reactorPatches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   interactivityMountedLayoutTextSelfTests(repoRoot);
   const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️mounted_layout.rs");
@@ -8289,9 +9516,11 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs");
   const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs");
   const mountedFrameShell = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
+  const mountedFrameServices = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
   const mountedFrameEngineCanvas = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
   const mountedFrameWorld3d = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
-  for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d, preparedRaster, preparedRasterGpu, preparedRasterDraw, mountedInterpreter, mountedEngine, mountedPaint, mountedSlots)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
+  const mountedFrameScenes = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs");
+  for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d, preparedRaster, preparedRasterGpu, preparedRasterDraw, mountedInterpreter, mountedEngine, mountedPaint, mountedSlots, mountedFrameScenes, mountedFrameServices)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -8360,11 +9589,11 @@ function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillS
     "FILL_ENVELOPE_PROCESS_BYTES: usize = FILL_ENVELOPE_MAX_BYTES * FILL_ENVELOPE_MAX_OPERATIONS",
   ]) if (!precompute.includes(cap)) failures.push(`Puzzle fill envelope fixed admission changed or disappeared: ${cap}`);
   if (!precompute.includes("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("generations: [u64; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("requested_items.checked_add(FILL_ENVELOPE_AUTHORITY_ITEMS)") || !precompute.includes("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)") || !precompute.includes("self.aggregate_bytes.checked_add(bytes)") || !precompute.includes("self.slots[slot] = Some(FillEnvelopeAuthority")) failures.push("Puzzle fill envelope is not admitted into fixed generation slots before handoff");
-  if (!sessionBridge.includes("let fill = self.engine.fill.take()?") || !sessionBridge.includes("registry.begin_measurement(job, operation, fill") || !sessionBridge.includes("Err(fill) =>") || !sessionBridge.includes("self.engine.fill = Some(fill)") || !sessionBridge.includes("registry.finish_measurement(&admission.request, credit.items, credit.bytes)")) failures.push("Puzzle fill UI admission does not move the exact source owner into a registered measurement authority before census and exact credit");
+  if (!sessionBridge.includes("let fill = self.engine.fill.take()?") || !sessionBridge.includes("registry.begin_measurement(job, operation, fill, worker") || !sessionBridge.includes("Err(owners) =>") || !sessionBridge.includes("self.engine.fill_worker = Some(owners.worker)") || !sessionBridge.includes("self.engine.fill = Some(owners.fill)") || !sessionBridge.includes("registry.finish_measurement(&admission.request, credit.items, credit.bytes)")) failures.push("Puzzle fill UI admission does not move the exact source and mounted worker owners into a registered measurement authority before census and exact credit");
   if (censusStart < 0 || censusEnd < 0 || fixedOwnerStart < 0 || fixedOwnerEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !geometry.includes("FIXED_OWNER_SLOTS: usize = 32") || !geometry.includes("FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024") || !fixedOwners.includes("page: Option<Box<[Option<(K, V)>; N]>>") || !fixedOwners.includes("std::mem::size_of::<[Option<(K, V)>; N]>()") || !fixedOwners.includes("if self.len == N") || !fixedOwners.includes("return Err((key, value));") || !fixedOwners.includes("Occupied { input_key: K, input_value: V }") || !fixedOwners.includes("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });") || (fixedOwners.match(/pub\(crate\) fn remove_entry/g) ?? []).length !== 2 || geometry.includes("#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap") || geometry.includes("CollectionBackings") || !fillFixedFields.every((field) => fill.includes(field)) || !fillFixedCredits.every((credit) => census.includes(credit)) || !geometry.includes("entries: FixedOwnerMap<String, CollisionAabb>") || !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>>") || !geometry.includes("oversized: FixedOwnerSet<String>") || !geometry.includes("0 => self.entries.backing_credit()") || !geometry.includes("2 => self.cells.backing_credit()") || !geometry.includes("4 => self.oversized.backing_credit()") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry backed by the exact credited slot pages before reservation");
   if (sessionBridge.includes("serde_json::") || sessionBridge.includes("checkpoint_bytes()") || precompute.includes("FillWorkerState") || precompute.includes("restore_fill_worker_state")) failures.push("Puzzle fill UI/worker route contains whole-state serialization or compatibility restoration");
   if (!precompute.includes("struct FillEnvelopeTokenCursor") || !precompute.includes("match self.field") || !precompute.includes("self.field += 1") || ingressGuardAt < 0 || !precompute.includes("Self { context_job, terminal_guard, token: FillEnvelopeTokenCursor::new(input) }") || !precompute.includes("let context_job = context.id().await") || !precompute.includes("let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context_job, input)") || !precompute.includes("request.job != self.context_job") || !precompute.includes("self.terminal_guard.request.as_ref() != Some(request)") || !precompute.includes("authority.request == *request") || !precompute.includes('return Err("fill worker envelope owner is stale");') || precompute.includes("request_fill_envelope_terminal_by_job") || ingressBindAt < ingressGuardAt || ingressDriveAt < ingressBindAt || !precompute.includes("context.tick().await;\n            match admitted_cursor.step()")) failures.push("Puzzle fill token ingress does not resolve the exact raw owner and bind context job to the decoded live request before transition");
-  if ((drive.match(/drive_step\(/g) ?? []).length !== 1 || !drive.includes("is_cancelled_now()") || !drive.includes("base_revision.0 != request.base_revision") || !drive.includes("FillEnvelopeDrive::Blocked") || drive.includes("while ") || drive.includes("for ")) failures.push("Puzzle fill worker grant does not advance exactly one fresh cancellable retained opportunity");
+  if ((drive.match(/\.pump_one\(/g) ?? []).length !== 1 || !drive.includes("take_checked_out_outcome()") || !drive.includes("worker_outcome") || drive.includes("drive_step") || drive.includes("StepBudget") || !drive.includes("is_cancelled_now()") || !drive.includes("base_revision.0 != request.base_revision") || !drive.includes("FillEnvelopeDrive::Blocked") || drive.includes("while ") || drive.includes("for ")) failures.push("Puzzle fill worker grant does not advance exactly one fresh cancellable mounted opportunity");
   if (!precompute.includes("pub fn take_terminal_fill_job") || !precompute.includes("pub fn resume(mut self)") || !precompute.includes("pub fn close_step(&mut self)") || !precompute.includes("impl Drop for FillEnvelopeTerminalHandle") || !precompute.includes("self.checked_out.store(false, Ordering::Release)") || !precompute.includes("authority.token_page.take()")) failures.push("Puzzle fill rejected/terminal owners lack public take-resume-close and Drop handback");
   if (!sessionBridge.includes("if self.pump_fill_terminal_step()") || !sessionBridge.includes("fn pump_fill_terminal_step(&mut self)") || !sessionBridge.includes("self.take_terminal_fill_job()") || !sessionBridge.includes("FillEnvelopeTerminalHandle::close_step") || !precompute.includes("registry.take_closed()")) failures.push("Puzzle fill production callers do not mount terminal take/close and orphan recovery");
   if (!precompute.includes("struct FillEnvelopeTerminalIntent") || !precompute.includes("intent.reason.fetch_max(reason.code(), Ordering::AcqRel)") || !precompute.includes("request_fill_envelope_terminal(request, reason)") || !precompute.includes("if !matches!(authority.phase, FillEnvelopePhase::Closing)") || !precompute.includes("apply_fill_envelope_terminal_intent(authority)") || !precompute.includes("terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed)")) failures.push("Puzzle fill terminal intent can be lost under registry contention or ignore already-terminal session Drop");
@@ -8372,10 +9601,10 @@ function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillS
   if (!restoreBridge.includes("let Some(request) = decode_fill_envelope_request(checkpoint)") || !restoreBridge.includes("*current != request && live(current)") || !restoreBridge.includes("terminal.request != request && live(&terminal.request)") || !restoreBridge.includes("authority.request == request") || !restoreBridge.includes("!authority.checked_out.load(Ordering::Acquire)") || restoreBridge.indexOf("*current != request && live(current)") > restoreBridge.indexOf("self.engine.fill = None")) failures.push("Puzzle fill restore can overwrite a different live mounted/closing exact producer");
   if (!precompute.includes("fn allocate_fill_identity(&mut self, advance_revision: bool)") || !precompute.includes("self.fill_revision.checked_add(1)?") || !precompute.includes("self.fill_generation.checked_add(1)?") || !precompute.includes("if revision == 0 || generation == 0") || precompute.includes("self.fill_revision.wrapping_add(1)") || precompute.includes("self.fill_generation.wrapping_add(1)") || !precompute.includes("self.request.generation == 0") || !precompute.includes("self.request.base_revision == 0") || !precompute.includes("registry.aggregate_bytes.checked_sub(authority.reserved_bytes)") || precompute.includes("registry.aggregate_bytes.saturating_sub(authority.reserved_bytes)")) failures.push("Puzzle fill semantic generation/revision or exact aggregate credit can wrap/reset instead of refusing exhaustion");
   if (takeClosedStart < 0 || !takeClosedBridge.includes("FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing") || !sessionBridge.includes("FillEnvelopePhase::Terminal(_) | FillEnvelopePhase::Closing") || !precompute.includes("request_fill_envelope_terminal(&self.request, FillEnvelopeTerminalReason::Closed);\n        self.checked_out.store(false, Ordering::Release)")) failures.push("Puzzle fill interrupted Closing handle is not durably re-armed for the exact generation");
-  if (!fill.includes("struct FillBuilderRetirementCursor") || !fill.includes("enum FillRetiredOwner") || !fill.includes("fn release_vec_backing<T>") || !fill.includes("self.current = Some(FillRetiredOwner::PreviewState(value));") || !fill.includes("FillRetiredOwner::PreviewState(value) => retire_preview_state(value)") || !fill.includes("20 => retire_fixed_collection_backing(fill)") || !fill.includes("fill.placed_lookup.retire_backing()") || !fill.includes("|| fill.candidate_same.retire_backing()") || !fill.includes("self.placed_lookup.terminal_owners_empty()") || !fill.includes("self.candidate_same.terminal_owners_empty()") || !fill.includes("if !fill.terminal_owners_empty()") || !geometry.includes("retiring_key: Option<String>") || !geometry.includes("retiring_bucket: Option<FixedOwnerSet<String>>") || !geometry.includes("self.retiring_bucket = Some(bucket);") || !geometry.includes("self.retiring_key = Some(key);") || !geometry.includes("if self.entries.retire_backing()") || !geometry.includes("if self.cells.retire_backing()") || !geometry.includes("if self.oversized.retire_backing()") || !geometry.includes("self.entries.terminal_owners_empty() && self.cells.terminal_owners_empty() && self.oversized.terminal_owners_empty()") || !geometry.includes("pub(crate) fn terminal_owners_empty(&self)") || !precompute.includes("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))") || !precompute.includes("FillBuilderRetirementCursor::retire_one")) failures.push("Puzzle fill terminal close can recursively or bulk-drop nested builders, actual fixed pages, seed vectors, or spatial buckets");
+  if (!fill.includes("struct FillBuilderRetirementCursor") || !fill.includes("enum FillRetiredOwner") || !fill.includes("fn release_vec_backing<T>") || !fill.includes("self.current = Some(FillRetiredOwner::PreviewState(value));") || !fill.includes("FillRetiredOwner::PreviewState(value) => retire_preview_state(value)") || !fill.includes("18 => !self.preview_json.close_step()") || !fill.includes("21 => retire_fixed_collection_backing(self)") || !fill.includes("fill.placed_lookup.retire_backing()") || !fill.includes("|| fill.candidate_same.retire_backing()") || !fill.includes("self.placed_lookup.terminal_owners_empty()") || !fill.includes("self.candidate_same.terminal_owners_empty()") || !fill.includes("self.preview_json.terminal_owners_empty()") || !fill.includes("if !fill.terminal_owners_empty()") || !geometry.includes("retiring_key: Option<String>") || !geometry.includes("retiring_bucket: Option<FixedOwnerSet<String>>") || !geometry.includes("self.retiring_bucket = Some(bucket);") || !geometry.includes("self.retiring_key = Some(key);") || !geometry.includes("if self.entries.retire_backing()") || !geometry.includes("if self.cells.retire_backing()") || !geometry.includes("if self.oversized.retire_backing()") || !geometry.includes("self.entries.terminal_owners_empty() && self.cells.terminal_owners_empty() && self.oversized.terminal_owners_empty()") || !geometry.includes("pub(crate) fn terminal_owners_empty(&self)") || !precompute.includes("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))") || !precompute.includes("FillBuilderRetirementCursor::retire_one")) failures.push("Puzzle fill terminal close can recursively or bulk-drop nested builders, actual fixed pages, seed vectors, or spatial buckets");
   if (!precomputeSource.includes("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn") || !precomputeSource.includes("fill_worker_fixed_cap_rejects_plus_one_and_reused_slot_rejects_aba") || !precomputeSource.includes("fill_worker_item_and_byte_plus_one_reject_before_owner_transfer") || !precomputeSource.includes("fill_worker_actual_owner_census_rejects_cap_plus_one_with_exact_handback") || !precomputeSource.includes("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once") || !precomputeSource.includes("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once") || !precomputeSource.includes("fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_retained_close") || !precomputeSource.includes("fill_worker_session_drop_during_partial_close_rearms_the_same_cursor_once") || !precomputeSource.includes("fill_worker_terminal_resume_contention_returns_then_rearms_the_exact_owner") || !precomputeSource.includes("fill_worker_cross_generation_restore_rejects_measuring_and_every_live_terminal_phase") || !precomputeSource.includes("fill_worker_cross_generation_restore_preserves_dropped_closing_handle_and_zero_credit") || !precomputeSource.includes("fill_worker_malformed_token_faults_exact_raw_owner_not_wrong_context_owner") || !precomputeSource.includes("fill_worker_wrong_context_identity_faults_decoded_producer_before_drive") || !precomputeSource.includes("fill_worker_stale_envelope_identity_is_rejected_without_faulting_replacement") || !precomputeSource.includes("fill_operation_identity_checked_nonzero_exhaustion_permanently_refuses_aba") || !precomputeSource.includes("fill_worker_zero_semantic_counters_and_exhausted_stale_tokens_never_alias") || !fillSource.includes("retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus_one") || !fillSource.includes("retained_owner_census_credits_each_actual_fixed_slot_page_not_a_layout_heuristic") || !fillSource.includes("all_fill_fixed_collections_store_max_entries_in_the_credited_page_and_return_plus_one") || !fillSource.includes("occupied_fixed_slot_returns_the_distinct_input_owners_without_replacing_stored_owners") || !geometrySource.includes("spatial_index_close_retains_bucket_values_and_retires_one_credited_owner_per_grant") || !geometrySource.includes("spatial_fixed_collections_use_the_credited_pages_and_return_identical_plus_one_owners") || !precomputeSource.includes("fill_worker_mounted_terminal_pump_closes_completed_slot_and_rearms_capacity") || !precomputeSource.includes("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental") || !precomputeSource.includes("fill_worker_token_decode_advances_exactly_one_field_per_grant") || !precomputeSource.includes("fill_job_checkpoint_is_a_fixed_generation_token_not_a_whole_state_buffer")) failures.push("Puzzle fill semantic identity/cap/ABA/accounting/terminal/retirement fixtures are missing");
   if ((action.match(/\.enqueue_fill_job\(\)/g) ?? []).length !== 2) failures.push("Puzzle fill retained envelope reachability is not exactly the two audited UI callers");
-  if (!fill.includes("StepOutcome::PreviewReady(Vec::new())") || !fill.includes("state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)") || !fill.includes("output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput)")) failures.push("Puzzle FillBuilder still materializes a whole preview/result envelope inside one worker grant");
+  if (!fill.includes("StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))") || !fill.includes("state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState)") || !fill.includes("output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput)")) failures.push("Puzzle FillBuilder still materializes a whole preview/result envelope inside one worker grant");
   return failures;
 }
 
@@ -8395,7 +9624,8 @@ function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
     ["wrong-context-owner", precompute.replace("request.job != self.context_job", "false"), fill, geometry, action],
     ["stale-envelope-owner", precompute.replace('return Err("fill worker envelope owner is stale");', "return Ok(());"), fill, geometry, action],
     ["missing-base-freshness", precompute.replace(" || fill.operation.base_revision.0 != request.base_revision", ""), fill, geometry, action],
-    ["two-drive-opportunities", precompute.replace("let outcome = drive_step(", "let _extra = drive_step(\n        &mut *fill, \"extra\", operation.operation, operation.generation, InteractiveStage::BackgroundStep, StepBudget::new(1, 1), cancel.clone(), default_now_ms, &mut authority.preview_sequence);\n    let outcome = drive_step("), fill, geometry, action],
+    ["direct-drive-instead-of-mounted", precompute.replace("match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background)", "match semio_framework_job::drive_step(todo!())"), fill, geometry, action],
+    ["two-mounted-opportunities", precompute.replace("match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background)", "let _extra = worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background);\n        match worker.pump_one(&fill_worker_pool(), semio_framework_async::Lane::Background)"), fill, geometry, action],
     ["missing-terminal-take", precompute.replace("pub fn take_terminal_fill_job", "fn hidden_terminal_fill_job"), fill, geometry, action],
     ["missing-drop-handback", precompute.replace("impl Drop for FillEnvelopeTerminalHandle", "impl FillEnvelopeTerminalHandle"), fill, geometry, action],
     ["restore-mutable-alias", precompute.replace("self.engine.fill = None;", "self.engine.fill = authority.fill.clone();"), fill, geometry, action],
@@ -8409,7 +9639,7 @@ function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
     ["zero-operation-generation", precompute.replace("self.request.generation == 0", "false"), fill, geometry, action],
     ["inexact-credit-release", precompute.replace("registry.aggregate_bytes.checked_sub(authority.reserved_bytes)", "registry.aggregate_bytes.saturating_sub(authority.reserved_bytes)"), fill, geometry, action],
     ["missing-identity-fixture", precompute.replace("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn", "fill_worker_token_smoke"), fill, geometry, action],
-    ["whole-preview", precompute, fill.replace("StepOutcome::PreviewReady(Vec::new())", "StepOutcome::PreviewReady(serde_json::to_vec(&self.preview).unwrap())"), geometry, action],
+    ["whole-preview", precompute, fill.replace("StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview))", "StepOutcome::PreviewReady(semio_framework_job::RetainedJobPayload::from_vec(semio_framework_job::JobPayloadStream::Preview, serde_json::to_vec(&self.preview).unwrap()).unwrap())"), geometry, action],
     ["lost-ui-caller", precompute, fill, geometry, action.replace("let spawn = precompute.enqueue_fill_job();", "let spawn = None;")],
     ["literal-max-credit", precompute.replace("registry.finish_measurement(&admission.request, credit.items, credit.bytes)", "registry.finish_measurement(&admission.request, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)"), fill, geometry, action],
     ["nested-cap", precompute, fill.replace("FILL_BUILDER_NESTED_ITEMS: usize = 32", "FILL_BUILDER_NESTED_ITEMS: usize = 33"), geometry, action],
@@ -8428,7 +9658,7 @@ function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
     ["bulk-preview-drop", precompute, fill.replace("self.current = Some(FillRetiredOwner::PreviewState(value));", "self.current = Some(FillRetiredOwner::String(value.target_vortex_full_id));"), geometry, action],
     ["missing-terminal-empty-witness", precompute, fill.replace("if !fill.terminal_owners_empty()", "if false"), geometry, action],
     ["bulk-spatial-bucket-drop", precompute, fill, geometry.replace("self.retiring_bucket = Some(bucket);", "drop(bucket);"), action],
-    ["bulk-fill-backing-drop", precompute, fill.replace("20 => retire_fixed_collection_backing(fill)", "20 => { drop(fill.placed_lookup.pop_first()); true }"), geometry, action],
+    ["bulk-fill-backing-drop", precompute, fill.replace("21 => retire_fixed_collection_backing(self)", "21 => { drop(self.placed_lookup.pop_first()); true }"), geometry, action],
     ["bulk-spatial-backing-drop", precompute, fill, geometry.replace("if self.entries.retire_backing()", "if false"), action],
     ["missing-fixed-page-fixture", precompute, fill.replace("all_fill_fixed_collections_store_max_entries_in_the_credited_page_and_return_plus_one", "fill_fixed_collection_smoke"), geometry, action],
     ["missing-occupied-owner-fixture", precompute, fill.replace("occupied_fixed_slot_returns_the_distinct_input_owners_without_replacing_stored_owners", "fill_fixed_occupied_smoke"), geometry, action],
@@ -8538,7 +9768,8 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     refusal.indexOf("return self.publish_preview(context)") > refusal.indexOf("return StepOutcome::Fault") ||
     !fillSource.includes("fn capacity_refusal_publishes_generation_qualified_no_ghost_diagnostic_before_fault") ||
     transport.includes("candidate_ghost.as_ref()?") ||
-    !transport.includes('build.stage == "complete"') ||
+    !precompute.includes('if fill.preview.stage == "complete"') ||
+    !transport.includes("session.fill_preview_json_page") ||
     !rendererSource.includes("let fillDiagnostic: WorldFillDiagnosticRecord | null = null")
   ) failures.push("P4e capacity refusal does not publish an active generation-qualified no-ghost diagnostic before terminal fault/removal");
   if (
@@ -8595,9 +9826,20 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
   ) failures.push("P4e preview publication is not the canonical bounded diagnostic page");
   if (
     transport.includes("candidate_ghost.as_ref()?") ||
-    !transport.includes('object.insert("fillBuildPreview".into(), serde_json::to_value(build).ok()?)') ||
-    transport.indexOf('object.insert("fillBuildPreview"') < transport.indexOf("if let Some(ghost)") ||
+    transport.includes("let build = session.fill_progress().preview?;") ||
+    transport.includes("serde_json::to_value(build)") ||
+    !transport.includes("session.fill_preview_json_page(&color, labels.fill_progress.as_str())") ||
+    !fill.includes("pub(crate) struct FillPreviewJsonCursor") ||
+    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024") ||
+    !fill.includes("FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES: usize = 256") ||
+    !fill.includes("FillPreviewJsonPhase::Census") ||
+    !fill.includes("FillPreviewJsonPhase::Reserve") ||
+    !fill.includes("FillPreviewJsonPhase::Encode") ||
+    !fill.includes("FillPreviewJsonPhase::Validate") ||
+    !fill.includes("try_reserve_exact") ||
+    fill.includes("serde_json::to_vec(&self.preview)") ||
     !rendererSource.includes("type WorldFillDiagnosticRecord") ||
+    !rendererSource.includes("readonly statusLabel: string") ||
     !rendererSource.includes("function FillDiagnosticOverlay") ||
     !rendererSource.includes("fillDiagnostic ? <FillDiagnosticOverlay diagnostic={fillDiagnostic} /> : null") ||
     !rendererSource.includes("latestFillIdentityRef") ||
@@ -8607,7 +9849,10 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     !rendererSource.includes("data-fill-truncated={diagnostic.truncated}") ||
     !rendererSource.includes("diagnostic.candidatePage") ||
     !rendererSource.includes("diagnostic.rejectionReason") ||
-    !rendererSource.includes("diagnostic.collisionCount")
+    !rendererSource.includes("diagnostic.collisionCount") ||
+    !rendererSource.includes("diagnostic.statusLabel.length === 0") ||
+    !rendererSource.includes("<span>{diagnostic.statusLabel}</span>") ||
+    !rendererSource.includes("aria-label={label}")
   ) failures.push("P4e renderer transport still gates diagnostics on ghosts, ignores canonical fields, or accepts stale identity");
   for (const fixture of ["constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently", "stale_generation_stops_preparation_before_installing_any_entry"]) {
     if (!fillSource.includes(`fn ${fixture}`)) failures.push(`P4e preparation fixture missing ${fixture}`);
@@ -8642,7 +9887,7 @@ function interactivityPuzzleFillP4eSelfTests(repoRoot: string): void {
     ["direct-spatial-mutation", precompute, fill.replace("self.spatial_index.step_replacement(mutation, owner)", "self.spatial_index.upsert(String::new(), CollisionAabb { min: [0.0; 3], max: [0.0; 3] })"), geometry, schema, transport, renderer],
     ["producer-clone", precompute, fill.replace("appended_attractions: Vec::new(),\n            sequence: Vec::new(),\n            preview", "appended_attractions: Vec::new(),\n            sequence: self.sequence.clone(),\n            preview"), geometry, schema, transport, renderer],
     ["unbounded-diagnostic", precompute, fill, geometry, schema.replace("pub candidate_page: [Option<String>; 8]", "pub candidate_page: Vec<String>"), transport, renderer],
-    ["ghost-gated", precompute, fill, geometry, schema, transport.replace("let build = session.fill_progress().preview?;", "let build = session.fill_progress().preview?; let _ghost = build.candidate_ghost.as_ref()?;"), renderer],
+    ["ghost-gated", precompute, fill, geometry, schema, transport.replace("session.fill_preview_json_page(&color, labels.fill_progress.as_str())", "session.fill_preview_object_kind().and(None)"), renderer],
     ["ignored-overlay", precompute, fill, geometry, schema, transport, renderer.replace("{fillDiagnostic ? <FillDiagnosticOverlay diagnostic={fillDiagnostic} /> : null}", "null")],
     ["stale-render", precompute, fill, geometry, schema, transport, renderer.replace("identity[4] >= latest[4]", "true")],
     ["ignored-truncation", precompute, fill, geometry, schema, transport, renderer.replace("data-fill-truncated={diagnostic.truncated}", "data-fill-truncated={false}")],
@@ -8666,7 +9911,7 @@ function interactivityPuzzleFillP4eSelfTests(repoRoot: string): void {
     ["dynamic-mesh-owner", precompute, fill.replace("meshes: FixedOwnerMap<String, CollisionBody>", "meshes: HashMap<String, CollisionBody>"), geometry, schema, transport, renderer],
     ["missing-catalog-cap-acceptance", precompute, fill.replace("(HostileRoot::CatalogObjects, \"catalog-objects\")", "(HostileRoot::FixtureObjects, \"catalog-objects\")"), geometry, schema, transport, renderer],
     ["fault-before-rejection-diagnostic", precompute, fill.replace("return self.publish_preview(context);", "return StepOutcome::Fault(JobFault { detail: b\"fill-preparation-capacity\".to_vec() });"), geometry, schema, transport, renderer],
-    ["omit-no-ghost-rejection", precompute, fill, geometry, schema, transport.replace("let build = session.fill_progress().preview?;", "let build = session.fill_progress().preview?; let _ghost = build.candidate_ghost.as_ref()?;"), renderer],
+    ["whole-fill-preview", precompute, fill.replace("pub(crate) struct FillPreviewJsonCursor", "fn whole_fill_preview() { let _ = serde_json::to_vec(&self.preview); }\npub(crate) struct FillPreviewJsonCursor"), geometry, schema, transport, renderer],
     ["missing-constructor-cap-fixture", precompute, fill.replace("constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently", "constructor_cap_smoke"), geometry, schema, transport, renderer],
     ["missing-stale-preparation-fixture", precompute, fill.replace("stale_generation_stops_preparation_before_installing_any_entry", "stale_preparation_smoke"), geometry, schema, transport, renderer],
     ["missing-sparse-query-fixture", precompute, fill, geometry.replace("spatial_resumable_query_narrows_sparse_cells_without_visiting_distant_population", "spatial_query_smoke"), schema, transport, renderer],
@@ -8679,6 +9924,195 @@ function interactivityPuzzleFillP4eSelfTests(repoRoot: string): void {
   }
   const failures = interactivityPuzzleFillP4eFailures(precompute, fill, geometry, schema, transport, renderer);
   if (failures.length !== 0) throw new Error(`[verify interactivity] Puzzle fill P4e baseline was falsely rejected: ${failures.join("; ")}`);
+}
+
+/** 🔭️Requires Puzzle3d and Puzzle5d's visible fill diagnostic to be a retained fixed-shape page with explicit locale admission. */
+export function interactivityPuzzleFillPreviewJsonFailures(
+  precomputeSource: string,
+  fillSource: string,
+  puzzle3dWindowSource: string,
+  puzzle5dPrecomputeSource: string,
+  puzzle5dWindowSource: string,
+  rendererSource: string,
+  puzzle3dTerminologySource: string,
+  puzzle5dTerminologySource: string,
+  fixtureSource: string,
+  rendererTestSource: string,
+): string[] {
+  const precompute = interactivityProductionSource(precomputeSource);
+  const fill = interactivityProductionSource(fillSource);
+  const puzzle3dWindow = interactivityProductionSource(puzzle3dWindowSource);
+  const puzzle5dPrecompute = interactivityProductionSource(puzzle5dPrecomputeSource);
+  const puzzle5dWindow = interactivityProductionSource(puzzle5dWindowSource);
+  const renderer = interactivityProductionSource(rendererSource);
+  const puzzle3dTerminology = interactivityProductionSource(puzzle3dTerminologySource);
+  const puzzle5dTerminology = interactivityProductionSource(puzzle5dTerminologySource);
+  const parserStart = renderer.indexOf("export function parseWorldBrushPreview");
+  const parserEnd = renderer.indexOf("type WorldContextMenuTarget", parserStart);
+  const parser = renderer.slice(parserStart, parserEnd);
+  const failures: string[] = [];
+  if (
+    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024") ||
+    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_COLOR_BYTES: usize = 128") ||
+    !fill.includes("pub(crate) const FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES: usize = 256") ||
+    !fill.includes("pub(crate) struct FillPreviewJsonCursor") ||
+    !["Census", "Reserve", "Encode", "Validate", "Ready", "Rejected", "Closing", "Terminal"].every((phase) => fill.includes(`FillPreviewJsonPhase::${phase}`)) ||
+    !fill.includes("fuel.checked_sub(1)") ||
+    !fill.includes("self.exact_bytes.checked_add(unit.len)") ||
+    !fill.includes("output.try_reserve_exact(self.exact_bytes)") ||
+    !fill.includes("output.extend_from_slice(&unit.bytes[..unit.len])") ||
+    !fill.includes("if self.identity != FillPreviewJsonIdentity::read(preview)") ||
+    !fill.includes("FillPreviewJsonStep::Pending { progress: self.progress, checkpoint: self.checkpoint() }") ||
+    !fill.includes("pub(crate) fn close_step(&mut self) -> bool") ||
+    !fill.includes("self.phase = FillPreviewJsonPhase::Terminal") ||
+    fill.includes("serde_json::to_vec(&self.preview)")
+  ) failures.push("Puzzle retained fill preview is not fixed-cap, one-fuel, generation-fenced, checkpointed, and incrementally closeable");
+  if (
+    !precompute.includes("pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String>") ||
+    !precompute.includes("let deadline = default_now_ms().saturating_add(2)") ||
+    !precompute.includes("let mut fuel = 1") ||
+    !precompute.includes("default_now_ms() >= deadline") ||
+    !precompute.includes("self.engine.fill_cancel.is_cancelled_now()") ||
+    !precompute.includes("fill.preview_json_ready().map(ToOwned::to_owned)") ||
+    precompute.includes("let build = session.fill_progress().preview?")
+  ) failures.push("Puzzle3d fill preview caller does not mount bounded fuel/deadline/cancel advancement and retain the last valid page");
+  if (
+    !puzzle3dWindow.includes("session.fill_preview_json_page(&color, labels.fill_progress.as_str())") ||
+    !puzzle3dWindow.includes("world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json") ||
+    puzzle3dWindow.includes("serde_json::to_value(build)") ||
+    !puzzle5dPrecompute.includes("self.inner.fill_preview_json_page(color, status_label)") ||
+    !puzzle5dWindow.includes("world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json") ||
+    !puzzle5dWindow.includes("labels.fill_progress.as_str()")
+  ) failures.push("Puzzle3d or Puzzle5d visible 3d consumer bypasses the shared retained fill page");
+  if (
+    parserStart < 0 || parserEnd < 0 ||
+    !renderer.includes('const WORLD_FILL_ROOT_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation", "color", "opacity", "fillBuildPreview"])') ||
+    !renderer.includes("const WORLD_FILL_DIAGNOSTIC_KEYS: ReadonlySet<string> = new Set([") ||
+    !renderer.includes('const WORLD_FILL_GHOST_KEYS: ReadonlySet<string> = new Set(["targetVortexFullId", "objectKindId", "sourceVortexIndex", "meshUrl", "origin", "orientation"])') ||
+    !renderer.includes("const WORLD_FILL_COLOR_MAX_BYTES = 128") ||
+    !parser.includes("censusAllowedOwnKeys(parsed, WORLD_FILL_ROOT_KEYS) < 0") ||
+    !parser.includes("censusAllowedOwnKeys(diagnostic, WORLD_FILL_DIAGNOSTIC_KEYS) !== WORLD_FILL_DIAGNOSTIC_KEYS.size") ||
+    !parser.includes("censusAllowedOwnKeys(candidateGhost, WORLD_FILL_GHOST_KEYS) === WORLD_FILL_GHOST_KEYS.size") ||
+    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "sourceVortexIndex") && !nonnegativeInteger(parsed.sourceVortexIndex)') ||
+    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "origin") && !finiteTuple(parsed.origin, 3)') ||
+    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "orientation") && !finiteTuple(parsed.orientation, 4)') ||
+    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "color") && (typeof parsed.color !== "string" || !boundedUtf8(parsed.color, WORLD_FILL_COLOR_MAX_BYTES))') ||
+    !parser.includes('Object.prototype.hasOwnProperty.call(parsed, "opacity") && parsed.opacity !== 0.35') ||
+    !parser.includes("diagnostic.candidateGhost.targetVortexFullId !== parsed.targetVortexFullId") ||
+    !parser.includes("diagnostic.candidateGhost.objectKindId !== parsed.objectKindId") ||
+    !parser.includes("diagnostic.candidateGhost.sourceVortexIndex !== parsed.sourceVortexIndex") ||
+    !parser.includes("diagnostic.candidateGhost.meshUrl !== parsed.meshUrl") ||
+    !parser.includes("!equalTuple(diagnostic.candidateGhost.origin, parsed.origin)") ||
+    !parser.includes("!equalTuple(diagnostic.candidateGhost.orientation, parsed.orientation)") ||
+    !parser.includes("diagnostic.statusLabel.length === 0") ||
+    !parser.includes("diagnostic.candidatePage.length !== 8") ||
+    !parser.includes("!Array.isArray(candidateGhost)") ||
+    !parser.includes("candidateGhost.sourceVortexIndex") ||
+    !parser.includes("candidateGhost.origin") ||
+    !parser.includes("candidateGhost.orientation") ||
+    !parser.includes("Number.isFinite") ||
+    !renderer.includes("readonly statusLabel: string") ||
+    !renderer.includes("aria-label={label}") ||
+    !renderer.includes("<span>{diagnostic.statusLabel}</span>") ||
+    renderer.includes('statusLabel ?? "Fill progress"')
+  ) failures.push("World3d fill parser or overlay does not fail closed on the exact diagnostic shape with visible/ARIA label parity");
+  if (
+    !puzzle3dTerminology.includes('fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt"') ||
+    !puzzle5dTerminology.includes('fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt"') ||
+    puzzle3dTerminology.includes("{ Locale::De } else { Locale::En }") ||
+    puzzle3dTerminology.includes(".unwrap_or(Terminology::Native)") ||
+    puzzle5dTerminology.includes("{ Locale::De } else { Locale::En }") ||
+    puzzle5dTerminology.includes("{ Terminology::Reuse } else { Terminology::Native }") ||
+    !puzzle3dTerminology.includes("None") ||
+    !puzzle5dTerminology.includes("None")
+  ) failures.push("Puzzle3d or Puzzle5d silently defaults an unsupported locale or terminology instead of failing closed");
+  try {
+    const fixture = JSON.parse(fixtureSource) as {
+      schema?: string;
+      limits?: { maximumBytes?: number; maximumColorBytes?: number; maximumStatusLabelBytes?: number; candidateItems?: number };
+      locales?: Record<string, { statusLabel?: string; expected?: string }>;
+    };
+    if (
+      fixture.schema !== "semio.puzzle3d.fill-preview-json.v1" ||
+      fixture.limits?.maximumBytes !== 4096 ||
+      fixture.limits?.maximumColorBytes !== 128 ||
+      fixture.limits?.maximumStatusLabelBytes !== 256 ||
+      fixture.limits?.candidateItems !== 8 ||
+      Object.keys(fixture.locales ?? {}).sort().join(",") !== "de,en" ||
+      fixture.locales?.en?.statusLabel !== "Fill progress" ||
+      fixture.locales?.de?.statusLabel !== "Füllfortschritt" ||
+      ![fixture.locales?.en?.expected, fixture.locales?.de?.expected].every((value) => typeof value === "string" && (JSON.parse(value).fillBuildPreview?.candidatePage?.length === 8))
+    ) failures.push("Puzzle fill language-neutral fixture does not own exact caps, EN/DE labels, and fixed eight-item expected pages");
+  } catch {
+    failures.push("Puzzle fill language-neutral fixture is malformed");
+  }
+  if (
+    !fillSource.includes("retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle") ||
+    !fillSource.includes("retained_preview_json_exact_cap_and_plus_one_fail_closed_before_reserve") ||
+    !fillSource.includes("retained_preview_json_zero_fuel_deadline_and_stale_generation_make_no_publication") ||
+    !fillSource.includes("retained_preview_json_cancellation_at_each_transfer_preserves_last_valid_page") ||
+    !fillSource.includes("retained_preview_json_reuses_exact_ready_page_during_locale_invalidated_encode_and_closes_idempotently") ||
+    !rendererTestSource.includes("parseWorldBrushPreview") ||
+    !rendererTestSource.includes('page("Füllfortschritt")') ||
+    !rendererTestSource.includes('page("Fill progress", {}, { extra: true })') ||
+    !rendererTestSource.includes('page("Fill progress", { extra: true })') ||
+    !rendererTestSource.includes("oneKeyNullGhostRoot") ||
+    !rendererTestSource.includes("fullNineKeyGhostRoot") ||
+    !rendererTestSource.includes("for (const malformedRoot of [") ||
+    !rendererTestSource.includes("for (const mismatchedRoot of [") ||
+    !rendererTestSource.includes('{ color: "ü".repeat(65) }')
+  ) failures.push("Puzzle fill source laws do not cover oracle parity, caps, stale/deadline/cancel/close, and localized renderer parsing");
+  return failures;
+}
+
+function interactivityPuzzleFillPreviewJsonSelfTests(repoRoot: string): void {
+  const sources = [
+    INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE,
+    INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE,
+  ].map((file) => policyReadFileSafe(repoRoot, file));
+  const mutations: [string, number, string, string][] = [
+    ["output-cap", 1, "FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024", "FILL_PREVIEW_JSON_MAX_BYTES: usize = 8 * 1024"],
+    ["whole-preview", 1, "pub(crate) struct FillPreviewJsonCursor", "fn whole_preview() { let _ = serde_json::to_vec(&self.preview); }\npub(crate) struct FillPreviewJsonCursor"],
+    ["lost-fuel", 1, "fuel.checked_sub(1)", "fuel.checked_sub(0)"],
+    ["lost-deadline", 0, "default_now_ms() >= deadline", "false"],
+    ["lost-puzzle3d-consumer", 2, "session.fill_preview_json_page(&color, labels.fill_progress.as_str())", "None"],
+    ["lost-puzzle5d-adapter", 3, "self.inner.fill_preview_json_page(color, status_label)", "None"],
+    ["lost-puzzle5d-consumer", 4, "labels.fill_progress.as_str()", "\"Fill progress\""],
+    ["short-page", 5, "diagnostic.candidatePage.length !== 8", "diagnostic.candidatePage.length > 8"],
+    ["array-ghost", 5, "!Array.isArray(candidateGhost)", "true"],
+    ["root-key-census", 5, "censusAllowedOwnKeys(parsed, WORLD_FILL_ROOT_KEYS) < 0", "false"],
+    ["diagnostic-key-census", 5, "censusAllowedOwnKeys(diagnostic, WORLD_FILL_DIAGNOSTIC_KEYS) !== WORLD_FILL_DIAGNOSTIC_KEYS.size", "false"],
+    ["ghost-key-census", 5, "censusAllowedOwnKeys(candidateGhost, WORLD_FILL_GHOST_KEYS) === WORLD_FILL_GHOST_KEYS.size", "true"],
+    ["root-source-index-shape", 5, 'Object.prototype.hasOwnProperty.call(parsed, "sourceVortexIndex") && !nonnegativeInteger(parsed.sourceVortexIndex)', "false"],
+    ["root-color-byte-cap", 5, '!boundedUtf8(parsed.color, WORLD_FILL_COLOR_MAX_BYTES)', "false"],
+    ["root-opacity", 5, "parsed.opacity !== 0.35", "false"],
+    ["root-ghost-authority", 5, "diagnostic.candidateGhost.targetVortexFullId !== parsed.targetVortexFullId", "false"],
+    ["hidden-label", 5, "<span>{diagnostic.statusLabel}</span>", "<span />"],
+    ["puzzle3d-locale-default", 6, "None", "Some(Locale::En)"],
+    ["puzzle5d-locale-default", 7, "None", "Some(Locale::En)"],
+    ["fixture-cap", 8, '"maximumBytes": 4096', '"maximumBytes": 4097'],
+    ["missing-oracle-law", 1, "retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle", "preview_json_smoke"],
+    ["missing-extra-root-law", 9, 'page("Fill progress", {}, { extra: true })', 'page("Fill progress")'],
+    ["missing-extra-diagnostic-law", 9, 'page("Fill progress", { extra: true })', 'page("Fill progress")'],
+    ["missing-known-root-shape-laws", 9, "for (const malformedRoot of [", "for (const ignoredMalformedRoot of ["],
+    ["missing-root-ghost-authority-laws", 9, "for (const mismatchedRoot of [", "for (const ignoredMismatchedRoot of ["],
+  ];
+  for (const [name, index, from, to] of mutations) {
+    const mutated = [...sources];
+    mutated[index] = mutated[index]!.replace(from, to);
+    if (mutated[index] === sources[index]) throw new Error(`[verify interactivity] Puzzle fill preview self-test mutation ${name} no longer reaches production source.`);
+    if (interactivityPuzzleFillPreviewJsonFailures(...(mutated as [string, string, string, string, string, string, string, string, string, string])).length === 0) throw new Error(`[verify interactivity] Puzzle fill preview self-test ${name} was falsely accepted.`);
+  }
+  const failures = interactivityPuzzleFillPreviewJsonFailures(...(sources as [string, string, string, string, string, string, string, string, string, string]));
+  if (failures.length !== 0) throw new Error(`[verify interactivity] Puzzle fill preview baseline was falsely rejected: ${failures.join("; ")}`);
 }
 
 export function interactivityLiveReconcileFailures(reconcileSource: string, patchesSource: string, reactorSource: string, valueSource: string, schemaSource = ""): string[] {
@@ -9021,10 +10455,34 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
   if (reconcile.includes("fn admit_vec_backing") || reconcile.includes("fn admit_hash_map_backing") || reconcile.includes("fn admit_hash_set_backing") || !reconcile.includes("struct RecordDiffCursor") || !reconcile.includes("fn diff_record_field") || reconcile.includes("fn diff_record(") || !reconcile.includes("struct SurfaceTreeRetireCursor") || reconcile.includes("retire_forest: Vec")) failures.push("live reconcile cursor/diff/retire backing is eager, fictional, hash-layout-estimated, or dynamically unowned");
   if (!reconcile.includes("pub struct SurfaceReconcileReservation") || !patches.includes("reservation: SurfaceReconcileReservation") || !patches.includes("SurfaceReconcileReservation::try_new(generation)") || !patches.includes("SurfaceReconcileJob::try_new_reserved") || !reconcile.includes("persistent_credit: Option<SurfaceReconcileCredit>")) failures.push("live reconcile producer/current/candidate ownership does not retain exact pre-materialization and persistent aggregate credit");
   if (!reconcile.includes("pub struct SurfaceReconcileRejected") || !reconcile.includes("pub struct SurfaceReconcileTerminal") || !reconcile.includes("pub fn take_sources(&mut self)") || !reconcile.includes("pub fn resume(mut self") || !reconcile.includes("pub fn close_step(&mut self)") || !reconcile.includes("impl Drop for SurfaceReconcileJob") || !reconcile.includes("impl Drop for SurfaceReconcileRejected") || !reconcile.includes("impl Drop for SurfaceReconcileTerminal") || !reconcile.includes("pub fn take_surface_reconcile_terminal")) failures.push("live reconcile exact rejected/terminal owners lack public take-resume-close and Drop handback");
-  if (!patches.includes("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected: [Option<RejectedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("terminals: [Option<TerminalSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("producer_terminals: [Option<MountedTreeTerminal>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected_reserved: [Option<u64>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("unadmitted: [Option<UnadmittedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS + 1]") || patches.includes("HashMap") || patches.includes("pub fn begin(&self, surface: String, tree: ComponentTree)") || !patches.includes("pub fn commit_source(mut self, root: TreeNode) -> Result<(), TreeNode>") || !patches.includes("pub fn reserve_mounted") || !patches.includes("pub fn drive_one(&self)") || !patches.includes("pub fn begin_close_instance") || !patches.includes("pub fn close_step(&self)") || !patches.includes("pub fn take_terminal") || !patches.includes("pub fn take_rejected")) failures.push("mounted PatchTracker is not the fixed admitted public lifecycle authority");
+  if (
+    !patches.includes("slots: Box<[Option<SurfaceSlot>]>") ||
+    !patches.includes("rejected: Box<[Option<RejectedSlot>]>") ||
+    !patches.includes("terminals: Box<[Option<TerminalSlot>]>") ||
+    !patches.includes("producer_terminals: Box<[Option<MountedTreeTerminal>]>") ||
+    !patches.includes("rejected_reserved: Box<[Option<u64>]>") ||
+    !patches.includes("deferred: Box<[Option<ui_contract::SurfaceId>]>") ||
+    !patches.includes("unadmitted: Box<[Option<UnadmittedSlot>]>") ||
+    !patches.includes("closing_instances: Box<[Option<ClosingInstance>]>") ||
+    !patches.includes("ready: Box<[Option<ReadySlot>]>") ||
+    !patches.includes("slots: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS)") ||
+    !patches.includes("unadmitted: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS + 1)") ||
+    !patches.includes("ready: fixed_slots(READY_PATCH_CAPACITY)") ||
+    !patches.includes("fn fixed_slots<T>(capacity: usize) -> Box<[Option<T>]>") ||
+    !patches.includes(".take(capacity).collect::<Vec<_>>().into_boxed_slice()") ||
+    patches.includes("HashMap") ||
+    patches.includes("pub fn begin(&self, surface: String, tree: ComponentTree)") ||
+    !patches.includes("pub fn commit_source(mut self, root: TreeNode) -> Result<(), TreeNode>") ||
+    !patches.includes("pub fn reserve_mounted") ||
+    !patches.includes("pub fn drive_one(&self)") ||
+    !patches.includes("pub fn begin_close_instance") ||
+    !patches.includes("pub fn close_step(&self)") ||
+    !patches.includes("pub fn take_terminal") ||
+    !patches.includes("pub fn take_rejected")
+  ) failures.push("mounted PatchTracker is not the fixed admitted public lifecycle authority");
   const commitSource = patches.slice(patches.indexOf("pub fn commit_source"), patches.indexOf("#[cfg(test)]", patches.indexOf("pub fn commit_source")));
   if ((commitSource.match(/return Err\(root\)/g) ?? []).length !== 6 || commitSource.includes("drop(root)")) failures.push("mounted source rejection does not return the exact root on every preflight or transfer refusal");
-  if (!patches.includes("ready: [Option<ReadySlot>; READY_PATCH_CAPACITY]") || !patches.includes("pending < ready_generation") || !patches.includes("acknowledged_revision") || !patches.includes("closing_instances: [Option<ClosingInstance>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("surface_instance(slot.surface.as_ref()) == Some(closing.instance)") || !patches.includes("slot.instance == Some(closing.instance)") || !patches.includes("state.ready.iter().all(Option::is_none)") || !patches.includes("state.deferred.iter().all(Option::is_none)") || !patches.includes("state.unadmitted.iter().all(Option::is_none)")) failures.push("mounted reconcile fixed publication/ACK/close order or terminal emptiness omits a retained owner class");
+  if (!patches.includes("ready: Box<[Option<ReadySlot>]>") || !patches.includes("pending < ready_generation") || !patches.includes("acknowledged_revision") || !patches.includes("closing_instances: Box<[Option<ClosingInstance>]>") || !patches.includes("surface_instance(slot.surface.as_ref()) == Some(closing.instance)") || !patches.includes("slot.instance == Some(closing.instance)") || !patches.includes("state.ready.iter().all(Option::is_none)") || !patches.includes("state.deferred.iter().all(Option::is_none)") || !patches.includes("state.unadmitted.iter().all(Option::is_none)")) failures.push("mounted reconcile fixed publication/ACK/close order or terminal emptiness omits a retained owner class");
   const unadmittedDefinition = patches.slice(patches.indexOf("struct UnadmittedSlot"), patches.indexOf("pub struct MountedReconcileGrant"));
   if (!patches.includes("MountedReconcileGrant") || !patches.includes("MountedReconcileOwner::Live { reconciler, reservation }") || !patches.includes("rejected_index: usize") || unadmittedDefinition.includes("tree:" ) || unadmittedDefinition.includes("reservation:") || patches.includes("tree: Option<ComponentTree>") || patches.includes("pub fn take_unadmitted")) failures.push("mounted producer can retain or publicly escape a whole unadmitted source tree instead of a reservation-only marker plus exact grant owner");
   const closeStart = patches.indexOf("pub fn close_step(&self)");
@@ -9072,7 +10530,7 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
   ) failures.push("P5b reactor poll work owners are not fixed SurfaceId/UiIntent collections with exact nonpanicking refusal");
   if (
     !trackerDefinitions.includes("surface: ui_contract::SurfaceId") ||
-    !trackerDefinitions.includes("deferred: [Option<ui_contract::SurfaceId>; SURFACE_RECONCILE_ADMISSION_SLOTS]") ||
+    !trackerDefinitions.includes("deferred: Box<[Option<ui_contract::SurfaceId>]>") ||
     !patches.includes("pub fn reserve_mounted(&self, surface: ui_contract::SurfaceId) -> Result<MountedReconcileGrant<'_>, ui_contract::SurfaceId>") ||
     trackerDefinitions.includes("surface: String") ||
     trackerDefinitions.includes("deferred: [Option<String>")
@@ -9246,11 +10704,11 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     ["missing-cancel", reconcile.replaceAll("if cx.is_cancelled()", "if false"), patches, reactor],
     ["double-step", reconcile.replace("match cursor.step(current) {", "let _extra = cursor.step(current);\n                match cursor.step(current) {"), patches, reactor],
     ["missing-terminal-drop", reconcile.replace("impl Drop for SurfaceReconcileTerminal", "impl SurfaceReconcileTerminal"), patches, reactor],
-    ["dynamic-tracker", reconcile, patches.replace("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]", "slots: Vec<Option<SurfaceSlot>>"), reactor],
+    ["dynamic-tracker", reconcile, patches.replace("slots: Box<[Option<SurfaceSlot>]>", "slots: Vec<Option<SurfaceSlot>>"), reactor],
     ["effect-reorder", reconcile, patches.replace("pending < ready_generation", "false"), reactor],
     ["instance-close-erasure", reconcile, patches.replaceAll("surface_instance(slot.surface.as_ref()) == Some(closing.instance)", "false"), reactor],
     ["tree-clone", reconcile, patches, reactor.replace("let _ = grant.commit_source(tree.root);", "let alias = unsafe { std::ptr::read(&tree.root) }; let _ = grant.commit_source(alias);")],
-    ["missing-drive", reconcile, patches, reactor.replace("let more = patches.drive_one();", "let more = false;")],
+    ["missing-drive", reconcile, patches, reactor.replace("more = patches.drive_one();", "more = false;")],
     ["missing-close", reconcile, patches, reactor.replace("patches.begin_close_instance(*numeric_instance)", "patches.defer(numeric_instance.to_string())")],
     ["old-diff", reconcile, patches.replace("pub fn reserve_mounted(&self, surface: ui_contract::SurfaceId)", "pub fn diff_mounted(&self, surface: ui_contract::SurfaceId)"), reactor],
     ["missing-cap-fixture", reconcile, patches.replace("cap_plus_one_returns_the_exact_tree_owner", "cap_smoke"), reactor],
@@ -9260,7 +10718,8 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     ["missing-zero-fuel-guard", reconcile.replaceAll("if cx.should_yield()", "if false"), patches, reactor],
     ["release-credit-in-take-ready", reconcile.replace("let (candidate_credit, patch_credit) = match split_surface_reconcile(credit) {", "release_surface_reconcile(credit); let replacement_credit = reserve_surface_reconcile(SurfaceReconcileLimits::default()).unwrap(); let (candidate_credit, patch_credit) = match split_surface_reconcile(replacement_credit) {"), patches, reactor],
     ["missing-pre-materialization-credit", reconcile, patches.replaceAll("SurfaceReconcileReservation::try_new(generation)", "None"), reactor],
-    ["dynamic-ready-owner", reconcile, patches.replace("ready: [Option<ReadySlot>; READY_PATCH_CAPACITY]", "ready: Vec<ReadySlot>"), reactor],
+    ["dynamic-ready-owner", reconcile, patches.replace("ready: Box<[Option<ReadySlot>]>", "ready: Vec<Option<ReadySlot>>"), reactor],
+    ["variable-fixed-owner-constructor", reconcile, patches.replace(".take(capacity).collect::<Vec<_>>().into_boxed_slice()", ".collect::<Vec<_>>().into_boxed_slice()"), reactor],
     ["unadmitted-owner-drop", reconcile, patches.replace("return Err(root);", "drop(root); return Ok(());"), reactor],
     ["mounted-source-retention", reconcile, patches.replace("reservation: SurfaceReconcileReservation", "tree: Option<ComponentTree>"), reactor],
     ["unmounted-render", reconcile, patches, reactor.replace("patches.reserve_mounted(surface)", "patches.begin(surface, tree)")],
@@ -9597,6 +11056,7 @@ export function interactivityMountedFrameTransactionFailures(
   paintSource: string,
   sceneSlotsSource: string,
   scenesSource: string,
+  servicesSource: string,
 ): string[] {
   const glue = interactivityProductionSource(glueSource);
   const frameJob = interactivityProductionSource(frameJobSource);
@@ -9614,6 +11074,7 @@ export function interactivityMountedFrameTransactionFailures(
   const paint = interactivityProductionSource(paintSource);
   const sceneSlots = interactivityProductionSource(sceneSlotsSource);
   const scenes = interactivityProductionSource(scenesSource);
+  const services = interactivityProductionSource(servicesSource);
   const transaction = glue.slice(glue.indexOf("pub(crate) struct FrameTransaction"), glue.indexOf("pub(crate) struct AppFramePresentation"));
   const frameCursors = glue.slice(glue.indexOf("struct FrameBuildCursor"), glue.indexOf("struct FrameWheelCursor"));
   const buildBoundary = glue.slice(glue.indexOf("fn frame_before_input_step"), glue.indexOf("fn frame_after_input_step"));
@@ -9653,6 +11114,7 @@ export function interactivityMountedFrameTransactionFailures(
   const chromeTourBoundary = interactivityProductionSource(shellSource.slice(shellSource.indexOf("fn render_chrome_tour_step"), shellSource.indexOf("#[cfg(test)]\n    fn render_navbar", shellSource.indexOf("fn render_chrome_tour_step"))));
   const prefsBoundary = shell.slice(shell.indexOf("fn native_pref_field_path"), shell.indexOf("//#endregion 🗄️PrefsStore"));
   const nativePrefsBoundary = prefsBoundary.slice(0, prefsBoundary.indexOf("fn prefs_get("));
+  const fixedFilePageBoundary = services.slice(services.indexOf("//#region 📄️FixedFilePage"), services.indexOf("//#endregion 📄️FixedFilePage"));
   const failures: string[] = [];
   const requireAll = (source: string, needles: readonly string[], label: string) => {
     if (needles.some((needle) => !source.includes(needle))) failures.push(label);
@@ -9825,15 +11287,29 @@ export function interactivityMountedFrameTransactionFailures(
     "fn native_pref_field_path",
     "key.len() > SHELL_CHROME_IO_FIELD_BYTES",
     "fn native_pref_read_page",
-    "let mut page = [0u8; SHELL_CHROME_IO_FIELD_BYTES]",
-    "file.read_exact(&mut page[..len])",
+    "semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES)",
+    "String::from_utf8(page)",
     "fn native_pref_write_page",
     "value.len() > SHELL_CHROME_IO_FIELD_BYTES",
-    "file.write_all(value.as_bytes())",
+    "semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES)",
     "prefs_get_bounded",
     "prefs_set_bounded",
-  ], "P5a native preference maintenance is not one fixed owned field page");
-  for (const forbidden of ["PREFS_STORE", "Mutex", ".lock()", "serde_json::from_", "serde_json::to_", "OS_SHELL_CONFIG_STORAGE_KEY", "Vec::with_capacity", "vec![", "loop {", "while "])
+  ], "P5a native preference maintenance does not delegate one fixed owned field page to the host-storage service");
+  requireAll(fixedFilePageBoundary, [
+    "pub const STORAGE_FIXED_FILE_PAGE_BYTES: usize = 16 * 1024",
+    "pub fn storage_worker_read_fixed_file_page",
+    "maximum_bytes > STORAGE_FIXED_FILE_PAGE_BYTES",
+    "logical_bytes > maximum_bytes",
+    "let mut page = [0u8; STORAGE_FIXED_FILE_PAGE_BYTES]",
+    "file.read_exact(&mut page[..logical_bytes])",
+    "if file.read(&mut trailing)? != 0",
+    "pub fn storage_worker_write_fixed_file_page",
+    "bytes.len() > maximum_bytes",
+    "std::fs::create_dir_all(parent)?",
+    "file.write_all(bytes)",
+  ], "P5a host-storage service does not own exact 16 KiB page admission/read/write and growth rejection");
+  if (!servicesSource.includes("fixed_file_page_exact_max_plus_one_matches_system_oracle_and_preserves_last_valid_page")) failures.push("P5a host-storage fixed page exact/max-plus-one/oracle preservation law is missing");
+  for (const forbidden of ["PREFS_STORE", "Mutex", ".lock()", "serde_json::from_", "serde_json::to_", "OS_SHELL_CONFIG_STORAGE_KEY", "Vec::with_capacity", "vec![", "loop {", "while ", "std::fs::", "std::io::"])
     if (nativePrefsBoundary.includes(forbidden)) failures.push(`P5a native preference field page retains blocking, dynamic, or whole-config ${forbidden}`);
   for (const forbidden of ["load_ui_prefs_once()", "read_stored_introduction_seen(", "persist_panel_layout_if_changed()", "write_stored_introduction_seen(", "persist_ui_prefs_if_changed()", "publish_presence_heartbeat()"])
     if (chromeBoundary.includes(forbidden)) failures.push(`P5a chrome frame still reaches synchronous maintenance ${forbidden}`);
@@ -10168,6 +11644,7 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs",
+    INTERACTIVITY_AUDIT_OS_SERVICES_FILE,
   ];
   const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
   const mutations: [string, number, string, string][] = [
@@ -10232,8 +11709,11 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["missing-maintenance-stale-witness", 0, "mailbox.0.presentation_authority.witness_for(generation).is_none()", "false"],
     ["maintenance-terminal-keeps-deferred-work", 0, "if let Some(fault) = frame_maintenance_terminal_fault(cancelled, stale, deadline_exceeded) {\n                    cursor.begin_close();", "if let Some(fault) = frame_maintenance_terminal_fault(cancelled, stale, deadline_exceeded) {\n                    cursor.shell_maintenance = false;"],
     ["discarded-maintenance-submission", 0, "match renderer_worker_pool().try_submit(semio_framework_async::Lane::Io, job) {", "renderer_worker_pool().submit(semio_framework_async::Lane::Io, job);\n        return Ok(());\n        match renderer_worker_pool().try_submit(semio_framework_async::Lane::Io, job) {"],
-    ["dynamic-preference-page", 5, "let mut page = [0u8; SHELL_CHROME_IO_FIELD_BYTES];", "let mut page = vec![0u8; SHELL_CHROME_IO_FIELD_BYTES];"],
-    ["whole-preference-json", 5, "String::from_utf8(page[..len].to_vec()).ok()", "serde_json::from_slice::<String>(&page[..len]).ok()"],
+    ["dynamic-preference-page", 16, "let mut page = [0u8; STORAGE_FIXED_FILE_PAGE_BYTES];", "let mut page = vec![0u8; STORAGE_FIXED_FILE_PAGE_BYTES];"],
+    ["whole-preference-json", 5, "String::from_utf8(page).ok()", "serde_json::from_slice::<String>(&page).ok()"],
+    ["ui-bypasses-host-storage-read", 5, "semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::read(&path)"],
+    ["ui-bypasses-host-storage-write", 5, "semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::write(&path, value.as_bytes())"],
+    ["missing-fixed-page-law", 16, "fixed_file_page_exact_max_plus_one_matches_system_oracle_and_preserves_last_valid_page", "fixed_file_page_smoke"],
     ["missing-paint-output-credit", 13, "draw.begin_retained_output(1, std::mem::size_of::<crate::wgpu::draw::UiInstance>())", "Ok::<(), ()>(())"],
     ["missing-paint-byte-cursor", 13, "byte: usize", "bytes: Vec<u8>"],
     ["missing-multimegabyte-text-law", 13, "retained_text_multi_megabyte_max_plus_one_preserves_tree_owner_identity", "retained_text_large_smoke"],
@@ -10897,7 +12377,7 @@ function interactivityPreparedRasterProducerFailures(preparedSource: string, dra
   const decodeAt = canvasQueue.indexOf("decode(&retained_source)");
   if (reserveAt < 0 || dimensionAt < 0 || claimAt < 0 || decodeAt < 0 || !(reserveAt < dimensionAt && dimensionAt < claimAt && claimAt < decodeAt) || canvasQueue.includes("digest_pixels(")) failures.push("Canvas raster reservation/claim is not before dimension, hash, and RGBA materialization");
   if (canvasQueue.includes("pixels[..expected].to_vec()") || canvas.includes("pending_raster_uploads: Vec") || canvas.includes("PendingRasterUpload {") || canvasQueue.includes("pixels.to_vec()")) failures.push("Canvas raster path reintroduced a contiguous prepared-pixel clone or growable queue");
-  if (!canvasQueue.includes("reservation.finalize(pixels, retained_source, width, height)") || !canvasQueue.includes("reject_with_retained") || canvasQueue.includes("PreparedRasterReservation::published_key") || canvasQueue.includes("let src_key") || !glue.includes("producer.bind_frame_generation(input.preview_generation)") || !glue.includes("input.raster_producers.push_back(producer)") || !glue.includes("checked_out.take()")) failures.push("Canvas producer does not move exact source/key owners once with checkout and frame generation witnesses");
+  if (!canvasQueue.includes("reservation.finalize(pixels, retained_source, width, height)") || !canvasQueue.includes("reject_with_retained") || canvasQueue.includes("PreparedRasterReservation::published_key") || canvasQueue.includes("let src_key") || !glue.includes("producer.bind_frame_generation(input.preview_generation)") || !glue.includes("input.try_push_raster_producer(producer)") || !glue.includes("checked_out.take()")) failures.push("Canvas producer does not move exact source/key owners once with checkout and frame generation witnesses");
   const svgQueueAt = interpreterSvg.indexOf("queue_canvas_image_upload_with");
   const svgParseAt = interpreterSvg.indexOf("parse_svg_data_url_bytes(src)");
   if (interpreter.includes("encode_rgba_png_data_url") || interpreter.includes("pixels.to_vec()") || interpreter.includes("ui_image_digest") || interpreter.includes("UI_IMAGE_SVG_CACHE") || !interpreter.includes("queue_canvas_image_upload_with") || !interpreter.includes("queue_canvas_image_upload_sized") || !interpreter.includes("UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned())") || svgQueueAt < 0 || svgParseAt < 0 || svgQueueAt > svgParseAt || !interpreterSvg.includes("Ok((measured.0, measured.1, bytes))") || !interpreterSvg.includes("|bytes|") || interpreterResolve.includes("parse_svg_data_url_bytes(src)")) failures.push("Interpreter raster routes parse, digest, clone, or drop source ownership before the stable prepared-key reservation");
@@ -10928,7 +12408,7 @@ function interactivityPreparedRasterProducerSelfTests(): void {
   const prepared = `const PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024; const PREPARED_RASTER_ITEM_BYTES: usize = 16 * 1024 * 1024; const PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256; const PREPARED_RASTER_PRODUCER_ITEMS: usize = 4_096; const PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024; slots: Vec<PreparedRasterPage> slots: Vec::with_capacity(claim.page_capacity) backing: Vec<u8> retained_source: Vec<u8> pub fn try_reserve_source pub fn claim_with_retained source_bytes.checked_mul(2) source_peak_bytes.checked_add(key_bytes) page_capacity.checked_add(8) key.capacity().checked_mul(2) page_capacity.checked_mul(size_of::<PreparedRasterPage>()) self.source_peak_bytes.checked_add(byte_len) retained_source.capacity() > self.source_bytes ledger.resize(credit, items, bytes) retire_backing_step self.backing = Vec::new() self.source = Vec::new() self.retained_source = Vec::new() self.key = String::new() self.slots.capacity() == 0 self.backing.capacity() == 0 self.retained_source.capacity() == 0 self.key_released && self.credit.is_none() if self.frame_generation != Some(expected_generation) { return Fault } pages.backing = std::mem::take(&mut self.source) raster_producers.front_mut() producer.begin_close() producer.close_step() return StepOutcome::Yield impl InteractiveJob for PreparedRenderJob { if cx.should_yield() { return StepOutcome::Yield } cx.consume_fuel(1); producer.step(cx.generation().0) } ${preparedFixtures}`;
   const canvas = `slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]> fn checkout_front(&mut self) struct PendingRasterCheckedOut surface.queue.hand_back(self.queue) pub(crate) fn queue_canvas_image_upload_with PreparedRasterReservation::try_reserve_source dimensions() reservation.claim_with_retained(width, height, retained_source) decode(&retained_source) reject_with_retained reservation.finalize(pixels, retained_source, width, height) pub struct PendingRasterAuthorityClose PENDING_RASTER_CLOSE_OWNER pub fn begin_pending_raster_authority_close ${canvasFixtures}`;
   const interpreter = "queue_canvas_image_upload_with queue_canvas_image_upload_sized UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned()) fn resolve_ui_image_svg { queue_canvas_image_upload_with parse_svg_data_url_bytes(src) Ok((measured.0, measured.1, bytes)) |bytes| } fn resolve_ui_image_url pub(crate) fn resolve_ui_image { return resolve_ui_image_svg(id, src); } fn object_contain_rect";
-  const glue = "checked_out.take() producer.bind_frame_generation(input.preview_generation) input.raster_producers.push_back(producer)";
+  const glue = "checked_out.take() producer.bind_frame_generation(input.preview_generation) input.try_push_raster_producer(producer)";
   const host = "raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose> begin_pending_raster_authority_close() raster_uploads.terminal_is_empty()";
   const gpu = "PreparedRenderUpload::RasterPages pixels.frame_generation() != packet.preview_generation()";
   const draw = "Self::Pages(pixels) => pixels.page_for_row(row)";
@@ -11112,7 +12592,7 @@ function interactivityDbIoFailures(storageSource: string, sqliteSource: string, 
   const testkit = interactivityProductionSource(testkitSource);
   const hub = interactivityProductionSource(hubSource);
   const failures: string[] = [];
-  for (const forbidden of ["run_blocking_op", "DbIoRequest", "DbIoAdmission", "DbIoState<", "DbIoOperationKind", "DbIoPages::try_new", "DbIoPages::try_range", "into_owner(self) -> Vec<u8>", "into_vec(self)", "Option<Arc<WorkerPool>>", "open_inline", "runtime.block_on", "tokio::spawn", "thread::spawn"])
+  for (const forbidden of ["run_blocking_op", "DbIoRequest", "DbIoAdmission", "DbIoState<", "DbIoOperationKind", "DbIoPages::try_new", "DbIoPages::try_range", "into_owner(self) -> Vec<u8>", "into_vec(self)", "open_inline", "runtime.block_on", "tokio::spawn", "thread::spawn"])
     if (storage.includes(forbidden) || sqlite.includes(forbidden)) failures.push(`live DB I/O source retains forbidden raw/generic authority: ${forbidden}`);
   for (const forbidden of ["struct MemWalSegment { bytes: Vec<u8>", "segment.bytes.extend_from_slice(fragment)"])
     if (storage.includes(forbidden)) failures.push(`memory DB I/O retains a whole raw WAL byte owner: ${forbidden}`);
@@ -11170,7 +12650,7 @@ function interactivityDbIoFailures(storageSource: string, sqliteSource: string, 
     "pub fn resume(&self) -> Result<bool, DbError>",
     "pub fn take(&mut self) -> Result<Option<Result<DbIoResultLease, DbIoFault>>, DbError>",
     "db_io_platform_maintenance_step",
-    "retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS]",
+    "retired: [Option<(u8, u64)>; DB_IO_PLATFORM_RETIREMENT_SLOTS]",
   ]) if (!storage.includes(required)) failures.push(`DB lane/ABA/retry/close ownership missing: ${required}`);
   if (storage.includes("callback_at(") || storage.includes("db_io_schedule_close")) failures.push("DB close/retry retains recursive timer scheduling instead of mounted maintenance");
   for (const required of [
@@ -11905,25 +13385,31 @@ function interactivityDbIoDirectWriterSelfTests(): void {
 
 function interactivityDbIoCursorCallerFailures(syncSource: string): string[] {
   const sync = interactivityProductionSource(syncSource);
-  const lower = sync.slice(sync.indexOf("struct BootstrapPageRangeCopy"), sync.indexOf("//#endregion 🔖️Hello"));
+  const followUp = sync.slice(sync.indexOf("enum DatabaseSyncHelloFollowUp"), sync.indexOf("struct DatabaseSyncHelloPrepared"));
+  const execute = sync.slice(sync.indexOf("async fn database_sync_hello_execute"), sync.indexOf("type DatabaseSyncHelloExecutionFuture"));
   const failures: string[] = [];
-  for (const forbidden of ["db_io_prepare_platform(pages)", ".chunks(snapshot_chunk_bytes)", "let chunks: Vec<&[u8]>", "chunk.to_vec()", "bytes.to_vec()"])
-    if (lower.includes(forbidden)) failures.push(`DB bootstrap retains a whole repository copy path: ${forbidden}`);
+  if (sync.includes("db_io_prepare_platform(pages)")) failures.push("DB bootstrap retains a whole repository copy path: db_io_prepare_platform(pages)");
+  for (const forbidden of [".chunks(snapshot_chunk_bytes)", "let chunks: Vec<&[u8]>", "chunk.to_vec()", "bytes.to_vec()", "while ", "for "])
+    if (followUp.includes(forbidden)) failures.push(`DB bootstrap retains a whole repository copy path: ${forbidden}`);
   for (const required of [
-    "struct BootstrapPageRangeCopy",
-    "impl std::future::Future for BootstrapPageRangeCopy",
-    "owner.pages.page(owner.page)",
-    "context.waker().wake_by_ref()",
-    "output.try_reserve_exact(len)",
-    "chunks > db_storage::DB_IO_OPERATION_ITEMS",
-    "bootstrap_page_range_copy(pages, start, len)?.await?",
-  ]) if (!lower.includes(required)) failures.push(`DB bootstrap retained page cursor missing: ${required}`);
-  if (!sync.includes("db_storage::db_io_hash_pages(&pages).await")) failures.push("DB bootstrap retained page hash cursor missing");
+    "enum DatabaseSyncHelloFollowUp",
+    "Snapshot { pages: db_storage::DbIoPages, chunk_bytes: usize, offset: usize, page: u8, page_offset: usize, seq: u32, chunk: Option<protocol::SnapshotChunkBytes>, done: bool }",
+    "fn drive_one_with_grant(",
+    "grant.check(cancelled, expired)?",
+    "let unit_bytes = (*chunk_bytes).min(DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES)",
+    "let fragment = pages.page(*page)",
+    "let copied = remaining.min(fragment.len().saturating_sub(*page_offset))",
+    "target.try_extend_from_slice(&fragment[*page_offset..*page_offset + copied])",
+    "*page = page.checked_add(1)",
+    "let bytes = chunk.take()",
+    "return Ok(Some(Some(frame)))",
+  ]) if (!followUp.includes(required)) failures.push(`DB bootstrap retained page cursor missing: ${required}`);
+  if (!execute.includes("for page in 0..pages.page_count()") || !execute.includes("hash.update(fragment)") || !execute.includes("database_sync_hello_opportunity(&cancelled, &expired).await")) failures.push("DB bootstrap retained page hash cursor missing");
   return failures;
 }
 
 function interactivityDbIoSelfTests(): void {
-  const goodStorage = `static DB_IO_PAGE_BACKINGS pub struct DbIoPageWriter pub fn try_reserve(reserved_pages: usize) pub struct DbIoPages pub fn page(&self, index: u8) pub fn try_range(mut self, start: usize) -> Result<Self, Self> pub fn advance(&mut self, len: usize) pub struct DbIoPlatformBuffer pub fn db_io_prepare_platform pub struct DbIoPageHash pub fn db_io_hash_pages owner.hasher.update(fragment) pub const DB_IO_PAGE_BYTES: usize = 16 * 1024 const DB_IO_OPERATION_PAGES: usize = 64 const DB_IO_TOTAL_PAGES: usize = 1024 const DB_IO_OPERATION_ITEMS: usize = 64 DbIoPagePhase::Queued DbIoPagePhase::Executing DbIoPagePhase::TerminalResult pub enum DbIoTask BackendOpen WalAppend SnapshotWrite PayloadPut CatalogCas IndexWrite LeaseAcquire BackendClose pub enum DbIoResult pub trait DbIoTaskExecutor fn execute_step(&self, operation: u64, task: &mut DbIoTask) fn close_operation_step(&self, operation: u64, task: &DbIoTask) pool.try_submit(Lane::Io, job) error.into_job() retry_generation retry_attempt DB_IO_RETRY_LIMIT DbIoTaskHandle { slot, generation, operation } db_io_slot_matches pub fn db_io_maintenance_step() db_io_task_close_step backend_cleanup_done backend_to_close pub fn resume(&self) -> Result<bool, DbError> pub fn take(&mut self) -> Result<Option<Result<DbIoResultLease, DbIoFault>>, DbError> db_io_platform_maintenance_step retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS] struct FsDbIoExecutor impl DbIoTaskExecutor for FsDbIoExecutor struct FsReadState payload_hashes readers: fn list_step chunks: [Option<DbIoPages>; DB_IO_OPERATION_ITEMS] struct MemWalRangeCopy impl Future for MemWalRangeCopy mem_wal_range_copy(segment, range)?.await struct MemoryDbIoExecutor impl DbIoTaskExecutor for MemoryDbIoExecutor enum MemoryDbIoCursor MemoryDbIoCursor::WalRead MemoryDbIoCursor::PageCopy MemoryDbIoCursor::List MemoryDbIoCursor::PayloadHash pub struct MemoryStorage memory_execute(self.pool.as_ref(), DbIoTask:: register_db_io_backend(DbIoBackendKind::Memory async fn append(bytes: DbIoPages) db_io_fixed_page_max_plus_one_and_zero_are_exact db_io_range_moves_the_same_page_leases_without_suffix_copy db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner db_io_process_page_max_plus_one_preflight_is_atomic db_io_result_page_reservation_plus_one_returns_the_writer db_io_interrupted_close_retires_one_page_or_owner_per_grant db_io_real_queued_callback_rejects_a_reused_task_slot_aba db_io_lost_page_handle_resumes_the_same_retirement_cursor`;
+  const goodStorage = `static DB_IO_PAGE_BACKINGS pub struct DbIoPageWriter pub fn try_reserve(reserved_pages: usize) pub struct DbIoPages pub fn page(&self, index: u8) pub fn try_range(mut self, start: usize) -> Result<Self, Self> pub fn advance(&mut self, len: usize) pub struct DbIoPlatformBuffer pub fn db_io_prepare_platform pub struct DbIoPageHash pub fn db_io_hash_pages owner.hasher.update(fragment) pub const DB_IO_PAGE_BYTES: usize = 16 * 1024 const DB_IO_OPERATION_PAGES: usize = 64 const DB_IO_TOTAL_PAGES: usize = 1024 const DB_IO_OPERATION_ITEMS: usize = 64 DbIoPagePhase::Queued DbIoPagePhase::Executing DbIoPagePhase::TerminalResult pub enum DbIoTask BackendOpen WalAppend SnapshotWrite PayloadPut CatalogCas IndexWrite LeaseAcquire BackendClose pub enum DbIoResult pub trait DbIoTaskExecutor fn execute_step(&self, operation: u64, task: &mut DbIoTask) fn close_operation_step(&self, operation: u64, task: &DbIoTask) pool.try_submit(Lane::Io, job) error.into_job() retry_generation retry_attempt DB_IO_RETRY_LIMIT DbIoTaskHandle { slot, generation, operation } db_io_slot_matches pub fn db_io_maintenance_step() db_io_task_close_step backend_cleanup_done backend_to_close pub fn resume(&self) -> Result<bool, DbError> pub fn take(&mut self) -> Result<Option<Result<DbIoResultLease, DbIoFault>>, DbError> db_io_platform_maintenance_step retired: [Option<(u8, u64)>; DB_IO_PLATFORM_RETIREMENT_SLOTS] struct FsDbIoExecutor impl DbIoTaskExecutor for FsDbIoExecutor struct FsReadState payload_hashes readers: fn list_step chunks: [Option<DbIoPages>; DB_IO_OPERATION_ITEMS] struct MemWalRangeCopy impl Future for MemWalRangeCopy mem_wal_range_copy(segment, range)?.await struct MemoryDbIoExecutor impl DbIoTaskExecutor for MemoryDbIoExecutor enum MemoryDbIoCursor MemoryDbIoCursor::WalRead MemoryDbIoCursor::PageCopy MemoryDbIoCursor::List MemoryDbIoCursor::PayloadHash pub struct MemoryStorage memory_execute(self.pool.as_ref(), DbIoTask:: register_db_io_backend(DbIoBackendKind::Memory async fn append(bytes: DbIoPages) db_io_fixed_page_max_plus_one_and_zero_are_exact db_io_range_moves_the_same_page_leases_without_suffix_copy db_io_list_capacity_plus_one_does_not_mutate_the_fixed_owner db_io_process_page_max_plus_one_preflight_is_atomic db_io_result_page_reservation_plus_one_returns_the_writer db_io_interrupted_close_retires_one_page_or_owner_per_grant db_io_real_queued_callback_rejects_a_reused_task_slot_aba db_io_lost_page_handle_resumes_the_same_retirement_cursor`;
   const goodSqlite = `struct SqliteDbIoExecutor impl DbIoTaskExecutor for SqliteDbIoExecutor CREATE TABLE IF NOT EXISTS db_io_stage fn write_stage_step fn read_stage_step fn payload_stage_step DELETE FROM db_io_stage WHERE operation typed_lane_is_lossless_at_page_boundary_and_zero typed_list_and_catalog_cas_are_stable`;
   const goodEngine = `pool: Arc<WorkerPool>`;
   const goodHub = `async fn connect_db { "fs" | "" => { Database::open_at(pool, &root, profile).await } "sqlite" => { let path = root.join("db.sqlite3"); SqliteStorage::open(pool.clone(), &path).await } } async fn connect_directory async fn main { let data_dir = root; let db = connect_db(&data_dir).await;`;
@@ -11939,7 +13425,7 @@ function interactivityDbIoSelfTests(): void {
     ["missing-operation-tag", goodStorage.replace("DbIoTaskHandle { slot, generation, operation }", "DbIoTaskHandle { slot, generation }"), goodSqlite, goodEngine, "", goodHub],
     ["missing-terminal-take", goodStorage.replace("pub fn take(&mut self) -> Result<Option<Result<DbIoResultLease, DbIoFault>>, DbError>", "fn drop_terminal"), goodSqlite, goodEngine, "", goodHub],
     ["missing-retry-resume", goodStorage.replace("pub fn resume(&self) -> Result<bool, DbError>", "fn drop_retry"), goodSqlite, goodEngine, "", goodHub],
-    ["platform-lost-handle", goodStorage.replace("retired: [Option<(u8, u64)>; DB_IO_PLATFORM_BUFFERS]", "drop_platform_slot"), goodSqlite, goodEngine, "", goodHub],
+    ["platform-lost-handle", goodStorage.replace("retired: [Option<(u8, u64)>; DB_IO_PLATFORM_RETIREMENT_SLOTS]", "drop_platform_slot"), goodSqlite, goodEngine, "", goodHub],
     ["quiet-saturation-strand", goodStorage.replace("retry_attempt", "drop"), goodSqlite, goodEngine, "", goodHub],
     ["bulk-close", goodStorage.replace("db_io_task_close_step", "close_all_tasks"), goodSqlite, goodEngine, "", goodHub],
     ["filesystem-read-reopen", goodStorage.replace("struct FsReadState", "fn read_to_end"), goodSqlite, goodEngine, "", goodHub],
@@ -11954,13 +13440,13 @@ function interactivityDbIoSelfTests(): void {
   for (const [name, storage, sqlite, engine, testkit, hub] of mutations)
     if (interactivityDbIoFailures(storage, sqlite, engine, testkit, hub).length === 0) throw new Error(`[verify interactivity] DB I/O self-test ${name} was falsely accepted.`);
   if (interactivityDbIoFailures(goodStorage, goodSqlite, goodEngine, "", goodHub).length !== 0) throw new Error("[verify interactivity] DB I/O self-test typed retained authority was falsely rejected.");
-  const goodSync = `struct BootstrapPageRangeCopy impl std::future::Future for BootstrapPageRangeCopy owner.pages.page(owner.page) context.waker().wake_by_ref() output.try_reserve_exact(len) chunks > db_storage::DB_IO_OPERATION_ITEMS bootstrap_page_range_copy(pages, start, len)?.await? db_storage::db_io_hash_pages(&pages).await //#endregion 🔖️Hello`;
+  const goodSync = `enum DatabaseSyncHelloFollowUp { Snapshot { pages: db_storage::DbIoPages, chunk_bytes: usize, offset: usize, page: u8, page_offset: usize, seq: u32, chunk: Option<protocol::SnapshotChunkBytes>, done: bool } } impl DatabaseSyncHelloFollowUp { fn drive_one_with_grant( grant.check(cancelled, expired)? let unit_bytes = (*chunk_bytes).min(DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES) let fragment = pages.page(*page) let copied = remaining.min(fragment.len().saturating_sub(*page_offset)) target.try_extend_from_slice(&fragment[*page_offset..*page_offset + copied]) *page = page.checked_add(1) let bytes = chunk.take() return Ok(Some(Some(frame))) } struct DatabaseSyncHelloPrepared async fn database_sync_hello_execute { for page in 0..pages.page_count() { hash.update(fragment) database_sync_hello_opportunity(&cancelled, &expired).await } } type DatabaseSyncHelloExecutionFuture`;
   for (const [name, source] of [
-    ["whole-platform-flatten", goodSync.replace("struct BootstrapPageRangeCopy", "db_io_prepare_platform(pages)")],
-    ["suffix-copy", goodSync.replace("owner.pages.page(owner.page)", "chunk.to_vec()")],
-    ["unbounded-items", goodSync.replace("chunks > db_storage::DB_IO_OPERATION_ITEMS", "let chunks: Vec<&[u8]>")],
-    ["single-turn-copy", goodSync.replace("context.waker().wake_by_ref()", "copy_from_slice(pages)")],
-    ["single-turn-hash", goodSync.replace("db_storage::db_io_hash_pages(&pages).await", "for fragment in pages.fragments() { hasher.update(fragment); }")],
+    ["whole-platform-flatten", goodSync.replace("enum DatabaseSyncHelloFollowUp", "db_io_prepare_platform(pages) enum DatabaseSyncHelloFollowUp")],
+    ["suffix-copy", goodSync.replace("let fragment = pages.page(*page)", "let fragment = chunk.to_vec()")],
+    ["unbounded-chunk", goodSync.replace("chunk: Option<protocol::SnapshotChunkBytes>", "chunk: Vec<u8>")],
+    ["single-turn-copy", goodSync.replace("target.try_extend_from_slice(&fragment[*page_offset..*page_offset + copied])", "for fragment in pages.fragments() { target.extend_from_slice(fragment); }")],
+    ["single-turn-hash", goodSync.replace("database_sync_hello_opportunity(&cancelled, &expired).await", "std::future::ready(()).await")],
   ] as const) if (interactivityDbIoCursorCallerFailures(source).length === 0) throw new Error(`[verify interactivity] DB I/O cursor-caller self-test ${name} was falsely accepted.`);
   if (interactivityDbIoCursorCallerFailures(goodSync).length !== 0) throw new Error("[verify interactivity] DB I/O cursor-caller self-test retained cursor was falsely rejected.");
 }
@@ -13297,7 +14783,7 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
   const terminalClose = terminalHandle.slice(terminalCloseStart, terminalHandle.indexOf("pub fn terminal_is_empty(&self)", terminalCloseStart));
   const productionWaits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const failures: string[] = [];
-  if (productionWaits !== 2 || engine.includes("async fn replay_history") || engine.includes("db_wal::replay_document(&storage.wal")) failures.push("DB engine retained history route does not preserve the two post-P1x residual waits");
+  if (productionWaits > 2 || engine.includes("async fn replay_history") || engine.includes("db_wal::replay_document(&storage.wal")) failures.push("DB engine retained history route exceeds the two post-P1x residual waits or revives whole history replay");
   for (const forbidden of ["block_on(", "ask_blocking", "submit_blocking", "thread::spawn", "WorkerPool::new(", "loop {", "while "])
     if (history.includes(forbidden) || replay.includes(forbidden)) failures.push(`retained history route contains ${forbidden}`);
   if (!history.includes("const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8") || !history.includes("const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024") || !history.includes("const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048") || !history.includes("const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481") || !history.includes("ArtifactHistoryAdmission::try_claim()")) failures.push("history operation lacks fixed item/page/operation/process admission");
@@ -13486,7 +14972,7 @@ function interactivityVcsBridgeFailures(engineSource: string, cliSource: string)
   const productionCliWaits = productionCli.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
   const wholeCliWaits = cliSource.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
   const seedDocument = cliSource.slice(cliSource.indexOf("fn seed_document"));
-  if (productionCliWaits !== 18 || wholeCliWaits !== 19 || productionCli.includes("fn seed_document") || !seedDocument.includes("db::actor::block_on(")) failures.push("DB CLI census is not exactly 18 production process-entry waits plus one test-only seed_document wait");
+  if (productionCliWaits > 18 || wholeCliWaits !== productionCliWaits + 1 || productionCli.includes("fn seed_document") || !seedDocument.includes("db::actor::block_on(")) failures.push("DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait");
   for (const forbidden of ["block_on(", "submit_blocking", "ask_blocking", "thread::spawn", "WorkerPool::new(", "loop {"]) if (vcs.includes(forbidden)) failures.push(`live VCS integration retains ${forbidden}`);
   if (!vcs.includes("const VCS_OPERATION_ITEMS: usize = 64") || !vcs.includes("const VCS_OPERATION_PAGE_BYTES: u64 = 16 * 1024") || !vcs.includes("const VCS_OPERATION_PAGES: u64 = 4") || !vcs.includes("const VCS_TOTAL_PAGES: u64 = 256") || !vcs.includes("VcsOperationAdmission::try_claim(items, bytes)")) failures.push("VCS operation lacks fixed item/page/process admission");
   for (const owner of ["document.0.capacity()", "change.parent.as_ref()", "change.author.0.capacity()", "change.message.capacity()", "request.change_ids.capacity()", "request.authors.capacity()", "request.change_ids.iter().map(String::capacity)", "request.authors.iter().map"])

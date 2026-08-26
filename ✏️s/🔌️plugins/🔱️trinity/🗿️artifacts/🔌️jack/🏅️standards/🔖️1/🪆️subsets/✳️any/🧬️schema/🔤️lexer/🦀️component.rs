@@ -60,7 +60,7 @@ pub struct SpannedToken {
     pub end: usize,
 }
 
-async fn token_class(token: &Token) -> TokenClass {
+fn token_class(token: &Token) -> TokenClass {
     match token {
         Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge | Token::And | Token::Or => TokenClass::Keyword,
         Token::Ident(_) => TokenClass::Ident,
@@ -72,13 +72,13 @@ async fn token_class(token: &Token) -> TokenClass {
     }
 }
 
-async fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end: usize) {
+fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end: usize) {
     tokens.push(SpannedToken { token, start, end });
 }
 
 /// 🔤️ Byte-span-tracked jack lexer. `forgiving = true` never fails (used by live editors mid-keystroke);
 /// `forgiving = false` rejects unterminated strings and unrecognized characters.
-pub async fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String> {
+pub fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String> {
     let mut tokens = Vec::new();
     let bytes = input.as_bytes();
     let mut i = 0;
@@ -208,12 +208,12 @@ pub async fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToke
     Ok(tokens)
 }
 
-pub async fn lex(input: &str) -> Result<Vec<Token>, String> {
+pub fn lex(input: &str) -> Result<Vec<Token>, String> {
     lex_spanned(input, false).map(|spanned| spanned.into_iter().map(|row| row.token).collect())
 }
 
 /// 🎨️ Tokenize jack source for editor highlighting (never fails).
-pub async fn tokenize(input: &str) -> Vec<TokenSpan> {
+pub fn tokenize(input: &str) -> Vec<TokenSpan> {
     lex_spanned(input, true)
         .unwrap_or_default()
         .into_iter()

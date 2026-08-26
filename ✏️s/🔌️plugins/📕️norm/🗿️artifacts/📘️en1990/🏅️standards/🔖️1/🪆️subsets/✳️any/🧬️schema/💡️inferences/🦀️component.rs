@@ -24,19 +24,19 @@ pub struct En1990Inference {
 }
 
 impl protocol::Inference<En1990Snapshot> for En1990Inference {
-    async fn infer(snapshot: &En1990Snapshot) -> Self {
+    fn infer(snapshot: &En1990Snapshot) -> Self {
         Self { outline: En1990Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.norm.en1990.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1990.inference.outline", reads: &["g_k", "q_k", "resistance_kn", "consequence_class", "annex", "seismic_a_ed_kn"] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1990::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1990.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1990_artifact_schema_descriptor`'s registration.
-pub async fn en1990_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn en1990_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1990.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    fn inference_determinism_law() {
         let snapshot = En1990Snapshot::default();
         assert_eq!(En1990Inference::infer(&snapshot), En1990Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    fn inference_default_law() {
         assert_eq!(En1990Inference::infer(&En1990Snapshot::default()), En1990Inference::default());
     }
 }
@@ -98,12 +98,12 @@ use crate::document::{AnnexChoice, CheckReport, DesignSituation};
 /// accessor — `q_k` is a composed `s.stdio.semio.table` child slot, ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) into the plain `(category, value)` pairs
 /// `ActionSet` expects.
-async fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {
+fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {
     ActionSet { g_k: document.g_k, q_k: crate::artifacts::en1990::en1990_qk(document).iter().map(|entry: &En1990QkEntry| (entry.category.clone(), entry.value)).collect() }
 }
 
 /// 📋️ `En1990Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
-pub async fn evaluate(document: &En1990Snapshot) -> CheckReport {
+pub fn evaluate(document: &En1990Snapshot) -> CheckReport {
     let actions = action_set_from_document(document);
     // 🔀️ O1 de-dyn: runtime-chosen concrete type (was `&dyn NationalAnnex`) — the closed-set enum
     // `NationalAnnexes` (`dyn_enum_close!` in en1990's schema module) replaces the trait object.
@@ -124,7 +124,7 @@ mod compliance_report_tests {
     use crate::artifacts::en1990::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
 
     #[semio_framework_async_macros::async_test]
-    async fn evaluate_accidental_situation_numeric() {
+    fn evaluate_accidental_situation_numeric() {
         let doc = En1990Snapshot::default();
         let actions = action_set_from_document(&doc);
         let accidental_ed = combination_uls(&NaDe, DesignSituation::Accidental, CombinationRule::Uls610a, &actions, 0);
@@ -137,7 +137,7 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn evaluate_seismic_situation_numeric() {
+    fn evaluate_seismic_situation_numeric() {
         let doc = En1990Snapshot::default();
         let report = evaluate(&doc);
         let seismic = report.checks.iter().find(|c| c.clause.section == "6.12b").expect("seismic 6.12b check present");

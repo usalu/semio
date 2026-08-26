@@ -15,15 +15,15 @@ pub struct ChangeSheetWElMm3 {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetWElMm3 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sheet-w-el-mm3", kind: "change-sheet-w-el-mm3", record: "ChangedSheetWElMm3" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_sheet_w_el_mm3::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_sheet_w_el_mm3::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change sheet elastic section modulus [mm3] to {}", self.new_sheet_w_el_mm3)
     }
 }

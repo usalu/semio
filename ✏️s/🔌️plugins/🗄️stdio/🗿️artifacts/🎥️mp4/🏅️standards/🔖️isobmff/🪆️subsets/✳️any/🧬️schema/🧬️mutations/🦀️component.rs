@@ -201,7 +201,7 @@ mod tests {
     /// 🧪️ mutation_diff_law + inverse_law, exercised across every real variant.
     #[semio_framework_async_macros::async_test]
     async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
-        let base = base_snapshot();
+        let base = base_snapshot().await;
         let variants = vec![
             Mp4Mutation::SetFtyp { ftyp: Mp4Ftyp { major_brand: "mp42".into(), minor_version: 1, compatible_brands: vec![] } },
             Mp4Mutation::InsertTrack { index: 1, track: Mp4Track { track_id: 2, timescale: 500, codec: Mp4Codec::default(), width: 32, height: 32, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] } },
@@ -228,7 +228,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn remove_track_then_insert_track_round_trips() {
-        let mut base = base_snapshot();
+        let mut base = base_snapshot().await;
         base.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::default(), width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
         let m = Mp4Mutation::RemoveTrack { index: 0 };
         let mut snap = base.clone();
@@ -244,7 +244,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn remove_sample_then_insert_sample_round_trips() {
-        let mut base = base_snapshot();
+        let mut base = base_snapshot().await;
         base.tracks[0].samples.push(Mp4Sample { data: vec![4, 5], duration: 33, cts_offset: 0, sync: false });
         let m = Mp4Mutation::RemoveSample { track_index: 0, index: 0 };
         let mut snap = base.clone();
@@ -258,7 +258,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_snapshot_still_works_as_a_full_replace() {
-        let base = base_snapshot();
+        let base = base_snapshot().await;
         let mut next = base.clone();
         next.ftyp.major_brand = "isom-mutated".into();
         let mutation = Mp4Mutation::SetSnapshot { snapshot: next.clone() };
@@ -273,7 +273,7 @@ mod tests {
     /// 🧪️ op_text_binary_roundtrip_law
     #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
-        let base = base_snapshot();
+        let base = base_snapshot().await;
         for m in
             [Mp4Mutation::NoMutation, Mp4Mutation::SetSnapshot { snapshot: base.clone() }, Mp4Mutation::SetFtyp { ftyp: base.ftyp.clone() }, Mp4Mutation::RemoveTrack { index: 0 }, Mp4Mutation::SetSampleSync { track_index: 0, index: 0, sync: true }]
         {
@@ -293,7 +293,7 @@ mod tests {
     /// §1: "the framework never parses Rust to check it itself").
     #[semio_framework_async_macros::async_test]
     async fn kinds_const_matches_enum_variants_in_declaration_order() {
-        let base = base_snapshot();
+        let base = base_snapshot().await;
         let one_per_variant = vec![
             Mp4Mutation::NoMutation,
             Mp4Mutation::SetSnapshot { snapshot: base.clone() },

@@ -15,15 +15,15 @@ pub struct ChangeWallPhiDeg {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallPhiDeg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "wall-phi-deg", kind: "change-wall-phi-deg", record: "ChangedWallPhiDeg" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_wall_phi_deg::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_wall_phi_deg::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change wall backfill friction angle [deg] to {}", self.new_wall_phi_deg)
     }
 }

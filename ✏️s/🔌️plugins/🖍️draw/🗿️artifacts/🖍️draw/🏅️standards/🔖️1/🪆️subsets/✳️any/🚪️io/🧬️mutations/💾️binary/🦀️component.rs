@@ -11,12 +11,12 @@ use crate::artifacts::draw::op::DrawMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `DrawMutation` to its binary command form.
-pub async fn encode_op(operation: &DrawMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &DrawMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `DrawMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<DrawMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<DrawMutation, protocol::ProtocolError> {
     DrawMutation::decode_op(bytes)
 }
 

@@ -1,5 +1,9 @@
 //! ??? Handcrafted retained-mode terminal UI: semio-styled scene, cell renderer, and ANSI backend.
 
+#[cfg(all(feature = "tui-terminal", windows))]
+#[path = "🪟️windows/🦀️component.rs"]
+mod windows_abi;
+
 // #region ???Geometry
 pub mod geometry {
     /// ??? A cell coordinate on the terminal grid.
@@ -4398,6 +4402,19 @@ pub mod backend {
         fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError>;
     }
 
+    #[cfg(all(feature = "tui-terminal", not(target_arch = "wasm32"), any(unix, windows)))]
+    fn release_owned_terminal_cleanup(owned: &mut bool, succeeded: bool) -> bool {
+        if *owned && succeeded {
+            *owned = false;
+        }
+        !*owned
+    }
+
+    #[cfg(all(feature = "tui-terminal", not(target_arch = "wasm32"), any(unix, windows)))]
+    fn terminal_entry_is_available(entered: bool, ansi_setup_owned: bool, platform_cleanup_empty: bool) -> bool {
+        !entered && !ansi_setup_owned && platform_cleanup_empty
+    }
+
     #[cfg(all(feature = "tui-terminal", unix, not(target_arch = "wasm32")))]
     mod native_unix {
         use super::*;
@@ -4409,12 +4426,26 @@ pub mod backend {
             BackendError { message: message.into() }
         }
 
+        fn retry_mode_restoration(raw_mode_entered: &mut bool, restore: impl FnOnce() -> bool) -> bool {
+            if !*raw_mode_entered {
+                return true;
+            }
+            if restore() {
+                *raw_mode_entered = false;
+                true
+            } else {
+                false
+            }
+        }
+
         /// ??? Raw-mode terminal backend for unix (macOS/Linux), driven by `libc` alone.
         pub struct NativeTerminal {
             fd: RawFd,
             original: libc::termios,
             parser: AnsiParser,
             entered: bool,
+            ansi_setup_owned: bool,
+            raw_mode_entered: bool,
         }
 
         impl NativeTerminal {
@@ -4427,7 +4458,7 @@ pub mod backend {
                     }
                     t
                 };
-                Ok(Self { fd, original, parser: AnsiParser::new(), entered: false })
+                Ok(Self { fd, original, parser: AnsiParser::new(), entered: false, ansi_setup_owned: false, raw_mode_entered: false })
             }
         }
 
@@ -4443,6 +4474,9 @@ pub mod backend {
             }
 
             fn enter(&mut self) -> Result<(), BackendError> {
+                if !terminal_entry_is_available(self.entered, self.ansi_setup_owned, !self.raw_mode_entered) {
+                    return Err(err("Terminal entry or cleanup is already active"));
+                }
                 let mut raw = self.original;
                 raw.c_lflag &= !(libc::ECHO | libc::ICANON | libc::ISIG | libc::IEXTEN);
                 raw.c_iflag &= !(libc::IXON | libc::ICRNL | libc::BRKINT | libc::INPCK | libc::ISTRIP);
@@ -4454,22 +4488,29 @@ pub mod backend {
                         return Err(err("tcsetattr failed"));
                     }
                 }
+                self.raw_mode_entered = true;
+                self.ansi_setup_owned = true;
+                if let Err(error) = std::io::stdout().write_all(setup_sequence().as_bytes()).and_then(|()| std::io::stdout().flush()).map_err(|e| err(e.to_string())) {
+                    let teardown = self.teardown_ansi();
+                    let restoration = self.restore_mode();
+                    self.entered = false;
+                    return match (teardown, restoration) {
+                        (Ok(()), Ok(())) => Err(error),
+                        _ => Err(err("Terminal setup write failed and terminal rollback is pending")),
+                    };
+                }
                 self.entered = true;
-                std::io::stdout().write_all(setup_sequence().as_bytes()).map_err(|e| err(e.to_string()))?;
-                std::io::stdout().flush().map_err(|e| err(e.to_string()))
+                Ok(())
             }
 
             fn leave(&mut self) -> Result<(), BackendError> {
-                if !self.entered {
+                if !self.entered && !self.ansi_setup_owned && !self.raw_mode_entered {
                     return Ok(());
                 }
-                std::io::stdout().write_all(teardown_sequence().as_bytes()).map_err(|e| err(e.to_string()))?;
-                std::io::stdout().flush().map_err(|e| err(e.to_string()))?;
-                unsafe {
-                    libc::tcsetattr(self.fd, libc::TCSANOW, &self.original);
-                }
+                let teardown = self.teardown_ansi();
+                let restoration = self.restore_mode();
                 self.entered = false;
-                Ok(())
+                teardown.and(restoration)
             }
 
             fn present(&mut self, patch: &AnsiPatch) -> Result<(), BackendError> {
@@ -4494,6 +4535,58 @@ pub mod backend {
             }
         }
 
+        impl NativeTerminal {
+            fn teardown_ansi(&mut self) -> Result<(), BackendError> {
+                if !self.ansi_setup_owned {
+                    return Ok(());
+                }
+                let result = std::io::stdout().write_all(teardown_sequence().as_bytes()).and_then(|()| std::io::stdout().flush()).map_err(|e| err(e.to_string()));
+                release_owned_terminal_cleanup(&mut self.ansi_setup_owned, result.is_ok());
+                result
+            }
+
+            fn restore_mode(&mut self) -> Result<(), BackendError> {
+                if !self.raw_mode_entered {
+                    return Ok(());
+                }
+                if !retry_mode_restoration(&mut self.raw_mode_entered, || unsafe { libc::tcsetattr(self.fd, libc::TCSANOW, &self.original) } == 0) {
+                    return Err(err("tcsetattr restore failed"));
+                }
+                Ok(())
+            }
+        }
+
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+
+            #[test]
+            fn raw_mode_restoration_retries_after_setup_cleanup_fails() {
+                let mut raw_mode_entered = true;
+                assert!(!retry_mode_restoration(&mut raw_mode_entered, || false));
+                assert!(raw_mode_entered);
+                assert!(retry_mode_restoration(&mut raw_mode_entered, || true));
+                assert!(!raw_mode_entered);
+            }
+
+            #[test]
+            fn failed_ansi_teardown_remains_owned_until_a_later_success() {
+                let mut ansi_setup_owned = true;
+                assert!(!release_owned_terminal_cleanup(&mut ansi_setup_owned, false));
+                assert!(ansi_setup_owned);
+                assert!(release_owned_terminal_cleanup(&mut ansi_setup_owned, true));
+                assert!(!ansi_setup_owned);
+            }
+
+            #[test]
+            fn pending_terminal_cleanup_rejects_reentry() {
+                assert!(terminal_entry_is_available(false, false, true));
+                assert!(!terminal_entry_is_available(true, false, true));
+                assert!(!terminal_entry_is_available(false, true, true));
+                assert!(!terminal_entry_is_available(false, false, false));
+            }
+        }
+
         impl Drop for NativeTerminal {
             fn drop(&mut self) {
                 let _ = self.leave();
@@ -4507,19 +4600,19 @@ pub mod backend {
     mod native_windows {
         use super::*;
         use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
-        use windows_sys::Win32::Foundation::HANDLE;
-        use windows_sys::Win32::Storage::FileSystem::{ReadFile, WriteFile};
-        use windows_sys::Win32::System::Console::{
-            GetConsoleMode, GetConsoleScreenBufferInfo, GetStdHandle, SetConsoleMode, CONSOLE_SCREEN_BUFFER_INFO, DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT, ENABLE_VIRTUAL_TERMINAL_INPUT,
-            ENABLE_VIRTUAL_TERMINAL_PROCESSING, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
+        use crate::tui::component::windows_abi::{
+            GetConsoleMode, GetConsoleScreenBufferInfo, GetStdHandle, ReadFile, SetConsoleMode, WaitForSingleObject, WriteFile, CONSOLE_SCREEN_BUFFER_INFO, DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT,
+            ENABLE_VIRTUAL_TERMINAL_INPUT, ENABLE_VIRTUAL_TERMINAL_PROCESSING, HANDLE, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, WAIT_OBJECT_0,
         };
-        use windows_sys::Win32::System::Threading::WaitForSingleObject;
 
         fn err(message: impl Into<String>) -> BackendError {
             BackendError { message: message.into() }
         }
 
-        /// ??? VT-mode terminal backend for Windows consoles, driven by `windows-sys` alone.
+        /// 🪟️ VT-mode terminal backend using borrowed standard handles and the private first-party Win32 ABI.
+        ///
+        /// The dashboard main loop owns this backend. Polling waits once and admits at most one
+        /// 4 KiB input page; presenting performs one retained-patch write.
         pub struct NativeTerminal {
             stdin: HANDLE,
             stdout: HANDLE,
@@ -4527,6 +4620,35 @@ pub mod backend {
             original_out: u32,
             parser: AnsiParser,
             entered: bool,
+            ansi_setup_owned: bool,
+            modes: ConsoleModeOwnership,
+        }
+
+        #[derive(Default)]
+        struct ConsoleModeOwnership {
+            stdin_changed: bool,
+            stdout_changed: bool,
+        }
+
+        impl ConsoleModeOwnership {
+            fn restore_with(&mut self, mut set_mode: impl FnMut(HANDLE, u32) -> bool, stdin: HANDLE, original_in: u32, stdout: HANDLE, original_out: u32) -> bool {
+                let mut restored = true;
+                if self.stdin_changed && set_mode(stdin, original_in) {
+                    self.stdin_changed = false;
+                } else if self.stdin_changed {
+                    restored = false;
+                }
+                if self.stdout_changed && set_mode(stdout, original_out) {
+                    self.stdout_changed = false;
+                } else if self.stdout_changed {
+                    restored = false;
+                }
+                restored
+            }
+
+            fn is_empty(&self) -> bool {
+                !self.stdin_changed && !self.stdout_changed
+            }
         }
 
         impl NativeTerminal {
@@ -4539,7 +4661,7 @@ pub mod backend {
                     if GetConsoleMode(stdin, &mut original_in) == 0 || GetConsoleMode(stdout, &mut original_out) == 0 {
                         return Err(err("GetConsoleMode failed"));
                     }
-                    Ok(Self { stdin, stdout, original_in, original_out, parser: AnsiParser::new(), entered: false })
+                    Ok(Self { stdin, stdout, original_in, original_out, parser: AnsiParser::new(), entered: false, ansi_setup_owned: false, modes: ConsoleModeOwnership::default() })
                 }
             }
         }
@@ -4558,28 +4680,46 @@ pub mod backend {
             }
 
             fn enter(&mut self) -> Result<(), BackendError> {
+                if !terminal_entry_is_available(self.entered, self.ansi_setup_owned, self.modes.is_empty()) {
+                    return Err(err("Terminal entry or cleanup is already active"));
+                }
                 unsafe {
                     let out_mode = self.original_out | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
                     let in_mode = (self.original_in | ENABLE_VIRTUAL_TERMINAL_INPUT) & !(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
-                    if SetConsoleMode(self.stdout, out_mode) == 0 || SetConsoleMode(self.stdin, in_mode) == 0 {
+                    if SetConsoleMode(self.stdout, out_mode) == 0 {
                         return Err(err("SetConsoleMode failed"));
                     }
+                    self.modes.stdout_changed = true;
+                    if SetConsoleMode(self.stdin, in_mode) == 0 {
+                        return match self.restore_modes() {
+                            Ok(()) => Err(err("SetConsoleMode failed")),
+                            Err(_) => Err(err("SetConsoleMode failed and rollback is pending")),
+                        };
+                    }
+                    self.modes.stdin_changed = true;
+                }
+                self.ansi_setup_owned = true;
+                if let Err(error) = self.write_raw(setup_sequence().as_bytes()) {
+                    let teardown = self.teardown_ansi();
+                    let restoration = self.restore_modes();
+                    self.entered = false;
+                    return match (teardown, restoration) {
+                        (Ok(()), Ok(())) => Err(error),
+                        _ => Err(err("Terminal setup write failed and rollback is pending")),
+                    };
                 }
                 self.entered = true;
-                self.write_raw(setup_sequence().as_bytes())
+                Ok(())
             }
 
             fn leave(&mut self) -> Result<(), BackendError> {
-                if !self.entered {
+                if !self.entered && !self.ansi_setup_owned && self.modes.is_empty() {
                     return Ok(());
                 }
-                self.write_raw(teardown_sequence().as_bytes())?;
-                unsafe {
-                    SetConsoleMode(self.stdin, self.original_in);
-                    SetConsoleMode(self.stdout, self.original_out);
-                }
+                let teardown = self.teardown_ansi();
+                let restoration = self.restore_modes();
                 self.entered = false;
-                Ok(())
+                teardown.and(restoration)
             }
 
             fn present(&mut self, patch: &AnsiPatch) -> Result<(), BackendError> {
@@ -4589,7 +4729,7 @@ pub mod backend {
             fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
                 let mut events = Vec::new();
                 let wait = unsafe { WaitForSingleObject(self.stdin, timeout.as_millis() as u32) };
-                if wait == 0 {
+                if wait == WAIT_OBJECT_0 {
                     let mut buf = [0u8; 4096];
                     let mut read = 0u32;
                     unsafe {
@@ -4601,6 +4741,57 @@ pub mod backend {
                     self.parser.flush_escape(&mut events);
                 }
                 Ok(events)
+            }
+        }
+
+        impl NativeTerminal {
+            fn teardown_ansi(&mut self) -> Result<(), BackendError> {
+                if !self.ansi_setup_owned {
+                    return Ok(());
+                }
+                let result = self.write_raw(teardown_sequence().as_bytes());
+                release_owned_terminal_cleanup(&mut self.ansi_setup_owned, result.is_ok());
+                result
+            }
+
+            fn restore_modes(&mut self) -> Result<(), BackendError> {
+                unsafe {
+                    if self.modes.restore_with(|handle, mode| SetConsoleMode(handle, mode) != 0, self.stdin, self.original_in, self.stdout, self.original_out) {
+                        Ok(())
+                    } else {
+                        Err(err("SetConsoleMode restore failed"))
+                    }
+                }
+            }
+        }
+
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+
+            #[test]
+            fn mode_rollback_retries_after_the_first_restore_failure() {
+                let mut modes = ConsoleModeOwnership { stdin_changed: false, stdout_changed: true };
+                assert!(!modes.restore_with(|_, _| false, std::ptr::null_mut(), 1, std::ptr::null_mut(), 2));
+                assert!(modes.stdout_changed);
+                assert!(modes.restore_with(|_, _| true, std::ptr::null_mut(), 1, std::ptr::null_mut(), 2));
+                assert!(modes.is_empty());
+            }
+
+            #[test]
+            fn mode_rollback_cleans_both_modes_after_a_setup_write_failure() {
+                let mut modes = ConsoleModeOwnership { stdin_changed: true, stdout_changed: true };
+                assert!(modes.restore_with(|_, _| true, std::ptr::null_mut(), 1, std::ptr::null_mut(), 2));
+                assert!(modes.is_empty());
+            }
+
+            #[test]
+            fn ansi_teardown_failure_remains_owned_for_a_later_windows_cleanup() {
+                let mut ansi_setup_owned = true;
+                assert!(!release_owned_terminal_cleanup(&mut ansi_setup_owned, false));
+                assert!(ansi_setup_owned);
+                assert!(release_owned_terminal_cleanup(&mut ansi_setup_owned, true));
+                assert!(!ansi_setup_owned);
             }
         }
 
@@ -4838,34 +5029,26 @@ pub mod pty {
     #[cfg(windows)]
     mod windows_impl {
         use super::*;
-        use std::ffi::OsStr;
-        use std::os::windows::ffi::OsStrExt;
-        use windows_sys::Win32::Foundation::{CloseHandle, SetHandleInformation, HANDLE, HANDLE_FLAG_INHERIT, INVALID_HANDLE_VALUE, STILL_ACTIVE, WAIT_OBJECT_0, WAIT_TIMEOUT};
-        use windows_sys::Win32::Security::SECURITY_ATTRIBUTES;
-        use windows_sys::Win32::Storage::FileSystem::{ReadFile, WriteFile};
-        use windows_sys::Win32::System::Console::{ClosePseudoConsole, CreatePseudoConsole, ResizePseudoConsole, COORD, HPCON};
-        use windows_sys::Win32::System::Pipes::{CreatePipe, PeekNamedPipe};
-        use windows_sys::Win32::System::Threading::{
-            CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess, GetProcessId, InitializeProcThreadAttributeList, TerminateProcess, UpdateProcThreadAttribute, WaitForSingleObject, CREATE_UNICODE_ENVIRONMENT,
-            EXTENDED_STARTUPINFO_PRESENT, PROCESS_INFORMATION, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, STARTUPINFOEXW,
+        use crate::tui::component::windows_abi::{
+            CreatePipe, CreateProcessW, CreatePseudoConsole, GetExitCodeProcess, GetProcessId, OwnedHandle, OwnedPseudoConsole, PeekNamedPipe, ProcThreadAttributeList, ReadFile, ResizePseudoConsole, SetHandleInformation, TerminateProcess,
+            WaitForSingleObject, WriteFile, COORD, CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT, HANDLE_FLAG_INHERIT, INVALID_HANDLE_VALUE, PROCESS_INFORMATION, SECURITY_ATTRIBUTES, STARTUPINFOEXW, STILL_ACTIVE, WAIT_OBJECT_0,
+            WAIT_TIMEOUT,
         };
+        use std::ffi::OsStr;
+        use std::mem::size_of;
+        use std::os::windows::ffi::OsStrExt;
 
-        /// ?? Windows ConPTY master pipes plus child process.
+        /// 🧵 Windows ConPTY master pipes plus child process.
+        ///
+        /// Spawn runs only at the dashboard's explicit command-activation boundary. Steady-state
+        /// reads admit one caller-sized page, status/resize perform one syscall, and termination
+        /// has a 1.5 second upper wait bound before RAII closes every owned kernel object.
         pub struct Pty {
-            hpcon: HPCON,
-            input_write: HANDLE,
-            output_read: HANDLE,
-            process: HANDLE,
-            thread: HANDLE,
-            closed: bool,
-        }
-
-        fn close_handle(handle: HANDLE) {
-            if handle != 0 && handle != INVALID_HANDLE_VALUE {
-                unsafe {
-                    CloseHandle(handle);
-                }
-            }
+            hpcon: OwnedPseudoConsole,
+            input_write: OwnedHandle,
+            output_read: OwnedHandle,
+            process: OwnedHandle,
+            _thread: OwnedHandle,
         }
 
         fn to_wide(s: &str) -> Vec<u16> {
@@ -4909,7 +5092,7 @@ pub mod pty {
             pub fn spawn(cmd: &str, args: &[&str], env: &[(&str, &str)], cwd: Option<&Path>, size: PtySize) -> Result<Self, PtyError> {
                 unsafe {
                     let mut sa: SECURITY_ATTRIBUTES = std::mem::zeroed();
-                    sa.nLength = std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32;
+                    sa.nLength = size_of::<SECURITY_ATTRIBUTES>() as u32;
                     sa.bInheritHandle = 1;
 
                     let mut input_read = INVALID_HANDLE_VALUE;
@@ -4919,46 +5102,37 @@ pub mod pty {
                     if CreatePipe(&mut input_read, &mut input_write, &sa, 0) == 0 {
                         return Err(err("CreatePipe input failed"));
                     }
+                    let input_read = OwnedHandle::from_raw(input_read);
+                    let input_write = OwnedHandle::from_raw(input_write);
+                    let input_read = input_read.ok_or_else(|| err("CreatePipe input returned an invalid read handle"))?;
+                    let input_write = input_write.ok_or_else(|| err("CreatePipe input returned an invalid write handle"))?;
                     if CreatePipe(&mut output_read, &mut output_write, &sa, 0) == 0 {
-                        close_handle(input_read);
-                        close_handle(input_write);
                         return Err(err("CreatePipe output failed"));
                     }
-                    SetHandleInformation(input_write, HANDLE_FLAG_INHERIT, 0);
-                    SetHandleInformation(output_read, HANDLE_FLAG_INHERIT, 0);
+                    let output_read = OwnedHandle::from_raw(output_read);
+                    let output_write = OwnedHandle::from_raw(output_write);
+                    let output_read = output_read.ok_or_else(|| err("CreatePipe output returned an invalid read handle"))?;
+                    let output_write = output_write.ok_or_else(|| err("CreatePipe output returned an invalid write handle"))?;
+                    if SetHandleInformation(input_write.as_raw(), HANDLE_FLAG_INHERIT, 0) == 0 || SetHandleInformation(output_read.as_raw(), HANDLE_FLAG_INHERIT, 0) == 0 {
+                        return Err(err(format!("SetHandleInformation failed: {}", std::io::Error::last_os_error())));
+                    }
 
                     let coord = COORD { X: size.cols as i16, Y: size.rows as i16 };
-                    let mut hpcon: HPCON = 0;
-                    let hr = CreatePseudoConsole(coord, input_read, output_write, 0, &mut hpcon);
-                    close_handle(input_read);
-                    close_handle(output_write);
-                    if hr < 0 || hpcon == 0 {
-                        close_handle(input_write);
-                        close_handle(output_read);
+                    let mut raw_hpcon = 0;
+                    let hr = CreatePseudoConsole(coord, input_read.as_raw(), output_write.as_raw(), 0, &mut raw_hpcon);
+                    if hr < 0 {
                         return Err(err(format!("CreatePseudoConsole failed: HRESULT {hr}")));
                     }
+                    let hpcon = OwnedPseudoConsole::from_raw(raw_hpcon).ok_or_else(|| err("CreatePseudoConsole returned a null handle"))?;
+                    drop(input_read);
+                    drop(output_write);
 
-                    let mut attr_size = 0usize;
-                    InitializeProcThreadAttributeList(std::ptr::null_mut(), 1, 0, &mut attr_size);
-                    let mut attr_buf = vec![0u8; attr_size];
-                    let attr_list = attr_buf.as_mut_ptr() as _;
-                    if InitializeProcThreadAttributeList(attr_list, 1, 0, &mut attr_size) == 0 {
-                        ClosePseudoConsole(hpcon);
-                        close_handle(input_write);
-                        close_handle(output_read);
-                        return Err(err("InitializeProcThreadAttributeList failed"));
-                    }
-                    if UpdateProcThreadAttribute(attr_list, 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE as usize, &hpcon as *const _ as *const _, std::mem::size_of::<HPCON>(), std::ptr::null_mut(), std::ptr::null()) == 0 {
-                        DeleteProcThreadAttributeList(attr_list);
-                        ClosePseudoConsole(hpcon);
-                        close_handle(input_write);
-                        close_handle(output_read);
-                        return Err(err("UpdateProcThreadAttribute failed"));
-                    }
+                    let mut attr_list = ProcThreadAttributeList::new(1).map_err(|e| err(format!("InitializeProcThreadAttributeList failed: {e}")))?;
+                    attr_list.set_pseudo_console(hpcon.as_raw()).map_err(|e| err(format!("UpdateProcThreadAttribute failed: {e}")))?;
 
                     let mut si: STARTUPINFOEXW = std::mem::zeroed();
-                    si.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
-                    si.lpAttributeList = attr_list;
+                    si.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
+                    si.lpAttributeList = attr_list.as_mut_ptr();
 
                     let mut cmdline = build_cmdline(cmd, args);
                     let cwd_wide = cwd.map(|p| to_wide(&p.to_string_lossy()));
@@ -4980,21 +5154,21 @@ pub mod pty {
                         &si.StartupInfo,
                         &mut pi,
                     );
-                    DeleteProcThreadAttributeList(attr_list);
                     if ok == 0 {
-                        ClosePseudoConsole(hpcon);
-                        close_handle(input_write);
-                        close_handle(output_read);
                         return Err(err(format!("CreateProcessW failed: {}", std::io::Error::last_os_error())));
                     }
+                    let process = OwnedHandle::from_raw(pi.hProcess);
+                    let thread = OwnedHandle::from_raw(pi.hThread);
+                    let process = process.ok_or_else(|| err("CreateProcessW returned an invalid process handle"))?;
+                    let thread = thread.ok_or_else(|| err("CreateProcessW returned an invalid thread handle"))?;
 
-                    Ok(Self { hpcon, input_write, output_read, process: pi.hProcess, thread: pi.hThread, closed: false })
+                    Ok(Self { hpcon, input_write, output_read, process, _thread: thread })
                 }
             }
 
             pub fn resize(&mut self, size: PtySize) -> Result<(), PtyError> {
                 let coord = COORD { X: size.cols as i16, Y: size.rows as i16 };
-                let hr = unsafe { ResizePseudoConsole(self.hpcon, coord) };
+                let hr = unsafe { ResizePseudoConsole(self.hpcon.as_raw(), coord) };
                 if hr < 0 {
                     return Err(err(format!("ResizePseudoConsole failed: HRESULT {hr}")));
                 }
@@ -5008,7 +5182,7 @@ pub mod pty {
             pub fn try_read(&mut self, buf: &mut [u8]) -> Result<usize, PtyError> {
                 unsafe {
                     let mut available = 0u32;
-                    if PeekNamedPipe(self.output_read, std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut available, std::ptr::null_mut()) == 0 {
+                    if PeekNamedPipe(self.output_read.as_raw(), std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut available, std::ptr::null_mut()) == 0 {
                         return Err(err(format!("PeekNamedPipe failed: {}", std::io::Error::last_os_error())));
                     }
                     if available == 0 {
@@ -5016,7 +5190,7 @@ pub mod pty {
                     }
                     let to_read = (buf.len() as u32).min(available);
                     let mut read = 0u32;
-                    if ReadFile(self.output_read, buf.as_mut_ptr(), to_read, &mut read, std::ptr::null_mut()) == 0 {
+                    if ReadFile(self.output_read.as_raw(), buf.as_mut_ptr(), to_read, &mut read, std::ptr::null_mut()) == 0 {
                         return Err(err(format!("ReadFile failed: {}", std::io::Error::last_os_error())));
                     }
                     Ok(read as usize)
@@ -5029,7 +5203,7 @@ pub mod pty {
 
             pub fn try_wait(&mut self) -> Result<Option<i32>, PtyError> {
                 unsafe {
-                    let wait = WaitForSingleObject(self.process, 0);
+                    let wait = WaitForSingleObject(self.process.as_raw(), 0);
                     if wait == WAIT_TIMEOUT {
                         return Ok(None);
                     }
@@ -5037,7 +5211,7 @@ pub mod pty {
                         return Err(err("WaitForSingleObject failed"));
                     }
                     let mut code = 0u32;
-                    if GetExitCodeProcess(self.process, &mut code) == 0 {
+                    if GetExitCodeProcess(self.process.as_raw(), &mut code) == 0 {
                         return Err(err("GetExitCodeProcess failed"));
                     }
                     if code == STILL_ACTIVE as u32 {
@@ -5048,38 +5222,24 @@ pub mod pty {
             }
 
             pub fn pid(&self) -> u32 {
-                unsafe { GetProcessId(self.process) }
+                unsafe { GetProcessId(self.process.as_raw()) }
             }
 
             pub fn kill(&mut self) -> Result<(), PtyError> {
                 unsafe {
-                    if TerminateProcess(self.process, 1) == 0 {
+                    if TerminateProcess(self.process.as_raw(), 1) == 0 {
                         return Err(err(format!("TerminateProcess failed: {}", std::io::Error::last_os_error())));
                     }
-                    WaitForSingleObject(self.process, 1500);
+                    WaitForSingleObject(self.process.as_raw(), 1500);
                 }
                 Ok(())
-            }
-
-            fn close_conpty(&mut self) {
-                if self.closed {
-                    return;
-                }
-                self.closed = true;
-                unsafe {
-                    ClosePseudoConsole(self.hpcon);
-                }
-                close_handle(self.input_write);
-                close_handle(self.output_read);
-                close_handle(self.thread);
-                close_handle(self.process);
             }
         }
 
         impl Write for Pty {
             fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
                 let mut written = 0u32;
-                let ok = unsafe { WriteFile(self.input_write, buf.as_ptr(), buf.len() as u32, &mut written, std::ptr::null_mut()) };
+                let ok = unsafe { WriteFile(self.input_write.as_raw(), buf.as_ptr(), buf.len() as u32, &mut written, std::ptr::null_mut()) };
                 if ok == 0 {
                     Err(std::io::Error::last_os_error())
                 } else {
@@ -5095,7 +5255,6 @@ pub mod pty {
         impl Drop for Pty {
             fn drop(&mut self) {
                 let _ = self.kill();
-                self.close_conpty();
             }
         }
     }

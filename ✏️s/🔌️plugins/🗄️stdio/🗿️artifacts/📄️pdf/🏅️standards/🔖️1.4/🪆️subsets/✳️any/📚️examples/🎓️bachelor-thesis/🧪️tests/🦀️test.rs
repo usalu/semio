@@ -185,7 +185,7 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
 
     let mut builder = PdfBuilder::empty().await;
     for page in &original.pages {
-        builder = builder.add_page(page.clone()).await;
+        builder = builder.add_page(page.clone());
     }
     let rebuilt_snapshot = builder.build().await.expect("builder-only reconstruction must succeed");
     let rebuilt_bytes = encode_pdf(&rebuilt_snapshot).expect("encode rebuilt snapshot");

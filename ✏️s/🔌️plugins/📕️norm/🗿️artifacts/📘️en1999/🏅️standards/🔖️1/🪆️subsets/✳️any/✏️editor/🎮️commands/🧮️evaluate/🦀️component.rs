@@ -21,7 +21,7 @@ pub struct Evaluate {}
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub async fn handle(_payload: &Evaluate, _doc: &ArtifactView<'_, En1999Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1999Mutation, NormConfigMutation>, Fault> {
+pub fn handle(_payload: &Evaluate, _doc: &ArtifactView<'_, En1999Snapshot>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<En1999Mutation, NormConfigMutation>, Fault> {
     Ok(Emit::default())
 }
 //#endregion 🔖️Handler
@@ -33,7 +33,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]
-    async fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
+    fn handle_emits_no_mutation_since_the_report_is_always_recomputed() {
         let projection = En1999Snapshot::default();
         let config = NormConfig::default();
         let emit = handle(&Evaluate {}, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");

@@ -25,11 +25,25 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-declaration", "set-
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://📰️ooxml-word-document.xml";
+/// 📜️ The document every mutation row runs on: the real `word/document.xml` of the real committed
+/// `📜️example-readme.docx`, extracted once (unzip, no other edit) — 92 873 bytes, 414 top-level
+/// body blocks including a real 37-row/7-column table, and a real XML declaration.
+const INPUT: &str = "shared://📰️ooxml-readme-document.xml";
+/// 📄️ The minified 747-byte OOXML part this case used to rest on, kept for `identity-round-trip`
+/// alone: it is the one committed document on which this repository's writer and `quick-xml` are
+/// known to CONVERGE character for character, which is the finding the serialization-form probe was
+/// written for and which nothing else here restates.
+const MINIFIED_INPUT: &str = "shared://📰️ooxml-word-document.xml";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("word-document.xml"))?;
+    let copy = ctx.copy_fixture(INPUT, Some("readme-document.xml"))?;
+    std::fs::read(&copy).map_err(|error| error.to_string())
+}
+
+/// 🧫️ The same, for the minified part the round-trip scenario additionally reads.
+fn mutable_minified_input(ctx: &Context) -> Result<Vec<u8>, String> {
+    let copy = ctx.copy_fixture(MINIFIED_INPUT, Some("word-document.xml"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -156,17 +170,24 @@ fn loosen_start_tags(input: &[u8]) -> Vec<u8> {
 /// additionally required to be non-vacuous (the perturbation must really have moved the bytes), and
 /// the round trip must still preserve the semantic projection.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = mutable_input(ctx)?;
+    let minified = round_trip_oracle_once(&mutable_minified_input(ctx)?, "the minified OOXML part")?;
+    let readme = round_trip_oracle_once(&mutable_input(ctx)?, "the README document part")?;
+    Ok(Outcome::with_raw(readme.0, Json::Object(vec![("minified".to_string(), minified.1), ("readme".to_string(), readme.1)])))
+}
+
+/// 🔁️ The probe itself, over one document.
+fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), String> {
+    let input = input.to_vec();
     let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(vec![]))]);
     let bytes = oracle_apply_mutation(&input, &no_mutation)?;
     let loosened = loosen_start_tags(&input);
     if loosened == input {
-        return Err("the serialization-form probe is vacuous: perturbing the start tags did not change a single byte, so it cannot distinguish parsing from copying".to_string());
+        return Err(format!("the serialization-form probe is vacuous on {what}: perturbing the start tags did not change a single byte, so it cannot distinguish parsing from copying"));
     }
     let from_loosened = oracle_apply_mutation(&loosened, &no_mutation)?;
     if from_loosened != bytes {
         return Err(format!(
-            "byte pass-through: two byte-different renderings of the SAME document re-encoded differently ({} vs {} bytes), so the output is not being re-derived from a parsed tree",
+            "byte pass-through on {what}: two byte-different renderings of the SAME document re-encoded differently ({} vs {} bytes), so the output is not being re-derived from a parsed tree",
             from_loosened.len(),
             bytes.len()
         ));
@@ -174,9 +195,9 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     let projection = project_xml_1_0(&bytes)?;
     let original = project_xml_1_0(&input)?;
     if let Some(divergence) = projection_divergence(&projection, &original) {
-        return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic projection -- {divergence}"));
+        return Err(format!("round-trip law violated on {what}: decode then re-encode did not preserve the semantic projection -- {divergence}"));
     }
-    Ok(Outcome::with_raw(bytes, projection))
+    Ok((bytes, projection))
 }
 //#endregion 🔖️Oracle
 
@@ -358,21 +379,28 @@ mod subject {
     /// ONLY channel from input to output (XML is text-native; there is no separate binary layer
     /// over the same model).
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
+        let minified = round_trip_once(&super::mutable_minified_input(ctx)?, "the minified OOXML part")?;
+        let readme = round_trip_once(&mutable_input(ctx)?, "the README document part")?;
+        Ok(Outcome::with_raw(readme.0, Json::Object(vec![("minified".to_string(), minified.1), ("readme".to_string(), readme.1)])))
+    }
+
+    /// 🔁️ The probe itself, over one document.
+    fn round_trip_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), String> {
+        let input = input.to_vec();
         let output = XmlSnapshot::import_utf8(&input).map_err(|error| format!("import_utf8 failed: {error}"))?.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         let loosened = super::loosen_start_tags(&input);
         if loosened == input {
-            return Err("the serialization-form probe is vacuous: perturbing the start tags did not change a single byte".to_string());
+            return Err(format!("the serialization-form probe is vacuous on {what}: perturbing the start tags did not change a single byte"));
         }
         let from_loosened = XmlSnapshot::import_utf8(&loosened).map_err(|error| format!("import_utf8 of the perturbed rendering failed: {error}"))?.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
         if from_loosened != output {
-            return Err(format!("byte pass-through: two byte-different renderings of the SAME document re-encoded differently ({} vs {} bytes)", from_loosened.len(), output.len()));
+            return Err(format!("byte pass-through on {what}: two byte-different renderings of the SAME document re-encoded differently ({} vs {} bytes)", from_loosened.len(), output.len()));
         }
         let projection = project_xml_1_0(&output)?;
         if let Some(divergence) = super::projection_divergence(&projection, &project_xml_1_0(&input)?) {
-            return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic projection -- {divergence}"));
+            return Err(format!("round-trip law violated on {what}: decode then re-encode did not preserve the semantic projection -- {divergence}"));
         }
-        Ok(Outcome::with_raw(output, projection))
+        Ok((output, projection))
     }
     //#endregion 🔖️Handlers
 

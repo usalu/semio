@@ -145,7 +145,7 @@ async fn committed_diff_is_canonical() {
     assert_eq!(
         serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/entities/modified/0/diff/args/modified/0/value").and_then(|v| v.get("string")).and_then(serde_json::Value::as_str),
         Some("Capsule Unit A"),
-        "set-snapshot/restamps-the-product-long-name: StepValue is externally tagged, so the committed argument reads {\"string\": …} — an adjacently tagged {\"kind\",\"value\"} pair would be ifc4's encoding, not step's"
+        "set-snapshot/restamps-the-product-long-name: StepValue is externally tagged, so the committed argument reads {{\"string\": …}} — an adjacently tagged {{\"kind\",\"value\"}} pair would be ifc4's encoding, not step's"
     );
 }
 

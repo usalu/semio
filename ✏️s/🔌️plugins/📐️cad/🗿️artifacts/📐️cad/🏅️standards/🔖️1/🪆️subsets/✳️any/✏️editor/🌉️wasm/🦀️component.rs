@@ -4,7 +4,7 @@
 
 #[cfg(target_arch = "wasm32")]
 mod bridge {
-    use crate::artifacts::cad::spr::{CadEnvelope, CadStore};
+    use crate::artifacts::cad::spr::CadStore;
     use crate::artifacts::cad::{empty_cad_snapshot, CAD_DOCUMENT_SCHEMA};
     use std::cell::RefCell;
     use store::create_document_envelope;
@@ -18,14 +18,8 @@ mod bridge {
     #[wasm_bindgen]
     impl CadArtifactVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<CadArtifactVcs, JsValue> {
-            let store = match envelope_json {
-                Some(json) => {
-                    let envelope: CadEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    semio_framework_plugin::resolve_ready(CadStore::new(envelope)).map_err(|e| JsValue::from_str(&e.to_string()))?
-                }
-                None => semio_framework_plugin::resolve_ready(CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None))).map_err(|e| JsValue::from_str(&e.to_string()))?,
-            };
+        pub fn new() -> Result<CadArtifactVcs, JsValue> {
+            let store = semio_framework_plugin::resolve_ready(CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None))).map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(store) })
         }
 

@@ -81,18 +81,18 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#region 🔖️DocumentHelpers
 /// 📦️ JSON text of the bundled Nakagin fixture — `RewriteSnapshot`'s own `_json` fields keep their
 /// JSON contract, so the `.trinity` DSL source is parsed once and re-serialized here.
-async fn nakagin_fixture_json() -> String {
+fn nakagin_fixture_json() -> String {
     JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).expect("bundled nakagin fixture parses").to_json().expect("fixture serializes")
 }
 
-pub(crate) async fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, PropertyValue> {
+pub(crate) fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, PropertyValue> {
     let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
         return BTreeMap::new();
     };
     rhs.parameters.iter().map(|param| (param.name.clone(), param.default.clone())).collect()
 }
 
-pub(crate) async fn default_rule_state() -> RewriteSnapshot {
+pub(crate) fn default_rule_state() -> RewriteSnapshot {
     let mut state = RewriteSnapshot { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
     state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
     state
@@ -100,14 +100,14 @@ pub(crate) async fn default_rule_state() -> RewriteSnapshot {
 
 /// 🌱️ Reads `RewriteSnapshot.before_fixture_json`'s seed-only `camera` field once — the one place a
 /// before-fixture's initial framing is consumed into the app's live config camera.
-pub(crate) async fn seed_before_pane_camera(state: &RewriteSnapshot) -> Camera {
+pub(crate) fn seed_before_pane_camera(state: &RewriteSnapshot) -> Camera {
     parse_fixture_json(&state.before_fixture_json).map(|fixture| fixture.camera).unwrap_or_default()
 }
 
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `resetRule` builds a `Effect::LoadDocument`
 /// (outside undo history) instead of an `artifact_mutations` entry.
-pub(crate) async fn reset_document_effect(state: &RewriteSnapshot) -> semio_framework_plugin::Effect {
+pub(crate) fn reset_document_effect(state: &RewriteSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RewriteSnapshot as ArtifactPack>::encode_pack(state);
     let envelope = store::create_document_envelope::<RewriteSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA, "rewrite", state.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("rewrite document spr encode is infallible for a fresh, edit-free envelope");
@@ -118,12 +118,9 @@ pub(crate) fn rewrite_action(action: &str, args: Option<semio_framework_plugin::
     semio_framework_plugin::ActionFactory::new(TRINITY_REWRITE_PLAY_CONTROLLER_ID).action(action, args)
 }
 
-
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
 }
 
 /// 🔘️ Admits one boolean UI action value.
@@ -136,27 +133,20 @@ pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue
     semio_framework_plugin::UiValue::Number(value.into())
 }
 
-
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
+    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
     for value in values {
-        builder
-            .push(value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
+        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::List(builder.finish()))
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
 pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
@@ -166,25 +156,22 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
     }
     Ok(nodes)
 }
 
-
-pub(crate) async fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
+pub(crate) fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
 }
 
-async fn build_rule_from_state(state: &RewriteSnapshot) -> Result<crate::artifacts::rewrite::schema::Rule, String> {
+fn build_rule_from_state(state: &RewriteSnapshot) -> Result<crate::artifacts::rewrite::schema::Rule, String> {
     let lhs: crate::artifacts::rewrite::schema::Lhs = serde_json::from_str(&state.lhs_json).map_err(|e| e.to_string())?;
     let rhs: Rhs = serde_json::from_str(&state.rhs_json).map_err(|e| e.to_string())?;
     Ok(crate::artifacts::rewrite::schema::Rule { name: TRINITY_REWRITE_PLAY_RULE_NAME.into(), lhs, rhs })
 }
 
-pub(crate) async fn compiled_jack_query(state: &RewriteSnapshot) -> String {
+pub(crate) fn compiled_jack_query(state: &RewriteSnapshot) -> String {
     let rule_json = match build_rule_from_state(state) {
         Ok(rule) => serde_json::to_string(&rule).unwrap_or_default(),
         Err(_) => return String::new(),
@@ -197,7 +184,7 @@ pub(crate) async fn compiled_jack_query(state: &RewriteSnapshot) -> String {
         .unwrap_or_else(|| build_rule_from_state(state).map(|rule| crate::artifacts::rewrite::schema::build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
 }
 
-async fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteSnapshot) -> String {
+fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteSnapshot) -> String {
     let Ok(mut graph) = crate::artifacts::jack::Graph::load_json(before_json) else {
         return before_json.into();
     };
@@ -213,16 +200,16 @@ async fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteSnapshot) ->
 
 /// ♻️ Pure computation of the rule-applied result graph — reused both by the `After` window's render
 /// and by `ArtifactApp::export_media`'s `"graph:out"` port.
-pub(crate) async fn after_fixture_json(state: &RewriteSnapshot) -> String {
+pub(crate) fn after_fixture_json(state: &RewriteSnapshot) -> String {
     apply_rewrite_to_fixture(&state.before_fixture_json, state)
 }
 
-async fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
+fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
     let (x, y) = rule_layout.get(id).map_or((x, y), |point| (point.x, point.y));
     Node { id: id.into(), name: name.into(), kind: kind.into(), x, y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
 }
 
-async fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::schema::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
+fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::schema::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
     let mut nodes = vec![semantic_rule_node("lhs-match", "rewrite.match", &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind), 0.0, 0.0, rule_layout)];
     let mut edges = Vec::new();
     if let Some(where_clause) = lhs.where_clause.as_deref().filter(|value| !value.trim().is_empty()) {
@@ -232,7 +219,7 @@ async fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewrite::schema::Lhs
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), crate::artifacts::jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
 }
 
-async fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
+fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
     let mut nodes = Vec::new();
     let edges = Vec::new();
     let mut y = 0.0;
@@ -271,14 +258,14 @@ async fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, La
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), crate::artifacts::jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
 }
 
-pub(crate) async fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
+pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
     let Ok(lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(lhs_json) else {
         return nakagin_fixture_json();
     };
     crate::artifacts::jack::Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
-pub(crate) async fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
+pub(crate) fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
     let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
         return nakagin_fixture_json();
     };
@@ -287,7 +274,7 @@ pub(crate) async fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMa
 
 /// 🕹️ Used by `interaction_topology` to hang a var-reference `TopologyNode` off its graph node
 /// (domain "graph" — "AST parents + variable references").
-async fn var_from_node_name(name: &str) -> Option<String> {
+fn var_from_node_name(name: &str) -> Option<String> {
     let trimmed = name.trim();
     if let Some((var, _)) = trimmed.split_once(':') {
         return Some(var.trim().into());
@@ -304,7 +291,7 @@ async fn var_from_node_name(name: &str) -> Option<String> {
 /// `trinity.rewrite.rule` document) plus a graph in/out pair: `graph:in` loads an incoming
 /// `trinity.graph` as this rule's `before_fixture_json` working graph, and `graph:out` re-emits the
 /// rule-applied result graph.
-pub(crate) async fn rewrite_io() -> semio_framework_plugin::AppIo {
+pub(crate) fn rewrite_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: REWRITE_RULE_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
@@ -336,7 +323,7 @@ pub(crate) async fn rewrite_io() -> semio_framework_plugin::AppIo {
 //#endregion 🔖️Io
 
 //#region 🔖️Render
-async fn rewrite_lod_json_for_window(cfg: &RewriteConfig, window_id: &str) -> Option<String> {
+fn rewrite_lod_json_for_window(cfg: &RewriteConfig, window_id: &str) -> Option<String> {
     let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
         Some(serde_json::json!({ "automatic": true }).to_string())
@@ -345,7 +332,7 @@ async fn rewrite_lod_json_for_window(cfg: &RewriteConfig, window_id: &str) -> Op
     }
 }
 
-async fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
+fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
     let mut items = vec![semio_framework_plugin::MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
     let rows: Vec<serde_json::Value> = serde_json::from_str(&crate::editor::rewrite::world::trinity_lod_scale_json()).unwrap_or_default();
     items.extend(rows.into_iter().filter_map(|row| {
@@ -362,7 +349,7 @@ async fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> Win
 /// wrapper's `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host
 /// reads domain "graph"'s `DomainSelection`/`DomainHover` directly, so the interactive surface stays
 /// correct even though this snapshot doesn't carry it.
-pub(crate) async fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, editable: bool, camera_override: Option<&Camera>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, editable: bool, camera_override: Option<&Camera>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
     let (nodes, edges, fixture_viewport) = crate::editor::jack::fixture_to_workflow(&fixture);
     let viewport = camera_override.map_or(fixture_viewport, |camera| NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom });
@@ -411,7 +398,7 @@ pub enum TrinityRewriteCommand {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for TrinityRewriteCommand {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -422,7 +409,7 @@ impl protocol::OpText for TrinityRewriteCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -432,7 +419,7 @@ impl protocol::OpText for TrinityRewriteCommand {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for TrinityRewriteCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -445,7 +432,7 @@ impl protocol::OpBinary for TrinityRewriteCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -488,20 +475,20 @@ impl ArtifactEditor for TrinityRewritePlayApp {
     const DIALECT: Dialect = TRINITY_REWRITE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::rewrite::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> RewriteSnapshot {
+    fn initial_snapshot() -> RewriteSnapshot {
         default_rule_state()
     }
 
-    async fn initial_config() -> RewriteConfig {
+    fn initial_config() -> RewriteConfig {
         let projection = Self::initial_snapshot();
         RewriteConfig { before_pane_camera: seed_before_pane_camera(&projection), ..RewriteConfig::default() }
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(rewrite_io())
     }
 
@@ -513,7 +500,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
     /// working graph — a single targeted field edit, not a whole-document replace.
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "graph:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -530,7 +517,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
     }
 
     /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"document:out"`.
-    async fn export_media(port: &str, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, RewriteSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
                 let fixture_json = after_fixture_json(doc.snapshot);
@@ -552,7 +539,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
 
     /// 🏷️ Maps each `TrinityRewriteCommand` variant back to the action id it was declared under in
     /// `create_rewrite_app`.
-    async fn command_id(command: &TrinityRewriteCommand) -> &'static str {
+    fn command_id(command: &TrinityRewriteCommand) -> &'static str {
         match command {
             TrinityRewriteCommand::NodeGraphEdit { .. } => "nodeGraphEdit",
             TrinityRewriteCommand::SetLhsJson { .. } => "setLhsJson",
@@ -568,7 +555,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         }
     }
 
-    async fn handle(
+    fn handle(
         command: &TrinityRewriteCommand,
         doc: &ArtifactView<'_, RewriteSnapshot>,
         cfg: &ConfigView<'_, RewriteConfig>,
@@ -593,7 +580,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::rewrite::terminology::TrinityRewriteLabels>(&config.locale);
@@ -611,7 +598,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         }
     }
 
-    async fn window_measures(_doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let mode_for = |window_id: &str| config.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([
@@ -622,7 +609,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         ])
     }
 
-    async fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewriteSnapshot>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = cfg.snapshot.locale.starts_with("de");
@@ -655,7 +642,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
     /// `lhs-match` via their one edge); (3) the RHS semantic graph (its clause nodes have no inherent
     /// parent order, so they're roots). `MergeMode::Range` is not declared for this domain, so
     /// `ordered`'s sequence need not be a strict pre-order.
-    async fn interaction_topology(doc: &ArtifactView<'_, RewriteSnapshot>, _cfg: &ConfigView<'_, RewriteConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, RewriteSnapshot>, _cfg: &ConfigView<'_, RewriteConfig>) -> InteractionTopology {
         let state = doc.snapshot;
         let mut ordered = Vec::new();
 
@@ -808,11 +795,11 @@ mod tests {
 
     /// 🎫️ See `jack`'s `trinity_jack_manifest_for_testkit` doc comment for why this wrapper exists
     /// (SDK gap, `testkit::new_app_with_registry`'s signature is still `fn(manifest: fn() -> App)`).
-    async fn trinity_rewrite_manifest_for_testkit() -> App {
+    fn trinity_rewrite_manifest_for_testkit() -> App {
         App { definition: create_rewrite_app(), examples: Vec::new() }
     }
 
-    async fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
+    fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
     }
 
@@ -844,13 +831,13 @@ mod tests {
     /// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
     /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
     /// domain "graph" selection needs the real manifest's `.interaction(...)` declaration present.
-    async fn new_app() -> VcsArtifactApp<EditorApp<TrinityRewritePlayApp>> {
+    fn new_app() -> VcsArtifactApp<EditorApp<TrinityRewritePlayApp>> {
         testkit::new_app_with_registry::<EditorApp<TrinityRewritePlayApp>>(trinity_rewrite_manifest_for_testkit)
     }
 
     /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "graph" — the
     /// replacement for the deleted `TrinityRewriteCommand::SetSelection`.
-    async fn select_graph(app: &mut VcsArtifactApp<EditorApp<TrinityRewritePlayApp>>, ids: &[&str]) {
+    fn select_graph(app: &mut VcsArtifactApp<EditorApp<TrinityRewritePlayApp>>, ids: &[&str]) {
         let targets: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": id })).collect();
         let args = serde_json::json!({ "domainId": "graph", "targets": serde_json::to_string(&targets).unwrap() });
         app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");

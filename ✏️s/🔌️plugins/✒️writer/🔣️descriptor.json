@@ -111,7 +111,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -156,7 +157,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -246,7 +248,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -289,7 +292,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -332,7 +336,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -376,7 +381,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -420,7 +426,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -463,7 +470,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -506,7 +514,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -567,7 +576,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -628,7 +638,8 @@
                     "idempotency": "none",
                     "expectedRevision": true,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -673,7 +684,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -717,7 +729,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -761,7 +774,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -805,7 +819,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -849,7 +864,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -1446,7 +1462,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },
@@ -3211,7 +3228,8 @@
                     "idempotency": "none",
                     "expectedRevision": false,
                     "cancellable": false,
-                    "class": "interactive"
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
                   }
                 }
               },

@@ -13,7 +13,7 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl Din4108Diff {
-    pub async fn apply_to_artifact(&self, artifact: &Din4108Artifact) -> protocol::MutationApplyResult<Din4108Artifact> {
+    pub fn apply_to_artifact(&self, artifact: &Din4108Artifact) -> protocol::MutationApplyResult<Din4108Artifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -82,7 +82,7 @@ impl Din4108Diff {
 }
 
 impl MutationDiff<Din4108Snapshot> for Din4108Diff {
-    async fn apply(&self, snapshot: &Din4108Snapshot) -> protocol::MutationApplyResult<Din4108Snapshot> {
+    fn apply(&self, snapshot: &Din4108Snapshot) -> protocol::MutationApplyResult<Din4108Snapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -145,7 +145,7 @@ impl MutationDiff<Din4108Snapshot> for Din4108Diff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -181,7 +181,7 @@ impl MutationDiff<Din4108Snapshot> for Din4108Diff {
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
-pub async fn diff_set_snapshot(snapshot: &Din4108Snapshot) -> Din4108Diff {
+pub fn diff_set_snapshot(snapshot: &Din4108Snapshot) -> Din4108Diff {
     Din4108Diff { artifact: Some(Box::new(Din4108Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers

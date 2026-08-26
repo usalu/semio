@@ -29,7 +29,7 @@ Feature: Apply every typed PPTX ECMA-376 mutation to a real-world presentation
   Defaults. Every `.rels`, `.png` and `.jpeg` part in the package was therefore left with no
   resolvable content type, which ECMA-376 Part 2 §10.1.2.2.1 forbids outright, and this subset's
   own `decode_pptx` rightly refused the file with `part docProps/thumbnail.jpeg has no resolvable
-  content type` — all 19 subject scenarios red, `parity=0/19`, while the oracle composition read
+  content type` — all 19 subject scenarios red, while the oracle composition read
   the same broken package without complaint. The eight real `<Default>` elements were spliced back
   in from the real source deck and NOTHING else changed: the repair rewrites only the
   `[Content_Types].xml` entry, and every other part keeps its exact bytes, order and zip timestamp

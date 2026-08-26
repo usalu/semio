@@ -10,13 +10,13 @@ pub const BODY_INSPECTION: &str = "norm.din18599.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, BODY_INSPECTION)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(host: &NormHost<DinV18599Family>, selected_check_index: Option<u32>) -> UiNode {
+pub fn render(host: &NormHost<DinV18599Family>, selected_check_index: Option<u32>) -> UiNode {
     crate::app_surface::render_inspection(host.report(), selected_check_index)
 }
 //#endregion 🔖️Render
@@ -28,7 +28,7 @@ mod tests {
     use crate::editor::din18599::testkit;
 
     #[semio_framework_async_macros::async_test]
-    async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
+    fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
         assert_eq!(definition().body_key.as_deref(), Some(BODY_INSPECTION));
         assert_eq!(definition().id(), FRAMEWORK_PANEL_TAB_INSPECTION_ID);
         assert!(matches!(definition().group, PanelGroup::Details));
@@ -37,7 +37,7 @@ mod tests {
     /// 👁️ The config-driven pointer: an out-of-range index falls back to the first check, so both
     /// renders agree for a document whose report has fewer rows than the index.
     #[semio_framework_async_macros::async_test]
-    async fn an_out_of_range_selected_index_falls_back_to_the_first_check() {
+    fn an_out_of_range_selected_index_falls_back_to_the_first_check() {
         let host = NormHost::<DinV18599Family>::from_document(crate::artifacts::din18599::Din18599Snapshot::default());
         let first = serde_json::to_string(&render(&host, None)).expect("json");
         let clamped = serde_json::to_string(&render(&host, Some(9_999))).expect("json");
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn renders_a_single_check() {
+    fn renders_a_single_check() {
         let mut app = testkit::new_app();
         assert!(!testkit::render(&mut app, BODY_INSPECTION).contains("Unknown body"));
     }

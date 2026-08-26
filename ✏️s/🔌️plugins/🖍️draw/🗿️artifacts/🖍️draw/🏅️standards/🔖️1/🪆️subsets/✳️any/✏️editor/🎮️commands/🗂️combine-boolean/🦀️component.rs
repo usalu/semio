@@ -15,7 +15,7 @@ pub struct CombineBoolean {
     pub ids: Vec<String>,
 }
 
-pub async fn handle(payload: &CombineBoolean, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
+pub fn handle(payload: &CombineBoolean, doc: &ArtifactView<'_, DrawSnapshot>, _cfg: &ConfigView<'_, DrawConfig>, session: &mut DrawSession) -> Result<Emit<DrawMutation, DrawConfigMutation>, Fault> {
     let document = doc.snapshot;
     let ids: Vec<String> = if payload.ids.is_empty() { session.interaction.ids.clone() } else { payload.ids.clone() };
     if ids.len() < 2 {

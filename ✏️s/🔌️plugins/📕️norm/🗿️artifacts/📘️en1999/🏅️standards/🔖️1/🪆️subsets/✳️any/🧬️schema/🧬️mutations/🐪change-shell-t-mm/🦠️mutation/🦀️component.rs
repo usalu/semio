@@ -15,15 +15,15 @@ pub struct ChangeShellTMm {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeShellTMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "shell-t-mm", kind: "change-shell-t-mm", record: "ChangedShellTMm" };
 
-    async fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_shell_t_mm::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
+    fn inverse(&self, base: &En1999Snapshot) -> Vec<En1999Mutation> {
         crate::artifacts::en1999::mutations::change_shell_t_mm::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change shell thickness t [mm] to {}", self.new_shell_t_mm)
     }
 }

@@ -83,11 +83,11 @@ pub(crate) struct PortDsl {
     properties: PropertyBag,
 }
 
-pub(crate) async fn port_to_port_dsl(port: &Port) -> PortDsl {
+pub(crate) fn port_to_port_dsl(port: &Port) -> PortDsl {
     PortDsl { id: port.id.clone(), kind: port.kind.clone(), direction: port.direction.into(), properties: port.properties.clone() }
 }
 
-pub(crate) async fn port_dsl_to_port(port: PortDsl) -> Port {
+pub(crate) fn port_dsl_to_port(port: PortDsl) -> Port {
     Port { id: port.id, kind: port.kind, direction: port.direction.into(), properties: port.properties }
 }
 //#endregion 🔖️DslMirrors
@@ -96,28 +96,28 @@ pub(crate) async fn port_dsl_to_port(port: PortDsl) -> Port {
 /// 🧪️ Real hex-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same style
 /// `dag`'s own facet establishes, duplicated locally (not imported across crates) to keep this facet
 /// independently compilable.
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if s.len() % 2 != 0 {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-pub(crate) async fn enc_str(s: &str) -> String {
+pub(crate) fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
+pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn enc_opt_str(s: &Option<String>) -> String {
+fn enc_opt_str(s: &Option<String>) -> String {
     match s {
         Some(v) => enc_str(v),
         None => "-".to_string(),
     }
 }
-async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
+fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     if s == "-" {
         Ok(None)
     } else {
@@ -125,7 +125,7 @@ async fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     }
 }
 
-async fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
+fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
     let scene = crate::artifacts::jack::jack_working_scene(s);
     let camera_json = serde_json::to_string(&s.camera).unwrap_or_default();
     let nodes_json = serde_json::to_string(&scene.nodes).unwrap_or_default();
@@ -142,7 +142,7 @@ async fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
     )
 }
 
-async fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
+fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
     let mut schema = None;
     let mut name = None;
     let mut manifest_id: Option<Option<String>> = None;
@@ -190,18 +190,18 @@ async fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
 //#region 🔖️BinaryPrimitives
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`), matching `dag`'s own `write_str_lp`/`read_str_lp` convention.
-async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
-async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
-async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
-async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
@@ -209,11 +209,11 @@ async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, Strin
 //#region 🔖️HandcraftedArtifactCodecs
 impl ArtifactDsl for JackSnapshot {
     const EXTENSION: &'static str = "trinity";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         "trinity.jack"
     }
 
-    async fn parse_dsl(text: &str) -> Result<Self, TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -221,7 +221,7 @@ impl ArtifactDsl for JackSnapshot {
         parse_jack_snapshot_body(body).map_err(|e| TextError::new(e, TextSpan::at(1, 1)))
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_jack_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -229,7 +229,7 @@ impl ArtifactDsl for JackSnapshot {
 }
 
 impl store::ArtifactPack for JackSnapshot {
-    async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let _ = options;
         let scene = crate::artifacts::jack::jack_working_scene(self);
         let mut out = Vec::new();
@@ -248,7 +248,7 @@ impl store::ArtifactPack for JackSnapshot {
         Ok(store::semio_format::wrap_binary(&envelope, &out))
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as ArtifactDsl>::envelope_id() {
             return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -286,12 +286,12 @@ impl store::ArtifactPack for JackSnapshot {
 pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.trinity` DSL text into a `JackSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
+pub fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {
     <JackSnapshot as ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `JackSnapshot` back to `.trinity` DSL text.
-pub async fn print_dsl(document: &JackSnapshot) -> String {
+pub fn print_dsl(document: &JackSnapshot) -> String {
     ArtifactDsl::print_dsl(document)
 }
 

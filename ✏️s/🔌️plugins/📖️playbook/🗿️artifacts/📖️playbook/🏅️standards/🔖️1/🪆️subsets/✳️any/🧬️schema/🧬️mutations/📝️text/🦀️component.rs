@@ -64,7 +64,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_playbook_add_step_roundtrip() {
         let spec = empty_playbook_snapshot();
-        let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into())).expect("valid mutation diff");
+        let next = apply_playbook_mutation(&spec, &add_step_operation("step-test".into(), "Step test".into())).expect("valid mutation diff");
         assert_eq!(next.steps().len(), 2);
     }
 
@@ -97,7 +97,7 @@ mod tests {
     async fn op_text_round_trips_for_every_kind() {
         use protocol::OpText;
         let ops = vec![
-            add_step_operation(&empty_playbook_snapshot(), "s2".into()),
+            add_step_operation("s2".into(), "Step 2".into()),
             remove_step_operation("s1"),
             move_step_operation("s1", 2),
             add_block_operation("s1", sample_block(), None),

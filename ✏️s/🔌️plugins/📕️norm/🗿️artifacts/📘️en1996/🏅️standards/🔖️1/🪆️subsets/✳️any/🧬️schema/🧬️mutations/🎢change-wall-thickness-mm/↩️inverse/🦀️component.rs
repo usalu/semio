@@ -6,7 +6,7 @@ use crate::artifacts::en1996::mutations::En1996Mutation;
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangeWallThicknessMm, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+pub fn inverse(_payload: &ChangeWallThicknessMm, base: &En1996Snapshot) -> Vec<En1996Mutation> {
     vec![En1996Mutation::ChangeWallThicknessMm(ChangeWallThicknessMm { new_wall_thickness_mm: base.wall_thickness_mm.clone() })]
 }
 //#endregion 🔖️Inverse

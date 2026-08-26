@@ -15,23 +15,23 @@ pub struct SetLayerBooleanOperation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn set_layer_boolean_operation(layer_id: String, boolean_operation: String) -> DrawMutation {
+pub fn set_layer_boolean_operation(layer_id: String, boolean_operation: String) -> DrawMutation {
     DrawMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id, boolean_operation })
 }
 
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for SetLayerBooleanOperation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-boolean-operation", record: "SetLayerBooleanOperation" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Set layer \"{}\" boolean operation to {}", self.layer_id, self.boolean_operation)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]
     }
 }

@@ -106,11 +106,11 @@ async fn base_glb_decode_encode_decode_is_semantically_equal() {
 /// construction), then prove the rebuilt document decodes to the same real data as the original.
 #[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
-    let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Binary(BASE_GLB_BYTES)]);
+    let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Binary(BASE_GLB_BYTES)]).await;
     let original = analysis.parts.snapshot.expect("analyzer decodes base.glb");
     let doc = &original.document;
 
-    let mut builder = GltfBuilder::empty();
+    let mut builder = GltfBuilder::empty().await;
     builder.set_asset_version(&doc.asset.version);
 
     for (i, buf) in original.buffers.iter().enumerate() {
@@ -158,7 +158,7 @@ async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
         builder.set_extensions_used(doc.extensions_used.clone());
     }
 
-    let rebuilt = builder.build().expect("build rebuilt snapshot");
+    let rebuilt = builder.build().await.expect("build rebuilt snapshot");
 
     // Structural spine this builder actually reconstructs (samplers/textures/images/skins/
     // animations/cameras have no typed constructor yet -- out of this wave's scope, and this

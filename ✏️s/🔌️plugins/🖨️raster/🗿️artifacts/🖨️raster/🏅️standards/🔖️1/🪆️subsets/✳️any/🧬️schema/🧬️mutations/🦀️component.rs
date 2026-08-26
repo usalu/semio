@@ -383,9 +383,9 @@ pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
 }
 
 /// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
-/// answering in the same shape — the metamorphic half of the evidence the `raster-mutation-semantics` no-oracle
-/// decision rests on. The inverse is computed against the PRE-mutation document, which is the only
-/// state that carries what a delete removed.
+/// answering in the same shape — the metamorphic half of what `mutate-raster-1` compares against its
+/// Python second implementation. The inverse is computed against the PRE-mutation document, which is
+/// the only state that carries what a delete removed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     use protocol::Mutation;

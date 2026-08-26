@@ -57,7 +57,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real mesh
     Given the real input mesh shared://🧊️hexagonal-cut-concrete-forest-left.stl
     When the <id> mutation is applied with its parameters

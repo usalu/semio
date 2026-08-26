@@ -1,103 +1,136 @@
 @capability-semio-v1-document-mutate
-@no-oracle-semio-document-mutation-semantics
+@oracle-semio-document-python-independent
 @comparison-ordered-json-v1
 @mutations-semio-v1-document
-Feature: Apply every typed semio DOCUMENT mutation to the real committed memo artifact
+Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, against an independent Python implementation
   `s.stdio.semio.document` is a semio-NATIVE format: no third party in any ecosystem reads or writes
-  `.dsl.semio`/`.pack.semio`, so there is no reference implementation to register as an oracle. That
-  is recorded as the `semio-document-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧪️oracle/🔣️component.json`, which also records why
-  `comrak` 0.54 — already linked into this owner's oracle crate, reads AND writes CommonMark, and
-  reachable through this subset's own Markdown export serializer — was surveyed and rejected rather
-  than merely absent: the oracle role may never link the subject crate, and CommonMark has no named
-  style table, no id-keyed image store and no run-level formatting that survives a parse-render
-  cycle, which strands ten of these eighteen kinds with nothing to compare against.
+  `.dsl.semio`/`.pack.semio`, so the second producer a differential comparison needs is a second
+  IMPLEMENTATION. `🐍️component.py` beside this file is that implementation - the envelope, the DSL
+  grammar, the binary pack frame and all eighteen verbs together with their inverses, written in
+  Python from the committed specification documents alone
+  (`../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
+  `.../📸️snapshot/💾️binary/📡️component.protocol.semio`,
+  `.../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, the committed schema mirror
+  `.../🧬️mutations/🟦️component.ts` for the three `DocBlockPath` segment tags, and the semio
+  envelope in `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`), importing nothing
+  from and transliterating nothing of the Rust it judges. It is registered as the oracle
+  `semio-document-python-independent` in `.../✳️document/🧪️oracle/🔣️component.json`; the recorded
+  no-oracle decision it replaces is gone, because there is now a reference to compare against.
 
-  The input is not synthetic. Every one of the eighteen kinds is applied to the snapshot this
-  standard's own committed real artifact decodes to: one named style (`heading1`, based on
-  `normal`), one embedded PNG image (`img1`), and an eight-block body that covers every single
-  `DocBlock` variant — a bold-run heading, a plain paragraph, an ordered list, a one-cell table, a
-  fenced Rust code block, a blockquote, a sized image reference and a page break. Each kind's
-  committed `(before, mutation, after)` specification vector lives in this case's own `🧫️fixtures/`
-  and was derived by an INDEPENDENT Python implementation of both the committed DSL grammar and this
-  vocabulary's specification, never by running this repository's own Rust. Both roles read the same
-  committed bytes: the `oracle` role reads the vector literally (no recomputation, no
-  reimplementation of mutation semantics) and the `subject` role decodes it into real
-  `SemioDocumentSnapshot`/`SemioDocumentMutation` values and runs the production entry point
-  `apply_semio_document_mutation`.
+  The CommonMark route the replaced decision surveyed stays rejected and nothing here revives it:
+  the oracle role may never link the subject crate, so handing `comrak` a document would mean
+  routing the snapshot through THIS repository's own Markdown exporter first, and CommonMark has no
+  named style table, no id-keyed embedded image store and no run-level character formatting that
+  survives a parse-render cycle - ten of the eighteen kinds would have had nothing to compare
+  against. A from-specification second implementation judges all eighteen.
 
-  What genuinely distinguishes this vocabulary from its siblings is `DocBlockPath` — a block is
-  addressed by a segment chain that descends through `Quote`, list-item and table-cell containers
-  before an index picks a slot in the innermost `Vec<DocBlock>`. A case that only ever used
-  `DocBlockPath::top(n)` would leave that whole mechanism unexercised, so two kinds deliberately go
-  nested: `insert-block` appends a second paragraph INSIDE the ordered list's first item, and
-  `set-run-text` rewrites the run inside the blockquote's own paragraph.
+  The document under test is the REAL committed memo, read where the domain keeps it through
+  `asset://` and never written to: one named style that is itself `basedOn` another, one embedded
+  PNG payload, and eight top-level blocks covering ALL eight `DocBlock` variants - a level-1
+  heading whose run is bold, a plain paragraph, an ordered list, a one-cell table, a `rust` code
+  block, a quote, an image block carrying both optional dimensions, and a page break. It is the
+  richest `s.stdio.semio.document` document committed anywhere in this artifact; `asset://` resolves
+  against the artifact root, so no other plugin's larger `.dsl.semio` is reachable from here, and
+  that limit is stated rather than papered over.
 
-  The `identity-round-trip` scenario is what keeps the vectors honest, and it is the only scenario
-  here that touches raw artifact bytes. It asserts that production's OWN `parse_dsl` of the same
-  real artifact equals the `before` snapshot every vector starts from, so a mistake in the
-  independent Python decoder surfaces as a red scenario instead of a quietly agreeable one. It also
-  crosses the two committed encodings of that one memo against each other — the text
-  `🗣️example.dsl.semio` and the binary `🎒️example.pack.semio` are separate committed files produced by
-  two separate codecs, so agreeing on one snapshot cannot be achieved by smuggling bytes from either
-  one. This is the scenario that caught the `Q[{}.await]` defect described below. Note that unlike a
-  foreign-writer format, byte-identical re-emission IS the expected result here: the committed text
-  is this codec's own output, so the wave's usual "output must not equal input" tripwire does not
-  apply; its mirror law is asserted in its place (see the next paragraph).
+  The `mutate-` and `inverse-` parameters are chosen against the memo's own shape, so a plausible
+  wrong codec fails, and between them they exercise all three `DocBlockPath` segment kinds:
+  `insert-block` reaches INSIDE the table's only cell, `set-block-content` replaces the list item's
+  paragraph with a code block through a `listItem` segment, `set-run-text` reaches into the quote,
+  `remove-block` deletes the MIDDLE code block so a tail-only implementation fails, `set-run-style`
+  overwrites an all-default style with one carrying every optional member at once so an
+  implementation honouring only the booleans fails, `set-image-block` sets `width` to ABSENT while
+  setting `height` present so an implementation that cannot write `None` fails, `set-style-name`
+  writes a non-ASCII name so a byte-length assumption fails, and `set-style-based-on` clears a
+  present `basedOn` to absent.
 
-  Writing this case found a real, isolated defect in the subset's own text codec, fixed under this
-  ticket: `enc_block`'s `Quote` arm in `../../🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🔺️diff/
-  🦀️component.rs` emitted `Q[{}.await]` — a stray `.await` literal left inside a `format!` string by
-  an automated async sweep — while `dec_block`'s `"Q"` arm expects `Q[<blocks>]`. Any document
-  carrying a blockquote therefore could not round-trip through its own DSL text codec, and the
-  committed real memo carries exactly one. The committed artifact predates the defect, which is why
-  it still holds the correct form.
+  `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed
+  `(before, mutation, after)` vector for each kind in this case's own `🧫️fixtures/`, now applied by
+  BOTH implementations and checked against the committed after-snapshot by each of them in role.
+  Nothing was removed to make room for the oracle.
 
-  The `identity-round-trip` scenario carries the BYTE half of the identity law as well as the
-  semantic half. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin,
-  and both committed example files were produced by these very codecs — so re-printing the parsed
-  snapshot and re-encoding it must reproduce those files BYTE FOR BYTE, and the scenario asserts
-  exactly that through the shared `law::carrier_is_exact`. The must-differ tripwire the wave applies
-  to third-party carriers would be backwards here: a re-emission that DIFFERED would be the defect,
-  not the evidence. The two encodings also cross-check each other — the binary twin has to decode to
-  the same document the text does, which no single codec can arrange on its own.
+  `identity-round-trip` carries the BYTE half of the identity law on BOTH committed encodings.
+  `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin, and both files
+  were produced by the Rust codecs, so an exact re-emission is the CORRECT answer here and the
+  wave's must-differ tripwire would be backwards, which is why the Rust side asserts
+  `law::carrier_is_exact` twice. What stops that being a codec agreeing with itself is that the
+  Python side reproduces the same 610 text bytes and 271 binary bytes - the text from the grammar,
+  including its rule that an `f64` leaf prints as the DECIMAL OF ITS BIT PATTERN rather than as a
+  float literal, and the binary from the committed protocol plus a record layout derived from the
+  committed bytes because the protocol document declares the three collections one opaque `payload`
+  chain by its own admission - and the two sides' digests of what each emitted are compared. The two
+  encodings also cross-check each other: the binary twin has to decode to the same memo the text
+  does.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to the decoded real memo snapshot
-    Given the committed specification vector local://🦠️<id>.json for the <id> kind
-    When <id> is applied to its before-snapshot through apply_semio_document_mutation
-    Then the resulting snapshot matches the vector's after-snapshot
+  @mode-differential
+  Scenario Outline: Apply <id> to the real committed memo
+    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
+    When the <id> mutation is applied to the memo parsed from it
+      """
+      <mutation>
+      """
+    Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
-      | id                  |
-      | no-mutation         |
-      | set-snapshot        |
-      | insert-block        |
-      | remove-block        |
-      | set-block-content   |
-      | set-paragraph-style |
-      | set-heading-level   |
-      | set-list-ordered    |
-      | set-run-text        |
-      | set-run-style       |
-      | set-image-block     |
-      | insert-style        |
-      | remove-style        |
-      | set-style-name      |
-      | set-style-based-on  |
-      | insert-image        |
-      | remove-image        |
-      | set-image-bytes     |
+      | id                  | mutation                                                                                                                                                                                                                                                                                              |
+      | no-mutation         | {"mutation":"noMutation"}                                                                                                                                                                                                                                                                             |
+      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"s.stdio.semio.document","styles":[],"images":[],"blocks":[{"kind":"pageBreak"}]}}                                                                                                                                                                     |
+      | insert-block        | {"mutation":"insertBlock","path":{"segments":[{"kind":"tableCell","block_index":3,"row":0,"cell":0}],"index":0},"block":{"kind":"paragraph","style_id":null,"runs":[{"text":"header cell","style":{"bold":true,"italic":false,"underline":false,"size":null,"font":null,"color":null,"link":null}}]}} |
+      | remove-block        | {"mutation":"removeBlock","path":{"segments":[],"index":4}}                                                                                                                                                                                                                                           |
+      | set-block-content   | {"mutation":"setBlockContent","path":{"segments":[{"kind":"listItem","block_index":2,"item":0}],"index":0},"block":{"kind":"code","language":"python","text":"print(1)"}}                                                                                                                             |
+      | set-paragraph-style | {"mutation":"setParagraphStyle","path":{"segments":[],"index":1},"style_id":"heading1"}                                                                                                                                                                                                               |
+      | set-heading-level   | {"mutation":"setHeadingLevel","path":{"segments":[],"index":0},"level":3}                                                                                                                                                                                                                             |
+      | set-list-ordered    | {"mutation":"setListOrdered","path":{"segments":[],"index":2},"ordered":false}                                                                                                                                                                                                                        |
+      | set-run-text        | {"mutation":"setRunText","path":{"segments":[{"kind":"quote","block_index":5}],"index":0},"run_index":0,"text":"zitiert"}                                                                                                                                                                             |
+      | set-run-style       | {"mutation":"setRunStyle","path":{"segments":[],"index":0},"run_index":0,"style":{"bold":false,"italic":true,"underline":true,"size":11.5,"font":"Inter","color":"#202020","link":"https://semio.tech"}}                                                                                              |
+      | set-image-block     | {"mutation":"setImageBlock","path":{"segments":[],"index":6},"image_id":"img1","alt":"Grundriss","width":null,"height":240.5}                                                                                                                                                                         |
+      | insert-style        | {"mutation":"insertStyle","style":{"id":"caption","name":"Caption","basedOn":"normal"}}                                                                                                                                                                                                               |
+      | remove-style        | {"mutation":"removeStyle","id":"heading1"}                                                                                                                                                                                                                                                            |
+      | set-style-name      | {"mutation":"setStyleName","id":"heading1","name":"Überschrift 1"}                                                                                                                                                                                                                                    |
+      | set-style-based-on  | {"mutation":"setStyleBasedOn","id":"heading1","based_on":null}                                                                                                                                                                                                                                        |
+      | insert-image        | {"mutation":"insertImage","image":{"id":"img2","mime":"image/jpeg","bytes":[255,216,255]}}                                                                                                                                                                                                            |
+      | remove-image        | {"mutation":"removeImage","id":"img1"}                                                                                                                                                                                                                                                                |
+      | set-image-bytes     | {"mutation":"setImageBytes","id":"img1","mime":"image/gif","bytes":[71,73,70]}                                                                                                                                                                                                                        |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the decoded real memo snapshot
+  @mode-differential
+  Scenario Outline: Undoing <id> restores the real committed memo
+    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
+    When the <id> mutation is applied to the memo parsed from it and each side undoes it with its own computed inverse
+      """
+      <mutation>
+      """
+    Then both sides restore the memo and agree on the mutated and the restored snapshot
+    Examples:
+      | id                  | mutation                                                                                                                                                                                                                                                                                              |
+      | no-mutation         | {"mutation":"noMutation"}                                                                                                                                                                                                                                                                             |
+      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"s.stdio.semio.document","styles":[],"images":[],"blocks":[{"kind":"pageBreak"}]}}                                                                                                                                                                     |
+      | insert-block        | {"mutation":"insertBlock","path":{"segments":[{"kind":"tableCell","block_index":3,"row":0,"cell":0}],"index":0},"block":{"kind":"paragraph","style_id":null,"runs":[{"text":"header cell","style":{"bold":true,"italic":false,"underline":false,"size":null,"font":null,"color":null,"link":null}}]}} |
+      | remove-block        | {"mutation":"removeBlock","path":{"segments":[],"index":4}}                                                                                                                                                                                                                                           |
+      | set-block-content   | {"mutation":"setBlockContent","path":{"segments":[{"kind":"listItem","block_index":2,"item":0}],"index":0},"block":{"kind":"code","language":"python","text":"print(1)"}}                                                                                                                             |
+      | set-paragraph-style | {"mutation":"setParagraphStyle","path":{"segments":[],"index":1},"style_id":"heading1"}                                                                                                                                                                                                               |
+      | set-heading-level   | {"mutation":"setHeadingLevel","path":{"segments":[],"index":0},"level":3}                                                                                                                                                                                                                             |
+      | set-list-ordered    | {"mutation":"setListOrdered","path":{"segments":[],"index":2},"ordered":false}                                                                                                                                                                                                                        |
+      | set-run-text        | {"mutation":"setRunText","path":{"segments":[{"kind":"quote","block_index":5}],"index":0},"run_index":0,"text":"zitiert"}                                                                                                                                                                             |
+      | set-run-style       | {"mutation":"setRunStyle","path":{"segments":[],"index":0},"run_index":0,"style":{"bold":false,"italic":true,"underline":true,"size":11.5,"font":"Inter","color":"#202020","link":"https://semio.tech"}}                                                                                              |
+      | set-image-block     | {"mutation":"setImageBlock","path":{"segments":[],"index":6},"image_id":"img1","alt":"Grundriss","width":null,"height":240.5}                                                                                                                                                                         |
+      | insert-style        | {"mutation":"insertStyle","style":{"id":"caption","name":"Caption","basedOn":"normal"}}                                                                                                                                                                                                               |
+      | remove-style        | {"mutation":"removeStyle","id":"heading1"}                                                                                                                                                                                                                                                            |
+      | set-style-name      | {"mutation":"setStyleName","id":"heading1","name":"Überschrift 1"}                                                                                                                                                                                                                                    |
+      | set-style-based-on  | {"mutation":"setStyleBasedOn","id":"heading1","based_on":null}                                                                                                                                                                                                                                        |
+      | insert-image        | {"mutation":"insertImage","image":{"id":"img2","mime":"image/jpeg","bytes":[255,216,255]}}                                                                                                                                                                                                            |
+      | remove-image        | {"mutation":"removeImage","id":"img1"}                                                                                                                                                                                                                                                                |
+      | set-image-bytes     | {"mutation":"setImageBytes","id":"img1","mime":"image/gif","bytes":[71,73,70]}                                                                                                                                                                                                                        |
+
+  @id-spec-vector
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector
     Given the committed specification vector local://🦠️<id>.json for the <id> kind
-    When <id> is applied to its before-snapshot through apply_semio_document_mutation
-    And the mutation's own computed inverse is applied through apply_semio_document_mutation
-    Then the snapshot matches the vector's before-snapshot again
+    When both implementations apply the vector's mutation to its before-snapshot
+    Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                  |
       | no-mutation         |
@@ -122,9 +155,9 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo ar
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real memo artifact through both of its committed encodings
-    Given the real committed text artifact asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
+  Scenario: Re-emit both committed encodings of the real memo from the parsed snapshot
+    Given the real committed memo asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🗣️example.dsl.semio
     And its committed binary twin asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🖼️assets/🎒️example.pack.semio
     And the committed specification vector local://🦠️no-mutation.json whose before-snapshot is that artifact decoded
-    When the text artifact is parsed, printed back to DSL and parsed again, and the binary twin is decoded and re-encoded
-    Then every decoding agrees with the committed before-snapshot
+    When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
+    Then both reproduce the two committed files byte for byte and agree on the memo and on the digests of what they emitted

@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_foundation_p_rd_kpa::mutation::C
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeFoundationPRdKpa, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeFoundationPRdKpa, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_foundation_p_rd_kpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Foundation bearing resistance p_Rd [kPa] must be a finite number, got {}.", payload.new_foundation_p_rd_kpa), Vec::<String>::new());
     }

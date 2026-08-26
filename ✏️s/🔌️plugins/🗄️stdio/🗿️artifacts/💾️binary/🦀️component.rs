@@ -103,7 +103,7 @@ pub mod io_registry {
         async fn register_then_resolve_through_the_typed_registry_finds_this_composer() {
             register();
             let key = IoKey { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into(), direction: IoDirection::Import, format_kind: "s.stdio.binary".into(), format_standard: "raw".into(), format_subset: "*".into() };
-            let entry = io_resolve(&key).expect("resolve");
+            let entry = io_resolve(&key).await.expect("resolve");
             assert_eq!(entry.writes, DIALECT);
         }
     }

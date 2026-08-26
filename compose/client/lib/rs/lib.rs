@@ -639,7 +639,7 @@ pub mod external_adapters {
     pub use thiserror;
     pub use uuid;
     #[cfg(target_arch = "wasm32")]
-    pub use {base64, getrandom, js_sys, serde_wasm_bindgen, wasm_bindgen, wasm_bindgen_futures, web_sys};
+    pub use {base64, getrandom, js_sys, serde_wasm_bindgen, wasm_bindgen, web_sys};
     #[cfg(not(target_arch = "wasm32"))]
     pub use {chrono, rusqlite, tempfile, ureq, walkdir, zip};
 }
@@ -14354,7 +14354,7 @@ pub mod worker {
         let fut = async move { ChildStore { label, graph, bus, inbox, backbone: BackboneNativeCell::new() }.run().await };
         #[cfg(target_arch = "wasm32")]
         {
-            wasm_bindgen_futures::spawn_local(fut);
+            semio_framework_async::browser::spawn_local(fut);
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -18635,8 +18635,8 @@ pub mod wasm_bridge {
     use std::sync::Mutex;
 
     use crate::external_adapters::async_graphql::{Request, Variables};
+    use semio_framework_async::browser::future_to_promise;
     use wasm_bindgen::prelude::*;
-    use wasm_bindgen_futures::future_to_promise;
 
     use crate::gql::{build_schema_for, AppSchema};
     use crate::worker::ParentStore;

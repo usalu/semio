@@ -5,7 +5,7 @@ use super::mutation::ReorderLayers;
 use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ReorderLayers, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+pub fn inverse(payload: &ReorderLayers, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
     let len = base.layers.len();
     if len == 0 || payload.from >= len {
         return Vec::new();

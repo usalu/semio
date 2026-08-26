@@ -19,7 +19,7 @@ const TRINITY_JACK_VIEW_CONTROLLER_ID: &str = "trinity-jack-view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::jack::create_trinity_jack_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"),
@@ -42,11 +42,11 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🩹 Read-only twin of the editor's `split_endpoint` — duplicated on purpose rather than imported
 /// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright.
-async fn split_endpoint(endpoint: &str) -> (String, String) {
+fn split_endpoint(endpoint: &str) -> (String, String) {
     crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
-async fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
+fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
     let width = if node.width > 0.0 { node.width } else { 96.0 };
     let height = if node.height > 0.0 { node.height } else { 48.0 };
     NodeGraphNodeRecord {
@@ -64,7 +64,7 @@ async fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
 
 /// 👁️ Pure `JackSnapshot -> UiNode` read: no selection, no LOD, no query text — the viewer renders
 /// the live fixture graph exactly as it stands.
-pub async fn render(document: &JackSnapshot) -> UiNode {
+pub fn render(document: &JackSnapshot) -> UiNode {
     let nodes: Vec<NodeGraphNodeRecord> = document.nodes().iter().map(node_to_record).collect();
     let edges: Vec<NodeGraphEdgeRecord> = document
         .edges()

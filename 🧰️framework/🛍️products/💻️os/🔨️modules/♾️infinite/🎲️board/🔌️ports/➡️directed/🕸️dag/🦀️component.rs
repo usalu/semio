@@ -2091,6 +2091,250 @@ pub struct DagPointerPlan {
     move_len: u16,
 }
 
+pub const DAG_CURSOR_MAX_OUTPUT_BYTES: usize = 65_536;
+
+/// ⛽️ One cancellable semantic-unit grant for a retained DAG cursor.
+#[derive(Clone, Copy, Debug)]
+pub struct DagCursorGrant {
+    pub fuel: u8,
+    pub now_milliseconds: u64,
+    pub deadline_milliseconds: u64,
+    pub cancelled: bool,
+    pub interrupted: bool,
+}
+
+/// 🚧️ Fail-closed retained DAG cursor faults.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DagCursorFault {
+    Cancelled,
+    Interrupted,
+    Deadline,
+    NoFuel,
+    Limit,
+    Sealed,
+}
+
+/// 📬️ A census, byte, progress, or terminal result from one DAG cursor grant.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DagCursorStep {
+    Progress { completed: usize, total: usize },
+    Census { bytes: usize },
+    Byte(u8),
+    Complete,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DagSelectedNodesJsonPhase {
+    CensusNode,
+    CensusText,
+    Open,
+    Seek,
+    Separator,
+    QuoteOpen,
+    Text,
+    Escape,
+    QuoteClose,
+    Close,
+    Complete,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DagSelectedJsonKind {
+    Nodes,
+    Edges,
+}
+
+/// 🎯️ Exact-preflight JSON array encoder that inspects or emits at most one unit per grant.
+pub struct DagSelectedNodesJsonCursor {
+    kind: DagSelectedJsonKind,
+    phase: DagSelectedNodesJsonPhase,
+    node_cursor: usize,
+    text_cursor: usize,
+    selected_count: usize,
+    emitted_count: usize,
+    census_bytes: usize,
+    output_cursor: usize,
+    escape: [u8; 6],
+    escape_length: u8,
+    escape_cursor: u8,
+}
+
+impl Default for DagSelectedNodesJsonCursor {
+    fn default() -> Self {
+        Self {
+            kind: DagSelectedJsonKind::Nodes,
+            phase: DagSelectedNodesJsonPhase::CensusNode,
+            node_cursor: 0,
+            text_cursor: 0,
+            selected_count: 0,
+            emitted_count: 0,
+            census_bytes: 2,
+            output_cursor: 0,
+            escape: [0; 6],
+            escape_length: 0,
+            escape_cursor: 0,
+        }
+    }
+}
+
+impl DagSelectedNodesJsonCursor {
+    pub fn edges() -> Self {
+        Self { kind: DagSelectedJsonKind::Edges, ..Self::default() }
+    }
+
+    fn guard(grant: DagCursorGrant) -> Result<(), DagCursorFault> {
+        if grant.cancelled {
+            Err(DagCursorFault::Cancelled)
+        } else if grant.interrupted {
+            Err(DagCursorFault::Interrupted)
+        } else if grant.now_milliseconds >= grant.deadline_milliseconds {
+            Err(DagCursorFault::Deadline)
+        } else if grant.fuel == 0 {
+            Err(DagCursorFault::NoFuel)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn selected(host: &DagHost, index: usize) -> bool {
+        let Ok(id) = u64::try_from(index.saturating_add(1)) else {
+            return false;
+        };
+        host.node_id_map.get(&id) == Some(&index) && host.engine.selection.node_ids.contains(&id)
+    }
+
+    fn count(&self, host: &DagHost) -> usize {
+        match self.kind {
+            DagSelectedJsonKind::Nodes => host.fixture.nodes.len(),
+            DagSelectedJsonKind::Edges => host.fixture.edges.len(),
+        }
+    }
+
+    fn item<'a>(&self, host: &'a DagHost, index: usize) -> Option<&'a str> {
+        match self.kind {
+            DagSelectedJsonKind::Nodes => Self::selected(host, index).then(|| host.fixture.nodes.get(index).map(|node| node.id.as_str())).flatten(),
+            DagSelectedJsonKind::Edges => host.edge_engine_ids.get(index).and_then(|id| *id).filter(|id| host.engine.selection.edge_ids.contains(id)).and_then(|_| host.fixture.edges.get(index).map(|edge| edge.id.as_str())),
+        }
+    }
+
+    fn escape(byte: u8) -> ([u8; 6], u8) {
+        const HEX: &[u8; 16] = b"0123456789abcdef";
+        match byte {
+            b'"' => ([b'\\', b'"', 0, 0, 0, 0], 2),
+            b'\\' => ([b'\\', b'\\', 0, 0, 0, 0], 2),
+            0x00..=0x1f => ([b'\\', b'u', b'0', b'0', HEX[usize::from(byte >> 4)], HEX[usize::from(byte & 0x0f)]], 6),
+            _ => ([byte, 0, 0, 0, 0, 0], 1),
+        }
+    }
+
+    pub fn step(&mut self, host: &DagHost, grant: DagCursorGrant) -> Result<DagCursorStep, DagCursorFault> {
+        Self::guard(grant)?;
+        let count = self.count(host);
+        match self.phase {
+            DagSelectedNodesJsonPhase::CensusNode => {
+                if self.node_cursor == count {
+                    if self.census_bytes > DAG_CURSOR_MAX_OUTPUT_BYTES {
+                        return Err(DagCursorFault::Limit);
+                    }
+                    self.node_cursor = 0;
+                    self.text_cursor = 0;
+                    self.phase = DagSelectedNodesJsonPhase::Open;
+                    return Ok(DagCursorStep::Census { bytes: self.census_bytes });
+                }
+                if self.item(host, self.node_cursor).is_some() {
+                    self.census_bytes = self.census_bytes.checked_add(2 + usize::from(self.selected_count != 0)).ok_or(DagCursorFault::Limit)?;
+                    self.phase = DagSelectedNodesJsonPhase::CensusText;
+                } else {
+                    self.node_cursor += 1;
+                }
+                Ok(DagCursorStep::Progress { completed: self.node_cursor, total: count })
+            }
+            DagSelectedNodesJsonPhase::CensusText => {
+                let text = self.item(host, self.node_cursor).ok_or(DagCursorFault::Limit)?.as_bytes();
+                if self.text_cursor == text.len() {
+                    self.selected_count += 1;
+                    self.node_cursor += 1;
+                    self.text_cursor = 0;
+                    self.phase = DagSelectedNodesJsonPhase::CensusNode;
+                } else {
+                    self.census_bytes = self.census_bytes.checked_add(usize::from(Self::escape(text[self.text_cursor]).1)).ok_or(DagCursorFault::Limit)?;
+                    self.text_cursor += 1;
+                }
+                Ok(DagCursorStep::Progress { completed: self.node_cursor, total: count })
+            }
+            DagSelectedNodesJsonPhase::Open => {
+                self.phase = DagSelectedNodesJsonPhase::Seek;
+                self.output_cursor += 1;
+                Ok(DagCursorStep::Byte(b'['))
+            }
+            DagSelectedNodesJsonPhase::Seek => {
+                if self.node_cursor == count {
+                    self.phase = DagSelectedNodesJsonPhase::Close;
+                } else if self.item(host, self.node_cursor).is_some() {
+                    self.phase = if self.emitted_count == 0 { DagSelectedNodesJsonPhase::QuoteOpen } else { DagSelectedNodesJsonPhase::Separator };
+                } else {
+                    self.node_cursor += 1;
+                }
+                Ok(DagCursorStep::Progress { completed: self.node_cursor, total: count })
+            }
+            DagSelectedNodesJsonPhase::Separator => {
+                self.phase = DagSelectedNodesJsonPhase::QuoteOpen;
+                self.output_cursor += 1;
+                Ok(DagCursorStep::Byte(b','))
+            }
+            DagSelectedNodesJsonPhase::QuoteOpen => {
+                self.phase = DagSelectedNodesJsonPhase::Text;
+                self.output_cursor += 1;
+                Ok(DagCursorStep::Byte(b'"'))
+            }
+            DagSelectedNodesJsonPhase::Text => {
+                let text = self.item(host, self.node_cursor).ok_or(DagCursorFault::Limit)?.as_bytes();
+                if self.text_cursor == text.len() {
+                    self.phase = DagSelectedNodesJsonPhase::QuoteClose;
+                    return Ok(DagCursorStep::Progress { completed: self.output_cursor, total: self.census_bytes });
+                }
+                let (escape, length) = Self::escape(text[self.text_cursor]);
+                if length == 1 {
+                    self.text_cursor += 1;
+                    self.output_cursor += 1;
+                    Ok(DagCursorStep::Byte(escape[0]))
+                } else {
+                    self.escape = escape;
+                    self.escape_length = length;
+                    self.escape_cursor = 0;
+                    self.phase = DagSelectedNodesJsonPhase::Escape;
+                    Ok(DagCursorStep::Progress { completed: self.output_cursor, total: self.census_bytes })
+                }
+            }
+            DagSelectedNodesJsonPhase::Escape => {
+                let byte = self.escape[usize::from(self.escape_cursor)];
+                self.escape_cursor += 1;
+                self.output_cursor += 1;
+                if self.escape_cursor == self.escape_length {
+                    self.text_cursor += 1;
+                    self.phase = DagSelectedNodesJsonPhase::Text;
+                }
+                Ok(DagCursorStep::Byte(byte))
+            }
+            DagSelectedNodesJsonPhase::QuoteClose => {
+                self.emitted_count += 1;
+                self.node_cursor += 1;
+                self.text_cursor = 0;
+                self.phase = DagSelectedNodesJsonPhase::Seek;
+                self.output_cursor += 1;
+                Ok(DagCursorStep::Byte(b'"'))
+            }
+            DagSelectedNodesJsonPhase::Close => {
+                self.phase = DagSelectedNodesJsonPhase::Complete;
+                self.output_cursor += 1;
+                Ok(DagCursorStep::Byte(b']'))
+            }
+            DagSelectedNodesJsonPhase::Complete if self.output_cursor == self.census_bytes => Ok(DagCursorStep::Complete),
+            DagSelectedNodesJsonPhase::Complete => Err(DagCursorFault::Limit),
+        }
+    }
+}
+
 fn dag_bit_contains(bits: &[u64; DAG_INTERACTION_WORD_CAPACITY], index: usize) -> bool {
     bits.get(index / 64).is_some_and(|word| word & (1_u64 << (index % 64)) != 0)
 }
@@ -2161,6 +2405,7 @@ pub struct DagHost {
     handle_port_shape: HashMap<HandleId, PortShape>,
     handle_port_visible: HashMap<HandleId, bool>,
     edge_id_map: HashMap<EdgeId, String>,
+    edge_engine_ids: Vec<Option<EdgeId>>,
     edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
     widget_drag: Option<usize>,
     pending_port_insert: Option<(DagPortSide, String, usize)>,
@@ -2204,6 +2449,7 @@ pub struct DagHostRetirement {
     handle_port_shape: HashMap<HandleId, PortShape>,
     handle_port_visible: HashMap<HandleId, bool>,
     edge_id_map: HashMap<EdgeId, String>,
+    edge_engine_ids: Vec<Option<EdgeId>>,
     edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
     pending_port_insert: Option<(DagPortSide, String, usize)>,
     dimmed: HashSet<NodeId>,
@@ -2237,6 +2483,7 @@ impl DagHostRetirement {
             handle_port_shape,
             handle_port_visible,
             edge_id_map,
+            edge_engine_ids,
             edge_route_style,
             widget_drag: _,
             pending_port_insert,
@@ -2278,6 +2525,7 @@ impl DagHostRetirement {
             handle_port_shape,
             handle_port_visible,
             edge_id_map,
+            edge_engine_ids,
             edge_route_style,
             pending_port_insert,
             dimmed,
@@ -2309,6 +2557,7 @@ impl DagHostRetirement {
         if self.fixture.schema.pop().is_some()
             || self.fixture.nodes.pop().is_some()
             || self.fixture.edges.pop().is_some()
+            || self.edge_engine_ids.pop().is_some()
             || self.pending_port_insert.as_mut().is_some_and(|(_, value, _)| value.pop().is_some())
             || self.pending_cluster_explode.as_mut().is_some_and(|value| value.pop().is_some())
             || self.pending_export_click.as_mut().is_some_and(|value| value.pop().is_some())
@@ -2381,6 +2630,7 @@ impl DagHostRetirement {
             && self.handle_port_shape.is_empty()
             && self.handle_port_visible.is_empty()
             && self.edge_id_map.is_empty()
+            && self.edge_engine_ids.is_empty()
             && self.edge_route_style.is_empty()
             && self.pending_port_insert.is_none()
             && self.dimmed.is_empty()
@@ -2586,6 +2836,13 @@ impl DagHost {
         Self::from_fixture(fixture)
     }
 
+    /// ♻️ Rebuilds transient DAG state while retaining the exact owner of admitted icon paints.
+    pub fn replace_fixture_without_layout(&mut self, fixture: DagFixture) {
+        let mut next = Self::from_fixture_without_layout(fixture);
+        std::mem::swap(&mut self.icon_paint_cache, &mut next.icon_paint_cache);
+        *self = next;
+    }
+
     fn from_fixture_with_layout(fixture: DagFixture, apply_layout: bool) -> Self {
         let mut host = Self {
             fixture,
@@ -2601,6 +2858,7 @@ impl DagHost {
             handle_port_shape: HashMap::new(),
             handle_port_visible: HashMap::new(),
             edge_id_map: HashMap::new(),
+            edge_engine_ids: Vec::new(),
             edge_route_style: HashMap::new(),
             widget_drag: None,
             pending_port_insert: None,
@@ -4003,6 +4261,8 @@ impl DagHost {
         self.handle_port_shape.clear();
         self.handle_port_visible.clear();
         self.edge_id_map.clear();
+        self.edge_engine_ids.clear();
+        self.edge_engine_ids.resize(self.fixture.edges.len(), None);
         self.edge_route_style.clear();
         for node in &mut self.fixture.nodes {
             fit_node_size(node);
@@ -4066,7 +4326,7 @@ impl DagHost {
             })
             .collect();
         let mut eid: u64 = 100;
-        for edge in &self.fixture.edges {
+        for (edge_index, edge) in self.fixture.edges.iter().enumerate() {
             if would_create_cycle(&existing, edge.source.split('@').next().unwrap_or(""), edge.target.split('@').next().unwrap_or("")) {
                 continue;
             }
@@ -4079,6 +4339,7 @@ impl DagHost {
                 eid = eid.max(id).saturating_add(1);
                 self.engine.create_edge(id, s, t);
                 self.edge_id_map.insert(id, edge.id.clone());
+                self.edge_engine_ids[edge_index] = Some(id);
                 self.edge_route_style.insert(id, edge.route_style);
             }
         }
@@ -4142,6 +4403,7 @@ impl DagHost {
 
     fn sync_edges_from_engine(&mut self) {
         let mut edges = Vec::with_capacity(self.engine.edges.len());
+        let mut edge_engine_ids = Vec::with_capacity(self.engine.edges.len());
         for (eid, edge) in &self.engine.edges {
             let Some(source) = self.handle_key_map.get(&edge.source).cloned() else {
                 continue;
@@ -4152,8 +4414,10 @@ impl DagHost {
             let id = self.edge_id_map.get(eid).cloned().unwrap_or_else(|| format!("e{eid}"));
             self.edge_id_map.insert(*eid, id.clone());
             edges.push(DagFixtureEdge { id, source, target, ..Default::default() });
+            edge_engine_ids.push(Some(*eid));
         }
         self.fixture.edges = edges;
+        self.edge_engine_ids = edge_engine_ids;
     }
 
     fn process_engine_events(&mut self) {
@@ -5844,10 +6108,10 @@ impl DagHost {
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
     use super::*;
+    use semio_framework_async::browser::future_to_promise;
     use std::cell::RefCell;
     use std::rc::Rc;
     use wasm_bindgen::prelude::*;
-    use wasm_bindgen_futures::future_to_promise;
     use web_sys::HtmlCanvasElement;
 
     struct DagSessionInner {
@@ -6020,6 +6284,57 @@ pub use wasm_session::DagSession;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn cursor_grant() -> DagCursorGrant {
+        DagCursorGrant { fuel: 1, now_milliseconds: 1, deadline_milliseconds: 8, cancelled: false, interrupted: false }
+    }
+
+    #[test]
+    fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
+        let fixture =
+            DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![DagNodeSpec { id: "a\"\\\n".into(), ..Default::default() }, DagNodeSpec { id: "β".into(), ..Default::default() }], edges: vec![] };
+        let mut host = DagHost::from_fixture_without_layout(fixture);
+        host.set_selection(&["a\"\\\n".into(), "β".into()]);
+        let expected = serde_json::to_vec(&host.selected_node_ids()).unwrap();
+        let mut cursor = DagSelectedNodesJsonCursor::default();
+        let mut rejected = cursor_grant();
+        rejected.fuel = 0;
+        assert_eq!(cursor.step(&host, rejected), Err(DagCursorFault::NoFuel));
+        let mut output = Vec::new();
+        let mut census = None;
+        loop {
+            match cursor.step(&host, cursor_grant()).unwrap() {
+                DagCursorStep::Census { bytes } => census = Some(bytes),
+                DagCursorStep::Byte(byte) => output.push(byte),
+                DagCursorStep::Complete => break,
+                DagCursorStep::Progress { .. } => {}
+            }
+        }
+        assert_eq!(census, Some(expected.len()));
+        assert_eq!(output, expected);
+        assert_eq!(cursor.step(&host, cursor_grant()), Ok(DagCursorStep::Complete));
+    }
+
+    #[test]
+    fn selected_edges_cursor_matches_test_only_serde_oracle() {
+        let mut host = DagHost::default_demo();
+        let edge = host.fixture.edges.first().expect("demo edge").id.clone();
+        host.set_selection_domains_json(&format!("{{\"nodes\":[],\"edges\":[{edge:?}],\"handles\":[]}}"));
+        let expected = serde_json::to_vec(&host.selected_edge_ids()).unwrap();
+        let mut cursor = DagSelectedNodesJsonCursor::edges();
+        let mut output = Vec::new();
+        let mut census = None;
+        loop {
+            match cursor.step(&host, cursor_grant()).unwrap() {
+                DagCursorStep::Census { bytes } => census = Some(bytes),
+                DagCursorStep::Byte(byte) => output.push(byte),
+                DagCursorStep::Complete => break,
+                DagCursorStep::Progress { .. } => {}
+            }
+        }
+        assert_eq!(census, Some(expected.len()));
+        assert_eq!(output, expected);
+    }
 
     #[test]
     fn bounded_interaction_projection_rejects_node_and_identifier_overflow() {
@@ -9128,14 +9443,8 @@ mod wasm_bridge {
     impl DagSnapshotVcs {
         /// 🌐️ Constructs the VCS bridge without synchronously blocking the browser host callback.
         #[wasm_bindgen(js_name = create)]
-        pub async fn create(envelope_json: Option<String>) -> Result<DagSnapshotVcs, JsValue> {
-            let store = match envelope_json {
-                Some(json) => {
-                    let envelope: DagEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    DagStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
-                }
-                None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,
-            };
+        pub async fn create() -> Result<DagSnapshotVcs, JsValue> {
+            let store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(Self { store: RefCell::new(store) })
         }
 

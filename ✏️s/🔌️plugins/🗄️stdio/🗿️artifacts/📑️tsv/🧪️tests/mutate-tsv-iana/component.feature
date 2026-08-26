@@ -64,7 +64,7 @@ Feature: Apply every typed IANA TSV mutation to a real-world table
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real table
     Given the real input table shared://reuse-marketplaces.tsv
     When the <id> mutation is applied with its parameters

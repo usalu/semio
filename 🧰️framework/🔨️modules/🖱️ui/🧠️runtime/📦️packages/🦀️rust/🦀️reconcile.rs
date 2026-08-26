@@ -427,6 +427,7 @@ impl Drop for SurfaceReconciler {
             published_surface: None,
             retire_tree: SurfaceTreeRetireCursor::default(),
             fault: None,
+            usage: SurfaceReconcileUsage::default(),
             credit: None,
             handback: self.handback.take(),
         });
@@ -1262,8 +1263,9 @@ impl SurfaceReconcileCursor {
                                 return SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow);
                             };
                             let projected = SurfaceReconcileUsage { nodes: projected_nodes, items: projected_items, bytes: projected_bytes };
-                            if node_page_bytes > SURFACE_RECONCILE_PAGE_BYTES {
-                                let fault = SurfaceReconcileFault::PageBytes { actual: node_page_bytes, max: SURFACE_RECONCILE_PAGE_BYTES };
+                            let page_bytes = if matches!(&node.component, ui_contract::Component::Surface(_)) { self.limits.max_bytes } else { SURFACE_RECONCILE_PAGE_BYTES };
+                            if node_page_bytes > page_bytes {
+                                let fault = SurfaceReconcileFault::PageBytes { actual: node_page_bytes, max: page_bytes };
                                 self.fault = Some(fault.clone());
                                 return SurfaceReconcileStep::Fault(fault);
                             }
@@ -1821,6 +1823,28 @@ fn split_surface_reconcile(credit: SurfaceReconcileCredit) -> Result<(SurfaceRec
     Ok((SurfaceReconcileCredit { slot, epoch, items, bytes, owner: 1 }, SurfaceReconcileCredit { slot, epoch, items, bytes, owner: 2 }))
 }
 
+/// 📉️ Returns unused aggregate admission capacity once reconciliation has measured its retained owners.
+fn shrink_surface_reconcile(mut credit: SurfaceReconcileCredit, usage: SurfaceReconcileUsage) -> Result<SurfaceReconcileCredit, SurfaceReconcileCredit> {
+    if usage.items > credit.items || usage.bytes > credit.bytes {
+        return Err(credit);
+    }
+    let mut ledger = SURFACE_RECONCILE_ADMISSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let Some(slot) = ledger.slots.get(credit.slot) else { return Err(credit) };
+    if !slot.occupied || slot.epoch != credit.epoch || slot.items != credit.items || slot.bytes != credit.bytes || slot.owners != credit.owner {
+        return Err(credit);
+    }
+    let Some(next_items) = ledger.items.checked_sub(credit.items).and_then(|items| items.checked_add(usage.items)) else { return Err(credit) };
+    let Some(next_bytes) = ledger.bytes.checked_sub(credit.bytes).and_then(|bytes| bytes.checked_add(usage.bytes)) else { return Err(credit) };
+    let slot = &mut ledger.slots[credit.slot];
+    slot.items = usage.items;
+    slot.bytes = usage.bytes;
+    ledger.items = next_items;
+    ledger.bytes = next_bytes;
+    credit.items = usage.items;
+    credit.bytes = usage.bytes;
+    Ok(credit)
+}
+
 fn release_surface_reconcile(credit: SurfaceReconcileCredit) {
     let mut ledger = SURFACE_RECONCILE_ADMISSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let Some(slot) = ledger.slots.get(credit.slot) else { return };
@@ -2078,6 +2102,7 @@ struct SurfaceReconcileRetained {
     published_surface: Option<ui_contract::SurfaceId>,
     retire_tree: SurfaceTreeRetireCursor,
     fault: Option<SurfaceReconcileFault>,
+    usage: SurfaceReconcileUsage,
     credit: Option<SurfaceReconcileCredit>,
     handback: Option<SurfaceReconcileHandbackReservation>,
 }
@@ -2395,6 +2420,7 @@ impl Drop for SurfaceReconcileReadyPatch {
             published_surface: None,
             retire_tree: SurfaceTreeRetireCursor::default(),
             fault: None,
+            usage: SurfaceReconcileUsage::default(),
             credit: self.credit.take(),
             handback: self.handback.take(),
         }));
@@ -2474,6 +2500,7 @@ impl Drop for SurfaceReconcilePublishedPatch {
             published_surface: Some(take(&mut self.surface)),
             retire_tree: SurfaceTreeRetireCursor::default(),
             fault: None,
+            usage: SurfaceReconcileUsage::default(),
             credit: self.credit.take(),
             handback: self.handback.take(),
         }));
@@ -2509,6 +2536,7 @@ impl SurfaceReconcileJob {
                         published_surface: None,
                         retire_tree: SurfaceTreeRetireCursor::default(),
                         fault: Some(SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: surface_bytes }, limits }),
+                        usage: SurfaceReconcileUsage::default(),
                         credit,
                         handback,
                     })),
@@ -2528,6 +2556,7 @@ impl SurfaceReconcileJob {
                 published_surface: None,
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
+                usage: SurfaceReconcileUsage::default(),
                 credit: Some(credit),
                 handback: Some(handback),
             })),
@@ -2552,6 +2581,7 @@ impl SurfaceReconcileJob {
                     published_surface: None,
                     retire_tree: SurfaceTreeRetireCursor::default(),
                     fault: Some(SurfaceReconcileFault::IdentifierBytes { actual: surface_bytes, max: limits.max_identifier_bytes }),
+                    usage: SurfaceReconcileUsage::default(),
                     credit: reservation.credit.take(),
                     handback,
                 })),
@@ -2570,6 +2600,7 @@ impl SurfaceReconcileJob {
                     published_surface: None,
                     retire_tree: SurfaceTreeRetireCursor::default(),
                     fault: Some(SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: surface_bytes }, limits }),
+                    usage: SurfaceReconcileUsage::default(),
                     credit: reservation.credit.take(),
                     handback: None,
                 })),
@@ -2588,6 +2619,7 @@ impl SurfaceReconcileJob {
                 published_surface: None,
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
+                usage: SurfaceReconcileUsage::default(),
                 credit: reservation.credit.take(),
                 handback: Some(handback),
             })),
@@ -2640,6 +2672,7 @@ impl SurfaceReconcileJob {
                 match cursor.step(current) {
                     SurfaceReconcileStep::Yield { .. } => SurfaceReconcileJobStep::MoreWork,
                     SurfaceReconcileStep::Complete { reconciler, patch } => {
+                        state.usage = cursor.usage;
                         state.candidate = Some(reconciler);
                         state.patch = patch;
                         state.phase = SurfaceReconcileJobPhase::RetireCursor;
@@ -2703,11 +2736,21 @@ impl SurfaceReconcileJob {
         };
         let patch = state.patch.take();
         let ready = if let Some(patch) = patch {
-            let Some(credit) = state.credit.take() else {
+            let Some(reserved_credit) = state.credit.take() else {
                 state.patch = Some(patch);
                 state.candidate = Some(reconciler);
                 self.state = Some(state);
                 return Err(self);
+            };
+            let credit = match shrink_surface_reconcile(reserved_credit, state.usage) {
+                Ok(credit) => credit,
+                Err(credit) => {
+                    state.credit = Some(credit);
+                    state.patch = Some(patch);
+                    state.candidate = Some(reconciler);
+                    self.state = Some(state);
+                    return Err(self);
+                }
             };
             let (candidate_credit, patch_credit) = match split_surface_reconcile(credit) {
                 Ok(split) => split,
@@ -2722,7 +2765,20 @@ impl SurfaceReconcileJob {
             reconciler.persistent_credit = Some(candidate_credit);
             Some(SurfaceReconcileReadyPatch { generation: state.generation, patch: Some(patch), credit: Some(patch_credit), handback: patch_handback })
         } else {
-            reconciler.persistent_credit = state.credit.take();
+            let Some(reserved_credit) = state.credit.take() else {
+                state.candidate = Some(reconciler);
+                self.state = Some(state);
+                return Err(self);
+            };
+            reconciler.persistent_credit = match shrink_surface_reconcile(reserved_credit, state.usage) {
+                Ok(credit) => Some(credit),
+                Err(credit) => {
+                    state.credit = Some(credit);
+                    state.candidate = Some(reconciler);
+                    self.state = Some(state);
+                    return Err(self);
+                }
+            };
             None
         };
         reconciler.handback = state.handback.take();
@@ -2838,6 +2894,7 @@ impl SurfaceReconcileTerminal {
                 published_surface: None,
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
+                usage: SurfaceReconcileUsage::default(),
                 credit: reservation.credit.take(),
                 handback: Some(handback),
             })),
@@ -2861,6 +2918,7 @@ impl SurfaceReconcileTerminal {
                 published_surface: None,
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
+                usage: SurfaceReconcileUsage::default(),
                 credit,
                 handback: Some(handback),
             })),
@@ -3403,6 +3461,27 @@ mod tests {
     }
 
     #[test]
+    fn opaque_surface_document_uses_aggregate_credits_instead_of_scalar_page() {
+        let payload = vec![7; ui_contract::UI_FIXED_BYTES];
+        let props = ui_contract::SurfaceProps {
+            kind: ui_contract::SurfaceKind::NodeGraph,
+            doc_schema: ui_text("node-graph@1"),
+            doc: ui_contract::SurfaceDoc { bytes: ui_contract::UiFixedBytes::try_from_vec(payload.clone()).expect("fixed surface payload") },
+            bindings: Default::default(),
+        };
+        let node = crate::TreeNode::try_new("surface", ui_contract::Component::Surface(props)).expect("bounded surface node");
+        let current = SurfaceReconciler::new("s");
+        let (reconciled, patch, _) = reconcile_resumable(&current, tree(node));
+
+        assert!(patch.is_some(), "the opaque surface publishes through the same transactional patch path");
+        let snapshot = reconciled.snapshot();
+        let ui_contract::Component::Surface(actual) = &snapshot.nodes[0].component else { panic!("surface component") };
+        assert_eq!(actual.doc.bytes.as_slice(), payload);
+        let json = serde_json::to_value(&snapshot).expect("third-party snapshot serialization");
+        assert_eq!(json["nodes"][0]["component"]["doc"]["bytes"].as_array().map(Vec::len), Some(ui_contract::UI_FIXED_BYTES));
+    }
+
+    #[test]
     fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_unchanged() {
         fn expired_now() -> u64 {
             10
@@ -3517,11 +3596,17 @@ mod tests {
                 break;
             }
         }
-        let (reconciler, _) = match job.take_ready() {
+        let (reconciler, ready_patch) = match job.take_ready() {
             Ok(ready) => ready,
             Err(_) => panic!("ready owner"),
         };
-        assert!(reconciler.persistent_credit.is_some(), "take_ready transfers rather than releases credit");
+        let retained_credit = reconciler.persistent_credit.as_ref().expect("take_ready transfers rather than releases credit");
+        assert!(retained_credit.items < SurfaceReconcileLimits::default().max_items, "ready reconciliation returns unused aggregate item capacity");
+        assert!(retained_credit.bytes < SurfaceReconcileLimits::default().max_bytes, "ready reconciliation returns unused aggregate byte capacity");
+        let mut ready_patch = ready_patch.expect("initial reconciliation publishes a patch");
+        let patch_credit = ready_patch.credit.as_ref().expect("ready patch shares the retained credit");
+        assert_eq!((patch_credit.items, patch_credit.bytes), (retained_credit.items, retained_credit.bytes));
+        while !ready_patch.close_step() {}
         let mut terminal = SurfaceReconcileTerminal::try_from_reconciler(reconciler, generation).expect("pre-admitted terminal handback");
         assert!(!terminal.close_step());
         while !terminal.terminal_is_empty() {

@@ -26,7 +26,7 @@ fn mutation() -> En1991Mutation {
 
 /// ▶️ `change-hoisting-speed-ms` carries `hoisting_speed_m_s` from 0.5 to 1.25 and lands on the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = outcome.diff().apply(&base).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: mutation applies to its committed before-snapshot");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ The inverse re-states the pre-edit `hoisting_speed_m_s` (0.5) and restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let outcome = forward.diff(&base);
@@ -52,7 +52,7 @@ async fn inverse_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1991Snapshot = serde_json::from_str(text).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: snapshot encodes");
@@ -66,7 +66,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared `applied` outcome holds — a clean 0.5→1.25 edit of `hoisting_speed_m_s` raises no diagnostic.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: this fixture declares an applied outcome");
     let base = before();
@@ -77,7 +77,7 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ The sparse delta is exactly the committed diff: `hoistingSpeedMS` set, every other field left null.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert_eq!(outcome.diff().hoisting_speed_m_s, Some(1.25), "change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: the diff must carry `hoisting_speed_m_s` = 1.25");
@@ -89,7 +89,7 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff is canonical and decodes to `En1991Diff`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: committed diff decodes");
     assert_eq!(decoded.hoisting_speed_m_s, Some(1.25), "change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: the committed diff must name `hoisting_speed_m_s` = 1.25");
     let reencoded = serde_json::to_value(&decoded).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: diff re-encodes");
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff to `before` yields `after` — the 1.25 `hoisting_speed_m_s` edit is complete on its own.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: committed diff decodes");
     let produced = decoded.apply(&base).expect("change-hoisting-speed-ms/speeds-hoisting-to-1-25-m-s: committed diff applies to the before-snapshot");

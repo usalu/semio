@@ -59,6 +59,8 @@ message TiffTag {
 // One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order).
 message TiffIfd {
   repeated TiffTag entries = 1;
+  // This directory's own raster as RAW STRIP BYTES; empty for IFD 0 and for a metadata-only directory.
+  bytes pixels = 2;
 }
 
 // Complete `stdio.tiff` 6.0 semantic snapshot. `pixels` is the decoded raster payload

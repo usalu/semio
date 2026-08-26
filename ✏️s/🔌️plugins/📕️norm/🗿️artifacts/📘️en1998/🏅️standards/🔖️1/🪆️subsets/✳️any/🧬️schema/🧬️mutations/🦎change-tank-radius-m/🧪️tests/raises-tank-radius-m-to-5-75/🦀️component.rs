@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-tank-radius-m` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `tank_radius_m` from 4.0 to 5.75, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_tank_radius_m_applies_to_committed_after() {
+fn change_tank_radius_m_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-tank-radius-m applies to its committed before-snapshot");
     assert_eq!(applied.tank_radius_m, 5.75, "change-tank-radius-m/raises-tank-radius-m-to-5-75: tank_radius_m must read 5.75 after the change");
     assert_eq!(applied, expected_after(), "change-tank-radius-m/raises-tank-radius-m-to-5-75: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_tank_radius_m_applies_to_committed_after() {
 /// ↩️ `change-tank-radius-m` is its own inverse partner: the inverse step restores `tank_radius_m` to its pre-change
 /// 4.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_tank_radius_m_inverse_restores_before() {
+fn change_tank_radius_m_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-tank-radius-m applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_tank_radius_m_inverse_restores_before() {
 /// decode then encode is a fixed point, so `tankRadiusM` and `newTankRadiusM` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_tank_radius_m_committed_json_is_canonical() {
+fn change_tank_radius_m_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-tank-radius-m snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-tank-radius-m snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_tank_radius_m_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-tank-radius-m` at 5.75 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_tank_radius_m_declared_outcome_holds() {
+fn change_tank_radius_m_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-tank-radius-m outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-tank-radius-m/raises-tank-radius-m-to-5-75: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_tank_radius_m_declared_outcome_holds() {
 /// assertion: it pins that only `tankRadiusM` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `tankMassT`.
 #[semio_framework_async_macros::async_test]
-async fn change_tank_radius_m_produces_committed_diff() {
+fn change_tank_radius_m_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().tank_radius_m, Some(5.75), "change-tank-radius-m/raises-tank-radius-m-to-5-75: the diff must set tank_radius_m to 5.75");
     assert!(outcome.diff().artifact.is_none(), "change-tank-radius-m/raises-tank-radius-m-to-5-75: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_tank_radius_m_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-tank-radius-m`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_tank_radius_m_committed_diff_is_canonical() {
+fn change_tank_radius_m_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-tank-radius-m committed diff decodes");
     assert_eq!(decoded.tank_radius_m, Some(5.75), "change-tank-radius-m/raises-tank-radius-m-to-5-75: the committed diff must carry tank_radius_m at 5.75");
     assert!(decoded.selected_check_index.is_none(), "change-tank-radius-m/raises-tank-radius-m-to-5-75: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_tank_radius_m_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 4.0 to 5.75 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_tank_radius_m_committed_diff_applies_to_after() {
+fn change_tank_radius_m_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-tank-radius-m committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-tank-radius-m committed diff applies to the before-snapshot");
     assert_eq!(produced.tank_radius_m, 5.75, "change-tank-radius-m/raises-tank-radius-m-to-5-75: the committed diff must leave tank_radius_m reading 5.75");

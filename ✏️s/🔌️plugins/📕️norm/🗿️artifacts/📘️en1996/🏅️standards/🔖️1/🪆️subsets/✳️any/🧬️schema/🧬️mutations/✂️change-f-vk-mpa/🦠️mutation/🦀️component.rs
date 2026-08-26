@@ -15,15 +15,15 @@ pub struct ChangeFVkMpa {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeFVkMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "f-vk-mpa", kind: "change-f-vk-mpa", record: "ChangedFVkMpa" };
 
-    async fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_f_vk_mpa::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         crate::artifacts::en1996::mutations::change_f_vk_mpa::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change characteristic shear strength f_vk [MPa] to {}", self.new_f_vk_mpa)
     }
 }

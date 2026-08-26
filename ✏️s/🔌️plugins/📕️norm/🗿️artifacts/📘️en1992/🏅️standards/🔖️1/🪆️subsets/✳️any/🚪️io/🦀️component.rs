@@ -5,10 +5,10 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.en1992` dialect only.
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
 //#region 🎹️DerivedComposition
@@ -25,11 +25,11 @@ pub mod derived_composition {
         type Snapshot = En1992Snapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -59,7 +59,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<En1992AnyComposer>()]).as_slice()
     }
 }

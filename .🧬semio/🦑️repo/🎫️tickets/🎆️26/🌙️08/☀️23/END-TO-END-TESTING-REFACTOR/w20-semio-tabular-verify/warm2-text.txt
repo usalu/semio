@@ -1,0 +1,3516 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling cfg-if v1.0.4
+   Compiling memchr v2.8.3
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling libc v0.2.189
+   Compiling itoa v1.0.18
+   Compiling equivalent v1.0.2
+   Compiling zmij v1.0.23
+   Compiling bitflags v2.13.1
+   Compiling simd-adler32 v0.3.10
+   Compiling log v0.4.34
+   Compiling adler2 v2.0.1
+   Compiling crc32fast v1.5.1
+   Compiling zlib-rs v0.6.7
+   Compiling find-msvc-tools v0.1.11
+   Compiling shlex v2.0.1
+   Compiling autocfg v1.5.1
+   Compiling smallvec v1.15.2
+   Compiling miniz_oxide v0.8.9
+   Compiling version_check v0.9.5
+   Compiling fastrand v2.5.0
+   Compiling siphasher v1.0.3
+   Compiling serde_json v1.0.151
+   Compiling foldhash v0.2.0
+   Compiling cc v1.4.4
+   Compiling semver v1.0.28
+   Compiling num-traits v0.2.19
+   Compiling arrayvec v0.7.8
+   Compiling flate2 v1.1.9
+   Compiling hashbrown v0.17.1
+   Compiling phf_shared v0.13.1
+   Compiling syn v3.0.4
+   Compiling syn v2.0.119
+   Compiling bumpalo v3.20.3
+   Compiling thiserror v2.0.20
+   Compiling indexmap v2.14.0
+   Compiling typenum v1.20.1
+   Compiling once_cell v1.21.4
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.20
+   Compiling zopfli v0.8.3
+   Compiling phf_generator v0.13.1
+   Compiling blake3 v1.8.7
+   Compiling byteorder v1.5.0
+   Compiling hybrid-array v0.4.14
+   Compiling semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling futures-sink v0.3.34
+   Compiling constant_time_eq v0.4.2
+   Compiling futures-core v0.3.34
+   Compiling pin-project-lite v0.2.17
+   Compiling phf_codegen v0.13.1
+   Compiling futures-macro v0.3.34
+   Compiling slab v0.4.12
+   Compiling anyhow v1.0.104
+   Compiling futures-task v0.3.34
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling futures-io v0.3.34
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+warning: fields `operation` and `generation` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️component.rs:274:5
+    |
+273 | struct JobPayloadOperationLedger {
+    |        ------------------------- fields in this struct
+274 |     operation: OperationId,
+    |     ^^^^^^^^^
+275 |     generation: Generation,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-job` (lib) generated 1 warning
+   Compiling wasmparser v0.247.0
+   Compiling polycool v0.4.0
+   Compiling futures-channel v0.3.34
+   Compiling parking_lot_core v0.9.12
+   Compiling zip v2.4.2
+   Compiling heck v0.5.0
+   Compiling crypto-common v0.2.2
+   Compiling tokio-macros v2.7.2
+   Compiling displaydoc v0.2.7
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:149:51
+    |
+149 |         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+    |                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+149 -         self.backing.as_ref().map_or(0, |backing| std::mem::size_of_val(backing.as_ref()))
+149 +         self.backing.as_ref().map_or(0, |backing| size_of_val(backing.as_ref()))
+    |
+
+   Compiling socket2 v0.6.5
+   Compiling mio v1.2.2
+   Compiling kurbo v0.13.1
+   Compiling futures-util v0.3.34
+   Compiling scopeguard v1.2.0
+warning: method `push` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🔗️causal/🦀️component.rs:142:8
+    |
+109 | impl<T> MutationDagFixedSlots<T> {
+    | -------------------------------- method in this implementation
+...
+142 |     fn push(&mut self, value: T) -> Result<(), T> {
+    |        ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-replication` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-replication` to apply 1 suggestion)
+   Compiling zerocopy v0.8.56
+   Compiling strsim v0.11.1
+   Compiling prettyplease v0.2.37
+   Compiling lazy_static v1.5.0
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+warning: fields `header_len` and `stored_len` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/../../📐️format/🦀️component.rs:178:5
+    |
+176 | struct EncodedSegment {
+    |        -------------- fields in this struct
+177 |     bytes: Vec<u8>,
+178 |     header_len: usize,
+    |     ^^^^^^^^^^
+179 |     stored_len: usize,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-pack` (lib) generated 1 warning
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling string_cache_codegen v0.6.1
+   Compiling tokio v1.53.1
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling zerocopy-derive v0.8.56
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling phf v0.13.1
+   Compiling new_debug_unreachable v1.0.6
+   Compiling lock_api v0.4.14
+   Compiling crossbeam-utils v0.8.22
+   Compiling rustix v1.1.4
+   Compiling leb128fmt v0.1.0
+   Compiling regex-syntax v0.8.11
+   Compiling unicode-xid v0.2.6
+   Compiling futures-executor v0.3.34
+   Compiling same-file v1.0.6
+   Compiling id-arena v2.3.0
+   Compiling rand_core v0.10.1
+   Compiling camino v1.2.5
+   Compiling getrandom v0.4.3
+   Compiling base64 v0.22.1
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling wasm-encoder v0.247.0
+   Compiling parking_lot v0.12.5
+   Compiling web_atoms v0.2.6
+   Compiling errno v0.3.14
+   Compiling block-padding v0.4.2
+   Compiling futures v0.3.34
+   Compiling walkdir v2.5.0
+   Compiling wit-parser v0.247.0
+   Compiling num-integer v0.1.47
+   Compiling error-chain v0.12.4
+   Compiling pkg-config v0.3.34
+   Compiling pulldown-cmark v0.9.6
+   Compiling syn v1.0.109
+   Compiling crossbeam-epoch v0.9.20
+   Compiling inflections v1.1.1
+   Compiling ident_case v1.0.1
+   Compiling tinyvec_macros v0.1.1
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1765:13
+     |
+1765 |     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1765 -     marker: std::marker::PhantomData<fn() -> (P, Mutation)>,
+1765 +     marker: PhantomData<fn() -> (P, Mutation)>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1770:119
+     |
+1770 | ...active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+     |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1770 -         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: std::marker::PhantomData }
+1770 +         Self { phase: ArtifactStoreCursorDisposerPhase::Displaced, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5064:49
+     |
+5064 | struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5064 - struct ArtifactRepositoryHistoryEntryDecoder<T>(std::marker::PhantomData<T>);
+5064 + struct ArtifactRepositoryHistoryEntryDecoder<T>(PhantomData<T>);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5068:14
+     |
+5068 |         Self(std::marker::PhantomData)
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5068 -         Self(std::marker::PhantomData)
+5068 +         Self(PhantomData)
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5153:14
+     |
+5153 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5153 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5153 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5154:23
+     |
+5154 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5154 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5154 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5172:18
+     |
+5172 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5172 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5172 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5173:27
+     |
+5173 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5173 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5173 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5367:14
+     |
+5367 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5367 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5367 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5368:23
+     |
+5368 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5368 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5368 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5369:25
+     |
+5369 |     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5369 -     retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5369 +     retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5387:18
+     |
+5387 |         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5387 -         catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5387 +         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5388:27
+     |
+5388 |         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5388 -         mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5388 +         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5389:29
+     |
+5389 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5389 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5389 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5607:14
+     |
+5607 |     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5607 -     catalog: std::sync::Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+5607 +     catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5608:23
+     |
+5608 |     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5608 -     mutation_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+5608 +     mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5617:29
+     |
+5617 |         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5617 -         retirement_factory: std::sync::Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+5617 +         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5833:12
+     |
+5833 |     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5833 -     state: std::sync::Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+5833 +     state: Mutex<ArtifactEnvelopeFieldDecoderRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:5851:20
+     |
+5851 | ...   state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECO...
+     |              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5851 -             state: std::sync::Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+5851 +             state: Mutex::new(ArtifactEnvelopeFieldDecoderRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY }),
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7223:12
+     |
+7223 |     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7223 -     state: std::sync::Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+7223 +     state: Mutex<ArtifactEnvelopeCompletedRecordRegistryState<P, Mutation>>,
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:7233:32
+     |
+7233 | ...   Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_...
+     |                              ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7233 -         Arc::new(Self { state: std::sync::Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+7233 +         Arc::new(Self { state: Mutex::new(ArtifactEnvelopeCompletedRecordRegistryState { slots, free, free_len: ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, live: 0, occupied: 0, closing: 0 }) })
+     |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11159:26
+      |
+11159 |             .checked_mul(std::mem::size_of::<String>())?
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11159 -             .checked_mul(std::mem::size_of::<String>())?
+11159 +             .checked_mul(size_of::<String>())?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11160:68
+      |
+11160 |             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11160 -             .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+11160 +             .checked_add(self.redo_edit_ids.capacity().checked_mul(size_of::<String>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11161:71
+      |
+11161 |             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+      |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11161 -             .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+11161 +             .checked_add(self.applied_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)?
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11162:68
+      |
+11162 |             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11162 -             .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+11162 +             .checked_add(self.redo_revision.capacity().checked_mul(size_of::<CursorRevisionRecord>())?)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11717:6
+      |
+11717 | impl serde::Serialize for ArtifactEditMessageLedger {
+      |      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11717 - impl serde::Serialize for ArtifactEditMessageLedger {
+11717 + impl Serialize for ArtifactEditMessageLedger {
+      |
+
+   Compiling either v1.18.0
+   Compiling precomputed-hash v0.1.1
+   Compiling wasm-metadata v0.247.0
+   Compiling inout v0.2.2
+   Compiling onig_sys v69.9.3
+warning: `semio-framework-os-kernel` (lib) generated 26 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 26 suggestions)
+   Compiling gltf-derive v1.4.1
+   Compiling darling_core v0.24.1
+   Compiling tinyvec v1.12.0
+   Compiling string_cache v0.9.0
+   Compiling cargo-platform v0.1.9
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling encoding_rs v0.8.35
+   Compiling aho-corasick v1.1.5
+   Compiling core-foundation-sys v0.8.7
+   Compiling unicase v2.9.0
+   Compiling crossbeam-deque v0.8.7
+   Compiling prettyplease v0.3.0
+   Compiling wit-bindgen-rust v0.57.1
+   Compiling utf8parse v0.2.2
+   Compiling tempfile v3.27.0
+   Compiling unicode-normalization v0.1.25
+   Compiling regex-automata v0.4.18
+   Compiling iana-time-zone v0.1.65
+   Compiling darling_macro v0.24.1
+   Compiling cargo_metadata v0.14.2
+   Compiling wit-component v0.247.0
+   Compiling anstyle-parse v1.0.0
+   Compiling cipher v0.5.2
+   Compiling gltf-json v1.4.1
+   Compiling wit-bindgen-core v0.57.1
+   Compiling num-bigint v0.4.8
+   Compiling tendril v0.5.1
+   Compiling block-buffer v0.12.1
+   Compiling proc-macro-error v1.0.4
+   Compiling bytecount v0.6.9
+   Compiling zune-core v0.5.3
+   Compiling anstyle-query v1.1.5
+   Compiling rayon-core v1.13.0
+   Compiling winnow v0.5.40
+   Compiling typed-path v0.12.3
+   Compiling colorchoice v1.0.5
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling const-oid v0.10.2
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling thiserror v1.0.69
+   Compiling xml-rs v0.8.29
+   Compiling wit-bindgen-rust-macro v0.57.1
+   Compiling toml_datetime v0.6.11
+   Compiling getrandom v0.3.4
+   Compiling anstyle v1.0.14
+   Compiling weezl v0.1.12
+   Compiling glob v0.3.4
+   Compiling rustversion v1.0.23
+   Compiling zune-jpeg v0.5.15
+   Compiling digest v0.11.3
+   Compiling xmltree v0.9.0
+   Compiling toml_edit v0.19.15
+   Compiling anstream v1.0.0
+   Compiling skeptic v0.13.7
+   Compiling gltf v1.4.1
+   Compiling markup5ever v0.39.0
+   Compiling num-rational v0.4.2
+   Compiling regex v1.13.1
+   Compiling chrono v0.4.45
+   Compiling terminal_size v0.4.4
+   Compiling darling v0.24.1
+   Compiling half v2.7.1
+   Compiling semio-framework-ui-scene v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust)
+warning: method `terminal_is_empty` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/🦀️math.rs:527:8
+    |
+440 | impl Mesh3dOwner {
+    | ---------------- method in this implementation
+...
+527 |     fn terminal_is_empty(&self) -> bool {
+    |        ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-ui-scene` (lib) generated 1 warning
+   Compiling thiserror-impl v1.0.69
+   Compiling macro-string v0.2.0
+   Compiling ahash v0.8.12
+   Compiling cpufeatures v0.3.0
+   Compiling peg-runtime v0.6.3
+   Compiling wit-bindgen v0.57.1
+   Compiling clap_lex v1.1.0
+   Compiling pxfm v0.1.30
+   Compiling entities v1.0.1
+   Compiling jetscii v0.5.3
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling fax v0.2.7
+   Compiling quick-error v2.0.1
+   Compiling peg-macros v0.6.3
+   Compiling bon-macros v3.10.0
+   Compiling clap_builder v4.6.6
+   Compiling Inflector v0.11.4
+   Compiling moxcms v0.8.1
+   Compiling comrak v0.54.0
+   Compiling semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+   Compiling ply-rs v0.1.3
+   Compiling proc-macro-crate v1.3.1
+   Compiling dxf v0.6.1
+   Compiling tiff v0.11.3
+   Compiling uuid v1.25.0
+   Compiling num-iter v0.1.46
+   Compiling chacha20 v0.10.1
+   Compiling clap_derive v4.6.4
+   Compiling semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+   Compiling bincode v1.3.3
+   Compiling semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+   Compiling semio-framework-schema-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust)
+   Compiling num-traits v0.1.43
+   Compiling num-complex v0.4.6
+warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:958:14
+    |
+958 | ...   .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(...
+    |        ^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+help: replace the use of the deprecated method
+    |
+958 -             .fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+958 +             .try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |pages| pages.checked_add(1).filter(|next| *next <= JOB_REPLAY_PROCESS_PAGE_CAPACITY))
+    |
+
+   Compiling fnv v1.0.7
+   Compiling cpubits v0.1.1
+warning: `semio-framework-actor` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-actor` to apply 1 suggestion)
+   Compiling time-core v0.1.9
+   Compiling bytemuck v1.25.2
+   Compiling convert_case v0.4.0
+   Compiling ryu v1.0.23
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling minimal-lexical v0.2.1
+   Compiling deranged v0.5.8
+   Compiling byteorder-lite v0.1.0
+   Compiling unicode-bidi v0.3.18
+   Compiling jiff-core v0.1.0
+   Compiling unicode-properties v0.1.4
+   Compiling debug_unsafe v0.1.4
+   Compiling powerfmt v0.2.0
+   Compiling num-conv v0.2.2
+   Compiling nom v7.1.3
+   Compiling derive_more v0.99.20
+   Compiling image v0.25.10
+   Compiling aes v0.9.2
+   Compiling jiff v0.2.35
+   Compiling stringprep v0.1.5
+   Compiling atoi_simd v0.18.1
+   Compiling num v0.4.3
+   Compiling time v0.3.55
+   Compiling enum_primitive v0.1.1
+   Compiling rand v0.10.2
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling ruststep-derive v0.4.0
+   Compiling clap v4.6.6
+   Compiling rayon v1.12.0
+   Compiling bon v3.10.0
+   Compiling peg v0.6.3
+   Compiling sha2 v0.11.0
+   Compiling xml5ever v0.39.0
+   Compiling html5ever v0.39.0
+   Compiling md-5 v0.11.0
+   Compiling zip v7.2.0
+   Compiling zip v8.6.0
+   Compiling derive-new v0.5.9
+   Compiling ecb v0.2.1
+   Compiling cbc v0.2.1
+   Compiling caseless v0.2.2
+   Compiling quick-xml v0.41.0
+   Compiling codepage v0.1.2
+   Compiling itertools v0.14.0
+   Compiling itertools v0.10.5
+   Compiling semio-framework-ui-runtime v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust)
+warning: constant `SURFACE_RECONCILE_FIXED_OPS` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:32:7
+   |
+32 | const SURFACE_RECONCILE_FIXED_OPS: usize = SURFACE_RECONCILE_FIXED_NODES * 9 + 1;
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `take_all` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:96:8
+   |
+48 | impl<T, const N: usize> SurfaceFixedVec<T, N> {
+   | --------------------------------------------- method in this implementation
+...
+96 |     fn take_all(&mut self) -> Self {
+   |        ^^^^^^^^
+
+warning: methods `values` and `clear` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:162:8
+    |
+132 | impl<K: Eq, V, const N: usize> SurfaceLinearMap<K, V, N> {
+    | -------------------------------------------------------- methods in this implementation
+...
+162 |     fn values(&self) -> impl Iterator<Item = &V> {
+    |        ^^^^^^
+...
+166 |     fn clear(&mut self) {
+    |        ^^^^^
+
+warning: methods `iter`, `remove`, and `is_empty` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:198:8
+    |
+190 | impl<T: Eq, const N: usize> SurfaceLinearSet<T, N> {
+    | -------------------------------------------------- methods in this implementation
+...
+198 |     fn iter(&self) -> impl Iterator<Item = &T> {
+    |        ^^^^
+...
+202 |     fn remove(&mut self, value: &T) -> bool {
+    |        ^^^^^^
+...
+211 |     fn is_empty(&self) -> bool {
+    |        ^^^^^^^^
+
+warning: associated function `new` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:1139:19
+     |
+1138 | impl SurfaceReconcileCursor {
+     | --------------------------- associated function in this implementation
+1139 |     pub(crate) fn new(tree: crate::ComponentTree, current: &SurfaceReconciler) -> Self {
+     |                   ^^^
+
+warning: function `estimate_record_bytes` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs:2957:4
+     |
+2957 | fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-ui-runtime` (lib) generated 6 warnings
+   Compiling emojis v0.8.2
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+   Compiling float-cmp v0.9.0
+   Compiling fdeflate v0.3.7
+   Compiling csv-core v0.1.13
+   Compiling nom v8.0.0
+   Compiling semio-framework-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust)
+   Compiling bytes v1.12.1
+   Compiling color_quant v1.1.0
+   Compiling weezl v0.2.1
+   Compiling finl_unicode v1.4.0
+   Compiling typed-arena v2.0.2
+   Compiling xdg v3.0.0
+   Compiling shell-words v1.1.1
+   Compiling fmt2io v1.0.0
+   Compiling fast-float2 v0.2.4
+   Compiling rustc-hash v2.1.3
+   Compiling rangemap v1.8.0
+   Compiling linked-hash-map v0.5.6
+   Compiling gif v0.13.3
+   Compiling mp4 v0.14.0
+   Compiling csv v1.4.0
+   Compiling png v0.18.1
+   Compiling stl_io v0.8.6
+   Compiling calamine v0.36.1
+   Compiling ruststep v0.4.0
+   Compiling lopdf v0.44.0
+   Compiling semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused import: `HashMap`
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:11:44
+   |
+11 | use std::collections::{BTreeMap, BTreeSet, HashMap};
+   |                                            ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `ComponentTree`
+ --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🩹️patches/🦀️component.rs:6:5
+  |
+6 |     ComponentTree, ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePu...
+  |     ^^^^^^^^^^^^^
+
+warning: unused import: `HashMap`
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:54:24
+   |
+54 | use std::collections::{HashMap, VecDeque};
+   |                        ^^^^^^^
+
+warning: unused doc comment
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12430:5
+      |
+12430 | /     /// 🗃️ sdk-dedyn (O1/§1.5): the default-composes-nothing case (design-dedyn.md §1.6's `NoMembers`
+12431 | |     /// pattern, applied here to `PluginApp`) — a zero-variant enum, `dyn_enum_close!`-generated
+12432 | |     /// (every method's body degenerates to `match *self {}` since there is no value to construct).
+12433 | |     /// The default `PA` for every generic in this file's declaration tree, so a library-only plugin
+12434 | |     /// (or a test that never actually instantiates an app) never has to name a real app enum.
+      | |_____-----------------------------------------------------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+      = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PresentCx`
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:242:47
+    |
+242 |     use semio_framework_ui_runtime::{Present, PresentCx};
+    |                                               ^^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:250:9
+    |
+250 |     use std::sync::Arc;
+    |         ^^^^^^^^^^^^^^
+
+warning: unused import: `ui_wgpu::wgpu::UiMenuRef`
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:271:9
+    |
+271 |     use ui_wgpu::wgpu::UiMenuRef;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ContextMenuPoint` and `ContextMenuResponse`
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:278:67
+    |
+278 | ...   collect_window_kind_ids_from_layout, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextM...
+    |                                                                 ^^^^^^^^^^^^^^^^                      ^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:297:9
+    |
+297 | ...   ui::surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_build().map_err(|_| ui_assembly_error("...
+    |       ^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+297 -         ui::surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
+297 +         surface(props).try_id(id).map_err(|_| ui_assembly_error("scene-surface.id"))?.try_build().map_err(|_| ui_assembly_error("scene-surface.build"))
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:304:9
+    |
+304 |         ui::text(value).try_build().map_err(|_| label)
+    |         ^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+304 -         ui::text(value).try_build().map_err(|_| label)
+304 +         text(value).try_build().map_err(|_| label)
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:440:49
+    |
+440 |     async fn ui_tree_domain_topology(sections: &ui::BuiltChildren, granularity: &str) -> UiAssemblyResult<protocol::DomainTopology> {
+    |                                                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+440 -     async fn ui_tree_domain_topology(sections: &ui::BuiltChildren, granularity: &str) -> UiAssemblyResult<protocol::DomainTopology> {
+440 +     async fn ui_tree_domain_topology(sections: &BuiltChildren, granularity: &str) -> UiAssemblyResult<protocol::DomainTopology> {
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:442:27
+    |
+442 |             children: &'a ui::BuiltChildren,
+    |                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+442 -             children: &'a ui::BuiltChildren,
+442 +             children: &'a BuiltChildren,
+    |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5819:27
+     |
+5819 |             let builder = ui::tree_section(label.unwrap_or_default()).default_open(default_open);
+     |                           ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5819 -             let builder = ui::tree_section(label.unwrap_or_default()).default_open(default_open);
+5819 +             let builder = tree_section(label.unwrap_or_default()).default_open(default_open);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5872:27
+     |
+5872 |             let builder = ui::tree().try_id(&self.namespace).map_err(|_| ui_assembly_error("panel-tree.root-id"))?;
+     |                           ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5872 -             let builder = ui::tree().try_id(&self.namespace).map_err(|_| ui_assembly_error("panel-tree.root-id"))?;
+5872 +             let builder = tree().try_id(&self.namespace).map_err(|_| ui_assembly_error("panel-tree.root-id"))?;
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5969:27
+     |
+5969 |             let builder = ui::field(ui_label(label, "form-panel.field-label")?);
+     |                           ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5969 -             let builder = ui::field(ui_label(label, "form-panel.field-label")?);
+5969 +             let builder = field(ui_label(label, "form-panel.field-label")?);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5994:31
+     |
+5994 |                 let builder = ui::input(InputKind::Text).value(value);
+     |                               ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5994 -                 let builder = ui::input(InputKind::Text).value(value);
+5994 +                 let builder = input(InputKind::Text).value(value);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6009:27
+     |
+6009 |             let builder = ui::button(ui_label(label, "form-panel.submit-label")?).icon(icon);
+     |                           ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6009 -             let builder = ui::button(ui_label(label, "form-panel.submit-label")?).icon(icon);
+6009 +             let builder = button(ui_label(label, "form-panel.submit-label")?).icon(icon);
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6024:27
+     |
+6024 |             let builder = ui::column().try_id(&self.namespace).map_err(|_| ui_assembly_error("form-panel.root-id"))?;
+     |                           ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6024 -             let builder = ui::column().try_id(&self.namespace).map_err(|_| ui_assembly_error("form-panel.root-id"))?;
+6024 +             let builder = column().try_id(&self.namespace).map_err(|_| ui_assembly_error("form-panel.root-id"))?;
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6040:21
+     |
+6040 | ...   let title = ui::text(ui_label(title, "entity-detail.title")?).try_build().map_err(|_| ui_assembly_error("entity-detail.title...
+     |                   ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6040 -         let title = ui::text(ui_label(title, "entity-detail.title")?).try_build().map_err(|_| ui_assembly_error("entity-detail.title-build"))?;
+6040 +         let title = text(ui_label(title, "entity-detail.title")?).try_build().map_err(|_| ui_assembly_error("entity-detail.title-build"))?;
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6043:28
+     |
+6043 |             let subtitle = ui::text(subtitle).try_build().map_err(|_| ui_assembly_error("entity-detail.subtitle-build"))?;
+     |                            ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6043 -             let subtitle = ui::text(subtitle).try_build().map_err(|_| ui_assembly_error("entity-detail.subtitle-build"))?;
+6043 +             let subtitle = text(subtitle).try_build().map_err(|_| ui_assembly_error("entity-detail.subtitle-build"))?;
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6055:23
+     |
+6055 |         let builder = ui::column().try_children(children).map_err(|_| ui_assembly_error("entity-detail.children"))?;
+     |                       ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6055 -         let builder = ui::column().try_children(children).map_err(|_| ui_assembly_error("entity-detail.children"))?;
+6055 +         let builder = column().try_children(children).map_err(|_| ui_assembly_error("entity-detail.children"))?;
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6259:24
+     |
+6259 |         List { cursor: ui::UiListCursor, output: Vec<Value> },
+     |                        ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6259 -         List { cursor: ui::UiListCursor, output: Vec<Value> },
+6259 +         List { cursor: UiListCursor, output: Vec<Value> },
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6260:23
+     |
+6260 |         Map { cursor: ui::UiMapCursor, output: serde_json::Map<String, Value>, key: Option<String> },
+     |                       ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6260 -         Map { cursor: ui::UiMapCursor, output: serde_json::Map<String, Value>, key: Option<String> },
+6260 +         Map { cursor: UiMapCursor, output: serde_json::Map<String, Value>, key: Option<String> },
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7771:64
+     |
+7771 | ...   pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::Artifac...
+     |                                                              ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7771 -         pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+7771 +         pub async fn assert_declaration_tree_registers_all<PA: PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7805:68
+     |
+7805 | ...   pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::Artifac...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7805 -         pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+7805 +         pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7816:68
+     |
+7816 | ...   pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7816 -         pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+7816 +         pub async fn assert_subset_declaration_ids_are_derived<PA: PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10756:27
+      |
+10756 |             let builder = ui::button(ui_label(label, "history-panel.button-label")?).icon(icon.clone()).disabled(!enabled);
+      |                           ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10756 -             let builder = ui::button(ui_label(label, "history-panel.button-label")?).icon(icon.clone()).disabled(!enabled);
+10756 +             let builder = button(ui_label(label, "history-panel.button-label")?).icon(icon.clone()).disabled(!enabled);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10770:34
+      |
+10770 |         let mut filter_builder = ui::select(ui_text(filter_value, "history-panel.filter-value")?);
+      |                                  ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10770 -         let mut filter_builder = ui::select(ui_text(filter_value, "history-panel.filter-value")?);
+10770 +         let mut filter_builder = select(ui_text(filter_value, "history-panel.filter-value")?);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10830:31
+      |
+10830 | ...   let actions_builder = ui::tree_section(ui_label(if is_de { "Aktionen" } else { "Actions" }, "history-panel.actions-label")?...
+      |                             ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10830 -         let actions_builder = ui::tree_section(ui_label(if is_de { "Aktionen" } else { "Actions" }, "history-panel.actions-label")?).default_open(true);
+10830 +         let actions_builder = tree_section(ui_label(if is_de { "Aktionen" } else { "Actions" }, "history-panel.actions-label")?).default_open(true);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10833:32
+      |
+10833 | ...   let commands_builder = ui::tree_section(ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label"...
+      |                              ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10833 -         let commands_builder = ui::tree_section(ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?).default_open(true);
+10833 +         let commands_builder = tree_section(ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?).default_open(true);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10839:9
+      |
+10839 | ...   ui::tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_asse...
+      |       ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10839 -         ui::tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
+10839 +         tree().try_children(sections).map_err(|_| ui_assembly_error("history-panel.sections"))?.try_build().map_err(|_| ui_assembly_error("history-panel.build"))
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12724:18
+      |
+12724 |             Fut: std::future::Future<Output = Menu<'a>>,
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12724 -             Fut: std::future::Future<Output = Menu<'a>>,
+12724 +             Fut: Future<Output = Menu<'a>>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13311:32
+      |
+13311 |         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13311 -         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+13311 +         P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13312:39
+      |
+13312 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13312 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+13312 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13315:19
+      |
+13315 |             match store::SpaceMember::close_owned_step(owner, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)? {
+      |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13315 -             match store::SpaceMember::close_owned_step(owner, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)? {
+13315 +             match SpaceMember::close_owned_step(owner, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)? {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13324:13
+      |
+13324 |             store::SpaceMember::close_owned_terminal_is_empty(owner)
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13324 -             store::SpaceMember::close_owned_terminal_is_empty(owner)
+13324 +             SpaceMember::close_owned_terminal_is_empty(owner)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13333:32
+      |
+13333 |         P: Clone + Serialize + serde::de::DeserializeOwned,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13333 -         P: Clone + Serialize + serde::de::DeserializeOwned,
+13333 +         P: Clone + Serialize + DeserializeOwned,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13334:39
+      |
+13334 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13334 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+13334 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13346:32
+      |
+13346 |         P: Clone + Serialize + serde::de::DeserializeOwned,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13346 -         P: Clone + Serialize + serde::de::DeserializeOwned,
+13346 +         P: Clone + Serialize + DeserializeOwned,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13347:39
+      |
+13347 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13347 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+13347 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13356:32
+      |
+13356 |         P: Clone + Serialize + serde::de::DeserializeOwned,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13356 -         P: Clone + Serialize + serde::de::DeserializeOwned,
+13356 +         P: Clone + Serialize + DeserializeOwned,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13357:39
+      |
+13357 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13357 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+13357 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13396:32
+      |
+13396 |         P: Clone + Serialize + serde::de::DeserializeOwned + Send,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13396 -         P: Clone + Serialize + serde::de::DeserializeOwned + Send,
+13396 +         P: Clone + Serialize + DeserializeOwned + Send,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13397:39
+      |
+13397 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + Send,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13397 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + Send,
+13397 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P> + Send,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13449:32
+      |
+13449 |         P: Clone + Serialize + serde::de::DeserializeOwned,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13449 -         P: Clone + Serialize + serde::de::DeserializeOwned,
+13449 +         P: Clone + Serialize + DeserializeOwned,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13450:39
+      |
+13450 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13450 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+13450 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15732:32
+      |
+15732 |         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15732 -         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+15732 +         P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15733:39
+      |
+15733 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15733 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+15733 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15752:32
+      |
+15752 |         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15752 -         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+15752 +         P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15753:39
+      |
+15753 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15753 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+15753 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15772:32
+      |
+15772 |         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15772 -         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+15772 +         P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15773:39
+      |
+15773 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15773 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+15773 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15931:32
+      |
+15931 |         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15931 -         P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+15931 +         P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15932:39
+      |
+15932 |         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15932 -         Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+15932 +         Mutation: Clone + Serialize + DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:17774:46
+      |
+17774 |             if artifact_mutations.iter().any(protocol::Mutation::may_emit_foreign_steps) {
+      |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+17774 -             if artifact_mutations.iter().any(protocol::Mutation::may_emit_foreign_steps) {
+17774 +             if artifact_mutations.iter().any(Mutation::may_emit_foreign_steps) {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20980:31
+      |
+20980 |         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20980 -         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+20980 +         apps: HashMap<String, declarations::AppFactory<PA>>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21122:66
+      |
+21122 |         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+      |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21122 -         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+21122 +         pub fn register_app_factory(mut self, app: App, factory: declarations::AppFactory<PA>) -> Self {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21242:27
+      |
+21242 |             let builder = ui::surface(props);
+      |                           ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21242 -             let builder = ui::surface(props);
+21242 +             let builder = surface(props);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21279:27
+      |
+21279 |             let builder = ui::surface(props);
+      |                           ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21279 -             let builder = ui::surface(props);
+21279 +             let builder = surface(props);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21524:28
+      |
+21524 |             let mut root = ui::column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-rows-window.id"))?;
+      |                            ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21524 -             let mut root = ui::column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-rows-window.id"))?;
+21524 +             let mut root = column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("table-rows-window.id"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21525:30
+      |
+21525 |             let mut header = ui::row().try_id("header").map_err(|_| ui_assembly_error("table-rows-window.header-id"))?;
+      |                              ^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21525 -             let mut header = ui::row().try_id("header").map_err(|_| ui_assembly_error("table-rows-window.header-id"))?;
+21525 +             let mut header = row().try_id("header").map_err(|_| ui_assembly_error("table-rows-window.header-id"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21527:43
+      |
+21527 |                 header = header.try_child(ui::text(Label(column))).map_err(|_| ui_assembly_error("table-rows-window.header"))?;
+      |                                           ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21527 -                 header = header.try_child(ui::text(Label(column))).map_err(|_| ui_assembly_error("table-rows-window.header"))?;
+21527 +                 header = header.try_child(text(Label(column))).map_err(|_| ui_assembly_error("table-rows-window.header"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21530:43
+      |
+21530 | ...   header = header.try_child(ui::text(Label(actions_label))).map_err(|_| ui_assembly_error("table-rows-window.actions-header"))?;
+      |                                 ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21530 -                 header = header.try_child(ui::text(Label(actions_label))).map_err(|_| ui_assembly_error("table-rows-window.actions-header"))?;
+21530 +                 header = header.try_child(text(Label(actions_label))).map_err(|_| ui_assembly_error("table-rows-window.actions-header"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21535:31
+      |
+21535 |                 let mut row = ui::row().try_id(id.as_str()).map_err(|_| ui_assembly_error("table-rows-window.row-id"))?;
+      |                               ^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21535 -                 let mut row = ui::row().try_id(id.as_str()).map_err(|_| ui_assembly_error("table-rows-window.row-id"))?;
+21535 +                 let mut row = row().try_id(id.as_str()).map_err(|_| ui_assembly_error("table-rows-window.row-id"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21537:41
+      |
+21537 |                     row = row.try_child(ui::text(Label(cell))).map_err(|_| ui_assembly_error("table-rows-window.cell"))?;
+      |                                         ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21537 -                     row = row.try_child(ui::text(Label(cell))).map_err(|_| ui_assembly_error("table-rows-window.cell"))?;
+21537 +                     row = row.try_child(text(Label(cell))).map_err(|_| ui_assembly_error("table-rows-window.cell"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21542:34
+      |
+21542 |                     let button = ui::button(label).icon(icon);
+      |                                  ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21542 -                     let button = ui::button(label).icon(icon);
+21542 +                     let button = button(label).icon(icon);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21611:35
+      |
+21611 |             let section_builder = ui::tree_section(Label::default()).default_open(true);
+      |                                   ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21611 -             let section_builder = ui::tree_section(Label::default()).default_open(true);
+21611 +             let section_builder = tree_section(Label::default()).default_open(true);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21614:32
+      |
+21614 |             let tree_builder = ui::tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
+      |                                ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21614 -             let tree_builder = ui::tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
+21614 +             let tree_builder = tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21648:27
+      |
+21648 |             let builder = ui::image(src).alt(alt);
+      |                           ^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21648 -             let builder = ui::image(src).alt(alt);
+21648 +             let builder = image(src).alt(alt);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21683:27
+      |
+21683 |             let builder = ui::surface(props);
+      |                           ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21683 -             let builder = ui::surface(props);
+21683 +             let builder = surface(props);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21719:31
+      |
+21719 |                 let builder = ui::text(ui_label(page.text.clone(), "document-window.page-text")?);
+      |                               ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21719 -                 let builder = ui::text(ui_label(page.text.clone(), "document-window.page-text")?);
+21719 +                 let builder = text(ui_label(page.text.clone(), "document-window.page-text")?);
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21723:27
+      |
+21723 |             let builder = ui::column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("document-window.id"))?;
+      |                           ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21723 -             let builder = ui::column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("document-window.id"))?;
+21723 +             let builder = column().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("document-window.id"))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24112:31
+      |
+24112 |         close_cleanup_cursor: std::cell::Cell<usize>,
+      |                               ^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24112 -         close_cleanup_cursor: std::cell::Cell<usize>,
+24112 +         close_cleanup_cursor: Cell<usize>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24113:30
+      |
+24113 |         live_cleanup_cursor: std::cell::Cell<usize>,
+      |                              ^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24113 -         live_cleanup_cursor: std::cell::Cell<usize>,
+24113 +         live_cleanup_cursor: Cell<usize>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24114:27
+      |
+24114 |         close_generation: std::cell::Cell<u64>,
+      |                           ^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24114 -         close_generation: std::cell::Cell<u64>,
+24114 +         close_generation: Cell<u64>,
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24126:39
+      |
+24126 |                 close_cleanup_cursor: std::cell::Cell::new(0),
+      |                                       ^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24126 -                 close_cleanup_cursor: std::cell::Cell::new(0),
+24126 +                 close_cleanup_cursor: Cell::new(0),
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24127:38
+      |
+24127 |                 live_cleanup_cursor: std::cell::Cell::new(0),
+      |                                      ^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24127 -                 live_cleanup_cursor: std::cell::Cell::new(0),
+24127 +                 live_cleanup_cursor: Cell::new(0),
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24128:35
+      |
+24128 |                 close_generation: std::cell::Cell::new(0),
+      |                                   ^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24128 -                 close_generation: std::cell::Cell::new(0),
+24128 +                 close_generation: Cell::new(0),
+      |
+
+warning: ambiguous glob re-exports
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:31859:13
+      |
+31859 |     pub use semio_framework::kernel::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `ActionId` in the type namespace is first re-exported here
+...
+31862 |     pub use semio_framework_ui_contract::*;
+      |             ------------------------------ but the name `ActionId` in the type namespace is also re-exported here
+      |
+      = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:31862:13
+      |
+31858 |     pub use crate::app::*;
+      |             ------------- but the name `tree_item` in the value namespace is also re-exported here
+...
+31862 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `tree_item` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:31862:13
+      |
+31858 |     pub use crate::app::*;
+      |             ------------- but the name `PeerMark` in the type namespace is also re-exported here
+...
+31862 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `PeerMark` in the type namespace is first re-exported here
+
+   Compiling rust_xlsxwriter v0.96.0
+   Compiling markup5ever_rcdom v0.39.0+unofficial
+   Compiling tobj v4.0.5
+   Compiling pdf-writer v0.15.0
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25342:17
+      |
+25342 |             let mut instance = find_instance(list, instance_id)?;
+      |                 ----^^^^^^^^
+      |                 |
+      |                 help: remove this `mut`
+      |
+      = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25730:17
+      |
+25730 |             let mut instance = find_instance(list, instance_id)?;
+      |                 ----^^^^^^^^
+      |                 |
+      |                 help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25749:17
+      |
+25749 |             let mut instance = find_instance(list, instance_id)?;
+      |                 ----^^^^^^^^
+      |                 |
+      |                 help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26774:37
+      |
+26774 | ...                   let mut instance = find_instance(list, instance_id)?;
+      |                           ----^^^^^^^^
+      |                           |
+      |                           help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26854:41
+      |
+26854 | ...                   let mut instance = find_instance(list, instance_id)?;
+      |                           ----^^^^^^^^
+      |                           |
+      |                           help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26904:29
+      |
+26904 |                         let mut instance = find_instance(list, instance_id)?;
+      |                             ----^^^^^^^^
+      |                             |
+      |                             help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26938:29
+      |
+26938 |                         let mut instance = find_instance(list, instance_id)?;
+      |                             ----^^^^^^^^
+      |                             |
+      |                             help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:27120:29
+      |
+27120 |                         let mut instance = find_instance(list, instance_id)?;
+      |                             ----^^^^^^^^
+      |                             |
+      |                             help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:27144:17
+      |
+27144 |             let mut instance = find_instance(list, instance_id)?;
+      |                 ----^^^^^^^^
+      |                 |
+      |                 help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26601:13
+      |
+26601 |         let mut retry_command = None;
+      |             ----^^^^^^^^^^^^^
+      |             |
+      |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26603:13
+      |
+26603 |         let mut presence_pending = None;
+      |             ----^^^^^^^^^^^^^^^^
+      |             |
+      |             help: remove this `mut`
+
+warning: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25297:22
+      |
+25297 |                     .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |generation| generation.checked_add(1))
+      |                      ^^^^^^^^^^^^
+      |
+      = note: `#[warn(deprecated)]` on by default
+help: replace the use of the deprecated method
+      |
+25297 -                     .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |generation| generation.checked_add(1))
+25297 +                     .try_update(Ordering::SeqCst, Ordering::SeqCst, |generation| generation.checked_add(1))
+      |
+
+warning: use of deprecated method `std::sync::atomic::Atomic::<u64>::fetch_update`: renamed to `try_update` for consistency
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14529:41
+      |
+14529 | ...   let _ = self.app_generation.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |genera...
+      |                                   ^^^^^^^^^^^^
+      |
+help: replace the use of the deprecated method
+      |
+14529 -             let _ = self.app_generation.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| Some(generation.saturating_add(1)));
+14529 +             let _ = self.app_generation.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| Some(generation.saturating_add(1)));
+      |
+
+warning: use of deprecated method `std::sync::atomic::Atomic::<usize>::fetch_update`: renamed to `try_update` for consistency
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13644:43
+      |
+13644 | ...   let result = self.state.bytes.fetch_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |curre...
+      |                                     ^^^^^^^^^^^^
+      |
+help: replace the use of the deprecated method
+      |
+13644 -             let result = self.state.bytes.fetch_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |current| current.checked_add(bytes).filter(|next| *next <= self.maximum)).map(|previous| previous + bytes);
+13644 +             let result = self.state.bytes.try_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |current| current.checked_add(bytes).filter(|next| *next <= self.maximum)).map(|previous| previous + bytes);
+      |
+
+warning: unused import: `Present`
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:242:38
+    |
+242 |     use semio_framework_ui_runtime::{Present, PresentCx};
+    |                                      ^^^^^^^
+
+warning: unused variable: `envelope_seq`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26668:22
+      |
+26668 |         if let Some((envelope_seq, mut owner)) = command {
+      |                      ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_envelope_seq`
+      |
+      = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `parent_document_id`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16242:17
+      |
+16242 |             let parent_document_id = self.store.envelope().await.id.clone();
+      |                 ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_parent_document_id`
+
+warning: unused variable: `actor`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10006:26
+      |
+10006 |                     let (actor, pack) = self.packs[self.packs_len - 1].as_ref().expect("retained app-typed presence pack");
+      |                          ^^^^^ help: if this is intentional, prefix it with an underscore: `_actor`
+
+   Compiling las v0.11.1
+warning: type `PeerPresenceRoot` is more private than the item `InteractionView::peers`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10178:9
+      |
+10178 |         pub(crate) peers: &'a PeerPresenceRoot,
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `InteractionView::peers` is reachable at visibility `pub(crate)`
+      |
+note: but type `PeerPresenceRoot` is only usable at visibility `pub(self)`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9607:5
+      |
+ 9607 |     struct PeerPresenceRoot {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^
+      = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `ChildMemberRegistry<M>` is more private than the item `component::app::VcsArtifactApp::children`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16098:9
+      |
+16098 |         pub(crate) children: ChildMemberRegistry<M>,
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `component::app::VcsArtifactApp::children` is reachable at visibility `pub(crate)`
+      |
+note: but type `ChildMemberRegistry<M>` is only usable at visibility `pub(self)`
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:8928:5
+      |
+ 8928 |     struct ChildMemberRegistry<M> {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `key` is never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:109:5
+    |
+107 | struct TaskRecord {
+    |        ---------- field in this struct
+108 |     instance: u32,
+109 |     key: Option<String>,
+    |     ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `REACTOR_TASK_KEY_BYTES` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:117:7
+    |
+117 | const REACTOR_TASK_KEY_BYTES: usize = 256;
+    |       ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `REACTOR_TASK_LABEL_BYTES` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:118:7
+    |
+118 | const REACTOR_TASK_LABEL_BYTES: usize = 256;
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `REACTOR_TASK_RESTART_BYTES` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:119:7
+    |
+119 | const REACTOR_TASK_RESTART_BYTES: usize = 64 * 1_024;
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `JobRenderBinding` is never constructed
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:122:8
+    |
+122 | struct JobRenderBinding {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: struct `JobRenderBindingRegistry` is never constructed
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:128:8
+    |
+128 | struct JobRenderBindingRegistry {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new`, `bind`, `accepted`, `complete`, and `close_instance` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:135:14
+    |
+134 | impl JobRenderBindingRegistry {
+    | ----------------------------- associated items in this implementation
+135 |     const fn new() -> Self {
+    |              ^^^
+...
+139 |     fn bind(&mut self, instance: u32, job: u64) -> Result<JobRenderBinding, ()> {
+    |        ^^^^
+...
+162 |     fn accepted(&self, job: u64) -> Option<JobRenderBinding> {
+    |        ^^^^^^^^
+...
+167 |     fn complete(&mut self, job: u64) -> Option<JobRenderBinding> {
+    |        ^^^^^^^^
+...
+178 |     fn close_instance(&mut self, instance: u32) {
+    |        ^^^^^^^^^^^^^^
+
+warning: methods `get_mut`, `insert_admitted`, and `take` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:257:8
+    |
+223 | impl<T> ReactorFixedSlots<T> {
+    | ---------------------------- methods in this implementation
+...
+257 |     fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+    |        ^^^^^^^
+...
+276 |     fn insert_admitted(&mut self, index: usize, value: T) {
+    |        ^^^^^^^^^^^^^^^
+...
+282 |     fn take(&mut self, index: usize) -> Option<T> {
+    |        ^^^^
+
+warning: multiple associated items are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:309:8
+    |
+304 | impl TaskRecordRegistry {
+    | ----------------------- associated items in this implementation
+...
+309 |     fn index(id: executor::TaskId) -> usize {
+    |        ^^^^^
+...
+313 |     fn can_insert(&self, id: executor::TaskId) -> bool {
+    |        ^^^^^^^^^^
+...
+317 |     fn insert(&mut self, id: executor::TaskId, record: TaskRecord) -> Result<(), TaskRecord> {
+    |        ^^^^^^
+...
+324 |     fn insert_admitted(&mut self, id: executor::TaskId, record: TaskRecord) {
+    |        ^^^^^^^^^^^^^^^
+...
+329 |     fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
+    |        ^^^^^^
+...
+338 |     fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
+    |        ^^^^^^^^
+...
+342 |     fn count_instance(&self, instance: u32) -> usize {
+    |        ^^^^^^^^^^^^^^
+...
+350 |     fn entry_at(&self, index: usize) -> Option<(executor::TaskId, &TaskRecord)> {
+    |        ^^^^^^^^
+
+warning: struct `ReactorCloseState` is never constructed
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:355:8
+    |
+355 | struct ReactorCloseState {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: struct `ReactorCloseRegistry` is never constructed
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:367:8
+    |
+367 | struct ReactorCloseRegistry {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new`, `index`, `insert`, `take_at`, and `put_at` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:372:8
+    |
+371 | impl ReactorCloseRegistry {
+    | ------------------------- associated items in this implementation
+372 |     fn new() -> Self {
+    |        ^^^
+...
+376 |     fn index(instance: u32) -> usize {
+    |        ^^^^^
+...
+380 |     fn insert(&mut self, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
+    |        ^^^^^^
+...
+385 |     fn take_at(&mut self, index: usize) -> Option<ReactorCloseState> {
+    |        ^^^^^^^
+...
+389 |     fn put_at(&mut self, index: usize, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
+    |        ^^^^^^
+
+warning: constant `REACTOR_TIMER_SLOTS` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:397:7
+    |
+397 | const REACTOR_TIMER_SLOTS: usize = 1_024;
+    |       ^^^^^^^^^^^^^^^^^^^
+
+warning: fields `instance` and `previous` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:401:5
+    |
+399 | struct TimerEntry {
+    |        ---------- fields in this struct
+400 |     id: u64,
+401 |     instance: u32,
+    |     ^^^^^^^^
+402 |     previous: Option<usize>,
+    |     ^^^^^^^^
+
+warning: fields `tail` and `allocation_admitted` are never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:409:5
+    |
+406 | struct FixedTimerRegistry {
+    |        ------------------ fields in this struct
+...
+409 |     tail: Option<usize>,
+    |     ^^^^
+410 |     live: usize,
+411 |     allocation_admitted: bool,
+    |     ^^^^^^^^^^^^^^^^^^^
+
+warning: field `preview_sequence` is never read
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:23908:9
+      |
+23901 |     struct RuntimeCloseWorkerState<PA: PluginApp> {
+      |            ----------------------- field in this struct
+...
+23908 |         preview_sequence: AtomicU64,
+      |         ^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:23926:12
+      |
+23925 |     impl RuntimeActorAuthority {
+      |     -------------------------- associated function in this implementation
+23926 |         fn new(actor: String) -> Result<Self, Fault> {
+      |            ^^^
+
+warning: methods `entry_mut`, `insert`, `get_mut`, and `is_empty` are never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:23984:12
+      |
+23946 |     impl<T> RuntimeInstanceRegistry<T> {
+      |     ---------------------------------- methods in this implementation
+...
+23984 |         fn entry_mut(&mut self, index: usize) -> Option<&mut (u32, T)> {
+      |            ^^^^^^^^^
+...
+23994 |         fn insert(&mut self, instance_id: u32, value: T) -> Result<(), T> {
+      |            ^^^^^^
+...
+24018 |         fn get_mut(&mut self, instance_id: u32) -> Option<&mut T> {
+      |            ^^^^^^^
+...
+24040 |         fn is_empty(&self) -> bool {
+      |            ^^^^^^^^
+
+warning: field `instance_id` is never read
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24884:9
+      |
+24883 |     struct RuntimeCloseCleanupJob<PA: PluginApp> {
+      |            ---------------------- field in this struct
+24884 |         instance_id: u32,
+      |         ^^^^^^^^^^^
+
+warning: associated items `index`, `insert`, `remove`, `first`, `contains`, and `cancel_instance_step` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:421:8
+    |
+414 | impl FixedTimerRegistry {
+    | ----------------------- associated items in this implementation
+...
+421 |     fn index(id: u64) -> usize {
+    |        ^^^^^
+...
+425 |     fn insert(&mut self, instance: u32, id: u64) -> Result<(), u64> {
+    |        ^^^^^^
+...
+447 |     fn remove(&mut self, id: u64) -> bool {
+    |        ^^^^^^
+...
+474 |     fn first(&self) -> Option<u64> {
+    |        ^^^^^
+...
+478 |     fn contains(&self, id: u64) -> bool {
+    |        ^^^^^^^^
+...
+497 |     fn cancel_instance_step(&mut self, instance: u32, cursor: &mut usize) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: field `quota` is never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:513:5
+    |
+510 | struct InstanceMetadata {
+    |        ---------------- field in this struct
+...
+513 |     quota: semio_framework::kernel::QuotaSchema,
+    |     ^^^^^
+
+warning: methods `get` and `remove` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:542:8
+    |
+520 | impl InstanceMetadataRegistry {
+    | ----------------------------- methods in this implementation
+...
+542 |     fn get(&self, instance: u32) -> Option<&InstanceMetadata> {
+    |        ^^^
+...
+546 |     fn remove(&mut self, instance: u32) -> Option<InstanceMetadata> {
+    |        ^^^^^^
+
+warning: variants `Emit` and `Fault` are never constructed
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:567:5
+    |
+565 | enum TaskResumeOutcome {
+    |      ----------------- variants in this enum
+566 |     Command(Vec<u8>),
+567 |     Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
+    |     ^^^^
+568 |     Fault(semio_framework::Fault),
+    |     ^^^^^
+
+warning: field `instance` is never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:577:5
+    |
+576 | struct PendingResume {
+    |        ------------- field in this struct
+577 |     instance: u32,
+    |     ^^^^^^^^
+
+warning: methods `push_admitted`, `pop`, `is_empty`, `begin_cancel_instance`, and `cancel_instance_step` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:637:8
+    |
+622 | impl FixedResumeQueue {
+    | --------------------- methods in this implementation
+...
+637 |     fn push_admitted(&mut self, value: PendingResume) {
+    |        ^^^^^^^^^^^^^
+...
+642 |     fn pop(&mut self) -> Option<PendingResume> {
+    |        ^^^
+...
+646 |     fn is_empty(&self) -> bool {
+    |        ^^^^^^^^
+...
+650 |     fn begin_cancel_instance(&self) -> usize {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+...
+654 |     fn cancel_instance_step(&mut self, instance: u32, remaining: &mut usize) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `instance_task_quota` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:679:10
+    |
+679 | async fn instance_task_quota(instance: u32) -> u64 {
+    |          ^^^^^^^^^^^^^^^^^^^
+
+warning: function `cancel_instance_tasks_step` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:800:15
+    |
+800 | pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `begin_reactor_close` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:824:4
+    |
+824 | fn begin_reactor_close(instance: u32) -> Result<(), semio_framework::Fault> {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `abort_reactor_close` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:837:4
+    |
+837 | fn abort_reactor_close(instance: u32) {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `step_reactor_close` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:847:4
+    |
+847 | fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `advance_command_cursor` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:961:4
+    |
+961 | fn advance_command_cursor(mut cursor: semio_framework::kernel::CommandPageCursor) -> Result<semio_framework::kernel::CommandPageCur...
+    |    ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `terminal_command_ingress` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:967:4
+    |
+967 | fn terminal_command_ingress(cursor: semio_framework::kernel::CommandPageCursor, fault: Option<Vec<u8>>) -> semio_framework::kernel:...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `reserved` is never read
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🧵️executor/🦀️component.rs:353:5
+    |
+348 | struct TaskSlot {
+    |        -------- field in this struct
+...
+353 |     reserved: bool,
+    |     ^^^^^^^^
+
+warning: variant `Running` is never constructed
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:291:5
+    |
+290 | enum JobBody {
+    |      ------- variant in this enum
+291 |     Running {
+    |     ^^^^^^^
+
+warning: constant `SLICE_MAX_ITERATIONS` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs:321:7
+    |
+321 | const SLICE_MAX_ITERATIONS: u32 = 64;
+    |       ^^^^^^^^^^^^^^^^^^^^
+
+warning: variants `Checkpoint` and `Commit` are never constructed
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:41:5
+   |
+40 | enum LosslessInferenceItem {
+   |      --------------------- variants in this enum
+41 |     Checkpoint(semio_framework_job::Checkpoint),
+   |     ^^^^^^^^^^
+42 |     Commit(CommitCandidate),
+   |     ^^^^^^
+   |
+   = note: `LosslessInferenceItem` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: method `byte_len` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:46:8
+   |
+45 | impl LosslessInferenceItem {
+   | -------------------------- method in this implementation
+46 |     fn byte_len(&self) -> usize {
+   |        ^^^^^^^^
+
+warning: variant `Saturated` is never constructed
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:57:5
+   |
+55 | enum InferenceBridgeError {
+   |      -------------------- variant in this enum
+56 |     Oversized { channel: &'static str, bytes: usize, max_bytes: usize },
+57 |     Saturated { channel: &'static str, items: usize, bytes: usize },
+   |     ^^^^^^^^^
+   |
+   = note: `InferenceBridgeError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `lossless`, `lossless_len`, and `lossless_bytes` are never read
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:73:5
+   |
+69 | struct InferenceBridge {
+   |        --------------- fields in this struct
+...
+73 |     lossless: [Option<LosslessInferenceItem>; LOSSLESS_MAX_ITEMS],
+   |     ^^^^^^^^
+74 |     lossless_len: usize,
+   |     ^^^^^^^^^^^^
+75 |     lossless_bytes: usize,
+   |     ^^^^^^^^^^^^^^
+
+warning: methods `publish_lossless` and `take_lossless` are never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/💡️infer/🦀️component.rs:104:8
+    |
+ 80 | impl InferenceBridge {
+    | -------------------- methods in this implementation
+...
+104 |     fn publish_lossless(&mut self, item: LosslessInferenceItem) -> Result<(), InferenceBridgeError> {
+    |        ^^^^^^^^^^^^^^^^
+...
+119 |     fn take_lossless(&mut self) -> Option<LosslessInferenceItem> {
+    |        ^^^^^^^^^^^^^
+
+warning: method `insert` is never used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/📮️requests/🦀️component.rs:117:8
+    |
+ 49 | impl Inner {
+    | ---------- method in this implementation
+...
+117 |     fn insert(&mut self, entry: SlotEntry) -> Result<(), SlotEntry> {
+    |        ^^^^^^
+
+warning: constant `DIRECT_READ_CHUNK` is never used
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/📖️body/🦀️component.rs:17:7
+   |
+17 | const DIRECT_READ_CHUNK: usize = 64 * 1024;
+   |       ^^^^^^^^^^^^^^^^^
+
+warning: method `len` is never used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9656:12
+     |
+9612 |     impl PeerPresenceRoot {
+     |     --------------------- method in this implementation
+...
+9656 |         fn len(&self) -> usize {
+     |            ^^^
+
+warning: fields `seq`, `generation`, and `cancel` are never read
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9834:9
+     |
+9833 |     struct PeerRosterCandidate<P> {
+     |            ------------------- fields in this struct
+9834 |         seq: u64,
+     |         ^^^
+9835 |         generation: u64,
+     |         ^^^^^^^^^^
+9836 |         cancel: semio_framework_job::CancelToken,
+     |         ^^^^^^
+
+warning: field `seq` is never read
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9844:9
+     |
+9843 |     struct ValidatedPeerRosterCommit {
+     |            ------------------------- field in this struct
+9844 |         seq: u64,
+     |         ^^^
+
+warning: field `run` is never read
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10927:9
+      |
+10911 |     pub struct AsyncTask<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
+      |                --------- field in this struct
+...
+10927 |         run: Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation...
+      |         ^^^
+
+warning: method `into_parts` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10956:29
+      |
+10930 |     impl<Mutation, ConfigMutation, DraftMutation> AsyncTask<Mutation, ConfigMutation, DraftMutation> {
+      |     ------------------------------------------------------------------------------------------------ method in this implementation
+...
+10956 |         pub(crate) async fn into_parts(self) -> (String, Option<String>, Option<Vec<u8>>, Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn ...
+      |                             ^^^^^^^^^^
+
+warning: method `handle_encoding` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13178:12
+      |
+13166 |     impl ArtifactDownloadOutput {
+      |     --------------------------- method in this implementation
+...
+13178 |         fn handle_encoding(&self) -> String {
+      |            ^^^^^^^^^^^^^^^
+
+warning: fields `0` and `1` are never read
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13189:18
+      |
+13189 |         Download(Result<ArtifactDownloadOutput, Fault>, EphemeralEmit<A>),
+      |         -------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+      |         |
+      |         fields in this variant
+      |
+help: consider changing the fields to be of unit type to suppress this warning while preserving the field numbering, or remove the fields
+      |
+13189 -         Download(Result<ArtifactDownloadOutput, Fault>, EphemeralEmit<A>),
+13189 +         Download((), ()),
+      |
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14113 |     framework_reserved_job!(FrameworkUndoJob, FrameworkUndoJobFactory, "undo", 0, 1_024, 16, 1_024, 1_024);
+      |     ------------------------------------------------------------------------------------------------------ in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14114 |     framework_reserved_job!(FrameworkRedoJob, FrameworkRedoJobFactory, "redo", 1, 1_024, 16, 1_024, 1_024);
+      |     ------------------------------------------------------------------------------------------------------ in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14115 |     framework_reserved_job!(FrameworkCommitCheckpointJob, FrameworkCommitCheckpointJobFactory, "commitCheckpoint", 2, 16_384, 128, 4_096, 16_384);
+      |     --------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14116 |     framework_reserved_job!(FrameworkCreateAlternativeJob, FrameworkCreateAlternativeJobFactory, "createAlternative", 3, 8_192, 32, 4_096, 8_192);
+      |     --------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14117 |     framework_reserved_job!(FrameworkSwitchAlternativeJob, FrameworkSwitchAlternativeJobFactory, "switchAlternative", 4, 8_192, 32, 4_096, 8_192);
+      |     --------------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14118 |     framework_reserved_job!(FrameworkCheckoutCheckpointJob, FrameworkCheckoutCheckpointJobFactory, "checkoutCheckpoint", 5, 8_192, 32, 4_096, 8_192);
+      |     ------------------------------------------------------------------------------------------------------------------------------------------------ in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14119 |     framework_reserved_job!(FrameworkRevertToCommandJob, FrameworkRevertToCommandJobFactory, "revertToCommand", 6, 8_192, 32, 256, 8_192);
+      |     ------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13969:20
+      |
+13968 |             impl $job {
+      |             --------- associated function in this implementation
+13969 |                 fn new(raw: Vec<u8>, total_items: usize) -> Self {
+      |                    ^^^
+...
+14120 |     framework_reserved_job!(FrameworkCopyJob, FrameworkCopyJobFactory, "copy", 7, 8_192, 4_096, 256, 1_048_576);
+      |     ----------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14120 |     framework_reserved_job!(FrameworkCopyJob, FrameworkCopyJobFactory, "copy", 7, 8_192, 4_096, 256, 1_048_576);
+      |     ----------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13969:20
+      |
+13968 |             impl $job {
+      |             --------- associated function in this implementation
+13969 |                 fn new(raw: Vec<u8>, total_items: usize) -> Self {
+      |                    ^^^
+...
+14121 |     framework_reserved_job!(FrameworkCutJob, FrameworkCutJobFactory, "cut", 8, 8_192, 4_096, 256, 1_048_576);
+      |     -------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14121 |     framework_reserved_job!(FrameworkCutJob, FrameworkCutJobFactory, "cut", 8, 8_192, 4_096, 256, 1_048_576);
+      |     -------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13969:20
+      |
+13968 |             impl $job {
+      |             --------- associated function in this implementation
+13969 |                 fn new(raw: Vec<u8>, total_items: usize) -> Self {
+      |                    ^^^
+...
+14122 |     framework_reserved_job!(FrameworkPasteJob, FrameworkPasteJobFactory, "paste", 9, 1_048_576, 4_096, 4_096, 4_194_304);
+      |     -------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14122 |     framework_reserved_job!(FrameworkPasteJob, FrameworkPasteJobFactory, "paste", 9, 1_048_576, 4_096, 4_096, 4_194_304);
+      |     -------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13969:20
+      |
+13968 |             impl $job {
+      |             --------- associated function in this implementation
+13969 |                 fn new(raw: Vec<u8>, total_items: usize) -> Self {
+      |                    ^^^
+...
+14123 |     framework_reserved_job!(FrameworkImportMediaJob, FrameworkImportMediaJobFactory, "import-media", 10, 8_388_608, 8_192, 4_096, 8_388_608);
+      |     ---------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14074:20
+      |
+14073 |             impl<A: ArtifactApp> $factory<A> {
+      |             -------------------------------- associated function in this implementation
+14074 |                 fn new(controller_id: &str) -> Self {
+      |                    ^^^
+...
+14123 |     framework_reserved_job!(FrameworkImportMediaJob, FrameworkImportMediaJobFactory, "import-media", 10, 8_388_608, 8_192, 4_096, 8_388_608);
+      |     ---------------------------------------------------------------------------------------------------------------------------------------- in this macro invocation
+      |
+      = note: this warning originates in the macro `framework_reserved_job` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: struct `FrameworkConfigurationBinaryJobFactory` is never constructed
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14207:12
+      |
+14207 |     struct FrameworkConfigurationBinaryJobFactory<A: ArtifactApp> {
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14213:12
+      |
+14212 |     impl<A: ArtifactApp> FrameworkConfigurationBinaryJobFactory<A> {
+      |     -------------------------------------------------------------- associated function in this implementation
+14213 |         fn new(controller_id: &str) -> Self {
+      |            ^^^
+
+warning: function `register_framework_reserved_factories` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14250:8
+      |
+14250 |     fn register_framework_reserved_factories<A: ArtifactApp>(registry: &mut ArtifactToolFactoryRegistry<'_, A>) -> Result<(), Fau...
+      |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `insert` is never used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14798:12
+      |
+14764 |     impl<T> ArtifactFixedRegistry<T> {
+      |     -------------------------------- method in this implementation
+...
+14798 |         fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
+      |            ^^^^^^
+
+warning: multiple fields are never read
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15092:9
+      |
+15091 |     struct ActiveToolCommand<A: ArtifactApp> {
+      |            ----------------- fields in this struct
+15092 |         verb: String,
+      |         ^^^^
+15093 |         meta: ActionMeta,
+      |         ^^^^
+15094 |         operation: semio_framework_job::Operation,
+      |         ^^^^^^^^^
+15095 |         contract: semio_framework::ToolExecutionContract,
+      |         ^^^^^^^^
+...
+15098 |         completion: ArtifactToolCompletion<A>,
+      |         ^^^^^^^^^^
+15099 |         output_chunks: ArtifactOutputChunks,
+      |         ^^^^^^^^^^^^^
+15100 |         cancellation_lease: ToolCancellationLease,
+      |         ^^^^^^^^^^^^^^^^^^
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3195:119
+     |
+3195 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+     = note: `#[warn(noop_method_call)]` on by default
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3229:119
+     |
+3229 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+
+warning: calls to `std::mem::drop` with a value that implements `Copy` does nothing
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15705:17
+      |
+15705 |                 drop(page);
+      |                 ^^^^^----^
+      |                      |
+      |                      argument has type `OwnedSchemaDecodePage`
+      |
+      = note: `#[warn(dropping_copy_types)]` on by default
+help: use `let _ = ...` to ignore the expression or result
+      |
+15705 -                 drop(page);
+15705 +                 let _ = page;
+      |
+
+warning: unused `Result` that must be used
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20755:13
+      |
+20755 |             self.store.detach_backbone().await;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: this `Result` may be an `Err` variant, which should be handled
+      = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+      |
+20755 |             let _ = self.store.detach_backbone().await;
+      |             +++++++
+
+warning: `semio-framework-plugin` (lib) generated 174 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 96 suggestions)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+   Compiling id3 v1.17.1
+   Compiling zip v6.0.0
+   Compiling quick-xml v0.42.0
+   Compiling riff v2.0.0
+   Compiling semio-repo-test-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust)
+   Compiling hound v3.5.1
+   Compiling json v0.12.4
+   Compiling semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🗜️dynamic/🦀️component.rs:663:22
+    |
+663 |     let item_bytes = std::mem::size_of::<T>();
+    |                      ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+663 -     let item_bytes = std::mem::size_of::<T>();
+663 +     let item_bytes = size_of::<T>();
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:598:22
+    |
+598 |     let item_bytes = std::mem::size_of::<T>();
+    |                      ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     let item_bytes = std::mem::size_of::<T>();
+598 +     let item_bytes = size_of::<T>();
+    |
+
+warning: unused import: `diff::PdfDiff`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:29:5
+   |
+29 |     diff::PdfDiff,
+   |     ^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `DocxOpcCtEntriesDiff`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:23:148
+   |
+23 | ..., NamedTripleDiff, DocxDiff, DocxOpcContentTypesDiff, DocxOpcCtEntriesDiff, DocxOpcDiff, DocxOpcPartDiff, DocxOpcPartsDiff, DocxO...
+   |                                                          ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `NamedTripleDiff`, `PptxOpcContentTypesDiff`, and `PptxOpcCtEntriesDiff`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:20:96
+   |
+20 | ...hema::diff::{NamedModified, NamedTripleDiff, PptxDiff, PptxOpcContentTypesDiff, PptxOpcCtEntriesDiff, PptxOpcDiff, PptxOpcRelDiff...
+   |                                ^^^^^^^^^^^^^^^            ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `xml_document_from_text` and `xml_document_to_text`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:22:47
+   |
+22 | use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `XlsxOpcRelDiff` and `XlsxOpcRelListDiff`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🧬️mutations/🦀️component.rs:23:218
+   |
+23 | ...lsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelDiff, XlsxOpcRelListDiff, XlsxOpcRelationshipsDiff};
+   |                                                   ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `XlsxOpcRelDiff` and `XlsxOpcRelListDiff`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:23:218
+   |
+23 | ...lsxOpcDiff, XlsxOpcPartDiff, XlsxOpcPartsDiff, XlsxOpcRelDiff, XlsxOpcRelListDiff, XlsxOpcRelationshipsDiff};
+   |                                                   ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused doc comment
+    --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:1325:1
+     |
+1325 | / /// 🧬️ Closed set spanning `semio`'s 18 composable subsets — the O1 replacement for the deleted
+1326 | | /// `Box<dyn SpaceMember>` `ChildStoreFactory` registry (`store::MemberFactory`'s own doc explains the
+1327 | | /// general mechanism; `store::space_members!` generates the `SpaceMember`/`MemberFactory` delegation
+1328 | | /// below). Generated exactly as any other family would be, EXCEPT the string fed to `MemberFactory::
+...    |
+1332 | | /// BE an `ArtifactKindId`; it only ever compares it against string literals, so this reuse is exact,
+1333 | | /// not approximate.
+     | |_-------------------^
+     |   |
+     |   rustdoc does not generate documentation for macro invocations
+     |
+     = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+     = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:53:5
+   |
+53 |     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+53 -     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
+53 +     subsets::brep::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:54:5
+   |
+54 |     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+54 -     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
+54 +     subsets::mesh::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:55:5
+   |
+55 |     crate::artifacts::semio::standards::v1::subsets::model::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+55 -     crate::artifacts::semio::standards::v1::subsets::model::io::register();
+55 +     subsets::model::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:56:5
+   |
+56 |     crate::artifacts::semio::standards::v1::subsets::value::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+56 -     crate::artifacts::semio::standards::v1::subsets::value::io::register();
+56 +     subsets::value::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:57:5
+   |
+57 |     crate::artifacts::semio::standards::v1::subsets::document::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+57 -     crate::artifacts::semio::standards::v1::subsets::document::io::register();
+57 +     subsets::document::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:58:5
+   |
+58 |     crate::artifacts::semio::standards::v1::subsets::cad::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+58 -     crate::artifacts::semio::standards::v1::subsets::cad::io::register();
+58 +     subsets::cad::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:59:5
+   |
+59 |     crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+59 -     crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
+59 +     subsets::drawing::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:60:5
+   |
+60 |     crate::artifacts::semio::standards::v1::subsets::image::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+60 -     crate::artifacts::semio::standards::v1::subsets::image::io::register();
+60 +     subsets::image::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:61:5
+   |
+61 |     crate::artifacts::semio::standards::v1::subsets::video::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+61 -     crate::artifacts::semio::standards::v1::subsets::video::io::register();
+61 +     subsets::video::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:62:5
+   |
+62 |     crate::artifacts::semio::standards::v1::subsets::audio::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+62 -     crate::artifacts::semio::standards::v1::subsets::audio::io::register();
+62 +     subsets::audio::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:63:5
+   |
+63 |     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+63 -     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
+63 +     subsets::animation::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:64:5
+   |
+64 |     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+64 -     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
+64 +     subsets::presentation::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:65:5
+   |
+65 |     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+65 -     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+65 +     subsets::flow::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:66:5
+   |
+66 |     crate::artifacts::semio::standards::v1::subsets::text::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+66 -     crate::artifacts::semio::standards::v1::subsets::text::io::register();
+66 +     subsets::text::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:67:5
+   |
+67 |     crate::artifacts::semio::standards::v1::subsets::table::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+67 -     crate::artifacts::semio::standards::v1::subsets::table::io::register();
+67 +     subsets::table::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:68:5
+   |
+68 |     crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+68 -     crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+68 +     subsets::graph::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:69:5
+   |
+69 |     crate::artifacts::semio::standards::v1::subsets::object::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+69 -     crate::artifacts::semio::standards::v1::subsets::object::io::register();
+69 +     subsets::object::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:70:5
+   |
+70 |     crate::artifacts::semio::standards::v1::subsets::kit::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+70 -     crate::artifacts::semio::standards::v1::subsets::kit::io::register();
+70 +     subsets::kit::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:71:5
+   |
+71 |     crate::artifacts::semio::standards::v1::subsets::any::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+71 -     crate::artifacts::semio::standards::v1::subsets::any::io::register();
+71 +     subsets::any::io::register();
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/✂️delete-edge/↩️inverse/🦀️component.rs:27:48
+   |
+27 |         .map(|x| SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: x.id.clone() }))
+   |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+27 -         .map(|x| SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: x.id.clone() }))
+27 +         .map(|x| SemioBrepMutation::DeleteEdge(DeleteEdge { id: x.id.clone() }))
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/💥delete-shell/↩️inverse/🦀️component.rs:25:49
+   |
+25 |         .map(|x| SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: x.id.clone() }))
+   |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+25 -         .map(|x| SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: x.id.clone() }))
+25 +         .map(|x| SemioBrepMutation::DeleteShell(DeleteShell { id: x.id.clone() }))
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🕳️delete-solid/↩️inverse/🦀️component.rs:24:49
+   |
+24 |         .map(|x| SemioBrepMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: x.id.clone() }))
+   |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+24 -         .map(|x| SemioBrepMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: x.id.clone() }))
+24 +         .map(|x| SemioBrepMutation::DeleteSolid(DeleteSolid { id: x.id.clone() }))
+   |
+
+warning: unnecessary qualification
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🚮delete-face/↩️inverse/🦀️component.rs:26:48
+   |
+26 |         .map(|x| SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: x.id.clone() }))
+   |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+26 -         .map(|x| SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: x.id.clone() }))
+26 +         .map(|x| SemioBrepMutation::DeleteFace(DeleteFace { id: x.id.clone() }))
+   |
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🦀️component.rs:21:5
+   |
+21 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs:17:35
+   |
+17 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `semio_framework_ui_contract::Buildable`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🦀️component.rs:13:5
+   |
+13 | use semio_framework_ui_contract::Buildable;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Buildable`, `HasBase`, and `HasChildren`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs:12:35
+   |
+12 | use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
+   |                                   ^^^^^^^^^             ^^^^^^^  ^^^^^^^^^^^
+
+warning: unused variable: `snapshot`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🦀️component.rs:202:33
+    |
+202 |             Self::SetSnapshot { snapshot } => Self::SetSnapshot { snapshot: base.clone() },
+    |                                 ^^^^^^^^ help: try ignoring the field: `snapshot: _`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `marked`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🦀️component.rs:203:33
+    |
+203 |             Self::SetMarkInfo { marked } => match support::catalog_flag(base, "MarkInfo", "Marked") {
+    |                                 ^^^^^^ help: try ignoring the field: `marked: _`
+
+warning: unused variable: `lang`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🦀️component.rs:213:29
+    |
+213 | ...   Self::SetLang { lang } => match support::catalog_entry(base, "Lang").and_then(|value| match value { PdfObject::Str(bytes) => ...
+    |                       ^^^^ help: try ignoring the field: `lang: _`
+
+warning: unused variable: `display`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🦀️component.rs:221:40
+    |
+221 |             Self::SetDisplayDocTitle { display } => match support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle") {
+    |                                        ^^^^^^^ help: try ignoring the field: `display: _`
+
+warning: unused variable: `title`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🦀️component.rs:229:34
+    |
+229 |             Self::SetInfoTitle { title } => Self::SetInfoTitle { title: base.info.title.clone().unwrap_or_default() },
+    |                                  ^^^^^ help: try ignoring the field: `title: _`
+
+warning: unused variable: `key`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🦀️component.rs:230:55
+    |
+230 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                 ^^^ help: try ignoring the field: `key: _`
+
+warning: unused variable: `program`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🧬️mutations/🦀️component.rs:230:60
+    |
+230 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                      ^^^^^^^ help: try ignoring the field: `program: _`
+
+warning: unused variable: `snapshot`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🧬️mutations/🦀️component.rs:227:33
+    |
+227 |             Self::SetSnapshot { snapshot } => Self::SetSnapshot { snapshot: base.clone() },
+    |                                 ^^^^^^^^ help: try ignoring the field: `snapshot: _`
+
+warning: unused variable: `identifier`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🧬️mutations/🦀️component.rs:230:37
+    |
+230 |             Self::SetOutputIntent { identifier } => Self::RemoveOutputIntent,
+    |                                     ^^^^^^^^^^ help: try ignoring the field: `identifier: _`
+
+warning: unused variable: `trim_box`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🧬️mutations/🦀️component.rs:235:44
+    |
+235 | ...   Self::SetTrimBox { page_index, trim_box } => match support::page_objects(base).get(*page_index).copied().and_then(|page| supp...
+    |                                      ^^^^^^^^ help: try ignoring the field: `trim_box: _`
+
+warning: unused variable: `key`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🧬️mutations/🦀️component.rs:243:55
+    |
+243 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                 ^^^ help: try ignoring the field: `key: _`
+
+warning: unused variable: `program`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🧬️mutations/🦀️component.rs:243:60
+    |
+243 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                      ^^^^^^^ help: try ignoring the field: `program: _`
+
+warning: unused variable: `snapshot`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🦀️component.rs:245:33
+    |
+245 |             Self::SetSnapshot { snapshot } => Self::SetSnapshot { snapshot: base.clone() },
+    |                                 ^^^^^^^^ help: try ignoring the field: `snapshot: _`
+
+warning: unused variable: `identifier`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🦀️component.rs:248:37
+    |
+248 |             Self::SetOutputIntent { identifier } => Self::RemoveOutputIntent,
+    |                                     ^^^^^^^^^^ help: try ignoring the field: `identifier: _`
+
+warning: unused variable: `trim_box`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🦀️component.rs:253:44
+    |
+253 | ...   Self::SetTrimBox { page_index, trim_box } => match support::page_objects(base).get(*page_index).copied().and_then(|page| supp...
+    |                                      ^^^^^^^^ help: try ignoring the field: `trim_box: _`
+
+warning: unused variable: `key`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🦀️component.rs:261:55
+    |
+261 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                 ^^^ help: try ignoring the field: `key: _`
+
+warning: unused variable: `program`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🦀️component.rs:261:60
+    |
+261 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                      ^^^^^^^ help: try ignoring the field: `program: _`
+
+warning: unused variable: `job`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🦀️component.rs:272:34
+    |
+272 |             Self::SetDpartRoot { job } => Self::RemoveDpartRoot,
+    |                                  ^^^ help: try ignoring the field: `job: _`
+
+warning: unused variable: `job`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🧬️mutations/🦀️component.rs:274:38
+    |
+274 |             Self::SetDpartMetadata { job } => match support::dpart_job(base) {
+    |                                      ^^^ help: try ignoring the field: `job: _`
+
+warning: unused variable: `snapshot`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations/🦀️component.rs:208:33
+    |
+208 |             Self::SetSnapshot { snapshot } => Self::SetSnapshot { snapshot: base.clone() },
+    |                                 ^^^^^^^^ help: try ignoring the field: `snapshot: _`
+
+warning: unused variable: `identifier`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations/🦀️component.rs:217:37
+    |
+217 |             Self::SetOutputIntent { identifier } => Self::RemoveOutputIntent,
+    |                                     ^^^^^^^^^^ help: try ignoring the field: `identifier: _`
+
+warning: unused variable: `key`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations/🦀️component.rs:222:55
+    |
+222 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                 ^^^ help: try ignoring the field: `key: _`
+
+warning: unused variable: `program`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🧬️mutations/🦀️component.rs:222:60
+    |
+222 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                      ^^^^^^^ help: try ignoring the field: `program: _`
+
+warning: unused variable: `snapshot`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs:202:33
+    |
+202 |             Self::SetSnapshot { snapshot } => Self::SetSnapshot { snapshot: base.clone() },
+    |                                 ^^^^^^^^ help: try ignoring the field: `snapshot: _`
+
+warning: unused variable: `title`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs:203:34
+    |
+203 |             Self::SetInfoTitle { title } => Self::SetInfoTitle { title: base.info.title.clone().unwrap_or_default() },
+    |                                  ^^^^^ help: try ignoring the field: `title: _`
+
+warning: unused variable: `author`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs:204:35
+    |
+204 |             Self::SetInfoAuthor { author } => Self::SetInfoAuthor { author: base.info.author.clone().unwrap_or_default() },
+    |                                   ^^^^^^ help: try ignoring the field: `author: _`
+
+warning: unused variable: `key`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs:211:55
+    |
+211 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                 ^^^ help: try ignoring the field: `key: _`
+
+warning: unused variable: `program`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🧬️mutations/🦀️component.rs:211:60
+    |
+211 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                      ^^^^^^^ help: try ignoring the field: `program: _`
+
+warning: unused variable: `snapshot`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🦀️component.rs:217:33
+    |
+217 |             Self::SetSnapshot { snapshot } => Self::SetSnapshot { snapshot: base.clone() },
+    |                                 ^^^^^^^^ help: try ignoring the field: `snapshot: _`
+
+warning: unused variable: `relationship`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🦀️component.rs:226:50
+    |
+226 | ...   Self::SetAfRelationship { file_name, relationship } => match support::file_spec_named(base, file_name).and_then(|id| support:...
+    |                                            ^^^^^^^^^^^^ help: try ignoring the field: `relationship: _`
+
+warning: unused variable: `identifier`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🦀️component.rs:234:37
+    |
+234 |             Self::SetOutputIntent { identifier } => Self::RemoveOutputIntent,
+    |                                     ^^^^^^^^^^ help: try ignoring the field: `identifier: _`
+
+warning: unused variable: `key`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🦀️component.rs:239:55
+    |
+239 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                 ^^^ help: try ignoring the field: `key: _`
+
+warning: unused variable: `program`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🧬️mutations/🦀️component.rs:239:60
+    |
+239 | ...   Self::EmbedFontFile { descriptor_ordinal, key, program } => Self::RemoveFontFile { descriptor_ordinal: *descriptor_ordinal },
+    |                                                      ^^^^^^^ help: try ignoring the field: `program: _`
+
+warning: function `part_text` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:123:4
+    |
+123 | fn part_text(base: &DocxSnapshot, path: &str) -> Option<String> {
+    |    ^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `declared_relationship_base` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🧬️mutations/🦀️component.rs:186:4
+    |
+186 | fn declared_relationship_base(base: &XlsxSnapshot, pair: [&str; 2]) -> Option<String> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `part_text` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:128:4
+    |
+128 | fn part_text(base: &XlsxSnapshot, path: &str) -> Option<String> {
+    |    ^^^^^^^^^
+
+warning: function `declared_relationship_base` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🧬️mutations/🦀️component.rs:172:4
+    |
+172 | fn declared_relationship_base(base: &XlsxSnapshot, pair: [&str; 2]) -> Option<String> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-stdio` (lib) generated 109 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 104 suggestions)
+   Compiling onig v6.5.3
+   Compiling syntect v5.3.0
+   Compiling semio-s-plugin-stdio-test-oracle v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust)
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:317:34
+    |
+317 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `quick_xml::events::attributes::Attribute::<'a>::unescape_value`: use `Self::normalized_value()`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/../../📰markup/🦀️component.rs:396:34
+    |
+396 |                 let value = attr.unescape_value().map_err(|error| error.to_string())?.into_owned();
+    |                                  ^^^^^^^^^^^^^^
+
+warning: constant `RELS_CONTENT_TYPE` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/././././././../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs:192:11
+    |
+192 |     const RELS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+    |           ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-stdio-test-oracle` (lib) generated 3 warnings
+   Compiling semio-test-host-mutate-semio-text v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/hosts/test-s-plugins-stdio-artifacts-semio-97645a-mutate-semio-text-subject-rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 17m 15s

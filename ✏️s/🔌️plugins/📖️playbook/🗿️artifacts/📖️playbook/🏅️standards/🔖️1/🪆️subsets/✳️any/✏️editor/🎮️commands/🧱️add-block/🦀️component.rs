@@ -19,12 +19,8 @@ pub struct AddBlock {
 // framework's own injected `interactionSelect` handling, never by an app command's `Emit` (mirrors
 // forms' `add-question`/note's `add-block`).
 pub async fn handle(payload: &AddBlock, doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
-    let spec = doc.snapshot;
-    let steps = spec.steps();
-    let Some(step_id) = payload.step_id.clone().or_else(|| steps.first().map(|step| step.id.clone())) else {
-        return Ok(Emit::default());
-    };
-    let block_id = format!("block-{}", steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
+    let step_id = payload.step_id.as_deref().filter(|value| !value.is_empty()).unwrap_or("s").to_string();
+    let block_id = format!("block-op-{}", doc.operation()?.operation_id);
     Ok(Emit { artifact_mutations: vec![add_block_operation(&step_id, default_block(block_id, &payload.kind), None)], ..Default::default() })
 }
 

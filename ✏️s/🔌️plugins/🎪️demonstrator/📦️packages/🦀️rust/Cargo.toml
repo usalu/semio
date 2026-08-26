@@ -26,6 +26,11 @@ role = "plugin"
 consumes = ["forms.questionKind", "flow.extension", "process.machines"]
 
 [[package.metadata.semio.playground]]
+variant = "demonstrator"
+app = "s.demonstrator.playground@1/*#editor"
+ports = { react = 6107, wgpu = 6207 }
+
+[[package.metadata.semio.playground]]
 variant = "generator"
 app = "s.procedural.procedural3d@1/*#editor"
 brand = "entwerfen-mit-bestand-generator"
@@ -137,3 +142,4 @@ gis = { path = "../../../🌍️gis/📦️packages/🦀️rust", package = "sem
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+semio-framework-ui-runtime = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }

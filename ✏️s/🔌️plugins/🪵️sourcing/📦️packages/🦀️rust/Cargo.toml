@@ -16,7 +16,7 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "sourcing"
-app = "sourcing-curate"
+app = "s.sourcing.curate@1/*#editor"
 aliases = ["curate"]
 ports = { react = 6081, wgpu = 6181 }
 

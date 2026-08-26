@@ -6,8 +6,8 @@
 //! - **Native** (wgpu native host, tests): {@link ArtifactHost::open} schedules bounded actor turns
 //!   on the injected process `WorkerPool`; WebSocket readiness remains on the ambient Tokio I/O
 //!   reactor and all actor deadlines use the pool's `TimerWheel`.
-//! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on `wasm_bindgen_futures::
-//!   spawn_local` with a `web_sys::WebSocket` semio_hub transport (no threads, no filesystem). The
+//! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on the owned browser-local
+//!   executor with a `web_sys::WebSocket` semio_hub transport (no threads, no filesystem). The
 //!   production browser shell instead uses a TS twin (`🟦️backbone-worker.ts`, WS-E); this wasm actor
 //!   keeps the crate coherent for a future in-wasm host.
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
@@ -865,8 +865,8 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
-    Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub store: ArtifactStore<P, Mutation>,
     cmd_tx: Option<ArtifactMailboxSender>,
@@ -876,8 +876,8 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
-    Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
@@ -1661,14 +1661,13 @@ mod native_actor {
                         message: "external history diverged while local operations are pending".into(),
                         target: vec![format!("folder://{}", self.document_id)],
                         op_index: None,
-                    }))
-                    .await;
+                    }));
                 } else {
                     self.known_op_ids = file_ids;
                     self.current_pack = Some(pack.clone());
                     self.current_spr = Some(spr.clone());
                     self.last_written_hash = Some(hash);
-                    self.deliver_snapshot(pack, spr).await;
+                    self.deliver_snapshot(pack, spr);
                 }
             }
         }
@@ -1773,7 +1772,7 @@ mod native_actor {
                 }
                 ServerFrame::Preview { actor, key, seq, payload } => {
                     if actor != ActorId(self.actor.clone()) {
-                        self.emit(ArtifactEvent::Preview { actor: actor.0, key, seq, payload }).await;
+                        self.emit(ArtifactEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
                 ServerFrame::Presence { peers } => {
@@ -1785,11 +1784,11 @@ mod native_actor {
                     }
                     let peers = decoded;
                     self.set_remote_state(RemoteState::Live { peer_count: peers.len() }).await;
-                    self.emit(ArtifactEvent::Presence { peers }).await;
+                    self.emit(ArtifactEvent::Presence { peers });
                 }
                 ServerFrame::Session { actor, color } => {
                     self.session_color = Some(color);
-                    self.emit(ArtifactEvent::Session { actor, color }).await;
+                    self.emit(ArtifactEvent::Session { actor, color });
                 }
                 ServerFrame::CreditGrant { .. } => {
                     // 🪙️ Command-lane credit-based flow control: no client-side backpressure
@@ -1797,7 +1796,7 @@ mod native_actor {
                     // accepted and ignored.
                 }
                 ServerFrame::Error { code, message } => {
-                    self.emit(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(code), message, target: vec![self.hub_base_url.clone().unwrap_or_default()], op_index: None })).await;
+                    self.emit(ArtifactEvent::Conflict(MutationMessage { level: crate::os_dsl::Severity::Error, code: crate::os_dsl::FaultCode::new(code), message, target: vec![self.hub_base_url.clone().unwrap_or_default()], op_index: None }));
                 }
             }
         }
@@ -1812,7 +1811,7 @@ mod native_actor {
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
                 match *outcome {
                     ApplyOutcome::Accepted => {
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted }).await;
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
                     }
                     ApplyOutcome::Transformed { envelope } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
@@ -1824,7 +1823,7 @@ mod native_actor {
                         let converted = *envelope;
                         self.persist_operations(std::slice::from_ref(&converted)).await;
                         self.deliver_remote_operations(vec![converted]).await;
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed }).await;
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
                     ApplyOutcome::Rejected { reason, messages } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
@@ -1833,7 +1832,7 @@ mod native_actor {
                         }
                         self.persist_operations(&rollbacks).await;
                         self.deliver_remote_operations(rollbacks).await;
-                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } }).await;
+                        self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });
                     }
                 }
             }
@@ -1882,20 +1881,25 @@ mod native_actor {
                 return;
             }
             let _ = self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await;
-            self.emit(ArtifactEvent::RemoteMutations { envelopes }).await;
+            self.emit(ArtifactEvent::RemoteMutations { envelopes });
         }
 
         /// @emoji 📸️ Pushes a full pack+spr snapshot into the store's inbound queue and notifies subscribers.
         async fn deliver_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
             let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack.clone(), spr: spr.clone() }).await;
-            self.emit(ArtifactEvent::SnapshotReplaced { pack, spr }).await;
+            self.emit(ArtifactEvent::SnapshotReplaced { pack, spr });
         }
 
-        async fn emit(&self, event: ArtifactEvent) {
+        /// 🚫️async: E1 pure sync body — `broadcast::Sender::send` never suspends. Declaring this
+        /// `async fn` forced `&ArtifactActor` to live across an await, which demanded
+        /// `ArtifactActor: Sync` from every `!Sync` field it owns (the folder watcher's `Receiver`,
+        /// `connect_future`, the codec table's `dyn Fn`) and made the whole actor turn non-`Send`.
+        fn emit(&self, event: ArtifactEvent) {
             let _ = self.events.send(event);
         }
 
-        async fn status(&self) -> ArtifactSyncStatus {
+        /// 🚫️async: E1 pure sync body — see `emit` above; same `&self`-across-await mechanism.
+        fn status(&self) -> ArtifactSyncStatus {
             ArtifactSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pending_mutations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
         }
 
@@ -1905,10 +1909,10 @@ mod native_actor {
         }
 
         async fn emit_status_if_changed(&mut self) {
-            let status = self.status().await;
+            let status = self.status();
             if self.last_status.as_ref() != Some(&status) {
                 self.last_status = Some(status.clone());
-                self.emit(ArtifactEvent::Status(status)).await;
+                self.emit(ArtifactEvent::Status(status));
             }
         }
         //#endregion 🔖️Deliver
@@ -3030,7 +3034,7 @@ mod wasm_actor {
             _closures: Vec::new(),
             _open_closures: Vec::new(),
         };
-        wasm_bindgen_futures::spawn_local(async move {
+        semio_framework_async::browser::spawn_local(async move {
             actor.connect().await;
             loop {
                 tokio::select! {

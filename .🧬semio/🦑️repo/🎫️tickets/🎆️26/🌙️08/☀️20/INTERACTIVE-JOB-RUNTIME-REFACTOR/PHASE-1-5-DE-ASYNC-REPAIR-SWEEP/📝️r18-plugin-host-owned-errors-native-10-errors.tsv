@@ -1,5 +1,0 @@
-E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	19203	no method named `expect` found for opaque type `impl std::future::Future<Output = Result<Vec<u8>, VcsError>>` in the current scope
-E0277	/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/macros/mod.rs	46	can't compare `std::string::String` with `impl std::future::Future<Output = &str>`
-E0277	/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/macros/mod.rs	51	`impl std::future::Future<Output = &str>` doesn't implement `Debug`
-E0369	/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/macros/mod.rs	46	binary operation `==` cannot be applied to type `impl std::future::Future<Output = &str>`
-E0277	/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/macros/mod.rs	51	`impl std::future::Future<Output = &str>` doesn't implement `Debug`

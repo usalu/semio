@@ -8,17 +8,13 @@ fn catalogue_add_item(id: &str, label: impl TryInto<Label>, clause_kind: &str) -
     tree_item_with_action(id, label, None, crate::editor::rewrite::rewrite_action("addRuleClause", Some(args))?)
 }
 
-pub(crate) async fn render(labels: &TrinityRewriteLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(labels: &TrinityRewriteLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     PanelTreeBuilder::new("trinity-catalogue")?
         .section(
             "trinity-catalogue.kinds",
             Some(labels.catalogue.into()),
             true,
-            crate::editor::rewrite::ui_node_list([
-                tree_item("trinity-catalogue.piece", labels.piece),
-                tree_item("trinity-catalogue.connection", labels.connection),
-                tree_item("trinity-catalogue.connector", labels.connector),
-            ])?,
+            crate::editor::rewrite::ui_node_list([tree_item("trinity-catalogue.piece", labels.piece), tree_item("trinity-catalogue.connection", labels.connection), tree_item("trinity-catalogue.connector", labels.connector)])?,
         )?
         .section("trinity-catalogue.lhs", Some(labels.add_to_lhs.into()), true, crate::editor::rewrite::ui_node_list([catalogue_add_item("trinity-catalogue.add-where", Label::data("Where clause"), "where")])?)?
         .section(

@@ -30,7 +30,7 @@ fn mutation() -> En1992Mutation {
 /// ▶️ `change-anchor-f-uk-mpa` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `anchor_f_uk_mpa` from 800.0 to 900.0, leaving every other EN 1992 concrete-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_anchor_f_uk_mpa_applies_to_committed_after() {
+fn change_anchor_f_uk_mpa_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-anchor-f-uk-mpa applies to its committed before-snapshot");
     assert_eq!(applied.anchor_f_uk_mpa, 900.0, "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: anchor_f_uk_mpa must read 900.0 after the change");
     assert_eq!(applied, expected_after(), "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_anchor_f_uk_mpa_applies_to_committed_after() {
 /// ↩️ `change-anchor-f-uk-mpa` is its own inverse partner: the inverse step restores `anchor_f_uk_mpa` to its pre-change
 /// 800.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_anchor_f_uk_mpa_inverse_restores_before() {
+fn change_anchor_f_uk_mpa_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-anchor-f-uk-mpa applies");
     let inverse = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_anchor_f_uk_mpa_inverse_restores_before() {
 /// decode then encode is a fixed point, so `anchorFUkMpa` and `newAnchorFUkMpa` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_anchor_f_uk_mpa_committed_json_is_canonical() {
+fn change_anchor_f_uk_mpa_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1992Snapshot = serde_json::from_str(text).expect("change-anchor-f-uk-mpa snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-anchor-f-uk-mpa snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_anchor_f_uk_mpa_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-anchor-f-uk-mpa` at 900.0 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_anchor_f_uk_mpa_declared_outcome_holds() {
+fn change_anchor_f_uk_mpa_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-anchor-f-uk-mpa outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: this fixture declares an applied outcome");
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_anchor_f_uk_mpa_declared_outcome_holds() {
 /// assertion: it pins that only `anchorFUkMpa` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `anchorFYkMpa`.
 #[semio_framework_async_macros::async_test]
-async fn change_anchor_f_uk_mpa_produces_committed_diff() {
+fn change_anchor_f_uk_mpa_produces_committed_diff() {
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().anchor_f_uk_mpa, Some(900.0), "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: the diff must set anchor_f_uk_mpa to 900.0");
     assert!(outcome.diff().artifact.is_none(), "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_anchor_f_uk_mpa_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-anchor-f-uk-mpa`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_anchor_f_uk_mpa_committed_diff_is_canonical() {
+fn change_anchor_f_uk_mpa_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-anchor-f-uk-mpa committed diff decodes");
     assert_eq!(decoded.anchor_f_uk_mpa, Some(900.0), "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: the committed diff must carry anchor_f_uk_mpa at 900.0");
     assert!(decoded.selected_check_index.is_none(), "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_anchor_f_uk_mpa_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 800.0 to 900.0 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_anchor_f_uk_mpa_committed_diff_applies_to_after() {
+fn change_anchor_f_uk_mpa_committed_diff_applies_to_after() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-anchor-f-uk-mpa committed diff decodes");
     let produced = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(&decoded, &before()).expect("change-anchor-f-uk-mpa committed diff applies to the before-snapshot");
     assert_eq!(produced.anchor_f_uk_mpa, 900.0, "change-anchor-f-uk-mpa/raises-anchor-f-uk-mpa-to-900-0: the committed diff must leave anchor_f_uk_mpa reading 900.0");

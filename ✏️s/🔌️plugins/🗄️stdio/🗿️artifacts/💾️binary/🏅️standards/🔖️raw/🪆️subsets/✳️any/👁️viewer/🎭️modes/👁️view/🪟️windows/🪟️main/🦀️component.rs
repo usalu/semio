@@ -38,6 +38,7 @@ pub fn render(document: &BinarySnapshot) -> semio_framework_plugin::UiAssemblyRe
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use semio_framework_plugin::Component;
     use super::*;
 
     #[semio_framework_async_macros::async_test]
@@ -51,8 +52,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_carries_the_bytes_as_read_only_hex() {
         let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.text_editor.expect("text_editor scene");
+        let node = render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
+        let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
         assert!(scene.buffer.starts_with("deadbeef"));
         assert!(scene.settings_json.unwrap_or_default().contains("readOnly"));
     }

@@ -7,7 +7,7 @@ use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::CreateProductGroup;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &CreateProductGroup, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+pub fn inverse(payload: &CreateProductGroup, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
     if base.catalogue.product_groups.iter().any(|group| group.id == payload.product_group.id) {
         return Vec::new();
     }

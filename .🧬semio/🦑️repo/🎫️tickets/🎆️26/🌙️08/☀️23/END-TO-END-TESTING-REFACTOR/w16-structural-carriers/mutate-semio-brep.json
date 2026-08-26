@@ -1,0 +1,330 @@
+{
+ "rows": {
+  "create-vertex": {
+   "prepare": [],
+   "mutation": {
+    "CreateVertex": {
+     "id": "v4",
+     "point": {
+      "x": 2.0,
+      "y": 1.5,
+      "z": -0.75
+     }
+    }
+   }
+  },
+  "delete-vertex": {
+   "prepare": [],
+   "mutation": {
+    "DeleteVertex": {
+     "id": "v3"
+    }
+   }
+  },
+  "create-edge": {
+   "prepare": [],
+   "mutation": {
+    "CreateEdge": {
+     "id": "e4",
+     "start_vertex": "v1",
+     "end_vertex": "v3",
+     "curve": {
+      "kind": "ellipse",
+      "center": {
+       "x": 2.0,
+       "y": 1.5,
+       "z": 0.0
+      },
+      "axis": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 1.0
+      },
+      "radiusMajor": 2.5,
+      "radiusMinor": 1.25
+     }
+    }
+   }
+  },
+  "delete-edge": {
+   "prepare": [],
+   "mutation": {
+    "DeleteEdge": {
+     "id": "e3"
+    }
+   }
+  },
+  "create-face": {
+   "prepare": [],
+   "mutation": {
+    "CreateFace": {
+     "id": "f2",
+     "outer_loop": "l1",
+     "inner_loops": [],
+     "surface": {
+      "kind": "torus",
+      "center": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 2.0
+      },
+      "axis": {
+       "x": 0.0,
+       "y": 1.0,
+       "z": 0.0
+      },
+      "majorRadius": 3.0,
+      "minorRadius": 0.75
+     },
+     "orientation": false
+    }
+   }
+  },
+  "delete-face": {
+   "prepare": [],
+   "mutation": {
+    "DeleteFace": {
+     "id": "f1"
+    }
+   }
+  },
+  "create-shell": {
+   "prepare": [],
+   "mutation": {
+    "CreateShell": {
+     "id": "s2",
+     "faces": [
+      {
+       "face": "f1",
+       "orientation": false
+      }
+     ]
+    }
+   }
+  },
+  "delete-shell": {
+   "prepare": [],
+   "mutation": {
+    "DeleteShell": {
+     "id": "s1"
+    }
+   }
+  },
+  "create-solid": {
+   "prepare": [],
+   "mutation": {
+    "CreateSolid": {
+     "id": "so2",
+     "shells": [
+      {
+       "shell": "s1",
+       "isVoid": true
+      }
+     ]
+    }
+   }
+  },
+  "delete-solid": {
+   "prepare": [],
+   "mutation": {
+    "DeleteSolid": {
+     "id": "so1"
+    }
+   }
+  },
+  "replace-curve": {
+   "prepare": [],
+   "mutation": {
+    "ReplaceCurve": {
+     "edge_id": "e1",
+     "new_curve": {
+      "kind": "circle",
+      "center": {
+       "x": 0.5,
+       "y": 0.0,
+       "z": 0.0
+      },
+      "axis": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 1.0
+      },
+      "radius": 0.5
+     }
+    }
+   }
+  },
+  "replace-surface": {
+   "prepare": [
+    {
+     "ReplaceSurface": {
+      "face_id": "f1",
+      "new_surface": {
+       "kind": "cone",
+       "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+       },
+       "axis": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+       },
+       "radius": 2.0,
+       "halfAngle": 0.5
+      }
+     }
+    }
+   ],
+   "mutation": {
+    "ReplaceSurface": {
+     "face_id": "f1",
+     "new_surface": {
+      "kind": "sphere",
+      "center": {
+       "x": 1.0,
+       "y": -2.0,
+       "z": 0.5
+      },
+      "radius": 4.25
+     }
+    }
+   }
+  },
+  "move-vertex": {
+   "prepare": [],
+   "mutation": {
+    "MoveVertex": {
+     "vertex_id": "v2",
+     "new_point": {
+      "x": 4.0,
+      "y": 0.0,
+      "z": 1.25
+     }
+    }
+   }
+  }
+ },
+ "vectors": {
+  "create-vertex": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🏗️create-vertex/🧪️tests/adds-an-apex-vertex-above-the-square/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🏗️create-vertex/🧪️tests/adds-an-apex-vertex-above-the-square/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🏗️create-vertex/🧪️tests/adds-an-apex-vertex-above-the-square/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-vertex": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🗑️delete-vertex/🧪️tests/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🗑️delete-vertex/🧪️tests/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🗑️delete-vertex/🧪️tests/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-edge": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🔗create-edge/🧪️tests/adds-a-diagonal-edge-across-the-square/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🔗create-edge/🧪️tests/adds-a-diagonal-edge-across-the-square/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🔗create-edge/🧪️tests/adds-a-diagonal-edge-across-the-square/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-edge": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/removes-the-closing-edge-and-keeps-its-two-vertices/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/removes-the-closing-edge-and-keeps-its-two-vertices/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/✂️delete-edge/🧪️tests/removes-the-closing-edge-and-keeps-its-two-vertices/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-face": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🔷create-face/🧪️tests/adds-an-opposing-face-over-the-same-loop/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🔷create-face/🧪️tests/adds-an-opposing-face-over-the-same-loop/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🔷create-face/🧪️tests/adds-an-opposing-face-over-the-same-loop/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-face": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🚮delete-face/🧪️tests/removes-the-only-face-and-leaves-its-loop-behind/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🚮delete-face/🧪️tests/removes-the-only-face-and-leaves-its-loop-behind/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🚮delete-face/🧪️tests/removes-the-only-face-and-leaves-its-loop-behind/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-shell": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🐚create-shell/🧪️tests/adds-a-second-shell-that-reuses-the-face-with-flipped-sense/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🐚create-shell/🧪️tests/adds-a-second-shell-that-reuses-the-face-with-flipped-sense/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🐚create-shell/🧪️tests/adds-a-second-shell-that-reuses-the-face-with-flipped-sense/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-shell": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/💥delete-shell/🧪️tests/removes-the-only-shell-and-leaves-its-faces-behind/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/💥delete-shell/🧪️tests/removes-the-only-shell-and-leaves-its-faces-behind/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/💥delete-shell/🧪️tests/removes-the-only-shell-and-leaves-its-faces-behind/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "create-solid": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🧊create-solid/🧪️tests/adds-a-second-solid-that-treats-the-shell-as-a-void/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🧊create-solid/🧪️tests/adds-a-second-solid-that-treats-the-shell-as-a-void/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🧊create-solid/🧪️tests/adds-a-second-solid-that-treats-the-shell-as-a-void/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "delete-solid": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🕳️delete-solid/🧪️tests/removes-the-only-solid-and-leaves-its-shell-behind/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🕳️delete-solid/🧪️tests/removes-the-only-solid-and-leaves-its-shell-behind/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🕳️delete-solid/🧪️tests/removes-the-only-solid-and-leaves-its-shell-behind/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "replace-curve": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/➰replace-curve/🧪️tests/swaps-the-first-edges-line-for-a-circular-arc/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/➰replace-curve/🧪️tests/swaps-the-first-edges-line-for-a-circular-arc/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/➰replace-curve/🧪️tests/swaps-the-first-edges-line-for-a-circular-arc/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "replace-surface": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🗺️replace-surface/🧪️tests/swaps-the-faces-plane-for-a-cylinder/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🗺️replace-surface/🧪️tests/swaps-the-faces-plane-for-a-cylinder/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🗺️replace-surface/🧪️tests/swaps-the-faces-plane-for-a-cylinder/📸️snapshot/➡️after/🔣️component.json"
+  ],
+  "move-vertex": [
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/📍move-vertex/🧪️tests/lifts-the-third-corner-off-the-base-plane/📸️snapshot/⬅️before/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/📍move-vertex/🧪️tests/lifts-the-third-corner-off-the-base-plane/🦠️mutation/🔣️component.json",
+   "🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/📍move-vertex/🧪️tests/lifts-the-third-corner-off-the-base-plane/📸️snapshot/➡️after/🔣️component.json"
+  ]
+ },
+ "dirs": {
+  "create-vertex": [
+   "🏗️create-vertex",
+   "adds-an-apex-vertex-above-the-square"
+  ],
+  "delete-vertex": [
+   "🗑️delete-vertex",
+   "removes-a-corner-vertex-and-cascades-into-its-two-incident-edges"
+  ],
+  "create-edge": [
+   "🔗create-edge",
+   "adds-a-diagonal-edge-across-the-square"
+  ],
+  "delete-edge": [
+   "✂️delete-edge",
+   "removes-the-closing-edge-and-keeps-its-two-vertices"
+  ],
+  "create-face": [
+   "🔷create-face",
+   "adds-an-opposing-face-over-the-same-loop"
+  ],
+  "delete-face": [
+   "🚮delete-face",
+   "removes-the-only-face-and-leaves-its-loop-behind"
+  ],
+  "create-shell": [
+   "🐚create-shell",
+   "adds-a-second-shell-that-reuses-the-face-with-flipped-sense"
+  ],
+  "delete-shell": [
+   "💥delete-shell",
+   "removes-the-only-shell-and-leaves-its-faces-behind"
+  ],
+  "create-solid": [
+   "🧊create-solid",
+   "adds-a-second-solid-that-treats-the-shell-as-a-void"
+  ],
+  "delete-solid": [
+   "🕳️delete-solid",
+   "removes-the-only-solid-and-leaves-its-shell-behind"
+  ],
+  "replace-curve": [
+   "➰replace-curve",
+   "swaps-the-first-edges-line-for-a-circular-arc"
+  ],
+  "replace-surface": [
+   "🗺️replace-surface",
+   "swaps-the-faces-plane-for-a-cylinder"
+  ],
+  "move-vertex": [
+   "📍move-vertex",
+   "lifts-the-third-corner-off-the-base-plane"
+  ]
+ }
+}

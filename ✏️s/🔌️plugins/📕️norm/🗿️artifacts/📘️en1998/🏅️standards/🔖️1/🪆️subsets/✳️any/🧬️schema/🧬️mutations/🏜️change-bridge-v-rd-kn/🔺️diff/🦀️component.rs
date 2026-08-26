@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_bridge_v_rd_kn::mutation::Change
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeBridgeVRdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeBridgeVRdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if !payload.new_bridge_v_rd_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Bridge design shear resistance [kN] must be a finite number, got {}.", payload.new_bridge_v_rd_kn), Vec::<String>::new());
     }

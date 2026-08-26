@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// Table 5.1 then demands 120 mm rather than 90 mm of clay masonry, but that REQUIRED thickness is computed,
 /// never stored, so the built thickness is untouched.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_fire_resistance_requirement_from_r60_to_r90() {
+fn raises_the_fire_resistance_requirement_from_r60_to_r90() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-fire-resistance-min applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.fire_resistance_min, 90, "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: fire_resistance_min must read 90 minutes once the change lands");
@@ -48,7 +48,7 @@ async fn raises_the_fire_resistance_requirement_from_r60_to_r90() {
 /// ↩️ `change-fire-resistance-min`'s inverse reads the OLD 60 minutes out of BASE, so replaying it puts the R60
 /// requirement back on `fire_resistance_min`.
 #[semio_framework_async_macros::async_test]
-async fn returning_to_r60_restores_before() {
+fn returning_to_r60_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-fire-resistance-min applies");
@@ -66,7 +66,7 @@ async fn returning_to_r60_restores_before() {
 /// decode → encode is a fixed point, so `newFireResistanceMin`, carrying a bare JSON integer because the
 /// field is a `u32` is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -81,7 +81,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `fire_resistance_min` is a `u32`, so `change-fire-resistance-min` has no finiteness guard;
 /// 90 differs from the committed 60, so its only guard — the equality one — stays shut.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `fireResistanceMin` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-fire-resistance-min diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the fire-resistance
 /// requirement and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-fire-resistance-min diff decodes");
     assert_eq!(decoded.fire_resistance_min, Some(90), "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: the committed diff must carry fireResistanceMin = 90 minutes");
     assert!(decoded.wall_thickness_mm.is_none(), "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: change-fire-resistance-min writes fireResistanceMin and must leave `wall_thickness_mm` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the fire-requirement change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-fire-resistance-min diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-fire-resistance-min/raises-the-fire-resistance-requirement-from-r60-to-r90: the committed diff did not carry before to after");

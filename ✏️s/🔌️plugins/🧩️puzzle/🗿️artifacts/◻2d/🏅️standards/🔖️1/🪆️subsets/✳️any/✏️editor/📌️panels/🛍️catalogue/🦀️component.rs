@@ -57,12 +57,9 @@ fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) ->
 }
 
 fn add_node_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    let kind = UiText::try_from_str(kind_id)
-        .map(UiValue::Text)
-        .ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue kind admission failed"))?;
+    let kind = UiText::try_from_str(kind_id).map(UiValue::Text).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue kind admission failed"))?;
     let mut args = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue action map admission failed"))?;
-    args.push("kind".into(), kind)
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue action entry admission failed"))?;
+    args.push("kind".into(), kind).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d catalogue action entry admission failed"))?;
     Ok(UiValue::Map(args.finish()))
 }
 

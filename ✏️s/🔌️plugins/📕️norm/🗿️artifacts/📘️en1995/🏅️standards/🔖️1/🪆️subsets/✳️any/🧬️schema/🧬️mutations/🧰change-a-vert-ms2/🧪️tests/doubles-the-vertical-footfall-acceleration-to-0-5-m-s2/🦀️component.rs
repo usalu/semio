@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 /// ▶️ Doubling the vertical footfall acceleration from 0.25 m/s² to 0.5 m/s² rewrites `a_vert_m_s2` alone — it
 /// is the EN 1995-2 pedestrian-comfort criterion and touches none of the EN 1995-1-1 strength inputs.
 #[semio_framework_async_macros::async_test]
-async fn doubles_the_vertical_footfall_acceleration_to_0_5_m_s2() {
+fn doubles_the_vertical_footfall_acceleration_to_0_5_m_s2() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-a-vert-ms2 applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-a-vert-ms2/doubles-the-vertical-footfall-acceleration-to-0-5-m-s2: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.a_vert_m_s2, 0.5, "change-a-vert-ms2/doubles-the-vertical-footfall-acceleration-to-0-5-m-s2: a_vert_m_s2 must read 0.5 m/s² once the change lands");
@@ -43,7 +43,7 @@ async fn doubles_the_vertical_footfall_acceleration_to_0_5_m_s2() {
 /// ↩️ `change-a-vert-ms2`'s inverse reads the OLD 0.25 m/s² out of BASE, so replaying it puts the 0.25 m/s²
 /// acceleration back on `a_vert_m_s2`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_0_25_m_s2_restores_before() {
+fn restoring_0_25_m_s2_restores_before() {
     let base = before();
     let forward = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-a-vert-ms2 applies");
@@ -62,7 +62,7 @@ async fn restoring_0_25_m_s2_restores_before() {
 /// `new_a_vert_m_s2` gives `newAVertMS2`, with the trailing `s2` segment capitalised to `S2` is spelled here
 /// exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 0.5 m/s² is finite and differs from the committed 0.25 m/s², so `change-a-vert-ms2` (whose
 /// guard message reads "A vert ms2") emits nothing.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-a-vert-ms2/doubles-the-vertical-footfall-acceleration-to-0-5-m-s2: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `aVertMS2` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-a-vert-ms2 diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-a-vert-ms2/doubles-the-vertical-footfall-acceleration-to-0-5-m-s2: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1995Diff`, re-encodes unchanged, and carries the vertical footfall
 /// acceleration and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-a-vert-ms2 diff decodes");
     assert_eq!(decoded.a_vert_m_s2, Some(0.5), "change-a-vert-ms2/doubles-the-vertical-footfall-acceleration-to-0-5-m-s2: the committed diff must carry aVertMS2 = 0.5 m/s²");
     assert!(decoded.n_cycles_bridge.is_none(), "change-a-vert-ms2/doubles-the-vertical-footfall-acceleration-to-0-5-m-s2: change-a-vert-ms2 writes aVertMS2 and must leave `n_cycles_bridge` untouched");
@@ -112,7 +112,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the comfort-criterion change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-a-vert-ms2 diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-a-vert-ms2/doubles-the-vertical-footfall-acceleration-to-0-5-m-s2: the committed diff did not carry before to after");

@@ -5,7 +5,6 @@ type DrawConfig {
   tracePointerGeneration: Float! @state(class: CONFIG)
   tracePointerCompletedWork: Float! @state(class: CONFIG)
   tracePointerPendingWork: Float! @state(class: CONFIG)
-  gestureCheckpointJson: String! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
 }
 type DrawCamera { x: Float! y: Float! zoom: Float! }

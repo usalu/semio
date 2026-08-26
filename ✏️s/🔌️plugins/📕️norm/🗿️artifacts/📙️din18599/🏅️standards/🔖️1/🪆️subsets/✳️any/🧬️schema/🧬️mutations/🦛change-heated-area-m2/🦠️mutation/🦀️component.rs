@@ -15,15 +15,15 @@ pub struct ChangeHeatedAreaM2 {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeHeatedAreaM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "heated-area-m2", kind: "change-heated-area-m2", record: "ChangedHeatedAreaM2" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_heated_area_m2::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_heated_area_m2::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change heated floor area [m2] to {}", self.new_heated_area_m2)
     }
 }

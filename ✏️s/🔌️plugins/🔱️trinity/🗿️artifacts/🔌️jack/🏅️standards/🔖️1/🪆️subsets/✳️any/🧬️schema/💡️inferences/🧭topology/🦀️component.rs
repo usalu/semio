@@ -35,7 +35,7 @@ impl Default for JackTopology {
 
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
-pub async fn compute_topology(snapshot: &JackSnapshot) -> JackTopology {
+pub fn compute_topology(snapshot: &JackSnapshot) -> JackTopology {
     let scene = crate::artifacts::jack::jack_working_scene(snapshot);
     let node_count = scene.nodes.len() as u32;
     let mut adjacency: BTreeMap<String, Vec<String>> = scene.nodes.iter().map(|node| (node.id.clone(), Vec::new())).collect();
@@ -91,7 +91,7 @@ mod tests {
     use crate::artifacts::jack::{Edge, Node, Port, PortDirection, PropertyBag};
 
     //#region 🧸️Fixtures
-    async fn node(id: &str) -> Node {
+    fn node(id: &str) -> Node {
         Node {
             id: id.into(),
             kind: "Piece".into(),
@@ -108,11 +108,11 @@ mod tests {
         }
     }
 
-    async fn edge(id: &str, source: &str, target: &str) -> Edge {
+    fn edge(id: &str, source: &str, target: &str) -> Edge {
         Edge { id: id.into(), kind: "Connection".into(), source: source.into(), target: target.into(), properties: PropertyBag::new() }
     }
 
-    async fn chain_snapshot() -> JackSnapshot {
+    fn chain_snapshot() -> JackSnapshot {
         // root -e1- mid -e2- leaf: a 3-node chain.
         JackSnapshot::with_content(
             "trinity.graph".into(),

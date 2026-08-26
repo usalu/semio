@@ -1,0 +1,76 @@
+bun test v1.3.14 (0d9b296a)
+
+🧪️index.test.ts:
+242 |   // ⏱️ Repo-wide: also runs the legacy-test survey and the oracle-purity scan over every
+243 |   // non-excluded path, so it needs the quick-level budget rather than bun's 5 s default.
+244 |   test(
+245 |     "every committed case satisfies the frozen contract",
+246 |     () => {
+247 |       expect(validateAllContracts(repoRoot).map((breach) => `${breach.kind}:${breach.scope}:${breach.summary}`)).toEqual([]);
+                                                                                                                       ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   "testing/discovery:🧰️framework:44 executable test file(s) outside the canonical owner-root test tree, baseline allows 35",
++   "testing/discovery:✏️s:5 executable test file(s) outside the canonical owner-root test tree, baseline allows 1",
++ ]
+
+- Expected  - 1
++ Received  + 4
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:247:114)
+(fail) 🔍️ discovery and contract > every committed case satisfies the frozen contract [45517.15ms]
+  ^ this test timed out after 30000ms.
+252 |   test(
+253 |     "the migration backlog is a shrink-only ratchet, never a growing allowlist",
+254 |     () => {
+255 |       const baseline = loadMigrationBaseline(repoRoot);
+256 |       const live = surveyUnmanagedTests(repoRoot).reduce((map, entry) => map.set(entry.area, (map.get(entry.area) ?? 0) + 1), new Map<string, number>());
+257 |       for (const [area, count] of live) expect(count).toBeLessThanOrEqual(baseline.unmanagedTests.byArea[area] ?? 0);
+                                                            ^
+error: expect(received).toBeLessThanOrEqual(expected)
+
+Expected: <= 1
+Received: 5
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:257:55)
+(fail) 🔍️ discovery and contract > the migration backlog is a shrink-only ratchet, never a growing allowlist [4425.14ms]
+342 |     // (reader + writer, archive + XML) that declared just its primary package would leave the others
+343 |     // linked into the host and absent from the ratchet, which is a gate that cannot see its subject.
+344 |     for (const oracle of loadOracleRegistry(repoRoot).oracles) {
+345 |       for (const linked of oracleLinkedPackages(oracle)) {
+346 |         const entry = baseline.entries.find((candidate) => candidate.name === linked.package);
+347 |         expect(entry?.kinds, `${linked.package} is linked by oracle ${oracle.id} but is absent from the dependency baseline`).toEqual(["test-oracle"]);
+                                                                                                                                    ^
+error: ifcopenshell is linked by oracle ifcopenshell-ifc-2x3-any-differential but is absent from the dependency baseline
+
+- [
+-   "test-oracle",
+- ]
++ undefined
+
+- Expected  - 3
++ Received  + 1
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:347:127)
+(fail) 🔒️ dependency ratchet > the committed baseline classifies every ecosystem it tracks and keeps oracles out of production [114.15ms]
+498 | 
+499 |   test("the committed baseline classifies every external host package as a test-only dependency", () => {
+500 |     const baseline = JSON.parse(readFileSync(join(repoRoot, "🔒️dependencies.json"), "utf8")) as { entries: { ecosystem: string; name: string; kinds: string[]; productionReachable: boolean }[] };
+501 |     for (const host of externalOracleHostPackages(loadOracleRegistry(repoRoot))) {
+502 |       const entry = baseline.entries.find((candidate) => candidate.ecosystem === host.ecosystem && candidate.name === host.name);
+503 |       expect(entry, `${host.ecosystem}:${host.name} is on a generated host's import path but is absent from the dependency baseline`).toBeDefined();
+                                                                                                                                            ^
+error: python:ifcopenshell is on a generated host's import path but is absent from the dependency baseline
+
+Received: undefined
+
+      at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧪️index.test.ts:503:135)
+(fail) 🧩️ cross-language oracle hosts > the committed baseline classifies every external host package as a test-only dependency [14.78ms]
+
+ 65 pass
+ 4 fail
+ 2058 expect() calls
+Ran 69 tests across 1 file. [192.45s]
+TS_EXIT=1

@@ -83,7 +83,7 @@ Feature: Apply every typed AVI 1.0 mutation to a real-world video container
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the real video container
     Given the real input document shared://📼️bauen-mit-bestand-mjpeg.avi
     When the <id> mutation is applied and then undone

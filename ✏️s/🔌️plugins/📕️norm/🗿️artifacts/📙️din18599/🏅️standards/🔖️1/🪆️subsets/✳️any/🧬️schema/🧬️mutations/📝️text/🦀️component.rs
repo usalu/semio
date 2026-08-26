@@ -68,7 +68,7 @@ enum Din18599MutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for Din18599MutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -79,7 +79,7 @@ impl OpText for Din18599MutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -88,16 +88,16 @@ impl OpText for Din18599MutationDsl {
 }
 
 impl protocol::OpBinary for Din18599MutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl {
+fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599MutationDsl {
     match mutation {
         Din18599Mutation::ChangeUseClass(payload) => Din18599MutationDsl::ChangeUseClass { new_use_class: payload.new_use_class.clone() },
         Din18599Mutation::ChangeHeatedAreaM2(payload) => Din18599MutationDsl::ChangeHeatedAreaM2 { new_heated_area_m2: payload.new_heated_area_m2.clone() },
@@ -115,7 +115,7 @@ async fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599Mutati
     }
 }
 
-async fn din18599_mutation_from_dsl(mutation: Din18599MutationDsl) -> Din18599Mutation {
+fn din18599_mutation_from_dsl(mutation: Din18599MutationDsl) -> Din18599Mutation {
     match mutation {
         Din18599MutationDsl::ChangeUseClass { new_use_class } => Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class }),
         Din18599MutationDsl::ChangeHeatedAreaM2 { new_heated_area_m2 } => Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2 }),
@@ -134,11 +134,11 @@ async fn din18599_mutation_from_dsl(mutation: Din18599MutationDsl) -> Din18599Mu
 }
 
 impl OpText for Din18599Mutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(din18599_mutation_from_dsl(<Din18599MutationDsl as OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         <Din18599MutationDsl as OpText>::print_op(&din18599_mutation_to_dsl(self))
     }
 }
@@ -146,11 +146,11 @@ impl OpText for Din18599Mutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `Din18599MutationDsl` already derives `OpBinary`
 /// via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for Din18599Mutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         din18599_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(din18599_mutation_from_dsl(Din18599MutationDsl::decode_op(bytes)?))
     }
 }
@@ -162,12 +162,12 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn op_text_round_trips_change_use_class() {
+    fn op_text_round_trips_change_use_class() {
         store::os_store::test_support::assert_op_line_round_trip(&Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn op_text_round_trips_update_climate() {
+    fn op_text_round_trips_update_climate() {
         store::os_store::test_support::assert_op_line_round_trip(&Din18599Mutation::UpdateClimate(update_climate::mutation::UpdateClimate {
             new_climate: MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
         }));
@@ -176,13 +176,13 @@ mod tests {
     /// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip over
     /// the closed vocabulary, one sample value per field.
     #[semio_framework_async_macros::async_test]
-    async fn every_variant_op_text_round_trips() {
+    fn every_variant_op_text_round_trips() {
         for mutation in every_mutation() {
             store::os_store::test_support::assert_op_line_round_trip(&mutation);
         }
     }
 
-    async fn every_mutation() -> Vec<Din18599Mutation> {
+    fn every_mutation() -> Vec<Din18599Mutation> {
         vec![
             Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }),
             Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 }),

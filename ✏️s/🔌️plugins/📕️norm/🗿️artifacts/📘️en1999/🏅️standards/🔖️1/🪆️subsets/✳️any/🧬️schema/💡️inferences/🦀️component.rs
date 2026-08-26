@@ -24,19 +24,19 @@ pub struct En1999Inference {
 }
 
 impl protocol::Inference<En1999Snapshot> for En1999Inference {
-    async fn infer(snapshot: &En1999Snapshot) -> Self {
+    fn infer(snapshot: &En1999Snapshot) -> Self {
         Self { outline: En1999Outline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<En1999Snapshot> for En1999Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.norm.en1999.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.norm.en1999.inference.outline", reads: &[] }]
     }
 }
@@ -52,7 +52,7 @@ impl ArtifactInferrer for crate::artifacts::en1999::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1999.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1999_artifact_schema_descriptor`'s registration.
-pub async fn en1999_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn en1999_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1999.inference",
         inference: schema::FacetLeaves {
@@ -73,13 +73,13 @@ mod tests {
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    fn inference_determinism_law() {
         let snapshot = En1999Snapshot::default();
         assert_eq!(En1999Inference::infer(&snapshot), En1999Inference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    fn inference_default_law() {
         assert_eq!(En1999Inference::infer(&En1999Snapshot::default()), En1999Inference::default());
     }
 }
@@ -95,7 +95,7 @@ use crate::document::{AnnexChoice, CheckReport};
 
 /// 📋️ Full EN 1999 check spanning every remaining part: 1-1 (cross-section, buckling, bending, welds), 1-2 (fire), 1-3 (fatigue), 1-4 (cold-formed sheeting), 1-5 (shell buckling).
 #[allow(clippy::too_many_arguments)]
-pub async fn check_full_aluminium(
+pub fn check_full_aluminium(
     n_ed_kn: f64,
     m_ed_knm: f64,
     a_mm2: f64,
@@ -144,7 +144,7 @@ pub async fn check_full_aluminium(
     report
 }
 
-async fn parse_alloy(value: &str) -> part_1_1::Alloy {
+fn parse_alloy(value: &str) -> part_1_1::Alloy {
     match value.to_ascii_lowercase().as_str() {
         "aw6082t6" => part_1_1::Alloy::Aw6082T6,
         _ => part_1_1::Alloy::Aw6060T6,
@@ -153,7 +153,7 @@ async fn parse_alloy(value: &str) -> part_1_1::Alloy {
 
 /// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1999Family` (defined
 /// in the sibling `op` crate, which depends on this `engine` crate to call it).
-pub async fn evaluate(document: &En1999Snapshot) -> CheckReport {
+pub fn evaluate(document: &En1999Snapshot) -> CheckReport {
     check_full_aluminium(
         document.n_ed_kn,
         document.m_ed_knm,
@@ -192,7 +192,7 @@ mod compliance_report_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn full_aluminium_worked_example() {
+    fn full_aluminium_worked_example() {
         let alloy = part_1_1::Alloy::Aw6060T6;
         let report = check_full_aluminium(80.0, 4.0, 1200.0, 24_000.0, alloy, 0.85, 5000.0, 3000.0, 200.0, 45.0, 71.0, 8.0, 500_000.0, 25.0, 4.0, 120.0, 0.63, 200.0, 2.0, 4.0, 8000.0, 0.5, 4.0, 500.0, 150.0, AnnexChoice::De);
         assert_eq!(report.checks.len(), 8);
@@ -200,13 +200,13 @@ mod compliance_report_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn evaluate_runs_all_parts() {
+    fn evaluate_runs_all_parts() {
         let report = evaluate(&En1999Snapshot::default());
         assert_eq!(report.checks.len(), 8);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn annex_en_de_documented_equality() {
+    fn annex_en_de_documented_equality() {
         // 📖️ DIN EN 1999-1-1/NA does not override γ_M1/γ_M2, so EN and DE-NA must yield identical utilization.
         let en_doc = En1999Snapshot { annex: AnnexChoice::En, ..En1999Snapshot::default() };
         let de_doc = En1999Snapshot { annex: AnnexChoice::De, ..En1999Snapshot::default() };

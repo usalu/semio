@@ -1,0 +1,34 @@
+{
+  "aliases": [
+    "ArtifactEnvelope",
+    "DrawEnvelope",
+    "Fem2dEnvelope",
+    "Fem3dEnvelope",
+    "Puzzle2dEnvelope",
+    "Puzzle5dEnvelope",
+    "Puzzle3dEnvelope",
+    "ShootingEnvelope",
+    "GisTerrainEnvelope",
+    "GisMapEnvelope",
+    "Procedural3dEnvelope",
+    "Procedural2dEnvelope",
+    "AssemblyEnvelope",
+    "PresentEnvelope",
+    "SequenceEnvelope",
+    "DagEnvelope",
+    "Block2dEnvelope",
+    "Block5dEnvelope",
+    "Block3dEnvelope",
+    "CadEnvelope",
+    "Process3dEnvelope",
+    "FlowEnvelope",
+    "RasterEnvelope",
+    "RewriteRuleEnvelope",
+    "TrinityGraphEnvelope"
+  ],
+  "direct": [],
+  "placeholder": [
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"
+  ]
+}

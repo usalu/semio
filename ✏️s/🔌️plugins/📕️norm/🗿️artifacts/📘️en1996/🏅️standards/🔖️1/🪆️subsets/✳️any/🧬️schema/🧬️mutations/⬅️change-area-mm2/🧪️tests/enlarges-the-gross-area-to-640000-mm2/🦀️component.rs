@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// ▶️ Enlarging the gross area from 500000.0 mm² to 640000.0 mm² rewrites `area_mm2` alone — the shear area is a
 /// separate, independently entered field and does not track it.
 #[semio_framework_async_macros::async_test]
-async fn enlarges_the_gross_area_to_640000_mm2() {
+fn enlarges_the_gross_area_to_640000_mm2() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-area-mm2 applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-area-mm2/enlarges-the-gross-area-to-640000-mm2: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.area_mm2, 640000.0, "change-area-mm2/enlarges-the-gross-area-to-640000-mm2: area_mm2 must read 640000.0 mm² once the change lands");
@@ -43,7 +43,7 @@ async fn enlarges_the_gross_area_to_640000_mm2() {
 /// ↩️ `change-area-mm2`'s inverse reads the OLD 500000.0 mm² out of BASE, so replaying it puts the 500000.0 mm²
 /// back on `area_mm2`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_500000_mm2_restores_before() {
+fn restoring_500000_mm2_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-area-mm2 applies");
@@ -61,7 +61,7 @@ async fn restoring_500000_mm2_restores_before() {
 /// encode is a fixed point, so `newAreaMm2` (serde camelCase over `new_area_mm2`) is spelled here exactly as
 /// this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 640000.0 mm² is finite and differs from the committed 500000.0 mm², so `change-area-mm2`
 /// returns a clean, message-free outcome.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-area-mm2/enlarges-the-gross-area-to-640000-mm2: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `areaMm2` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-area-mm2 diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-area-mm2/enlarges-the-gross-area-to-640000-mm2: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the gross cross-sectional
 /// area and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-area-mm2 diff decodes");
     assert_eq!(decoded.area_mm2, Some(640000.0), "change-area-mm2/enlarges-the-gross-area-to-640000-mm2: the committed diff must carry areaMm2 = 640000.0 mm²");
     assert!(decoded.shear_area_mm2.is_none(), "change-area-mm2/enlarges-the-gross-area-to-640000-mm2: change-area-mm2 writes areaMm2 and must leave `shear_area_mm2` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the gross-area change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-area-mm2 diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-area-mm2/enlarges-the-gross-area-to-640000-mm2: the committed diff did not carry before to after");

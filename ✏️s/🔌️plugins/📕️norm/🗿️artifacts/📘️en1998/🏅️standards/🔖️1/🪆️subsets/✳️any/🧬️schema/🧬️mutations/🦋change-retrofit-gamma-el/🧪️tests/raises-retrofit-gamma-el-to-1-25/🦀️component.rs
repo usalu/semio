@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-retrofit-gamma-el` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `retrofit_gamma_el` from 1.0 to 1.25, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_gamma_el_applies_to_committed_after() {
+fn change_retrofit_gamma_el_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-retrofit-gamma-el applies to its committed before-snapshot");
     assert_eq!(applied.retrofit_gamma_el, 1.25, "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: retrofit_gamma_el must read 1.25 after the change");
     assert_eq!(applied, expected_after(), "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_retrofit_gamma_el_applies_to_committed_after() {
 /// ↩️ `change-retrofit-gamma-el` is its own inverse partner: the inverse step restores `retrofit_gamma_el` to its pre-change
 /// 1.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_gamma_el_inverse_restores_before() {
+fn change_retrofit_gamma_el_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-retrofit-gamma-el applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_retrofit_gamma_el_inverse_restores_before() {
 /// decode then encode is a fixed point, so `retrofitGammaEl` and `newRetrofitGammaEl` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_gamma_el_committed_json_is_canonical() {
+fn change_retrofit_gamma_el_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-retrofit-gamma-el snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-retrofit-gamma-el snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_retrofit_gamma_el_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-retrofit-gamma-el` at 1.25 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_gamma_el_declared_outcome_holds() {
+fn change_retrofit_gamma_el_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-retrofit-gamma-el outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_retrofit_gamma_el_declared_outcome_holds() {
 /// assertion: it pins that only `retrofitGammaEl` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `siloHeightM`.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_gamma_el_produces_committed_diff() {
+fn change_retrofit_gamma_el_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().retrofit_gamma_el, Some(1.25), "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: the diff must set retrofit_gamma_el to 1.25");
     assert!(outcome.diff().artifact.is_none(), "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_retrofit_gamma_el_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-retrofit-gamma-el`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_gamma_el_committed_diff_is_canonical() {
+fn change_retrofit_gamma_el_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-retrofit-gamma-el committed diff decodes");
     assert_eq!(decoded.retrofit_gamma_el, Some(1.25), "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: the committed diff must carry retrofit_gamma_el at 1.25");
     assert!(decoded.selected_check_index.is_none(), "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_retrofit_gamma_el_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 1.0 to 1.25 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_retrofit_gamma_el_committed_diff_applies_to_after() {
+fn change_retrofit_gamma_el_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-retrofit-gamma-el committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-retrofit-gamma-el committed diff applies to the before-snapshot");
     assert_eq!(produced.retrofit_gamma_el, 1.25, "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: the committed diff must leave retrofit_gamma_el reading 1.25");

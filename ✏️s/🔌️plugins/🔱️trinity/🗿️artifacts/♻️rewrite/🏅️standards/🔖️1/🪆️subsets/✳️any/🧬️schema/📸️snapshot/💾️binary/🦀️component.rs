@@ -10,12 +10,12 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `RewriteSnapshot` to its binary pack form.
-pub async fn encode(document: &RewriteSnapshot) -> Vec<u8> {
+pub fn encode(document: &RewriteSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `RewriteSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<RewriteSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<RewriteSnapshot, PackError> {
     <RewriteSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -28,7 +28,7 @@ mod tests {
     use ::store::os_store::test_support::assert_dsl_pack_equivalence;
     use std::collections::BTreeMap;
 
-    async fn sample_rule_state() -> RewriteSnapshot {
+    fn sample_rule_state() -> RewriteSnapshot {
         let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));

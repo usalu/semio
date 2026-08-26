@@ -1,0 +1,15 @@
+8 high-priority breach(es) across 3 rule(s):
+      4  testing/contract
+      2  testing/fixture
+      2  testing/discovery
+
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/differential-ifc-4/component.feature  Step at line 30 is outside a Background or Scenario
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/differential-ifc-4/component.feature  Step at line 34 is outside a Background or Scenario
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/differential-ifc-4/component.feature  Step at line 37 is outside a Background or Scenario
+  testing/contract  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/differential-ifc-4/component.feature  Step at line 39 is outside a Background or Scenario
+  testing/fixture  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/🧫️fixtures/🎒️hexagonal-cut-concrete-forest-left.pack.semio  Case-local fixture 🎒️hexagonal-cut-concrete-forest-left.pack.semio is referenced by no scenario
+  testing/fixture  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-brep/🧫️fixtures/🗣️hexagonal-cut-concrete-forest-left.dsl.semio  Case-local fixture 🗣️hexagonal-cut-concrete-forest-left.dsl.semio is referenced by no scenario
+  testing/discovery  🧰️framework  44 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s  5 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json

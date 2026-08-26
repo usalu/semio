@@ -4,7 +4,7 @@ use super::mutation::UpdateColdFormedInputs;
 use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &UpdateColdFormedInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+pub fn inverse(_payload: &UpdateColdFormedInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
     vec![En1993Mutation::UpdateColdFormedInputs(UpdateColdFormedInputs {
         new_cf_b_bar_mm: base.cf_b_bar_mm,
         new_cf_t_mm: base.cf_t_mm,

@@ -2,10 +2,11 @@
 //! variant's `diff()` is handcrafted directly against `base`, and every variant's `inverse()` is
 //! handcrafted, reading whatever pre-state it needs out of the base.
 //!
-//! **Why this vocabulary has four variants and not sixteen.** PDF 1.4's retained snapshot is a bare
-//! `PageDoc { width, height, text }` — no object graph — and this subset's own
-//! `check_pdf_x_conformance` (`../../🦀️component.rs`) raises exactly two diagnostics:
-//! `stdio.pdf.x.degenerate-page-size` when the page's width or height is not strictly positive, and
+//! **Why this vocabulary has four variants and not sixteen.** PDF 1.4's retained snapshot is the
+//! document's page tree — `PageDoc { width, height, text }` per page — with no object graph, and
+//! this subset's own `check_pdf_x_conformance` (`../../🦀️component.rs`) raises exactly two
+//! diagnostics: `stdio.pdf.x.degenerate-page-size` when the first page's width or height is not
+//! strictly positive, and
 //! `stdio.pdf.x.schema-gap-unverifiable`, which fires unconditionally to record that full ISO 15930
 //! conformance cannot be checked from this schema at all. The one movable axis is therefore PAGE
 //! GEOMETRY, and this vocabulary is that axis and nothing else. Declaring what the 1.7 `✳️x` subset
@@ -14,16 +15,14 @@
 //! cannot observe a single one of them.
 //!
 //! **And why it shares no variant with `1.4/✳️a`.** That sibling's `check_pdf_a_conformance` reads
-//! `page.text` and never looks at the geometry; this one reads the geometry and never looks at the
-//! text. Two subsets of one standard over one snapshot type, disjoint because their checkers read
-//! different fields of it.
+//! the first page's text and never looks at the geometry; this one reads the geometry and never
+//! looks at the text. Two subsets of one standard over one snapshot type, disjoint because their
+//! checkers read different fields of it.
 //!
-//! ⚠️ One honest limit, recorded rather than glossed: the `✳️any` subset's `decode_pdf` hardcodes
-//! `612×792` for every input and never reads a real page's `/MediaBox` (that subset's own oracle
-//! module documents it against this artifact's real fixture, whose true box is `595.276×841.89`).
-//! This vocabulary can therefore SET geometry that this repository's own encoder will write, but a
-//! decode of someone else's document will not deliver the geometry it actually had. That is a codec
-//! gap, not a vocabulary gap, and closing it is out of this vocabulary's scope.
+//! 📐️ **Which page.** ISO 15930's trim-geometry axis is read off page 1 here, the page this subset's
+//! reference implementation writes and reads too, and every variant addresses that page alone: the
+//! page count and every other page's geometry come through untouched. A verb that addressed an
+//! arbitrary page index would be a vocabulary this subset's checker cannot observe.
 //!
 //! @see ../../🧪️oracle/🔣️component.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️component.rs — `check_pdf_x_conformance`, the one axis this vocabulary derives from.
@@ -77,11 +76,12 @@ pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-page-size", "co
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn stamp_conformance(base: PdfSnapshot, stamped: bool) -> PdfSnapshot {
     let mut next = base;
+    let page = next.first_page_mut();
     if stamped {
-        next.page.width = CONFORMANT_WIDTH;
-        next.page.height = CONFORMANT_HEIGHT;
+        page.width = CONFORMANT_WIDTH;
+        page.height = CONFORMANT_HEIGHT;
     } else {
-        next.page.width = 0.0;
+        page.width = 0.0;
     }
     next
 }
@@ -113,10 +113,11 @@ impl Mutation<PdfSnapshot> for PdfX1Mutation {
             Self::NoMutation => {}
             Self::SetSnapshot { snapshot } => next = snapshot.clone(),
             Self::SetPageSize { width, height } => {
-                next.page.width = *width;
-                next.page.height = *height;
+                let page = next.first_page_mut();
+                page.width = *width;
+                page.height = *height;
             }
-            Self::CollapsePageSize => next.page.width = 0.0,
+            Self::CollapsePageSize => next.first_page_mut().width = 0.0,
         }
         protocol::MutationOutcome::new(<PdfDiff as DiffAlgebra<PdfSnapshot>>::between(base, &next))
     }
@@ -127,7 +128,10 @@ impl Mutation<PdfSnapshot> for PdfX1Mutation {
         vec![match self {
             Self::NoMutation => Self::NoMutation,
             Self::SetSnapshot { .. } => Self::SetSnapshot { snapshot: base.clone() },
-            Self::SetPageSize { .. } | Self::CollapsePageSize => Self::SetPageSize { width: base.page.width, height: base.page.height },
+            Self::SetPageSize { .. } | Self::CollapsePageSize => {
+                let page = base.first_page().cloned().unwrap_or_default();
+                Self::SetPageSize { width: page.width, height: page.height }
+            }
         }]
     }
 }
@@ -141,7 +145,10 @@ mod tests {
     use protocol::MutationDiff;
 
     fn base() -> PdfSnapshot {
-        PdfSnapshot { schema: crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA.into(), page: PageDoc { width: 595.276, height: 841.89, text: "a real abstract".into() } }
+        PdfSnapshot {
+            schema: crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA.into(),
+            pages: vec![PageDoc { width: 595.276, height: 841.89, text: "a real abstract".into() }, PageDoc { width: 841.89, height: 595.276, text: "a landscape page this vocabulary must never touch".into() }],
+        }
     }
 
     #[test]
@@ -191,11 +198,15 @@ mod tests {
         for mutation in [PdfX1Mutation::SetSnapshot { snapshot: stamp_conformance(base.clone(), false) }, PdfX1Mutation::SetPageSize { width: 419.528, height: 595.276 }, PdfX1Mutation::CollapsePageSize] {
             let mut state = base.clone();
             apply_x_conformance_mutation(&mut state, &mutation);
-            assert_ne!((state.page.width, state.page.height), (base.page.width, base.page.height), "{mutation:?} must move the page geometry");
+            let (moved, before) = (state.first_page().expect("page 1"), base.first_page().expect("page 1"));
+            assert_ne!((moved.width, moved.height), (before.width, before.height), "{mutation:?} must move page 1's geometry");
+            assert_eq!(state.pages.len(), base.pages.len(), "{mutation:?} addresses page 1 only and must never change the page count");
+            assert_eq!(state.pages[1], base.pages[1], "{mutation:?} addresses page 1 only and must leave every other page untouched");
         }
         let mut collapsed = base.clone();
         apply_x_conformance_mutation(&mut collapsed, &PdfX1Mutation::CollapsePageSize);
-        assert!(!(collapsed.page.width > 0.0 && collapsed.page.height > 0.0), "CollapsePageSize must flip check_pdf_x_conformance's own degeneracy test");
+        let page = collapsed.first_page().expect("page 1");
+        assert!(!(page.width > 0.0 && page.height > 0.0), "CollapsePageSize must flip check_pdf_x_conformance's own degeneracy test");
     }
 }
 //#endregion 🧪️Tests

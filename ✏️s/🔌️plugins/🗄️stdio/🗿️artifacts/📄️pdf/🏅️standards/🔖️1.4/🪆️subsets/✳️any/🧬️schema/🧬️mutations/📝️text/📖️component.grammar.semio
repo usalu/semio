@@ -1,37 +1,24 @@
 dialect grammar
 grammar stdio.pdf.mutations
 start op
-
-# P2-FG3: real one-line `OpText::print_op`/`parse_op` shape for `stdio.pdf` (1.4)'s
-# `dsl::DslOps`-derived `PdfMutation` (../../🦀️component.rs `OpCodecs` region: `dsl::DslVariants::
-# to_named_record` + `dsl::print(..., dsl::JoinMode::Inline)` -- no per-artifact custom printer,
-# same generic derive-driven shape stdio.txt's/stdio.zip's own already-real mutations grammars
-# document). Confirmed against a real `[DEBUG]` dump of `print_op`, not guessed:
-# `"set-snapshot snapshot { schema=stdio.pdf page { width=300.5 height=400.25 text=\"hello
-# world\" } }"` / `"no-mutation"`.
 comment none
 
+# P2-FG3: real one-line `OpText::print_op`/`parse_op` shape for `stdio.pdf` (1.4)'s hand-rolled
+# `PdfMutation` (../../🦀️component.rs's `OpCodecs` region). Every keyword and value production
+# below is copied verbatim from that file's own `format!(...)` call sites, never guessed.
+#
+# `#[derive(dsl::DslOps)]` was DROPPED for this facet in ticket
+# 26/08/23/END-TO-END-TESTING-REFACTOR when `PdfSnapshot` grew a real page tree: a derived printer
+# chooses the payload's token shape, and this file has to state that shape production for
+# production for `ops_grammar_conformance_law` to mean anything. Hand-rolling the printer makes
+# this grammar a transcription of real call sites instead of a transcription of a `[DEBUG]` dump.
+# The sibling 1.7 standard's own mutations grammar is written the same way, for the same reason.
 op = no-mutation | set-snapshot
 no-mutation = "no-mutation"
 
-# `SetSnapshot`'s whole `PdfSnapshot` payload is `#[dsl(block)]` -- printed as `snapshot { ... }`.
-# `PdfSnapshot`'s own 2 fields (`schema` rank 0, `page` the one rank-1 nested block) print in that
-# order; `PageDoc`'s own 3 fields (`width`/`height`/`text`) print in declaration order inside
-# their own nested `{ }`.
-set-snapshot = "set-snapshot" "snapshot" "{" snapshot-fields "}"
-snapshot-fields = schema-field page-field
-schema-field = "schema" "=" text-value
-page-field = "page" "{" page-fields "}"
-page-fields = width-field height-field text-field
-width-field = "width" "=" number
-height-field = "height" "=" number
-text-field = "text" "=" text-value
-
-# `scalar_to_text` prints a `String` field bare (`IDENT`) when it re-lexes as exactly one
-# identifier (`is_bare_ident`), quoted+escaped (`TEXT`) otherwise -- `"stdio.pdf"` (contains `.`,
-# `is_ident_continue` allows `_-./`) is bare; `"hello world"` (contains a space) is quoted.
-text-value = IDENT | TEXT
-# `f64` via `format_f64`/Rust `Display` (`🗣️dsl/🔤️token/🦀️component.rs`) -- a whole-valued float
-# MAY print with no fractional part (lexes as `INT`, not `FLOAT`), so both alternatives are
-# modeled defensively, the same convention stl's/obj's own `number = INT | FLOAT` productions use.
-number = INT | FLOAT
+# `SetSnapshot`'s whole `PdfSnapshot` payload is carried as lowercase hexadecimal over its own
+# binary encoding (`enc_snapshot_bin`, shared verbatim with the diff facet so one structure has
+# one encoding): schema as a length-prefixed string, a varint page count, then each `PageDoc` as
+# two little-endian `f64`s and a length-prefixed text.
+set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
+snapshot-lit = hex

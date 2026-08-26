@@ -15,15 +15,15 @@ pub struct ChangeUnit {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeUnit {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "unit", kind: "change-unit", record: "ChangedUnit" };
 
-    async fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_unit::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         crate::artifacts::en1996::mutations::change_unit::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change masonry unit material to \"{}\"", self.new_unit)
     }
 }

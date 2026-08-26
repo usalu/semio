@@ -14,12 +14,12 @@ use store::PackError;
 /// `🧬️schema/📸️snapshot/🦀️component.rs` (design.md §1 CORRECTION: unsplit native codec lives at
 /// `🚪️io/<facet>/<representation>/`; `🧬️schema` keeps only the `DrawSnapshot` struct + `Default`).
 impl store::ArtifactPack for DrawSnapshot {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -27,19 +27,19 @@ impl store::ArtifactPack for DrawSnapshot {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️HandcraftedArtifactPack
 
 /// 📦️ Encodes a `DrawSnapshot` to its binary pack form.
-pub async fn encode(document: &DrawSnapshot) -> Vec<u8> {
+pub fn encode(document: &DrawSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `DrawSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<DrawSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<DrawSnapshot, PackError> {
     <DrawSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -51,7 +51,7 @@ mod tests {
     use crate::artifacts::draw::schema::{create_draw_boolean_layer, create_draw_image_layer, create_draw_path_layer, create_draw_shape_layer_rect, create_draw_trace_layer, default_draw_document, default_layer_base, layer_id};
     use crate::artifacts::draw::{DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA};
 
-    async fn representative_draw_document() -> DrawSnapshot {
+    fn representative_draw_document() -> DrawSnapshot {
         let mut assets = std::collections::BTreeMap::new();
         assets.insert("src-1".to_string(), DrawImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
 

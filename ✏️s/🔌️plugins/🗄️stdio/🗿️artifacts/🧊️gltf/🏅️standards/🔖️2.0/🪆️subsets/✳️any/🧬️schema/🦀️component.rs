@@ -323,7 +323,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn typed_constructors_build_a_decodable_triangle() {
-            let mut b = GltfBuilderConstruction::empty();
+            let mut b = GltfBuilderConstruction::empty().await;
             b.set_asset_version("2.0");
             let mut bytes = Vec::new();
             let verts: [[f32; 3]; 3] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
@@ -341,7 +341,7 @@ pub mod derived_construction {
             let node = b.add_node(Some(mesh));
             let scene = b.add_scene(vec![node], None);
             b.set_default_scene(scene);
-            let snapshot = b.build().expect("build");
+            let snapshot = b.build().await.expect("build");
 
             assert_eq!(snapshot.document.asset.version, "2.0");
             let decoded = crate::artifacts::gltf::engine::decode_accessor(&snapshot.document, &snapshot.buffers, acc).expect("decode");
@@ -465,20 +465,20 @@ pub mod derived_analysis {
             let mut bytes = vec![b'g', b'l', b'T', b'F'];
             bytes.extend_from_slice(&2u32.to_le_bytes());
             bytes.extend_from_slice(&[0u8; 4]);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a glb")), IoConfidence::Low);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)).await, IoConfidence::High);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a glb")).await, IoConfidence::Low);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_recognizes_gltf_json() {
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text(r#"{"asset":{"version":"2.0"}}"#)), IoConfidence::High);
-            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not json")), IoConfidence::Medium);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text(r#"{"asset":{"version":"2.0"}}"#)).await, IoConfidence::High);
+            assert_eq!(GltfAnalyzerAnalysis::sniff(&AnalyzeSource::Text("not json")).await, IoConfidence::Medium);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_decodes_real_gltf_json_text_directly() {
             let text = r#"{"asset":{"version":"2.0"},"scenes":[]}"#;
-            let analysis = GltfAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(text)]);
+            let analysis = GltfAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(text)]).await;
             assert_eq!(analysis.confidence, IoConfidence::High);
             let snap = analysis.parts.snapshot.expect("snapshot");
             assert_eq!(snap.document.asset.version, "2.0");

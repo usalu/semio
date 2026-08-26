@@ -15,15 +15,15 @@ pub struct ChangeRenewableKwh {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeRenewableKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "renewable-kwh", kind: "change-renewable-kwh", record: "ChangedRenewableKwh" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_renewable_kwh::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_renewable_kwh::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change renewable energy contribution [kWh] to {}", self.new_renewable_kwh)
     }
 }

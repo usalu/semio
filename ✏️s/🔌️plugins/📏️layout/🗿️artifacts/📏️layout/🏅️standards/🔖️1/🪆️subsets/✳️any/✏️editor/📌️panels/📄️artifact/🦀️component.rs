@@ -98,17 +98,10 @@ fn layout_tree_item(
 fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
     let mut targets = UiFixedList::default();
     for id in ids {
-        targets
-            .try_push(InteractionTarget { granularity: LAYOUT_GRANULARITY_ELEMENT.into(), id })
-            .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout selection target admission failed"))?;
+        targets.try_push(InteractionTarget { granularity: LAYOUT_GRANULARITY_ELEMENT.into(), id }).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout selection target admission failed"))?;
     }
     let targets = serde_json::to_string(&targets).map_err(|error| PluginAssemblyError::new("ui.action-argument", error.to_string()))?;
-    ui_value_map([
-        ("domainId", ui_value_text(LAYOUT_INTERACTION_ELEMENTS)?),
-        ("targets", ui_value_text(targets)?),
-        ("merge", ui_value_text(merge)?),
-        ("method", ui_value_text("pick")?),
-    ])
+    ui_value_map([("domainId", ui_value_text(LAYOUT_INTERACTION_ELEMENTS)?), ("targets", ui_value_text(targets)?), ("merge", ui_value_text(merge)?), ("method", ui_value_text("pick")?)])
 }
 
 /// 🕹️ Used to build a `layout_tree_item` that additionally dispatched `setHover`/clear-hover on
@@ -127,12 +120,12 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
     let page_items = ui_node_list(doc.pages.iter().map(|page| {
         let action = ui_value_map([("pageId", ui_value_text(&page.id)?)])?;
         layout_tree_item(
-                page_row_id(&page.id),
-                Label::data(page.name.clone()),
-                page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent.as_str())),
-                Some("file".into()),
-                Some(layout_action("setActivePage", Some(action))?),
-            )
+            page_row_id(&page.id),
+            Label::data(page.name.clone()),
+            page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent.as_str())),
+            Some("file".into()),
+            Some(layout_action("setActivePage", Some(action))?),
+        )
     }))?;
 
     // 🕹️ Row `id` is the BARE frame id (not a `frame_row_id(...)`-prefixed row id) — the framework's
@@ -143,13 +136,7 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
     for page in &doc.pages {
         for frame in &page.frames {
             let action = layout_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args([frame.id().to_string()], "replace")?))?;
-            let item = layout_tree_item(
-                    frame.id(),
-                    Label::data(frame.id()),
-                    Some(format!("{} · {}", page.name, frame.kind_str())),
-                    Some(frame_icon(frame.kind_str()).into()),
-                    Some(action),
-                )?;
+            let item = layout_tree_item(frame.id(), Label::data(frame.id()), Some(format!("{} · {}", page.name, frame.kind_str())), Some(frame_icon(frame.kind_str()).into()), Some(action))?;
             frame_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout frame row admission failed"))?;
         }
     }
@@ -158,13 +145,17 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
         frame_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout empty frame row admission failed"))?;
     }
 
-    let parent_page_items = ui_node_list(doc.parent_pages.iter().map(|parent| layout_tree_item(parent_page_row_id(&parent.id), Label::data(parent.name.clone()), Some(format!("{}×{}", parent.width as i64, parent.height as i64)), Some("copy".into()), None)))?;
+    let parent_page_items =
+        ui_node_list(doc.parent_pages.iter().map(|parent| layout_tree_item(parent_page_row_id(&parent.id), Label::data(parent.name.clone()), Some(format!("{}×{}", parent.width as i64, parent.height as i64)), Some("copy".into()), None)))?;
 
     let layer_items = ui_node_list(doc.pages.iter().flat_map(|page| {
-        page.layers.iter().map(move |layer| layout_tree_item(layer_row_id(&page.id, &layer.id), Label::data(format!("{} · {}", page.name, layer.name)), Some(format!("{} {}", layer.object_ids.len(), labels.objects.as_str())), Some("layers".into()), None))
+        page.layers
+            .iter()
+            .map(move |layer| layout_tree_item(layer_row_id(&page.id, &layer.id), Label::data(format!("{} · {}", page.name, layer.name)), Some(format!("{} {}", layer.object_ids.len(), labels.objects.as_str())), Some("layers".into()), None))
     }))?;
 
-    let story_items = ui_node_list(doc.stories.iter().map(|story| layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None)))?;
+    let story_items =
+        ui_node_list(doc.stories.iter().map(|story| layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None)))?;
 
     let mut link_items = UiFixedList::default();
     for link in &doc.links {
@@ -176,22 +167,13 @@ pub async fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &Layou
                 }
             }
         }
-        let action = if referencing_ids.is_empty() {
-            None
-        } else {
-            Some(layout_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(referencing_ids, "replace")?))?)
-        };
-        let item = layout_tree_item(
-                link_row_id(&link.id),
-                Label::data(link.path.clone()),
-                Some(link.state.clone().unwrap_or_else(|| "ok".into())),
-                Some("link".into()),
-                action,
-            )?;
+        let action = if referencing_ids.is_empty() { None } else { Some(layout_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(referencing_ids, "replace")?))?) };
+        let item = layout_tree_item(link_row_id(&link.id), Label::data(link.path.clone()), Some(link.state.clone().unwrap_or_else(|| "ok".into())), Some("link".into()), action)?;
         link_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout link row admission failed"))?;
     }
 
-    let mut style_items = ui_node_list(doc.paragraph_styles.iter().map(|style| layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(format!("{} · {}pt", style.font_family, style.font_size as i64)), Some("type".into()), None)))?;
+    let mut style_items =
+        ui_node_list(doc.paragraph_styles.iter().map(|style| layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(format!("{} · {}pt", style.font_family, style.font_size as i64)), Some("type".into()), None)))?;
     for style in &doc.character_styles {
         let name = style.name.clone().unwrap_or_else(|| style.id.clone());
         let font_family = style.font_family.as_deref().unwrap_or("—");

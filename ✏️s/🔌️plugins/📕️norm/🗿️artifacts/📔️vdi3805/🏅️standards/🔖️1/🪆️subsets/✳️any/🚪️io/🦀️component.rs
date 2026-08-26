@@ -5,10 +5,10 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.vdi3805` dialect only.
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
 //#region 🎹️DerivedComposition
@@ -25,11 +25,11 @@ pub mod derived_composition {
         type Snapshot = Vdi3805Snapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -56,19 +56,19 @@ use crate::artifacts::vdi3805::{ManufacturerCatalog, Vdi3805Snapshot};
 use crate::document::NormError;
 
 /// 📤️ JSON round-trip for manufacturer catalogues.
-pub async fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {
+pub fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {
     serde_json::to_string_pretty(catalog).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
-pub async fn catalog_from_json(json: &str) -> Result<ManufacturerCatalog, NormError> {
+pub fn catalog_from_json(json: &str) -> Result<ManufacturerCatalog, NormError> {
     serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
-pub async fn document_to_json(document: &Vdi3805Snapshot) -> Result<String, NormError> {
+pub fn document_to_json(document: &Vdi3805Snapshot) -> Result<String, NormError> {
     serde_json::to_string_pretty(document).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
-pub async fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
+pub fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
     serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
@@ -84,7 +84,7 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<Vdi3805AnyComposer>()]).as_slice()
     }
 }
@@ -96,7 +96,7 @@ mod json_serializers_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn catalog_and_document_json_round_trip() {
+    fn catalog_and_document_json_round_trip() {
         let doc = Vdi3805Snapshot::default();
         let json = catalog_to_json(&doc.catalog).expect("to_json");
         let restored = catalog_from_json(&json).expect("from_json");

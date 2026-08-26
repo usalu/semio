@@ -6,7 +6,7 @@ use crate::artifacts::en1997::mutations::En1997Mutation;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &ChangePhiDeg, base: &En1997Snapshot) -> Vec<En1997Mutation> {
+pub fn inverse(_payload: &ChangePhiDeg, base: &En1997Snapshot) -> Vec<En1997Mutation> {
     vec![En1997Mutation::ChangePhiDeg(ChangePhiDeg { new_phi_deg: base.phi_deg.clone() })]
 }
 //#endregion 🔖️Inverse

@@ -4,7 +4,7 @@ use super::mutation::ReplaceCurvePoints;
 use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &ReplaceCurvePoints, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+pub fn inverse(payload: &ReplaceCurvePoints, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
     let Some(curve) = base.curves.get(&payload.id) else {
         return Vec::new();
     };

@@ -1,0 +1,41 @@
+cases=164 scenarios=4910
+oracle-cases=121 oracle-scenarios=3191
+no-oracle-cases=43 no-oracle-scenarios=1719
+--- per plugin/owner ---
+✏️s/🔌️plugins/🗄️stdio	cases=101	scen=2154
+✏️s/🔌️plugins/📕️norm	cases=15	scen=799
+✏️s/🔌️plugins/🏛️architect	cases=1	scen=533
+✏️s/🔌️plugins/🧱️block	cases=3	scen=237
+✏️s/🔌️plugins/🧩️puzzle	cases=3	scen=181
+✏️s/🔌️plugins/🏗️fem	cases=2	scen=152
+✏️s/🔌️plugins/🌀️procedural	cases=3	scen=77
+✏️s/🔌️plugins/📸️remodel	cases=1	scen=71
+✏️s/🔌️plugins/🗒️note	cases=1	scen=67
+✏️s/🔌️plugins/🎥️shooting	cases=1	scen=63
+✏️s/🔌️plugins/📏️layout	cases=1	scen=51
+✏️s/🔌️plugins/🔱️trinity	cases=2	scen=47
+✏️s/🔌️plugins/🌍️gis	cases=2	scen=44
+✏️s/🔌️plugins/📐️cad	cases=1	scen=41
+✏️s/🔌️plugins/🖨️raster	cases=1	scen=37
+✏️s/🔌️plugins/💠️lowpoly	cases=1	scen=35
+✏️s/🔌️plugins/🏭️process	cases=1	scen=33
+✏️s/🔌️plugins/➗️mathematical	cases=1	scen=31
+✏️s/🔌️plugins/🕸️dag	cases=1	scen=29
+✏️s/🔌️plugins/🖍️draw	cases=1	scen=29
+✏️s/🔌️plugins/🌊️flow	cases=1	scen=21
+✏️s/🔌️plugins/📋️forms	cases=1	scen=21
+✏️s/🔌️plugins/💡️reasoning	cases=1	scen=21
+✏️s/🔌️plugins/🎞️animate	cases=1	scen=19
+✏️s/🔌️plugins/📖️playbook	cases=1	scen=19
+✏️s/🔌️plugins/🎬️sequence	cases=1	scen=17
+✏️s/🔌️plugins/🌿️vcs	cases=1	scen=13
+✏️s/🔌️plugins/🪐️space	cases=2	scen=12
+🧰️framework/🔨️modules/🖱️ui	cases=3	scen=10
+✏️s/🔌️plugins/🪵️sourcing	cases=1	scen=10
+✏️s/🔌️plugins/📜️imperative	cases=1	scen=9
+✏️s/🔌️plugins/✒️writer	cases=1	scen=9
+🧰️framework/🛍️products/💻️os	cases=1	scen=5
+🧰️framework/🔨️modules/🎠️kernel	cases=2	scen=4
+🧰️framework/🛍️products/🦑️repo	cases=1	scen=3
+✏️s/🔌️plugins/🎪️demonstrator	cases=1	scen=3
+✏️s/🔌️plugins/🔋️energy	cases=1	scen=3

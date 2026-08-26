@@ -41,6 +41,7 @@ pub fn render(document: &CsvSnapshot) -> semio_framework_plugin::UiAssemblyResul
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use semio_framework_plugin::Component;
     use super::*;
 
     #[semio_framework_async_macros::async_test]
@@ -60,8 +61,9 @@ mod tests {
                 crate::artifacts::csv::CsvRecord { fields: vec![crate::artifacts::csv::CsvField { value: "ada".into(), quoted: false }] },
             ],
         };
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.table.expect("table scene");
+        let node = render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
+        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
         let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0][0], "ada");

@@ -55,7 +55,7 @@ async fn the_undo_replace_curve_restores_the_original_line() {
     assert_eq!(current, base, "replace-curve/swaps-the-first-edges-line-for-a-circular-arc: the undo did not restore the before-snapshot");
 }
 
-/// 🔣️ Snapshots and the payload are canonical — `BrepCurve` is internally tagged on `kind` with camelCase VARIANTS but snake_case FIELDS (`radius_major`, `control_points`), because it declares `rename_all` without `rename_all_fields`.
+/// 🔣️ Snapshots and the payload are canonical — `BrepCurve` is internally tagged on `kind` and carries `rename_all_fields`, so both its VARIANTS and its members are camelCase (`radiusMajor`, `controlPoints`), the spelling `📸️snapshot/🔣️component.json` declares. This vector's `circle` arm has only single-word members, so it reads the same either way; the mismatch the missing `rename_all_fields` used to cause was invisible here and was found by the cross-language differential in `🧪️tests/mutate-semio-brep`.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {

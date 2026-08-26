@@ -33,7 +33,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// ▶️ Raising q_s from 80.0 kPa to 120.0 kPa rewrites `q_s_kpa` alone — the unit BASE resistance q_b is the
 /// other half of the EN 1997-1 §7.6.2 pile capacity and is entered independently.
 #[semio_framework_async_macros::async_test]
-async fn raises_the_unit_shaft_resistance_to_120_kpa() {
+fn raises_the_unit_shaft_resistance_to_120_kpa() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-qs-kpa applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-qs-kpa/raises-the-unit-shaft-resistance-to-120-kpa: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.q_s_kpa, 120.0, "change-qs-kpa/raises-the-unit-shaft-resistance-to-120-kpa: q_s_kpa must read 120.0 kPa once the change lands");
@@ -43,7 +43,7 @@ async fn raises_the_unit_shaft_resistance_to_120_kpa() {
 /// ↩️ `change-qs-kpa`'s inverse reads the OLD 80.0 kPa out of BASE, so replaying it puts the 80.0 kPa back on
 /// `q_s_kpa`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_80_kpa_restores_before() {
+fn restoring_80_kpa_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-qs-kpa applies");
@@ -61,7 +61,7 @@ async fn restoring_80_kpa_restores_before() {
 /// is a fixed point, so `newQSKpa` (serde camelCase over `new_q_s_kpa`) is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 120.0 kPa is finite and differs from the committed 80.0 kPa, so `change-qs-kpa` (whose guard
 /// message reads "Shaft resistance q_s [kPa]") stays silent.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-qs-kpa/raises-the-unit-shaft-resistance-to-120-kpa: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -92,7 +92,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `qSKpa` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-qs-kpa diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-qs-kpa/raises-the-unit-shaft-resistance-to-120-kpa: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the unit shaft resistance
 /// and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-qs-kpa diff decodes");
     assert_eq!(decoded.q_s_kpa, Some(120.0), "change-qs-kpa/raises-the-unit-shaft-resistance-to-120-kpa: the committed diff must carry qSKpa = 120.0 kPa");
     assert!(decoded.q_b_kpa.is_none(), "change-qs-kpa/raises-the-unit-shaft-resistance-to-120-kpa: change-qs-kpa writes qSKpa and must leave `q_b_kpa` untouched");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the shaft-resistance change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-qs-kpa diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-qs-kpa/raises-the-unit-shaft-resistance-to-120-kpa: the committed diff did not carry before to after");

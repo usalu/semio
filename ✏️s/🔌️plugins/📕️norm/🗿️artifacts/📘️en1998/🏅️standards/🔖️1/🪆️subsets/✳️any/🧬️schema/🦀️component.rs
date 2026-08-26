@@ -127,7 +127,7 @@ impl From<En1998Snapshot> for En1998Artifact {
 }
 
 impl En1998Artifact {
-    pub async fn to_snapshot(&self) -> En1998Snapshot {
+    pub fn to_snapshot(&self) -> En1998Snapshot {
         En1998Snapshot {
             seismic_zone: self.seismic_zone.clone(),
             ground_type: self.ground_type.clone(),
@@ -181,7 +181,7 @@ impl En1998Artifact {
         }
     }
 
-    pub async fn from_snapshot(snapshot: En1998Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1998Snapshot) -> Self {
         Self {
             seismic_zone: snapshot.seismic_zone,
             ground_type: snapshot.ground_type,
@@ -236,7 +236,7 @@ impl En1998Artifact {
         }
     }
 
-    pub async fn set_snapshot(&mut self, snapshot: En1998Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: En1998Snapshot) {
         self.seismic_zone = snapshot.seismic_zone;
         self.ground_type = snapshot.ground_type;
         self.importance_class = snapshot.importance_class;
@@ -291,7 +291,7 @@ impl En1998Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub async fn en1998_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn en1998_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1998",
         artifact: schema::FacetLeaves {
@@ -340,19 +340,19 @@ pub mod derived_construction {
         type Snapshot = En1998Snapshot;
         type Mutation = En1998Mutation;
         type Diff = En1998Diff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: En1998Snapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1998Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<En1998Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -360,12 +360,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -393,11 +393,11 @@ pub mod derived_analysis {
         type Parts = En1998Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.en1998", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = En1998Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -461,7 +461,7 @@ pub mod na_de {
     }
 
     impl SeismicZone {
-        pub async fn as_u8(self) -> u8 {
+        pub fn as_u8(self) -> u8 {
             match self {
                 Self::Zone0 => 0,
                 Self::Zone1 => 1,
@@ -470,7 +470,7 @@ pub mod na_de {
             }
         }
 
-        pub async fn a_g(self) -> f64 {
+        pub fn a_g(self) -> f64 {
             match self {
                 Self::Zone0 => 0.0,
                 Self::Zone1 => 0.08,
@@ -491,7 +491,7 @@ pub mod na_de {
     }
 
     impl GroundType {
-        pub async fn spectrum_params(self) -> (f64, f64, f64, f64) {
+        pub fn spectrum_params(self) -> (f64, f64, f64, f64) {
             match self {
                 Self::A => (0.05, 0.25, 0.8, 1.0),
                 Self::B => (0.15, 0.4, 2.0, 1.0),
@@ -502,7 +502,7 @@ pub mod na_de {
         }
     }
 
-    pub async fn peak_ground_acceleration(zone: SeismicZone) -> f64 {
+    pub fn peak_ground_acceleration(zone: SeismicZone) -> f64 {
         zone.a_g()
     }
 }
@@ -525,7 +525,7 @@ pub mod part_1 {
     }
 
     impl StructuralSystem {
-        pub async fn q(self) -> f64 {
+        pub fn q(self) -> f64 {
             match self {
                 Self::MomentFrameDch => 4.0,
                 Self::MomentFrameDcm => 3.3,
@@ -548,7 +548,7 @@ pub mod part_1 {
     }
 
     impl ImportanceClass {
-        pub async fn gamma_i(self) -> f64 {
+        pub fn gamma_i(self) -> f64 {
             match self {
                 Self::Cc1 => 0.8,
                 Self::Cc2 => 1.0,
@@ -577,7 +577,7 @@ pub mod part_1 {
 
     impl EnGroundType {
         /// 📊️ (S, T_B, T_C, T_D) per EN 1998-1 Table 3.2 (Type 1) / Table 3.3 (Type 2).
-        pub async fn spectrum_params(self, spectrum: SpectrumType) -> (f64, f64, f64, f64) {
+        pub fn spectrum_params(self, spectrum: SpectrumType) -> (f64, f64, f64, f64) {
             match spectrum {
                 SpectrumType::Type1 => match self {
                     Self::A => (1.0, 0.15, 0.4, 2.0),
@@ -598,7 +598,7 @@ pub mod part_1 {
     }
 
     /// 📈️ Elastic response spectrum Type 1/2 shape horizontal [g] per EN 1998-1 §3.2.2.2, given resolved (a_g, S, T_B, T_C, T_D).
-    pub async fn elastic_response_spectrum_type1(a_g: f64, s: f64, tb: f64, tc: f64, td: f64, t: f64) -> f64 {
+    pub fn elastic_response_spectrum_type1(a_g: f64, s: f64, tb: f64, tc: f64, td: f64, t: f64) -> f64 {
         let eta = 1.0;
         if t <= tb {
             a_g * s * (1.0 + t / tb * (2.5 * eta - 1.0))
@@ -612,22 +612,22 @@ pub mod part_1 {
     }
 
     /// 📉️ Design spectrum Sd(T) = S_e(T) · γ_I / q [g].
-    pub async fn design_spectrum_sd(s_e: f64, gamma_i: f64, q: f64) -> f64 {
+    pub fn design_spectrum_sd(s_e: f64, gamma_i: f64, q: f64) -> f64 {
         s_e * gamma_i / q
     }
 
     /// 🌊️ Base shear V_b = S_e(T1) · m · γ_I / q [kN] with mass in tonnes.
-    pub async fn base_shear_kn(s_e: f64, mass_t: f64, gamma_i: f64, q: f64) -> f64 {
+    pub fn base_shear_kn(s_e: f64, mass_t: f64, gamma_i: f64, q: f64) -> f64 {
         s_e * mass_t * 9.81 * gamma_i / q
     }
 
     /// 🌊️ Base shear from design spectrum S_d(T1) [kN].
-    pub async fn base_shear_from_design_kn(s_d: f64, mass_t: f64) -> f64 {
+    pub fn base_shear_from_design_kn(s_d: f64, mass_t: f64) -> f64 {
         s_d * mass_t * 9.81
     }
 
     /// 🔁️ Redundancy factor ρ per EN 1998-1 §4.2.5.
-    pub async fn redundancy_factor(multiple_resisting_systems: bool) -> f64 {
+    pub fn redundancy_factor(multiple_resisting_systems: bool) -> f64 {
         if multiple_resisting_systems {
             1.0
         } else {
@@ -636,7 +636,7 @@ pub mod part_1 {
     }
 
     /// 📐️ Interstorey drift limit with ρ per EN 1998-1 §4.3.3.4 [mm].
-    pub async fn drift_limit_mm(height_m: f64, rho: f64, ductility: DuctilityClass, nu: f64) -> f64 {
+    pub fn drift_limit_mm(height_m: f64, rho: f64, ductility: DuctilityClass, nu: f64) -> f64 {
         let theta = match ductility {
             DuctilityClass::Dch => 0.01,
             DuctilityClass::Dcm => 0.007,
@@ -652,11 +652,11 @@ pub mod part_1 {
         Dcl,
     }
 
-    pub async fn check_drift(drift_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
+    pub fn check_drift(drift_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-1", "§4.3", "4.3.3"), Quantity::length_m(drift_mm / 1000.0), Quantity::length_m(limit_mm / 1000.0), "interstorey drift SLS", annex)
     }
 
-    pub async fn check_base_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
+    pub fn check_base_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-1", "§4.3", "4.3.4"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "seismic base shear ULS", annex)
     }
 }
@@ -671,7 +671,7 @@ pub enum AnnexParams {
 }
 
 impl AnnexParams {
-    pub async fn choice(&self) -> AnnexChoice {
+    pub fn choice(&self) -> AnnexChoice {
         match self {
             Self::De { .. } => AnnexChoice::De,
             Self::En { .. } => AnnexChoice::En,
@@ -679,7 +679,7 @@ impl AnnexParams {
     }
 
     /// 📐️ Resolved (a_g, S, T_B, T_C, T_D) feeding `part_1::elastic_response_spectrum_type1`.
-    pub async fn ground_params(&self) -> (f64, f64, f64, f64, f64) {
+    pub fn ground_params(&self) -> (f64, f64, f64, f64, f64) {
         match self {
             Self::De { zone, ground } => {
                 let (tb, tc, td, s) = ground.spectrum_params();
@@ -693,7 +693,7 @@ impl AnnexParams {
     }
 
     /// 📈️ Elastic response spectrum S_e(T) [g] resolved for this annex selection.
-    pub async fn elastic_response_spectrum(&self, t: f64) -> f64 {
+    pub fn elastic_response_spectrum(&self, t: f64) -> f64 {
         let (a_g, s, tb, tc, td) = self.ground_params();
         part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, t)
     }
@@ -705,25 +705,25 @@ pub mod part_2 {
     use super::*;
 
     /// 🌉️ Isolated bridge design spectrum reduction factor q_isol.
-    pub async fn isolation_reduction_factor(period_ratio: f64) -> f64 {
+    pub fn isolation_reduction_factor(period_ratio: f64) -> f64 {
         (period_ratio * period_ratio).max(1.0)
     }
 
     /// 🌉️ Design spectrum for isolated bridge deck [g].
-    pub async fn isolated_spectrum_sd(s_e: f64, gamma_i: f64, q_isol: f64) -> f64 {
+    pub fn isolated_spectrum_sd(s_e: f64, gamma_i: f64, q_isol: f64) -> f64 {
         s_e * gamma_i / q_isol
     }
 
     /// 🌉️ Bearing displacement check limit [mm].
-    pub async fn bearing_displacement_limit_mm(d_max_mm: f64) -> f64 {
+    pub fn bearing_displacement_limit_mm(d_max_mm: f64) -> f64 {
         d_max_mm
     }
 
-    pub async fn check_bridge_seismic(v_ed: f64, v_rd: f64) -> CheckResult {
+    pub fn check_bridge_seismic(v_ed: f64, v_rd: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-2", "§5", "5.3"), Quantity::force_kn(v_ed), Quantity::force_kn(v_rd), "bridge seismic shear", AnnexChoice::En)
     }
 
-    pub async fn check_isolation_bearing(d_ed_mm: f64, d_rd_mm: f64) -> CheckResult {
+    pub fn check_isolation_bearing(d_ed_mm: f64, d_rd_mm: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-2", "§7", "7.5"), Quantity::length_m(d_ed_mm / 1000.0), Quantity::length_m(d_rd_mm / 1000.0), "isolation bearing displacement", AnnexChoice::En)
     }
 }
@@ -743,7 +743,7 @@ pub mod part_3 {
 
     impl KnowledgeLevel {
         /// 🎯️ Confidence factor CF per EN 1998-3 Table 3.1.
-        pub async fn confidence_factor(self) -> f64 {
+        pub fn confidence_factor(self) -> f64 {
             match self {
                 Self::Kl1 => 1.35,
                 Self::Kl2 => 1.20,
@@ -762,7 +762,7 @@ pub mod part_3 {
 
     impl RetrofitLimitState {
         /// 📑️ EN 1998-3 §2.3.4 clause subsection per limit state.
-        pub async fn clause_section(self) -> &'static str {
+        pub fn clause_section(self) -> &'static str {
             match self {
                 Self::DamageLimitation => "2.3.4.1",
                 Self::SignificantDamage => "2.3.4.2",
@@ -772,12 +772,12 @@ pub mod part_3 {
     }
 
     /// 🏚️ Design capacity R_d = R_k / (CF · γ_el) per EN 1998-3 §2.3.3.
-    pub async fn design_capacity_kn(r_k_kn: f64, cf: f64, gamma_el: f64) -> f64 {
+    pub fn design_capacity_kn(r_k_kn: f64, cf: f64, gamma_el: f64) -> f64 {
         r_k_kn / (cf * gamma_el)
     }
 
     /// 🏚️ Existing-element seismic capacity check E_d ≤ R_k / (CF · γ_el) per EN 1998-3 §2.3.3.
-    pub async fn check_element_capacity(e_d_kn: f64, r_k_kn: f64, cf: f64, gamma_el: f64, limit_state: RetrofitLimitState, annex: AnnexChoice) -> CheckResult {
+    pub fn check_element_capacity(e_d_kn: f64, r_k_kn: f64, cf: f64, gamma_el: f64, limit_state: RetrofitLimitState, annex: AnnexChoice) -> CheckResult {
         let r_d = design_capacity_kn(r_k_kn, cf, gamma_el);
         CheckResult::from_utilization(ClauseId::new("EN 1998-3", "§2.3", limit_state.clause_section()), Quantity::force_kn(e_d_kn), Quantity::force_kn(r_d), "existing element seismic capacity", annex)
     }
@@ -789,49 +789,49 @@ pub mod part_4 {
     use super::*;
 
     /// 🏺️ Impulsive period T_i [s] for circular silo/tank per EN 1998-4 Annex.
-    pub async fn impulsive_period_s(height_m: f64, radius_m: f64) -> f64 {
+    pub fn impulsive_period_s(height_m: f64, radius_m: f64) -> f64 {
         0.1 * (height_m / radius_m).sqrt()
     }
 
     /// 🏺️ Convective (sloshing) period T_c [s] for circular silo/tank.
-    pub async fn convective_period_s(radius_m: f64) -> f64 {
+    pub fn convective_period_s(radius_m: f64) -> f64 {
         2.0 * (radius_m / 9.81).sqrt()
     }
 
     /// 🏺️ Impulsive mass ratio μ_i.
-    pub async fn impulsive_mass_ratio(h_over_r: f64) -> f64 {
+    pub fn impulsive_mass_ratio(h_over_r: f64) -> f64 {
         (0.45 * h_over_r / (1.0 + 0.75 * h_over_r)).clamp(0.1, 0.85)
     }
 
     /// 🏺️ Convective mass ratio μ_c.
-    pub async fn convective_mass_ratio(h_over_r: f64) -> f64 {
+    pub fn convective_mass_ratio(h_over_r: f64) -> f64 {
         (0.55 / (1.0 + 0.75 * h_over_r)).clamp(0.05, 0.75)
     }
 
     /// 🏺️ Combined silo base shear via SRSS of impulsive and convective components [kN].
-    pub async fn silo_base_shear_kn(v_i_kn: f64, v_c_kn: f64) -> f64 {
+    pub fn silo_base_shear_kn(v_i_kn: f64, v_c_kn: f64) -> f64 {
         (v_i_kn * v_i_kn + v_c_kn * v_c_kn).sqrt()
     }
 
     /// 🛢️ Tank base shear V = m_i·S_e(T_i) + m_c·S_e(T_c) [kN] per EN 1998-4 §4 simplified model.
-    pub async fn tank_base_shear_kn(m_i_t: f64, s_e_i: f64, m_c_t: f64, s_e_c: f64) -> f64 {
+    pub fn tank_base_shear_kn(m_i_t: f64, s_e_i: f64, m_c_t: f64, s_e_c: f64) -> f64 {
         (m_i_t * s_e_i + m_c_t * s_e_c) * 9.81
     }
 
     /// 🏺️ Behaviour factor q capped at 1.5 for silos per EN 1998-4 Table 2.1.
-    pub async fn silo_behaviour_factor(q_nominal: f64) -> f64 {
+    pub fn silo_behaviour_factor(q_nominal: f64) -> f64 {
         q_nominal.min(1.5)
     }
 
-    pub async fn check_silo_wall(n_ed_kn: f64, n_rd_kn: f64) -> CheckResult {
+    pub fn check_silo_wall(n_ed_kn: f64, n_rd_kn: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-4", "§3", "3.4"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd_kn), "silo wall seismic", AnnexChoice::En)
     }
 
-    pub async fn check_silo_anchor(v_ed_kn: f64, v_rd_kn: f64) -> CheckResult {
+    pub fn check_silo_anchor(v_ed_kn: f64, v_rd_kn: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-4", "§3", "3.5"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "silo anchorage", AnnexChoice::En)
     }
 
-    pub async fn check_tank_base_shear(v_ed_kn: f64, v_rd_kn: f64) -> CheckResult {
+    pub fn check_tank_base_shear(v_ed_kn: f64, v_rd_kn: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-4", "§4", "4.3"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "tank hydrodynamic base shear", AnnexChoice::En)
     }
 }
@@ -842,26 +842,26 @@ pub mod part_5 {
     use super::*;
 
     /// 🧱️ Foundation stiffness ratio r = K_f / K_s per EN 1998-5 §7.
-    pub async fn stiffness_ratio(k_foundation: f64, k_soil: f64) -> f64 {
+    pub fn stiffness_ratio(k_foundation: f64, k_soil: f64) -> f64 {
         k_foundation / k_soil
     }
 
     /// 🧱️ Radiation damping ratio ξ for shallow foundation.
-    pub async fn radiation_damping(ratio: f64) -> f64 {
+    pub fn radiation_damping(ratio: f64) -> f64 {
         (0.05 + 0.1 * ratio / (1.0 + ratio)).clamp(0.05, 0.20)
     }
 
     /// 🧱️ Bearing capacity reduction factor under seismic loading per EN 1998-5 §7.
-    pub async fn bearing_reduction_factor(a_g: f64) -> f64 {
+    pub fn bearing_reduction_factor(a_g: f64) -> f64 {
         (1.0 - 1.5 * a_g).max(0.5)
     }
 
     /// 🧱️ Seismic bearing pressure [kPa].
-    pub async fn seismic_bearing_pressure_kpa(v_seismic_kn: f64, area_m2: f64) -> f64 {
+    pub fn seismic_bearing_pressure_kpa(v_seismic_kn: f64, area_m2: f64) -> f64 {
         v_seismic_kn / area_m2
     }
 
-    pub async fn check_foundation_bearing(p_ed_kpa: f64, p_rd_kpa: f64) -> CheckResult {
+    pub fn check_foundation_bearing(p_ed_kpa: f64, p_rd_kpa: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1998-5", "§7", "7.3"),
             Quantity::new(crate::document::QuantityKind::Pressure, p_ed_kpa * 1000.0),
@@ -871,17 +871,17 @@ pub mod part_5 {
         )
     }
 
-    pub async fn check_foundation_sliding(h_ed_kn: f64, h_rd_kn: f64) -> CheckResult {
+    pub fn check_foundation_sliding(h_ed_kn: f64, h_rd_kn: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-5", "§7", "7.4"), Quantity::force_kn(h_ed_kn), Quantity::force_kn(h_rd_kn), "foundation seismic sliding", AnnexChoice::De)
     }
 
     /// 🌍️ Horizontal seismic coefficient k_h = α·S/r per EN 1998-5 §7.3.2.2 (r: wall-displacement class).
-    pub async fn horizontal_seismic_coefficient(alpha: f64, s: f64, r: f64) -> f64 {
+    pub fn horizontal_seismic_coefficient(alpha: f64, s: f64, r: f64) -> f64 {
         alpha * s / r
     }
 
     /// 🧱️ Mononobe-Okabe dynamic active earth-pressure coefficient K_AE per EN 1998-5 Annex E (vertical wall, horizontal backfill, no wall friction). Reduces to the classic Rankine K_a at k_h = 0.
-    pub async fn mononobe_okabe_k_ae(phi_deg: f64, k_h: f64) -> f64 {
+    pub fn mononobe_okabe_k_ae(phi_deg: f64, k_h: f64) -> f64 {
         let phi = phi_deg.to_radians();
         let theta = k_h.atan();
         let bracket = 1.0 + ((phi.sin() * (phi - theta).sin()) / theta.cos()).sqrt();
@@ -889,11 +889,11 @@ pub mod part_5 {
     }
 
     /// 🧱️ Dynamic active thrust increment on a retaining wall [kN/m] from K_AE.
-    pub async fn retaining_wall_thrust_kn_m(gamma_soil_kn_m3: f64, height_m: f64, k_ae: f64) -> f64 {
+    pub fn retaining_wall_thrust_kn_m(gamma_soil_kn_m3: f64, height_m: f64, k_ae: f64) -> f64 {
         0.5 * gamma_soil_kn_m3 * height_m * height_m * k_ae
     }
 
-    pub async fn check_retaining_wall_sliding(h_ed_kn_m: f64, h_rd_kn_m: f64) -> CheckResult {
+    pub fn check_retaining_wall_sliding(h_ed_kn_m: f64, h_rd_kn_m: f64) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1998-5", "§6", "E.2"), Quantity::force_kn(h_ed_kn_m), Quantity::force_kn(h_rd_kn_m), "retaining wall seismic thrust", AnnexChoice::En)
     }
 }
@@ -904,42 +904,42 @@ pub mod part_6 {
     use super::*;
 
     /// 🗼️ Along-wind base overturning moment [kNm] per EN 1998-6 §4 (wind-induced dynamic response of slender towers).
-    pub async fn along_wind_overturning_knm(rho_air: f64, v_crit_m_s: f64, height_m: f64, diameter_m: f64, c_d: f64) -> f64 {
+    pub fn along_wind_overturning_knm(rho_air: f64, v_crit_m_s: f64, height_m: f64, diameter_m: f64, c_d: f64) -> f64 {
         let q_z = 0.5 * rho_air * v_crit_m_s * v_crit_m_s / 1000.0;
         q_z * c_d * diameter_m * height_m * height_m / 2.0
     }
 
     /// 🗼️ Critical wind speed for vortex shedding [m/s].
-    pub async fn critical_wind_speed_m_s(strouhal: f64, frequency_hz: f64, diameter_m: f64) -> f64 {
+    pub fn critical_wind_speed_m_s(strouhal: f64, frequency_hz: f64, diameter_m: f64) -> f64 {
         strouhal * frequency_hz * diameter_m
     }
 
     /// 🗼️ First-mode natural frequency [Hz] for a cantilever tower.
-    pub async fn tower_frequency_hz(e_i_pa: f64, i_m4: f64, mass_kg_m: f64, height_m: f64) -> f64 {
+    pub fn tower_frequency_hz(e_i_pa: f64, i_m4: f64, mass_kg_m: f64, height_m: f64) -> f64 {
         let lambda = 1.875;
         let omega = lambda * lambda * (e_i_pa * i_m4 / (mass_kg_m * height_m.powi(4))).sqrt();
         omega / (2.0 * std::f64::consts::PI)
     }
 
     /// 🗼️ Behaviour factor q capped per EN 1998-6 Table 4.1: 1.5 for chimneys, 2.0 for other towers/masts.
-    pub async fn tower_behaviour_factor(q_nominal: f64, is_chimney: bool) -> f64 {
+    pub fn tower_behaviour_factor(q_nominal: f64, is_chimney: bool) -> f64 {
         let cap = if is_chimney { 1.5 } else { 2.0 };
         q_nominal.min(cap)
     }
 
     /// 🗼️ First-mode participation factor Γ for a uniform cantilever with mode shape φ(x) = 1 − cos(πx/2H) per EN 1998-6 Annex B (simplified modal analysis).
-    pub async fn cantilever_modal_participation_factor() -> f64 {
+    pub fn cantilever_modal_participation_factor() -> f64 {
         let numerator = 1.0 - 2.0 / std::f64::consts::PI;
         let denominator = 1.5 - 4.0 / std::f64::consts::PI;
         numerator / denominator
     }
 
     /// 🗼️ Modal base shear V_b1 = Γ · S_d(T1) · m · g [kN] for the cantilever first mode.
-    pub async fn tower_base_shear_kn(gamma: f64, s_d: f64, mass_t: f64) -> f64 {
+    pub fn tower_base_shear_kn(gamma: f64, s_d: f64, mass_t: f64) -> f64 {
         gamma * s_d * mass_t * 9.81
     }
 
-    pub async fn check_tower_overturning(m_ed_knm: f64, m_rd_knm: f64) -> CheckResult {
+    pub fn check_tower_overturning(m_ed_knm: f64, m_rd_knm: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1998-6", "§4", "4.3.2"),
             Quantity::new(crate::document::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
@@ -953,7 +953,7 @@ pub mod part_6 {
 
 /// 📋️ Building seismic check generalized over DE zone-based or EN Type-1/2-spectrum annex selection.
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub async fn check_building_seismic_with_annex(
+pub fn check_building_seismic_with_annex(
     annex: &AnnexParams,
     importance: part_1::ImportanceClass,
     system: part_1::StructuralSystem,
@@ -980,7 +980,7 @@ pub async fn check_building_seismic_with_annex(
 
 /// 📋️ Building seismic check (DE NA zone parameters).
 #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub async fn check_building_seismic(
+pub fn check_building_seismic(
     zone: na_de::SeismicZone,
     ground: na_de::GroundType,
     importance: part_1::ImportanceClass,
@@ -1003,7 +1003,7 @@ mod compliance_helpers_tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn zone2_spectrum_sd_at_t1() {
+    fn zone2_spectrum_sd_at_t1() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.3);
@@ -1013,7 +1013,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn zone2_spectrum_sd_at_half_second() {
+    fn zone2_spectrum_sd_at_half_second() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.5);
@@ -1025,7 +1025,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn base_shear_uses_design_spectrum() {
+    fn base_shear_uses_design_spectrum() {
         let a_g = 0.15;
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.3);
@@ -1040,7 +1040,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn drift_rho_limit() {
+    fn drift_rho_limit() {
         let rho = part_1::redundancy_factor(false);
         assert!((rho - 1.3).abs() < 1e-9);
         let limit = part_1::drift_limit_mm(12.0, rho, part_1::DuctilityClass::Dcm, 1.0);
@@ -1048,7 +1048,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn building_seismic_base_shear_uses_sd() {
+    fn building_seismic_base_shear_uses_sd() {
         let a_g = na_de::SeismicZone::Zone2.a_g();
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.3);
@@ -1063,7 +1063,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn en_type1_vs_de_zone_divergence_same_nominal_ag() {
+    fn en_type1_vs_de_zone_divergence_same_nominal_ag() {
         let a_g = 0.15;
         let annex_de = AnnexParams::De { zone: na_de::SeismicZone::Zone2, ground: na_de::GroundType::B };
         let annex_en = AnnexParams::En { a_gr: a_g, ground: part_1::EnGroundType::B, spectrum: part_1::SpectrumType::Type1 };
@@ -1075,13 +1075,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn building_seismic_e2e() {
+    fn building_seismic_e2e() {
         let report = check_building_seismic(na_de::SeismicZone::Zone2, na_de::GroundType::B, part_1::ImportanceClass::Cc2, part_1::StructuralSystem::MomentFrameDch, 0.3, 500.0, 800.0, 20.0, 12.0, true);
         assert_eq!(report.checks.len(), 2);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn silo_impulsive_convective() {
+    fn silo_impulsive_convective() {
         let h = 10.0;
         let r = 5.0;
         let t_i = part_4::impulsive_period_s(h, r);
@@ -1092,13 +1092,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn silo_behaviour_factor_capped() {
+    fn silo_behaviour_factor_capped() {
         assert!((part_4::silo_behaviour_factor(2.0) - 1.5).abs() < 1e-9);
         assert!((part_4::silo_behaviour_factor(1.0) - 1.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn tank_base_shear_combines_impulsive_and_convective() {
+    fn tank_base_shear_combines_impulsive_and_convective() {
         let a_g = 0.15;
         let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
         let t_i = part_4::impulsive_period_s(8.0, 4.0);
@@ -1110,13 +1110,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn bridge_isolation_distinct() {
+    fn bridge_isolation_distinct() {
         let q_isol = part_2::isolation_reduction_factor(2.0);
         assert!((q_isol - 4.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn retrofit_confidence_factor_scales_capacity_exactly() {
+    fn retrofit_confidence_factor_scales_capacity_exactly() {
         let r_k = 400.0;
         let r_d_kl3 = part_3::design_capacity_kn(r_k, part_3::KnowledgeLevel::Kl3.confidence_factor(), 1.0);
         let r_d_kl1 = part_3::design_capacity_kn(r_k, part_3::KnowledgeLevel::Kl1.confidence_factor(), 1.0);
@@ -1124,7 +1124,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn mononobe_okabe_k_ae_matches_hand_calc_and_reduces_to_rankine() {
+    fn mononobe_okabe_k_ae_matches_hand_calc_and_reduces_to_rankine() {
         let k_ae = part_5::mononobe_okabe_k_ae(30.0, 0.2);
         assert!((k_ae - 0.46407409106465564).abs() < 1e-9);
         let k_a_static = part_5::mononobe_okabe_k_ae(30.0, 0.0);
@@ -1133,7 +1133,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn retaining_wall_thrust_from_k_ae() {
+    fn retaining_wall_thrust_from_k_ae() {
         let k_h = part_5::horizontal_seismic_coefficient(0.15, 1.0, 1.5);
         assert!((k_h - 0.1).abs() < 1e-9);
         let k_ae = part_5::mononobe_okabe_k_ae(30.0, 0.2);
@@ -1142,13 +1142,13 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn cantilever_modal_participation_factor_matches_closed_form() {
+    fn cantilever_modal_participation_factor_matches_closed_form() {
         let gamma = part_6::cantilever_modal_participation_factor();
         assert!((gamma - 1.602484997695127).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn tower_behaviour_factor_capped_by_type() {
+    fn tower_behaviour_factor_capped_by_type() {
         assert!((part_6::tower_behaviour_factor(3.0, true) - 1.5).abs() < 1e-9);
         assert!((part_6::tower_behaviour_factor(3.0, false) - 2.0).abs() < 1e-9);
     }

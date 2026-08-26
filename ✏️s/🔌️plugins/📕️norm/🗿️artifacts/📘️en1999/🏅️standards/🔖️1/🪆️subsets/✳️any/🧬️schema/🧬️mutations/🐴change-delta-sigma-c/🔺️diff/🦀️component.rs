@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_delta_sigma_c::mutation::ChangeD
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeDeltaSigmaC, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeDeltaSigmaC, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_delta_sigma_c.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fatigue reference stress range [MPa] must be a finite number, got {}.", payload.new_delta_sigma_c), Vec::<String>::new());
     }

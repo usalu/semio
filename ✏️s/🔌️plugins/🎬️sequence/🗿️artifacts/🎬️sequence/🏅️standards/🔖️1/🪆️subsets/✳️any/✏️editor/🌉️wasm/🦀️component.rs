@@ -354,9 +354,6 @@ pub unsafe extern "C" fn sequence_bridge_send(pointer: *const u8, length: usize,
     let Ok(message) = decode_abi_message(bytes) else {
         return -1;
     };
-    if matches!(message, AbiMessage::Control(_)) {
-        RETAINED.with(|retained| retained.borrow_mut().take());
-    }
     BRIDGE.with(|bridge| bridge.borrow_mut().try_send(message, AbiWorkBudget::credits(byte_credit)).map(|_| 1).unwrap_or(-1))
 }
 

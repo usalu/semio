@@ -18,6 +18,7 @@ semio_framework_plugin::app_labels! {
         select: native_en "Select", native_de "Auswählen", reuse_en "Select", reuse_de "Auswählen";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
+        fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
         duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
@@ -67,18 +68,27 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
-pub fn puzzle5d_is_de_locale(config: &Puzzle5dConfig) -> bool {
-    config.locale.starts_with("de")
+fn puzzle5d_locale(value: &str) -> Option<Locale> {
+    match value {
+        "en" | "en-US" => Some(Locale::En),
+        "de" | "de-DE" => Some(Locale::De),
+        _ => None,
+    }
+}
+
+/// 🗣️ Resolves the German branch only for an explicitly recognized locale.
+pub fn puzzle5d_is_de_locale(config: &Puzzle5dConfig) -> Option<bool> {
+    puzzle5d_locale(config.locale.as_str()).map(|locale| locale == Locale::De)
 }
 
 /// 🗣️ Resolves the active label set from this document's persisted locale/terminology config
 /// (see `Puzzle5dConfig::locale`/`.terminology` — this app VCS's its own axes rather than reading
-/// `ViewModel`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here).
-pub fn puzzle5d_labels(config: &Puzzle5dConfig) -> &'static Puzzle5dLabels {
-    let locale = if puzzle5d_is_de_locale(config) { Locale::De } else { Locale::En };
-    let terminology = if config.terminology == "reuse" { Terminology::Reuse } else { Terminology::Native };
-    Puzzle5dLabels::labels(locale, terminology)
+/// `ViewModel`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here). Unsupported
+/// BCP-47 or terminology values fail closed.
+pub fn puzzle5d_labels(config: &Puzzle5dConfig) -> Option<&'static Puzzle5dLabels> {
+    let locale = puzzle5d_locale(config.locale.as_str())?;
+    let terminology = Terminology::parse(config.terminology.as_str())?;
+    Some(Puzzle5dLabels::labels(locale, terminology))
 }
 
 /// 🗺️ Lifts a `Puzzle5dLabels` field accessor into a full manifest-level `LocalizedLabel` matrix —
@@ -88,3 +98,29 @@ pub fn puzzle5d_localized(field: fn(&Puzzle5dLabels) -> LabelText) -> LocalizedL
     LocalizedLabel::from_fn(move |terminology, locale| field(Puzzle5dLabels::labels(locale, terminology)).as_str().to_string())
 }
 //#endregion 🔖️Locale
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn label_resolution_has_no_locale_or_terminology_default() {
+        for (locale, terminology) in [("en-US", "native"), ("en", "reuse"), ("de-DE", "native"), ("de", "reuse")] {
+            let mut config = Puzzle5dConfig::default();
+            config.locale = locale.into();
+            config.terminology = terminology.into();
+            assert!(puzzle5d_labels(&config).is_some());
+        }
+        for locale in ["fr", "de-AT"] {
+            let mut unsupported_locale = Puzzle5dConfig::default();
+            unsupported_locale.locale = locale.into();
+            assert!(puzzle5d_labels(&unsupported_locale).is_none());
+            assert_eq!(puzzle5d_is_de_locale(&unsupported_locale), None);
+        }
+        let mut unsupported_terminology = Puzzle5dConfig::default();
+        unsupported_terminology.terminology = "legacy".into();
+        assert!(puzzle5d_labels(&unsupported_terminology).is_none());
+    }
+}
+//#endregion 🧪️Tests

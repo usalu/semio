@@ -9,12 +9,12 @@ pub const TRINITY_REWRITE_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::rewrite::create_rewrite_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: TRINITY_REWRITE_MODE_EDIT.into(), label: LocalizedLabel::native("Explore", "Erkunden"), icon_id: "focus".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One quadrant of the layout: a stack holding a single window kind.
-async fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
+fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
         size,
@@ -24,7 +24,7 @@ async fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> W
 }
 
 /// @emoji 🪟️ Two rows: LHS/RHS/Jack on top (50%), Parameters/Before/After on the bottom (50%).
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
             kind: "column".into(),

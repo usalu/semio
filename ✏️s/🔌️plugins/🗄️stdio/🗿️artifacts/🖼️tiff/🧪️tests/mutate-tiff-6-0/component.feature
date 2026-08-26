@@ -24,18 +24,23 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   decode/re-encode, and the writer reproduces its own committed output exactly, which any
   reader/writer asymmetry would break.
 
-  ⚠️ KNOWN OPEN DIVERGENCE — `mutate-insert-ifd` (parity 16/17, 2026-08-24). The row's `ifd` param
-  carries six entries and a real `pixels` strip. The oracle backs that page with actual strip bytes,
-  which forces `RowsPerStrip` to the page's `ImageLength` (TIFF6 §Strips: a single combined strip
-  needs `RowsPerStrip = height`, or a reader expects `ceil(height/RowsPerStrip)` strip offsets and
-  finds one), so its IFD 2 projects seven entries. `TiffSnapshot` has ONE `pixels` field — IFD 0's —
-  so this repository's encoder cannot back a non-primary IFD with raster at all and writes the six
-  declared entries verbatim; see `MultiIfdEncodeScopeNote` in
-  `../../🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs`. The two sides genuinely produce
-  different documents: the oracle's inserted page has pixels, ours is metadata only. Closing it means
-  giving `TiffIfd` its own strip bytes — a schema-first change across the snapshot, diff, mutation,
-  proto/graphql/ts mirrors and the binary protocol — not a tolerance, an `ignoreKeys` entry or a
-  cosmetic `RowsPerStrip` our encoder would have nothing to back.
+  ✅ CLOSED, AT THE CAUSE — `mutate-insert-ifd` (the ratios before and after are recorded in the
+  ticket, not here).
+  The row's `ifd` param carries six entries and a real `pixels` strip. The oracle backs that page
+  with actual strip bytes, which forces `RowsPerStrip` to the page's `ImageLength` (TIFF6 §Strips: a
+  single combined strip needs `RowsPerStrip = height`, or a reader expects `ceil(height/RowsPerStrip)`
+  strip offsets and finds one), so its IFD 2 projects seven entries where ours projected six. The
+  cause was that `TiffSnapshot` had ONE `pixels` field — IFD 0's — so this repository's encoder could
+  not back a non-primary IFD with raster at all, discarded the param's strip, and omitted the three
+  strip tags. The remedy this paragraph named has been carried out rather than papered over:
+  `TiffIfd` now has its OWN `pixels` field (raw strip bytes), threaded through the snapshot, the
+  diff (`TiffIfdDiff`), the text and binary diff codecs and the proto/graphql/ts/json mirrors, so the
+  inserted page is backed by real bytes and its `StripOffsets`/`RowsPerStrip`/`StripByteCounts`
+  triple is computed from them. Nothing was tolerated, ignored or cosmetically emitted: the profile
+  still declares no writer freedom, the row's parameters are unchanged, and an IFD carrying no strip
+  bytes still gets no invented `RowsPerStrip`. The same change closes a defect no scenario was
+  measuring — before it, every round trip of this two-page fixture silently dropped page 2's raster,
+  because the semantic projection only decodes IFD 0's.
 
   @id-mutate
   @level-exhaustive
@@ -60,7 +65,7 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff
     When the <id> mutation is applied with its parameters

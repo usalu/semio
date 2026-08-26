@@ -221,19 +221,19 @@ pub mod derived_analysis {
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_text_source_is_high() {
-            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Text("anything at all")), IoConfidence::High);
+            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Text("anything at all")).await, IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_binary_with_nul_bytes_is_low_or_medium_not_high() {
             let bytes: &[u8] = b"\x00\x01\x02binary garbage\x00";
-            assert_ne!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::High);
+            assert_ne!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)).await, IoConfidence::High);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn sniff_invalid_utf8_binary_is_low() {
             let bytes: &[u8] = &[0xff, 0xfe, 0xfd];
-            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)), IoConfidence::Low);
+            assert_eq!(TxtAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(bytes)).await, IoConfidence::Low);
         }
     }
     //#endregion 🧪️Tests
@@ -481,15 +481,15 @@ mod tests {
     }
 
     /// 🧪️ P2-P3: `register_schema_spec` genuinely resolves both the document and diff schema ids
-    /// through `dsl::registry::full_resolver()` once `register()` has run.
+    /// through `dsl::registry::full_resolver().await` once `register()` has run.
     #[semio_framework_async_macros::async_test]
     #[cfg(not(target_arch = "wasm32"))]
     async fn schema_spec_registration_resolves() {
         use dsl::os_pack::cli::SchemaResolver;
         crate::artifacts::txt::standards::v_utf_8::subsets::any::io::register_schema_specs();
-        let resolver = dsl::registry::full_resolver();
-        assert!(resolver.resolve("stdio.txt").is_some(), "stdio.txt must resolve");
-        assert!(resolver.resolve("stdio.txt#diff").is_some(), "stdio.txt#diff must resolve");
+        let resolver = dsl::registry::full_resolver().await;
+        assert!(resolver.resolve("stdio.txt").await.is_some(), "stdio.txt must resolve");
+        assert!(resolver.resolve("stdio.txt#diff").await.is_some(), "stdio.txt#diff must resolve");
     }
     //#endregion 🔖️P2P3GrammarProtocolFixtureLaws
 }

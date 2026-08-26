@@ -1,0 +1,3489 @@
+{
+ "count": 28,
+ "rows": [
+  {
+   "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel",
+   "ownerName": "📸️remodel",
+   "case": "mutate-remodel-1",
+   "caseDir": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🧪️tests/mutate-remodel-1",
+   "featurePath": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🧪️tests/mutate-remodel-1/component.feature",
+   "scenarios": 71,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-stream",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-stream",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-stream-sync",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-add-stream-frame",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-stream-frame",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-stream-source",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-asset",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-asset",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-camera-calibration",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-camera-calibration",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-camera-calibration",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-rig-extrinsic",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-rig-extrinsic",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-rig-extrinsic",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-gcp",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-gcp",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-add-gcp-observation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-gcp-observation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-ingest-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-feature-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-match-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-sfm-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-dense-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-mesh-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-motion-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-geo-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-job",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-sparse",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-dense",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-mesh-result",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-trajectory",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-tracks",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-geo-products",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-qc",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-commit-reconstruction",
+     "mode": "error",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-stream",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-stream",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-stream-sync",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-add-stream-frame",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-stream-frame",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-stream-source",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-asset",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-asset",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-camera-calibration",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-camera-calibration",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-camera-calibration",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-rig-extrinsic",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-rig-extrinsic",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-rig-extrinsic",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-gcp",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-gcp",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-add-gcp-observation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-gcp-observation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-ingest-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-feature-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-match-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-sfm-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-dense-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-mesh-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-motion-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-geo-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-job",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-sparse",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-dense",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-mesh-result",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-trajectory",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-tracks",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-geo-products",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-qc",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-commit-reconstruction",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "remodel-1-mutate",
+   "noOracle": "remodel-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "remodel-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and no photogrammetry library is authoritative over `RemodelMutation` — this is a reconstruction JOB document, not a point cloud or a mesh file, so a reader of COLMAP, LAS or PLY output would be judging a different artifact. What distinguishes this subset is that its 35 kinds fall into three genuinely different families with different laws: id-keyed create/delete/change over five referential pools (`streams`, `assets`, camera calibrations, rig extrinsics, GCPs — where deleting a stream or a GCP CASCADES into observations that point at it), `update-*-params` over the eight inseparable `ReconstructionParams` sub-records (each replaced whole because its fields are only meaningful together), and `replace-*` over the engine-owned result payloads. Confidence comes from the committed per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, already unit-tested inside the production crate, plus the inverse law as a metamorphic property — which for the cascading deletes means the undone document must carry the cascaded observations back, not merely the deleted record. `commit-reconstruction` is the one kind with NO committed vector: its diff reads process-global staging state (`commit_staged_remodel_reconstruction`, `durable_staged_remodel_asset`) that a `(before, mutation, after)` triple cannot carry, so `mutate-remodel-1` exercises it through its own documented refusal path instead and says so in its feature description.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
+   "ownerName": "🎥️shooting",
+   "case": "mutate-shooting-1",
+   "caseDir": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🧪️tests/mutate-shooting-1",
+   "featurePath": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🧪️tests/mutate-shooting-1/component.feature",
+   "scenarios": 63,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-asset",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-asset",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-asset",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-asset-url",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-assets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-drag-assets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rotate-assets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-scale-assets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-shot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-shot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-shot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-shot-width",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-shot-height",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-shot-format",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-shot-shape",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-shots",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-shot-camera",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-saved-camera",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-saved-camera",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-saved-camera",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-saved-camera-view",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-saved-cameras",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-active-shot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-active-asset",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-scene-sun-enabled",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-scene-sun-azimuth",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-scene-sun-elevation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-scene-sun-intensity",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-scene-ambient-intensity",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-scene-shadow-enabled",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-scene-material-roughness",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-asset",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-asset",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-asset",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-asset-url",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-assets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-drag-assets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rotate-assets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-scale-assets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-shot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-shot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-shot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-shot-width",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-shot-height",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-shot-format",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-shot-shape",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-shots",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-shot-camera",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-saved-camera",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-saved-camera",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-saved-camera",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-saved-camera-view",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-saved-cameras",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-active-shot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-active-asset",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-scene-sun-enabled",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-scene-sun-azimuth",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-scene-sun-elevation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-scene-sun-intensity",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-scene-ambient-intensity",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-scene-shadow-enabled",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-scene-material-roughness",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "shooting-1-mutate",
+   "noOracle": "shooting-render-scene-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "shooting-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.shooting.shooting` is a semio-NATIVE artifact. Its persisted document is the `shooting.shooting.dsl` envelope — `semio shooting.shooting.dsl v1` followed by a handcrafted block/table grammar with typed columns (`[id:TEXT name:TEXT url:TEXT format:TEXT origin:CRD orientation:TUPLE scale:TUPLE]`) and `deg`-suffixed angle literals — and no package in any ecosystem reads or writes it, because that grammar is defined by this repository alone. There is therefore nothing to register, and no library is authoritative over `ShootingMutation`: that vocabulary IS this subset's own specification. The nearest candidates were surveyed and DECLINED rather than merely absent, and unlike the sibling semio-native vocabularies this one has real domain competitors, so the decision has to be argued. (1) The 3D-scene interchange formats — glTF 2.0 (`gltf`), USD, Collada — do carry an asset list, a transform per asset, a camera list and a punctual-light block, so a naive reading suggests a differential is possible. It is not, and the reason is structural rather than cosmetic: this document's `shots` collection has no counterpart in any of them. A shot is a RENDER REQUEST — width, height, output format, mask shape, background, and a reference to a saved camera — and eleven of the thirty-one kinds address it. A glTF reader asked to judge `change-shot-format` or `change-shot-shape` would have nothing to read, so eleven kinds would silently report agreement about a field the reference does not model. That is precisely the shape of green this wave exists to stop. (2) A generic JSON or YAML reader is rejected for the same reason as every other subset here: it supplies a DOM and no knowledge of an id-keyed collection, a quaternion orientation or a scene lighting block, so all thirty-one semantics would still be hand-written on top of it. Confidence comes instead from specification vectors of unusual strength: this subset's thirty-one committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/` share ONE byte-identical committed before-snapshot (SHA-1 `6441b72754e5c649b2b07a2f2b244313467f85a0`, verified across all thirty-one), so the vocabulary comes with a complete, independently authored `(before, mutation, after)` suite already — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real DSL artifact must survive decode/encode byte-for-byte.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/renames-asset-hero-to-lead/📸️snapshot/⬅️before/🔣️component.json",
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+   "ownerName": "📏️layout",
+   "case": "mutate-layout-1",
+   "caseDir": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🧪️tests/mutate-layout-1",
+   "featurePath": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🧪️tests/mutate-layout-1/component.feature",
+   "scenarios": 51,
+   "scenarioIds": [
+    {
+     "id": "mutate-rename-layout",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-print-target",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-data-fields",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-page",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-page",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-page",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-page-width",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-page-height",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-page-margins",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-page-columns",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-pages",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-story",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-story",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-edit-story",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-link",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-link",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-link-path",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-frame",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-frame",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-frame",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-resize-frame",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-frame-fill",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-frame-stroke",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-frame-wrap-mode",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-frame-columns",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-layout",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-print-target",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-data-fields",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-page",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-page",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-page",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-page-width",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-page-height",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-page-margins",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-page-columns",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-pages",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-story",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-story",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-edit-story",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-link",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-link",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-link-path",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-frame",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-frame",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-frame",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-resize-frame",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-frame-fill",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-frame-stroke",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-frame-wrap-mode",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-frame-columns",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "layout-1-mutate",
+   "noOracle": "layout-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "layout-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `LayoutMutation`. What distinguishes this subset from every sibling is that a layout document is FOUR pools at two nesting depths joined by reference: document-root scalars (`name`, `printTarget`, `dataFieldsJson`), the id-keyed root collections `pages`, `stories` and `links`, and — nested one level down, inside a page — that page's own `layers` and `frames`. A frame is therefore addressed by (page, frame) rather than by id alone, a text frame names its `stories` member by id and an image frame names its `links` member by id, so `delete-story` and `delete-link` reach ACROSS pools into frames that point at them, while `reorder-pages` moves a whole nested subtree. Confidence comes from the committed per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate — plus the inverse law as a metamorphic property: applying a kind and then its own computed inverse must restore the exact pre-mutation document, including a deleted page's ORIGINAL index and its whole frame subtree, which a deletion undone by re-appending would not. The `mutate-layout-1` case re-exercises those SAME committed bytes end-to-end through `apply_layout_mutation`/`inverse_layout_mutation`.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio",
+   "ownerName": "🧿️semio",
+   "case": "mutate-semio-any",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-any",
+   "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-any/component.feature",
+   "scenarios": 43,
+   "scenarioIds": [
+    {
+     "id": "mutate-brep",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-mesh",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-model",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-value",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-document",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-cad",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-drawing",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-image",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-video",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-audio",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-animation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-presentation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-flow",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-text",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-table",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-graph",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-object",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-kit",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-brep",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-mesh",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-model",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-value",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-document",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-cad",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-drawing",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-image",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-video",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-audio",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-animation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-presentation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-flow",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-text",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-table",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-graph",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-object",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-kit",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-no-mutation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-no-mutation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-snapshot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-snapshot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "rejects-a-mismatched-arm",
+     "mode": "error",
+     "level": "exhaustive"
+    },
+    {
+     "id": "set-snapshot-changes-the-subset-kind",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "semio-v1-any-mutate",
+   "noOracle": "semio-envelope-routing",
+   "comparison": "ordered-json-v1",
+   "catalog": "semio-v1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.stdio.semio` is the ENVELOPE union over all eighteen semio subsets; there is no third-party crate that reads or writes `.dsl.semio`/`.pack.semio`, and there could not be one authoritative over a vocabulary whose eighteen wrapper variants each embed another semio-native subset's own mutation enum. What this subset OWNS is not the payload semantics — those belong to the eighteen arms and are covered by their own leaf fixtures and their own cases — but the envelope-level ROUTING: does a wrapped mutation whose arm matches the base snapshot's arm thread through, does a MISMATCHED one get refused with `mutation.target-missing` instead of silently corrupting the document, and is `set-snapshot` genuinely the only verb that can change the subset kind. Every scenario is written against exactly that, with a projection the envelope can answer without naming any arm's snapshot type: `{schema, subset, diagnostics, matchesReference}`. Confidence comes from the committed `(before, mutation, after, diff)` specification vector under `../🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/`, already unit-tested inside the production crate, plus the routing and inverse laws as metamorphic properties. Honest limits, recorded rather than papered over: the eighteen delegating arms are exercised against each arm's OWN empty snapshot rather than a real-world document, because no real-world `.semio` artifact exists outside this repository and the committed example assets can only be decoded through `store::ArtifactDsl`/`store::ArtifactPack`, traits reached solely via a private extern-crate alias that nothing re-exports — the same structural gap wave 7 recorded for `kit`, `object`, `text` and `table`. Re-exporting those two traits would let this case read the committed `.dsl.semio` examples directly and is the single change that would most strengthen it. WAVE-14 RE-SURVEY (cross-language differential oracles, ticket 26/08/23): a second IMPLEMENTATION in another language was built for five sibling subsets in this same artifact and works end to end, so the route was re-examined here and REJECTED on two concrete, nameable blockers rather than on absence. First, the envelope's own committed documents declare the wrapped arm OPAQUE: the snapshot grammar's `document = artifact-mark subset-line REST` hands off to the arm's own grammar, the binary protocol models the wrapped pack as one opaque trailing `payload` chain, and the mutations grammar is `op = \"noMutation\" | tag \":\" REST`. An envelope-level second implementation can therefore reproduce both committed carriers byte for byte - and it can - but it can say nothing about whether a DELEGATED verb changed the arm it reached, which is exactly what eighteen of this vocabulary's twenty kinds measure. Answering that honestly needs a second implementation of eighteen separate subset vocabularies, not of this one. Second, nothing lets the two languages read the same arm input: this subset exports `parse_semio_envelope_dsl`/`print_semio_envelope_dsl` and `decode_semio_envelope_pack`/`encode_semio_envelope_pack` but NO JSON bridge for `SemioSnapshot` or `SemioMutation`, so the arm snapshots and the wrapped verbs can only be constructed in Rust, inside the subject crate, where a second language cannot see them. Registering a Python oracle that merely restated the routing table would be a transcribed expectation wearing an oracle's name - our own answer on both sides - and is the one thing this platform exists to prevent, so it was not done. The two changes that would unblock a real differential here, in order of leverage: export a JSON bridge for `SemioSnapshot`/`SemioMutation` the way `✳️cad` and `✳️document` already do, and re-export `store::ArtifactDsl`/`store::ArtifactPack` so an external adapter can decode the committed example assets. A third, smaller finding recorded here rather than filed away: the committed snapshot grammar's `subset-tag` production still lists only thirteen tags (brep, mesh, model, value, document, cad, drawing, image, video, audio, animation, presentation, flow) while this catalog and the sibling mutations grammar both declare eighteen arms - `text`, `table`, `graph`, `object` and `kit` are missing from it.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️component.json",
+    "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️component.json",
+    "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🧪️tests/replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/➡️after/🔣️component.json",
+    "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🗣️example.dsl.semio",
+    "asset://🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🖼️assets/🎒️example.pack.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+   "ownerName": "🧊️process3d",
+   "case": "mutate-process3d-1",
+   "caseDir": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/mutate-process3d-1",
+   "featurePath": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🧪️tests/mutate-process3d-1/component.feature",
+   "scenarios": 33,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-step-enabled",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-step-origin",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-step-measure",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-steps",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-machine",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-machine",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-machine",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-machine-icon",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-machine-capabilities",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-stock",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-stock-label",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-stock-solid",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-cursor",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-step-enabled",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-step-origin",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-step-measure",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-steps",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-machine",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-machine",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-machine",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-machine-icon",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-machine-capabilities",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-stock",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-stock-label",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-stock-solid",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-cursor",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "process3d-1-mutate",
+   "noOracle": "process3d-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "process3d-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`process.process3d` is a semio-NATIVE artifact — a fabrication document holding a workshop of machines, a stock body and an ordered timeline of process steps, all in `.dsl.semio` — and nothing outside this repository reads it. Two candidate families were surveyed and DECLINED. G-code parsers (`gcode`, `nom-gcode`) model a flat instruction stream with no machine catalogue, no capability recipes and no undoable edit vocabulary, so they could adjudicate none of these sixteen kinds; and STEP/BREP kernels (`ruststep`, already registered under `✏️s/🔌️plugins/🗄️stdio`'s `📐️step` subsets) model solid geometry, which is only the payload of `replace-stock-solid` and says nothing about the timeline, the workshop or the replay cursor. Evidence is the sixteen committed specification vectors plus the inverse law. That evidence is UNEVEN and the feature says so kind by kind: nine vectors are forward and observable, but the seven step-scoped verbs are implemented today as documented no-ops — their `diff` builders take `_payload`/`_base` by underscore and return `MutationOutcome::empty().warn(\"mutation.no-op\", …)` because the timeline is a composed `s.stdio.semio.flow` child and no link resolver exists yet — so their vectors record `before == after` and their `mutate-`/`inverse-` scenarios can assert only the declared no-op, never the forward semantics.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical",
+   "ownerName": "➗️mathematical",
+   "case": "mutate-mathematical-1",
+   "caseDir": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🧪️tests/mutate-mathematical-1",
+   "featurePath": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🧪️tests/mutate-mathematical-1/component.feature",
+   "scenarios": 31,
+   "scenarioIds": [
+    {
+     "id": "mutate-change-graph-directed",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-graph-algorithm",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-graph",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-node-label",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-connect-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-disconnect-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-points",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-insert-point",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-point",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-point",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-coefficient",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-graph-directed",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-graph-algorithm",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-graph",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-node-label",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-connect-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-disconnect-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-points",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-insert-point",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-point",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-point",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-coefficient",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "mathematical-1-mutate",
+   "noOracle": "mathematical-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "mathematical-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.mathematical.mathematical` is a semio-NATIVE artifact. Its persisted body is three composed child handles (`notation` → `s.stdio.semio.text`, `results` → `s.stdio.semio.table`, `computed` → `s.stdio.semio.value`) plus ONE plain field, `equation`: a labelled expression AST whose `EquationNodeLabel` allocator only ever increases, so an address survives edits that a positional path would not. Both candidate families were surveyed and DECLINED. `petgraph` is the credible Rust graph library, but it models a graph as an in-memory container — it cannot read `.dsl.semio`, it has no notion of node labels, positions, an algorithm selector or a directedness flag, and it has no editing vocabulary whose results could be compared with ours. On the algebra side an external CAS is likewise the wrong instrument: `symbolica` is commercially licensed and cannot be linked here, and the small expression crates (`meval`, `evalexpr`) EVALUATE a string rather than exposing an authored, labelled AST, so none of them can adjudicate `change-coefficient`, which edits a numbered term in place. Evidence is the fifteen committed specification vectors plus the inverse law — and, recorded here rather than hidden, that evidence is thin for thirteen of the fifteen kinds: the graph and point-cloud verbs address collections that live in composed children the fixtures cannot resolve, so nine of them carry `rejected` vectors (`mutation.target-missing`, `mutation.duplicate-id`) and four carry `applied`-but-`mutation.no-op` vectors. Only `change-coefficient` and `insert-point` carry a forward, observable vector.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag",
+   "ownerName": "🕸️dag",
+   "case": "mutate-dag-1",
+   "caseDir": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/mutate-dag-1",
+   "featurePath": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🧪️tests/mutate-dag-1/component.feature",
+   "scenarios": 29,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-node-name",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-resize-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-node-icon",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-node-abbreviation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-node-operator-kind",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-node-kind",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-node-properties",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-connect-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-disconnect-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-node-name",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-resize-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-node-icon",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-node-abbreviation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-node-operator-kind",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-node-kind",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-node-properties",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-connect-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-disconnect-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "dag-1-mutate",
+   "noOracle": "dag-1-port-directed-graph-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "dag-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "No third party reads or writes `.dag.dsl.semio`/`.dag.pack.semio`, and no graph library holds an opinion about the two things this vocabulary actually decides. First, `DagSnapshot` persists NO nodes and NO edges: it carries `schema` plus one composed `s.stdio.semio.graph` child handle whose `childId` is a content digest of the child, so what an applied mutation produces is a NEW handle and what a refused one produces is the same handle — an addressing scheme private to this repository. Second, the vocabulary is a DAG vocabulary, not a graph one: `connect-nodes` refuses a self-loop and refuses any edge whose target can already reach its source (`🔗connect-nodes/🔺️diff/🦀️component.rs::would_create_cycle`), and endpoints are `node@port` strings split by this plugin's own `split_endpoint`. A general graph crate asked to adjudicate either would be answering a different question. Confidence comes instead from the fourteen committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/` — one per kind, each already unit-tested inside the production crate itself — and from the inverse law as a metamorphic property. Those fourteen vectors are ALL rejection vectors, and deliberately so: the leaf tests state the reason in as many words (`🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦀️component.rs`) — hand-authoring an APPLIED `➡️after` would mean hand-forging a `std::collections::hash_map::DefaultHasher` digest, a value the standard library explicitly does not specify. `mutate-dag-1` therefore runs each vector for its exact `(code, severity, target)` triple AND separately applies a real-effect payload of its own to the committed five-node example document, where the content-addressed handle supplies the observability the vectors cannot.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw",
+   "ownerName": "🖍️draw",
+   "case": "mutate-draw-1",
+   "caseDir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧪️tests/mutate-draw-1",
+   "featurePath": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🧪️tests/mutate-draw-1/component.feature",
+   "scenarios": 29,
+   "scenarioIds": [
+    {
+     "id": "mutate-set-layer-visible",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-layer-locked",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-layer-opacity",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-layer-blend-mode",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-layer",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-layer-transform",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-layer-fill",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-layer-stroke",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-layer-boolean-operation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-layer-trace-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-layer",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-layer",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-layer",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-duplicate-layer",
+     "mode": "error",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-layer-visible",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-layer-locked",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-layer-opacity",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-layer-blend-mode",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-layer",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-layer-transform",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-layer-fill",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-layer-stroke",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-layer-boolean-operation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-layer-trace-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-layer",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-duplicate-layer",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-layer",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-layer",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "draw-1-mutate",
+   "noOracle": "draw-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "draw-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `DrawMutation`. The vocabulary is not a generic tree-edit list either: it is derived from `DrawSnapshot`'s RECURSIVE layer tree, where a layer is one of several node kinds (group, path, trace, …) sharing a `base` record, so `update-layer-trace-params` exists only for the trace node kind while `set-layer-boolean-operation`, `replace-layer-fill` and `replace-layer-stroke` reach into the shared `attributes` record, and `create-layer`/`duplicate-layer`/`reorder-layer` address a PARENT plus an index rather than a flat position. Layer ids are content-addressed, which is why `create-layer` with an existing node is a hard rejection rather than a duplicate. Confidence comes from the committed per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate — plus the inverse law as a metamorphic property: applying a kind and then its own computed inverse must restore the exact pre-mutation document, POSITION in the tree included. The `mutate-draw-1` case re-exercises those SAME committed bytes end-to-end through `apply_draw_mutation`/`inverse_draw_mutation`, and crosses the real committed `Semio Emblem` drawing through both of its codecs for the identity law.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt",
+   "ownerName": "📄txt",
+   "case": "mutate-txt-utf-8",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧪️tests/mutate-txt-utf-8",
+   "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🧪️tests/mutate-txt-utf-8/component.feature",
+   "scenarios": 24,
+   "scenarioIds": [
+    {
+     "id": "mutate-no-mutation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-snapshot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-trailing-newline",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-line-ending",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-insert-line",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-line",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-line",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-no-mutation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-snapshot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-trailing-newline",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-line-ending",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-insert-line",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-line",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-line",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    },
+    {
+     "id": "spec-vector-pure-lf",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-pure-crlf",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-lf-no-trailing-terminator",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-mixed-crlf-and-bare-lf",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-bom-as-first-line-content",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-astral-emoji-and-variation-selectors",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-combining-mark-distinct-from-precomposed",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-nel-ls-ps-as-ordinary-content",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "spec-vector-empty-document",
+     "mode": "conformance",
+     "level": "exhaustive"
+    }
+   ],
+   "capability": "txt-utf-8-mutate",
+   "noOracle": "txt-utf-8-line-structure",
+   "comparison": "exact-bytes-v1",
+   "catalog": "txt-utf-8-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "There is no credible third-party crate that is authoritative over plain-text line structure: line splitting on LF/CRLF, uniform-per-document line-ending policy and trailing-newline presence are exactly what THIS subset defines, not a fact an external library could confirm or refute independently. The closest candidate, the `csv` crate already linked for the tabular subsets, genuinely helps for a NARROW part of this: with quoting disabled and a delimiter byte that cannot appear in real text, its record reader independently confirms this subset's own line-boundary splitting on single-style (no mixed CR/LF/CRLF), NON-BLANK real content — but a standalone probe found `csv-core`'s NFA silently treats a zero-byte record as \"not a record\" and never emits it (confirmed unconditionally, not a `Terminator`-mode artifact), so it cannot cross-check the true line count on any real prose that has blank lines at all, which most real text does (the real fixture below has 80, measured). It cannot discharge a full differential comparison either way: it collapses LF/CR/CRLF into one undifferentiated boundary and never reports which terminator it saw, so it cannot confirm or refute this subset's central claim (LF vs CRLF vs trailing-newline presence). Confidence instead comes from specification vectors (CRLF/LF/mixed, no trailing terminator, a BOM, astral-plane characters, combining marks, and NEL/LS/PS explicitly NOT treated as separators — all carried directly in the feature file as literal byte-exact local:// fixtures) and the inverse law as a metamorphic property (apply a mutation, apply its computed inverse, the real document's projection must return to the original) plus an independently hand-written reference implementation of the mutation semantics in this subset's own oracle module, which never calls this subset's production `TxtSnapshot`/`TxtMutation` code.",
+   "fixtures": [
+    "shared://📄️interview-transkript.tex"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
+   "ownerName": "🌊️flow",
+   "case": "mutate-flow-1",
+   "caseDir": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/mutate-flow-1",
+   "featurePath": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/mutate-flow-1/component.feature",
+   "scenarios": 21,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-widget",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-widget",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-widgets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-widget",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-connect-widgets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-disconnect-widgets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-synapses",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-update-synapse-endpoints",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-widgets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-duplicate-widget",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-widget",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-widget",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-widgets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-widget",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-connect-widgets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-disconnect-widgets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-synapses",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-update-synapse-endpoints",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-widgets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-duplicate-widget",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "flow-1-mutate",
+   "noOracle": "flow-widget-graph-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "flow-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.flow.flow` is a semio-NATIVE artifact. Its persisted document is the `flow.flow` envelope (`semio flow.flow.dsl v1` followed by a JSON body) and its widget graph lives in a composed `s.stdio.semio.flow` CHILD addressed by a content-derived handle. No package in any ecosystem reads or writes that envelope — the preamble and the child-handle addressing are defined by this repository alone — so there is nothing to register, and no library is authoritative over `FlowMutation`: that vocabulary IS this subset's own specification. The nearest candidates were surveyed and DECLINED rather than merely absent, and the first one is unusually close, which is why the decision has to be argued rather than assumed. (1) This document's BODY is plain JSON and json-rust 0.12 is already linked into the stdio oracle crate, so a json-rust-mediated differential is technically reachable. It would still be a weak oracle of exactly the kind the wave brief forbids: json-rust supplies a generic DOM and no knowledge of a widget discriminant, a synapse port pair, a layout entry or the cascade `delete-widget` performs on the synapses that touched the deleted widget, so all ten mutation semantics — the entire content of this catalog — would still be hand-written on top of it, and calling that hand-written code a third-party reference would overstate the evidence rather than add any. A generic container parser is not a reference implementation of the vocabulary carried inside the container. (2) The node-graph domain has real third-party readers (Graphviz DOT, GraphML, and the node-graph formats of several DCC tools), and they were rejected on a substantive point: none carries a typed widget UNION whose variant decides its own field set, and none carries `duplicate-widget`, a COMPOSITE that plans a widget insert and a synapse insert together and therefore has no framework-generic counterpart at all (see `to_framework_mutation`'s own doc comment). A differential against one would compare two different documents. Confidence comes instead from specification vectors — this subset's own committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each an independently authored `(before, mutation, after|absent, diff, outcome)` bundle — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real artifact must survive decode/encode byte-for-byte.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "local://🌊️base-scene.json"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",
+   "ownerName": "🔌️wires",
+   "case": "mutate-wires-1",
+   "caseDir": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/mutate-wires-1",
+   "featurePath": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🧪️tests/mutate-wires-1/component.feature",
+   "scenarios": 21,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-resize-node",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-node-kind",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-node-shape",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-edit-node-text",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-node-root",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-connect-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-disconnect-nodes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-resize-node",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-node-kind",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-node-shape",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-edit-node-text",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-node-root",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-connect-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-disconnect-nodes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "wires-1-mutate",
+   "noOracle": "wires-1-argument-board-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "wires-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "No third party reads or writes `.wires.dsl.semio`, whose body is five hex-encoded `DslValue` lines this repository defines. More to the point, the document this vocabulary mutates is not a graph in any library's sense: `WiresSnapshot` carries an untyped `wiresFixture` tree holding `identities`, `relationships` and a nested `board`, and every node mutation edits one scalar key inside that tree through this facet's own `set_node_field`. A graph or JSON-patch crate asked to adjudicate `set-node-root` would be answering a question about JSON, not about whether an unflagged node set to not-root is a no-op. Confidence comes instead from the ten committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, and from the inverse law as a metamorphic property. What those ten vectors pin is unusual and worth stating: SIX of them are NO-OP vectors — an `applied` outcome carrying a `Warning`-level `mutation.no-op` because the field already holds the requested value — and only four are refusals. That split is the vocabulary's real shape: every single-field node verb here degrades to a warned no-op rather than an error when its target already matches, and the two branches must never be confused, so `mutate-wires-1` requires the exact `(code, severity)` pair per vector and separately applies a real-effect payload of its own to the same committed base for the observability the no-op vectors cannot give.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg",
+   "ownerName": "📷️jpg",
+   "case": "mutate-jpg-jfif-1-01-baseline",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01-baseline",
+   "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🧪️tests/mutate-jpg-jfif-1-01-baseline/component.feature",
+   "scenarios": 21,
+   "scenarioIds": [
+    {
+     "id": "mutate-no-mutation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-snapshot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-sof-marker",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-sample-precision",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-arithmetic",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-insert-huffman-table",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-huffman-table",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-insert-frame-component",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-frame-component",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-component-sampling",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-no-mutation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-snapshot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-sof-marker",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-sample-precision",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-arithmetic",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-insert-huffman-table",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-huffman-table",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-insert-frame-component",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-frame-component",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-component-sampling",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "jpg-jfif-1-01-baseline-mutate",
+   "noOracle": "jpg-jfif-1-01-baseline-conformance-class-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "jpg-jfif-1-01-baseline",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "Two independent reasons, and the first is the decisive one. (1) NO CANDIDATE CAN SEE THE AXES. This vocabulary addresses the SOF marker byte, the frame's sample precision, whether a DAC arithmetic-conditioning segment is present, the per-class Huffman table count and each component's sampling factors — every one of them a field of the frame header or the entropy-coding mode. `image` 0.25 is registered by the sibling ✳️any subset and is the right reference for a JPEG raster, but its public API hands back pixels, dimensions and a colour type; it exposes no frame header, no SOFn discriminant, no DAC flag and no DHT view, and it offers no way to WRITE any of them either. `jpeg-decoder` exposes only an `ImageInfo`. A reference that cannot express the mutation cannot adjudicate it, and registering one anyway to satisfy the workflow would be selecting a weak oracle mechanically. (2) EVEN A PERFECT ORACLE WOULD BE MEASURING NOTHING AT THE BYTE LEVEL, because this repository's own `encode_jpg` writes a conforming baseline file and no other kind of JPEG at all: it emits `FF C0` for the frame marker, precision 8, a fixed three-component 4:2:0 sampling array, exactly four DHT segments and never a DAC — so every axis this vocabulary moves is normalized away on re-serialization. That is a real, documented property of the codec (stated in the vocabulary's own module docstring), not a gap. The substitutes are therefore the standard's own tables — ITU-T T.81 Table B.1 for the SOFn marker codes, §4.2 for the 8-bit precision mandate, Annex F for Huffman-only entropy coding, §B.2.4.2 for the four-table-per-class ceiling and §B.2.2 for the 1..=4 sampling factors — read against `check_baseline_conformance`, which is where the class verdict actually lives; plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-jpg-jfif-1-01-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim, except in `identity-round-trip`, which does re-encode and reads both sides through the INDEPENDENT `image` reader the ✳️any subset registers.",
+   "fixtures": [
+    "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary",
+   "ownerName": "💾️binary",
+   "case": "mutate-binary-raw",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧪️tests/mutate-binary-raw",
+   "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧪️tests/mutate-binary-raw/component.feature",
+   "scenarios": 20,
+   "scenarioIds": [
+    {
+     "id": "mutate-no-mutation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-snapshot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-splice",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-append-bytes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-truncate-at",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-no-mutation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-snapshot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-splice",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-append-bytes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-truncate-at",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    },
+    {
+     "id": "vector-zero-length-splice",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "vector-splice-at-offset-zero",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "vector-splice-at-exact-end",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "vector-splice-spans-whole-buffer",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "vector-truncate-to-zero",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "vector-truncate-beyond-length",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "append-to-empty-buffer",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "invalid-splice-offset-beyond-buffer",
+     "mode": "error",
+     "level": "exhaustive"
+    },
+    {
+     "id": "invalid-splice-remove-len-exceeds-buffer",
+     "mode": "error",
+     "level": "exhaustive"
+    }
+   ],
+   "capability": "binary-raw-mutate",
+   "noOracle": "raw-buffer-no-format",
+   "comparison": "exact-bytes-v1",
+   "catalog": "binary-raw-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "A raw byte buffer carries no format — it is bytes, full stop. There is no grammar for a third-party library to parse, no independent reader to project both sides through, and no credible reference WRITER either: agreeing or disagreeing with some arbitrary crate would measure that crate's own opinion of what 'a buffer' is, not a defect in this subset. The specification IS the mutation vocabulary itself (`BinaryMutation`'s five variants and their documented offset/remove_len contract in `../🧬️schema/🧬️mutations/🦀️component.rs`), so the evidence is the specification vectors below plus the inverse law as a metamorphic property — both discharged by this module's own independently written splice/append/truncate implementation (`../🧪️oracle/🦀️component.rs`), which never touches the subject's `BinaryDiff`/`apply_binary_mutation`.",
+   "fixtures": [
+    "shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present",
+   "ownerName": "🎬️present",
+   "case": "mutate-present-1",
+   "caseDir": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🧪️tests/mutate-present-1",
+   "featurePath": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🧪️tests/mutate-present-1/component.feature",
+   "scenarios": 19,
+   "scenarioIds": [
+    {
+     "id": "mutate-resize-source-frame",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-source",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-create-tile",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-tile",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-tiles",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-tile",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-resize-tile-crop",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-tiles",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-replace-tiles",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-resize-source-frame",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-source",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-tile",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-tile",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-tiles",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-tile",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-resize-tile-crop",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-tiles",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-tiles",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "present-1-mutate",
+   "noOracle": "present-figure-deck-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "present-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.animate.present` is a semio-NATIVE artifact. Its persisted document is the `animate.present.dsl` envelope (`semio animate.present.dsl v1` + hex/bracket field grammar) and its content lives in two composed `s.stdio.semio` children (`presentation`, `animation`) addressed by a content-derived handle. No package in any ecosystem — crates.io, PyPI, npm, Go modules, NuGet — reads or writes that envelope, because the envelope preamble, the hex field encoding and the child-handle addressing are defined by this repository alone. There is therefore no reference implementation to register, and no library is authoritative over `PresentMutation`: that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. The nearest candidates were surveyed and DECLINED rather than merely absent. (1) A generic JSON reader (json-rust is already linked into the stdio oracle crate, and this subset's mutations serialize as externally-tagged JSON) would supply a DOM and no knowledge of a source frame, a tile crop or a tile order, so all nine mutation semantics — which are the entire content of this catalog — would still be hand-written on top of it; calling that hand-written code a third-party reference would overstate the evidence rather than add any. (2) The presentation domain has real third-party writers (`rust_xlsxwriter`-class OOXML tooling, PDF writers), but none of them models a FIGURE SOURCE cropped into named tiles — this artifact is a figure-tiling deck, not a slide deck in any interchange format — so a differential against one would compare two different documents. Confidence comes instead from specification vectors — this subset's own committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each an independently authored `(before, mutation, after|absent, outcome)` quadruple — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real artifact must survive decode/encode byte-for-byte.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "local://🎞️base-tiles.json"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff",
+   "ownerName": "🖼️tiff",
+   "case": "mutate-tiff-6-0-baseline",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0-baseline",
+   "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/mutate-tiff-6-0-baseline/component.feature",
+   "scenarios": 19,
+   "scenarioIds": [
+    {
+     "id": "mutate-no-mutation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-snapshot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-compression",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-photometric-interpretation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-bits-per-sample",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-insert-tile-tags",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-tile-tags",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-strip-offsets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-strip-offsets",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-no-mutation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-snapshot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-compression",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-photometric-interpretation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-bits-per-sample",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-insert-tile-tags",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-tile-tags",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-strip-offsets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-strip-offsets",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "tiff-6-0-baseline-mutate",
+   "noOracle": "tiff-6-0-baseline-conformance-class-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "tiff-6-0-baseline",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "Two independent reasons. (1) THE QUESTION IS NOT ONE A PACKAGE ANSWERS. This vocabulary asks whether a decoded document is inside Adobe TIFF 6.0 Part 1's Baseline class, read on five specific fields of IFD 0 — `Compression` (259) restricted to {1, 2, 32773}, `PhotometricInterpretation` (262) to 0..=3, `BitsPerSample` (258) to {1, 4, 8}, `TileWidth`/`TileLength` (322/323) absent because Baseline is strip-organized, and `StripOffsets` (273) present when it is not tiled. `image` 0.25's TIFF surface is a single-IFD raster codec: it decodes pixels and re-encodes them under its own choice of those very tags, and exposes no API to set an arbitrary compression, an out-of-range photometric or a tile-organized IFD. It could not perform any row of this vocabulary, and it holds no opinion about class membership to be compared against. (2) FOUR OF SIX KINDS ARE NOT BYTE-OBSERVABLE THROUGH THIS REPOSITORY'S OWN ENCODER EITHER: `encode_tiff` regenerates every one of `CORE_STRIP_TAGS` from the raster it is about to write, so `set-compression`, `set-photometric-interpretation`, `set-bits-per-sample` and `set-strip-offsets` are normalized away on re-serialization — a documented property of the codec, stated in the vocabulary's own module docstring, and the same constraint PNG's IHDR is under. Only the two tile kinds survive, because `TileWidth`/`TileLength` sit outside `CORE_STRIP_TAGS` and are carried verbatim. The substitutes are therefore TIFF 6.0's own tag-value tables read against `check_tiff_baseline_conformance`, which is where the class verdict lives, plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-tiff-6-0-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim for those four kinds; its `identity-round-trip` does re-encode, and reads both sides through the independent IFD reader the ✳️any subset registers.",
+   "fixtures": [
+    "shared://🖼️abbau-aufbau-masterarbeit-grundriss.tiff"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+   "ownerName": "🎬️sequence",
+   "case": "mutate-sequence-1",
+   "caseDir": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/mutate-sequence-1",
+   "featurePath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/mutate-sequence-1/component.feature",
+   "scenarios": 17,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-move-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-edit-step-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-step-collapsed",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-connect-steps",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-disconnect-steps",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-duplicate-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-move-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-edit-step-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-step-collapsed",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-connect-steps",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-disconnect-steps",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-duplicate-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "sequence-1-mutate",
+   "noOracle": "sequence-step-graph-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "sequence-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.sequence.sequence` is a semio-NATIVE artifact. Its persisted document is the `sequence.sequence.dsl` envelope — `semio sequence.sequence.dsl v1` followed by hex-encoded fields and a bracketed composed-child handle — and its step graph lives in a composed `s.stdio.semio.flow` CHILD addressed by a content-derived handle. No package in any ecosystem reads or writes that envelope: the preamble, the hex field grammar and the child-handle addressing are defined by this repository alone, so there is nothing to register and nothing authoritative over `SequenceMutation` — that vocabulary IS this subset's own specification. The nearest candidates were surveyed and DECLINED rather than merely absent. (1) A generic JSON reader (json-rust is already linked into the stdio oracle crate and every mutation here serializes as internally-tagged JSON) supplies a DOM and no knowledge of a step, an id-keyed collection, a slot or an edge cascade, so all eight mutation semantics — the entire content of this catalog — would still be hand-written on top of it; calling that a third-party reference would overstate the evidence. (2) The workflow/DAG domain has real third-party libraries (BPMN and Graphviz readers), and they were rejected on a substantive point rather than on absence: none of them models THIS graph. `delete-step` cascades every incident edge inside its own diff, `duplicate-step` mints a second step from a source id, `edit-step-params` carries an opaque `Dictionary` whose integer/decimal distinction a generic graph format erases — a differential against a BPMN or DOT reader would compare two different documents and report agreement about neither. Confidence comes instead from specification vectors — this subset's own committed per-kind leaf fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each an independently authored `(before, mutation, after|absent, outcome)` quadruple — and from the metamorphic laws the case asserts in role: every kind must MOVE the semantic projection, every kind's own computed inverse must restore it exactly, and the committed real artifact must survive decode/encode byte-for-byte.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio",
+    "local://🎬️base-scene.json"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs",
+   "ownerName": "🌿️vcs",
+   "case": "mutate-vcs-1",
+   "caseDir": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🧪️tests/mutate-vcs-1",
+   "featurePath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🧪️tests/mutate-vcs-1/component.feature",
+   "scenarios": 13,
+   "scenarioIds": [
+    {
+     "id": "mutate-rename-vcs",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-counter",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-notes",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-change-status",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-add-tag",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-remove-tag",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-vcs",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-counter",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-notes",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-status",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-add-tag",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-remove-tag",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "vcs-1-mutate",
+   "noOracle": "vcs-1-checkpoint-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "vcs-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "There is no third-party implementation of `s.vcs.vcs` to compare against. The artifact is a review-checkpoint document invented here — title, an integer counter, freeform notes, a workflow status word and an ORDERED tag list — and its two wire forms (`🚪️io/📸️snapshot/📝️text`'s `.vcs.dsl.semio` and `💾️binary`'s `.vcs.pack.semio`) are grammars this repository defines and nobody else reads. Registering a general JSON or key-value library would not adjudicate a single one of the six kinds: what is under test is not how `{\"tag\": \"urgent\"}` serializes but that AddTag APPENDS after the members the base already carried, that a duplicate add degrades to `mutation.no-op` with an EMPTY inverse, and that RemoveTag against an absent tag is `mutation.target-missing` rather than a silent success — semantics no external package can hold an opinion about. Confidence comes instead from the six committed, independently handcrafted `(before, mutation, after, diff, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate itself, re-exercised end to end here through `apply_vcs_mutation_reporting`; and from the inverse law as a metamorphic property, asserted in role by the subject handler rather than inferred from an oracle's silence. Note that this catalog declares NO `no-mutation` and NO `set-snapshot`: whole-document replace is banned vocabulary in this taxonomy and reaches the store through its non-history `reset` path, so the two kinds every 🗄️stdio catalog carries genuinely do not exist here.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative",
+   "ownerName": "📜️imperative",
+   "case": "mutate-imperative-1",
+   "caseDir": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🧪️tests/mutate-imperative-1",
+   "featurePath": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🧪️tests/mutate-imperative-1/component.feature",
+   "scenarios": 9,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-step",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-reorder-steps",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-edit-step-params",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-step",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-reorder-steps",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-edit-step-params",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "imperative-1-mutate",
+   "noOracle": "imperative-1-nested-step-list-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "imperative-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "No third party reads or writes `.imperative.dsl.semio`, and no AST or list library could adjudicate this vocabulary either, because the addressing scheme is the whole point. `ImperativeSnapshot` persists NO steps: it carries a schema string and two content-addressed child handles, one `s.stdio.semio.flow` and one `s.stdio.semio.text`, and the program itself lives in a thread-local working scene keyed by the flow handle. Every one of the four kinds therefore addresses a `PathRef` — `{}` for the root program, `{\"owner\": \"step-3\", \"slot\": \"then\"}` for a branch body inside it — and the SAME step id in two scopes is two different targets, which is exactly what the committed `delete-step` vector pins by refusing a root id addressed inside a branch. Confidence comes instead from the four committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, and from the inverse law as a metamorphic property. All four leave the document byte-identical, for two different reasons apiece: a duplicate id at the addressed path and an out-of-scope target are refusals, while a reorder index clamped past the end and a param edit that rewrites the value already present are `Warning`-level no-ops. That is why `mutate-imperative-1` requires the exact `(code, severity)` pair per vector, and separately applies a real-effect payload of its own to the same seeded program, where the content-addressed flow handle supplies the observability the vectors cannot.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space",
+   "ownerName": "🪐️space",
+   "case": "mutate-s-space-1",
+   "caseDir": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🧪️tests/mutate-s-space-1",
+   "featurePath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🧪️tests/mutate-s-space-1/component.feature",
+   "scenarios": 9,
+   "scenarioIds": [
+    {
+     "id": "mutate-create-artifact",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-delete-artifact",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-rename-artifact",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-touch-artifact",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-create-artifact",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-delete-artifact",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-rename-artifact",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-touch-artifact",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "s-space-1-mutate",
+   "noOracle": "s-space-index-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "s-space-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.space.space` is a semio-NATIVE artifact — no third party reads or writes `.sspace.dsl.semio` — and what it persists is a hub space's INDEX of artifact rows (id, name, kind id, schema, a `dialect` block, and two created/updated clock pairs), never the indexed artifacts' own document bytes. That is a workspace bookkeeping model, not an interchange format: nothing in the ecosystem defines it, so there is no library that could confirm or refute `create-artifact`/`delete-artifact`/`rename-artifact`/`touch-artifact`. Two adjacent families were considered and DECLINED rather than merely absent: generic table/CSV readers (`csv`, `calamine`) can parse a row grid but know nothing of the `dialect:BLOCK` column, of id-keyed identity, or of the create/touch clock distinction that gives this vocabulary its shape; and content-addressed store crates model blobs, not an editable metadata index. Evidence comes from the four committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/`, each handcrafted against a different hazard, plus the inverse law: `touch-artifact` is the only verb that writes a clock, so its inverse must restore BOTH the previous `updated_at_ms` and the previous `updated_by`, and dropping either one shows up immediately.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+   "ownerName": "🖊️dwg",
+   "case": "mutate-dwg-ac1018",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1018",
+   "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1018/component.feature",
+   "scenarios": 7,
+   "scenarioIds": [
+    {
+     "id": "mutate-no-mutation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-snapshot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-version-info",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-no-mutation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-snapshot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-version-info",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "dwg-ac1018-mutate",
+   "noOracle": "dwg-ac1018-proprietary-container",
+   "comparison": "semantic-dwg-preamble-v1",
+   "catalog": "dwg-ac1018-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "DWG is a proprietary, undocumented format. The only independent implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C library on this repository's test host, and no owner ruling permits that. No permissively licensed Rust DWG reader exists at all — `dxf` 0.6, the crate registered for the sibling 🖊️dxf artifact, reads DXF (the PUBLISHED interchange format Autodesk documents) and explicitly not DWG. Confidence instead comes from specification vectors and the metamorphic laws, exercised against a real 148,638-byte committed architectural drawing by an independently hand-written reader/writer of the one part of DWG that IS publicly specified: the plain preamble every file since R13 begins with — six ASCII version characters at 0x00-0x05, the `maint_version` byte at 0x12, and the little-endian `codepage` u16 at 0x13-0x14, the offsets LibreDWG's own `header.spec` documents and this subset's `DwgSnapshot` doc comments already cite (and which the real fixture confirms: 0x02 and 30/ANSI_1252). That reader never calls this repository's own 12,000-line R2004+ decoder. The narrowness is real and is stated rather than hidden: everything after the preamble is the R2004+ section map — compressed, checksummed and section-encrypted — which nothing in this repository or in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and the projection covers the preamble triple plus the document length only. `byteLength` is what keeps `set-snapshot` (a whole-document replacement) distinguishable from `set-version-info` (a field set in place) rather than the two collapsing into one indistinguishable edit.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+   "ownerName": "🖊️dwg",
+   "case": "mutate-dwg-ac1024",
+   "caseDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1024",
+   "featurePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧪️tests/mutate-dwg-ac1024/component.feature",
+   "scenarios": 7,
+   "scenarioIds": [
+    {
+     "id": "mutate-no-mutation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-snapshot",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-set-version-info",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-no-mutation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-snapshot",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-version-info",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "dwg-ac1024-mutate",
+   "noOracle": "dwg-ac1024-proprietary-container",
+   "comparison": "semantic-dwg-preamble-v1",
+   "catalog": "dwg-ac1024-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "DWG is a proprietary, undocumented format. The only independent implementation of any weight is LibreDWG, which is GPL-3.0 C: linking it would put a copyleft C library on this repository's test host, and no owner ruling permits that. No permissively licensed Rust DWG reader exists at all — `dxf` 0.6, the crate registered for the sibling 🖊️dxf artifact, reads DXF (the PUBLISHED interchange format Autodesk documents) and explicitly not DWG. Confidence instead comes from specification vectors and the metamorphic laws, exercised against a real 148,638-byte committed architectural drawing by an independently hand-written reader/writer of the one part of DWG that IS publicly specified: the plain preamble every file since R13 begins with — six ASCII version characters at 0x00-0x05, the `maint_version` byte at 0x12, and the little-endian `codepage` u16 at 0x13-0x14, the offsets LibreDWG's own `header.spec` documents and this subset's `DwgSnapshot` doc comments already cite (and which the real fixture confirms: 0x02 and 30/ANSI_1252). That reader never calls this repository's own 12,000-line R2004+ decoder. The narrowness is real and is stated rather than hidden: everything after the preamble is the R2004+ section map — compressed, checksummed and section-encrypted — which nothing in this repository or in the permissively licensed Rust ecosystem can regenerate, so it is carried through unchanged and the projection covers the preamble triple plus the document length only. `byteLength` is what keeps `set-snapshot` (a whole-document replacement) distinguishable from `set-version-info` (a field set in place) rather than the two collapsing into one indistinguishable edit.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🖼️assets/📄️architectural.dwg"
+   ]
+  },
+  {
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host",
+   "ownerName": "🖥️host",
+   "case": "mutate-os-config-opening",
+   "caseDir": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/mutate-os-config-opening",
+   "featurePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/mutate-os-config-opening/component.feature",
+   "scenarios": 5,
+   "scenarioIds": [
+    {
+     "id": "mutate-set-default-app",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "mutate-clear-default-app",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-set-default-app",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-clear-default-app",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "os-config-opening-1-mutate",
+   "noOracle": "os-config-opening-preferences-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "os-config-opening-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`os.config.opening` is this operating system's own preference record — a list of `(artifact dialect, role) -> app` pins, where the dialect is a semio `ArtifactDialect` triple and the app is a semio `AppRef`. There is no third-party implementation of it and no third party could hold an opinion about it: what is under test is that a pin is an UPSERT keyed on `(dialect, role)` rather than an append, that clearing a pin nobody set is a warned no-op rather than an error, and that `set` and `clear` are exact inverses of each other on that key — statements about this repository's own preference semantics, not about JSON or key-value storage. Confidence comes instead from the two committed, independently handcrafted `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the facet itself, re-exercised end to end through `apply_opening_config_mutation_reporting`; and from the inverse law as a metamorphic property. Both vectors run against the same two-pin document — a cad viewer pin and a cad editor pin — which is what lets each kind be held to the claim that it touches ONE pin and leaves its sibling alone.",
+   "fixtures": []
+  },
+  {
+   "owner": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition",
+   "ownerName": "🏷️class-name-composition",
+   "case": "merge-conflicting-utilities",
+   "caseDir": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🧪️tests/merge-conflicting-utilities",
+   "featurePath": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🧪️tests/merge-conflicting-utilities/component.feature",
+   "scenarios": 3,
+   "scenarioIds": [
+    {
+     "id": "last-surface-fill-wins",
+     "mode": "conformance",
+     "level": "fundamental"
+    },
+    {
+     "id": "last-utility-in-a-family-wins",
+     "mode": "conformance",
+     "level": "fundamental"
+    },
+    {
+     "id": "modifiers-scope-the-conflict",
+     "mode": "conformance",
+     "level": "quick"
+    }
+   ],
+   "capability": "class-name-conflict-resolution",
+   "noOracle": "repository-owned-utility-groups",
+   "comparison": "utf8-text-v1",
+   "catalog": null,
+   "adapters": [
+    "typescript"
+   ],
+   "rationale": "cn() resolves conflicts over a finite table of REPOSITORY-OWNED utility families (ui-surface/ui-glass/ui-veil fills, px-single/px-tiny spacing, text-element sizing, border-accent colours). tailwind-merge and every other third-party merger resolve against Tailwind's default scale and know none of these families, so agreeing with one would prove nothing and disagreeing with it would prove nothing either. Choosing such a library purely to satisfy the workflow would be selecting a weak oracle mechanically. The group table in 🟦️component.ts is the specification, and the vectors in the feature carry it.",
+   "fixtures": []
+  },
+  {
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+   "ownerName": "🧪️test",
+   "case": "host-protocol-parity",
+   "caseDir": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/host-protocol-parity",
+   "featurePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/host-protocol-parity/component.feature",
+   "scenarios": 3,
+   "scenarioIds": [
+    {
+     "id": "digest-and-fixture-resolution",
+     "mode": "differential",
+     "level": "fundamental"
+    },
+    {
+     "id": "fixture-not-in-plan-is-an-error",
+     "mode": "error",
+     "level": "fundamental"
+    },
+    {
+     "id": "work-directory-is-cache-local",
+     "mode": "conformance",
+     "level": "quick"
+    }
+   ],
+   "capability": "test-host-protocol",
+   "noOracle": "repo-test-platform",
+   "comparison": "ordered-json-v1",
+   "catalog": null,
+   "adapters": [
+    "rust",
+    "typescript",
+    "go",
+    "python",
+    "dotnet"
+   ],
+   "rationale": "The repository test platform is the thing under test; no third-party library implements this repository's taxonomy, feature profile or cache contract, so an external reference would be meaningless. Confidence comes from specification vectors (the frozen contract), metamorphic laws (discovery is idempotent, clean is a no-op on a clean tree) and independently written assertions per behaviour.",
+   "fixtures": [
+    "shared://📄️protocol-vector.txt"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground",
+   "ownerName": "🎪️playground",
+   "case": "mutate-playground-1",
+   "caseDir": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🧪️tests/mutate-playground-1",
+   "featurePath": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🧪️tests/mutate-playground-1/component.feature",
+   "scenarios": 3,
+   "scenarioIds": [
+    {
+     "id": "mutate-change-schema",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-schema",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "playground-1-mutate",
+   "noOracle": "playground-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "playground-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "No third-party crate reads or writes semio's `.dsl.semio`/`.pack.semio` envelope, and none could be authoritative over `PlaygroundMutation` — a one-variant vocabulary whose single kind retags the artifact's only persistent field. What genuinely distinguishes this subset from every other mutation vocabulary in the repository is that `PlaygroundSnapshot` carries NO `#[serde(tag = ..)]` and its payload struct carries no `rename_all`, so the mutation encodes EXTERNALLY tagged as `{\"ChangeSchema\": {\"new_schema\": ..}}` with a snake_case field — the opposite convention from every sibling artifact. Confidence therefore comes from the committed specification vector under `../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/retags-the-playground-document-schema/`, whose `(before, mutation, after, diff, outcome)` quintet pins exactly that wire shape and is already unit-tested inside the production crate (`committed_json_is_canonical`, `produces_committed_diff`, `committed_diff_applies_to_after`, `declared_outcome_holds`), plus the inverse law as a metamorphic property: retagging and then applying the mutation's own computed inverse must restore the committed before-document. The `mutate-playground-1` case re-exercises those SAME committed bytes end-to-end through `apply_playground_mutation`/`inverse_playground_mutation` rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture test does.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+   "ownerName": "🔋️model",
+   "case": "mutate-energy-model-1",
+   "caseDir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/mutate-energy-model-1",
+   "featurePath": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🧪️tests/mutate-energy-model-1/component.feature",
+   "scenarios": 3,
+   "scenarioIds": [
+    {
+     "id": "mutate-replace-model",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-replace-model",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "energy-model-1-mutate",
+   "noOracle": "energy-model-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "energy-model-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.energy.model` is a semio-NATIVE artifact whose `.dsl.semio` envelope no third party reads. The domain's real references — EnergyPlus and OpenStudio — were surveyed and DECLINED for a specific reason, not merely noted as absent: they are building-energy SOLVERS over their own IDF/OSM models, they cannot read this artifact, and above all they have no counterpart to what this vocabulary actually addresses. This snapshot persists no content model of its own at all: its entire substantive body is two composed CHILD HANDLES (`structure` → `s.stdio.semio.value`, `zones` → `s.stdio.semio.table`) that are always regenerated TOGETHER from one `crate::model::Model`, so `replace-model` is a paired-child overwrite keyed by a serialized model string — a composition operation, not an energy calculation, and nothing an EnergyPlus run could adjudicate. The `energyplus` weather reader already registered under `✏️s/🔌️plugins/🗄️stdio`'s `🌦️epw` subset is a weather-file reader and is deliberately NOT reused here; doing so would fail the capability check and would claim evidence that does not exist. Evidence is therefore the committed specification vector plus the inverse law — and this subset's vector is WEAK, which is recorded in the feature rather than hidden: it carries `newModelJson: \"{}\"`, which the leaf documents as honest degradation to `Model::default()`, and the fixture's before-snapshot already holds the default model, so the vector is a no-op and the forward semantics of `replace-model` have no committed vector at all.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
+   "ownerName": "🏠️home",
+   "case": "mutate-s-home-1",
+   "caseDir": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🧪️tests/mutate-s-home-1",
+   "featurePath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🧪️tests/mutate-s-home-1/component.feature",
+   "scenarios": 3,
+   "scenarioIds": [
+    {
+     "id": "mutate-change-catalog-generation",
+     "mode": "conformance",
+     "level": "exhaustive"
+    },
+    {
+     "id": "inverse-change-catalog-generation",
+     "mode": "property",
+     "level": "exhaustive"
+    },
+    {
+     "id": "identity-round-trip",
+     "mode": "round-trip",
+     "level": "long"
+    }
+   ],
+   "capability": "s-home-1-mutate",
+   "noOracle": "s-home-mutation-semantics",
+   "comparison": "ordered-json-v1",
+   "catalog": "s-home-1-any",
+   "adapters": [
+    "rust"
+   ],
+   "rationale": "`s.space.home` is a semio-NATIVE artifact: its `.shome.dsl.semio` text and `.pack.semio` binary envelopes are written and read by this repository alone, and its whole mutable artifact-lane surface is a single unsigned counter, `catalog_generation`, that no interchange format anywhere models. There is nothing for a third party to be authoritative ABOUT — the counter is a re-materialize trigger bumped after a create/import/delete on the launcher's catalog port, not authored content — so no crate was found, surveyed or declined: the category is empty. Confidence comes instead from the committed specification vector under `../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/bumps-the-catalog-generation-to-7/`, a handcrafted `(before, mutation, after, diff, outcome)` quintet that pins 3 → 7 so an implementation that INCREMENTED rather than SET lands on 4 and fails, and from the inverse law as a metamorphic property: the inverse of a setter can only be built by reading the old value out of BASE, so a leaf that inverted structurally instead cannot restore the document and is caught by `inverse-change-catalog-generation`.",
+   "fixtures": [
+    "asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"
+   ]
+  },
+  {
+   "owner": "🧰️framework/🔨️modules/🎠️kernel",
+   "ownerName": "🎠️kernel",
+   "case": "reject-malformed-version-input",
+   "caseDir": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/reject-malformed-version-input",
+   "featurePath": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/reject-malformed-version-input/component.feature",
+   "scenarios": 1,
+   "scenarioIds": [
+    {
+     "id": "malformed-input-is-unsatisfied-never-a-throw",
+     "mode": "error",
+     "level": "quick"
+    }
+   ],
+   "capability": "version-requirement-error-law",
+   "noOracle": "frozen-requirement-grammar",
+   "comparison": "ordered-json-v1",
+   "catalog": null,
+   "adapters": [
+    "typescript"
+   ],
+   "rationale": "Outside the frozen requirement grammar this repository guarantees 'unsatisfied, never a throw'. `semver` cannot adjudicate that: it THROWS on some malformed input and coerces other malformed input to a match, which is a different and equally valid contract. Comparing against it would measure a deliberate divergence rather than a defect, so the vectors carry the specification instead.",
+   "fixtures": []
+  }
+ ]
+}

@@ -23,6 +23,7 @@ semio_framework_plugin::app_labels! {
         window_main: native_en "Puzzle 3D", native_de "Puzzle 3D", reuse_en "Aggregator", reuse_de "Aggregator";
         example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
         fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
+        fill_progress: native_en "Fill progress", native_de "Füllfortschritt", reuse_en "Fill progress", reuse_de "Füllfortschritt";
         count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
         brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
         move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
@@ -100,17 +101,20 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
-pub fn is_de_locale(config: &Puzzle3dConfig) -> bool {
-    config.locale.starts_with("de")
+fn puzzle3d_locale(value: &str) -> Option<Locale> {
+    match value {
+        "en" | "en-US" => Some(Locale::En),
+        "de" | "de-DE" => Some(Locale::De),
+        _ => None,
+    }
 }
 
 /// 🗣️ Resolves the active label set from `Puzzle3dConfig`'s own persisted locale/terminology strings
-/// through the generated `Puzzle3dLabels::labels` (`AppLabels`) exhaustive resolver.
-pub fn puzzle3d_labels(config: &Puzzle3dConfig) -> &'static Puzzle3dLabels {
-    let locale = if is_de_locale(config) { Locale::De } else { Locale::En };
-    let terminology = Terminology::parse(config.terminology.as_str()).unwrap_or(Terminology::Native);
-    Puzzle3dLabels::labels(locale, terminology)
+/// through the explicit EN/DE BCP-47 tags and generated terminology axis; unsupported values fail closed.
+pub fn puzzle3d_labels(config: &Puzzle3dConfig) -> Option<&'static Puzzle3dLabels> {
+    let locale = puzzle3d_locale(config.locale.as_str())?;
+    let terminology = Terminology::parse(config.terminology.as_str())?;
+    Some(Puzzle3dLabels::labels(locale, terminology))
 }
 
 /// 🗺️ Builds a full locale×terminology `LocalizedLabel` from one `Puzzle3dLabels` field, reusing the
@@ -132,3 +136,28 @@ pub fn puzzle3d_localized_phrase(field: impl Fn(&Puzzle3dLabels) -> LabelText, e
     })
 }
 //#endregion 🔖️Locale
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn label_resolution_has_no_locale_or_terminology_default() {
+        for (locale, terminology) in [("en-US", "native"), ("en", "reuse"), ("de-DE", "native"), ("de", "reuse")] {
+            let mut config = Puzzle3dConfig::default();
+            config.locale = locale.into();
+            config.terminology = terminology.into();
+            assert!(puzzle3d_labels(&config).is_some());
+        }
+        for locale in ["fr", "de-AT"] {
+            let mut unsupported_locale = Puzzle3dConfig::default();
+            unsupported_locale.locale = locale.into();
+            assert!(puzzle3d_labels(&unsupported_locale).is_none());
+        }
+        let mut unsupported_terminology = Puzzle3dConfig::default();
+        unsupported_terminology.terminology = "legacy".into();
+        assert!(puzzle3d_labels(&unsupported_terminology).is_none());
+    }
+}
+//#endregion 🧪️Tests

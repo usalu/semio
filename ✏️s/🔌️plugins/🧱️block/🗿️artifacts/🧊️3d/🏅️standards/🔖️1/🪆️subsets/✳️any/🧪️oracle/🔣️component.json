@@ -1,19 +1,25 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `Block3dMutation` is a semio-NATIVE vocabulary carried in `.dsl.semio`/`.pack.semio`, so no oracle is registered and the decision below records what stands in for one.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.block.3d` is a semio-NATIVE KIND DEFINITION — one object kind's identity, its mesh representations, the vortex kinds it exposes, the vortices placed on it in 3-space, the compatibility relation between those kinds, its attributes, authors, camera and metadata. No component- or symbol-library format models that and none reads `.dsl.semio`, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas and specification vectors, exactly as the sibling `mutate-block-2d-1` does over the same carrier.",
+  "oracles": [
     {
-      "id": "block-3d-mutation-semantics",
-      "capabilities": ["block-3d-1-mutate"],
-      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and none is authoritative over `Block3dMutation` — the definition of an object kind whose vortex-kind vocabulary is SPLIT across two places: a shared catalogue held as a child document reference in `catalog`, and this document's own additions in `vortexKindExtra`. `create-vortex-kind` and `delete-vortex-kind` move BOTH at once and the diff declares them through a single `vortexKinds` field, so a reader that assumed a diff field mirrors a snapshot field would mis-measure every one of those kinds. That split IS this subset's specification, not a fact an external library could confirm or refute. Confidence comes instead from the committed specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — one handcrafted `(before, mutation, diff, outcome, after)` quintet per kind, already unit-tested inside the production crate — replayed end-to-end through the test platform here, plus two metamorphic laws asserted in role: observability and footprint completeness, the latter resolving both `catalog` and `vortexKindExtra` through the declared alias table.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "id": "block-3d-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "block-3d-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.block.3d` object-kind document and all thirty-seven typed mutations, in Python, at `../../../../../🧪️tests/mutate-block-3d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the eleven members), `../🧬️schema/🧬️mutations/🔣️component.json` (the thirty-seven verbs and their argument lists), rules 1, 2 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and the thirty-seven committed `(before, mutation, diff, outcome, after)` quintets — which are the only statement of two things: that `create-vortex-kind` writes the local extras record WITHOUT the `name` its payload carries, because the name belongs to the catalogue child alone, and that an `attribute` is addressed by `key` while every other record is addressed by `id`. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `block-3d-mutation-semantics` no-oracle decision, whose argument — that the split of the vortex-kind vocabulary across `catalog` and `vortexKindExtra` IS this subset's specification and so not a fact an external library could confirm or refute — was already refuted by the sibling `mutate-block-2d-1`, which took a Python second implementation over the same carrier in the same plugin. The split is modelled here and the many-to-one diff arm with it. The reference REFUSES three of the thirty-seven kinds by clause rather than adjudicating them, and says so in role: `create-vortex-kind`, `delete-vortex-kind` and `rename-vortex-kind` all rewrite `catalog`, a COMPOSED CHILD HANDLE whose committed after-snapshots carry a new `childId` that is a content address of the child `s.stdio.semio@v1/kit` document; no document in this repository states the addressing function or the child's canonical encoding. The local `vortexKindExtra` half of those kinds IS implemented. TWO THINGS THIS COMPARISON DOES NOT YET REACH, stated rather than implied. First, the SUBJECT half of this case does not run this subset's codec: `../../../../../🧪️tests/mutate-block-3d-1/🦀️component.rs` links no plugin crate and replays the committed vectors, so what the comparison currently establishes is that an independent implementation of the specification computes the committed after-snapshots — a real check of the vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec against a second producer. Adding a `block3d_mutation_report_json` bridge beside the mutation enum, the one thing `mutate-block-2d-1` gained in this wave, is what closes it; it is not added here because `semio-s-plugin-block` does not compile today (1,522 errors from a peer session's in-flight async refactor), so it could not be verified. Second, this case reads no real-world artifact: all 185 of its fixtures are handcrafted specification vectors. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "block-3d-1-any",

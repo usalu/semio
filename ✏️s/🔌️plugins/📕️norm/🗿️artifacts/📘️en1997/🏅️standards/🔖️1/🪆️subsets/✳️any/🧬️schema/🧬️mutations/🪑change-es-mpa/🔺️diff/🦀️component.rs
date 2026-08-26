@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_e_s_mpa::mutation::ChangeESMpa;
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeESMpa, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeESMpa, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_e_s_mpa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Soil modulus E_s [MPa] must be a finite number, got {}.", payload.new_e_s_mpa), Vec::<String>::new());
     }

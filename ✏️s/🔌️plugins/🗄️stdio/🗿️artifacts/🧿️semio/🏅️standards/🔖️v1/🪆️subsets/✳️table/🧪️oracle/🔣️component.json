@@ -1,14 +1,17 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its (non-)oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.table` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it, so no oracle is registered (see noOracleDecisions below).",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.table` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it — so the reference registered below is a second IMPLEMENTATION in another language rather than a third-party package.",
+  "oracles": [
     {
-      "id": "semio-table-mutation-semantics",
+      "id": "semio-table-python-independent",
+      "ecosystem": "python",
+      "package": "",
       "capabilities": ["semio-v1-table-mutate"],
-      "rationale": "There is no third-party crate that reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, let alone one authoritative over this subset's `SemioTableMutation` vocabulary (create/delete/rename-column, reorder-columns, insert/remove-row, reorder-rows, edit-cell) — that vocabulary IS this subset's own specification, not a fact an external library could confirm or refute. Confidence instead comes from the committed, independently handcrafted per-kind fixtures under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff)` specification vector per kind, authored by hand and already unit-tested inside the production crate itself (`kinds_match_the_enum_and_the_catalog`, `produces_committed_diff`, `committed_diff_applies_to_after`, `committed_json_is_canonical` per leaf) — plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation fixture. This feature re-exercises those SAME committed fixtures end-to-end through `apply_semio_table_mutation`, the entry point this ticket added, rather than calling `Mutation::diff`/`inverse` directly as the in-crate unit tests do.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "comparisonProfiles": ["ordered-json-v1"],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "No library in any ecosystem reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so the second producer a differential comparison needs is a second IMPLEMENTATION. `../../../../../../🧪️tests/mutate-semio-table/🐍️component.py` is that implementation: the semio envelope, the `s.stdio.semio.table` DSL grammar, the tag-prefixed `SemioValue` cell grammar, the LEB128 pack frame and all eight verbs with their inverses, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio`, `../🧬️schema/🧬️mutations/🔣️component.json`, the committed per-kind `(before, mutation, after)` specification vectors, and the envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`. It imports nothing from and transliterates nothing of the Rust it judges, and it needs no host package, which is why `package` is empty. The protocol description stops at the repeated `columns`/`rows` records and names their layout only in prose; that prose was turned into a reader and a writer by taking the field order from the grammar and the value tag ordinals from the grammar's own `Z B I F S Y L M R` order, and the derivation is PINNED by the implementation re-encoding the committed `../📚️examples/📃️sheet/🖼️assets/🎒️example.pack.semio` byte for byte. The payload half of the case carries a genuinely third-party reader as well: `payload-fidelity` re-tokenizes the real committed survey CSV with Python's own RFC 4180 `csv` module on the oracle side and with this repository's `stdio.csv` codec on the subject side."
     }
   ],
   "mutationCatalogs": [

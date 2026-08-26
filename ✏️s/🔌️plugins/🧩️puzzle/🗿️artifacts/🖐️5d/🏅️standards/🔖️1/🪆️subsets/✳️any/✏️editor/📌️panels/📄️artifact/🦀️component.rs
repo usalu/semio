@@ -46,31 +46,20 @@ fn fastener_label(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> S
 
 //#region 🔖️Render
 fn ui_text_value(value: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value)
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "fixed action text admission failed"))
+    semio_framework_plugin::UiText::try_from_str(value).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.text", "fixed action text admission failed"))
 }
 
 fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new()
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "fixed action map admission failed"))?;
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.action.map", "fixed action map admission failed"))?;
     for (key, value) in values {
-        builder
-            .push(key.to_owned(), value)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "fixed action map entry admission failed"))?;
+        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.map.entry", "fixed action map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
 fn select_action(granularity: &str, id: &str) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)> {
-    let targets = serde_json::to_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }])
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.targets", "selection target encoding failed"))?;
-    let args = ui_map_value([
-        ("domainId", ui_text_value(PUZZLE5D_INTERACTION_DOMAIN)?),
-        ("merge", ui_text_value("replace")?),
-        ("method", ui_text_value("pick")?),
-        ("targets", ui_text_value(&targets)?),
-    ])?;
+    let targets = serde_json::to_string(&[InteractionTarget { granularity: granularity.into(), id: id.into() }]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.action.targets", "selection target encoding failed"))?;
+    let args = ui_map_value([("domainId", ui_text_value(PUZZLE5D_INTERACTION_DOMAIN)?), ("merge", ui_text_value("replace")?), ("method", ui_text_value("pick")?), ("targets", ui_text_value(&targets)?)])?;
     ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action(INTERACTION_SELECT_ACTION_ID, Some(args))
 }
 
@@ -101,9 +90,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
             let grip_item = selectable_item(full_id.clone(), format!("{} ({})", grip.id, grip.grip_kind), "circle-dot", select_action(PUZZLE5D_GRANULARITY_GRIP, &full_id))?
                 .try_build()
                 .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.grip", "grip row admission failed"))?;
-            grip_items
-                .try_push(grip_item)
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.grips", "grip list admission failed"))?;
+            grip_items.try_push(grip_item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.grips", "grip list admission failed"))?;
         }
         let part_item = selectable_item(part.id.clone(), part_label(part), "box", select_action(PUZZLE5D_GRANULARITY_PART, &part.id))?
             .description(semio_framework_plugin::UiText::try_from_string(part.part_kind.clone()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.part-description", "part description admission failed"))?)
@@ -111,23 +98,14 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.part-children", "part child admission failed"))?
             .try_build()
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.part", "part row admission failed"))?;
-        part_items
-            .try_push(part_item)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.parts", "part list admission failed"))?;
+        part_items.try_push(part_item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.parts", "part list admission failed"))?;
     }
     let mut fastener_items = semio_framework_plugin::UiFixedList::default();
     for fastener in &envelope.document.fasteners {
-        let fastener_item = selectable_item(
-            fastener.id.clone(),
-            fastener_label(&envelope.document, fastener),
-            "link",
-            select_action(PUZZLE5D_GRANULARITY_FASTENER, &fastener.id),
-        )?
-        .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.fastener", "fastener row admission failed"))?;
-        fastener_items
-            .try_push(fastener_item)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.fasteners", "fastener list admission failed"))?;
+        let fastener_item = selectable_item(fastener.id.clone(), fastener_label(&envelope.document, fastener), "link", select_action(PUZZLE5D_GRANULARITY_FASTENER, &fastener.id))?
+            .try_build()
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.fastener", "fastener row admission failed"))?;
+        fastener_items.try_push(fastener_item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.fasteners", "fastener list admission failed"))?;
     }
     PanelTreeBuilder::new("puzzle5d-play-document")?
         .section_or_placeholder("puzzle5d-play-document.parts", Some(ui_label(labels.parts.as_str())?), true, part_items, ui_label(labels.none.as_str())?)?

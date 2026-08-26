@@ -1,0 +1,121 @@
+🧪️ w13 — mutate-semio-text converted to a cross-language differential. Verbatim command output.
+All commands run from 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test. Exit codes are the tool's own.
+Date 2026-08-25.
+
+================================================================ BEFORE
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-text
+[test] not-exercised ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-text (recorded no-oracle decision semio-text-mutation-semantics — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+EXIT=0
+
+$ bun ./📜️script.ts subject exhaustive --owner 🗄️stdio --case mutate-semio-text
+[test] level=exhaustive cases=1 executed=15 passed=15 failed=0 errored=0 parity=0/0
+EXIT=0
+(3:17.22 total, including the cargo build)
+
+$ bun ./📜️script.ts contract --owner 🗄️stdio --case mutate-semio-text
+2 high-priority breach(es) across 1 rule(s):
+      2  testing/discovery
+  testing/discovery  🧰️framework  42 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s  3 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+EXIT=1
+
+================================ THE FRAMEWORK GAP, PROVEN ON A PRE-EXISTING CASE
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case extract-text-pdf-1-4
+[test] level=exhaustive cases=1 executed=4 passed=2 failed=0 errored=2 parity=0/2
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf::extract-text-pdf-1-4::declared-pages-carry-their-printed-text::python::subject (1 differences)
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf::extract-text-pdf-1-4::every-page-yields-text::python::subject (1 differences)
+EXIT=1
+
+(wave-12's Python proof case, untouched by this work: `parity` runs its oracle-only python adapter
+in the SUBJECT role too, where it has no registrations.)
+
+================================================================ THE INDEPENDENT IMPLEMENTATION, STANDALONE
+
+$ python3 .🧬semio/…/🐍️w13-semio-text-oracle-smoke.py
+parsed: {"schema": "s.stdio.semio.text", "runs": [{"language": "en", "content": "Hello, ", "marks": []}, {"language": "en", "content": "world", "marks": [{"kind": "bold", "href": ""}]}, {"language": "de", "content": "semio.tech", "marks": [{"kind": "link", "href": "https://semio.tech"}]}]}
+dsl byte-exact: True 203 203
+pack == dsl doc: True
+pack byte-exact: True 118 118
+insert-run           vector=True  inverse=True
+remove-run           vector=True  inverse=True
+edit-run             vector=True  inverse=True
+change-run-language  vector=True  inverse=True
+reorder-runs         vector=True  inverse=True
+add-mark             vector=True  inverse=True
+remove-mark          vector=True  inverse=True
+
+================================================================ AFTER
+
+$ bun ./📜️script.ts contract --owner 🗄️stdio --case mutate-semio-text
+2 high-priority breach(es) across 1 rule(s):
+      2  testing/discovery
+  testing/discovery  🧰️framework  42 executable test file(s) outside the canonical owner-root test tree, baseline allows 35
+  testing/discovery  ✏️s  4 executable test file(s) outside the canonical owner-root test tree, baseline allows 1
+EXIT=1
+
+.🧬semio/🦑️repo/⚡️cache/breaches/testing.json, read directly — the FULL set including non-blocking
+priorities, 2 records, both `unmanaged-tests`, neither naming this case:
+  high unmanaged-tests | 🧰️framework | 42 executable test file(s) …
+  high unmanaged-tests | ✏️s | 4 executable test file(s) …
+The four `✏️s` files are 🎞️animate/…/🧪️index.test.ts and three 🎬️sequence/…/*.test.js, all from
+concurrent sessions; the count moved 3 → 4 during this session and none of the four is this case's.
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case mutate-semio-text
+[test] level=exhaustive cases=1 executed=22 passed=22 failed=0 errored=0 parity=0/0
+EXIT=0
+
+$ bun ./📜️script.ts dependency
+[dependency] ecosystems=4 entries=232 production-reachable=151 test-oracle=30
+EXIT=0
+(unchanged from the w12 audit — the `package: ""` oracle entry adds no dependency)
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-text --implementation rust
+[test] level=exhaustive cases=1 executed=44 passed=44 failed=0 errored=0 parity=22/22
+EXIT=0
+(1:43.56 total)
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-text
+[test] level=exhaustive cases=1 executed=66 passed=44 failed=0 errored=22 parity=22/66
+[test] parity failed: …::mutate-insert-run::python::subject (1 differences)
+… 21 more, one per scenario …
+[test] cross-subject parity failed: …::mutate-insert-run::python~rust (1 differences)
+… 21 more …
+EXIT=1
+(the same 22 real comparisons are equal; the 22 errors and 44 red lines are the python SUBJECT pass)
+
+================================================================ CROSS-LANGUAGE BYTE AGREEMENT
+
+.🧬semio/🦑️repo/⚡️cache/tests/results/…-oracle-python/identity-round-trip.oracle.projection.json
+.🧬semio/🦑️repo/⚡️cache/tests/results/…-subject-rust/identity-round-trip.subject.projection.json
+are byte-identical:
+
+{"document":{"schema":"s.stdio.semio.text","runs":[{"language":"en","content":"Hello, ","marks":[]},{"language":"en","content":"world","marks":[{"kind":"bold","href":""}]},{"language":"de","content":"semio.tech","marks":[{"kind":"link","href":"https://semio.tech"}]}]},"dslDigest":"df28edec0b6978c6a38b6e8a687059e6","packDigest":"983d00e56cc4ad465838326a1fb7d615","dslLength":203,"packLength":118}
+
+================================================================ NEGATIVE CONTROL
+
+Injected into the Python oracle: ReorderRuns changed from move (`runs.insert(target, runs.pop(source))`)
+to swap (`runs[source], runs[target] = runs[target], runs[source]`).
+
+$ bun ./📜️script.ts parity exhaustive --owner 🗄️stdio --case mutate-semio-text --implementation rust
+[test] level=exhaustive cases=1 executed=44 passed=43 failed=1 errored=0 parity=19/22
+[test] parity failed: …::mutate-reorder-runs::rust::subject (8 differences)
+[test] parity failed: …::inverse-reorder-runs::rust::subject (8 differences)
+[test] parity failed: …::spec-vector-reorder-runs::rust::subject (1 differences)
+EXIT=1
+
+Reverted; re-ran the same command:
+[test] level=exhaustive cases=1 executed=44 passed=44 failed=0 errored=0 parity=22/22
+EXIT=0
+
+================================================================ NOTHING ELSE BROKEN
+
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio
+[test] level=exhaustive cases=101 executed=1343 passed=1343 failed=0 errored=0 parity=0/0 not-exercised=24
+
+(w12 audit's stdio-only baseline was cases=56 executed=781 not-exercised=9; the case count grew from
+concurrent sessions adding stdio cases, not from this work. `mutate-semio-text` is no longer among
+the not-exercised — the other 18 `mutate-semio-*` cases still are. Zero failures, zero errors, and no
+`[test] <problem>` line printed after the summary.)

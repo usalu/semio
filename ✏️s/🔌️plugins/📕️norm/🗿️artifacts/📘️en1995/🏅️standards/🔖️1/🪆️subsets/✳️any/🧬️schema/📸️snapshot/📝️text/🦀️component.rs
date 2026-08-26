@@ -15,12 +15,12 @@ use crate::artifacts::en1995::En1995Snapshot;
 pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/📕️glulam-footbridge/🖼️assets/🗣️glulam-footbridge.dsl.semio");
 
 /// 📖️ Parses `.en1995` DSL text into a `En1995Snapshot`.
-pub async fn parse_dsl(text: &str) -> Result<En1995Snapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<En1995Snapshot, store::TextError> {
     <En1995Snapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1995Snapshot` back to `.en1995` DSL text.
-pub async fn print_dsl(document: &En1995Snapshot) -> String {
+pub fn print_dsl(document: &En1995Snapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -31,12 +31,12 @@ mod tests {
     use crate::document::AnnexChoice;
 
     #[semio_framework_async_macros::async_test]
-    async fn document_dsl_round_trips() {
+    fn document_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&En1995Snapshot::default());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn glulam_footbridge_example_fixture_parses_and_round_trips() {
+    fn glulam_footbridge_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT).expect("parse glulam footbridge example");
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.service_class, "sc2");

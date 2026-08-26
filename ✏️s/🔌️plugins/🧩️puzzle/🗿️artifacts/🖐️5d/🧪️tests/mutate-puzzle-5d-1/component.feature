@@ -1,35 +1,73 @@
 @capability-puzzle-5d-1-mutate
-@no-oracle-puzzle-5d-mutation-semantics
+@oracle-puzzle-5d-python-independent
 @comparison-ordered-json-v1
 @mutations-puzzle-5d-1-any
-Feature: Replay every typed Puzzle 5d 1 mutation against its committed specification vector
-  `s.puzzle.5d@1/*` is a semio-NATIVE document, carried as `.dsl.semio`/`.pack.semio`/`.op.semio`/
-  `.spr.semio`. No third party reads those, and none is authoritative over `Puzzle5dMutation`, so this case
-  rests on the recorded `puzzle-5d-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) and its two named substitutes: the
-  committed specification vectors, and the metamorphic laws below.
+Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.puzzle.5d` assembly document and its twenty-eight typed mutations,
+  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from
+  rules 1, 2, 4 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the twenty-eight committed quintets. It imports nothing from this repository's Rust.
 
-  The five dimensions are not five collections — they are one PART carrying two facets at once. A part has
-  a 2d placement and a 3d placement simultaneously, which is why this vocabulary has a `move-part2d` AND a
-  `move-part3d`, a `change-part2d-icon` beside a `change-part3d-mesh`, and why a create/delete pair has to
-  bring both facets in and out together. Grips play the role handles play in the 2d subset, fasteners the
-  role edges play, and — unlike either sibling — `kindCompatibility` is a TOP-LEVEL field here rather than
-  a member of `meta`, so the compatibility kinds have a footprint of their own.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. This case used to argue that its five-dimensional shape — every element placed in TWO spaces
+  at once — is this subset's own specification and so not a fact an external library could confirm or
+  refute. `mutate-fem2d-1`, `mutate-fem3d-1` and `mutate-gismap-1` refuted that in this same wave by
+  taking Python second implementations over this same carrier. Two placements are not an obstacle;
+  they are something a second implementation must model, and the reference models both, down to the
+  grip that carries a 2d angle and a 3d position simultaneously. A third-party library was
+  nonetheless declined and the reason is concrete: STEP AP214, glTF, USD and IFC each place an element
+  in ONE space, none of them carries a part placed in a diagram and in a model at the same time with
+  a joint addressed as `"<partId>:<gripId>"`, and none of them reads this carrier.
 
-  One row deserves naming rather than hiding: `replace-kind-catalogs`'s ONLY committed vector is
-  `null-catalogs-is-noop`, whose own `🎯️outcome` records a `mutation.no-op` warning. For a vector the
-  fixture itself declares a no-op, the scenario asserts the OPPOSITE of observability: nothing moved, and
-  the diff declares nothing. That the kind has no vector which actually replaces the catalogs is a real gap
-  in this subset's production fixtures, visible here rather than papered over.
+  ✅️ ALL TWENTY-EIGHT KINDS ARE ADJUDICATED AND NONE IS REFUSED — and this subset is the one that
+  settles a question its siblings leave open. `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1` each
+  commit exactly one `replace-<container>-<port>` vector (`replace-node-handle`,
+  `replace-object-vortex`) and each declares it `mutation.no-op` with an unchanged after-snapshot,
+  which leaves three readings open: the verb is unimplemented, or it refuses an attached port, or it
+  refuses an unadmitted kind. Here the corresponding `replace-part-grip` vector really does rekind
+  `grip-1` — on a grip a fastener IS attached to — and the document moves. That narrows the siblings'
+  three readings to one: the verb is implemented and attachment does not block it. Their
+  `null-catalogs-is-noop` counterpart is settled here too: this subset commits a vector showing that
+  `replace-kind-catalogs` with a NULL argument is accepted and does NOTHING, which is what makes the
+  siblings' missing catalogue inverse a gap in the VOCABULARY rather than in an implementation.
 
-  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same
-  bytes the production crate's own fixture tests beside each leaf assert against — end to end through
-  the test platform. The vector each row names is written out in full in the row itself, so the
-  provenance of every input is readable here and pinned by digest at plan time.
+  📌️ A FINDING MADE WHILE THE REFERENCE WAS BEING WRITTEN. Like both siblings,
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json` is not a mutation schema at
+  all: it declares the SNAPSHOT's members — the pre-migration whole-snapshot-shaped generic schema
+  that `s.architect.program`'s own mutation schema records itself as superseding. It was never
+  replaced here, so the verbs and their argument lists had to be read off the committed payloads.
+
+  📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
+  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  crate and replays the committed vectors, so today the comparison establishes that an independent
+  implementation of the specification computes the committed after-snapshots — a real check of the
+  vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec
+  against a second producer. A `puzzle5d_mutation_report_json` bridge beside the mutation enum closes
+  it; it was not added here for two reasons, and neither is that
+  the verb is hard: it is PRODUCTION code in a crate this test-side pass deliberately does not
+  touch, and it could not be verified end to end today anyway.
+  `parity` was not measured for any case in this pass: the single-case probe
+  `parity exhaustive --owner 🗒️note --case mutate-note-1` was killed at the runner's OWN 900 s
+  per-case budget while still COMPILING the generated subject host — the runner's message names the
+  cause, shared cargo target-dir lock contention from a concurrent session — and then threw
+  `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all.
+  `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import
+  component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated
+  host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so
+  rather than repeating it as fact. This subset's own plugin crate compiles clean at
+  `cargo check --lib`. Second, this case reads no real-world
+  artifact: all 140 of its fixtures are handcrafted specification vectors.
+
+  The committed specification vectors were KEPT, not replaced, and the reference asserts more against
+  them than the subject half can: it applies each verb, requires the committed after-snapshot member
+  by member, applies its OWN computed inverse and requires the committed before-snapshot back — the
+  full inverse law, where the subject half asserts only the weaker footprint precondition.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: The committed <id> vector declares its own kind and moves the document
     Given the committed specification vector for the <id> kind
       """
@@ -77,7 +115,7 @@ Feature: Replay every typed Puzzle 5d 1 mutation against its committed specifica
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: The committed <id> vector changes only what its diff declares
     Given the committed specification vector for the <id> kind
       """

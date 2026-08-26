@@ -108,6 +108,16 @@ pub fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_len: u
 }
 
 /// 🛡️ Rejects missing, duplicate, overlapping, or colliding named collection operations.
+///
+/// 🐛️ A key the same diff REMOVES may be re-added: `apply_named` retains survivors first and pushes
+/// `added` onto the tail, so `removed + added` of one key is the only spelling this container has for
+/// "move this member", and the key is present exactly once afterwards. Testing `added` against the
+/// raw base keys instead of the post-removal ones made the validator disagree with the applier it
+/// guards, and made a whole-collection REPLACEMENT — the only faithful diff for a `set-snapshot`
+/// that reorders surviving members — unrepresentable. Measured on the real Nakagin Capsule Tower by
+/// `mutate-semio-model`’s `mutate-set-snapshot`, which the applier handles correctly and this
+/// preflight rejected with `mutation.apply.invalid-add-key`. A key that is NOT removed still
+/// collides, exactly as before.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate_named_triple<K, D, T, A>(base: &[T], diff: &NamedTripleDiff<K, D, A>, key_of_base: impl Fn(&T) -> K, key_of_added: impl Fn(&A) -> K, target: impl IntoIterator<Item = impl Into<String>>) -> protocol::MutationApplyResult<()>
 where
@@ -139,7 +149,7 @@ where
     let mut added = Vec::new();
     for item in &diff.added {
         let key = key_of_added(item);
-        if base_keys.contains(&key) || added.contains(&key) {
+        if (base_keys.contains(&key) && !removed.contains(&key)) || added.contains(&key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-key", format!("add key {key:?} already exists or is duplicated")).at(target.clone()));
         }
         added.push(key);
@@ -390,6 +400,22 @@ mod tests {
         let collision: NamedTripleDiff<String, (), String> = NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec!["present".into()] };
         let error = validate_named_triple(&["present".to_string()], &collision, Clone::clone, Clone::clone, ["items"]).unwrap_err();
         assert_eq!(error.code, "mutation.apply.invalid-add-key");
+    }
+
+    /// 🔁️ The whole-collection replacement a reordering `set-snapshot` needs: every base key removed
+    /// and every target item re-added, which `apply_named` reproduces exactly and this preflight used
+    /// to reject.
+    #[semio_framework_async_macros::async_test]
+    async fn named_preflight_admits_a_removed_key_being_re_added() {
+        let base = ["site".to_string(), "building".to_string(), "storey".to_string()];
+        let replacement: NamedTripleDiff<String, (), String> =
+            NamedTripleDiff { removed: base.to_vec(), modified: Vec::new(), added: vec!["storey".into(), "site".into()] };
+        validate_named_triple(&base, &replacement, Clone::clone, Clone::clone, ["spatial"]).unwrap();
+
+        let mut items = base.to_vec();
+        items.retain(|item| !replacement.removed.contains(item));
+        items.extend(replacement.added.iter().cloned());
+        assert_eq!(items, vec!["storey".to_string(), "site".to_string()]);
     }
 }
 //#endregion 🔖️Tests

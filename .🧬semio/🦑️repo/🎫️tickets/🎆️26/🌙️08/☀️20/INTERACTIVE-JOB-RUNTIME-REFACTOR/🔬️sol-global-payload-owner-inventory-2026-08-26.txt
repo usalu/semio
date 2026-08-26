@@ -1,0 +1,49 @@
+abi-bridge-retention	BRIDGE	RefCell<SequenceBridge<SequenceDomainAdapter>>	✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs	325
+abi-bridge-retention	RETAINED	RefCell<Option<RetainedMessage>>	✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs	325
+child-content-scratch	DAG_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, DagWorkingScene>>	✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️component.rs	152
+child-content-scratch	DIN18599_CLIMATE_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, MonthlyClimate>>	✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs	95
+child-content-scratch	EN1990_QK_SCRATCH	RefCell<HashMap<String, Vec<En1990QkEntry>>>	✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🦀️component.rs	67
+child-content-scratch	FLOW_SCRATCH	RefCell<HashMap<String, FlowWorkingScene>>	✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️component.rs	177
+child-content-scratch	FORMS_SCRATCH	RefCell<HashMap<String, FormsWorkingScene>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️component.rs	382
+child-content-scratch	IMPERATIVE_FLOW_SCRATCH	RefCell<HashMap<String, Path>>	✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🦀️component.rs	202
+child-content-scratch	JACK_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, JackWorkingScene>>	✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️component.rs	303
+child-content-scratch	LOWPOLY_SCRATCH	std::cell::RefCell<LowpolyScratch>	✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	153
+child-content-scratch	MATH_SCRATCH	RefCell<HashMap<String, MathematicalWorkingScene>>	✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🦀️component.rs	317
+child-content-scratch	PLAYBOOK_SCRATCH	RefCell<HashMap<String, Vec<PlaybookStep>>>	✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️component.rs	217
+child-content-scratch	PROGRAM_BENCHMARKS_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, Vec<BenchmarkRecord>>>	✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs	73
+child-content-scratch	PROGRAM_KNOWLEDGE_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, Vec<KnowledgeRecord>>>	✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️component.rs	160
+child-content-scratch	RASTER_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>>	✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs	588
+child-content-scratch	REMODEL_PRIVATE_ASSET_STAGING	OnceLock<Mutex<BTreeMap<String, RemodelAssetBlob>>>	✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs	421
+child-content-scratch	REMODEL_PRIVATE_MESH_STAGING	OnceLock<Mutex<BTreeMap<String, RemodelMeshBlob>>>	✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🦀️component.rs	537
+child-content-scratch	SEQUENCE_SCRATCH	RefCell<HashMap<String, SequenceWorkingScene>>	✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️component.rs	255
+child-content-scratch	SHOOTING_EMBLEM_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>>	✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️component.rs	518
+child-content-scratch	TRY_VALUES_BATCHES	OnceLock<Mutex<BTreeMap<String, TryValuesBatch>>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs	45
+child-content-scratch	TRY_VALUE_BLOBS	OnceLock<Mutex<BTreeMap<String, TryValueBlob>>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs	37
+child-content-scratch	WIRES_SCRATCH	std::cell::RefCell<std::collections::HashMap<String, WiresWorkingScene>>	✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️component.rs	209
+child-content-scratch	WRITER_SCRATCH	OnceLock<Mutex<HashMap<String, Arc<str>>>>	✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️component.rs	152
+fixed-operation-registry	DRAW_MUTATION_ARENA_POOL	std::sync::OnceLock<std::sync::Mutex<DrawMutationArenaProcessState>>	✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs	1092
+fixed-operation-registry	FEM3D_BACKING_RECOVERY	RefCell<Fem3dBackingRecovery>	✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs	2048
+fixed-operation-registry	FORMS_INPUT_REGISTRY	OnceLock<Mutex<FormsInputRegistry>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs	344
+fixed-operation-registry	HOSTILES	std::sync::OnceLock<std::sync::Mutex<[Option<Procedural2dPublicationHostileLease>; PROCEDURAL2D_PUBLICATION_SLOTS]>>	✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs	228
+fixed-operation-registry	HOSTILES	std::sync::OnceLock<std::sync::Mutex<[Option<Procedural3dPublicationHostileLease>; PROCEDURAL3D_PUBLICATION_SLOTS]>>	✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs	234
+fixed-operation-registry	HOSTILES	std::sync::OnceLock<std::sync::Mutex<[Option<Process3dPublicationHostileLease>; PROCESS3D_PUBLICATION_SLOTS]>>	✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs	236
+fixed-operation-registry	LAYOUT_EXPORT_REJECTIONS	RefCell<[LayoutExportRejectionSlot; LAYOUT_EXPORT_REJECTION_SLOTS]>	✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs	56
+fixed-operation-registry	LEASES	std::sync::OnceLock<std::sync::Mutex<[Option<Procedural2dPublicationLease>; PROCEDURAL2D_PUBLICATION_SLOTS]>>	✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs	219
+fixed-operation-registry	LEASES	std::sync::OnceLock<std::sync::Mutex<[Option<Procedural3dPublicationLease>; PROCEDURAL3D_PUBLICATION_SLOTS]>>	✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs	225
+fixed-operation-registry	LEASES	std::sync::OnceLock<std::sync::Mutex<[Option<Process3dPublicationLease>; PROCESS3D_PUBLICATION_SLOTS]>>	✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs	227
+fixed-operation-registry	MOUNTED	RefCell<MountedRegistry>	✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs	2116
+fixed-operation-registry	MOUNTED	RefCell<Registry>	✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs	3371
+fixed-operation-registry	RECOVERY	RefCell<[Option<RecoveryRecord>; SHELL_SLOTS]>	✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️component.rs	1708
+fixed-operation-registry	REGISTRY	OnceLock<Mutex<FillEnvelopeRegistry>>	✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs	355
+fixed-operation-registry	REGISTRY	RefCell<Registry>	✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️component.rs	1708
+mutable-entropy	ENTROPY_SEED	Cell<u64>	✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🦀️component.rs	291
+mutable-entropy	IMPERATIVE_SEED_SCRATCH	RefCell<HashMap<String, BTreeMap<String, Value>>>	✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🦀️component.rs	202
+mutable-payload	RECONSTRUCTION_SESSIONS	OnceLock<Mutex<ReconstructionSessions>>	✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️run-reconstruction/🦀️component.rs	347
+resizable-operation-registry	ACTIVE_BULK_GENERATIONS	OnceLock<Mutex<BTreeMap<(String, String, String), u64>>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs	17
+resizable-operation-registry	ACTIVE_DRAW_SESSIONS	OnceLock<Mutex<BTreeMap<(u32, String, String), (u64, u64, String)>>>	✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	175
+resizable-operation-registry	ACTIVE_TRACE_POINTER_JOBS	OnceLock<Mutex<BTreeMap<(u32, String, u64), TracePointerJobKey>>>	✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs	609
+resizable-operation-registry	ACTIVE_TRY_VALUE_GENERATIONS	OnceLock<Mutex<BTreeMap<(String, String, String), u64>>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs	148
+resizable-operation-registry	BULK_SESSIONS	OnceLock<Mutex<BTreeMap<BulkJobKey, BulkSession>>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-values/🦀️component.rs	28
+resizable-operation-registry	DRAW_SESSIONS	OnceLock<Mutex<BTreeMap<DrawSessionKey, DrawSession>>>	✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	174
+resizable-operation-registry	TRACE_POINTER_JOBS	OnceLock<Mutex<BTreeMap<TracePointerJobKey, TracePointerJob>>>	✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs	608
+resizable-operation-registry	TRY_VALUE_SESSIONS	OnceLock<Mutex<BTreeMap<FormsJobKey, TryValueSession>>>	✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️set-try-value/🦀️component.rs	147

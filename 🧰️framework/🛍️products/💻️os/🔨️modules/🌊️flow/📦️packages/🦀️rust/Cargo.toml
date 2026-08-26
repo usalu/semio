@@ -27,6 +27,7 @@ math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/�
 graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻2d/📦️packages/🦀️rust" }
 semio-s-plugin-stdio = { path = "../../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
@@ -44,11 +45,6 @@ semio-s-plugin-flow-extension-dictionary = { path = "../../../../../../../✏️
 semio-s-plugin-flow-extension-list = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.106"
-wasm-bindgen-futures = "0.4.71"
-js-sys = "0.3.83"
-serde-wasm-bindgen = "0.6.5"
-web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
 # 🎲️ `.cargo/config.toml` sets `--cfg getrandom_backend="wasm_js"` for wasm32, but that flag alone makes
 # getrandom 0.3 `compile_error!` unless its own `wasm_js` Cargo feature is also on. This crate pulls
 # getrandom transitively (semio-framework-ui's wgpu features → wgpu/vello/hayro), and nothing in that

@@ -1,37 +1,80 @@
 @capability-puzzle-2d-1-mutate
-@no-oracle-puzzle-2d-mutation-semantics
+@oracle-puzzle-2d-python-independent
 @comparison-ordered-json-v1
 @mutations-puzzle-2d-1-any
-Feature: Replay every typed Puzzle 2d 1 mutation against its committed specification vector
-  `s.puzzle.2d@1/*` is a semio-NATIVE document, carried as `.dsl.semio`/`.pack.semio`/`.op.semio`/
-  `.spr.semio`. No third party reads those, and none is authoritative over `Puzzle2dMutation`, so this case
-  rests on the recorded `puzzle-2d-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) and its two named substitutes: the
-  committed specification vectors, and the metamorphic laws below.
+Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.puzzle.2d` board document and its twenty-six typed mutations,
+  written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from
+  rules 2, 4 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the twenty-six committed quintets. It imports nothing from this repository's Rust.
 
-  What distinguishes this subset is that its connectivity is split across two levels. A node owns its
-  HANDLES; an edge is a top-level record naming two of them. So `add-node-handle` writes into the `nodes`
-  collection while `connect-handles` writes into `edges`, and `disconnect-handles` has to reach back the
-  other way — three kinds, three different footprints, one relationship. The kind catalogs and the
-  compatibility relation are filed in `meta` rather than beside the elements they govern, which is why
-  `connect-kind-compatibility`, `disconnect-kind-compatibility` and `replace-kind-catalogs` all land on
-  `meta` and on nothing else.
+  Why a second implementation rather than a third-party library, and why the previous answer was
+  wrong. This case used to argue that because handles live INSIDE nodes while the edges that join
+  them are a sibling top-level collection, "that is this subset's own specification, not a fact an
+  external diagram or graph library could confirm or refute". `mutate-fem2d-1` and `mutate-gismap-1`
+  refuted that in this same wave by taking Python second implementations over this same carrier. A
+  two-level connectivity is not an obstacle to a second implementation; it is something a second
+  implementation must model — and the reference models BOTH cascades: deleting a node severs every
+  edge attached to any of its handles, and removing a single handle severs the edges attached to that
+  handle alone. A third-party library was nonetheless declined and the reason is concrete: GraphML,
+  DOT and GEXF all join node to node, none of them can express an edge whose endpoints are ports
+  OWNED BY a node, and none of them reads this carrier.
 
-  One row deserves naming rather than hiding: `replace-node-handle`'s ONLY committed vector is
-  `rekind-handle-1-is-noop`, whose own `🎯️outcome` records a `mutation.no-op` warning. This feature does
-  not let that report a green the way a real mutation would — for a vector the fixture itself declares a
-  no-op, the scenario asserts the OPPOSITE of observability: nothing moved, and the diff declares nothing.
-  That the kind has no vector which actually replaces a handle is a real gap in this subset's production
-  fixtures, visible here rather than papered over.
+  🚧️ TWO REFUSALS THE REFERENCE ARGUES BY CLAUSE, and reports rather than works around. First,
+  `replace-node-handle`. Its ONLY committed vector, `rekind-handle-1-is-noop`, supplies a genuinely
+  different handle — `handle-1` moves from `handle-kind-a` to `handle-kind-c` — and yet its committed
+  outcome declares `mutation.no-op` and its after-snapshot is identical to its before-snapshot. At
+  least three rules produce exactly that and no committed document distinguishes them: the verb is
+  unimplemented; it refuses a handle an edge is attached to, which `handle-1` is; or it refuses a
+  handle kind the `kindCompatibility` relation does not admit, which `handle-kind-c` is.
+  `📓️derivation-rules.md` rule 2 says `replace-<singular>-<member>` replaces the addressed record, so
+  a second implementation written from the specification would move the document — and the reference
+  declines to pick one of the three rules and call it agreement. ONE more vector, on an unconnected
+  handle, decides it. Second, `inverse-replace-kind-catalogs`: the committed vector INSTALLS a
+  catalogue where the before-snapshot carried none, so undoing it means REMOVING the member, and
+  nothing committed says whether the verb accepts a null argument.
 
-  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same
-  bytes the production crate's own fixture tests beside each leaf assert against — end to end through
-  the test platform. The vector each row names is written out in full in the row itself, so the
-  provenance of every input is readable here and pinned by digest at plan time.
+  📌️ A FINDING MADE WHILE THE REFERENCE WAS BEING WRITTEN.
+  `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json` is not a mutation schema at
+  all: it is titled `Puzzle2dMutation` and declares `{schema, camera, nodes, edges, meta}` — a copy of
+  the SNAPSHOT schema, the pre-migration whole-snapshot-shaped generic schema that
+  `s.architect.program`'s own mutation schema records itself as superseding. It was never replaced
+  here, so the verbs and their argument lists had to be read off the committed payloads instead. It is
+  also where the one spelling inconsistency in this vocabulary would have been caught:
+  `replace-edge-geometry` names the eight edge-geometry values with a `new` prefix and
+  `connect-handles` names the same eight bare.
+
+  📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
+  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  crate and replays the committed vectors, so today the comparison establishes that an independent
+  implementation of the specification computes the committed after-snapshots — a real check of the
+  vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec
+  against a second producer. A `puzzle2d_mutation_report_json` bridge beside the mutation enum closes
+  it; it was not added here for two reasons, and neither is that
+  the verb is hard: it is PRODUCTION code in a crate this test-side pass deliberately does not
+  touch, and it could not be verified end to end today anyway.
+  `parity` was not measured for any case in this pass: the single-case probe
+  `parity exhaustive --owner 🗒️note --case mutate-note-1` was killed at the runner's OWN 900 s
+  per-case budget while still COMPILING the generated subject host — the runner's message names the
+  cause, shared cargo target-dir lock contention from a concurrent session — and then threw
+  `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all.
+  `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import
+  component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated
+  host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so
+  rather than repeating it as fact. This subset's own plugin crate compiles clean at
+  `cargo check --lib`. Second, this case reads no real-world
+  artifact: all 130 of its fixtures are handcrafted specification vectors.
+
+  The committed specification vectors were KEPT, not replaced, and the reference asserts more against
+  them than the subject half can: it applies each verb, requires the committed after-snapshot member
+  by member, applies its OWN computed inverse and requires the committed before-snapshot back — the
+  full inverse law, where the subject half asserts only the weaker footprint precondition.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: The committed <id> vector declares its own kind and moves the document
     Given the committed specification vector for the <id> kind
       """
@@ -77,7 +120,7 @@ Feature: Replay every typed Puzzle 2d 1 mutation against its committed specifica
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: The committed <id> vector changes only what its diff declares
     Given the committed specification vector for the <id> kind
       """

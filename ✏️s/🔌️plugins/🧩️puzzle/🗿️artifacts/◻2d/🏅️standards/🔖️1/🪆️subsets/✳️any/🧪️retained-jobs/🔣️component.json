@@ -1,0 +1,71 @@
+{
+  "$schema": "semio.puzzle.retained-command.fixture.v1",
+  "owner": "puzzle2d",
+  "documentSchema": "puzzle.2d.fixture",
+  "payloadSchema": "puzzle.2d.fixture.tool-command.v1",
+  "toolIds": ["addNode", "forceLayout", "setActiveExample"],
+  "capacities": {
+    "rawBytes": 8192,
+    "decodedItems": 512,
+    "workItems": 4096,
+    "outputBytes": 262144,
+    "stepMicros": 7500,
+    "semanticUnitsPerGrant": 1
+  },
+  "semanticCursors": {
+    "addNode": ["boundedDecode", "oneNodeMutation", "publish", "closeOwner"],
+    "forceLayout": ["node", "handle", "edge", "seed", "center", "forceReset", "repulsionPair", "spring", "integration", "mutationPublish", "closeOwner"],
+    "setActiveExample": ["clearEdge", "clearNode", "manifest", "clearCompatibility", "addCompatibility", "catalogs", "addNode", "addEdge", "closeOwner"]
+  },
+  "hostileSourceMutations": [
+    {"id":"forceLayoutOldReducer", "replace":"Puzzle2dForceLayoutWork::default()", "with":"BoundedFirstStepCommandWork", "expected":"rejected"},
+    {"id":"forceLayoutNodeCursorRemoved", "remove":"Puzzle2dForceStage::Nodes", "expected":"rejected"},
+    {"id":"forceLayoutPairCursorRemoved", "remove":"Puzzle2dForceStage::Repel", "expected":"rejected"},
+    {"id":"forceLayoutSpringCursorRemoved", "remove":"Puzzle2dForceStage::Springs", "expected":"rejected"},
+    {"id":"forceLayoutPublishCursorRemoved", "remove":"Puzzle2dForceStage::Emit", "expected":"rejected"},
+    {"id":"setActiveExampleOldReducer", "replace":"Puzzle2dActiveExampleWork::default()", "with":"BoundedFirstStepCommandWork", "expected":"rejected"},
+    {"id":"setActiveExampleClearCursorRemoved", "remove":"Puzzle2dExampleStage::ClearEdges", "expected":"rejected"},
+    {"id":"setActiveExampleAddCursorRemoved", "remove":"Puzzle2dExampleStage::Nodes", "expected":"rejected"},
+    {"id":"addNodeUnboundedReducer", "remove":"matches!(command.action_id(), \"addNode\").then_some(1)", "expected":"rejected"}
+  ],
+  "locales": {
+    "en": {
+      "progress": ["Reading command page", "Validating command capacity", "Applying command", "Publishing result"],
+      "cancel": "Cancel command",
+      "status": "Command status"
+    },
+    "de": {
+      "progress": ["Befehlsseite wird gelesen", "Befehlskapazität wird geprüft", "Befehl wird angewendet", "Ergebnis wird veröffentlicht"],
+      "cancel": "Befehl abbrechen",
+      "status": "Befehlsstatus"
+    }
+  },
+  "vectors": [
+    {"id": "zero", "rawBytes": 0, "control": "poll", "expected": "malformedFault", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "max", "rawBytes": 8192, "padding": "jsonWhitespace", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "maxPlusOne", "rawBytes": 8193, "control": "admit", "expected": "rejectedUnchanged", "fingerprint": "8193:0:0:0:0:0"},
+    {"id": "malformed", "raw": "{", "control": "poll", "expected": "malformedFault", "fingerprint": "1:0:0:0:0:0"},
+    {"id": "staleGeneration", "authority": {"operation": 7, "generation": 1, "presentedGeneration": 0}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
+    {"id": "wrongOperation", "authority": {"operation": 7, "presentedOperation": 8, "generation": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
+    {"id": "abaGeneration", "authority": {"operation": 7, "generation": 3, "presentedGeneration": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
+    {"id": "cancelWirePage", "boundary": "wirePage", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelWireByte", "boundary": "wireByte", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelPreflight", "boundary": "preflight", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelWork", "boundary": "work", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "cancelPublish", "boundary": "publish", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "faultWork", "boundary": "work", "control": "faultClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "retry", "control": "faultRetryAckClose", "expected": "onePublicationTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "close", "closeGrant": {"items": 1, "bytes": 1}, "expected": "incrementalTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
+    {"id": "replay", "control": "runAckReplayAckClose", "expected": "sameSemanticDigest", "fingerprint": "0:0:0:0:0:0"},
+    {"id":"forceLayoutUtf8", "toolId":"forceLayout", "nodes":[{"id":"knoten-ä","x":0,"y":0},{"id":"knoten-ß","x":10,"y":10}], "expected":"deterministicFinitePositions", "control":"pollEachProgressAckClose", "fingerprint":"0:0:0:0:0:0"},
+    {"id":"forceLayoutEmpty", "toolId":"forceLayout", "nodes":0, "edges":0, "expected":"terminalEmpty"},
+    {"id":"forceLayoutSingle", "toolId":"forceLayout", "nodes":1, "edges":0, "expected":"oneFinitePositionTerminalEmpty"},
+    {"id":"forceLayoutMax", "toolId":"forceLayout", "nodes":512, "expected":"admitted"},
+    {"id":"forceLayoutMaxPlusOne", "toolId":"forceLayout", "nodes":513, "expected":"rejectedUnchanged"},
+    {"id":"forceLayoutCancelEveryBoundary", "toolId":"forceLayout", "boundaries":["node","handle","edge","seed","center","forceReset","repulsionPair","spring","integration","mutationPublish","closeOwner"], "control":"freshCancelAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
+    {"id":"forceLayoutFaultEveryBoundary", "toolId":"forceLayout", "boundaries":["node","handle","edge","seed","center","forceReset","repulsionPair","spring","integration","mutationPublish","closeOwner"], "control":"freshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
+    {"id":"setActiveExampleCancelFault", "toolId":"setActiveExample", "boundaries":["clearEdge","clearNode","manifest","clearCompatibility","addCompatibility","catalogs","addNode","addEdge","closeOwner"], "control":"freshCancelAndFreshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
+    {"id":"cohortStaleRetryCloseReplay", "toolIds":["addNode","forceLayout","setActiveExample"], "authority":{"operation":11,"generation":6,"presentedGeneration":5}, "control":"rejectStaleThenValidFaultRetryAckIncrementalCloseReplay", "expected":"sameSemanticDigestTerminalEmpty", "fingerprint":"0:0:0:0:0:0"}
+  ],
+  "oracle": {"interface": "PuzzleRetainedFixtureOracle", "implementation": "serde_json", "runtimeReachable": false}
+}

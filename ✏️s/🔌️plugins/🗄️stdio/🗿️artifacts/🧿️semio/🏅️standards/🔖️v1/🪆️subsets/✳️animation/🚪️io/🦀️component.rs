@@ -193,7 +193,7 @@ pub mod derived_composition {
         async fn registered_validator_matches_direct_invariant_check_on_a_binary_payload() {
             let snap = snapshot_with_channel(vec![]);
             let bytes = <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-            let via_validator = SemioAnimationValidator::validate(&IoPayload::Binary(bytes));
+            let via_validator = SemioAnimationValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(via_validator.iter().any(|d| d.code.0 == "stdio.semio_animation.empty-channel"), "got {via_validator:?}");
         }
 

@@ -42,7 +42,7 @@ use std::collections::HashMap;
 
 use crate::element::{Bounds, ElementId, Hitbox};
 use crate::schedule::InvalidationReason;
-use ui_contract::{ActionBinding, ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UiValue};
+use ui_contract::{ActionBinding, ActionId, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UiText, UiValue};
 
 //#region 🔖️HitTest
 
@@ -186,20 +186,41 @@ pub fn hit_test_subtree(tree: &DispatchTree, subtree_root: FrameNodeId, x: f32, 
 /// was built from — see [`is_stale`] for why that revision matters. `value` is the node's current
 /// declarative value if it is [`DispatchFlags::EDITABLE`] (`None` otherwise), used only to seed an
 /// [`EditState`] on focus gain — dispatch never interprets it beyond that.
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct ListenerSet {
     pub surface: SurfaceId,
     pub node: UiNodeId,
-    pub node_key: String,
+    pub node_key: UiText,
     pub revision: UiRevision,
     pub value: Option<UiValue>,
     pub bindings: Vec<ActionBinding>,
 }
 
 impl ListenerSet {
+    pub fn credited_clone(&self) -> Option<Self> {
+        Some(Self {
+            surface: self.surface.clone(),
+            node: self.node,
+            node_key: self.node_key.clone(),
+            revision: self.revision,
+            value: match self.value.as_ref() {
+                Some(value) => Some(value.credited_clone()?),
+                None => None,
+            },
+            bindings: self.bindings.iter().map(ActionBinding::credited_clone).collect::<Option<Vec<_>>>()?,
+        })
+    }
+
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn binding_for(&self, trigger: Trigger) -> Option<&ActionBinding> {
         self.bindings.iter().find(|binding| binding.trigger == trigger)
+    }
+}
+
+#[cfg(test)]
+impl Clone for ListenerSet {
+    fn clone(&self) -> Self {
+        self.credited_clone().expect("bounded test listener set has clone credits")
     }
 }
 
@@ -743,7 +764,17 @@ type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool>;
 /// drop commit is just an ordinary fired binding like any other, no special command needed).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn drag_payload_to_value(payload: &DragPayload) -> Option<UiValue> {
-    payload.is_empty().then(|| UiValue::Map(ui_contract::UiMap::default()))
+    if payload.is_empty() {
+        return Some(UiValue::Map(ui_contract::UiMap::default()));
+    }
+    let mut entries = payload.iter().collect::<Vec<_>>();
+    entries.sort_unstable_by(|left, right| left.0.cmp(right.0));
+    let mut builder = ui_contract::UiMapBuilder::try_new()?;
+    for (key, value) in entries {
+        let value = UiValue::Text(UiText::try_from_str(value)?);
+        builder.push(key.clone(), value).ok()?;
+    }
+    Some(UiValue::Map(builder.finish()))
 }
 
 //#endregion 🔖️Drag
@@ -1228,7 +1259,7 @@ impl Dispatcher {
                 }
                 let (start, end) = selection_bounds(edit.anchor, edit.caret);
                 let text = edit.text[start..end].to_string();
-                return (true, Some(self.build_clipboard_intent("clipboardCopy", text)));
+                return (true, self.build_clipboard_intent("clipboardCopy", text));
             }
             "x" | "X" if modifiers.ctrl || modifiers.meta => {
                 if !has_selection {
@@ -1239,10 +1270,10 @@ impl Dispatcher {
                 edit.text.replace_range(start..end, "");
                 edit.caret = start;
                 edit.anchor = start;
-                return (true, Some(self.build_clipboard_intent("clipboardCut", text)));
+                return (true, self.build_clipboard_intent("clipboardCut", text));
             }
             "v" | "V" if modifiers.ctrl || modifiers.meta => {
-                return (true, Some(self.build_clipboard_intent("clipboardPasteRequested", String::new())));
+                return (true, self.build_clipboard_intent("clipboardPasteRequested", String::new()));
             }
             _ => return (false, None),
         }
@@ -1250,19 +1281,21 @@ impl Dispatcher {
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn build_clipboard_intent(&mut self, name: &str, text: String) -> UiIntent {
+    fn build_clipboard_intent(&mut self, name: &str, text: String) -> Option<UiIntent> {
+        let action = ActionId::try_v1("dispatch", name)?;
+        let input = (!text.is_empty()).then(|| UiText::try_from_string(text).ok()).flatten().map(UiValue::Text);
         self.seq += 1;
-        UiIntent {
+        Some(UiIntent {
             surface: SurfaceId::default(),
             revision: UiRevision::default(),
             node: UiNodeId::default(),
-            node_key: String::new(),
+            node_key: UiText::default(),
             trigger: Trigger::Commit,
-            action: ActionId::v1("dispatch", name),
+            action,
             args: None,
-            input: (!text.is_empty()).then(|| ui_contract::UiText::try_from_string(text).ok()).flatten().map(UiValue::Text),
+            input,
             seq: self.seq,
-        }
+        })
     }
     //#endregion ✍️EditApi
 
@@ -1277,6 +1310,10 @@ impl Dispatcher {
         if is_stale(node.listeners.revision, tree.revision()) {
             return None;
         }
+        let args = match binding.args.as_ref() {
+            Some(args) => Some(args.credited_clone()?),
+            None => None,
+        };
         self.seq += 1;
         Some(UiIntent {
             surface: node.listeners.surface.clone(),
@@ -1285,7 +1322,7 @@ impl Dispatcher {
             node_key: node.listeners.node_key.clone(),
             trigger,
             action: binding.action.clone(),
-            args: binding.args.clone(),
+            args,
             input,
             seq: self.seq,
         })
@@ -1570,7 +1607,7 @@ mod tests {
     }
 
     fn act(name: &str) -> ActionId {
-        ActionId::v1("test", name)
+        ActionId::try_v1("test", name).expect("bounded test action")
     }
 
     fn bind(trigger: Trigger, name: &str) -> ActionBinding {
@@ -1578,16 +1615,16 @@ mod tests {
     }
 
     fn listen(bindings: Vec<ActionBinding>) -> ListenerSet {
-        ListenerSet { surface: SurfaceId::from("s"), node: UiNodeId(1), node_key: "k".into(), revision: UiRevision(0), value: None, bindings }
+        ListenerSet { surface: SurfaceId(UiText::try_from_str("s").expect("bounded fixture surface")), node: UiNodeId(1), node_key: UiText::try_from_str("k").expect("bounded fixture key"), revision: UiRevision(0), value: None, bindings }
     }
 
     fn listen_editable(value: &str) -> ListenerSet {
         ListenerSet {
-            surface: SurfaceId::from("s"),
+            surface: SurfaceId(UiText::try_from_str("s").expect("bounded fixture surface")),
             node: UiNodeId(1),
-            node_key: "k".into(),
+            node_key: UiText::try_from_str("k").expect("bounded fixture key"),
             revision: UiRevision(0),
-            value: Some(UiValue::Text(ui_contract::UiText::try_from_str(value).expect("bounded fixture text"))),
+            value: Some(UiValue::Text(UiText::try_from_str(value).expect("bounded fixture text"))),
             bindings: Vec::new(),
         }
     }
@@ -2031,8 +2068,8 @@ mod tests {
         let outcome = dispatcher.dispatch(&tree, &DispatchEvent::KeyDown { key: "c".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } });
 
         assert!(outcome.intents.iter().any(|intent| {
-            intent.action == ActionId::v1("dispatch", "clipboardCopy")
-                && intent.input == Some(UiValue::Text(ui_contract::UiText::try_from_str("hello").expect("bounded fixture text")))
+            intent.action == ActionId::try_v1("dispatch", "clipboardCopy").expect("bounded test action")
+                && intent.input == Some(UiValue::Text(UiText::try_from_str("hello").expect("bounded fixture text")))
         }));
         assert_eq!(dispatcher.edit_state(input_element).unwrap().text, "hello", "copy must not mutate the buffer");
     }

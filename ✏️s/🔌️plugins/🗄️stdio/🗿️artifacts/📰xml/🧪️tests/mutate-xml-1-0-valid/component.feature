@@ -2,18 +2,34 @@
 @oracle-quick-xml-xml-1-0-valid-mutate
 @comparison-semantic-xml-valid-1-0-v1
 @mutations-xml-1-0-valid
-Feature: Apply every typed XML 1.0 valid-subset mutation to a real DOCTYPE-bearing document
-  The input is `shared://📰️macos-uttype-plist.xml`, a real production document of this repository
-  copied verbatim into this artifact's own fixtures directory from
-  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/macos/tech.semio.document.uttype.plist`
-  — the Uniform Type Identifier declaration macOS reads to associate `.semio` files with the app. It
-  is chosen because it is the ONLY committed XML document in this repository that is actually in this
-  subset: it carries an `<?xml version="1.0" encoding="UTF-8"?>` declaration, a
-  `<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">`
-  whose Name is exactly the document element's name, real indentation whitespace as text nodes at
-  four nesting levels, and a structure dictated by Apple's own PropertyList DTD rather than by
-  anything written here. Every scenario copies it into the case work directory before touching it;
-  the committed document is never written to.
+Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE-bearing document
+  📰️ **The input is a real 40 KB property list, derived ONCE from real committed content.** XML 1.0
+  Fifth Edition §2.8 makes a document *valid* only if it carries a document type declaration whose
+  Name is the document element's name, and exactly ONE committed document in this repository
+  satisfies that: `shared://📰️macos-uttype-plist.xml`, copied verbatim from
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/macos/tech.semio.document.uttype.plist`,
+  the real Uniform Type Identifier declaration macOS reads to associate `.semio` files with the app.
+  It is 631 bytes, which puts every mutation at the document's edge. Every larger committed XML
+  document in this repository — the OOXML parts, the SVG drawings, the HTML article — carries no
+  DOCTYPE at all, so none of them is in this subset.
+
+  `shared://📰️reuse-marketplaces-plist.xml` is therefore derived, by `🐍️derive-xml-valid-fixture.py`
+  in the ticket folder, from real committed CONTENT in the same Apple PropertyList 1.0 dialect and
+  under the same real Apple DOCTYPE: the real 50-row German building-material-reuse survey
+  `../../📊️csv/🧫️fixtures/📊️reuse-marketplaces.csv` — 50 real rows over 12 real columns — read with
+  Python's own stdlib `csv` module and serialised with Python's own stdlib `plistlib`. Two
+  independent standard-library implementations, neither of which knows anything about this
+  repository; every key is a real column header of the real survey, every string is a real cell of
+  it, and the `<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">`,
+  the `<plist version="1.0">` document element and the tab indentation are `plistlib`'s own output
+  for Apple's own format. The result is 40 440 bytes with real indentation whitespace as text nodes
+  at five nesting levels and real German content with umlauts throughout, against 631 bytes at four
+  levels for the UTType declaration.
+
+  The UTType declaration is NOT gone: `identity-round-trip` still reads it on its own beside the
+  survey, because it is the real production document this repository ships and that tie is worth
+  keeping. Every scenario copies the fixture it reads into the case work directory before touching
+  it; the committed documents are never written to.
 
   This is `✳️valid`'s own vocabulary, not `✳️any`'s — the two catalogs have exactly ONE kind in
   common (`set-text`). XML 1.0 Fifth Edition §2.8 makes a document *valid* only if it carries a
@@ -61,7 +77,7 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real DOCTYPE-beari
   semantic projection to MOVE — a row whose parameters make the mutation a no-op against the real
   document tests nothing, and every `Examples` value below is chosen against this document's actual
   content for that reason: `set-text` addresses `[1,3,0]`, the real
-  `<string>tech.semio.document</string>` text node, and `set-standalone` sets the pseudo-attribute the
+  `<string>reuse-marketplaces</string>` text node, and `set-standalone` sets the pseudo-attribute the
   document does NOT have, which additionally flips the §2.9 verdict because the DOCTYPE really does
   reference an external subset. Every `inverse-<kind>` row requires apply-then-undo to restore that
   side's OWN reading of the original document's projection. And `identity-round-trip` requires that
@@ -73,7 +89,7 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real DOCTYPE-beari
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to the real property-list document
-    Given the real input document shared://📰️macos-uttype-plist.xml
+    Given the real input document shared://📰️reuse-marketplaces-plist.xml
     When the <id> mutation is applied with its parameters
       """
       {"kind": "<id>", "params": <params>}
@@ -90,13 +106,13 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real DOCTYPE-beari
       | set-standalone | {"standalone": true} |
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
       | set-internal-subset | {"declarations": [{"parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
-      | set-text | {"path": [1, 3, 0], "text": "tech.semio.kit"} |
+      | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
 
   @id-inverse
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the real property-list document
-    Given the real input document shared://📰️macos-uttype-plist.xml
+    Given the real input document shared://📰️reuse-marketplaces-plist.xml
     When the <id> mutation is applied and then its own computed inverse is applied to that result
       """
       {"kind": "<id>", "params": <params>}
@@ -112,13 +128,14 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real DOCTYPE-beari
       | set-standalone | {"standalone": true} |
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
       | set-internal-subset | {"declarations": [{"parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
-      | set-text | {"path": [1, 3, 0], "text": "tech.semio.kit"} |
+      | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode and re-encode the real document without passing bytes through
-    Given the real input document shared://📰️macos-uttype-plist.xml
-    When the document is fully parsed into the subset's own snapshot model and re-encoded from it alone
-    Then the oracle and the subject agree on the semantic projection
-    And the re-encoded bytes are not bit-identical to the input
+  Scenario: Decode and re-encode both real documents without passing bytes through
+    Given the real input document shared://📰️reuse-marketplaces-plist.xml
+    And the real macOS UTType declaration this case used to rest on shared://📰️macos-uttype-plist.xml
+    When each document is fully parsed into the subset's own snapshot model and re-encoded from it alone
+    Then the oracle and the subject agree on the semantic projection of both
+    And the re-encoded bytes of each are not bit-identical to its input

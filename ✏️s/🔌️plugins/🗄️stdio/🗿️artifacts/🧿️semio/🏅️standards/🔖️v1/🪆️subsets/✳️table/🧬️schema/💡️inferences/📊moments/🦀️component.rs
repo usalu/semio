@@ -143,7 +143,7 @@ mod tests {
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = two_numeric_column_snapshot();
         let pure = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&snapshot, None);
-        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() });
+        let mut disabled = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
         let via_disabled = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&snapshot, Some(&mut disabled));
         assert_eq!(pure, via_disabled);
     }
@@ -152,27 +152,27 @@ mod tests {
     //#region 🧪️IncrementalityLaw
     #[semio_framework_async_macros::async_test]
     async fn identical_snapshot_recompute_is_a_cache_hit() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_numeric_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.stats().await;
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
         assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
         assert_eq!(after.hits - before.hits, 2, "both numeric columns must be cache hits");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_numeric_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.rows[0].cells[0] = SemioValue::Float { lexeme: "99.0".into() };
-        let before = cache.stats();
+        let before = cache.stats().await;
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 1, "only score's own entry may miss when its own cells change");
         assert_eq!(values.get("count").map(|m| m.count), Some(3), "count column's moments must be untouched");
@@ -180,15 +180,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn changing_an_unrelated_column_does_not_miss() {
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
+        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = two_numeric_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.rows[0].cells[2] = SemioValue::Str { value: "z".into() };
-        let before = cache.stats();
+        let before = cache.stats().await;
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.stats().await;
         assert_eq!(after.misses, before.misses, "the label column has no bearing on score/count dep chains");
     }
     //#endregion 🧪️IncrementalityLaw

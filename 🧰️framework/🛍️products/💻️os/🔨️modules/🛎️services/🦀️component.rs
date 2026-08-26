@@ -44,7 +44,7 @@ use semio_framework_async::{
     WorkerPoolConfig,
 };
 use semio_framework_job::{
-    default_now_ms, drive_step, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepBudget, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
+    default_now_ms, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
     MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_MS, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_MS,
 };
 
@@ -685,9 +685,9 @@ impl ComputePool {
         ComputePool { admission: Arc::new(Semaphore::new(capacity.max(1) as usize)), pool }
     }
 
-    /// 🧮️ Drives `job` to a terminal outcome on [`global_worker_pool`]. Every worker closure
-    /// performs exactly one fuel- and wall-bounded [`drive_step`]; resumable outcomes enqueue a fresh
-    /// closure on the context lane. The admission permit spans the whole job. Cancellation is checked
+    /// 🧮️ Drives `job` to a terminal outcome on [`global_worker_pool`] through one retained mounted
+    /// session. Every worker closure pumps at most one bounded session transition; resumable outcomes
+    /// enqueue a fresh closure on the context lane. The admission permit spans the whole job. Cancellation is checked
     /// before admission and inside every step, while an absolute deadline cancels the job and returns
     /// [`ComputeError::DeadlineExceeded`].
     #[cfg(test)]
@@ -697,8 +697,26 @@ impl ComputePool {
         if ctx.cancel.is_cancelled().await {
             return Ok(StepOutcome::Cancelled);
         }
+        let (stage, fuel, wall_ms) = compute_job_budget(lane);
+        let params = semio_framework_job::BatchJobParams {
+            operation: OperationId(ctx.trace.0),
+            generation: JobGeneration(u64::from(ctx.generation)),
+            cancel: ctx.cancel.clone(),
+            config: semio_framework_job::BatchDriveConfig { site: "os-services.compute-job", stage, fuel_per_step: fuel, step_budget_ms: wall_ms },
+            now_ms: default_now_ms,
+        };
+        let session = match semio_framework_job::MountedWorkerJobSession::try_new(job, params) {
+            Ok(session) => session,
+            Err(mut rejected) => {
+                rejected.begin_close();
+                while !rejected.terminal_is_empty() {
+                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                }
+                return Err(ComputeError::WorkerLost);
+            }
+        };
         let (result_tx, result_rx) = oneshot::channel();
-        let state = Arc::new(Mutex::new(ComputeJobDriveState { job, ctx: ctx.clone(), lane, preview_sequence: 0, sender: Some(result_tx), _permit: permit }));
+        let state = Arc::new(Mutex::new(ComputeJobDriveState { session, lane, retained_outcome: None, sender: Some(result_tx), _permit: permit }));
         schedule_compute_job_step(&self.pool, state);
         match ctx.deadline_ms {
             Some(deadline_ms) => match select2(result_rx, runtime.sleep_until(deadline_ms)).await {
@@ -762,15 +780,16 @@ impl ComputePool {
     }
 }
 
+#[cfg(test)]
 struct ComputeJobDriveState<J> {
-    job: J,
-    ctx: OperationContext,
+    session: semio_framework_job::MountedWorkerJobSession<J>,
     lane: Lane,
-    preview_sequence: u64,
+    retained_outcome: Option<StepOutcome>,
     sender: Option<oneshot::Sender<StepOutcome>>,
     _permit: OwnedPermit,
 }
 
+#[cfg(test)]
 fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
     match lane {
         Lane::Interactive => (InteractiveStage::InteractiveStep, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS),
@@ -780,6 +799,7 @@ fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
     }
 }
 
+#[cfg(test)]
 fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
     let next_pool = pool.clone();
     let lane = state.lock().expect("ComputeJobDriveState mutex poisoned").lane;
@@ -788,17 +808,27 @@ fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, sta
         Box::new(move || {
             let terminal = {
                 let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
-                let (stage, fuel, wall_ms) = compute_job_budget(state.lane);
-                let budget = StepBudget::new(fuel, default_now_ms().saturating_add(wall_ms));
-                let operation = OperationId(state.ctx.trace.0);
-                let generation = JobGeneration(u64::from(state.ctx.generation));
-                let cancel = state.ctx.cancel.clone();
-                let ComputeJobDriveState { job, preview_sequence, sender, .. } = &mut *state;
-                let outcome = drive_step(job, "os-services.compute-job", operation, generation, stage, budget, cancel, default_now_ms, preview_sequence);
-                if outcome.is_terminal() {
-                    Some((sender.take().expect("terminal compute job has a result sender"), outcome))
-                } else {
+                if let Some(outcome) = state.retained_outcome.as_mut() {
+                    let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if outcome.terminal_is_empty() {
+                        state.retained_outcome = None;
+                        let _ = state.session.resume();
+                    }
                     None
+                } else {
+                    let lane = state.lane;
+                    match state.session.pump_one(&next_pool, lane) {
+                        Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                            let outcome = state.session.take_checked_out_outcome().expect("mounted compute session checked out one exact outcome");
+                            if outcome.is_terminal() {
+                                Some((state.sender.take().expect("terminal compute job has a result sender"), outcome))
+                            } else {
+                                state.retained_outcome = Some(outcome);
+                                None
+                            }
+                        }
+                        Ok(_) | Err(_) => None,
+                    }
                 }
             };
             if let Some((sender, outcome)) = terminal {
@@ -1567,6 +1597,50 @@ impl Drop for HttpPoolBody {
 }
 //#endregion 🌐️HttpPool
 
+//#region 💾️Storage
+//#region 📄️FixedFilePage
+/// 📄️ Maximum logical payload admitted by one host-storage worker turn.
+pub const STORAGE_FIXED_FILE_PAGE_BYTES: usize = 16 * 1024;
+
+/// 📖️ Reads exactly one bounded file page from a caller-owned path. This synchronous
+/// primitive is deliberately owned by the host-storage service and must be invoked only by an
+/// already-admitted [`Lane::Io`] worker job; presentation code may retain paths and results but
+/// never performs the platform operation itself.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn storage_worker_read_fixed_file_page(path: &std::path::Path, maximum_bytes: usize) -> std::io::Result<Vec<u8>> {
+    use std::io::Read;
+    if maximum_bytes > STORAGE_FIXED_FILE_PAGE_BYTES {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "fixed file page limit exceeds host-storage authority"));
+    }
+    let mut file = std::fs::File::open(path)?;
+    let logical_bytes = usize::try_from(file.metadata()?.len()).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidData, "fixed file page length is not representable"))?;
+    if logical_bytes > maximum_bytes {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "fixed file page exceeds admitted bytes"));
+    }
+    let mut page = [0u8; STORAGE_FIXED_FILE_PAGE_BYTES];
+    file.read_exact(&mut page[..logical_bytes])?;
+    let mut trailing = [0u8; 1];
+    if file.read(&mut trailing)? != 0 {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "fixed file page grew beyond admitted bytes"));
+    }
+    Ok(page[..logical_bytes].to_vec())
+}
+
+/// 📝️ Writes exactly one bounded file page from an already-admitted [`Lane::Io`] worker
+/// job. Byte admission precedes directory creation, file opening, truncation, and publication.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn storage_worker_write_fixed_file_page(path: &std::path::Path, bytes: &[u8], maximum_bytes: usize) -> std::io::Result<()> {
+    use std::io::Write;
+    if maximum_bytes > STORAGE_FIXED_FILE_PAGE_BYTES || bytes.len() > maximum_bytes {
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "fixed file page exceeds admitted bytes"));
+    }
+    let parent = path.parent().ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "fixed file page has no parent"))?;
+    std::fs::create_dir_all(parent)?;
+    let mut file = std::fs::OpenOptions::new().create(true).truncate(true).write(true).open(path)?;
+    file.write_all(bytes)
+}
+//#endregion 📄️FixedFilePage
+
 //#region 💾️StorageScheduler
 /// 🚫️ [`StorageScheduler::submit`]'s failure modes.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1805,6 +1879,7 @@ impl<R: HostAsyncRuntime> StorageTicket<R> {
     }
 }
 //#endregion 💾️StorageScheduler
+//#endregion 💾️Storage
 
 //#region 📮️EventRouter
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -2515,6 +2590,29 @@ mod tests {
         pool.shutdown();
     }
     //#endregion ⏲️TimerWheelDriverTests
+
+    //#region 📄️FixedFilePageTests
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn fixed_file_page_exact_max_plus_one_matches_system_oracle_and_preserves_last_valid_page() {
+        let directory = std::env::temp_dir().join(format!("semio-fixed-file-page-{}-{:?}", std::process::id(), std::thread::current().id()));
+        let path = directory.join("page.bin");
+        let exact = vec![0x5au8; STORAGE_FIXED_FILE_PAGE_BYTES];
+        storage_worker_write_fixed_file_page(&path, &exact, STORAGE_FIXED_FILE_PAGE_BYTES).expect("exact page must be admitted");
+        let retained = storage_worker_read_fixed_file_page(&path, STORAGE_FIXED_FILE_PAGE_BYTES).expect("exact page must be readable");
+        let oracle = std::fs::read(&path).expect("system oracle must read the same published page");
+        assert_eq!(retained, oracle);
+        assert_eq!(retained, exact);
+
+        let plus_one = vec![0xa5u8; STORAGE_FIXED_FILE_PAGE_BYTES + 1];
+        assert_eq!(storage_worker_write_fixed_file_page(&path, &plus_one, STORAGE_FIXED_FILE_PAGE_BYTES).expect_err("max plus one must fail before truncation").kind(), std::io::ErrorKind::InvalidInput);
+        assert_eq!(std::fs::read(&path).expect("rejected write must preserve the last valid page"), exact);
+
+        std::fs::write(&path, &plus_one).expect("system oracle must publish hostile oversized input");
+        assert_eq!(storage_worker_read_fixed_file_page(&path, STORAGE_FIXED_FILE_PAGE_BYTES).expect_err("oversized hostile page must fail closed").kind(), std::io::ErrorKind::InvalidData);
+        let _ = std::fs::remove_dir_all(&directory);
+    }
+    //#endregion 📄️FixedFilePageTests
 
     //#region 💾️StorageSchedulerTests
     /// 💾️ `ManualRuntime`'s dispatch would run synchronously, in-line, so nothing can ever be

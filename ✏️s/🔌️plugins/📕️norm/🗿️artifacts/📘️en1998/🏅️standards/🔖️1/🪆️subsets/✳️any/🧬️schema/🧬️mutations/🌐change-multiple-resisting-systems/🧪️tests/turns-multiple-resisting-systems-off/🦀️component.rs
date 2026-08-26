@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-multiple-resisting-systems` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `multiple_resisting_systems` from true to false, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_multiple_resisting_systems_applies_to_committed_after() {
+fn change_multiple_resisting_systems_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-multiple-resisting-systems applies to its committed before-snapshot");
     assert!(!applied.multiple_resisting_systems, "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: multiple_resisting_systems must read false after the change");
     assert_eq!(applied, expected_after(), "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_multiple_resisting_systems_applies_to_committed_after() {
 /// ↩️ `change-multiple-resisting-systems` is its own inverse partner: the inverse step restores `multiple_resisting_systems` to its pre-change
 /// true and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_multiple_resisting_systems_inverse_restores_before() {
+fn change_multiple_resisting_systems_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-multiple-resisting-systems applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_multiple_resisting_systems_inverse_restores_before() {
 /// decode then encode is a fixed point, so `multipleResistingSystems` and `newMultipleResistingSystems` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_multiple_resisting_systems_committed_json_is_canonical() {
+fn change_multiple_resisting_systems_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-multiple-resisting-systems snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-multiple-resisting-systems snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_multiple_resisting_systems_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-multiple-resisting-systems` at false is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_multiple_resisting_systems_declared_outcome_holds() {
+fn change_multiple_resisting_systems_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-multiple-resisting-systems outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_multiple_resisting_systems_declared_outcome_holds() {
 /// assertion: it pins that only `multipleResistingSystems` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `annex`.
 #[semio_framework_async_macros::async_test]
-async fn change_multiple_resisting_systems_produces_committed_diff() {
+fn change_multiple_resisting_systems_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().multiple_resisting_systems, Some(false), "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: the diff must set multiple_resisting_systems to false");
     assert!(outcome.diff().artifact.is_none(), "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_multiple_resisting_systems_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-multiple-resisting-systems`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_multiple_resisting_systems_committed_diff_is_canonical() {
+fn change_multiple_resisting_systems_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-multiple-resisting-systems committed diff decodes");
     assert_eq!(decoded.multiple_resisting_systems, Some(false), "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: the committed diff must carry multiple_resisting_systems at false");
     assert!(decoded.selected_check_index.is_none(), "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_multiple_resisting_systems_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the true to false delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_multiple_resisting_systems_committed_diff_applies_to_after() {
+fn change_multiple_resisting_systems_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-multiple-resisting-systems committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-multiple-resisting-systems committed diff applies to the before-snapshot");
     assert!(!produced.multiple_resisting_systems, "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: the committed diff must leave multiple_resisting_systems reading false");

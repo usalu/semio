@@ -1,0 +1,41 @@
+########## mutate-pdf-1-4-x ##########
+[test] level=exhaustive cases=1 executed=18 passed=18 failed=0 errored=0 parity=9/9
+##### mutate-pdf-1-4-x exit=0 #####
+########## mutate-pdf-1-4 ##########
+[test] level=exhaustive cases=1 executed=10 passed=10 failed=0 errored=0 parity=5/5
+##### mutate-pdf-1-4 exit=0 #####
+########## mutate-step-ap214-cc2 ##########
+[test] level=exhaustive cases=1 executed=26 passed=26 failed=0 errored=0 parity=13/13
+##### mutate-step-ap214-cc2 exit=0 #####
+########## mutate-step-ap214-cc3 ##########
+[test] level=exhaustive cases=1 executed=26 passed=26 failed=0 errored=0 parity=13/13
+##### mutate-step-ap214-cc3 exit=0 #####
+########## mutate-step-ap214-cc4 ##########
+1810 | export function markRunComplete(absDir: string): void {
+1811 |   // 🏁️A run can legitimately finish without the directory existing — a case whose scenarios were all
+1812 |   // filtered out at this level never writes anything into its work directory. Crashing the whole
+1813 |   // sweep at the finish line for that is a worse failure than the empty directory it complains about.
+1814 |   mkdirSync(absDir, { recursive: true });
+1815 |   writeFileSync(join(absDir, "🏁️done"), "");
+       ^
+ENOSPC: no space left on device, open '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-oracle-rust/🏁️done'
+    path: "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tests/work/test-s-plugins-stdio-artifacts-step-2e2f87-mutate-step-ap214-cc4-oracle-rust/🏁️done",
+ syscall: "open",
+   errno: -28,
+    code: "ENOSPC"
+
+      at writeFileSync (unknown:1:1)
+      at markRunComplete (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📦️index.ts:1815:3)
+      at executeOne (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:748:21)
+      at runPhases (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:797:21)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts:710:18)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1443:68)
+      at runBundleScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1491:16)
+
+Bun v1.3.14 (macOS arm64)
+##### mutate-step-ap214-cc4 exit=1 #####
+########## mutate-step-ap214-cc5 ##########
+##### mutate-step-ap214-cc5 exit=1 #####
+########## mutate-step-ap214-cc6 ##########
+##### mutate-step-ap214-cc6 exit=1 #####
+ALLDONE

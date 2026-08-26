@@ -226,7 +226,7 @@ impl FrameEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ui_contract::{ActionBinding, ActionId, EdgeSpace, LayoutSpec, LeafLayout, ScrollAxes, ScrollLayout, Sizing, SurfaceId, Trigger, UiNodeId, UiRevision as UiRev};
+    use ui_contract::{ActionBinding, ActionId, EdgeSpace, LayoutSpec, LeafLayout, ScrollAxes, ScrollLayout, Sizing, SurfaceId, Trigger, UiNodeId, UiRevision as UiRev, UiText};
 
     #[test]
     fn frame_generation_next_is_strictly_increasing() {
@@ -402,7 +402,7 @@ mod tests {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn act(name: &str) -> ActionId {
-        ActionId::v1("test", name)
+        ActionId::try_v1("test", name).expect("bounded test action")
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -412,7 +412,7 @@ mod tests {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn listen(bindings: Vec<ActionBinding>) -> crate::ListenerSet {
-        crate::ListenerSet { surface: SurfaceId::from("s"), node: UiNodeId(1), node_key: "k".into(), revision: UiRev(0), value: None, bindings }
+        crate::ListenerSet { surface: SurfaceId(UiText::try_from_str("s").expect("bounded fixture surface")), node: UiNodeId(1), node_key: UiText::try_from_str("k").expect("bounded fixture key"), revision: UiRev(0), value: None, bindings }
     }
 
     /// 🏁️ Runs `root` through a real `build_frame` call against a fresh `FrameEngine` and returns the

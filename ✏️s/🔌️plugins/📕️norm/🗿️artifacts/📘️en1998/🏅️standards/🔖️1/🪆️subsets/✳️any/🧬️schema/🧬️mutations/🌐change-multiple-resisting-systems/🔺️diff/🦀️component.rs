@@ -5,7 +5,7 @@ use crate::artifacts::en1998::mutations::change_multiple_resisting_systems::muta
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeMultipleResistingSystems, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+pub fn diff(payload: &ChangeMultipleResistingSystems, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.multiple_resisting_systems == payload.new_multiple_resisting_systems {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Multiple resisting systems flag is already {}.", payload.new_multiple_resisting_systems));
     }

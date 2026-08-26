@@ -1,0 +1,3 @@
+[test] level=exhaustive cases=1 executed=50 passed=49 failed=1 errored=0 parity=24/25
+[test] parity failed: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif::mutate-gif-87a::mutate-set-global-color-table::rust::subject (1 differences)
+EXIT=1

@@ -43,9 +43,7 @@ fn ui_build<B: Buildable>(builder: B) -> semio_framework_plugin::UiAssemblyResul
 }
 
 pub(crate) fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref())
-        .map(semio_framework_plugin::UiValue::Text)
-        .ok_or_else(|| ui_assembly_error("ui.value.text"))
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| ui_assembly_error("ui.value.text"))
 }
 
 pub(crate) fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -64,7 +62,9 @@ pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-pub(crate) fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+pub(crate) fn ui_node_list(
+    values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
     let mut nodes = semio_framework_plugin::UiFixedList::default();
     for value in values {
         nodes.try_push(value?).map_err(|_| ui_assembly_error("ui.node-list.item"))?;
@@ -79,7 +79,13 @@ pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, k
 }
 
 /// 📖 Renders the shared generation list without routing through Flow's legacy renderer node.
-pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str, generation: &flow::playbook::GenerationPlayState, locale: ui_wgpu::wgpu::Locale, terminology: ui_wgpu::wgpu::Terminology) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn generation_tree(
+    controller_id: &'static str,
+    surface_prefix: &str,
+    generation: &flow::playbook::GenerationPlayState,
+    locale: ui_wgpu::wgpu::Locale,
+    terminology: ui_wgpu::wgpu::Terminology,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let _ = terminology;
     let label = |key: &str| {
         match (key, locale) {
@@ -102,7 +108,7 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
     let factory = ActionFactory::new(controller_id);
     let mut items = semio_framework_plugin::UiFixedList::default();
     for entry in &generation.generations {
-        let args = ui_value_map([("id", ui_value_text(&entry.id)? )])?;
+        let args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
         let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
         if let Component::TreeItem(props) = &mut item.component {
             props.icon = Some(ui_text("layers")?);
@@ -110,12 +116,22 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
             let rename_args = ui_value_map([("id", ui_value_text(&entry.id)?), ("name", ui_value_text(format!("{} copy", entry.name))?)])?;
             let (rename_action, rename_args) = factory.action("renameGeneration", Some(rename_args))?;
             row_actions
-                .try_push(RowAction { icon: ui_text("pencil")?, label: Some(ui_label(label("rename"))?), action: ActionBinding { trigger: Trigger::Activate, action: rename_action, args: rename_args, capability: None }, placement: RowActionPlacement::Menu })
+                .try_push(RowAction {
+                    icon: ui_text("pencil")?,
+                    label: Some(ui_label(label("rename"))?),
+                    action: ActionBinding { trigger: Trigger::Activate, action: rename_action, args: rename_args, capability: None },
+                    placement: RowActionPlacement::Menu,
+                })
                 .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
             let remove_args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
             let (remove_action, remove_args) = factory.action("removeGeneration", Some(remove_args))?;
             row_actions
-                .try_push(RowAction { icon: ui_text("trash-2")?, label: Some(ui_label(label("remove"))?), action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None }, placement: RowActionPlacement::Menu })
+                .try_push(RowAction {
+                    icon: ui_text("trash-2")?,
+                    label: Some(ui_label(label("remove"))?),
+                    action: ActionBinding { trigger: Trigger::Activate, action: remove_action, args: remove_args, capability: None },
+                    placement: RowActionPlacement::Menu,
+                })
                 .map_err(|_| ui_assembly_error("ui.generation.row-actions"))?;
             props.row_actions = row_actions;
         }
@@ -144,7 +160,13 @@ fn generation_control_args(generation_id: &str, question_id: &str, field_index: 
 }
 
 /// 📝 Renders generation questions as semantic controls with typed change bindings.
-pub(crate) fn generation_form(spec: &flow::playbook::PlaybookSpec, values: &serde_json::Map<String, serde_json::Value>, controller_id: &'static str, action: &str, generation_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn generation_form(
+    spec: &flow::playbook::PlaybookSpec,
+    values: &serde_json::Map<String, serde_json::Value>,
+    controller_id: &'static str,
+    action: &str,
+    generation_id: &str,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut root = ui_id(column(), "generate.form")?;
     let mut has_children = false;
     for step in &spec.steps {
@@ -186,12 +208,12 @@ pub(crate) fn generation_form(spec: &flow::playbook::PlaybookSpec, values: &serd
                     ui_build(generation_control_action(ui_id(select, format!("{field_id}.select"))?, controller_id, action, args()?)?)?
                 }
                 "vector" => {
-                    let numbers = value.as_array().cloned().unwrap_or_else(|| {
-                        question.fields.as_deref().unwrap_or_default().iter().map(|field| serde_json::json!(field.value.unwrap_or(0.0))).collect()
-                    });
-                    let labels: Vec<String> = question.fields.as_deref().map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect()).unwrap_or_else(|| {
-                        numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect()
-                    });
+                    let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| serde_json::json!(field.value.unwrap_or(0.0))).collect());
+                    let labels: Vec<String> = question
+                        .fields
+                        .as_deref()
+                        .map(|fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect())
+                        .unwrap_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect());
                     let mut vector = ui_id(column(), format!("{field_id}.vector"))?;
                     for (index, number) in numbers.iter().enumerate() {
                         let input = input(InputKind::Number).value(ui_text(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default())?);

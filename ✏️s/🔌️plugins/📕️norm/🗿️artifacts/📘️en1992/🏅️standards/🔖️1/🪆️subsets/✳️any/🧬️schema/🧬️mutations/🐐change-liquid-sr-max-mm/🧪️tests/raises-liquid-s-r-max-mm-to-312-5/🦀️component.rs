@@ -30,7 +30,7 @@ fn mutation() -> En1992Mutation {
 /// ▶️ `change-liquid-sr-max-mm` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `liquid_s_r_max_mm` from 250.0 to 312.5, leaving every other EN 1992 concrete-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_liquid_sr_max_mm_applies_to_committed_after() {
+fn change_liquid_sr_max_mm_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-liquid-sr-max-mm applies to its committed before-snapshot");
     assert_eq!(applied.liquid_s_r_max_mm, 312.5, "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: liquid_s_r_max_mm must read 312.5 after the change");
     assert_eq!(applied, expected_after(), "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_liquid_sr_max_mm_applies_to_committed_after() {
 /// ↩️ `change-liquid-sr-max-mm` is its own inverse partner: the inverse step restores `liquid_s_r_max_mm` to its pre-change
 /// 250.0 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_liquid_sr_max_mm_inverse_restores_before() {
+fn change_liquid_sr_max_mm_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-liquid-sr-max-mm applies");
     let inverse = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_liquid_sr_max_mm_inverse_restores_before() {
 /// decode then encode is a fixed point, so `liquidSRMaxMm` and `newLiquidSRMaxMm` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_liquid_sr_max_mm_committed_json_is_canonical() {
+fn change_liquid_sr_max_mm_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1992Snapshot = serde_json::from_str(text).expect("change-liquid-sr-max-mm snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-liquid-sr-max-mm snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_liquid_sr_max_mm_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-liquid-sr-max-mm` at 312.5 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_liquid_sr_max_mm_declared_outcome_holds() {
+fn change_liquid_sr_max_mm_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-liquid-sr-max-mm outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: this fixture declares an applied outcome");
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_liquid_sr_max_mm_declared_outcome_holds() {
 /// assertion: it pins that only `liquidSRMaxMm` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `anchorHEfMm`.
 #[semio_framework_async_macros::async_test]
-async fn change_liquid_sr_max_mm_produces_committed_diff() {
+fn change_liquid_sr_max_mm_produces_committed_diff() {
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().liquid_s_r_max_mm, Some(312.5), "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: the diff must set liquid_s_r_max_mm to 312.5");
     assert!(outcome.diff().artifact.is_none(), "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_liquid_sr_max_mm_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-liquid-sr-max-mm`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_liquid_sr_max_mm_committed_diff_is_canonical() {
+fn change_liquid_sr_max_mm_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-liquid-sr-max-mm committed diff decodes");
     assert_eq!(decoded.liquid_s_r_max_mm, Some(312.5), "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: the committed diff must carry liquid_s_r_max_mm at 312.5");
     assert!(decoded.selected_check_index.is_none(), "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_liquid_sr_max_mm_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 250.0 to 312.5 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_liquid_sr_max_mm_committed_diff_applies_to_after() {
+fn change_liquid_sr_max_mm_committed_diff_applies_to_after() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-liquid-sr-max-mm committed diff decodes");
     let produced = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(&decoded, &before()).expect("change-liquid-sr-max-mm committed diff applies to the before-snapshot");
     assert_eq!(produced.liquid_s_r_max_mm, 312.5, "change-liquid-sr-max-mm/raises-liquid-s-r-max-mm-to-312-5: the committed diff must leave liquid_s_r_max_mm reading 312.5");

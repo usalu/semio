@@ -26,7 +26,7 @@ fn mutation() -> En1994Mutation {
 
 /// ▶️ `change-fatigue-detail` carries `fatigue_detail` from stud_welded to flange_butt_weld and lands on the committed `after`.
 #[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+fn applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = outcome.diff().apply(&base).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: mutation applies to its committed before-snapshot");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
 
 /// ↩️ The inverse re-states the pre-edit `fatigue_detail` (stud_welded) and restores `before` exactly.
 #[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+fn inverse_restores_before() {
     let base = before();
     let forward = mutation();
     let outcome = forward.diff(&base);
@@ -52,7 +52,7 @@ async fn inverse_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1994Snapshot = serde_json::from_str(text).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: snapshot encodes");
@@ -66,7 +66,7 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared `applied` outcome holds — a clean stud_welded→flange_butt_weld edit of `fatigue_detail` raises no diagnostic.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: this fixture declares an applied outcome");
     let base = before();
@@ -77,7 +77,7 @@ async fn declared_outcome_holds() {
 
 /// 🔺️ The sparse delta is exactly the committed diff: `fatigueDetail` set, every other field left null.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     assert_eq!(outcome.diff().fatigue_detail.as_deref(), Some("flange_butt_weld"), "change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: the diff must carry `fatigue_detail` = flange_butt_weld");
@@ -89,7 +89,7 @@ async fn produces_committed_diff() {
 
 /// 🔣️ The committed diff is canonical and decodes to `En1994Diff`.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1994Diff = serde_json::from_str(DIFF).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: committed diff decodes");
     assert_eq!(decoded.fatigue_detail.as_deref(), Some("flange_butt_weld"), "change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: the committed diff must name `fatigue_detail` = flange_butt_weld");
     let reencoded = serde_json::to_value(&decoded).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: diff re-encodes");
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff to `before` yields `after` — the flange_butt_weld `fatigue_detail` edit is complete on its own.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: En1994Diff = serde_json::from_str(DIFF).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: committed diff decodes");
     let produced = decoded.apply(&base).expect("change-fatigue-detail/switches-fatigue-detail-to-flange-butt-weld: committed diff applies to the before-snapshot");

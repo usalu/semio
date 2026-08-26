@@ -6,16 +6,36 @@
   "noOracleDecisions": [
     {
       "id": "dag-1-port-directed-graph-mutation-semantics",
-      "capabilities": ["dag-1-mutate"],
-      "rationale": "No third party reads or writes `.dag.dsl.semio`/`.dag.pack.semio`, and no graph library holds an opinion about the two things this vocabulary actually decides. First, `DagSnapshot` persists NO nodes and NO edges: it carries `schema` plus one composed `s.stdio.semio.graph` child handle whose `childId` is a content digest of the child, so what an applied mutation produces is a NEW handle and what a refused one produces is the same handle — an addressing scheme private to this repository. Second, the vocabulary is a DAG vocabulary, not a graph one: `connect-nodes` refuses a self-loop and refuses any edge whose target can already reach its source (`🔗connect-nodes/🔺️diff/🦀️component.rs::would_create_cycle`), and endpoints are `node@port` strings split by this plugin's own `split_endpoint`. A general graph crate asked to adjudicate either would be answering a different question. Confidence comes instead from the fourteen committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/` — one per kind, each already unit-tested inside the production crate itself — and from the inverse law as a metamorphic property. Those fourteen vectors are ALL rejection vectors, and deliberately so: the leaf tests state the reason in as many words (`🌱create-node/🧪️tests/rejects-a-duplicate-node-id/🦀️component.rs`) — hand-authoring an APPLIED `➡️after` would mean hand-forging a `std::collections::hash_map::DefaultHasher` digest, a value the standard library explicitly does not specify. `mutate-dag-1` therefore runs each vector for its exact `(code, severity, target)` triple AND separately applies a real-effect payload of its own to the committed five-node example document, where the content-addressed handle supplies the observability the vectors cannot.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "capabilities": [
+        "dag-1-mutate"
+      ],
+      "rationale": "Nothing third-party reads `.dag.dsl.semio`, and no graph format holds an opinion about a PORT-directed edge — an edge whose endpoints are named ports owned by two nodes rather than the nodes themselves. THAT SURVEY STANDS, AND IT IS NOT WHAT THIS DECISION NOW RESTS ON. Surveying and declining a third-party LIBRARY is a different judgement from declining a SECOND IMPLEMENTATION, and until this re-examination that is the only judgement this decision had ever made. The sentence it used to lean on — that this subset's own shape IS its specification and so not a fact an external implementation could confirm or refute — is refuted inside this repository: `mutate-puzzle-2d-1` and `mutate-puzzle-3d-1`, whose documents carry ports inside nodes and cascade on delete, took Python second implementations over this same `.dsl.semio` carrier, from the same kind of committed material, and between them they surfaced findings no single-implementation case could produce. So THIS DECISION IS A DEBT, NOT A JUDGEMENT, and it is recorded as one here rather than left reading as a verdict.\n\nWHAT A SECOND IMPLEMENTATION HERE WOULD BE WRITTEN FROM: `../🧬️schema/📸️snapshot/🔣️component.json` for the document's members, the rules of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` that this vocabulary was derived by, and the fourteen committed `(before, mutation, after, outcome)` specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`. The nearest transferable recipe is `mutate-puzzle-2d-1`, which models exactly that: handles inside nodes, edges naming handles, and a cascade when either goes.\n\nWHAT BLOCKS IT TODAY, precisely. This case's committed specification vectors are NOT declared as `asset://` fixtures. Its `Examples` table carries the payloads inline, and the Rust adapter reaches the committed `(before, mutation, after, outcome)` files through `include_str!` instead. Two consequences follow: the execution plan does not pin those files' digests, so a silently edited vector changes the result rather than the plan; and a Python reference cannot read them at all, because the Python host resolves a fixture only through the plan and raises on an undeclared URI. Declaring them — the shape `mutate-program-1`, `mutate-note-1` and `mutate-block-3d-1` already use — is the one edit that unblocks this case, and it strengthens the case whether or not a reference follows. AND, SEPARATELY, `identity-round-trip` WOULD STILL BE REFUSED. This subset's committed snapshot text grammar is the repository-wide PLACEHOLDER: its whole body is `payload = OCTET+` and its header production declares `\"schema\" SP \"stdio.json\"`, which the committed artifact contradicts on its own first line. A second reader cannot parse what no document describes — the finding `mutate-iso16757-1`, `mutate-vdi3805-1`, `mutate-program-1` and `mutate-writer-1` all report against their own subsets.\n\nWHAT IS ASSERTED IN THE MEANTIME is unchanged and is listed in `substitutes`: the committed specification vectors, replayed end to end through the platform, and the metamorphic laws the subject handler asserts in role. The ceiling on all of it is unchanged too and is worth restating: no second producer runs beside them, so a mistake shared by the handcrafted vector and the production code passes unseen.",
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
     }
   ],
   "mutationCatalogs": [
     {
       "id": "dag-1-any",
       "capability": "dag-1-mutate",
-      "kinds": ["create-node", "delete-node", "rename-node", "change-node-name", "move-node", "resize-node", "change-node-icon", "change-node-abbreviation", "change-node-operator-kind", "replace-node-kind", "replace-node-properties", "reorder-nodes", "connect-nodes", "disconnect-nodes"]
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "rename-node",
+        "change-node-name",
+        "move-node",
+        "resize-node",
+        "change-node-icon",
+        "change-node-abbreviation",
+        "change-node-operator-kind",
+        "replace-node-kind",
+        "replace-node-properties",
+        "reorder-nodes",
+        "connect-nodes",
+        "disconnect-nodes"
+      ]
     }
   ]
 }

@@ -5,7 +5,7 @@ use crate::artifacts::en1999::mutations::change_weld_length_mm::mutation::Change
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeWeldLengthMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+pub fn diff(payload: &ChangeWeldLengthMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_weld_length_mm.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Weld length [mm] must be a finite number, got {}.", payload.new_weld_length_mm), Vec::<String>::new());
     }

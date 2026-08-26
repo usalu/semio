@@ -1535,7 +1535,12 @@
       "request": "launch",
       "command": "bun ./📜️script.ts verify rust-warnings --target native",
       "cwd": "${workspaceFolder}",
-      "presentation":     {
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.4
+      }
+    },
+    {
       "name": "🧹clean",
       "type": "node-terminal",
       "request": "launch",
@@ -1544,11 +1549,6 @@
       "presentation": {
         "group": "4_gate",
         "order": 410
-      }
-    },
-{
-        "group": "4_gate",
-        "order": 411.4
       }
     },
     {
@@ -1673,7 +1673,7 @@
       "name": "🛠️dev✏️draw🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native s",
+      "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts native draw",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2447,6 +2447,72 @@
       "presentation": {
         "group": "5_publish",
         "order": 50
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.43
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🎯️tool-jobs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity tool-jobs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.44
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🧭️apps",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity apps",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.45
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🧭️apps🎛️actions",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify interactivity apps --actions",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.46
+      }
+    },
+    {
+      "name": "⚖️gate📦️dependencies",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.47
+      }
+    },
+    {
+      "name": "⚖️gate📦️dependencies0️⃣",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify dependencies literal-external",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.48
       }
     }
     // #endregion

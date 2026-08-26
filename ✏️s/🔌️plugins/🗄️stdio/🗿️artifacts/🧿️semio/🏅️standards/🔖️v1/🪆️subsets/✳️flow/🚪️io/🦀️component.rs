@@ -175,7 +175,7 @@ pub mod derived_composition {
         async fn validator_recheck_on_wire_payload_flags_the_same_invariants() {
             let snap = SemioFlowSnapshot { nodes: vec![node("a")], edges: vec![edge("e1", "a", "ghost")], ..SemioFlowSnapshot::default() };
             let bytes = <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&snap);
-            let diagnostics = SemioFlowValidator::validate(&IoPayload::Binary(bytes));
+            let diagnostics = SemioFlowValidator::validate(&IoPayload::Binary(bytes)).await;
             assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_flow.dangling-edge-endpoint"), "got {diagnostics:?}");
         }
 

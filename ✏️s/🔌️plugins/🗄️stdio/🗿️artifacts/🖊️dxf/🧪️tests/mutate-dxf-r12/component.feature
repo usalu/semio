@@ -32,7 +32,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   gitignored with `git check-ignore -v` (the taxonomy's `!**/🔖️*/**` negation rule at `.gitignore:187`
   un-ignores every `🔖️<standard>/**` subtree, this one included).
 
-  THE FIRST DIFFERENTIAL RUN OF THIS CASE WAS `parity=0/39`, AND IT FOUND THREE REAL DEFECTS THAT
+  THE FIRST DIFFERENTIAL RUN OF THIS CASE FOUND THREE REAL DEFECTS THAT
   THE SUBJECT PHASE ALONE HAD REPORTED AS 39 GREENS.
 
   1. THE WRITER PUT `LAYER` BEFORE `LTYPE`. A `LAYER` record names its linetype by string (group
@@ -112,7 +112,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the document
     Given the real input document asset://🏅️standards/🔖️r12/🪆️subsets/✳️any/📚️examples/🚏️bus-shelter/🖼️assets/🖊️bus-shelter-r12.dxf
     When the <id> mutation is applied and then undone

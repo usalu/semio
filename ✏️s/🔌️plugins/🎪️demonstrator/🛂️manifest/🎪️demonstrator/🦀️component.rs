@@ -162,5 +162,49 @@ mod tests {
         assert!(!tick.in_palette);
         assert!(tick.args.is_empty());
     }
+
+    fn assert_tree_reconciles(tree: semio_framework_ui_runtime::ComponentTree, generation: u64, label: &str) {
+        assert!(!tree.root.key.is_empty(), "{label} must contain an authored root");
+        let mut producer = semio_framework_ui_runtime::ComponentTreeProducer::try_new(tree.root, generation).expect("nonzero aggregate tree generation");
+        for _ in 0..65_536 {
+            match producer.step(generation, false, false) {
+                semio_framework_ui_runtime::ComponentTreeProducerStep::MoreWork => {}
+                semio_framework_ui_runtime::ComponentTreeProducerStep::Complete => {
+                    assert!(producer.take_complete().is_some(), "completed {label} tree transfers its exact owner");
+                    return;
+                }
+                semio_framework_ui_runtime::ComponentTreeProducerStep::Fault(fault) => panic!("{label} tree must enter retained reconciliation: {fault:?}"),
+            }
+        }
+        panic!("{label} tree producer did not settle within its fixed bound");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn aggregate_runtime_renders_every_demonstrator_window() {
+        let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::<DemonstratorApps>::new();
+        semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, test_bundle());
+        let apps: &[(&str, &[&str])] = &[
+            ("s.procedural.procedural3d@1/*#editor", &["procedural.play.main", "procedural.play.preview", "procedural.play.generations", "procedural.play.generate-form", "procedural.play.generate-preview"]),
+            ("s.cad.cad@1/*#editor", &["cad.play.shape", "cad.play.building", "cad.play.energy", "cad.play.structure-classic"]),
+            ("s.puzzle.puzzle3d@1/*#editor", &["puzzle3d.play.composite"]),
+            ("s.sourcing.curate@1/*#editor", &["sourcing.pool", "sourcing.curated", "sourcing.preview", "sourcing.grid"]),
+            ("s.process.process3d@1/*#editor", &["process.play.main"]),
+            ("s.gis.gismap@1/*#editor", &["gis2d.play.composite"]),
+        ];
+        let mut generation = 1_u64;
+        for (app_index, (app_id, body_keys)) in apps.iter().enumerate() {
+            let instance_id = u32::try_from(app_index + 1).expect("six aggregate app instances");
+            semio_framework_plugin::plugin_runtime::plugin_create_app_with_id(&runtime, instance_id, app_id)
+                .await
+                .unwrap_or_else(|fault| panic!("aggregate app {app_id} opens: {fault:?}"));
+            for body_key in *body_keys {
+                let tree = semio_framework_plugin::plugin_runtime::plugin_render(&runtime, instance_id, body_key, "{}")
+                    .await
+                    .unwrap_or_else(|fault| panic!("aggregate body {body_key} renders: {fault:?}"));
+                assert_tree_reconciles(tree, generation, body_key);
+                generation += 1;
+            }
+        }
+    }
 }
 //#endregion 🧪️Tests

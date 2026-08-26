@@ -974,13 +974,13 @@ impl RasterHost {
 
 // #region 🔖️WasmSession
 #[cfg(target_arch = "wasm32")]
+use semio_framework_async::browser::future_to_promise;
+#[cfg(target_arch = "wasm32")]
 use std::cell::RefCell;
 #[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen_futures::future_to_promise;
 #[cfg(target_arch = "wasm32")]
 use web_sys::HtmlCanvasElement;
 

@@ -37,7 +37,7 @@ pub(crate) struct ListenerEntry {
 
 /// ⏳️ A future queued by `Context::spawn_local`, handed to the embedder's own executor. This crate
 /// never polls it — `future` is `pub` precisely so the embedder can take it and drive it however its
-/// platform requires (`wasm_bindgen_futures::spawn_local` on wasm, a native local executor on host).
+/// platform requires (the owned browser microtask executor on wasm, a native local executor on host).
 pub struct PendingTask {
     pub id: u64,
     pub future: Pin<Box<dyn Future<Output = ()> + 'static>>,

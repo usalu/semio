@@ -18,13 +18,12 @@
 //! `blur_downsample_pipeline`, `scene_blit_pipeline`, `glass_pipeline`).
 
 use crate::msl::{BLUR_DOWNSAMPLE_SHADER_MSL, GLASS_SHADER_MSL, SCENE_BLIT_SHADER_MSL, UI_SHADER_MSL, VECTOR_SHADER_MSL, WORLD3D_LINES_SHADER_MSL, WORLD3D_MESH_SHADER_MSL};
+use crate::objective_c::{
+    MTLDepthStencilDescriptor, MTLDepthStencilState, MTLDevice as Device, MTLFunction, MTLLibrary as Library, MTLRenderPipelineDescriptor, MTLRenderPipelineState, MTLSamplerDescriptor, MTLSamplerState, MTLStencilDescriptor, MTLVertexDescriptor, NSString, Owned,
+};
 use crate::types::{World3dGpuInstance, World3dGpuVertex, WorldLineGpuVertex};
-use objc2::rc::Retained;
-use objc2::runtime::ProtocolObject;
-use objc2_foundation::ns_string;
 use objc2_metal::{
-    MTLBlendFactor, MTLBlendOperation, MTLColorWriteMask, MTLCompareFunction, MTLDepthStencilDescriptor, MTLDepthStencilState, MTLDevice, MTLLibrary, MTLPixelFormat, MTLRenderPipelineDescriptor, MTLRenderPipelineState, MTLSamplerAddressMode,
-    MTLSamplerDescriptor, MTLSamplerMinMagFilter, MTLSamplerMipFilter, MTLSamplerState, MTLStencilDescriptor, MTLStencilOperation, MTLVertexDescriptor, MTLVertexFormat, MTLVertexStepFunction,
+    MTLBlendFactor, MTLBlendOperation, MTLColorWriteMask, MTLCompareFunction, MTLPixelFormat, MTLSamplerAddressMode, MTLSamplerMinMagFilter, MTLSamplerMipFilter, MTLStencilOperation, MTLVertexFormat, MTLVertexStepFunction,
 };
 use ui_render::{GlassInstance, QuadInstance, VectorVertex};
 
@@ -40,7 +39,7 @@ pub const DEPTH_STENCIL_FORMAT: MTLPixelFormat = MTLPixelFormat::Depth32Float_St
 //#region 🎨️VertexDescriptors
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn ui_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
+fn ui_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let descriptor = MTLVertexDescriptor::new();
     let layouts = descriptor.layouts();
     let attributes = descriptor.attributes();
@@ -78,7 +77,7 @@ fn ui_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn vector_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
+fn vector_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let descriptor = MTLVertexDescriptor::new();
     let layouts = descriptor.layouts();
     let attributes = descriptor.attributes();
@@ -99,7 +98,7 @@ fn vector_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn glass_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
+fn glass_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let descriptor = MTLVertexDescriptor::new();
     let layouts = descriptor.layouts();
     let attributes = descriptor.attributes();
@@ -132,7 +131,7 @@ fn glass_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn world3d_mesh_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
+fn world3d_mesh_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let descriptor = MTLVertexDescriptor::new();
     let layouts = descriptor.layouts();
     let attributes = descriptor.attributes();
@@ -165,7 +164,7 @@ fn world3d_mesh_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn world3d_line_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
+fn world3d_line_vertex_descriptor() -> Owned<MTLVertexDescriptor> {
     let descriptor = MTLVertexDescriptor::new();
     let layouts = descriptor.layouts();
     let attributes = descriptor.attributes();
@@ -189,17 +188,14 @@ fn world3d_line_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
 
 //#region 🖇️PipelineBuilder
 
-type Device = ProtocolObject<dyn MTLDevice>;
-type Library = ProtocolObject<dyn MTLLibrary>;
-
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn compile_library(device: &Device, label: &str, source: &str) -> Retained<Library> {
-    let source_ns = objc2_foundation::NSString::from_str(source);
+fn compile_library(device: &Device, label: &str, source: &str) -> Owned<Library> {
+    let source_ns = NSString::from_str(source);
     device.newLibraryWithSource_options_error(&source_ns, None).unwrap_or_else(|error| panic!("metal backend: {label} failed to compile: {error:?}"))
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn function(library: &Library, name: &objc2_foundation::NSString) -> Retained<ProtocolObject<dyn objc2_metal::MTLFunction>> {
+fn function(library: &Library, name: &NSString) -> Owned<MTLFunction> {
     library.newFunctionWithName(name).unwrap_or_else(|| panic!("metal backend: MSL library is missing function {name}"))
 }
 
@@ -237,40 +233,42 @@ const ALPHA_BLEND: Option<(MTLBlendFactor, MTLBlendFactor)> = Some((MTLBlendFact
 /// once in `MetalBackend::new` against the swapchain's pixel format and the offscreen scene target's
 /// pixel format (the two color targets in play — see `🦀️scene_target.rs`).
 pub struct Pipelines {
-    pub ui_mask: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub ui_content: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub vector: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub glass: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub blur_downsample: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub scene_blit: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub world3d_mesh_opaque: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub world3d_mesh_translucent: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
-    pub world3d_line: Retained<ProtocolObject<dyn MTLRenderPipelineState>>,
+    pub ui_mask: Owned<MTLRenderPipelineState>,
+    pub ui_content: Owned<MTLRenderPipelineState>,
+    pub vector: Owned<MTLRenderPipelineState>,
+    pub glass: Owned<MTLRenderPipelineState>,
+    pub blur_downsample: Owned<MTLRenderPipelineState>,
+    pub scene_blit: Owned<MTLRenderPipelineState>,
+    pub world3d_mesh_opaque: Owned<MTLRenderPipelineState>,
+    pub world3d_mesh_translucent: Owned<MTLRenderPipelineState>,
+    pub world3d_line: Owned<MTLRenderPipelineState>,
 
     /// 🩹️ `Always`/`Replace`/`Replace`, write mask `0xff` — stamps the silhouette mask. Mirrors
     /// `mask_stencil_state()`.
-    pub mask_depth_stencil: Retained<ProtocolObject<dyn MTLDepthStencilState>>,
+    pub mask_depth_stencil: Owned<MTLDepthStencilState>,
     /// 🔒 `Equal`/`Keep`, read mask `0xff` write mask `0x00` — clips UI/vector content against a
     /// previously written mask. Mirrors `content_stencil_state()`; shared by `ui_content` and
     /// `vector`.
-    pub content_depth_stencil: Retained<ProtocolObject<dyn MTLDepthStencilState>>,
+    pub content_depth_stencil: Owned<MTLDepthStencilState>,
     /// 🗻️ Opaque world mesh: depth write on, `Less`.
-    pub world3d_opaque_depth_stencil: Retained<ProtocolObject<dyn MTLDepthStencilState>>,
+    pub world3d_opaque_depth_stencil: Owned<MTLDepthStencilState>,
     /// 🫧️ Translucent world mesh *and* lines: depth write off, `LessEqual` — identical depth/stencil
     /// behaviour in Metal (depth bias is encoder state, not part of this object; see this file's
     /// header), so the two wgpu-target states collapse onto one here.
-    pub world3d_translucent_depth_stencil: Retained<ProtocolObject<dyn MTLDepthStencilState>>,
+    pub world3d_translucent_depth_stencil: Owned<MTLDepthStencilState>,
 
-    pub glyph_sampler: Retained<ProtocolObject<dyn MTLSamplerState>>,
-    pub icon_sampler: Retained<ProtocolObject<dyn MTLSamplerState>>,
-    pub scene_sampler: Retained<ProtocolObject<dyn MTLSamplerState>>,
+    pub glyph_sampler: Owned<MTLSamplerState>,
+    pub icon_sampler: Owned<MTLSamplerState>,
+    pub scene_sampler: Owned<MTLSamplerState>,
 }
 
 impl Pipelines {
     /// 🏗️ `surface_format` is the swapchain's pixel format (`scene_blit`, `glass` target it);
     /// `scene_format` is the offscreen scene color target's format (`blur_downsample` targets it, and
     /// every 2D/3D content pipeline targets it too, mirroring `render_scene_content` rendering into
-    /// `scene_view` before `composite_to_swapchain` blits to the real swapchain view).
+    /// `scene_view` before `composite_to_swapchain` blits to the real swapchain view). The caller
+    /// census is construction-only: `MetalBackend::from_parts` calls this once, while render/event
+    /// callbacks only read the retained pipeline states.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(device: &Device, surface_format: MTLPixelFormat, scene_format: MTLPixelFormat) -> Self {
         let ui_library = compile_library(device, "ui_shader", UI_SHADER_MSL);
@@ -281,12 +279,12 @@ impl Pipelines {
         let blit_library = compile_library(device, "scene_blit_shader", SCENE_BLIT_SHADER_MSL);
         let glass_library = compile_library(device, "glass_shader", GLASS_SHADER_MSL);
 
-        let ui_vs = function(&ui_library, ns_string!("ui_vertex_main"));
-        let ui_fs = function(&ui_library, ns_string!("ui_fragment_main"));
+        let ui_vs = function(&ui_library, &NSString::from_str("ui_vertex_main"));
+        let ui_fs = function(&ui_library, &NSString::from_str("ui_fragment_main"));
         let ui_layout = ui_vertex_descriptor();
 
         let mask_descriptor = MTLRenderPipelineDescriptor::new();
-        mask_descriptor.setLabel(Some(ns_string!("silhouette_mask_pipeline")));
+        mask_descriptor.setLabel(Some(&*NSString::from_str("silhouette_mask_pipeline")));
         mask_descriptor.setVertexFunction(Some(&ui_vs));
         mask_descriptor.setFragmentFunction(Some(&ui_fs));
         mask_descriptor.setVertexDescriptor(Some(&ui_layout));
@@ -296,7 +294,7 @@ impl Pipelines {
         let ui_mask = device.newRenderPipelineStateWithDescriptor_error(&mask_descriptor).expect("metal backend: silhouette_mask_pipeline failed to link");
 
         let content_descriptor = MTLRenderPipelineDescriptor::new();
-        content_descriptor.setLabel(Some(ns_string!("ui_pipeline")));
+        content_descriptor.setLabel(Some(&*NSString::from_str("ui_pipeline")));
         content_descriptor.setVertexFunction(Some(&ui_vs));
         content_descriptor.setFragmentFunction(Some(&ui_fs));
         content_descriptor.setVertexDescriptor(Some(&ui_layout));
@@ -305,10 +303,10 @@ impl Pipelines {
         content_descriptor.setStencilAttachmentPixelFormat(DEPTH_STENCIL_FORMAT);
         let ui_content = device.newRenderPipelineStateWithDescriptor_error(&content_descriptor).expect("metal backend: ui_pipeline failed to link");
 
-        let vector_vs = function(&vector_library, ns_string!("vector_vertex_main"));
-        let vector_fs = function(&vector_library, ns_string!("vector_fragment_main"));
+        let vector_vs = function(&vector_library, &NSString::from_str("vector_vertex_main"));
+        let vector_fs = function(&vector_library, &NSString::from_str("vector_fragment_main"));
         let vector_descriptor = MTLRenderPipelineDescriptor::new();
-        vector_descriptor.setLabel(Some(ns_string!("vector_pipeline")));
+        vector_descriptor.setLabel(Some(&*NSString::from_str("vector_pipeline")));
         vector_descriptor.setVertexFunction(Some(&vector_vs));
         vector_descriptor.setFragmentFunction(Some(&vector_fs));
         vector_descriptor.setVertexDescriptor(Some(&vector_vertex_descriptor()));
@@ -317,40 +315,40 @@ impl Pipelines {
         vector_descriptor.setStencilAttachmentPixelFormat(DEPTH_STENCIL_FORMAT);
         let vector = device.newRenderPipelineStateWithDescriptor_error(&vector_descriptor).expect("metal backend: vector_pipeline failed to link");
 
-        let glass_vs = function(&glass_library, ns_string!("glass_vertex_main"));
-        let glass_fs = function(&glass_library, ns_string!("glass_fragment_main"));
+        let glass_vs = function(&glass_library, &NSString::from_str("glass_vertex_main"));
+        let glass_fs = function(&glass_library, &NSString::from_str("glass_fragment_main"));
         let glass_descriptor = MTLRenderPipelineDescriptor::new();
-        glass_descriptor.setLabel(Some(ns_string!("glass_pipeline")));
+        glass_descriptor.setLabel(Some(&*NSString::from_str("glass_pipeline")));
         glass_descriptor.setVertexFunction(Some(&glass_vs));
         glass_descriptor.setFragmentFunction(Some(&glass_fs));
         glass_descriptor.setVertexDescriptor(Some(&glass_vertex_descriptor()));
         configure_color_attachment(&glass_descriptor, surface_format, ALPHA_BLEND, MTLColorWriteMask::All);
         let glass = device.newRenderPipelineStateWithDescriptor_error(&glass_descriptor).expect("metal backend: glass_pipeline failed to link");
 
-        let blur_vs = function(&blur_library, ns_string!("blur_downsample_vertex_main"));
-        let blur_fs = function(&blur_library, ns_string!("blur_downsample_fragment_main"));
+        let blur_vs = function(&blur_library, &NSString::from_str("blur_downsample_vertex_main"));
+        let blur_fs = function(&blur_library, &NSString::from_str("blur_downsample_fragment_main"));
         let blur_descriptor = MTLRenderPipelineDescriptor::new();
-        blur_descriptor.setLabel(Some(ns_string!("blur_downsample_pipeline")));
+        blur_descriptor.setLabel(Some(&*NSString::from_str("blur_downsample_pipeline")));
         blur_descriptor.setVertexFunction(Some(&blur_vs));
         blur_descriptor.setFragmentFunction(Some(&blur_fs));
         configure_color_attachment(&blur_descriptor, scene_format, None, MTLColorWriteMask::All);
         let blur_downsample = device.newRenderPipelineStateWithDescriptor_error(&blur_descriptor).expect("metal backend: blur_downsample_pipeline failed to link");
 
-        let blit_vs = function(&blit_library, ns_string!("scene_blit_vertex_main"));
-        let blit_fs = function(&blit_library, ns_string!("scene_blit_fragment_main"));
+        let blit_vs = function(&blit_library, &NSString::from_str("scene_blit_vertex_main"));
+        let blit_fs = function(&blit_library, &NSString::from_str("scene_blit_fragment_main"));
         let blit_descriptor = MTLRenderPipelineDescriptor::new();
-        blit_descriptor.setLabel(Some(ns_string!("scene_blit_pipeline")));
+        blit_descriptor.setLabel(Some(&*NSString::from_str("scene_blit_pipeline")));
         blit_descriptor.setVertexFunction(Some(&blit_vs));
         blit_descriptor.setFragmentFunction(Some(&blit_fs));
         configure_color_attachment(&blit_descriptor, surface_format, None, MTLColorWriteMask::All);
         let scene_blit = device.newRenderPipelineStateWithDescriptor_error(&blit_descriptor).expect("metal backend: scene_blit_pipeline failed to link");
 
-        let world_mesh_vs = function(&world_mesh_library, ns_string!("world3d_mesh_vertex_main"));
-        let world_mesh_fs = function(&world_mesh_library, ns_string!("world3d_mesh_fragment_main"));
+        let world_mesh_vs = function(&world_mesh_library, &NSString::from_str("world3d_mesh_vertex_main"));
+        let world_mesh_fs = function(&world_mesh_library, &NSString::from_str("world3d_mesh_fragment_main"));
         let world_mesh_layout = world3d_mesh_vertex_descriptor();
 
         let world_opaque_descriptor = MTLRenderPipelineDescriptor::new();
-        world_opaque_descriptor.setLabel(Some(ns_string!("world3d_pipeline")));
+        world_opaque_descriptor.setLabel(Some(&*NSString::from_str("world3d_pipeline")));
         world_opaque_descriptor.setVertexFunction(Some(&world_mesh_vs));
         world_opaque_descriptor.setFragmentFunction(Some(&world_mesh_fs));
         world_opaque_descriptor.setVertexDescriptor(Some(&world_mesh_layout));
@@ -360,7 +358,7 @@ impl Pipelines {
         let world3d_mesh_opaque = device.newRenderPipelineStateWithDescriptor_error(&world_opaque_descriptor).expect("metal backend: world3d_pipeline failed to link");
 
         let world_translucent_descriptor = MTLRenderPipelineDescriptor::new();
-        world_translucent_descriptor.setLabel(Some(ns_string!("world3d_pipeline_translucent")));
+        world_translucent_descriptor.setLabel(Some(&*NSString::from_str("world3d_pipeline_translucent")));
         world_translucent_descriptor.setVertexFunction(Some(&world_mesh_vs));
         world_translucent_descriptor.setFragmentFunction(Some(&world_mesh_fs));
         world_translucent_descriptor.setVertexDescriptor(Some(&world_mesh_layout));
@@ -369,10 +367,10 @@ impl Pipelines {
         world_translucent_descriptor.setStencilAttachmentPixelFormat(DEPTH_STENCIL_FORMAT);
         let world3d_mesh_translucent = device.newRenderPipelineStateWithDescriptor_error(&world_translucent_descriptor).expect("metal backend: world3d_pipeline_translucent failed to link");
 
-        let world_line_vs = function(&world_line_library, ns_string!("world3d_line_vertex_main"));
-        let world_line_fs = function(&world_line_library, ns_string!("world3d_line_fragment_main"));
+        let world_line_vs = function(&world_line_library, &NSString::from_str("world3d_line_vertex_main"));
+        let world_line_fs = function(&world_line_library, &NSString::from_str("world3d_line_fragment_main"));
         let world_line_descriptor = MTLRenderPipelineDescriptor::new();
-        world_line_descriptor.setLabel(Some(ns_string!("world3d_line_pipeline")));
+        world_line_descriptor.setLabel(Some(&*NSString::from_str("world3d_line_pipeline")));
         world_line_descriptor.setVertexFunction(Some(&world_line_vs));
         world_line_descriptor.setFragmentFunction(Some(&world_line_fs));
         world_line_descriptor.setVertexDescriptor(Some(&world3d_line_vertex_descriptor()));

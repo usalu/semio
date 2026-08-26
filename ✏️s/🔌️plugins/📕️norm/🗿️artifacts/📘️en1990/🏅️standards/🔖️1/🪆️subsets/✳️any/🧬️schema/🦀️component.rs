@@ -34,16 +34,16 @@ pub struct En1990Artifact {
 //#region 🔖️Conversions
 impl En1990Artifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::en1990::En1990Snapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::en1990::En1990Snapshot {
         crate::artifacts::en1990::En1990Snapshot { g_k: self.g_k, q_k: self.q_k.clone(), resistance_kn: self.resistance_kn, consequence_class: self.consequence_class, annex: self.annex, seismic_a_ed_kn: self.seismic_a_ed_kn }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::en1990::En1990Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::en1990::En1990Snapshot) -> Self {
         Self { g_k: snapshot.g_k, q_k: snapshot.q_k.clone(), resistance_kn: snapshot.resistance_kn, consequence_class: snapshot.consequence_class, annex: snapshot.annex, seismic_a_ed_kn: snapshot.seismic_a_ed_kn, selected_check_index: None }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::en1990::En1990Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1990::En1990Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -54,7 +54,7 @@ impl En1990Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1990` — twenty handcrafted schema leaves.
-pub async fn en1990_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn en1990_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1990",
         artifact: schema::FacetLeaves {
@@ -103,19 +103,19 @@ pub mod derived_construction {
         type Snapshot = En1990Snapshot;
         type Mutation = En1990Mutation;
         type Diff = En1990Diff;
-        async fn empty() -> Self {
+        fn empty() -> Self {
             Self { snapshot: En1990Snapshot::default(), diagnostics: Vec::new() }
         }
-        async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
         }
-        async fn from_text(text: &str) -> Result<Self, store::TextError> {
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<En1990Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
         }
-        async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<En1990Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <En1990Mutation as protocol::Mutation<En1990Snapshot>>::diff(&mutation, &self.snapshot);
             match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
@@ -123,12 +123,12 @@ pub mod derived_construction {
             }
             (self, outcome)
         }
-        async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             let snapshot = <En1990Diff as protocol::MutationDiff<En1990Snapshot>>::apply(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
-        async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
                 Ok(self.snapshot)
             } else {
@@ -156,11 +156,11 @@ pub mod derived_analysis {
         type Parts = En1990Parts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.en1990", standard: StandardId("1"), subset: SubsetId("*") };
 
-        async fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
             IoConfidence::Medium
         }
 
-        async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = En1990Parts::default();
             let mut diagnostics = Vec::new();
             let mut confidence = IoConfidence::High;
@@ -224,7 +224,7 @@ pub struct PsiRow {
     psi_2: f64,
 }
 
-async fn psi_row_de(category: &str) -> PsiRow {
+fn psi_row_de(category: &str) -> PsiRow {
     match category {
         "residential" | "A" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
         "office" | "B" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
@@ -244,7 +244,7 @@ async fn psi_row_de(category: &str) -> PsiRow {
     }
 }
 
-async fn psi_row_en(category: &str) -> PsiRow {
+fn psi_row_en(category: &str) -> PsiRow {
     match category {
         "residential" | "A" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
         "office" | "B" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
@@ -262,7 +262,7 @@ async fn psi_row_en(category: &str) -> PsiRow {
     }
 }
 
-pub async fn psi_for_category<A: NationalAnnex>(annex: &A, category: &str) -> PsiRow {
+pub fn psi_for_category<A: NationalAnnex>(annex: &A, category: &str) -> PsiRow {
     if annex.choice() == AnnexChoice::De {
         psi_row_de(category)
     } else {
@@ -270,7 +270,7 @@ pub async fn psi_for_category<A: NationalAnnex>(annex: &A, category: &str) -> Ps
     }
 }
 
-pub async fn psi_for_imposed<A: NationalAnnex>(annex: &A, category: ImposedCategory) -> PsiRow {
+pub fn psi_for_imposed<A: NationalAnnex>(annex: &A, category: ImposedCategory) -> PsiRow {
     psi_for_category(annex, category.label())
 }
 // #endregion 🔖️PsiTables
@@ -281,19 +281,19 @@ pub async fn psi_for_imposed<A: NationalAnnex>(annex: &A, category: ImposedCateg
 pub struct NaDe;
 
 impl NationalAnnex for NaDe {
-    async fn choice(&self) -> AnnexChoice {
+    fn choice(&self) -> AnnexChoice {
         AnnexChoice::De
     }
 
-    async fn gamma_g(&self) -> f64 {
+    fn gamma_g(&self) -> f64 {
         1.35
     }
 
-    async fn gamma_q(&self) -> f64 {
+    fn gamma_q(&self) -> f64 {
         1.5
     }
 
-    async fn gamma_m(&self, material: &str) -> f64 {
+    fn gamma_m(&self, material: &str) -> f64 {
         match material {
             "concrete" => 1.5,
             "steel" => 1.0,
@@ -302,26 +302,26 @@ impl NationalAnnex for NaDe {
         }
     }
 
-    async fn gamma_r(&self) -> f64 {
+    fn gamma_r(&self) -> f64 {
         1.0
     }
 
-    async fn xi(&self, category: &str) -> f64 {
+    fn xi(&self, category: &str) -> f64 {
         match category {
             "accidental" | "seismic" => 1.0,
             _ => 0.85,
         }
     }
 
-    async fn psi_0(&self, category: &str) -> f64 {
+    fn psi_0(&self, category: &str) -> f64 {
         psi_row_de(category).psi_0
     }
 
-    async fn psi_1(&self, category: &str) -> f64 {
+    fn psi_1(&self, category: &str) -> f64 {
         psi_row_de(category).psi_1
     }
 
-    async fn psi_2(&self, category: &str) -> f64 {
+    fn psi_2(&self, category: &str) -> f64 {
         psi_row_de(category).psi_2
     }
 }
@@ -333,19 +333,19 @@ impl NationalAnnex for NaDe {
 pub struct NaEn;
 
 impl NationalAnnex for NaEn {
-    async fn choice(&self) -> AnnexChoice {
+    fn choice(&self) -> AnnexChoice {
         AnnexChoice::En
     }
 
-    async fn gamma_g(&self) -> f64 {
+    fn gamma_g(&self) -> f64 {
         1.35
     }
 
-    async fn gamma_q(&self) -> f64 {
+    fn gamma_q(&self) -> f64 {
         1.5
     }
 
-    async fn gamma_m(&self, material: &str) -> f64 {
+    fn gamma_m(&self, material: &str) -> f64 {
         match material {
             "concrete" => 1.5,
             "steel" => 1.0,
@@ -354,23 +354,23 @@ impl NationalAnnex for NaEn {
         }
     }
 
-    async fn gamma_r(&self) -> f64 {
+    fn gamma_r(&self) -> f64 {
         1.0
     }
 
-    async fn xi(&self, _category: &str) -> f64 {
+    fn xi(&self, _category: &str) -> f64 {
         0.85
     }
 
-    async fn psi_0(&self, category: &str) -> f64 {
+    fn psi_0(&self, category: &str) -> f64 {
         psi_row_en(category).psi_0
     }
 
-    async fn psi_1(&self, category: &str) -> f64 {
+    fn psi_1(&self, category: &str) -> f64 {
         psi_row_en(category).psi_1
     }
 
-    async fn psi_2(&self, category: &str) -> f64 {
+    fn psi_2(&self, category: &str) -> f64 {
         psi_row_en(category).psi_2
     }
 }
@@ -418,14 +418,14 @@ pub enum CombinationRule {
     SlsQuasiPermanent,
 }
 
-async fn gamma_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> (f64, f64) {
+fn gamma_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> (f64, f64) {
     match situation {
         DesignSituation::Persistent | DesignSituation::Transient => (annex.gamma_g(), annex.gamma_q()),
         DesignSituation::Accidental | DesignSituation::Seismic => (1.0, 1.0),
     }
 }
 
-async fn xi_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> f64 {
+fn xi_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> f64 {
     match situation {
         DesignSituation::Persistent | DesignSituation::Transient => annex.xi("permanent"),
         DesignSituation::Accidental => annex.xi("accidental"),
@@ -434,12 +434,12 @@ async fn xi_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituatio
 }
 
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10: max(6.10a, 6.10b) surrogate as 6.10a.
-pub async fn combination_6_10<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
+pub fn combination_6_10<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     combination_6_10a(annex, actions, leading)
 }
 
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10a: γ_G·G + γ_Q·Q + γ_Q·ψ_0·ΣQ.
-pub async fn combination_6_10a<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
+pub fn combination_6_10a<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = annex.gamma_g() * actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { annex.gamma_q() } else { annex.gamma_q() * annex.psi_0(cat) };
@@ -449,7 +449,7 @@ pub async fn combination_6_10a<A: NationalAnnex>(annex: &A, actions: &ActionSet,
 }
 
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10b: ξ·γ_G·G + γ_Q·Q + γ_Q·ψ_0·ΣQ.
-pub async fn combination_6_10b<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
+pub fn combination_6_10b<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let xi = annex.xi("permanent");
     let mut sum = xi * annex.gamma_g() * actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
@@ -460,7 +460,7 @@ pub async fn combination_6_10b<A: NationalAnnex>(annex: &A, actions: &ActionSet,
 }
 
 /// 🧮️ ULS combination for a design situation with situation-specific γ factors.
-pub async fn combination_uls<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
+pub fn combination_uls<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
     let (gamma_g, gamma_q) = gamma_for_situation(annex, situation);
     let xi = xi_for_situation(annex, situation);
     let g_factor = match rule {
@@ -476,7 +476,7 @@ pub async fn combination_uls<A: NationalAnnex>(annex: &A, situation: DesignSitua
 }
 
 /// 🧮️ SLS characteristic combination: G + Q + ψ_0·ΣQ.
-pub async fn combination_sls_char<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
+pub fn combination_sls_char<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { 1.0 } else { annex.psi_0(cat) };
@@ -486,7 +486,7 @@ pub async fn combination_sls_char<A: NationalAnnex>(annex: &A, actions: &ActionS
 }
 
 /// 🧮️ SLS frequent combination: G + ψ_1·Q_leading + ψ_2·ΣQ_accompanying.
-pub async fn combination_sls_frequent<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
+pub fn combination_sls_frequent<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { annex.psi_1(cat) } else { annex.psi_2(cat) };
@@ -496,7 +496,7 @@ pub async fn combination_sls_frequent<A: NationalAnnex>(annex: &A, actions: &Act
 }
 
 /// 🧮️ SLS quasi-permanent combination: G + ψ_2·ΣQ.
-pub async fn combination_sls_quasi_permanent<A: NationalAnnex>(annex: &A, actions: &ActionSet) -> f64 {
+pub fn combination_sls_quasi_permanent<A: NationalAnnex>(annex: &A, actions: &ActionSet) -> f64 {
     let mut sum = actions.g_k;
     for (cat, q) in &actions.q_k {
         sum += annex.psi_2(cat) * q;
@@ -504,7 +504,7 @@ pub async fn combination_sls_quasi_permanent<A: NationalAnnex>(annex: &A, action
     sum
 }
 
-pub async fn combination_value<A: NationalAnnex>(annex: &A, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
+pub fn combination_value<A: NationalAnnex>(annex: &A, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
     match rule {
         CombinationRule::Uls610 => combination_6_10(annex, actions, leading),
         CombinationRule::Uls610a => combination_6_10a(annex, actions, leading),
@@ -516,7 +516,7 @@ pub async fn combination_value<A: NationalAnnex>(annex: &A, rule: CombinationRul
 }
 
 /// 📋️ Combination rules relevant for a design situation and limit state.
-pub async fn rules_for_situation(situation: DesignSituation, limit_state: LimitState) -> Vec<CombinationRule> {
+pub fn rules_for_situation(situation: DesignSituation, limit_state: LimitState) -> Vec<CombinationRule> {
     match (situation, limit_state) {
         (DesignSituation::Persistent | DesignSituation::Transient, LimitState::Uls) => {
             vec![CombinationRule::Uls610, CombinationRule::Uls610a, CombinationRule::Uls610b]
@@ -530,7 +530,7 @@ pub async fn rules_for_situation(situation: DesignSituation, limit_state: LimitS
     }
 }
 
-async fn clause_for_rule(rule: CombinationRule) -> ClauseId {
+fn clause_for_rule(rule: CombinationRule) -> ClauseId {
     match rule {
         CombinationRule::Uls610 => ClauseId::new("EN 1990", "§6.4", "6.10"),
         CombinationRule::Uls610a => ClauseId::new("EN 1990", "§6.4", "6.10a"),
@@ -541,7 +541,7 @@ async fn clause_for_rule(rule: CombinationRule) -> ClauseId {
     }
 }
 
-async fn message_for_rule(rule: CombinationRule, leading: usize) -> String {
+fn message_for_rule(rule: CombinationRule, leading: usize) -> String {
     match rule {
         CombinationRule::Uls610 => format!("ULS 6.10 leading={leading}"),
         CombinationRule::Uls610a => format!("ULS 6.10a leading={leading}"),
@@ -553,13 +553,13 @@ async fn message_for_rule(rule: CombinationRule, leading: usize) -> String {
 }
 
 /// ✅️ Check one combination against a resistance limit [kN].
-pub async fn check_combination<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize, resistance_kn: f64) -> CheckResult {
+pub fn check_combination<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize, resistance_kn: f64) -> CheckResult {
     let ed = if matches!(rule, CombinationRule::Uls610 | CombinationRule::Uls610a | CombinationRule::Uls610b) { combination_uls(annex, situation, rule, actions, leading) } else { combination_value(annex, rule, actions, leading) };
     CheckResult::from_utilization(clause_for_rule(rule), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), message_for_rule(rule, leading), annex.choice())
 }
 
 /// ✅️ Run all relevant combinations for an action set in a design situation.
-pub async fn check_combination_set<A: NationalAnnex>(annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) -> CheckReport {
+pub fn check_combination_set<A: NationalAnnex>(annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) -> CheckReport {
     let mut report = CheckReport::default();
     let n_leading = actions.q_k.len().max(1);
     for rule in rules_for_situation(situation, LimitState::Uls) {
@@ -589,7 +589,7 @@ pub async fn check_combination_set<A: NationalAnnex>(annex: &A, situation: Desig
 }
 
 /// ✅️ Check design action against resistance (ULS).
-pub async fn check_uls_action<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, resistance: f64) -> CheckResult {
+pub fn check_uls_action<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, resistance: f64) -> CheckResult {
     let ed = combination_6_10(annex, actions, leading);
     CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4", "6.10"), Quantity::force_kn(ed), Quantity::force_kn(resistance), "ULS design action", annex.choice())
 }
@@ -597,7 +597,7 @@ pub async fn check_uls_action<A: NationalAnnex>(annex: &A, actions: &ActionSet, 
 
 // #region 🔖️Reliability
 /// 📐️ Reliability index target β for RC2 (EN 1990 Annex C).
-pub async fn target_reliability_index(consequence_class: u8) -> f64 {
+pub fn target_reliability_index(consequence_class: u8) -> f64 {
     match consequence_class {
         1 => 3.1,
         2 => 3.8,
@@ -606,7 +606,7 @@ pub async fn target_reliability_index(consequence_class: u8) -> f64 {
     }
 }
 
-pub async fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult {
+pub fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult {
     let target = target_reliability_index(consequence_class);
     let passes = beta >= target;
     CheckResult {
@@ -622,13 +622,13 @@ pub async fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckR
 // #endregion 🔖️Reliability
 
 /// 🔁️ Append one design-situation's combination checks onto a shared report.
-pub async fn append_combination_set<A: NationalAnnex>(report: &mut CheckReport, annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) {
+pub fn append_combination_set<A: NationalAnnex>(report: &mut CheckReport, annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) {
     let sub = check_combination_set(annex, situation, actions, resistance_kn);
     report.checks.extend(sub.checks);
 }
 
 /// 📋️ Run EN 1990 design basis checks across persistent, accidental, and seismic situations.
-pub async fn check_design_basis<A: NationalAnnex>(annex: &A, actions: &ActionSet, resistance_kn: f64, consequence_class: u8) -> CheckReport {
+pub fn check_design_basis<A: NationalAnnex>(annex: &A, actions: &ActionSet, resistance_kn: f64, consequence_class: u8) -> CheckReport {
     let mut report = CheckReport::default();
     append_combination_set(&mut report, annex, DesignSituation::Persistent, actions, resistance_kn);
     append_combination_set(&mut report, annex, DesignSituation::Accidental, actions, resistance_kn);
@@ -638,7 +638,7 @@ pub async fn check_design_basis<A: NationalAnnex>(annex: &A, actions: &ActionSet
 }
 
 /// 🧮️ Seismic combination per EN 1990 Eq. 6.12b: ΣG_k + A_Ed + Σψ_2·Q_k.
-pub async fn combination_6_12b<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64) -> f64 {
+pub fn combination_6_12b<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64) -> f64 {
     let mut sum = actions.g_k + seismic_a_ed_kn;
     for (cat, q) in &actions.q_k {
         sum += annex.psi_2(cat) * q;
@@ -647,7 +647,7 @@ pub async fn combination_6_12b<A: NationalAnnex>(annex: &A, actions: &ActionSet,
 }
 
 /// ✅️ Check the seismic design situation per EN 1990 Eq. 6.12b.
-pub async fn check_seismic_situation<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64, resistance_kn: f64) -> CheckResult {
+pub fn check_seismic_situation<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64, resistance_kn: f64) -> CheckResult {
     let ed = combination_6_12b(annex, actions, seismic_a_ed_kn);
     CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), "seismic design situation", annex.choice())
 }
@@ -658,12 +658,12 @@ pub async fn check_seismic_situation<A: NationalAnnex>(annex: &A, actions: &Acti
 mod compliance_helpers_tests {
     use super::*;
 
-    async fn sample_actions() -> ActionSet {
+    fn sample_actions() -> ActionSet {
         ActionSet { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)] }
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn de_na_combination_6_10() {
+    fn de_na_combination_6_10() {
         let annex = NaDe;
         let actions = sample_actions();
         let ed = combination_6_10(&annex, &actions, 0);
@@ -673,7 +673,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn de_combination_6_10a_numeric() {
+    fn de_combination_6_10a_numeric() {
         let annex = NaDe;
         let actions = sample_actions();
         let ed = combination_6_10a(&annex, &actions, 0);
@@ -681,7 +681,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn de_combination_6_10b_numeric() {
+    fn de_combination_6_10b_numeric() {
         let annex = NaDe;
         let actions = sample_actions();
         let ed = combination_6_10b(&annex, &actions, 0);
@@ -689,7 +689,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn en_combination_6_10a_differs_on_other_psi() {
+    fn en_combination_6_10a_differs_on_other_psi() {
         let de = NaDe;
         let en = NaEn;
         let actions = ActionSet { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("other".into(), 30.0)] };
@@ -701,7 +701,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn de_vs_en_congregation_psi_tables() {
+    fn de_vs_en_congregation_psi_tables() {
         let de = NaDe;
         let en = NaEn;
         assert!((de.psi_1("congregation") - 0.7).abs() < 1e-9);
@@ -724,7 +724,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn de_na_gamma_m_and_xi() {
+    fn de_na_gamma_m_and_xi() {
         let annex = NaDe;
         assert!((annex.gamma_m("concrete") - 1.5).abs() < 1e-9);
         assert!((annex.gamma_m("steel") - 1.0).abs() < 1e-9);
@@ -734,7 +734,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn imposed_categories_a_to_h_de() {
+    fn imposed_categories_a_to_h_de() {
         let annex = NaDe;
         for cat in [ImposedCategory::A, ImposedCategory::B, ImposedCategory::C, ImposedCategory::D, ImposedCategory::E, ImposedCategory::F, ImposedCategory::G, ImposedCategory::H] {
             let row = psi_for_imposed(&annex, cat);
@@ -748,7 +748,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn check_combination_set_covers_uls_and_sls() {
+    fn check_combination_set_covers_uls_and_sls() {
         let annex = NaDe;
         let actions = sample_actions();
         let report = check_combination_set(&annex, DesignSituation::Persistent, &actions, 300.0);
@@ -760,7 +760,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn accidental_situation_uses_unit_gamma() {
+    fn accidental_situation_uses_unit_gamma() {
         let annex = NaDe;
         let actions = sample_actions();
         let persistent = combination_uls(&annex, DesignSituation::Persistent, CombinationRule::Uls610a, &actions, 0);
@@ -770,7 +770,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn check_design_basis_covers_all_situations() {
+    fn check_design_basis_covers_all_situations() {
         let annex = NaDe;
         let actions = sample_actions();
         let report = check_design_basis(&annex, &actions, 300.0, 2);
@@ -781,7 +781,7 @@ mod compliance_helpers_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn seismic_combination_de_vs_en_diverge_on_other_psi_2() {
+    fn seismic_combination_de_vs_en_diverge_on_other_psi_2() {
         let actions = ActionSet { g_k: 100.0, q_k: vec![("other".into(), 50.0)] };
         let de_ed = combination_6_12b(&NaDe, &actions, 40.0);
         let en_ed = combination_6_12b(&NaEn, &actions, 40.0);

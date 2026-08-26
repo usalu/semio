@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 /// triple from three payload fields at once, because the three budgets are validated as one atomic bundle
 /// rather than as independent rows.
 #[semio_framework_async_macros::async_test]
-async fn doubles_the_step_budget_and_quintuples_the_timeout() {
+fn doubles_the_step_budget_and_quintuples_the_timeout() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("update-script-limits applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "update-script-limits/doubles-the-step-budget-and-quintuples-the-timeout: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.script_limits.max_steps, 20000, "update-script-limits/doubles-the-step-budget-and-quintuples-the-timeout: the step budget must double");
@@ -45,7 +45,7 @@ async fn doubles_the_step_budget_and_quintuples_the_timeout() {
 /// ↩️ `update-script-limits`'s inverse reads all three OLD budgets out of BASE into one `UpdateScriptLimits`, so
 /// the atomic bundle is restored atomically.
 #[semio_framework_async_macros::async_test]
-async fn restoring_the_default_budgets_restores_before() {
+fn restoring_the_default_budgets_restores_before() {
     let base = before();
     let forward = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward update-script-limits applies");
@@ -63,7 +63,7 @@ async fn restoring_the_default_budgets_restores_before() {
 /// "new_max_recursion": …, "new_timeout_ms": …}}` — three bare JSON integers (`u32`, `u32`, `u64`),
 /// snake_case.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Iso16757Snapshot = serde_json::from_str(text).expect("the committed catalogue snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed catalogue snapshot re-encodes");
@@ -78,7 +78,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The oracle builds the candidate `ScriptLimits` first and compares the WHOLE struct; 20000/128/250 differs
 /// from the committed 10000/64/50, so `mutation.no-op` stays shut.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "update-script-limits/doubles-the-step-budget-and-quintuples-the-timeout: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: `Iso16757Diff` is a per-CONTAINER delta, so this pins that only `scriptLimits`
 /// is rewritten and the other eight containers stay `null`.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced update-script-limits diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "update-script-limits/doubles-the-step-budget-and-quintuples-the-timeout: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -99,7 +99,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `Iso16757Diff`, re-encodes unchanged, and carries the rebuilt script-limits
 /// triple and nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed update-script-limits diff decodes");
     let limits = decoded.script_limits.as_ref().expect("the committed update-script-limits diff carries the limits");
     assert_eq!((limits.max_steps, limits.max_recursion, limits.timeout_ms), (20000, 128, 250), "update-script-limits/doubles-the-step-budget-and-quintuples-the-timeout: the diff must carry all three new budgets together");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete description
 /// of the script-limits update, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed update-script-limits diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "update-script-limits/doubles-the-step-budget-and-quintuples-the-timeout: the committed diff did not carry before to after");

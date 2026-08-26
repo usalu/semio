@@ -69,8 +69,7 @@ impl ArtifactViewer for Procedural2dViewer {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             preview::BODY_KEY => preview::render(doc.snapshot),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }

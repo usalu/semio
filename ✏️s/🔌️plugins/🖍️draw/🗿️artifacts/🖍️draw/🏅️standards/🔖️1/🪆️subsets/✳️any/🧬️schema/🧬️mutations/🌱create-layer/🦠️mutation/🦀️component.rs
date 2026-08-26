@@ -27,16 +27,16 @@ pub fn create_layer(parent_id: Option<String>, index: Option<usize>, layer: Draw
 impl protocol::MutationKind<DrawSnapshot, DrawMutation> for CreateLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
-    async fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
+    fn diff(&self, base: &DrawSnapshot) -> protocol::MutationOutcome<DrawDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
+    fn inverse(&self, base: &DrawSnapshot) -> Vec<DrawMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create layer \"{}\"", crate::artifacts::draw::schema::layer_id(&self.layer))
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![crate::artifacts::draw::schema::layer_id(&self.layer).to_string()]
     }
 }

@@ -190,6 +190,62 @@ fn presentation_to_xml(master_rid: &str, sld_id_entries: &[(u32, String)]) -> Xm
 }
 //#endregion 🔖️PresentationXml
 
+//#region 🔖️PresentationRelationships
+/// 🆔 The lowest `rIdN` not already spoken for — relationship ids are unique per owner part
+/// (ECMA-376 Part 2 §9.3), so a regenerated slide pointer may never collide with a preserved
+/// `viewProps`/`presProps`/`tableStyles`/`notesMaster`/`theme` one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn fresh_rel_id(taken: &mut Vec<String>) -> String {
+    let mut n = 1usize;
+    loop {
+        let candidate = format!("rId{n}");
+        if !taken.iter().any(|id| id == &candidate) {
+            taken.push(candidate.clone());
+            return candidate;
+        }
+        n += 1;
+    }
+}
+
+/// 🔗️ `ppt/presentation.xml`'s relationship list, regenerated for the slide list this snapshot
+/// carries while PRESERVING every relationship the package was read with that this codec does not
+/// own (`presProps`, `viewProps`, `tableStyles`, `notesMaster`, `theme`, …). Only the `slide`
+/// pointers are rebuilt, each reusing the id and the declared type URI of the pointer it replaces,
+/// so the list keeps its original order and a Strict package keeps its `purl.oclc.org/ooxml` types.
+/// Returns the slide-master relationship id, the per-slide relationship ids in slide order, and the
+/// rebuilt list.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn presentation_relationships(existing: &[OpcRelationship], slide_count: usize) -> (String, Vec<String>, Vec<OpcRelationship>) {
+    let is_slide = |rel: &OpcRelationship| rel.rel_type.ends_with("/slide");
+    let slide_type = existing.iter().find(|r| is_slide(r)).map(|r| r.rel_type.clone()).unwrap_or_else(|| REL_TYPE_SLIDE.to_string());
+    let mut taken: Vec<String> = existing.iter().map(|r| r.id.clone()).collect();
+
+    let master = existing.iter().find(|r| r.rel_type.ends_with("/slideMaster")).cloned();
+    let master_rel = master.clone().unwrap_or_else(|| OpcRelationship { id: fresh_rel_id(&mut taken), rel_type: REL_TYPE_SLIDE_MASTER.into(), target: "slideMasters/slideMaster1.xml".into(), target_mode: OpcTargetMode::Internal });
+    let master_rid = master_rel.id.clone();
+
+    let prior_slide_ids: Vec<String> = existing.iter().filter(|r| is_slide(r)).map(|r| r.id.clone()).collect();
+    let slide_rids: Vec<String> = (0..slide_count).map(|i| prior_slide_ids.get(i).cloned().unwrap_or_else(|| fresh_rel_id(&mut taken))).collect();
+    let mut slides = slide_rids.iter().enumerate().map(|(i, id)| OpcRelationship { id: id.clone(), rel_type: slide_type.clone(), target: format!("slides/slide{}.xml", i + 1), target_mode: OpcTargetMode::Internal });
+
+    let mut rebuilt: Vec<OpcRelationship> = Vec::with_capacity(existing.len().max(slide_count + 1));
+    if master.is_none() {
+        rebuilt.push(master_rel);
+    }
+    for relationship in existing {
+        if is_slide(relationship) {
+            if let Some(next) = slides.next() {
+                rebuilt.push(next);
+            }
+            continue;
+        }
+        rebuilt.push(relationship.clone());
+    }
+    rebuilt.extend(slides);
+    (master_rid, slide_rids, rebuilt)
+}
+//#endregion 🔖️PresentationRelationships
+
 //#region 🔖️Codec
 /// 🔄 Regenerates every pptx-owned part (`ppt/presentation.xml`, every `ppt/slides/slideN.xml`
 /// and its relationships) from `presentation`, discarding stale slide parts a shrinking slide
@@ -226,23 +282,14 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
         opc.set_part(THEME_PART, THEME_CONTENT_TYPE, MINIMAL_THEME_XML.as_bytes().to_vec());
     }
 
-    let master_rel = opc.relationships_for(PRESENTATION_PART).iter().find(|r| r.rel_type == REL_TYPE_SLIDE_MASTER).cloned().unwrap_or(OpcRelationship {
-        id: "rId1".into(),
-        rel_type: REL_TYPE_SLIDE_MASTER.into(),
-        target: "slideMasters/slideMaster1.xml".into(),
-        target_mode: OpcTargetMode::Internal,
-    });
-    let master_rid = master_rel.id.clone();
-    let mut pres_rels = vec![master_rel];
+    let (master_rid, slide_rids, pres_rels) = presentation_relationships(opc.relationships_for(PRESENTATION_PART), presentation.slides.len());
 
     let mut sld_id_entries = Vec::with_capacity(presentation.slides.len());
     for (i, slide) in presentation.slides.iter().enumerate() {
         let path = format!("ppt/slides/slide{}.xml", i + 1);
         let xml = slide_to_xml(slide);
         opc.set_part(&path, SLIDE_CONTENT_TYPE, xml_document_to_text(&xml).into_bytes());
-        let rid = format!("rId{}", i + 2); // rId1 reserved for the slide-master relationship
-        pres_rels.push(OpcRelationship { id: rid.clone(), rel_type: REL_TYPE_SLIDE.into(), target: format!("slides/slide{}.xml", i + 1), target_mode: OpcTargetMode::Internal });
-        sld_id_entries.push((256 + i as u32, rid));
+        sld_id_entries.push((256 + i as u32, slide_rids[i].clone()));
         opc.relationships.insert(path, vec![OpcRelationship { id: "rId1".into(), rel_type: REL_TYPE_SLIDE_LAYOUT.into(), target: "../slideLayouts/slideLayout1.xml".into(), target_mode: OpcTargetMode::Internal }]);
     }
     opc.relationships.insert(PRESENTATION_PART.to_string(), pres_rels);

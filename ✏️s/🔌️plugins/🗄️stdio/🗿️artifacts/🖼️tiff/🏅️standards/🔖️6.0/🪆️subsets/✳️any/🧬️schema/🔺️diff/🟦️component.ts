@@ -15,7 +15,9 @@ export interface TiffTagsDiff {
   added?: TiffTagAdded[];
 }
 
-export interface TiffIfdModified { index: number; diff: TiffTagsDiff }
+/** One IFD's own delta: the recursive tag triple plus a whole-value slot for its raw strip payload. */
+export interface TiffIfdDiff { entries: TiffTagsDiff; pixels?: number[] }
+export interface TiffIfdModified { index: number; diff: TiffIfdDiff }
 export interface TiffIfdAdded { index: number; ifd: TiffIfd }
 
 /** Index-keyed `ifds` triple (TIFF's IFD chain is positional). */

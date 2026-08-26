@@ -116,6 +116,14 @@ fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
         .unwrap_or_else(|| "#38bdf8".into())
 }
 
+fn part_color(kind_catalogs: Option<&Value>, part_kind: Option<&str>) -> String {
+    part_kind
+        .and_then(|part_kind| kind_catalogs.and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).and_then(|entries| entries.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some(part_kind))))
+        .and_then(|entry| entry.get("color").and_then(Value::as_str))
+        .unwrap_or("#38bdf8")
+        .to_string()
+}
+
 fn world_grips_json(document: &Puzzle5dDocument) -> String {
     let mut records = Vec::new();
     for part in &document.parts {
@@ -185,11 +193,20 @@ fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzz
     let full_id = puzzle5d_brush_target_grip(envelope)?;
     session.brush_preview_json(&full_id, envelope.runtime.brush_candidate_index)
 }
+
+/// 🪣️ The 5d world consumes the same retained, generation-fenced fill page as puzzle3d.
+fn world_fill_preview_json(session: &Puzzle5dPrecomputeSession, envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Option<String> {
+    if envelope.active_utility != board2d::utilities::fill::UTILITY_ID {
+        return None;
+    }
+    let object_kind = session.fill_preview_object_kind();
+    session.fill_preview_json_page(&part_color(envelope.document.kind_catalogs.as_ref(), object_kind.as_deref()), labels.fill_progress.as_str())
+}
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let brush_preview = world_brush_preview_json(precompute, envelope);
+pub fn render(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let brush_preview = world_fill_preview_json(precompute, envelope, labels).or_else(|| world_brush_preview_json(precompute, envelope));
     let scene = world3d_scene_extended(
         camera3d_json(&envelope.runtime.camera3d),
         world_meshes_json(&envelope.document),

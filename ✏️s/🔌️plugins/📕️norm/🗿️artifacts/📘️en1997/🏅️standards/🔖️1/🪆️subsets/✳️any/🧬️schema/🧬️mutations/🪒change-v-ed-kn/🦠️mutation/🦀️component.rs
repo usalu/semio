@@ -15,15 +15,15 @@ pub struct ChangeVEdKn {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeVEdKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "v-ed-kn", kind: "change-v-ed-kn", record: "ChangedVEdKn" };
 
-    async fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_v_ed_kn::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
+    fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         crate::artifacts::en1997::mutations::change_v_ed_kn::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change design vertical load V_Ed [kN] to {}", self.new_v_ed_kn)
     }
 }

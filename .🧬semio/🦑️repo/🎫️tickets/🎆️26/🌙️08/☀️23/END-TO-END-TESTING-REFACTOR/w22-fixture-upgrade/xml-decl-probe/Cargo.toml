@@ -1,0 +1,9 @@
+[workspace]
+
+[package]
+name = "xml-decl-probe"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+quick-xml = "0.42"

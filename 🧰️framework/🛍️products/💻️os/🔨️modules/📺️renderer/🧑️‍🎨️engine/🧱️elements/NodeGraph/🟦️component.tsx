@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas } from "@semio-tech/infinite-canvas-react-renderer";
-import { currentStylingAppearanceName, resolveColorHex, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
+import { currentStylingAppearanceName, resolveColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {
   borderNormalBottomClass,
   CanvasPickMenu,
@@ -62,7 +62,7 @@ import {
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { mapContextMenuSpecs, parseJsonArray, parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
-import { createDemandFrameScheduler, createFlowSession, createGraphSession, isFlowGraphScene, type FlowWasmSession } from "../WasmSessionLoader/🟦️component.tsx";
+import { createDemandFrameScheduler, createFlowSession, createGraphSession, isFlowGraphScene, type FlowTask, type FlowWasmSession } from "../WasmSessionLoader/🟦️component.tsx";
 import { useAppKeybindingsByActionId, useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 import { useUIFindSafe } from "../ShellSearch/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -1326,9 +1326,9 @@ export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOve
  * — factored out because both session interfaces expose the same overlay/entity JSON shape and both host
  * components (`FlowGraphCanvasHost`, `WasmGraphSurface`) register the identical resolver logic. */
 type DagIntroductionSession = {
-  readonly labelOverlayPaintStateJson: () => string;
-  readonly sliderOverlayStateJson: () => string;
-  readonly entityScreenJson?: (domain: string, id: string) => string;
+  readonly labelOverlayPaintStateJson: () => string | FlowTask<unknown>;
+  readonly sliderOverlayStateJson: () => string | FlowTask<unknown>;
+  readonly entityScreenJson?: (domain: string, id: string) => string | FlowTask<unknown>;
 };
 
 /** @emoji 🎯️ Builds the `IntroductionSurfaceResolver` for a dag-engine-backed graph surface. Reads the
@@ -1337,13 +1337,28 @@ type DagIntroductionSession = {
  * already-fetched `sliderOverlayStateJson()` (no Rust round trip); every other domain (`"node"`,
  * `"handle"`, `"edge"`) goes through `entityScreenJson`, added to the dag engine specifically for this. */
 function dagIntroductionResolver(sessionRef: React.RefObject<DagIntroductionSession | null>, containerRef: React.RefObject<HTMLElement | null>): IntroductionSurfaceResolver {
+  const cache = new Map<string, string>();
+  const active = new Map<string, FlowTask<unknown>>();
+  const read = (key: string, value: string | FlowTask<unknown>): string | undefined => {
+    if (typeof value === "string") return value;
+    active.get(key)?.cancel();
+    active.set(key, value);
+    const unsubscribe = value.subscribe(() => {});
+    void value.result.then((result) => cache.set(key, flowJsonText(result))).catch(() => {}).finally(() => {
+      unsubscribe();
+      if (active.get(key) === value) active.delete(key);
+    });
+    return cache.get(key);
+  };
   return {
     canvasPoint: (x, y) => {
       const session = sessionRef.current;
       const container = containerRef.current;
       if (!session || !container) return null;
       const rect = container.getBoundingClientRect();
-      const camera = parseDagOverlayCamera(session.labelOverlayPaintStateJson());
+      const cameraJson = read("labels", session.labelOverlayPaintStateJson());
+      if (!cameraJson) return null;
+      const camera = parseDagOverlayCamera(cameraJson);
       const screen = dagWorldToScreen(camera, rect.width, rect.height, x, y);
       return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
     },
@@ -1353,10 +1368,14 @@ function dagIntroductionResolver(sessionRef: React.RefObject<DagIntroductionSess
       if (!session || !container) return null;
       const rect = container.getBoundingClientRect();
       if (domain === "slider") {
-        const sliders = parseDagSliderOverlays(session.sliderOverlayStateJson());
+        const slidersJson = read("sliders", session.sliderOverlayStateJson());
+        if (!slidersJson) return null;
+        const sliders = parseDagSliderOverlays(slidersJson);
         const slider = entityId === "*" ? sliders[0] : sliders.find((row) => row.widgetId === entityId);
         if (!slider) return null;
-        const camera = parseDagOverlayCamera(session.labelOverlayPaintStateJson());
+        const cameraJson = read("labels", session.labelOverlayPaintStateJson());
+        if (!cameraJson) return null;
+        const camera = parseDagOverlayCamera(cameraJson);
         const anchor = dagWorldToScreen(camera, rect.width, rect.height, slider.x, slider.y);
         return {
           point: { x: rect.left + anchor.x, y: rect.top + anchor.y },
@@ -1367,7 +1386,9 @@ function dagIntroductionResolver(sessionRef: React.RefObject<DagIntroductionSess
       }
       if (!session.entityScreenJson) return null;
       try {
-        const geometry = JSON.parse(session.entityScreenJson(domain, entityId)) as {
+        const geometryJson = read(`entity:${domain}:${entityId}`, session.entityScreenJson(domain, entityId));
+        if (!geometryJson) return null;
+        const geometry = JSON.parse(geometryJson) as {
           readonly visible: boolean;
           readonly x?: number;
           readonly y?: number;
@@ -1668,17 +1689,73 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 //#region Sync
 // @emoji 🎥️ `applyCamera` must stay false for every resync after the first: live pan/zoom lives in the
 // FlowWasmSession (and plugin runtime via `nodeGraphViewport`), while `scene.viewport` often lags.
-// Applying it on hover/eval/edit-triggered resync would snap the camera; `loadFixtureJson` also
+// Applying it on hover/eval/edit-triggered synchronization would snap the camera; document
 // preserves the live camera so fixture content reloads never reset the view.
+const activeFlowTasks = new WeakMap<FlowWasmSession, Map<string, FlowTask<unknown>>>();
+
+function observeFlowTask<T>(session: FlowWasmSession, feature: string, task: FlowTask<T>, consume?: (value: T) => void): () => void {
+  let features = activeFlowTasks.get(session);
+  if (!features) {
+    features = new Map();
+    activeFlowTasks.set(session, features);
+  }
+  features.get(feature)?.cancel();
+  features.set(feature, task as FlowTask<unknown>);
+  const unsubscribe = task.subscribe(() => {});
+  void task.result
+    .then((value) => consume?.(value))
+    .catch(() => {})
+    .finally(() => {
+      unsubscribe();
+      if (features?.get(feature) === task) features.delete(feature);
+    });
+  return () => {
+    unsubscribe();
+    task.cancel();
+    if (features?.get(feature) === task) features.delete(feature);
+  };
+}
+
+async function readFlowTask<T>(task: FlowTask<T>): Promise<T> {
+  const unsubscribe = task.subscribe(() => {});
+  try {
+    return await task.result;
+  } finally {
+    unsubscribe();
+  }
+}
+
+async function readObservedFlowTask<T>(session: FlowWasmSession, feature: string, task: FlowTask<T>): Promise<T> {
+  observeFlowTask(session, feature, task);
+  return task.result;
+}
+
+function cancelFlowTasks(session: FlowWasmSession): void {
+  for (const task of activeFlowTasks.get(session)?.values() ?? []) task.cancel();
+  activeFlowTasks.delete(session);
+}
+
+function syncFlowCanvasTheme(session: FlowWasmSession): void {
+  observeFlowTask(session, "setCanvasThemeJson", session.setCanvasThemeJson(serializeCanvasThemeJson()));
+}
+
+function flowJsonText(value: unknown): string {
+  return typeof value === "string" ? value : JSON.stringify(value ?? null);
+}
+
+function flowBoolean(value: unknown): boolean {
+  return value === true || value === 1 || value === "\u0001";
+}
+
 function applyNodeGraphHoverFromScene(session: FlowWasmSession, hover: NodeGraphHover | undefined): void {
   if (hover === undefined) return;
-  session.setHover?.(hover.nodeId ?? null);
+  observeFlowTask(session, "setHover", session.setHover(hover.nodeId ?? null));
 }
 
 function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
-  if (scene.evalJson) session.applyEvalOutputsJson(scene.evalJson);
-  if (scene.statusJson) session.setNodeStatuses?.(scene.statusJson);
-  else if (scene.computingJson) session.setComputingProgress(scene.computingJson);
+  if (scene.evalJson) observeFlowTask(session, "applyEvalOutputsJson", session.applyEvalOutputsJson(scene.evalJson));
+  if (scene.statusJson) observeFlowTask(session, "setNodeStatuses", session.setNodeStatuses(scene.statusJson));
+  else if (scene.computingJson) observeFlowTask(session, "setComputingProgress", session.setComputingProgress(scene.computingJson));
 }
 
 function syncFlowSessionStructureFromScene(
@@ -1687,27 +1764,26 @@ function syncFlowSessionStructureFromScene(
   applyCamera: boolean,
   skipFixture = false,
 ): void {
-  if (scene.operators) session.setNeuronKindInfosJson(JSON.stringify(scene.operators));
+  if (scene.operators) observeFlowTask(session, "setNeuronKindInfosJson", session.setNeuronKindInfosJson(JSON.stringify(scene.operators)));
   if (!skipFixture && scene.fixtureJson) {
-    if (session.resyncFixtureJson) session.resyncFixtureJson(scene.fixtureJson);
-    else session.loadFixtureJson(scene.fixtureJson);
+    observeFlowTask(session, "synchronizeDocumentJson", session.synchronizeDocumentJson(scene.fixtureJson));
   }
-  if (scene.selection) session.setSelection(JSON.stringify(scene.selection));
+  if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(scene.selection)));
   applyNodeGraphHoverFromScene(session, scene.hover);
-  if (scene.previewOffJson) session.setPreviewOff(scene.previewOffJson);
-  if (scene.catalogueJson != null) session.setCatalogueJson(scene.catalogueJson);
+  if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
+  if (scene.catalogueJson != null) observeFlowTask(session, "setCatalogueJson", session.setCatalogueJson(scene.catalogueJson));
   if (scene.lodJson) {
     try {
       const lod = parseSceneJsonField<{ readonly automatic?: boolean; readonly forcedLabel?: string }>(scene.lodJson);
-      session.setAutomaticLod(lod.automatic !== false);
-      if (lod.forcedLabel) session.setForcedDrawLodLabel(lod.forcedLabel);
+      observeFlowTask(session, "setAutomaticLod", session.setAutomaticLod(lod.automatic !== false));
+      if (lod.forcedLabel) observeFlowTask(session, "setForcedDrawLodLabel", session.setForcedDrawLodLabel(lod.forcedLabel));
     } catch {
       /* ignore */
     }
   }
   if (!applyCamera) return;
   const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
-  session.setCamera(viewport.x, viewport.y, viewport.zoom);
+  observeFlowTask(session, "setCamera", session.setCamera(viewport.x, viewport.y, viewport.zoom));
 }
 
 function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
@@ -1720,6 +1796,10 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
 //#endregion Sync
 
 //#region FlowGraphCanvasHost
+export function flowSurfaceRenderAllowed(surfaceReady: boolean): boolean {
+  return surfaceReady;
+}
+
 export function FlowGraphCanvasHost({
   scene,
   surfaceId,
@@ -1738,6 +1818,7 @@ export function FlowGraphCanvasHost({
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const sessionRef = useRef<FlowWasmSession | null>(null);
   const schedulerRef = useRef<ReturnType<typeof createDemandFrameScheduler> | null>(null);
+  const surfaceReadyRef = useRef(false);
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1754,6 +1835,8 @@ export function FlowGraphCanvasHost({
   const [containerSize, setContainerSize] = useState({ w: 800, h: 600 });
   const [sessionReady, setSessionReady] = useState(false);
   const [spotlight, setSpotlight] = useState<FlowSpotlightState | null>(null);
+  const [spotlightSections, setSpotlightSections] = useState<readonly FlowCatalogueSection[]>([]);
+  const pickTargetsRef = useRef<readonly CanvasPickTarget[]>([]);
   const sceneSignature = useMemo(() => JSON.stringify(scene), [scene]);
   // Always holds the latest `scene` without forcing effects to depend on (and re-run per) it.
   const sceneRef = useRef(scene);
@@ -1794,12 +1877,9 @@ export function FlowGraphCanvasHost({
   const commitFixture = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
-    try {
-      const fixtureJson = session.fixtureJson();
-      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setFixture", fixtureJson }] });
-    } catch {
-      /* session not ready */
-    }
+    observeFlowTask(session, "documentJson:commit", session.documentJson(), (value) => {
+      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setFixture", fixtureJson: flowJsonText(value) }] });
+    });
   }, [dispatch]);
 
   // A continuous gesture (e.g. dragging a slider) fires many onValueChange ticks per second, each
@@ -1849,29 +1929,45 @@ export function FlowGraphCanvasHost({
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
     setContainerSize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
-    try {
-      const labelJson = session.labelOverlayPaintStateJson();
+    void Promise.all([
+      readObservedFlowTask(session, "labelOverlayPaintStateJson", session.labelOverlayPaintStateJson()),
+      readObservedFlowTask(session, "selectedWidgetIds", session.selectedWidgetIds()),
+      readObservedFlowTask(session, "preselectWidgetIdsJson", session.preselectWidgetIdsJson()),
+      readObservedFlowTask(session, "previewOffWidgetIds", session.previewOffWidgetIds()),
+      readObservedFlowTask(session, "hoveredWidgetId:overlay", session.hoveredWidgetId()),
+      readObservedFlowTask(session, "sliderOverlayStateJson", session.sliderOverlayStateJson()),
+      readObservedFlowTask(session, "selectionUnionBoundsScreenJson", session.selectionUnionBoundsScreenJson()),
+      readObservedFlowTask(session, "selectionPreviewPointsJson", session.selectionPreviewPointsJson()),
+      readObservedFlowTask(session, "selectionPreviewCrossing", session.selectionPreviewCrossing()),
+      readObservedFlowTask(session, "selectionPreviewMethod", session.selectionPreviewMethod()),
+    ]).then(([labelValue, selectedValue, preselectValue, dimmedValue, hoveredValue, sliderValue, boundsValue, pointsValue, crossingValue, methodValue]) => {
+      const labelJson = flowJsonText(labelValue);
       setLabelStateJson((prev) => (prev === labelJson ? prev : labelJson));
       const minimapCursor = parseDagMinimapWidgetCursor(labelJson);
       if (gpuCanvasRef.current) {
         gpuCanvasRef.current.style.cursor = minimapCursor ?? "";
       }
-      const selectedIds = parseDagNodeIdArray(session.selectedWidgetIds());
-      const preselect = parseDagPreselectJson(session.preselectWidgetIdsJson());
-      const dimmedIds = parseDagNodeIdArray(session.previewOffWidgetIds());
+      const selectedIds = parseDagNodeIdArray(flowJsonText(selectedValue));
+      const preselect = parseDagPreselectJson(flowJsonText(preselectValue));
+      const dimmedIds = parseDagNodeIdArray(flowJsonText(dimmedValue));
       paintDagLabelOverlays(labelJson, labelCanvas, rect.width, rect.height, dpr, {
-        hoveredId: session.hoveredWidgetId() ?? null,
+        hoveredId: typeof hoveredValue === "string" ? hoveredValue : null,
         selectedIds,
         preselect,
         dimmedIds,
       });
-      const nextSliderJson = session.sliderOverlayStateJson();
+      const nextSliderJson = flowJsonText(sliderValue);
       setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
-    } catch {
-      /* gpu not ready */
-    }
-    setSelectionBounds(parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson()));
-    setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), session.selectionPreviewMethod?.()));
+      setSelectionBounds(parseDagSelectionUnionBoundsScreen(flowJsonText(boundsValue)));
+      setMarquee(computeDagMarqueeOverlay(flowJsonText(pointsValue), flowBoolean(crossingValue), typeof methodValue === "string" ? methodValue : undefined));
+    }).catch(() => {});
+  }, []);
+
+  const renderFlow = useCallback(() => {
+    const session = sessionRef.current;
+    const canvas = gpuCanvasRef.current;
+    if (!session || !canvas || !flowSurfaceRenderAllowed(surfaceReadyRef.current)) return;
+    observeFlowTask(session, "renderCanvas", session.renderCanvas(canvas));
   }, []);
 
   const handleGesturePointerUp = useCallback(() => {
@@ -1888,31 +1984,30 @@ export function FlowGraphCanvasHost({
       // session's live fixture (slider seeds) and skip stale `evalJson`/`statusJson` until the plugin
       // worker's `flowEvalTick` chain publishes a fresh scene after `commitFixture`.
       syncFlowSessionStructureFromScene(session, sceneRef.current, false, true);
-      try {
-        session.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      renderFlow();
       paintOverlays();
     }
     lastCommitAtRef.current = Date.now();
     commitFixture();
-  }, [commitFixture, paintOverlays]);
+  }, [commitFixture, paintOverlays, renderFlow]);
 
   const emitInteractionState = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
-    try {
-      const domains = parseSelectionDomainsFromSession(session.selectionDomainsJson?.() ?? session.selectedWidgetIds());
+    void Promise.all([
+      readObservedFlowTask(session, "selectionDomainsJson:interaction", session.selectionDomainsJson()),
+      readObservedFlowTask(session, "hoveredWidgetId:interaction", session.hoveredWidgetId()),
+      readObservedFlowTask(session, "hoveredChannelJson:interaction", session.hoveredChannelJson()),
+      readObservedFlowTask(session, "cameraJson:interaction", session.cameraJson()),
+    ]).then(([domainsValue, hoveredValue, channelValue, cameraValue]) => {
+      const domains = parseSelectionDomainsFromSession(flowJsonText(domainsValue));
       dispatch(nodeGraphActions.select, { nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles });
-      const hovered = session.hoveredWidgetId();
-      const channelJson = session.hoveredChannelJson();
+      const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
+      const channelJson = flowJsonText(channelValue);
       dispatch(nodeGraphActions.hover, { hoverJson: hovered ? channelJson : null });
-      const cameraJson = session.cameraJson?.();
+      const cameraJson = flowJsonText(cameraValue);
       if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(cameraJson));
-    } catch {
-      /* session not ready */
-    }
+    }).catch(() => {});
     paintOverlays();
   }, [dispatch, paintOverlays]);
 
@@ -1920,7 +2015,7 @@ export function FlowGraphCanvasHost({
     let cancelled = false;
     void createFlowSession().then((session) => {
       if (cancelled) {
-        session.free();
+        void session.free();
         return;
       }
       sessionRef.current = session;
@@ -1930,7 +2025,10 @@ export function FlowGraphCanvasHost({
       cancelled = true;
       // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was never freed on unmount — the wasm-side
       // session (and everything it retains) leaked for the rest of the document's lifetime.
-      sessionRef.current?.free();
+      if (sessionRef.current) {
+        cancelFlowTasks(sessionRef.current);
+        void sessionRef.current.free();
+      }
       sessionRef.current = null;
     };
   }, []);
@@ -1950,17 +2048,19 @@ export function FlowGraphCanvasHost({
     const dpr = globalThis.devicePixelRatio || 1;
     let cancelled = false;
     let cleanupAttached: (() => void) | undefined;
-    session
-      .attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr)
+    const attachment = session.attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr);
+    const unsubscribeAttachment = attachment.subscribe(() => schedulerRef.current?.invalidate());
+    void attachment.result
       .then(() => {
         if (cancelled) return;
+        surfaceReadyRef.current = true;
         syncFlowSessionFromScene(session, sceneRef.current, true);
-        syncSessionCanvasTheme(session);
+        syncFlowCanvasTheme(session);
         const resize = () => {
           const next = container.getBoundingClientRect();
           const nextDpr = globalThis.devicePixelRatio || 1;
-          session.setSize(Math.round(next.width), Math.round(next.height), nextDpr);
-          session.renderFrame();
+          observeFlowTask(session, "setSize", session.setSize(Math.round(next.width), Math.round(next.height), nextDpr));
+          renderFlow();
           paintOverlays();
         };
         resize();
@@ -1969,7 +2069,7 @@ export function FlowGraphCanvasHost({
         // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was an unconditional 60fps `requestAnimationFrame`
         // loop for the surface's entire lifetime — see `createDemandFrameScheduler`'s docstring.
         const scheduler = createDemandFrameScheduler(() => {
-          session.renderFrame();
+          renderFlow();
           paintOverlays();
         });
         schedulerRef.current = scheduler;
@@ -1985,9 +2085,12 @@ export function FlowGraphCanvasHost({
       });
     return () => {
       cancelled = true;
+      surfaceReadyRef.current = false;
+      unsubscribeAttachment();
+      attachment.cancel();
       cleanupAttached?.();
     };
-  }, [sessionReady, paintOverlays]);
+  }, [sessionReady, paintOverlays, renderFlow]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -1999,20 +2102,16 @@ export function FlowGraphCanvasHost({
     if (!isGestureActiveRef.current) {
       syncFlowSessionFromScene(session, scene, false);
     }
-    session.renderFrame();
+    renderFlow();
     paintOverlays();
     schedulerRef.current?.invalidate();
-  }, [sceneSignature, paintOverlays, scene, sessionReady]);
+  }, [sceneSignature, paintOverlays, renderFlow, scene, sessionReady]);
 
   const flowGraphCanvasHostShellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
     () => {
-      syncSessionCanvasTheme(sessionRef.current);
-      try {
-        sessionRef.current?.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      if (sessionRef.current) syncFlowCanvasTheme(sessionRef.current);
+      renderFlow();
       paintOverlays();
       schedulerRef.current?.invalidate();
     },
@@ -2028,31 +2127,33 @@ export function FlowGraphCanvasHost({
       const rect = container.getBoundingClientRect();
       const sx = client.x - rect.left;
       const sy = client.y - rect.top;
-      try {
-        return JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
-      } catch {
-        return [];
-      }
+      observeFlowTask(session, "pickTargetsAtScreenJson:pointer", session.pickTargetsAtScreenJson(sx, sy), (value) => {
+        try {
+          pickTargetsRef.current = JSON.parse(flowJsonText(value)) as CanvasPickTarget[];
+        } catch {
+          pickTargetsRef.current = [];
+        }
+      });
+      return [...pickTargetsRef.current];
     },
     onHoverFocus: (focus) => {
       const session = sessionRef.current;
       if (!session) return;
       const target = focus.target;
       if (!target) {
-        session.setHover?.(null);
+        observeFlowTask(session, "setHover", session.setHover(null));
       } else if (target.portId) {
-        session.setHoverChannel?.(target.id, target.portId);
+        observeFlowTask(session, "setHoverChannel", session.setHoverChannel(target.id, target.portId));
       } else {
-        session.setHover?.(target.id);
+        observeFlowTask(session, "setHover", session.setHover(target.id));
       }
-      try {
-        const hovered = session.hoveredWidgetId();
-        const channelJson = session.hoveredChannelJson();
-        dispatch(nodeGraphActions.hover, { hoverJson: hovered ? channelJson : null });
-      } catch {
-        /* session not ready */
-      }
-      session.renderFrame();
+      void Promise.all([
+        readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
+        readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
+      ]).then(([hoveredValue, channelValue]) => {
+        dispatch(nodeGraphActions.hover, { hoverJson: hoveredValue ? flowJsonText(channelValue) : null });
+      }).catch(() => {});
+      renderFlow();
       paintOverlays();
     },
     onSelectTarget: () => {
@@ -2063,10 +2164,10 @@ export function FlowGraphCanvasHost({
   const clearGhostPreview = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
-    session.clearGhostWidget();
-    session.renderFrame();
+    observeFlowTask(session, "clearGhostWidget", session.clearGhostWidget());
+    renderFlow();
     paintOverlays();
-  }, [paintOverlays]);
+  }, [paintOverlays, renderFlow]);
 
   const closeSpotlight = useCallback(() => {
     setSpotlight(null);
@@ -2079,17 +2180,17 @@ export function FlowGraphCanvasHost({
       const open = spotlight;
       if (!session || !open) return;
       if (!item) {
-        session.clearGhostWidget();
-        session.renderFrame();
+        observeFlowTask(session, "clearGhostWidget", session.clearGhostWidget());
+        renderFlow();
         paintOverlays();
         return;
       }
       console.log("[DEBUG] flow spotlight preview", item.kind, item.neuronKind ?? item.name, open.world);
-      session.setGhostWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y);
-      session.renderFrame();
+      observeFlowTask(session, "setGhostWidget", session.setGhostWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y));
+      renderFlow();
       paintOverlays();
     },
-    [paintOverlays, spotlight],
+    [paintOverlays, renderFlow, spotlight],
   );
 
   const commitSpotlightItem = useCallback(
@@ -2098,13 +2199,10 @@ export function FlowGraphCanvasHost({
       const open = spotlight;
       if (!session || !open) return;
       console.log("[DEBUG] flow spotlight commit", item.kind, item.neuronKind ?? item.name, open.world);
-      try {
-        session.addWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y);
+      observeFlowTask(session, "addWidget", session.addWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y), () => {
         commitFixture();
         emitInteractionState();
-      } catch {
-        /* invalid descriptor */
-      }
+      });
       setSpotlight(null);
       clearGhostPreview();
     },
@@ -2118,16 +2216,18 @@ export function FlowGraphCanvasHost({
       const rect = target.getBoundingClientRect();
       const sx = clientX - rect.left;
       const sy = clientY - rect.top;
-      let world = { x: sx, y: sy };
-      try {
-        const parsed = JSON.parse(session.worldFromScreen(sx, sy)) as { readonly x?: number; readonly y?: number };
-        world = { x: parsed.x ?? sx, y: parsed.y ?? sy };
-      } catch {
-        const camera = parseDagOverlayCamera(labelStateJson);
-        world = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
-      }
+      const camera = parseDagOverlayCamera(labelStateJson);
+      const world = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
       console.log("[DEBUG] flow spotlight open", { screen: { x: sx, y: sy }, world });
       setSpotlight({ screen: { x: sx, y: sy }, world });
+      observeFlowTask(session, "worldFromScreen:spotlight", session.worldFromScreen(sx, sy), (value) => {
+        try {
+          const parsed = JSON.parse(flowJsonText(value)) as { readonly x?: number; readonly y?: number };
+          setSpotlight({ screen: { x: sx, y: sy }, world: { x: parsed.x ?? world.x, y: parsed.y ?? world.y } });
+        } catch {
+          /* retain projected world */
+        }
+      });
     },
     [editable, labelStateJson],
   );
@@ -2146,19 +2246,21 @@ export function FlowGraphCanvasHost({
       const rect = container.getBoundingClientRect();
       const sx = event.clientX - rect.left;
       const sy = event.clientY - rect.top;
-      let world = { x: sx, y: sy };
-      try {
-        const parsed = JSON.parse(session.worldFromScreen(sx, sy)) as { readonly x?: number; readonly y?: number };
-        world = { x: parsed.x ?? sx, y: parsed.y ?? sy };
-      } catch {
-        const camera = parseDagOverlayCamera(labelStateJson);
-        world = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
-      }
-      session.setGhostWidget(catalogueGhostDescriptorJson(catalogueApp), world.x, world.y);
-      session.renderFrame();
+      const camera = parseDagOverlayCamera(labelStateJson);
+      const world = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
+      observeFlowTask(session, "setGhostWidget", session.setGhostWidget(catalogueGhostDescriptorJson(catalogueApp), world.x, world.y));
+      observeFlowTask(session, "worldFromScreen:drag", session.worldFromScreen(sx, sy), (value) => {
+        try {
+          const parsed = JSON.parse(flowJsonText(value)) as { readonly x?: number; readonly y?: number };
+          observeFlowTask(session, "setGhostWidget", session.setGhostWidget(catalogueGhostDescriptorJson(catalogueApp), parsed.x ?? world.x, parsed.y ?? world.y));
+        } catch {
+          /* retain projected world */
+        }
+      });
+      renderFlow();
       paintOverlays();
     },
-    [editable, labelStateJson, paintOverlays],
+    [editable, labelStateJson, paintOverlays, renderFlow],
   );
 
   const onDrop = useCallback(
@@ -2174,27 +2276,27 @@ export function FlowGraphCanvasHost({
       const rect = container.getBoundingClientRect();
       const sx = event.clientX - rect.left;
       const sy = event.clientY - rect.top;
-      let world = { x: sx, y: sy };
-      try {
-        const parsed = JSON.parse(session.worldFromScreen(sx, sy)) as { readonly x?: number; readonly y?: number };
-        world = { x: parsed.x ?? sx, y: parsed.y ?? sy };
-      } catch {
-        const camera = parseDagOverlayCamera(labelStateJson);
-        world = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
-      }
-      const catalogueApp = parseCatalogueAppDragPayload(raw);
-      if (catalogueApp) {
-        dispatch("spawnApp", { pluginId: catalogueApp.pluginId, appId: catalogueApp.appId, x: world.x, y: world.y });
-        return;
-      }
-      try {
+      const camera = parseDagOverlayCamera(labelStateJson);
+      const fallback = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
+      observeFlowTask(session, "worldFromScreen:drop", session.worldFromScreen(sx, sy), (value) => {
+        let world = fallback;
+        try {
+          const parsed = JSON.parse(flowJsonText(value)) as { readonly x?: number; readonly y?: number };
+          world = { x: parsed.x ?? fallback.x, y: parsed.y ?? fallback.y };
+        } catch {
+          /* retain projected world */
+        }
+        const catalogueApp = parseCatalogueAppDragPayload(raw);
+        if (catalogueApp) {
+          dispatch("spawnApp", { pluginId: catalogueApp.pluginId, appId: catalogueApp.appId, x: world.x, y: world.y });
+          return;
+        }
         const descriptor = raw.startsWith("{") ? raw : JSON.stringify({ kind: raw });
-        session.addWidget(descriptor, world.x, world.y);
-        commitFixture();
-        emitInteractionState();
-      } catch {
-        /* invalid descriptor */
-      }
+        observeFlowTask(session, "addWidget", session.addWidget(descriptor, world.x, world.y), () => {
+          commitFixture();
+          emitInteractionState();
+        });
+      });
     },
     [clearGhostPreview, commitFixture, dispatch, editable, emitInteractionState, labelStateJson],
   );
@@ -2204,31 +2306,36 @@ export function FlowGraphCanvasHost({
       if (!editable) return;
       const session = sessionRef.current;
       if (!session) return;
-      const hovered = session.hoveredWidgetId();
-      if (hovered) {
+      observeFlowTask(session, "hoveredWidgetId:doubleClick", session.hoveredWidgetId(), (value) => {
+        const hovered = typeof value === "string" ? value : undefined;
+        if (!hovered) {
+          openSpotlightAtClient(event.clientX, event.clientY, event.currentTarget);
+          return;
+        }
         const instanceId = resolveFixtureWidgetInstanceId(scene.fixtureJson, hovered);
         if (instanceId) {
           dispatch("openInstance", { instanceId });
-          return;
         }
-        return;
-      }
-      openSpotlightAtClient(event.clientX, event.clientY, event.currentTarget);
+      });
     },
     [dispatch, editable, openSpotlightAtClient, scene.fixtureJson],
   );
 
   useEffect(() => clearGhostPreview, [clearGhostPreview]);
 
-  const spotlightSections = useMemo(() => {
-    if (!spotlight || !sessionReady) return [] as FlowCatalogueSection[];
-    const session = sessionRef.current;
-    if (!session) return parseFlowCatalogueSections(scene.catalogueJson);
-    try {
-      return parseFlowCatalogueSections(session.catalogueJson());
-    } catch {
-      return parseFlowCatalogueSections(scene.catalogueJson);
+  useEffect(() => {
+    if (!spotlight || !sessionReady) {
+      setSpotlightSections([]);
+      return;
     }
+    const session = sessionRef.current;
+    if (!session) {
+      setSpotlightSections(parseFlowCatalogueSections(scene.catalogueJson));
+      return;
+    }
+    return observeFlowTask(session, "catalogueJson:spotlight", session.catalogueJson(), (value) => {
+      setSpotlightSections(parseFlowCatalogueSections(flowJsonText(value)));
+    });
   }, [scene.catalogueJson, sessionReady, spotlight]);
 
   return (
@@ -2253,7 +2360,7 @@ export function FlowGraphCanvasHost({
           let domains = { nodes: [] as string[], edges: [] as string[], handles: [] as string[] };
           if (session) {
             try {
-              domains = parseSelectionDomainsFromSession(session.selectionDomainsJson?.() ?? session.selectedWidgetIds());
+              domains = parseSelectionDomainsFromSession(flowJsonText(await readFlowTask(session.selectionDomainsJson())));
             } catch {
               domains = { nodes: [], edges: [], handles: [] };
             }
@@ -2263,7 +2370,7 @@ export function FlowGraphCanvasHost({
             const sx = event.clientX - rect.left;
             const sy = event.clientY - rect.top;
             try {
-              const targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
+              const targets = JSON.parse(flowJsonText(await readFlowTask(session.pickTargetsAtScreenJson(sx, sy)))) as CanvasPickTarget[];
               hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
               widgetId = pickMostSpecificCanvasTarget(targets)?.id;
             } catch {
@@ -2271,15 +2378,14 @@ export function FlowGraphCanvasHost({
             }
           }
           if (!widgetId) {
-            widgetId = session?.hoveredWidgetId() ?? undefined;
+            const hovered = session ? await readFlowTask(session.hoveredWidgetId()).catch(() => undefined) : undefined;
+            widgetId = typeof hovered === "string" ? hovered : undefined;
           }
           if (widgetId && !domains.nodes.includes(widgetId)) {
             domains = { nodes: [widgetId], edges: [], handles: [] };
-            try {
-              session?.setSelection?.(JSON.stringify(domains));
-              session?.renderFrame();
-            } catch {
-              /* session not ready */
+            if (session) {
+              observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(domains)));
+              renderFlow();
             }
             dispatch("contextMenuAt", { id: widgetId });
           } else if (widgetId) {
@@ -2317,12 +2423,8 @@ export function FlowGraphCanvasHost({
         onSliderChange={(widgetId, value) => {
           const session = sessionRef.current;
           if (!session) return;
-          session.setSliderValue(widgetId, value);
-          try {
-            session.renderFrame();
-          } catch {
-            /* gpu not ready */
-          }
+          observeFlowTask(session, "setSliderValue", session.setSliderValue(widgetId, value));
+          renderFlow();
           commitFixtureThrottled();
           paintOverlays();
         }}
@@ -2336,7 +2438,8 @@ export function FlowGraphCanvasHost({
             <SelectionAlignChrome
               bounds={selectionBounds}
               onAlign={(mode) => {
-                sessionRef.current?.alignSelection(mode);
+                const session = sessionRef.current;
+                if (session) observeFlowTask(session, "alignSelection", session.alignSelection(mode));
                 commitFixture();
                 paintOverlays();
               }}
@@ -2362,8 +2465,8 @@ export function FlowGraphCanvasHost({
           const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerDown(client);
-          session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey, event.button === 1 || event.buttons === 4);
-          session.renderFrame();
+          observeFlowTask(session, "pointerDownScreen", session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey, event.button === 1 || event.buttons === 4));
+          renderFlow();
           paintOverlays();
         }}
         onPointerMove={(event) => {
@@ -2372,8 +2475,8 @@ export function FlowGraphCanvasHost({
           const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerMove(client);
-          session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
-          session.renderFrame();
+          observeFlowTask(session, "pointerMoveScreen", session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey));
+          renderFlow();
           paintOverlays();
         }}
         onPointerUp={(event) => {
@@ -2383,8 +2486,8 @@ export function FlowGraphCanvasHost({
           const rect = event.currentTarget.getBoundingClientRect();
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
-          session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
-          session.renderFrame();
+          observeFlowTask(session, "pointerUpScreen", session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey));
+          renderFlow();
           commitFixture();
           emitInteractionState();
         }}
@@ -2396,10 +2499,11 @@ export function FlowGraphCanvasHost({
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
           const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
-          session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true);
-          session.renderFrame();
-          const cameraJson = session.cameraJson?.();
-          if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(cameraJson));
+          observeFlowTask(session, "wheelScreen", session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true));
+          renderFlow();
+          observeFlowTask(session, "cameraJson:wheel", session.cameraJson(), (value) => {
+            dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(flowJsonText(value)));
+          });
           paintOverlays();
         }}
       />

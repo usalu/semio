@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 /// 1.5 to the EN table's class-dependent value, but that is COMPUTED in `💡️inferences`, so the masonry class
 /// the EN table reads must ride through untouched.
 #[semio_framework_async_macros::async_test]
-async fn switches_from_the_german_na_to_the_recommended_en_annex() {
+fn switches_from_the_german_na_to_the_recommended_en_annex() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-annex applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.annex, crate::document::AnnexChoice::En, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: annex must read `AnnexChoice::En` once the change lands");
@@ -44,7 +44,7 @@ async fn switches_from_the_german_na_to_the_recommended_en_annex() {
 /// ↩️ `change-annex`'s inverse reads the OLD `AnnexChoice::De` out of BASE, so replaying it puts the German
 /// national annex back on `annex`.
 #[semio_framework_async_macros::async_test]
-async fn switching_back_to_the_german_na_restores_before() {
+fn switching_back_to_the_german_na_restores_before() {
     let base = before();
     let forward = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-annex applies");
@@ -62,7 +62,7 @@ async fn switching_back_to_the_german_na_restores_before() {
 /// is a fixed point, so `"En"` — `AnnexChoice` carries no serde rename, so the wire spelling is the bare Rust
 /// variant name is spelled here exactly as this artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1996Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ `change-annex` has only an equality guard (an enum cannot be non-finite), and `En` differs
 /// from the committed `De`, so `mutation.no-op` must not fire.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `annex` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-annex diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -98,7 +98,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1996Diff`, re-encodes unchanged, and carries the annex choice and nothing
 /// else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-annex diff decodes");
     assert_eq!(decoded.annex, Some(crate::document::AnnexChoice::En), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed diff must carry annex = `AnnexChoice::En`");
     assert!(decoded.masonry_class.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: change-annex writes annex and must leave `masonry_class` untouched");
@@ -112,7 +112,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the annex switch, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-annex diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed diff did not carry before to after");

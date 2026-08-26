@@ -1,21 +1,38 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. `trinity.graph` is a semio-NATIVE assembly scene whose pieces and connections live in a composed `s.stdio.semio.graph` child, so no oracle is registered and the evidence rests on the eight committed per-kind vectors plus the inverse law over the real committed Nakagin tower (see noOracleDecisions).",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. `s.trinity.jack` is a semio-NATIVE assembly scene: a labelled property graph whose edges address PORTS over a kind manifest. No graph library models a port-addressed endpoint and none reads `.dsl.semio`, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed snapshot schema, mutation grammar and specification vectors.",
+  "oracles": [
     {
-      "id": "jack-1-assembly-scene-mutation-semantics",
-      "capabilities": ["jack-1-mutate"],
-      "rationale": "No third party reads or writes `.jack.dsl.semio`, and no graph library could adjudicate this vocabulary either. `JackSnapshot` persists a `manifest`, a camera, a root node id and ONE composed `s.stdio.semio.graph` child handle whose `childId` is a content digest of the child — pieces and connections are never persisted inline — so what an applied mutation produces is a NEW handle and what a refused one produces is the same handle, an addressing scheme private to this repository. And the vocabulary is an ASSEMBLY vocabulary rather than a graph one: an edge endpoint is a `node@port` pair split by this plugin's own `port_node_id`, an edge that names an absent endpoint is the Fatal `mutation.invariant` rather than a missing target, and `change-data-property`/`remove-data-property` address an `EntityRef` because nodes and edges share one property-bag shape. Confidence comes instead from the eight committed, independently handcrafted specification vectors under `../🧬️schema/🧬️mutations/<slug>/🧪️tests/<fixture>/`, each already unit-tested inside the production crate, and from the inverse law as a metamorphic property. Those eight split evenly and deliberately: four are refusals at two severities, four are no-ops — renaming a piece to the name it already carries, moving it to the point it already occupies, setting a property to the value it already holds, removing a property an edge never had. All eight leave the document byte-identical, so the `(code, severity)` pair is the only thing that tells a refusal from a degenerate application; `mutate-jack-1` therefore requires that pair per vector and separately applies a real-effect payload of its own to the committed Nakagin tower, where the content-addressed handle supplies the observability the vectors cannot.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "id": "jack-python-independent",
+      "ecosystem": "python",
+      "package": "",
+      "version": "",
+      "capabilities": [
+        "jack-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "A second implementation of the `s.trinity.jack` scene, of its `.dsl.semio` carrier and of all eight typed mutations, in Python, at `../../../../../🧪️tests/mutate-jack-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the document: nodes with ports, edges over `node@port` endpoints, a manifest, a camera and a root node id), `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` (the eight verbs and their positional argument lists) and the eight committed specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `networkx`, `igraph` and `petgraph` model vertices and edges but have no notion of a PORT-addressed endpoint, of a manifest that closes the kind vocabulary, or of the untyped property bag `change-data-property` and `remove-data-property` edit, and none of them reads this carrier. THREE FINDINGS reported rather than worked around: (1) `../🧬️schema/🧬️mutations/🔣️component.json` does not describe the mutations — it is a verbatim copy of the snapshot schema with the title changed — so the wire form was read off the vectors, which inconsistently mix camelCase discriminators with snake_case arguments; (2) nothing states whether deleting a node cascades to its edges, so the reference cascades on the grounds of the invariant `create-edge`'s own rejection establishes, and the feature's `delete-node` row addresses a node no edge names so the comparison never rests on the inference; (3) all eight committed vectors are NEGATIVE, three rejections and five accepted no-ops, so the accepting direction of this vocabulary had no committed evidence before this case's real-document scenarios. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
     }
   ],
   "mutationCatalogs": [
     {
       "id": "jack-1-any",
       "capability": "jack-1-mutate",
-      "kinds": ["create-node", "delete-node", "create-edge", "delete-edge", "rename-node", "move-node", "change-data-property", "remove-data-property"]
+      "kinds": [
+        "create-node",
+        "delete-node",
+        "create-edge",
+        "delete-edge",
+        "rename-node",
+        "move-node",
+        "change-data-property",
+        "remove-data-property"
+      ]
     }
   ]
 }

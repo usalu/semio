@@ -88,7 +88,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn empty_builder_injects_profile_and_builds_clean() {
-            let snapshot = SvgBasicBuilderConstruction::empty().build().expect("empty document builds clean");
+            let snapshot = SvgBasicBuilderConstruction::empty().await.build().await.expect("empty document builds clean");
             match &snapshot.doc.root {
                 Some(XmlNode::Element { attrs, .. }) => {
                     assert!(attrs.iter().any(|a| a.name == "baseProfile" && a.value == "basic"));
@@ -100,19 +100,19 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = SvgBasicBuilderConstruction::empty().build().unwrap();
+            let mut snapshot = SvgBasicBuilderConstruction::empty().await.build().await.unwrap();
             if let Some(XmlNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
                 children.push(XmlNode::Element { name: "filter".into(), attrs: vec![XmlAttr { name: "id".into(), value: "f1".into() }], children: vec![XmlNode::Element { name: "feMorphology".into(), attrs: vec![], children: vec![] }] });
             }
-            let (mutated, _diff) = SvgBasicBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgBasicMutation::SetSnapshot { snapshot });
-            let err = mutated.build().expect_err("a feMorphology primitive must fail build()");
+            let (mutated, _diff) = SvgBasicBuilderConstruction::from_snapshot(SvgSnapshot::default()).await.mutate(SvgBasicMutation::SetSnapshot { snapshot }).await;
+            let err = mutated.build().await.expect_err("a feMorphology primitive must fail build()");
             assert!(err.iter().any(|d| d.code.0 == CODE_FILTER_PRIMITIVE));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn from_text_round_trips_through_basic_build() {
             let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>"#;
-            let built = SvgBasicBuilderConstruction::from_text(text).expect("parses").build().expect("conforming document builds");
+            let built = SvgBasicBuilderConstruction::from_text(text).await.expect("parses").build().await.expect("conforming document builds");
             assert!(matches!(built.doc.root, Some(XmlNode::Element { .. })));
         }
     }

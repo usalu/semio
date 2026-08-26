@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-structural-system` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `structural_system` from moment_frame_dch to wall_dcm, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_structural_system_applies_to_committed_after() {
+fn change_structural_system_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-structural-system applies to its committed before-snapshot");
     assert_eq!(applied.structural_system, "wall_dcm", "change-structural-system/switches-structural-system-to-wall-dcm: structural_system must read wall_dcm after the change");
     assert_eq!(applied, expected_after(), "change-structural-system/switches-structural-system-to-wall-dcm: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_structural_system_applies_to_committed_after() {
 /// ↩️ `change-structural-system` is its own inverse partner: the inverse step restores `structural_system` to its pre-change
 /// moment_frame_dch and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_structural_system_inverse_restores_before() {
+fn change_structural_system_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-structural-system applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_structural_system_inverse_restores_before() {
 /// decode then encode is a fixed point, so `structuralSystem` and `newStructuralSystem` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_structural_system_committed_json_is_canonical() {
+fn change_structural_system_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-structural-system snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-structural-system snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_structural_system_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-structural-system` at wall_dcm is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_structural_system_declared_outcome_holds() {
+fn change_structural_system_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-structural-system outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-structural-system/switches-structural-system-to-wall-dcm: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_structural_system_declared_outcome_holds() {
 /// assertion: it pins that only `structuralSystem` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `t1S`.
 #[semio_framework_async_macros::async_test]
-async fn change_structural_system_produces_committed_diff() {
+fn change_structural_system_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().structural_system.as_deref(), Some("wall_dcm"), "change-structural-system/switches-structural-system-to-wall-dcm: the diff must set structural_system to wall_dcm");
     assert!(outcome.diff().artifact.is_none(), "change-structural-system/switches-structural-system-to-wall-dcm: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_structural_system_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-structural-system`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_structural_system_committed_diff_is_canonical() {
+fn change_structural_system_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-structural-system committed diff decodes");
     assert_eq!(decoded.structural_system.as_deref(), Some("wall_dcm"), "change-structural-system/switches-structural-system-to-wall-dcm: the committed diff must carry structural_system at wall_dcm");
     assert!(decoded.selected_check_index.is_none(), "change-structural-system/switches-structural-system-to-wall-dcm: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_structural_system_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the moment_frame_dch to wall_dcm delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_structural_system_committed_diff_applies_to_after() {
+fn change_structural_system_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-structural-system committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-structural-system committed diff applies to the before-snapshot");
     assert_eq!(produced.structural_system, "wall_dcm", "change-structural-system/switches-structural-system-to-wall-dcm: the committed diff must leave structural_system reading wall_dcm");

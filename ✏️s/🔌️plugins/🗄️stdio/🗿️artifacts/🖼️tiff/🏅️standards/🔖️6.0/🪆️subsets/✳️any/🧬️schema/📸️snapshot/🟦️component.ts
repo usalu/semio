@@ -38,6 +38,9 @@ export interface TiffTag {
 /** 🗂️ One Image File Directory — tag-id-keyed `entries` (TIFF requires ascending-tag-order). */
 export interface TiffIfd {
   entries: TiffTag[];
+  /** This directory's own raster as RAW STRIP BYTES; empty for IFD 0 (whose raster is the
+   * snapshot's own canonical RGBA `pixels`) and for a metadata-only directory. */
+  pixels: number[];
 }
 
 /** 📸️ Complete `stdio.tiff` 6.0 semantic snapshot. `schema` is an identity field, never

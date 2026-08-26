@@ -23,11 +23,25 @@ const KINDS: &[&str] = &["no-mutation", "set-snapshot", "stamp-base-profile", "i
 //#endregion 🔖️Kinds
 
 //#region 🔖️Input
-const INPUT: &str = "shared://mouse.svg";
+/// 🎨️ The document every mutation row runs on: one SVG composed ONCE, body for body, out of the
+/// repository's two real committed drawings — its real animated brand logo and the real onboarding
+/// mouse, the only committed SVG that declares a `<clipPath>` — by `🐍️derive-svg-basic-fixture.py`
+/// in the ticket folder. 138 219 bytes, 63 root children, 23 real groups, 27 real paths, 138 real
+/// animation elements and the real clip path the profile's own rule needs.
+const INPUT: &str = "shared://🎨️semio-brand-and-onboarding.svg";
+/// 🖱️ The onboarding mouse on its own, kept for `identity-round-trip`: it is the drawing the
+/// framework's UI really renders, and reading it where it is committed keeps that tie.
+const MOUSE_INPUT: &str = "shared://mouse.svg";
 
 /// 🧫️ Copies the immutable real asset into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("mouse.svg"))?;
+    let copy = ctx.copy_fixture(INPUT, Some("brand-and-onboarding.svg"))?;
+    std::fs::read(&copy).map_err(|error| error.to_string())
+}
+
+/// 🧫️ The same, for the mouse drawing the round-trip scenario additionally reads.
+fn mutable_mouse_input(ctx: &Context) -> Result<Vec<u8>, String> {
+    let copy = ctx.copy_fixture(MOUSE_INPUT, Some("mouse.svg"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -87,17 +101,23 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// tag, quote and escape from the tree, so bit-identity would prove the artifact was copied rather
 /// than parsed), and the re-encoded drawing's own projection must still equal the input's.
 fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = mutable_input(ctx)?;
-    let bytes = oracle_round_trip(&input)?;
+    let mouse = round_trip_oracle_once(&mutable_mouse_input(ctx)?, "the onboarding mouse")?;
+    let composed = round_trip_oracle_once(&mutable_input(ctx)?, "the composed drawing")?;
+    Ok(Outcome::with_raw(composed.0, Json::Object(vec![("mouse".to_string(), mouse.1), ("composed".to_string(), composed.1)])))
+}
+
+/// 🔁️ The probe itself, over one drawing.
+fn round_trip_oracle_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), String> {
+    let bytes = oracle_round_trip(input)?;
     if bytes == input {
-        return Err("byte pass-through: the oracle's re-encoded bytes are bit-identical to the input, so nothing here proves the drawing was parsed rather than copied".to_string());
+        return Err(format!("byte pass-through on {what}: the oracle's re-encoded bytes are bit-identical to the input, so nothing here proves the drawing was parsed rather than copied"));
     }
     let projection = project_svg_basic(&bytes)?;
-    let original = project_svg_basic(&input)?;
+    let original = project_svg_basic(input)?;
     if let Some(divergence) = projection_divergence(&projection, &original) {
-        return Err(format!("round-trip law violated: decode then re-encode did not preserve the semantic projection -- {divergence}"));
+        return Err(format!("round-trip law violated on {what}: decode then re-encode did not preserve the semantic projection -- {divergence}"));
     }
-    Ok(Outcome::with_raw(bytes, projection))
+    Ok((bytes, projection))
 }
 //#endregion 🔖️Oracle
 
@@ -281,14 +301,20 @@ mod subject {
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
     /// typed snapshot and re-serialize from the model alone.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = mutable_input(ctx)?;
-        let snapshot = SvgSnapshot::import_utf8(&input).map_err(|error| format!("import_utf8 failed: {error}"))?;
-        let output = snapshot.export_utf8().map_err(|error| format!("export_utf8 failed: {error}"))?;
+        let mouse = round_trip_once(&super::mutable_mouse_input(ctx)?, "the onboarding mouse")?;
+        let composed = round_trip_once(&mutable_input(ctx)?, "the composed drawing")?;
+        Ok(Outcome::with_raw(composed.0, Json::Object(vec![("mouse".to_string(), mouse.1), ("composed".to_string(), composed.1)])))
+    }
+
+    /// 🔁️ The probe itself, over one drawing.
+    fn round_trip_once(input: &[u8], what: &str) -> Result<(Vec<u8>, Json), String> {
+        let snapshot = SvgSnapshot::import_utf8(input).map_err(|error| format!("import_utf8 of {what} failed: {error}"))?;
+        let output = snapshot.export_utf8().map_err(|error| format!("export_utf8 of {what} failed: {error}"))?;
         if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".to_string());
+            return Err(format!("byte pass-through on {what}: output is bit-identical to the input"));
         }
         let projection = project_svg_basic(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        Ok((output, projection))
     }
     //#endregion 🔖️Handlers
 }

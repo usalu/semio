@@ -15,15 +15,15 @@ pub struct ChangeTowerQNominal {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerQNominal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "tower-q-nominal", kind: "change-tower-q-nominal", record: "ChangedTowerQNominal" };
 
-    async fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_tower_q_nominal::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    fn inverse(&self, base: &En1998Snapshot) -> Vec<En1998Mutation> {
         crate::artifacts::en1998::mutations::change_tower_q_nominal::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change tower nominal behaviour factor q to {}", self.new_tower_q_nominal)
     }
 }

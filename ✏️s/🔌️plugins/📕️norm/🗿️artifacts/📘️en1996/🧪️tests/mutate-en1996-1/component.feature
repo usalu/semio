@@ -1,126 +1,129 @@
 @capability-en1996-1-mutate
-@no-oracle-en1996-1-mutation-semantics
+@oracle-en1996-1-python-independent
 @comparison-ordered-json-v1
 @mutations-en1996-1-any
-Feature: Apply every typed EN 1996 mutation to its committed specification fixtures
-  `s.norm.en1996` is a semio-NATIVE artifact — no third party reads or writes its
-  `.dsl.semio`/`.pack.semio` envelope — so there is no reference implementation to register as an
-  oracle. That is recorded as the `en1996-1-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, and it means the runner
-  executes NO oracle role for this case: every assertion below lives inside the subject handler,
-  which compares the applied document against the committed after-snapshot and the undone document
-  against the committed before-snapshot, and fails with both documents printed. A handler that
-  merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed EN 1996 mutation against an independent Python implementation
+  `s.norm.en1996` is a semio-NATIVE artifact and no third party reads or writes it — checked, not
+  assumed: PyPI serves no `en1996` distribution, and none for `eurocode`, `vdi3805` or `iso16757`
+  either, and the nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`)
+  implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
+  authoritative over this subset's `En1996Mutation` vocabulary. The second producer a differential
+  comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is
+  it: all 22 kinds of this vocabulary, written in Python from the repository's own written
+  specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
+  ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
+  `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape
+  rules — plus this subset's committed catalog for the closed list of kinds. It imports nothing from
+  the Rust it judges and transliterates none of it: the document field a `new*` argument names is
+  resolved by normalised spelling against the document's own keys, which is what the naming mechanic
+  states, never from a table copied out of `🧬️mutations/**` — and the paragraph below names the
+  spellings in THIS subset where that resolution can genuinely go wrong. The recorded no-oracle
+  decision it replaces is gone from
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, because there is now a
+  reference to compare against.
 
-  Twenty-two document-root scalars and enums, one `change-<field>` each: the design actions M_Ed,
-  N_Ed, V_Ed and H_Ed, the section properties Z, gross area and shear area, the characteristic
-  strengths f_k and f_vk, the national annex, masonry class, design situation, the friction
-  coefficient mu, wall thickness, required fire resistance, the unit and mortar classifications,
-  bed-joint thickness, storey count and the effective height and thickness h_ef / t_ef.
+  Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`
+  path below is a declared `asset://` fixture, so neither side holds a transcription that could
+  drift. All twenty-two kinds are flat `change-<field>` edits, and half of this subset's fields are
+  ENUM-valued rather than numeric — `change-unit`, `change-mortar`, `change-masonry-class`,
+  `change-exposure`, `change-design-situation`, `change-annex`. That matters because an independent
+  implementation resolves the FIELD by normalised spelling but must reproduce the VALUE's spelling
+  exactly, and an enum is the one place where a plausible-looking near-miss survives a numeric
+  comparison. Each side then asserts the same three laws in role — the applied document must BE the
+  committed after-snapshot; an `applied` vector must move the document and a `rejected` one must
+  leave it bit-identical; and the mutation followed by its OWN computed inverse must restore the
+  before-snapshot exactly. What `parity` adds on top is the only thing a single implementation can
+  never provide: that two implementations, in two languages, written from one written specification,
+  reach the same document.
 
-  Masonry is characterised by CLASSIFICATIONS rather than by continuous properties, and this
-  vocabulary keeps four of them side by side — `change-unit`, `change-mortar`,
-  `change-masonry-class` and `change-exposure` — where the first two together determine f_k
-  through a table lookup and the third and fourth select the partial factor. Four enum kinds in
-  one document is the shape in which a lookup keyed on the wrong enum still returns a plausible
-  strength, so each is committed with a whole-document after-snapshot rather than a spot check on
-  the derived value. The effective-geometry pair `change-h-ef-mm` / `change-t-ef-mm` sits beside
-  the physical `change-wall-thickness-mm`, and confusing effective with actual thickness is the
-  classic EN 1996 slenderness defect — the fixtures keep all three separately addressable.
+  `inverse-` projects BOTH the mutated and the restored document. Every kind is scalar, so the
+  restored document repeats the before-document on all twenty-two rows; for the six enum-valued
+  kinds the mutated projection is the only place the written spelling of the new value is
+  observable.
 
-  Each of the 22 kinds carries its own independently handcrafted `(before, mutation, after, diff,
-  outcome)` quintet under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/`, and this
-  feature re-exercises those SAME committed bytes end to end through `apply_en1996_mutation`
-  rather than calling `Mutation::diff`/`inverse` directly the way the in-crate fixture tests do.
-  The committed `🎯️outcome` decides which contract a row is held to: `applied` demands the
-  observability law (the document must MOVE), `rejected` demands the opposite and stricter one —
-  the mutation must be refused and the document must come back bit-identical. All 22 committed
-  vectors declare `applied`, so every row below is held to the observability law: a kind that left
-  the document bit-for-bit unchanged would fail rather than pass silently.
-
-  The identity scenario reads the real committed EN 1996 document at
-  `📚️examples/📕️loadbearing-wall`, not a fixture authored for this case. Its DSL carrier is
-  deliberately byte-preserving — the committed file IS this codec's own canonical printer output,
-  so reproducing it exactly is the correct answer and anything else is the defect — which is why
-  that half of the identity law is asserted as `carrier_is_exact` rather than as the usual
-  no-byte-pass-through inequality. The evidence that the document was genuinely PARSED rather than
-  copied comes from the other half: the same snapshot is round-tripped through two further,
-  independently written codecs — the binary `.pack.semio` protocol and the JSON projection — and
-  all three must agree on one document. The committed binary twin `🎒️loadbearing-wall.pack.semio`
-  is decoded and cross-checked against the text artifact as well, so two separately committed
-  files written by two separate codecs have to describe the same EN 1996 document.
+  ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
+  `📚️examples/📕️loadbearing-wall/🖼️assets/🗣️loadbearing-wall.dsl.semio` — a named load-bearing
+  masonry wall, so the enum fields above carry real spellings rather than defaults. It is an
+  authored case, not a surveyed wall. The carrier has no published grammar: the committed
+  `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` placeholder, so identity is
+  compared at the envelope preamble, the ordered `key=value` fields and the digest and length of the
+  re-emitted bytes — and for an enum-heavy subset that byte-level comparison is doing more work than
+  it does elsewhere in this plugin.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
-  Scenario Outline: Apply <id> to its committed before-snapshot fixture
-    Given the committed before-snapshot, mutation and outcome fixture for the <id> kind
-    When <id> is applied through apply_en1996_mutation
-    Then the resulting document matches the committed after-snapshot fixture for <id> and honours the committed outcome status
+  @mode-differential
+  Scenario Outline: Apply <id> to its committed specification vector
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When both implementations apply the committed mutation to the committed before-snapshot
+    Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
-      | id |
-      | change-m-ed-knm |
-      | change-n-ed-kn |
-      | change-v-ed-kn |
-      | change-h-ed-kn |
-      | change-z-mm3 |
-      | change-area-mm2 |
-      | change-shear-area-mm2 |
-      | change-fk-mpa |
-      | change-f-vk-mpa |
-      | change-annex |
-      | change-masonry-class |
-      | change-design-situation |
-      | change-mu |
-      | change-wall-thickness-mm |
-      | change-fire-resistance-min |
-      | change-unit |
-      | change-exposure |
-      | change-mortar |
-      | change-bed-joint-thickness-mm |
-      | change-storeys |
-      | change-h-ef-mm |
-      | change-t-ef-mm |
+      | id                            | dir                            | fixture                                                   |
+      | change-m-ed-knm               | 📐change-m-ed-knm               | raises-the-design-bending-moment-to-12-5-knm              |
+      | change-n-ed-kn                | 🔽change-n-ed-kn                | raises-the-design-axial-force-to-320-kn                   |
+      | change-v-ed-kn                | 🔼change-v-ed-kn                | raises-the-design-shear-force-to-48-kn                    |
+      | change-h-ed-kn                | ↔️change-h-ed-kn               | raises-the-design-sliding-force-to-26-kn                  |
+      | change-z-mm3                  | ➡️change-z-mm3                 | raises-the-section-modulus-to-9500000-mm3                 |
+      | change-area-mm2               | ⬅️change-area-mm2              | enlarges-the-gross-area-to-640000-mm2                     |
+      | change-shear-area-mm2         | 📏change-shear-area-mm2         | enlarges-the-shear-area-to-384000-mm2                     |
+      | change-fk-mpa                 | 🟩change-fk-mpa                 | raises-the-characteristic-compressive-strength-to-7-5-mpa |
+      | change-f-vk-mpa               | ✂️change-f-vk-mpa              | raises-the-characteristic-shear-strength-to-0-375-mpa     |
+      | change-annex                  | 🔨change-annex                  | switches-from-the-german-na-to-the-recommended-en-annex   |
+      | change-masonry-class          | 🗺️change-masonry-class         | downgrades-manufacturing-control-to-class-4               |
+      | change-design-situation       | 🧱change-design-situation       | switches-the-design-situation-to-seismic                  |
+      | change-mu                     | 🏗️change-mu                    | raises-the-bed-joint-friction-coefficient-to-0-625        |
+      | change-wall-thickness-mm      | 🎢change-wall-thickness-mm      | thickens-the-wall-to-300-mm                               |
+      | change-fire-resistance-min    | 🧊change-fire-resistance-min    | raises-the-fire-resistance-requirement-from-r60-to-r90    |
+      | change-unit                   | 🌡️change-unit                  | switches-the-masonry-unit-from-clay-to-calcium-silicate   |
+      | change-exposure               | 💧change-exposure               | moves-the-wall-to-exposure-class-mx3                      |
+      | change-mortar                 | 🌬️change-mortar                | upgrades-the-general-purpose-mortar-to-m10                |
+      | change-bed-joint-thickness-mm | 🔥change-bed-joint-thickness-mm | thickens-the-bed-joint-to-the-15-mm-upper-limit           |
+      | change-storeys                | ❄️change-storeys               | adds-a-third-storey-at-the-simplified-method-limit        |
+      | change-h-ef-mm                | ⚡change-h-ef-mm                | lengthens-the-effective-height-to-2750-mm                 |
+      | change-t-ef-mm                | 🔆change-t-ef-mm                | raises-the-effective-thickness-to-300-mm                  |
 
   @id-inverse
   @level-exhaustive
-  @mode-property
-  Scenario Outline: Undoing <id> restores the committed before-snapshot fixture
-    Given the committed before-snapshot and mutation fixture for the <id> kind
-    When <id> is applied through apply_en1996_mutation
-    And the mutation's own computed inverse is applied through apply_en1996_mutation
-    Then the document matches the committed before-snapshot fixture again
+  @mode-differential
+  Scenario Outline: Undoing <id> restores its committed before-snapshot
+    Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/⬅️before/🔣️component.json
+    And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json
+    And the committed after-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/📸️snapshot/➡️after/🔣️component.json
+    And the committed outcome asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<dir>/🧪️tests/<fixture>/🎯️outcome/🔣️component.json
+    When each implementation applies the committed mutation and then its OWN computed inverse
+    Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
-      | id |
-      | change-m-ed-knm |
-      | change-n-ed-kn |
-      | change-v-ed-kn |
-      | change-h-ed-kn |
-      | change-z-mm3 |
-      | change-area-mm2 |
-      | change-shear-area-mm2 |
-      | change-fk-mpa |
-      | change-f-vk-mpa |
-      | change-annex |
-      | change-masonry-class |
-      | change-design-situation |
-      | change-mu |
-      | change-wall-thickness-mm |
-      | change-fire-resistance-min |
-      | change-unit |
-      | change-exposure |
-      | change-mortar |
-      | change-bed-joint-thickness-mm |
-      | change-storeys |
-      | change-h-ef-mm |
-      | change-t-ef-mm |
+      | id                            | dir                            | fixture                                                   |
+      | change-m-ed-knm               | 📐change-m-ed-knm               | raises-the-design-bending-moment-to-12-5-knm              |
+      | change-n-ed-kn                | 🔽change-n-ed-kn                | raises-the-design-axial-force-to-320-kn                   |
+      | change-v-ed-kn                | 🔼change-v-ed-kn                | raises-the-design-shear-force-to-48-kn                    |
+      | change-h-ed-kn                | ↔️change-h-ed-kn               | raises-the-design-sliding-force-to-26-kn                  |
+      | change-z-mm3                  | ➡️change-z-mm3                 | raises-the-section-modulus-to-9500000-mm3                 |
+      | change-area-mm2               | ⬅️change-area-mm2              | enlarges-the-gross-area-to-640000-mm2                     |
+      | change-shear-area-mm2         | 📏change-shear-area-mm2         | enlarges-the-shear-area-to-384000-mm2                     |
+      | change-fk-mpa                 | 🟩change-fk-mpa                 | raises-the-characteristic-compressive-strength-to-7-5-mpa |
+      | change-f-vk-mpa               | ✂️change-f-vk-mpa              | raises-the-characteristic-shear-strength-to-0-375-mpa     |
+      | change-annex                  | 🔨change-annex                  | switches-from-the-german-na-to-the-recommended-en-annex   |
+      | change-masonry-class          | 🗺️change-masonry-class         | downgrades-manufacturing-control-to-class-4               |
+      | change-design-situation       | 🧱change-design-situation       | switches-the-design-situation-to-seismic                  |
+      | change-mu                     | 🏗️change-mu                    | raises-the-bed-joint-friction-coefficient-to-0-625        |
+      | change-wall-thickness-mm      | 🎢change-wall-thickness-mm      | thickens-the-wall-to-300-mm                               |
+      | change-fire-resistance-min    | 🧊change-fire-resistance-min    | raises-the-fire-resistance-requirement-from-r60-to-r90    |
+      | change-unit                   | 🌡️change-unit                  | switches-the-masonry-unit-from-clay-to-calcium-silicate   |
+      | change-exposure               | 💧change-exposure               | moves-the-wall-to-exposure-class-mx3                      |
+      | change-mortar                 | 🌬️change-mortar                | upgrades-the-general-purpose-mortar-to-m10                |
+      | change-bed-joint-thickness-mm | 🔥change-bed-joint-thickness-mm | thickens-the-bed-joint-to-the-15-mm-upper-limit           |
+      | change-storeys                | ❄️change-storeys               | adds-a-third-storey-at-the-simplified-method-limit        |
+      | change-h-ef-mm                | ⚡change-h-ef-mm                | lengthens-the-effective-height-to-2750-mm                 |
+      | change-t-ef-mm                | 🔆change-t-ef-mm                | raises-the-effective-thickness-to-300-mm                  |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
-  Scenario: Decode the real committed EN 1996 document through every encoding it has
+  Scenario: Re-emit the real committed EN 1996 document from the parsed carrier
     Given the real committed text artifact asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🖼️assets/🗣️loadbearing-wall.dsl.semio
-    And its committed binary twin asset://🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📕️loadbearing-wall/🖼️assets/🎒️loadbearing-wall.pack.semio
-    When the text artifact is parsed, printed back to DSL and parsed again, and the same document is round-tripped through the binary pack protocol and the JSON projection
-    Then the canonical DSL rendering is reproduced byte for byte and every decoding agrees on one EN 1996 document
+    When each implementation parses the artifact and prints it back to its canonical carrier bytes
+    Then both reproduce the committed file byte for byte and agree on the parsed fields and the digest of what they emitted

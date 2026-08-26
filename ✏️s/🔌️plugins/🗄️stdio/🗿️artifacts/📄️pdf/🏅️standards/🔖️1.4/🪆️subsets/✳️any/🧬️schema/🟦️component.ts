@@ -3,5 +3,5 @@ import type { PageDoc } from './📸️snapshot/🟦️component.ts';
 
 export interface PdfArtifact {
   /** @state artifact */ schema: string;
-  /** @state artifact */ page: PageDoc;
+  /** @state artifact */ pages: PageDoc[];
 }

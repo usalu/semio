@@ -12,37 +12,38 @@
 //! of it, and each action emits the granular typed operation delta
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
+use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
-use crate::artifacts::puzzle5d::op::{Puzzle5dMutation, Puzzle5dPlaySnapshot, puzzle5d_document_delta_operations};
 use crate::editor::puzzle5d::commands::{
     add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
     engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active, set_active_example, set_brush_placement_overlap_budget,
     set_camera, set_camera_2d, set_camera_3d, set_fill_count, set_fixture_json, set_grid_factor, set_grid_snap_enabled, set_kind_weight, set_lod_mode, set_selection_flag, set_suggestion_offset, translate_selection, world_relocate, zoom_to_selection,
 };
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
+use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::panels::{catalogue, document as document_panel, inspection};
 use crate::editor::puzzle5d::precompute::{BrushPlacePayload, Puzzle5dPrecomputeSession};
 use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
-use crate::editor::puzzle5d::terminology::{Puzzle5dLabels, puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized};
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement};
+use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
+use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest,
-    ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, INTERACTION_SELECT_ACTION_ID, IconName,
-    InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity,
-    PluginCloseStep, SET_ACTIVE_UTILITY_ACTION_ID, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob,
+    ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName,
+    InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation,
+    PluginCloseStep, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
+    SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️component.rs's identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
 use semio_framework_plugin::app::InteractionView;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::sync::LazyLock;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::LazyLock;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -85,6 +86,7 @@ pub static CAPSULE_DREAM_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse
 static CONCRETE_FOREST_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str()));
 static NAKAGIN_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(NAKAGIN_EXAMPLE_JSON.as_str()));
 static CAPSULE_DREAM_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(|| document_from_json(CAPSULE_DREAM_EXAMPLE_JSON.as_str()));
+static EMPTY_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(empty_document);
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
@@ -430,7 +432,11 @@ pub fn window_instance_ids(kind_id: &str) -> Vec<String> {
 }
 
 pub fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
-    if grip_id.contains(':') { grip_id.to_string() } else { format!("{part_id}:{grip_id}") }
+    if grip_id.contains(':') {
+        grip_id.to_string()
+    } else {
+        format!("{part_id}:{grip_id}")
+    }
 }
 
 /// 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
@@ -1440,7 +1446,17 @@ struct Puzzle5dClipboardWork {
 
 impl Puzzle5dClipboardWork {
     fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>, interaction: semio_framework::InteractionState) -> Self {
-        Self { raw: request.raw_wire, raw_cursor: 0, progress: 0, stage: Puzzle5dClipboardStage::Envelope, scan: Puzzle5dSelectionScan::new(request.snapshot, &interaction), encode_cursor: 0, dsl_text: String::new(), completion: Some(request.completion), closing: false }
+        Self {
+            raw: request.raw_wire,
+            raw_cursor: 0,
+            progress: 0,
+            stage: Puzzle5dClipboardStage::Envelope,
+            scan: Puzzle5dSelectionScan::new(request.snapshot, &interaction),
+            encode_cursor: 0,
+            dsl_text: String::new(),
+            completion: Some(request.completion),
+            closing: false,
+        }
     }
 
     fn step_work(&mut self, cx: &mut StepContext<'_>) -> Result<bool, String> {
@@ -1539,7 +1555,9 @@ impl Puzzle5dClipboardWork {
                 return Err(Fault::from("puzzle5d clipboard part retains an unproved recursive scale value"));
             }
             let part = self.scan.parts.pop().expect("last part exists");
-            let bytes = part.id.len()
+            let bytes = part
+                .id
+                .len()
                 .saturating_add(part.part_kind.len())
                 .saturating_add(part.part_2d.shape.len())
                 .saturating_add(part.part_2d.text.len())
@@ -2232,10 +2250,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                     Ok(fragment) => fragment,
                     Err(error) => return puzzle5d_job_fault(error.to_string()),
                 };
-                let decoded_items = ["objectKinds", "vortexKinds", "kindCompatibility"]
-                    .into_iter()
-                    .map(|key| fragment.get(key).and_then(Value::as_array).map_or(0, Vec::len))
-                    .sum::<usize>();
+                let decoded_items = ["objectKinds", "vortexKinds", "kindCompatibility"].into_iter().map(|key| fragment.get(key).and_then(Value::as_array).map_or(0, Vec::len)).sum::<usize>();
                 if decoded_items > PUZZLE5D_RESERVED_ITEMS {
                     return puzzle5d_job_fault("puzzle5d kit:in decoded item limit exceeded");
                 }
@@ -2243,19 +2258,9 @@ impl InteractiveJob for Puzzle5dImportJob {
                 let Some(snapshot) = self.snapshot.as_ref() else {
                     return puzzle5d_job_fault("puzzle5d import lost its snapshot");
                 };
-                self.catalogs = snapshot
-                    .0
-                    .get("kindCatalogs")
-                    .cloned()
-                    .and_then(|value| serde_json::from_value(value).ok())
-                    .unwrap_or_default();
+                self.catalogs = snapshot.0.get("kindCatalogs").cloned().and_then(|value| serde_json::from_value(value).ok()).unwrap_or_default();
                 self.initial_catalogs = self.catalogs.clone();
-                self.compatibility = snapshot
-                    .0
-                    .get("kindCompatibility")
-                    .cloned()
-                    .and_then(|value| serde_json::from_value(value).ok())
-                    .unwrap_or_default();
+                self.compatibility = snapshot.0.get("kindCompatibility").cloned().and_then(|value| serde_json::from_value(value).ok()).unwrap_or_default();
                 self.fragment = Some(fragment);
                 self.stage = Puzzle5dImportStage::IndexParts;
                 self.cursor = 0;
@@ -2298,10 +2303,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                         id: parsed.id.clone(),
                         name: parsed.name,
                         label: parsed.label,
-                        representations: parsed
-                            .mesh_url
-                            .map(|url| vec![crate::artifacts::puzzle5d::Puzzle5dRepresentation { id: "mesh".into(), name: "mesh".into(), url, mime: "model/gltf-binary".into(), ..Default::default() }])
-                            .unwrap_or_default(),
+                        representations: parsed.mesh_url.map(|url| vec![crate::artifacts::puzzle5d::Puzzle5dRepresentation { id: "mesh".into(), name: "mesh".into(), url, mime: "model/gltf-binary".into(), ..Default::default() }]).unwrap_or_default(),
                         grips: parsed
                             .vortices
                             .into_iter()
@@ -2339,14 +2341,7 @@ impl InteractiveJob for Puzzle5dImportJob {
                         Err(_) => return self.checkpoint(),
                     };
                     let id = parsed.id.clone();
-                    let next = crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind {
-                        id: parsed.id,
-                        code: Some(parsed.name),
-                        label: Some(parsed.label),
-                        color: parsed.color,
-                        default_rope_kind: parsed.default_cable_kind,
-                        ..Default::default()
-                    };
+                    let next = crate::artifacts::puzzle5d::Puzzle5dCatalogGripKind { id: parsed.id, code: Some(parsed.name), label: Some(parsed.label), color: parsed.color, default_rope_kind: parsed.default_cable_kind, ..Default::default() };
                     match self.grip_index.get(&id).copied() {
                         Some(index) => self.catalogs.grips[index] = next,
                         None => {
@@ -2371,23 +2366,11 @@ impl InteractiveJob for Puzzle5dImportJob {
                         Some(index) if self.compatibility[index] == parsed => {}
                         Some(index) => {
                             self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::disconnect_kind_compatibility(parsed.source.clone(), parsed.target.clone()));
-                            self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(
-                                parsed.source.clone(),
-                                parsed.target.clone(),
-                                parsed.bidirectional,
-                                parsed.important,
-                                parsed.specificity,
-                            ));
+                            self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity));
                             self.compatibility[index] = parsed;
                         }
                         None => {
-                            self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(
-                                parsed.source.clone(),
-                                parsed.target.clone(),
-                                parsed.bidirectional,
-                                parsed.important,
-                                parsed.specificity,
-                            ));
+                            self.compatibility_mutations.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity));
                             self.compatibility_index.insert(key, self.compatibility.len());
                             self.compatibility.push(parsed);
                         }
@@ -2637,7 +2620,7 @@ impl ArtifactReservedJob for Puzzle5dImportJob {
 /// trailing destructive row. `organize_context_menu`, run automatically at the `VcsArtifactApp::context_menu`
 /// funnel, handles taxonomy ordering/separator placement — this function only needs to emit the rows.
 fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], labels: &Puzzle5dLabels, is_de: bool, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{ContextMenuItemSpec, Menu, selection_count_phrase};
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
     if part_ids.is_empty() {
         return Vec::new();
     }
@@ -2720,15 +2703,17 @@ macro_rules! puzzle5d_command_variants {
                 }
             }
 
-            /// 🧪️ Test-only reverse of `action_id()` — builds the variant for a given action id, for
-            /// the testkit's `dispatch(...)` helper. Panics on an unknown action id (a test bug, not
-            /// a runtime path).
+            fn try_from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
+                match action {
+                    $($id => Some(Puzzle5dCommand::$Variant { window_id, args })),*,
+                    _ => None,
+                }
+            }
+
             #[cfg(test)]
             fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
-                match action {
-                    $($id => Puzzle5dCommand::$Variant { window_id, args }),*,
-                    other => panic!("unknown puzzle5d action id in test: {other}"),
-                }
+                Self::try_from_action(action, args, window_id)
+                    .unwrap_or_else(|| panic!("unknown puzzle5d action id in test: {action}"))
             }
         }
     };
@@ -2812,7 +2797,7 @@ pub struct Puzzle5dActionCtx<'a> {
     /// 🕹️ Read-only view of the framework-owned `vortex` interaction domain (ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
     /// `.selected_part_ids()?`/etc. here instead of the deleted `Puzzle5dConfig` selection fields.
-    pub interaction: &'a InteractionView<'a>,
+    pub selection: &'a protocol::DomainSelection,
     /// 🛑️ Set by an arm that must skip the whole epilogue (delta, effects, config snapshot) — the
     /// direct replacement for the pre-migration `return Emit::default()` early exits.
     pub abort: bool,
@@ -2820,8 +2805,11 @@ pub struct Puzzle5dActionCtx<'a> {
 
 impl<'a> Puzzle5dActionCtx<'a> {
     fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
-        let selection = semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE5D_INTERACTION_DOMAIN));
-        if selection.granularity == granularity_id { selection.ids.clone() } else { Vec::new() }
+        if self.selection.granularity == granularity_id {
+            self.selection.ids.clone()
+        } else {
+            Vec::new()
+        }
     }
     pub fn selected_part_ids(&self) -> Vec<String> {
         self.selected_ids(PUZZLE5D_GRANULARITY_PART)
@@ -2847,8 +2835,7 @@ fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>)
 }
 /// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d label admission failed"))
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d label admission failed"))
 }
 
 /// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
@@ -3041,20 +3028,12 @@ impl Puzzle5dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle5dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        window_id: Option<&str>,
-        doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
-        config: &Puzzle5dConfig,
-        interaction: &InteractionView<'_>,
-    ) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
-        let before = doc.snapshot.0.clone();
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, snapshot: &Puzzle5dPlaySnapshot, config: &Puzzle5dConfig, selection: &protocol::DomainSelection) -> Emit<Puzzle5dMutation, Puzzle5dConfigMutation> {
+        let before = snapshot.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
         let wid = window_id.map_or_else(|| world3d::WINDOW_KIND_ID.to_string(), str::to_string);
         let mut scene = scene_from_projection(&before, config.clone(), &active_utility_initial);
-        let mut ctx = Puzzle5dActionCtx { app: self, scene: &mut scene, window_id: &wid, interaction, abort: false };
+        let mut ctx = Puzzle5dActionCtx { app: self, scene: &mut scene, window_id: &wid, selection, abort: false };
         dispatch_puzzle5d_action(&mut ctx, action, args);
         if ctx.abort {
             return Emit::default();
@@ -3139,6 +3118,4197 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
     }
 }
 
+//#region 🧵️RetainedCommands
+pub(crate) const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
+    "addBrushObject",
+    "addBrushPart",
+    "addNode",
+    "addPartKind",
+    "applyBoardEvents",
+    "canvasPointerDown",
+    "createFastener",
+    "cycleBrushCandidate",
+    "deleteFastener",
+    "editFastener",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementSubmit",
+    "focusSelection",
+    "patchFastener",
+    "patchGrip",
+    "patchPart",
+    "proximityConnect",
+    "registerBrushMesh",
+    "retargetFastener",
+    "rotateSelection",
+    "scaleSelection",
+    "selectSameKind",
+    "setActiveExample",
+    "setBrushPlacementOverlapBudget",
+    "setCamera",
+    "setCamera2d",
+    "setCamera3d",
+    "setFillCount",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setLodMode",
+    "setObjectKindWeight",
+    "setSuggestionOffset",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setVortexKindWeight",
+    "toggleSun",
+    "translateSelection",
+    "worldPointerDown",
+    "worldRelocate",
+];
+const PUZZLE5D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.5d.tool-command.v1";
+
+fn puzzle5d_retained_extent(_command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+    let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
+    let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+    let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+    let items = selection.checked_add(parts)?.checked_add(fasteners)?;
+    (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+}
+
+fn puzzle5d_retained_reduce(
+    command: &Puzzle5dCommand,
+    snapshot: &Puzzle5dPlaySnapshot,
+    config: &Puzzle5dConfig,
+    interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, Fault> {
+    let empty_selection = protocol::DomainSelection::default();
+    let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
+    Ok(with_puzzle5d_app(|app| app.handle_action_impl(command.action_id(), command.args(), command.window_id(), snapshot, config, selection)))
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dTransformStage {
+    Selection,
+    Parts,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dTransformWork {
+    tool_id: &'static str,
+    stage: Puzzle5dTransformStage,
+    selection_cursor: usize,
+    part_cursor: usize,
+    selected: HashSet<String>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Puzzle5dTransformWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            stage: Puzzle5dTransformStage::Selection,
+            selection_cursor: 0,
+            part_cursor: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+
+    fn source_len(command: &Puzzle5dCommand, interaction: &protocol::InteractionState) -> usize {
+        command
+            .args()
+            .and_then(|args| args.get("ids"))
+            .and_then(Value::as_array)
+            .filter(|ids| !ids.is_empty())
+            .map_or_else(
+                || {
+                    interaction
+                        .selection
+                        .get(PUZZLE5D_INTERACTION_DOMAIN)
+                        .filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_PART)
+                        .map_or(0, |selection| selection.ids.len())
+                },
+                Vec::len,
+            )
+    }
+
+    fn source_id<'a>(command: &'a Puzzle5dCommand, interaction: &'a protocol::InteractionState, index: usize) -> Option<&'a str> {
+        if let Some(ids) = command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).filter(|ids| !ids.is_empty()) {
+            return ids.get(index).and_then(Value::as_str);
+        }
+        interaction
+            .selection
+            .get(PUZZLE5D_INTERACTION_DOMAIN)
+            .filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_PART)
+            .and_then(|selection| selection.ids.get(index))
+            .map(String::as_str)
+    }
+
+    fn axis(command: &Puzzle5dCommand, key: &str, fallback: f64) -> f64 {
+        command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(fallback)
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dTransformWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let items = Self::source_len(command, interaction).checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dTransformStage::Selection => {
+                if let Some(id) = Self::source_id(command, interaction, self.selection_cursor) {
+                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle5d-transform-selection-capacity"));
+                    }
+                    self.selected.insert(id.to_string());
+                    self.selection_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-transform-selection", "Reading selected part", "Ausgewähltes Teil wird gelesen"));
+                }
+                self.stage = Puzzle5dTransformStage::Parts;
+                Ok(Self::progress("puzzle5d-transform-part", "Transforming selected part", "Ausgewähltes Teil wird transformiert"))
+            }
+            Puzzle5dTransformStage::Parts => {
+                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    self.stage = Puzzle5dTransformStage::Complete;
+                    let coalesce_key = match self.tool_id {
+                        "translateSelection" => "gumball-translate",
+                        "rotateSelection" => "gumball-rotate",
+                        "scaleSelection" => "gumball-scale",
+                        _ => return Err(Fault::from("puzzle5d-transform-tool-mismatch")),
+                    };
+                    let mutations = std::mem::take(&mut self.mutations);
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        artifact_mutations: mutations,
+                        coalesce_key: Some(coalesce_key.to_string()),
+                        ui_scope: UiDirtyScope::Full,
+                        ..Default::default()
+                    }));
+                };
+                self.part_cursor += 1;
+                let Some(id) = row.get("id").and_then(Value::as_str) else {
+                    return Ok(Self::progress("puzzle5d-transform-part", "Skipping malformed part", "Fehlerhaftes Teil wird übersprungen"));
+                };
+                if !self.selected.contains(id) {
+                    return Ok(Self::progress("puzzle5d-transform-part", "Scanning part", "Teil wird geprüft"));
+                }
+                let part_3d = row.get("3d").and_then(Value::as_object);
+                let mutation = match self.tool_id {
+                    "translateSelection" => {
+                        let origin = part_3d.and_then(|part| part.get("origin")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
+                        crate::artifacts::puzzle5d::mutations::move_part_3d(
+                            id.to_string(),
+                            [origin[0] + Self::axis(command, "dx", 0.0), origin[1] + Self::axis(command, "dy", 0.0), origin[2] + Self::axis(command, "dz", 0.0)],
+                        )
+                    }
+                    "rotateSelection" => {
+                        let orientation = part_3d
+                            .and_then(|part| part.get("orientation"))
+                            .and_then(|value| serde_json::from_value::<[f64; 4]>(value.clone()).ok())
+                            .unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                        let delta = quat_from_axis_angle(Self::axis(command, "ax", 0.0), Self::axis(command, "ay", 0.0), Self::axis(command, "az", 0.0), Self::axis(command, "angle", 0.0));
+                        crate::artifacts::puzzle5d::mutations::rotate_part_3d(id.to_string(), Some(quat_mul(delta, orientation)))
+                    }
+                    "scaleSelection" => {
+                        let scale = part_3d.and_then(|part| part.get("scale"));
+                        let current = match scale {
+                            Some(Value::Number(value)) => [value.as_f64().unwrap_or(1.0); 3],
+                            Some(Value::Array(values)) => [
+                                values.first().and_then(Value::as_f64).unwrap_or(1.0),
+                                values.get(1).and_then(Value::as_f64).unwrap_or(1.0),
+                                values.get(2).and_then(Value::as_f64).unwrap_or(1.0),
+                            ],
+                            _ => [1.0; 3],
+                        };
+                        crate::artifacts::puzzle5d::mutations::scale_part_3d(
+                            id.to_string(),
+                            Some(crate::artifacts::puzzle5d::Puzzle5dScale::Vec3([
+                                current[0] * Self::axis(command, "sx", 1.0),
+                                current[1] * Self::axis(command, "sy", 1.0),
+                                current[2] * Self::axis(command, "sz", 1.0),
+                            ])),
+                        )
+                    }
+                    _ => return Err(Fault::from("puzzle5d-transform-tool-mismatch")),
+                };
+                self.mutations.push(mutation);
+                Ok(Self::progress("puzzle5d-transform-part", "Transforming selected part", "Ausgewähltes Teil wird transformiert"))
+            }
+            Puzzle5dTransformStage::Complete => Err(Fault::from("puzzle5d-transform-complete-repolled")),
+            Puzzle5dTransformStage::Closing => Err(Fault::from("puzzle5d-transform-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dTransformStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let selected = {
+            let mut selected = self.selected.extract_if(|_| true);
+            selected.next()
+        };
+        if selected.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dTransformStage::Closing && self.mutations.is_empty() && self.selected.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dScalarConfigStage {
+    Apply,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dScalarConfigWork {
+    tool_id: &'static str,
+    stage: Puzzle5dScalarConfigStage,
+}
+
+impl Puzzle5dScalarConfigWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, stage: Puzzle5dScalarConfigStage::Apply }
+    }
+
+    fn vector(value: Option<&Value>) -> [f64; 3] {
+        let values = value.and_then(Value::as_array);
+        [
+            values.and_then(|values| values.first()).and_then(Value::as_f64).unwrap_or(0.0),
+            values.and_then(|values| values.get(1)).and_then(Value::as_f64).unwrap_or(0.0),
+            values.and_then(|values| values.get(2)).and_then(Value::as_f64).unwrap_or(0.0),
+        ]
+    }
+
+    fn camera2d(value: &Value) -> Puzzle5dCamera2d {
+        Puzzle5dCamera2d {
+            x: value.get("x").and_then(Value::as_f64).unwrap_or(0.0),
+            y: value.get("y").and_then(Value::as_f64).unwrap_or(0.0),
+            zoom: value.get("zoom").and_then(Value::as_f64).unwrap_or(1.0),
+        }
+    }
+
+    fn camera3d(value: &Value) -> Puzzle5dCamera3d {
+        Puzzle5dCamera3d {
+            position: Self::vector(value.get("position")),
+            target: Self::vector(value.get("target")),
+            zoom: value.get("zoom").and_then(Value::as_f64).unwrap_or(1.0),
+        }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dScalarConfigWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(1)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        _snapshot: &Puzzle5dPlaySnapshot,
+        config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        if self.stage != Puzzle5dScalarConfigStage::Apply {
+            return Err(Fault::from("puzzle5d-scalar-config-repolled"));
+        }
+        self.stage = Puzzle5dScalarConfigStage::Complete;
+        let args = command.args();
+        let mutation = match self.tool_id {
+            "setCamera" | "setCamera2d" | "setCamera3d" => {
+                let Some(camera) = args.and_then(|args| args.get("camera")) else {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                let is_2d = self.tool_id == "setCamera2d"
+                    || (self.tool_id == "setCamera"
+                        && (args.and_then(|args| args.get("surfaceId")).and_then(Value::as_str) == Some(board2d::SURFACE_ID) || camera.get("position").is_none()));
+                if is_2d {
+                    Puzzle5dConfigMutation::SetCamera2d { camera: Self::camera2d(camera) }
+                } else {
+                    Puzzle5dConfigMutation::SetCamera3d { camera: Self::camera3d(camera) }
+                }
+            }
+            "setGridFactor" => {
+                let Some(value) = args.and_then(|args| args.get("value")).and_then(Value::as_f64) else {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                Puzzle5dConfigMutation::SetGridFactor { value }
+            }
+            "setGridSnapEnabled" => Puzzle5dConfigMutation::SetGridSnapEnabled {
+                enabled: args.and_then(|args| args.get("enabled")).and_then(Value::as_bool).unwrap_or(false),
+            },
+            "setLodMode" => {
+                let Some(mode) = args.and_then(|args| args.get("value").or_else(|| args.get("mode"))).and_then(Value::as_str) else {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                Puzzle5dConfigMutation::SetLodMode { mode: mode.to_string() }
+            }
+            "setSuggestionOffset" => {
+                let Some(distance) = args.and_then(|args| args.get("distance").or_else(|| args.get("value"))).and_then(Value::as_f64) else {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                Puzzle5dConfigMutation::SetSuggestionOffset { distance: distance.clamp(PUZZLE5D_SUGGESTION_OFFSET_MIN, PUZZLE5D_SUGGESTION_OFFSET_MAX) }
+            }
+            "setBrushPlacementOverlapBudget" => {
+                let Some(value) = args.and_then(|args| args.get("value")).and_then(Value::as_f64) else {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                Puzzle5dConfigMutation::SetOverlapBudget { value: value.clamp(0.0, 1.0) }
+            }
+            "engagementControlSelect" => {
+                let candidate_id = args.and_then(|args| args.get("id").or_else(|| args.get("value"))).and_then(Value::as_str).unwrap_or("");
+                let Some(index) = candidate_id.strip_prefix("puzzle5d.brush.candidate.").and_then(|value| value.parse::<usize>().ok()) else {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                Puzzle5dConfigMutation::SetBrushCandidateIndex { index }
+            }
+            "engagementInput" => {
+                let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID);
+                if !PUZZLE5D_PLAY_WINDOWS.contains(&window_id) {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                }
+                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("");
+                Puzzle5dConfigMutation::SetEngagementInput { window_id: window_id.to_string(), value: value.to_string() }
+            }
+            "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                let mut sun = config.sun.clone();
+                semio_framework_plugin::apply_world3d_sun_action(&mut sun, self.tool_id, args);
+                if sun == config.sun {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                }
+                Puzzle5dConfigMutation::SetSun { sun }
+            }
+            _ => return Err(Fault::from("puzzle5d-scalar-config-tool-mismatch")),
+        };
+        Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+            config_mutations: vec![mutation],
+            ui_scope: UiDirtyScope::Full,
+            ..Default::default()
+        }))
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dScalarConfigStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dScalarConfigStage::Closing
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dKindWeightStage {
+    Catalog,
+    InferParts,
+    InferGrips,
+    Validate,
+    SumOthers,
+    Changed,
+    Build,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dKindWeightWork {
+    tool_id: &'static str,
+    stage: Puzzle5dKindWeightStage,
+    cursor: usize,
+    part_cursor: usize,
+    grip_cursor: usize,
+    ids: Vec<String>,
+    seen: HashSet<String>,
+    result: HashMap<String, f64>,
+    missing: bool,
+    base_sum: f64,
+    other_sum: f64,
+    other_count: usize,
+    changed_id: Option<String>,
+    requested: f64,
+}
+
+impl Puzzle5dKindWeightWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            stage: Puzzle5dKindWeightStage::Catalog,
+            cursor: 0,
+            part_cursor: 0,
+            grip_cursor: 0,
+            ids: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            seen: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            result: HashMap::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            missing: false,
+            base_sum: 0.0,
+            other_sum: 0.0,
+            other_count: 0,
+            changed_id: None,
+            requested: 1.0,
+        }
+    }
+
+    fn section(&self) -> &'static str {
+        if self.tool_id == "setObjectKindWeight" { "parts" } else { "grips" }
+    }
+
+    fn weights<'a>(&self, config: &'a Puzzle5dConfig) -> &'a HashMap<String, f64> {
+        if self.tool_id == "setObjectKindWeight" { &config.object_kind_weights } else { &config.vortex_kind_weights }
+    }
+
+    fn catalog<'a>(&self, snapshot: &'a Puzzle5dPlaySnapshot) -> &'a [Value] {
+        snapshot.0.get("kindCatalogs").and_then(|value| value.get(self.section())).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    }
+
+    fn push_id(&mut self, id: &str, inferred: bool) -> Result<(), Fault> {
+        if self.ids.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+            return Err(Fault::from("puzzle5d-kind-weight-catalog-capacity"));
+        }
+        if !inferred || self.seen.insert(id.to_string()) {
+            self.ids.push(id.to_string());
+        }
+        Ok(())
+    }
+
+    fn base_weight(&self, config: &Puzzle5dConfig, id: &str) -> f64 {
+        if self.ids.is_empty() {
+            return 0.0;
+        }
+        if self.missing || self.weights(config).is_empty() {
+            return 1.0 / self.ids.len() as f64;
+        }
+        let value = self.weights(config).get(id).copied().unwrap_or(0.0);
+        if (self.base_sum - 1.0).abs() > 0.001 && self.base_sum.abs() > f64::EPSILON { value / self.base_sum } else { value }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dKindWeightWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dKindWeightStage::Catalog => {
+                let entries = self.catalog(snapshot);
+                if let Some(entry) = entries.get(self.cursor) {
+                    if let Some(id) = entry.get("id").and_then(Value::as_str) {
+                        self.push_id(id, false)?;
+                    }
+                    self.cursor += 1;
+                    return Ok(Self::progress("puzzle5d-kind-weight-catalog", "Reading kind owner", "Artinhaber wird gelesen"));
+                }
+                self.stage = if entries.is_empty() {
+                    if self.tool_id == "setObjectKindWeight" { Puzzle5dKindWeightStage::InferParts } else { Puzzle5dKindWeightStage::InferGrips }
+                } else {
+                    Puzzle5dKindWeightStage::Validate
+                };
+                self.cursor = 0;
+                Ok(Self::progress("puzzle5d-kind-weight-infer", "Preparing kind validation", "Artprüfung wird vorbereitet"))
+            }
+            Puzzle5dKindWeightStage::InferParts => {
+                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    self.stage = Puzzle5dKindWeightStage::Validate;
+                    return Ok(Self::progress("puzzle5d-kind-weight-validate", "Validating current weights", "Aktuelle Gewichte werden geprüft"));
+                };
+                self.part_cursor += 1;
+                if let Some(id) = part.get("partKind").and_then(Value::as_str) {
+                    self.push_id(id, true)?;
+                }
+                Ok(Self::progress("puzzle5d-kind-weight-part", "Reading inferred part kind", "Abgeleitete Teileart wird gelesen"))
+            }
+            Puzzle5dKindWeightStage::InferGrips => {
+                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    self.stage = Puzzle5dKindWeightStage::Validate;
+                    return Ok(Self::progress("puzzle5d-kind-weight-validate", "Validating current weights", "Aktuelle Gewichte werden geprüft"));
+                };
+                let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
+                    self.part_cursor += 1;
+                    self.grip_cursor = 0;
+                    return Ok(Self::progress("puzzle5d-kind-weight-part", "Advancing grip owner", "Griffinhaber wird gewechselt"));
+                };
+                self.grip_cursor += 1;
+                if let Some(id) = grip.get("gripKind").and_then(Value::as_str) {
+                    self.push_id(id, true)?;
+                }
+                Ok(Self::progress("puzzle5d-kind-weight-grip", "Reading inferred grip kind", "Abgeleitete Griffart wird gelesen"))
+            }
+            Puzzle5dKindWeightStage::Validate => {
+                if self.changed_id.is_none() {
+                    self.changed_id = Some(command.args().and_then(|args| args.get("kindId")).and_then(Value::as_str).unwrap_or("").to_string());
+                    self.requested = command.args().and_then(|args| args.get("value")).and_then(Value::as_f64).unwrap_or(1.0).clamp(0.0, 1.0);
+                }
+                let Some(id) = self.ids.get(self.cursor) else {
+                    self.cursor = 0;
+                    self.stage = Puzzle5dKindWeightStage::SumOthers;
+                    return Ok(Self::progress("puzzle5d-kind-weight-sum", "Measuring sibling weights", "Geschwistergewichte werden gemessen"));
+                };
+                let weights = self.weights(config);
+                self.missing |= !weights.contains_key(id);
+                self.base_sum += weights.get(id).copied().unwrap_or(0.0);
+                self.cursor += 1;
+                Ok(Self::progress("puzzle5d-kind-weight-validate", "Validating kind weight", "Artgewicht wird geprüft"))
+            }
+            Puzzle5dKindWeightStage::SumOthers => {
+                let Some(id) = self.ids.get(self.cursor) else {
+                    self.cursor = 0;
+                    self.stage = Puzzle5dKindWeightStage::Changed;
+                    return Ok(Self::progress("puzzle5d-kind-weight-changed", "Preparing changed weight", "Geändertes Gewicht wird vorbereitet"));
+                };
+                if self.changed_id.as_deref() != Some(id.as_str()) {
+                    self.other_sum += self.base_weight(config, id);
+                    self.other_count += 1;
+                }
+                self.cursor += 1;
+                Ok(Self::progress("puzzle5d-kind-weight-sum", "Measuring sibling weight", "Geschwistergewicht wird gemessen"))
+            }
+            Puzzle5dKindWeightStage::Changed => {
+                if self.ids.len() >= 2 {
+                    self.result.insert(self.changed_id.clone().ok_or_else(|| Fault::from("puzzle5d-kind-weight-changed-owner"))?, self.requested);
+                }
+                self.stage = Puzzle5dKindWeightStage::Build;
+                Ok(Self::progress("puzzle5d-kind-weight-build", "Building normalized weights", "Normalisierte Gewichte werden aufgebaut"))
+            }
+            Puzzle5dKindWeightStage::Build => {
+                let Some(id) = self.ids.get(self.cursor).cloned() else {
+                    self.stage = Puzzle5dKindWeightStage::Publish;
+                    return Ok(Self::progress("puzzle5d-kind-weight-publish", "Preparing weight publication", "Gewichtsveröffentlichung wird vorbereitet"));
+                };
+                self.cursor += 1;
+                let value = if self.ids.len() == 1 {
+                    1.0
+                } else if self.changed_id.as_deref() == Some(id.as_str()) {
+                    return Ok(Self::progress("puzzle5d-kind-weight-build", "Keeping changed weight", "Geändertes Gewicht wird beibehalten"));
+                } else {
+                    let remainder = (1.0 - self.requested).max(0.0);
+                    if self.other_sum <= f64::EPSILON { remainder / self.other_count.max(1) as f64 } else { self.base_weight(config, &id) / self.other_sum * remainder }
+                };
+                self.result.insert(id, value);
+                Ok(Self::progress("puzzle5d-kind-weight-build", "Building kind weight", "Artgewicht wird aufgebaut"))
+            }
+            Puzzle5dKindWeightStage::Publish => {
+                self.stage = Puzzle5dKindWeightStage::Complete;
+                let mutation = if self.tool_id == "setObjectKindWeight" {
+                    Puzzle5dConfigMutation::SetObjectKindWeights { value: std::mem::take(&mut self.result) }
+                } else {
+                    Puzzle5dConfigMutation::SetVortexKindWeights { value: std::mem::take(&mut self.result) }
+                };
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { config_mutations: vec![mutation], ui_scope: UiDirtyScope::Full, ..Default::default() }))
+            }
+            Puzzle5dKindWeightStage::Complete => Err(Fault::from("puzzle5d-kind-weight-complete-repolled")),
+            Puzzle5dKindWeightStage::Closing => Err(Fault::from("puzzle5d-kind-weight-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dKindWeightStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.ids.pop().is_some() || self.changed_id.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let seen = {
+            let mut values = self.seen.extract_if(|_| true);
+            values.next()
+        };
+        if seen.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let result = {
+            let mut values = self.result.extract_if(|_, _| true);
+            values.next()
+        };
+        if result.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dKindWeightStage::Closing && self.ids.is_empty() && self.seen.is_empty() && self.result.is_empty() && self.changed_id.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dEngagementAbortStage {
+    Input,
+    BoardUtility,
+    WorldUtility,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dEngagementAbortWork {
+    stage: Puzzle5dEngagementAbortStage,
+    input: Option<Puzzle5dConfigMutation>,
+    effects: [Option<Effect>; 2],
+}
+
+impl Default for Puzzle5dEngagementAbortWork {
+    fn default() -> Self {
+        Self { stage: Puzzle5dEngagementAbortStage::Input, input: None, effects: [None, None] }
+    }
+}
+
+impl Puzzle5dEngagementAbortWork {
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dEngagementAbortWork {
+    fn tool_id(&self) -> &'static str {
+        "engagementAbort"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(4)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        _snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let args = command.args();
+        let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID);
+        let utility_id = if window_id == world3d::WINDOW_KIND_ID { "move" } else { "select" };
+        match self.stage {
+            Puzzle5dEngagementAbortStage::Input => {
+                if PUZZLE5D_PLAY_WINDOWS.contains(&window_id) {
+                    self.input = Some(Puzzle5dConfigMutation::SetEngagementInput { window_id: window_id.to_string(), value: String::new() });
+                }
+                self.stage = Puzzle5dEngagementAbortStage::BoardUtility;
+                Ok(Self::progress("puzzle5d-engagement-abort-input", "Clearing engagement input", "Eingabe wird geleert"))
+            }
+            Puzzle5dEngagementAbortStage::BoardUtility => {
+                self.effects[0] = Some(Effect::SetActiveUtility { window_id: board2d::WINDOW_KIND_ID.to_string(), utility_id: utility_id.to_string() });
+                self.stage = Puzzle5dEngagementAbortStage::WorldUtility;
+                Ok(Self::progress("puzzle5d-engagement-abort-board", "Preparing board utility", "Board-Werkzeug wird vorbereitet"))
+            }
+            Puzzle5dEngagementAbortStage::WorldUtility => {
+                self.effects[1] = Some(Effect::SetActiveUtility { window_id: world3d::WINDOW_KIND_ID.to_string(), utility_id: utility_id.to_string() });
+                self.stage = Puzzle5dEngagementAbortStage::Publish;
+                Ok(Self::progress("puzzle5d-engagement-abort-world", "Preparing world utility", "Welt-Werkzeug wird vorbereitet"))
+            }
+            Puzzle5dEngagementAbortStage::Publish => {
+                let mut config_mutations = Vec::with_capacity(1);
+                if let Some(input) = self.input.take() {
+                    config_mutations.push(input);
+                }
+                let mut effects = Vec::with_capacity(2);
+                if let Some(effect) = self.effects[0].take() {
+                    effects.push(effect);
+                }
+                if let Some(effect) = self.effects[1].take() {
+                    effects.push(effect);
+                }
+                self.stage = Puzzle5dEngagementAbortStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { config_mutations, effects, ui_scope: UiDirtyScope::Full, ..Default::default() }))
+            }
+            Puzzle5dEngagementAbortStage::Complete => Err(Fault::from("puzzle5d-engagement-abort-complete-repolled")),
+            Puzzle5dEngagementAbortStage::Closing => Err(Fault::from("puzzle5d-engagement-abort-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dEngagementAbortStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.input.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        for effect in &mut self.effects {
+            if effect.take().is_some() {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dEngagementAbortStage::Closing && self.input.is_none() && self.effects.iter().all(Option::is_none)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dEngagementSubmitStage {
+    Parse,
+    BoardConfig,
+    WorldConfig,
+    BoardEffect,
+    WorldEffect,
+    Input,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dEngagementSubmitWork {
+    stage: Puzzle5dEngagementSubmitStage,
+    emit: Option<Emit<Puzzle5dMutation, Puzzle5dConfigMutation>>,
+    utility: Option<String>,
+    window_id: Option<String>,
+}
+
+impl Default for Puzzle5dEngagementSubmitWork {
+    fn default() -> Self {
+        Self { stage: Puzzle5dEngagementSubmitStage::Parse, emit: Some(Emit::default()), utility: None, window_id: None }
+    }
+}
+
+impl Puzzle5dEngagementSubmitWork {
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn emit_mut(&mut self) -> Result<&mut Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, Fault> {
+        self.emit.as_mut().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-emit-owner"))
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dEngagementSubmitWork {
+    fn tool_id(&self) -> &'static str {
+        "engagementSubmit"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(7)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        _snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dEngagementSubmitStage::Parse => {
+                let args = command.args();
+                let window_id = args.and_then(|args| args.get("window")).and_then(Value::as_str).unwrap_or(board2d::WINDOW_KIND_ID).to_string();
+                let token = args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("").trim().to_lowercase();
+                self.utility = match token.as_str() {
+                    "select" if window_id == world3d::WINDOW_KIND_ID => Some("move".to_string()),
+                    "select" | "brush" | "fill" => Some(token),
+                    _ => None,
+                };
+                self.window_id = Some(window_id);
+                self.stage = if self.utility.is_some() { Puzzle5dEngagementSubmitStage::BoardConfig } else { Puzzle5dEngagementSubmitStage::Input };
+                Ok(Self::progress("puzzle5d-engagement-submit-parse", "Reading engagement command", "Eingabebefehl wird gelesen"))
+            }
+            Puzzle5dEngagementSubmitStage::BoardConfig => {
+                let value = self.utility.clone();
+                self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::SetActiveUtility { window_id: board2d::WINDOW_KIND_ID.to_string(), value });
+                self.stage = Puzzle5dEngagementSubmitStage::WorldConfig;
+                Ok(Self::progress("puzzle5d-engagement-submit-board-config", "Preparing board utility", "Board-Werkzeug wird vorbereitet"))
+            }
+            Puzzle5dEngagementSubmitStage::WorldConfig => {
+                let value = self.utility.clone();
+                self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::SetActiveUtility { window_id: world3d::WINDOW_KIND_ID.to_string(), value });
+                self.stage = Puzzle5dEngagementSubmitStage::BoardEffect;
+                Ok(Self::progress("puzzle5d-engagement-submit-world-config", "Preparing world utility", "Welt-Werkzeug wird vorbereitet"))
+            }
+            Puzzle5dEngagementSubmitStage::BoardEffect => {
+                let utility_id = self.utility.clone().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-utility-owner"))?;
+                self.emit_mut()?.effects.push(Effect::SetActiveUtility { window_id: board2d::WINDOW_KIND_ID.to_string(), utility_id });
+                self.stage = Puzzle5dEngagementSubmitStage::WorldEffect;
+                Ok(Self::progress("puzzle5d-engagement-submit-board-effect", "Preparing board publication", "Board-Veröffentlichung wird vorbereitet"))
+            }
+            Puzzle5dEngagementSubmitStage::WorldEffect => {
+                let utility_id = self.utility.clone().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-utility-owner"))?;
+                self.emit_mut()?.effects.push(Effect::SetActiveUtility { window_id: world3d::WINDOW_KIND_ID.to_string(), utility_id });
+                self.stage = Puzzle5dEngagementSubmitStage::Input;
+                Ok(Self::progress("puzzle5d-engagement-submit-world-effect", "Preparing world publication", "Welt-Veröffentlichung wird vorbereitet"))
+            }
+            Puzzle5dEngagementSubmitStage::Input => {
+                let window_id = self.window_id.clone().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-window-owner"))?;
+                if PUZZLE5D_PLAY_WINDOWS.contains(&window_id.as_str()) {
+                    self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::SetEngagementInput { window_id, value: String::new() });
+                }
+                self.stage = Puzzle5dEngagementSubmitStage::Publish;
+                Ok(Self::progress("puzzle5d-engagement-submit-input", "Clearing engagement input", "Eingabe wird geleert"))
+            }
+            Puzzle5dEngagementSubmitStage::Publish => {
+                self.stage = Puzzle5dEngagementSubmitStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.emit.take().ok_or_else(|| Fault::from("puzzle5d-engagement-submit-publish-owner"))?))
+            }
+            Puzzle5dEngagementSubmitStage::Complete => Err(Fault::from("puzzle5d-engagement-submit-complete-repolled")),
+            Puzzle5dEngagementSubmitStage::Closing => Err(Fault::from("puzzle5d-engagement-submit-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dEngagementSubmitStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.emit.take().is_some() || self.utility.take().is_some() || self.window_id.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dEngagementSubmitStage::Closing && self.emit.is_none() && self.utility.is_none() && self.window_id.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dFocusSelectionStage {
+    Selection,
+    Parts,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dFocusSelectionWork {
+    stage: Puzzle5dFocusSelectionStage,
+    selection_cursor: usize,
+    part_cursor: usize,
+    selected: HashSet<String>,
+    sum_2d: [f64; 2],
+    sum_3d: [f64; 3],
+    matched: usize,
+}
+
+impl Default for Puzzle5dFocusSelectionWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dFocusSelectionStage::Selection,
+            selection_cursor: 0,
+            part_cursor: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            sum_2d: [0.0; 2],
+            sum_3d: [0.0; 3],
+            matched: 0,
+        }
+    }
+}
+
+impl Puzzle5dFocusSelectionWork {
+    fn source(interaction: &protocol::InteractionState) -> &[String] {
+        interaction
+            .selection
+            .get(PUZZLE5D_INTERACTION_DOMAIN)
+            .filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_PART)
+            .map(|selection| selection.ids.as_slice())
+            .unwrap_or_default()
+    }
+
+    fn axis(row: &Value, section: &str, field: &str, index: usize) -> f64 {
+        row.get(section)
+            .and_then(|section| section.get(field))
+            .and_then(Value::as_array)
+            .and_then(|values| values.get(index))
+            .and_then(Value::as_f64)
+            .unwrap_or(0.0)
+    }
+
+    fn scalar(row: &Value, section: &str, field: &str) -> f64 {
+        row.get(section).and_then(|section| section.get(field)).and_then(Value::as_f64).unwrap_or(0.0)
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dFocusSelectionWork {
+    fn tool_id(&self) -> &'static str {
+        "focusSelection"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let selected = Self::source(interaction).len();
+        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let items = selected.checked_add(parts)?.checked_add(1)?;
+        (selected <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        _command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        config: &Puzzle5dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dFocusSelectionStage::Selection => {
+                if let Some(id) = Self::source(interaction).get(self.selection_cursor) {
+                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle5d-focus-selection-capacity"));
+                    }
+                    self.selected.insert(id.clone());
+                    self.selection_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-focus-selection-owner", "Reading selected part", "Ausgewähltes Teil wird gelesen"));
+                }
+                self.stage = Puzzle5dFocusSelectionStage::Parts;
+                Ok(Self::progress("puzzle5d-focus-selection-part", "Finding selected part", "Ausgewähltes Teil wird gesucht"))
+            }
+            Puzzle5dFocusSelectionStage::Parts => {
+                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    self.stage = Puzzle5dFocusSelectionStage::Publish;
+                    return Ok(Self::progress("puzzle5d-focus-selection-publish", "Preparing camera focus", "Kamerafokus wird vorbereitet"));
+                };
+                self.part_cursor += 1;
+                if row.get("id").and_then(Value::as_str).is_some_and(|id| self.selected.contains(id)) {
+                    self.sum_2d[0] += Self::scalar(row, "2d", "x");
+                    self.sum_2d[1] += Self::scalar(row, "2d", "y");
+                    self.sum_3d[0] += Self::axis(row, "3d", "origin", 0);
+                    self.sum_3d[1] += Self::axis(row, "3d", "origin", 1);
+                    self.sum_3d[2] += Self::axis(row, "3d", "origin", 2);
+                    self.matched += 1;
+                }
+                Ok(Self::progress("puzzle5d-focus-selection-part", "Scanning selected part", "Ausgewähltes Teil wird geprüft"))
+            }
+            Puzzle5dFocusSelectionStage::Publish => {
+                self.stage = Puzzle5dFocusSelectionStage::Complete;
+                if self.matched == 0 {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                }
+                let divisor = self.matched as f64;
+                let target = [self.sum_3d[0] / divisor, self.sum_3d[1] / divisor, self.sum_3d[2] / divisor];
+                let offset = [
+                    config.camera3d.position[0] - config.camera3d.target[0],
+                    config.camera3d.position[1] - config.camera3d.target[1],
+                    config.camera3d.position[2] - config.camera3d.target[2],
+                ];
+                let mut next = config.clone();
+                next.camera2d.x = self.sum_2d[0] / divisor;
+                next.camera2d.y = self.sum_2d[1] / divisor;
+                next.camera3d.target = target;
+                next.camera3d.position = [target[0] + offset[0], target[1] + offset[1], target[2] + offset[2]];
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    config_mutations: vec![Puzzle5dConfigMutation::Snapshot { config: next }],
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dFocusSelectionStage::Complete => Err(Fault::from("puzzle5d-focus-selection-complete-repolled")),
+            Puzzle5dFocusSelectionStage::Closing => Err(Fault::from("puzzle5d-focus-selection-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dFocusSelectionStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let selected = {
+            let mut selected = self.selected.extract_if(|_| true);
+            selected.next()
+        };
+        if selected.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dFocusSelectionStage::Closing && self.selected.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dPatchPartStage {
+    Selection,
+    Parts,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dPatchPartWork {
+    stage: Puzzle5dPatchPartStage,
+    selection_cursor: usize,
+    part_cursor: usize,
+    selected: HashSet<String>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dPatchPartWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dPatchPartStage::Selection,
+            selection_cursor: 0,
+            part_cursor: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle5dPatchPartWork {
+    fn source_len(command: &Puzzle5dCommand) -> usize {
+        let args = command.args();
+        args.and_then(|args| args.get("partIds")).and_then(Value::as_array).map_or(0, Vec::len)
+            + usize::from(args.and_then(|args| args.get("partId")).and_then(Value::as_str).is_some())
+    }
+
+    fn source_id(command: &Puzzle5dCommand, index: usize) -> Option<&str> {
+        let args = command.args()?;
+        let ids = args.get("partIds").and_then(Value::as_array);
+        if let Some(id) = ids.and_then(|ids| ids.get(index)).and_then(Value::as_str) {
+            return (!id.is_empty()).then_some(id);
+        }
+        (index == ids.map_or(0, Vec::len)).then(|| args.get("partId").and_then(Value::as_str)).flatten().filter(|id| !id.is_empty())
+    }
+
+    fn mutation(command: &Puzzle5dCommand, part: &Puzzle5dPart) -> Option<Puzzle5dMutation> {
+        let args = command.args()?;
+        let field = args.get("field").and_then(Value::as_str).unwrap_or("");
+        let value = args.get("value");
+        let delta = args.get("delta");
+        let text = value.and_then(Value::as_str);
+        match field {
+            "partKind" => text.map(|text| crate::artifacts::puzzle5d::mutations::change_part_kind(part.id.clone(), Some(text.to_string()))),
+            "anchor" => text.map(|text| {
+                let anchor = match text.to_ascii_lowercase().as_str() {
+                    "derived" | "connected" => crate::artifacts::puzzle5d::Puzzle5dPartAnchor::Derived,
+                    _ => crate::artifacts::puzzle5d::Puzzle5dPartAnchor::Fixed,
+                };
+                crate::artifacts::puzzle5d::mutations::change_part_anchor(part.id.clone(), anchor)
+            }),
+            "text" => text.map(|text| crate::artifacts::puzzle5d::mutations::edit_part_2d_text(part.id.clone(), Some(text.to_string()))),
+            "label" => Some(crate::artifacts::puzzle5d::mutations::edit_part_3d_label(part.id.clone(), text.filter(|text| !text.is_empty()).map(str::to_string))),
+            "meshUrl" => Some(crate::artifacts::puzzle5d::mutations::change_part_3d_mesh(part.id.clone(), text.filter(|text| !text.is_empty()).map(str::to_string))),
+            "x" => puzzle5d_resolve_number_edit(part.part_2d.x, value, delta).map(|updated| crate::artifacts::puzzle5d::mutations::move_part_2d(part.id.clone(), updated, part.part_2d.y)),
+            "y" => puzzle5d_resolve_number_edit(part.part_2d.y, value, delta).map(|updated| crate::artifacts::puzzle5d::mutations::move_part_2d(part.id.clone(), part.part_2d.x, updated)),
+            _ => {
+                let axis = puzzle5d_axis_index(field, "origin")?;
+                let updated = puzzle5d_resolve_number_edit(part.part_3d.origin[axis], value, delta)?;
+                let mut origin = part.part_3d.origin;
+                origin[axis] = updated;
+                Some(crate::artifacts::puzzle5d::mutations::move_part_3d(part.id.clone(), origin))
+            }
+        }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPatchPartWork {
+    fn tool_id(&self) -> &'static str {
+        "patchPart"
+    }
+
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let items = Self::source_len(command).checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dPatchPartStage::Selection => {
+                if let Some(id) = Self::source_id(command, self.selection_cursor) {
+                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle5d-patch-part-selection-capacity"));
+                    }
+                    self.selected.insert(id.to_string());
+                    self.selection_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-patch-part-selection", "Reading part target", "Teilziel wird gelesen"));
+                }
+                self.stage = Puzzle5dPatchPartStage::Parts;
+                Ok(Self::progress("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
+            }
+            Puzzle5dPatchPartStage::Parts => {
+                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else {
+                    self.stage = Puzzle5dPatchPartStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        artifact_mutations: std::mem::take(&mut self.mutations),
+                        ui_scope: UiDirtyScope::Full,
+                        ..Default::default()
+                    }));
+                };
+                self.part_cursor += 1;
+                let part: Puzzle5dPart = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-patch-part-malformed"))?;
+                if self.selected.contains(&part.id) {
+                    if let Some(mutation) = Self::mutation(command, &part) {
+                        self.mutations.push(mutation);
+                    }
+                }
+                Ok(Self::progress("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
+            }
+            Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-part-complete-repolled")),
+            Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-part-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dPatchPartStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let selected = {
+            let mut selected = self.selected.extract_if(|_| true);
+            selected.next()
+        };
+        if selected.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dPatchPartStage::Closing && self.mutations.is_empty() && self.selected.is_empty()
+    }
+}
+
+struct Puzzle5dPatchFastenerWork {
+    stage: Puzzle5dPatchPartStage,
+    selection_cursor: usize,
+    fastener_cursor: usize,
+    selected: HashSet<String>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dPatchFastenerWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dPatchPartStage::Selection,
+            selection_cursor: 0,
+            fastener_cursor: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle5dPatchFastenerWork {
+    fn source_len(command: &Puzzle5dCommand) -> usize {
+        let args = command.args();
+        args.and_then(|args| args.get("fastenerIds")).and_then(Value::as_array).map_or(0, Vec::len)
+            + usize::from(args.and_then(|args| args.get("fastenerId")).and_then(Value::as_str).is_some())
+    }
+
+    fn source_id(command: &Puzzle5dCommand, index: usize) -> Option<&str> {
+        let args = command.args()?;
+        let ids = args.get("fastenerIds").and_then(Value::as_array);
+        if let Some(id) = ids.and_then(|ids| ids.get(index)).and_then(Value::as_str) {
+            return (!id.is_empty()).then_some(id);
+        }
+        (index == ids.map_or(0, Vec::len)).then(|| args.get("fastenerId").and_then(Value::as_str)).flatten().filter(|id| !id.is_empty())
+    }
+
+    fn mutation(command: &Puzzle5dCommand, fastener: &Puzzle5dFastener) -> Option<Puzzle5dMutation> {
+        let args = command.args()?;
+        let field = args.get("field").and_then(Value::as_str).unwrap_or("");
+        let value = args.get("value");
+        let delta = args.get("delta");
+        if field == "fastenerKind" {
+            return Some(crate::artifacts::puzzle5d::mutations::change_fastener_kind(
+                fastener.id.clone(),
+                value.and_then(Value::as_str).filter(|text| !text.is_empty()).map(str::to_string),
+            ));
+        }
+        let mut geometry = [fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y];
+        let index = match field {
+            "gap" => 0,
+            "shift" => 1,
+            "rise" => 2,
+            "rotation" => 3,
+            "turn" => 4,
+            "tilt" => 5,
+            "x" => 6,
+            "y" => 7,
+            _ => return None,
+        };
+        geometry[index] = puzzle5d_resolve_number_edit(geometry[index], value, delta)?;
+        Some(crate::artifacts::puzzle5d::mutations::replace_fastener_geometry(
+            fastener.id.clone(), geometry[0], geometry[1], geometry[2], geometry[3], geometry[4], geometry[5], geometry[6], geometry[7],
+        ))
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPatchFastenerWork {
+    fn tool_id(&self) -> &'static str {
+        "patchFastener"
+    }
+
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let items = Self::source_len(command).checked_add(snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dPatchPartStage::Selection => {
+                if let Some(id) = Self::source_id(command, self.selection_cursor) {
+                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle5d-patch-fastener-selection-capacity"));
+                    }
+                    self.selected.insert(id.to_string());
+                    self.selection_cursor += 1;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-fastener-selection", "Reading fastener target", "Verbindungsziel wird gelesen"));
+                }
+                self.stage = Puzzle5dPatchPartStage::Parts;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
+            }
+            Puzzle5dPatchPartStage::Parts => {
+                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)).cloned() else {
+                    self.stage = Puzzle5dPatchPartStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        artifact_mutations: std::mem::take(&mut self.mutations),
+                        ui_scope: UiDirtyScope::Full,
+                        ..Default::default()
+                    }));
+                };
+                self.fastener_cursor += 1;
+                let fastener: Puzzle5dFastener = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-patch-fastener-malformed"))?;
+                if self.selected.contains(&fastener.id) {
+                    if let Some(mutation) = Self::mutation(command, &fastener) {
+                        self.mutations.push(mutation);
+                    }
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
+            }
+            Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-fastener-complete-repolled")),
+            Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-fastener-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dPatchPartStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let selected = {
+            let mut selected = self.selected.extract_if(|_| true);
+            selected.next()
+        };
+        if selected.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dPatchPartStage::Closing && self.mutations.is_empty() && self.selected.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dEditFastenerStage {
+    Scan,
+    Kind,
+    Geometry,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dEditFastenerWork {
+    stage: Puzzle5dEditFastenerStage,
+    cursor: usize,
+    fastener: Option<Puzzle5dFastener>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dEditFastenerWork {
+    fn default() -> Self {
+        Self { stage: Puzzle5dEditFastenerStage::Scan, cursor: 0, fastener: None, mutations: Vec::with_capacity(2) }
+    }
+}
+
+impl Puzzle5dEditFastenerWork {
+    fn id(command: &Puzzle5dCommand) -> &str {
+        command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or("")
+    }
+
+    fn updated_kind(command: &Puzzle5dCommand, current: &Puzzle5dFastener) -> Option<Option<String>> {
+        let args = command.args()?;
+        let mut update = args
+            .get("fastenerKind")
+            .or_else(|| args.get("edgeKind"))
+            .and_then(Value::as_str)
+            .filter(|text| !text.is_empty())
+            .map(|text| Some(text.to_string()));
+        if matches!(args.get("field").and_then(Value::as_str), Some("fastenerKind" | "edgeKind")) {
+            update = Some(args.get("value").and_then(Value::as_str).filter(|text| !text.is_empty()).map(str::to_string));
+        }
+        update.filter(|updated| updated != &current.fastener_kind)
+    }
+
+    fn updated_geometry(command: &Puzzle5dCommand, current: &Puzzle5dFastener) -> Option<[f64; 8]> {
+        let args = command.args()?;
+        let mut geometry = [current.gap, current.shift, current.rise, current.rotation, current.turn, current.tilt, current.x, current.y];
+        let keys = ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"];
+        let mut changed = false;
+        for (index, key) in keys.iter().enumerate() {
+            if let Some(value) = args.get(*key) {
+                if let Some(updated) = puzzle5d_resolve_number_edit(geometry[index], Some(value), None) {
+                    changed |= updated != geometry[index];
+                    geometry[index] = updated;
+                }
+            }
+        }
+        if let Some(index) = keys.iter().position(|key| args.get("field").and_then(Value::as_str) == Some(*key)) {
+            if let Some(updated) = puzzle5d_resolve_number_edit(geometry[index], args.get("value"), args.get("delta")) {
+                changed |= updated != geometry[index];
+                geometry[index] = updated;
+            }
+        }
+        changed.then_some(geometry)
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dEditFastenerWork {
+    fn tool_id(&self) -> &'static str {
+        "editFastener"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len).checked_add(2).filter(|items| *items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dEditFastenerStage::Scan => {
+                let target = Self::id(command);
+                if target.is_empty() {
+                    self.stage = Puzzle5dEditFastenerStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                }
+                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)).cloned() else {
+                    self.stage = Puzzle5dEditFastenerStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                self.cursor += 1;
+                if row.get("id").and_then(Value::as_str) == Some(target) {
+                    self.fastener = Some(serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-edit-fastener-malformed"))?);
+                    self.stage = Puzzle5dEditFastenerStage::Kind;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-edit-fastener-scan", "Finding fastener", "Verbindung wird gesucht"))
+            }
+            Puzzle5dEditFastenerStage::Kind => {
+                let Some(fastener) = self.fastener.as_ref() else { return Err(Fault::from("puzzle5d-edit-fastener-owner")) };
+                if let Some(kind) = Self::updated_kind(command, fastener) {
+                    self.mutations.push(crate::artifacts::puzzle5d::mutations::change_fastener_kind(fastener.id.clone(), kind));
+                }
+                self.stage = Puzzle5dEditFastenerStage::Geometry;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-edit-fastener-kind", "Updating fastener kind", "Verbindungsart wird aktualisiert"))
+            }
+            Puzzle5dEditFastenerStage::Geometry => {
+                let Some(fastener) = self.fastener.as_ref() else { return Err(Fault::from("puzzle5d-edit-fastener-owner")) };
+                if let Some(geometry) = Self::updated_geometry(command, fastener) {
+                    self.mutations.push(crate::artifacts::puzzle5d::mutations::replace_fastener_geometry(
+                        fastener.id.clone(), geometry[0], geometry[1], geometry[2], geometry[3], geometry[4], geometry[5], geometry[6], geometry[7],
+                    ));
+                }
+                self.stage = Puzzle5dEditFastenerStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dEditFastenerStage::Complete => Err(Fault::from("puzzle5d-edit-fastener-complete-repolled")),
+            Puzzle5dEditFastenerStage::Closing => Err(Fault::from("puzzle5d-edit-fastener-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dEditFastenerStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() || self.fastener.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dEditFastenerStage::Closing && self.mutations.is_empty() && self.fastener.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dRetargetFastenerStage {
+    Fastener,
+    SourceGrip,
+    TargetGrip,
+    Duplicate,
+    Compatibility,
+    Disconnect,
+    Connect,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dRetargetFastenerWork {
+    stage: Puzzle5dRetargetFastenerStage,
+    part_cursor: usize,
+    grip_cursor: usize,
+    fastener_cursor: usize,
+    compatibility_cursor: usize,
+    processed_units: usize,
+    fastener: Option<Puzzle5dFastener>,
+    source: Option<String>,
+    target: Option<String>,
+    source_kind: Option<String>,
+    target_kind: Option<String>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dRetargetFastenerWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dRetargetFastenerStage::Fastener,
+            part_cursor: 0,
+            grip_cursor: 0,
+            fastener_cursor: 0,
+            compatibility_cursor: 0,
+            processed_units: 0,
+            fastener: None,
+            source: None,
+            target: None,
+            source_kind: None,
+            target_kind: None,
+            mutations: Vec::with_capacity(2),
+        }
+    }
+}
+
+impl Puzzle5dRetargetFastenerWork {
+    fn argument<'a>(command: &'a Puzzle5dCommand, primary: &str, alias: &str) -> Option<&'a str> {
+        command.args().and_then(|args| args.get(primary).or_else(|| args.get(alias))).and_then(Value::as_str).filter(|value| !value.is_empty())
+    }
+
+    fn scan_grip(&mut self, snapshot: &Puzzle5dPlaySnapshot, target: &str) -> Puzzle5dGripScan {
+        let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+            return Puzzle5dGripScan::Exhausted;
+        };
+        let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
+            self.part_cursor += 1;
+            self.grip_cursor = 0;
+            return Puzzle5dGripScan::Progress;
+        };
+        self.grip_cursor += 1;
+        let Some(part_id) = part.get("id").and_then(Value::as_str) else { return Puzzle5dGripScan::Progress };
+        let Some(grip_id) = grip.get("id").and_then(Value::as_str) else { return Puzzle5dGripScan::Progress };
+        if puzzle5d_grip_full_id(part_id, grip_id) != target {
+            return Puzzle5dGripScan::Progress;
+        }
+        let kind = grip
+            .get("gripKind")
+            .and_then(Value::as_str)
+            .filter(|kind| !kind.is_empty())
+            .or_else(|| grip.get("2d").and_then(|value| value.get("gripKind")).and_then(Value::as_str).filter(|kind| !kind.is_empty()))
+            .map(str::to_string);
+        Puzzle5dGripScan::Found(kind)
+    }
+
+    fn complete_empty(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        self.stage = Puzzle5dRetargetFastenerStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default())
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dRetargetFastenerWork {
+    fn tool_id(&self) -> &'static str {
+        "retargetFastener"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let compatibility = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
+        let items = parts.checked_mul(2)?.checked_add(fasteners.checked_mul(2)?)?.checked_add(compatibility)?.checked_add(2)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle5d-retarget-fastener-work-capacity"));
+        }
+        self.processed_units += 1;
+        match self.stage {
+            Puzzle5dRetargetFastenerStage::Fastener => {
+                let Some(id) = Self::argument(command, "id", "fastenerId") else { return Ok(self.complete_empty()) };
+                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)).cloned() else {
+                    return Ok(self.complete_empty());
+                };
+                self.fastener_cursor += 1;
+                if row.get("id").and_then(Value::as_str) == Some(id) {
+                    let fastener: Puzzle5dFastener = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-retarget-fastener-malformed"))?;
+                    self.source = Some(Self::argument(command, "source", "attracting").map_or_else(|| fastener.source.clone(), str::to_string));
+                    self.target = Some(Self::argument(command, "target", "attracted").map_or_else(|| fastener.target.clone(), str::to_string));
+                    if self.source.as_deref().is_none_or(str::is_empty) || self.target.as_deref().is_none_or(str::is_empty) || self.source == self.target {
+                        return Ok(self.complete_empty());
+                    }
+                    self.fastener = Some(fastener);
+                    self.part_cursor = 0;
+                    self.grip_cursor = 0;
+                    self.stage = Puzzle5dRetargetFastenerStage::SourceGrip;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-fastener", "Finding fastener", "Verbindung wird gesucht"))
+            }
+            Puzzle5dRetargetFastenerStage::SourceGrip => {
+                let source = self.source.as_deref().unwrap_or("").to_string();
+                match self.scan_grip(snapshot, &source) {
+                    Puzzle5dGripScan::Progress => Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-source", "Finding source grip", "Quellgriff wird gesucht")),
+                    Puzzle5dGripScan::Found(kind) => {
+                        self.source_kind = kind;
+                        self.part_cursor = 0;
+                        self.grip_cursor = 0;
+                        self.stage = Puzzle5dRetargetFastenerStage::TargetGrip;
+                        Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-target", "Finding target grip", "Zielgriff wird gesucht"))
+                    }
+                    Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
+                }
+            }
+            Puzzle5dRetargetFastenerStage::TargetGrip => {
+                let target = self.target.as_deref().unwrap_or("").to_string();
+                match self.scan_grip(snapshot, &target) {
+                    Puzzle5dGripScan::Progress => Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-target", "Finding target grip", "Zielgriff wird gesucht")),
+                    Puzzle5dGripScan::Found(kind) => {
+                        self.target_kind = kind;
+                        self.fastener_cursor = 0;
+                        self.stage = Puzzle5dRetargetFastenerStage::Duplicate;
+                        Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-duplicate", "Checking duplicate fastener", "Doppelte Verbindung wird geprüft"))
+                    }
+                    Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
+                }
+            }
+            Puzzle5dRetargetFastenerStage::Duplicate => {
+                if let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                    self.fastener_cursor += 1;
+                    let id = row.get("id").and_then(Value::as_str).unwrap_or("");
+                    let source = row.get("source").and_then(Value::as_str).unwrap_or("");
+                    let target = row.get("target").and_then(Value::as_str).unwrap_or("");
+                    let own_id = self.fastener.as_ref().map_or("", |fastener| fastener.id.as_str());
+                    let next_source = self.source.as_deref().unwrap_or("");
+                    let next_target = self.target.as_deref().unwrap_or("");
+                    if id != own_id && ((source == next_source && target == next_target) || (source == next_target && target == next_source)) {
+                        return Ok(self.complete_empty());
+                    }
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-duplicate", "Checking duplicate fastener", "Doppelte Verbindung wird geprüft"));
+                }
+                self.stage = Puzzle5dRetargetFastenerStage::Compatibility;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+            }
+            Puzzle5dRetargetFastenerStage::Compatibility => {
+                let rows = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if rows.is_empty() || self.source_kind.is_none() || self.target_kind.is_none() {
+                    self.stage = Puzzle5dRetargetFastenerStage::Disconnect;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-disconnect", "Disconnecting old fastener", "Alte Verbindung wird getrennt"));
+                }
+                let Some(row) = rows.get(self.compatibility_cursor) else { return Ok(self.complete_empty()) };
+                self.compatibility_cursor += 1;
+                let source = row.get("source").and_then(Value::as_str).unwrap_or("");
+                let target = row.get("target").and_then(Value::as_str).unwrap_or("");
+                let bidirectional = row.get("bidirectional").and_then(Value::as_bool).unwrap_or(false);
+                let source_kind = self.source_kind.as_deref().unwrap_or("");
+                let target_kind = self.target_kind.as_deref().unwrap_or("");
+                if (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind) {
+                    self.stage = Puzzle5dRetargetFastenerStage::Disconnect;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+            }
+            Puzzle5dRetargetFastenerStage::Disconnect => {
+                let id = self.fastener.as_ref().map(|fastener| fastener.id.clone()).ok_or_else(|| Fault::from("puzzle5d-retarget-fastener-owner"))?;
+                self.mutations.push(crate::artifacts::puzzle5d::mutations::disconnect_grips(id));
+                self.stage = Puzzle5dRetargetFastenerStage::Connect;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-retarget-connect", "Connecting retargeted fastener", "Neu ausgerichtete Verbindung wird erstellt"))
+            }
+            Puzzle5dRetargetFastenerStage::Connect => {
+                let fastener = self.fastener.as_ref().ok_or_else(|| Fault::from("puzzle5d-retarget-fastener-owner"))?;
+                self.mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips(
+                    fastener.id.clone(),
+                    self.source.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-retarget-source-owner"))?,
+                    self.target.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-retarget-target-owner"))?,
+                    fastener.fastener_kind.clone(),
+                    fastener.gap,
+                    fastener.shift,
+                    fastener.rise,
+                    fastener.rotation,
+                    fastener.turn,
+                    fastener.tilt,
+                    fastener.x,
+                    fastener.y,
+                ));
+                self.stage = Puzzle5dRetargetFastenerStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dRetargetFastenerStage::Complete => Err(Fault::from("puzzle5d-retarget-fastener-complete-repolled")),
+            Puzzle5dRetargetFastenerStage::Closing => Err(Fault::from("puzzle5d-retarget-fastener-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dRetargetFastenerStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some()
+            || self.fastener.take().is_some()
+            || self.source.take().is_some()
+            || self.target.take().is_some()
+            || self.source_kind.take().is_some()
+            || self.target_kind.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dRetargetFastenerStage::Closing
+            && self.mutations.is_empty()
+            && self.fastener.is_none()
+            && self.source.is_none()
+            && self.target.is_none()
+            && self.source_kind.is_none()
+            && self.target_kind.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dProximityConnectStage {
+    Moved,
+    Candidate,
+    Existing,
+    Compatibility,
+    Emit,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dProximityConnectWork {
+    stage: Puzzle5dProximityConnectStage,
+    part_cursor: usize,
+    grip_cursor: usize,
+    fastener_cursor: usize,
+    compatibility_cursor: usize,
+    processed_units: usize,
+    moved_id: Option<String>,
+    moved_kind: Option<String>,
+    moved_position: Option<[f64; 3]>,
+    candidate_id: Option<String>,
+    candidate_kind: Option<String>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dProximityConnectWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dProximityConnectStage::Moved,
+            part_cursor: 0,
+            grip_cursor: 0,
+            fastener_cursor: 0,
+            compatibility_cursor: 0,
+            processed_units: 0,
+            moved_id: None,
+            moved_kind: None,
+            moved_position: None,
+            candidate_id: None,
+            candidate_kind: None,
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle5dProximityConnectWork {
+    fn argument<'a>(command: &'a Puzzle5dCommand, key: &str) -> Option<&'a str> {
+        command.args().and_then(|args| args.get(key)).and_then(Value::as_str).filter(|value| !value.is_empty())
+    }
+
+    fn grip_kind(grip: &Value) -> Option<String> {
+        grip.get("gripKind")
+            .and_then(Value::as_str)
+            .filter(|kind| !kind.is_empty())
+            .or_else(|| grip.get("2d").and_then(|value| value.get("gripKind")).and_then(Value::as_str).filter(|kind| !kind.is_empty()))
+            .map(str::to_string)
+    }
+
+    fn world_position(part: &Value, grip: &Value) -> [f64; 3] {
+        let origin = part.get("3d").and_then(|part| part.get("origin")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
+        let orientation = part
+            .get("3d")
+            .and_then(|part| part.get("orientation"))
+            .and_then(|value| serde_json::from_value::<[f64; 4]>(value.clone()).ok())
+            .unwrap_or([0.0, 0.0, 0.0, 1.0]);
+        let position = grip.get("3d").and_then(|grip| grip.get("position")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
+        let rotated = quat_rotate_vector(orientation, position);
+        [origin[0] + rotated[0], origin[1] + rotated[1], origin[2] + rotated[2]]
+    }
+
+    fn clear_candidate(&mut self) {
+        self.candidate_id = None;
+        self.candidate_kind = None;
+        self.fastener_cursor = 0;
+        self.compatibility_cursor = 0;
+        self.stage = Puzzle5dProximityConnectStage::Candidate;
+    }
+
+    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        self.stage = Puzzle5dProximityConnectStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() })
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dProximityConnectWork {
+    fn tool_id(&self) -> &'static str {
+        "proximityConnect"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let compatibility = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
+        let items = parts
+            .checked_add(fasteners.checked_mul(parts)?)?
+            .checked_add(compatibility.checked_mul(parts)?)?
+            .checked_add(parts)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle5d-proximity-connect-work-capacity"));
+        }
+        self.processed_units += 1;
+        let part_id = Self::argument(command, "partId").or_else(|| Self::argument(command, "objectId")).unwrap_or("");
+        if part_id.is_empty() {
+            return Ok(self.complete());
+        }
+        match self.stage {
+            Puzzle5dProximityConnectStage::Moved => {
+                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    return Ok(self.complete());
+                };
+                self.part_cursor += 1;
+                if part.get("id").and_then(Value::as_str) == Some(part_id) {
+                    let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.first()) else { return Ok(self.complete()) };
+                    let Some(grip_id) = grip.get("id").and_then(Value::as_str) else { return Ok(self.complete()) };
+                    self.moved_id = Some(puzzle5d_grip_full_id(part_id, grip_id));
+                    self.moved_kind = Self::grip_kind(grip);
+                    self.moved_position = Some(Self::world_position(part, grip));
+                    self.part_cursor = 0;
+                    self.grip_cursor = 0;
+                    self.stage = Puzzle5dProximityConnectStage::Candidate;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-moved", "Finding moved grip", "Verschobener Griff wird gesucht"))
+            }
+            Puzzle5dProximityConnectStage::Candidate => {
+                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    return Ok(self.complete());
+                };
+                let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
+                    self.part_cursor += 1;
+                    self.grip_cursor = 0;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                };
+                self.grip_cursor += 1;
+                if part.get("id").and_then(Value::as_str) == Some(part_id) {
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                }
+                let Some(peer_part_id) = part.get("id").and_then(Value::as_str) else { return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Skipping malformed part", "Fehlerhaftes Teil wird übersprungen")) };
+                let Some(peer_grip_id) = grip.get("id").and_then(Value::as_str) else { return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Skipping malformed grip", "Fehlerhafter Griff wird übersprungen")) };
+                let peer_id = puzzle5d_grip_full_id(peer_part_id, peer_grip_id);
+                if self.moved_id.as_deref() == Some(peer_id.as_str()) {
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                }
+                let moved = self.moved_position.ok_or_else(|| Fault::from("puzzle5d-proximity-position-owner"))?;
+                let peer = Self::world_position(part, grip);
+                let radius = command.args().and_then(|args| args.get("radius")).and_then(Value::as_f64).unwrap_or(PUZZLE5D_PROXIMITY_RADIUS).max(0.0);
+                let dx = moved[0] - peer[0];
+                let dy = moved[1] - peer[1];
+                let dz = moved[2] - peer[2];
+                if (dx * dx + dy * dy + dz * dz).sqrt() > radius {
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                }
+                self.candidate_id = Some(peer_id);
+                self.candidate_kind = Self::grip_kind(grip);
+                self.fastener_cursor = 0;
+                self.stage = Puzzle5dProximityConnectStage::Existing;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"))
+            }
+            Puzzle5dProximityConnectStage::Existing => {
+                if let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                    self.fastener_cursor += 1;
+                    let source = row.get("source").and_then(Value::as_str).unwrap_or("");
+                    let target = row.get("target").and_then(Value::as_str).unwrap_or("");
+                    let peer = self.candidate_id.as_deref().unwrap_or("");
+                    let moved = self.moved_id.as_deref().unwrap_or("");
+                    if (source == peer && target == moved) || (source == moved && target == peer) {
+                        self.clear_candidate();
+                    }
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"));
+                }
+                self.stage = Puzzle5dProximityConnectStage::Compatibility;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+            }
+            Puzzle5dProximityConnectStage::Compatibility => {
+                let rows = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if rows.is_empty() || self.candidate_kind.is_none() || self.moved_kind.is_none() {
+                    self.stage = Puzzle5dProximityConnectStage::Emit;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-emit", "Connecting nearby grip", "Naher Griff wird verbunden"));
+                }
+                let Some(row) = rows.get(self.compatibility_cursor) else {
+                    self.clear_candidate();
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                };
+                self.compatibility_cursor += 1;
+                let source = row.get("source").and_then(Value::as_str).unwrap_or("");
+                let target = row.get("target").and_then(Value::as_str).unwrap_or("");
+                let bidirectional = row.get("bidirectional").and_then(Value::as_bool).unwrap_or(false);
+                let source_kind = self.candidate_kind.as_deref().unwrap_or("");
+                let target_kind = self.moved_kind.as_deref().unwrap_or("");
+                if (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind) {
+                    self.stage = Puzzle5dProximityConnectStage::Emit;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+            }
+            Puzzle5dProximityConnectStage::Emit => {
+                if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+                    return Err(Fault::from("puzzle5d-proximity-connect-output-capacity"));
+                }
+                let id = next_fastener_id();
+                let source = self.candidate_id.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-proximity-source-owner"))?;
+                let target = self.moved_id.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-proximity-target-owner"))?;
+                let arg = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(0.0);
+                let kind = command
+                    .args()
+                    .and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind")))
+                    .and_then(Value::as_str)
+                    .filter(|kind| !kind.is_empty())
+                    .map(str::to_string);
+                self.mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips(
+                    id,
+                    source,
+                    target,
+                    kind,
+                    arg("gap"),
+                    arg("shift"),
+                    arg("rise"),
+                    arg("rotation"),
+                    arg("turn"),
+                    arg("tilt"),
+                    arg("x"),
+                    arg("y"),
+                ));
+                self.clear_candidate();
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"))
+            }
+            Puzzle5dProximityConnectStage::Complete => Err(Fault::from("puzzle5d-proximity-connect-complete-repolled")),
+            Puzzle5dProximityConnectStage::Closing => Err(Fault::from("puzzle5d-proximity-connect-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dProximityConnectStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some()
+            || self.moved_id.take().is_some()
+            || self.moved_kind.take().is_some()
+            || self.moved_position.take().is_some()
+            || self.candidate_id.take().is_some()
+            || self.candidate_kind.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dProximityConnectStage::Closing
+            && self.mutations.is_empty()
+            && self.moved_id.is_none()
+            && self.moved_kind.is_none()
+            && self.moved_position.is_none()
+            && self.candidate_id.is_none()
+            && self.candidate_kind.is_none()
+    }
+}
+
+struct Puzzle5dPatchGripWork {
+    stage: Puzzle5dPatchPartStage,
+    selection_cursor: usize,
+    part_cursor: usize,
+    grip_cursor: usize,
+    processed_grips: usize,
+    selected: HashSet<String>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dPatchGripWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dPatchPartStage::Selection,
+            selection_cursor: 0,
+            part_cursor: 0,
+            grip_cursor: 0,
+            processed_grips: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle5dPatchGripWork {
+    fn source_len(command: &Puzzle5dCommand) -> usize {
+        let args = command.args();
+        args.and_then(|args| args.get("gripFullIds")).and_then(Value::as_array).map_or(0, Vec::len)
+            + usize::from(args.and_then(|args| args.get("gripFullId")).and_then(Value::as_str).is_some())
+    }
+
+    fn source_id(command: &Puzzle5dCommand, index: usize) -> Option<&str> {
+        let args = command.args()?;
+        let ids = args.get("gripFullIds").and_then(Value::as_array);
+        if let Some(id) = ids.and_then(|ids| ids.get(index)).and_then(Value::as_str) {
+            return (!id.is_empty()).then_some(id);
+        }
+        (index == ids.map_or(0, Vec::len)).then(|| args.get("gripFullId").and_then(Value::as_str)).flatten().filter(|id| !id.is_empty())
+    }
+
+    fn patch(command: &Puzzle5dCommand, grip: &mut crate::artifacts::puzzle5d::Puzzle5dGrip) -> bool {
+        let Some(args) = command.args() else { return false };
+        let field = args.get("field").and_then(Value::as_str).unwrap_or("");
+        let value = args.get("value");
+        let delta = args.get("delta");
+        let text = value.and_then(Value::as_str);
+        match field {
+            "gripKind" => {
+                let Some(text) = text else { return false };
+                grip.grip_kind = Some(text.to_string());
+                grip.grip_2d.grip_kind = Some(text.to_string());
+            }
+            "angle" => {
+                let Some(updated) = puzzle5d_resolve_number_edit(grip.grip_2d.angle, value, delta) else { return false };
+                grip.grip_2d.angle = updated;
+            }
+            "radius" => {
+                let Some(updated) = puzzle5d_resolve_number_edit(grip.grip_3d.radius.unwrap_or(0.0), value, delta) else { return false };
+                grip.grip_2d.radius = Some(updated);
+                grip.grip_3d.radius = Some(updated);
+            }
+            "label" => grip.grip_3d.label = text.filter(|text| !text.is_empty()).map(str::to_string),
+            _ => {
+                if let Some(axis) = puzzle5d_axis_index(field, "position") {
+                    let Some(updated) = puzzle5d_resolve_number_edit(grip.grip_3d.position[axis], value, delta) else { return false };
+                    grip.grip_3d.position[axis] = updated;
+                } else if let Some(axis) = puzzle5d_axis_index(field, "direction") {
+                    let mut direction = grip.grip_3d.direction.unwrap_or([0.0, 0.0, -1.0]);
+                    let Some(updated) = puzzle5d_resolve_number_edit(direction[axis], value, delta) else { return false };
+                    direction[axis] = updated;
+                    grip.grip_3d.direction = Some(direction);
+                } else {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPatchGripWork {
+    fn tool_id(&self) -> &'static str {
+        "patchGrip"
+    }
+
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let items = Self::source_len(command).checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dPatchPartStage::Selection => {
+                if let Some(id) = Self::source_id(command, self.selection_cursor) {
+                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle5d-patch-grip-selection-capacity"));
+                    }
+                    self.selected.insert(id.to_string());
+                    self.selection_cursor += 1;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-grip-selection", "Reading grip target", "Griffziel wird gelesen"));
+                }
+                self.stage = Puzzle5dPatchPartStage::Parts;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
+            }
+            Puzzle5dPatchPartStage::Parts => {
+                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    self.stage = Puzzle5dPatchPartStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        artifact_mutations: std::mem::take(&mut self.mutations),
+                        ui_scope: UiDirtyScope::Full,
+                        ..Default::default()
+                    }));
+                };
+                let Some(grip_value) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)).cloned() else {
+                    self.part_cursor += 1;
+                    self.grip_cursor = 0;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-grip-part", "Advancing grip owner", "Griffinhaber wird gewechselt"));
+                };
+                if self.processed_grips >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+                    return Err(Fault::from("puzzle5d-patch-grip-work-capacity"));
+                }
+                self.processed_grips += 1;
+                self.grip_cursor += 1;
+                let part_id = part.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-patch-grip-part-id-malformed"))?;
+                let mut grip: crate::artifacts::puzzle5d::Puzzle5dGrip = serde_json::from_value(grip_value).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
+                let full_id = puzzle5d_grip_full_id(part_id, &grip.id);
+                if self.selected.contains(&full_id) && Self::patch(command, &mut grip) {
+                    let grip_id = grip.id.clone();
+                    self.mutations.push(crate::artifacts::puzzle5d::mutations::replace_part_grip(part_id.to_string(), grip_id, grip));
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
+            }
+            Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-grip-complete-repolled")),
+            Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-grip-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dPatchPartStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let selected = {
+            let mut selected = self.selected.extract_if(|_| true);
+            selected.next()
+        };
+        if selected.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dPatchPartStage::Closing && self.mutations.is_empty() && self.selected.is_empty()
+    }
+}
+
+struct Puzzle5dDeleteFastenerWork {
+    cursor: usize,
+    closing: bool,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dDeleteFastenerWork {
+    fn default() -> Self {
+        Self { cursor: 0, closing: false, mutations: Vec::with_capacity(1) }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dDeleteFastenerWork {
+    fn tool_id(&self) -> &'static str {
+        "deleteFastener"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        snapshot.0.get("fasteners").and_then(Value::as_array).map_or(Some(1), |fasteners| fasteners.len().checked_add(1)).filter(|items| *items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let target = command
+            .args()
+            .and_then(|args| args.get("id").or_else(|| args.get("fastenerId")))
+            .and_then(Value::as_str)
+            .filter(|id| !id.is_empty());
+        let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.cursor)) else {
+            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                artifact_mutations: std::mem::take(&mut self.mutations),
+                ui_scope: UiDirtyScope::Full,
+                ..Default::default()
+            }));
+        };
+        self.cursor += 1;
+        if target == row.get("id").and_then(Value::as_str) {
+            if let Some(id) = target {
+                self.mutations.push(crate::artifacts::puzzle5d::mutations::disconnect_grips(id.to_string()));
+            }
+        }
+        Ok(Puzzle5dPatchPartWork::progress("puzzle5d-delete-fastener", "Scanning fastener", "Verbindung wird geprüft"))
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.mutations.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dAddNodeStage {
+    Catalog,
+    Grips,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dAddNodeWork {
+    stage: Puzzle5dAddNodeStage,
+    catalog_cursor: usize,
+    grip_cursor: usize,
+    catalog_index: Option<usize>,
+    mesh_url: Option<String>,
+    grips: Vec<crate::artifacts::puzzle5d::Puzzle5dGrip>,
+    mutation: Option<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dAddNodeWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dAddNodeStage::Catalog,
+            catalog_cursor: 0,
+            grip_cursor: 0,
+            catalog_index: None,
+            mesh_url: None,
+            grips: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            mutation: None,
+        }
+    }
+}
+
+impl Puzzle5dAddNodeWork {
+    fn part_kind(command: &Puzzle5dCommand) -> &str {
+        command.args().and_then(|args| args.get("kind")).and_then(Value::as_str).unwrap_or("Part")
+    }
+
+    fn catalogs(snapshot: &Puzzle5dPlaySnapshot) -> &[Value] {
+        snapshot.0.get("kindCatalogs").and_then(|catalogs| catalogs.get("parts")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dAddNodeWork {
+    fn tool_id(&self) -> &'static str {
+        "addNode"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let items = Self::catalogs(snapshot).len().checked_add(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let catalogs = Self::catalogs(snapshot);
+        match self.stage {
+            Puzzle5dAddNodeStage::Catalog => {
+                let Some(entry) = catalogs.get(self.catalog_cursor) else {
+                    self.stage = Puzzle5dAddNodeStage::Grips;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-add-node-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                };
+                let index = self.catalog_cursor;
+                self.catalog_cursor += 1;
+                if entry.get("id").and_then(Value::as_str) == Some(Self::part_kind(command)) {
+                    self.catalog_index = Some(index);
+                    self.mesh_url = entry.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
+                    self.stage = Puzzle5dAddNodeStage::Grips;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-add-node-catalog", "Reading part catalog", "Teilekatalog wird gelesen"))
+            }
+            Puzzle5dAddNodeStage::Grips => {
+                let templates = self.catalog_index.and_then(|index| catalogs.get(index)).and_then(|entry| entry.get("grips")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if let Some(template) = templates.get(self.grip_cursor) {
+                    if self.grips.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle5d-add-node-grip-capacity"));
+                    }
+                    let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
+                    let grip_2d: crate::artifacts::puzzle5d::Puzzle5dGrip2d = match template.get("2d").cloned() {
+                        Some(value) => serde_json::from_value(value).map_err(|_| Fault::from("puzzle5d-add-node-grip2d-malformed"))?,
+                        None => Default::default(),
+                    };
+                    let grip_3d: crate::artifacts::puzzle5d::Puzzle5dGrip3d = match template.get("3d").cloned() {
+                        Some(value) => serde_json::from_value(value).map_err(|_| Fault::from("puzzle5d-add-node-grip3d-malformed"))?,
+                        None => Default::default(),
+                    };
+                    self.grips.push(crate::artifacts::puzzle5d::Puzzle5dGrip { id: format!("v{}", self.grip_cursor), grip_kind: Some(grip_kind), grip_2d, grip_3d });
+                    self.grip_cursor += 1;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-add-node-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                }
+                let x = command.args().and_then(|args| args.get("x")).and_then(Value::as_f64).unwrap_or(120.0);
+                let y = command.args().and_then(|args| args.get("y")).and_then(Value::as_f64).unwrap_or(120.0);
+                let flat_to_world = 1.0 / 48.0;
+                let origin = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).map_or([x * flat_to_world, -y * flat_to_world, 0.0], |peer| {
+                    let peer_2d = peer.get("2d");
+                    let peer_3d = peer.get("3d");
+                    let peer_x = peer_2d.and_then(|part| part.get("x")).and_then(Value::as_f64).unwrap_or_default();
+                    let peer_y = peer_2d.and_then(|part| part.get("y")).and_then(Value::as_f64).unwrap_or_default();
+                    let peer_origin = peer_3d.and_then(|part| part.get("origin")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()).unwrap_or_default();
+                    [peer_origin[0] + (x - peer_x) * flat_to_world, peer_origin[1] - (y - peer_y) * flat_to_world, peer_origin[2]]
+                });
+                let part_kind = Self::part_kind(command).to_string();
+                let part = crate::artifacts::puzzle5d::Puzzle5dPart {
+                    id: next_part_id(),
+                    part_kind: Some(part_kind.clone()),
+                    anchor: Default::default(),
+                    part_2d: crate::artifacts::puzzle5d::Puzzle5dPart2d {
+                        x,
+                        y,
+                        shape: Some("circle".to_string()),
+                        radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS),
+                        text: Some(part_kind),
+                        ..Default::default()
+                    },
+                    part_3d: crate::artifacts::puzzle5d::Puzzle5dPart3d { origin, mesh_url: self.mesh_url.take(), orientation: Some([0.0, 0.0, 0.0, 1.0]), ..Default::default() },
+                    grips: std::mem::take(&mut self.grips),
+                };
+                self.mutation = Some(crate::artifacts::puzzle5d::mutations::create_part(part, None));
+                self.stage = Puzzle5dAddNodeStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: self.mutation.take().into_iter().collect(),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dAddNodeStage::Complete => Err(Fault::from("puzzle5d-add-node-complete-repolled")),
+            Puzzle5dAddNodeStage::Closing => Err(Fault::from("puzzle5d-add-node-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dAddNodeStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutation.take().is_some() || self.grips.pop().is_some() || self.mesh_url.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dAddNodeStage::Closing && self.mutation.is_none() && self.grips.is_empty() && self.mesh_url.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dAddBrushPartStage {
+    Catalog,
+    Grips,
+    Target,
+    Create,
+    Connect,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dAddBrushPartWork {
+    tool_id: &'static str,
+    payload: Option<Value>,
+    stage: Puzzle5dAddBrushPartStage,
+    catalog_cursor: usize,
+    grip_cursor: usize,
+    part_cursor: usize,
+    target_grip_cursor: usize,
+    processed_units: usize,
+    catalog_index: Option<usize>,
+    mesh_url: Option<String>,
+    target_id: Option<String>,
+    target_position: Option<[f64; 3]>,
+    target_direction: Option<[f64; 3]>,
+    created_id: Option<String>,
+    created_grip_id: Option<String>,
+    grips: Vec<crate::artifacts::puzzle5d::Puzzle5dGrip>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Puzzle5dAddBrushPartWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            payload: None,
+            stage: Puzzle5dAddBrushPartStage::Catalog,
+            catalog_cursor: 0,
+            grip_cursor: 0,
+            part_cursor: 0,
+            target_grip_cursor: 0,
+            processed_units: 0,
+            catalog_index: None,
+            mesh_url: None,
+            target_id: None,
+            target_position: None,
+            target_direction: None,
+            created_id: None,
+            created_grip_id: None,
+            grips: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            mutations: Vec::with_capacity(2),
+        }
+    }
+
+    fn from_board_payload(payload: Value) -> Self {
+        let mut work = Self::new("addBrushPart");
+        work.payload = Some(payload);
+        work
+    }
+
+    fn args<'a>(&'a self, command: &'a Puzzle5dCommand) -> Option<&'a Value> {
+        self.payload.as_ref().or_else(|| command.args())
+    }
+
+    fn owned_part_kind<'a>(&'a self, command: &'a Puzzle5dCommand) -> &'a str {
+        self.args(command)
+            .and_then(|args| args.get("partKind").or_else(|| args.get("objectKindId")).or_else(|| args.get("nodeKind")))
+            .and_then(Value::as_str)
+            .filter(|kind| !kind.is_empty())
+            .unwrap_or("Part")
+    }
+
+    fn catalogs(snapshot: &Puzzle5dPlaySnapshot) -> &[Value] {
+        Puzzle5dAddNodeWork::catalogs(snapshot)
+    }
+
+    fn target(&self, command: &Puzzle5dCommand, interaction: &protocol::InteractionState) -> Option<String> {
+        self
+            .args(command)
+            .and_then(|args| args.get("targetVortexFullId").or_else(|| args.get("targetGripFullId")))
+            .and_then(Value::as_str)
+            .filter(|id| !id.is_empty())
+            .map(str::to_string)
+            .or_else(|| {
+                interaction
+                    .selection
+                    .get(PUZZLE5D_INTERACTION_DOMAIN)
+                    .filter(|selection| selection.granularity == PUZZLE5D_GRANULARITY_GRIP)
+                    .and_then(|selection| selection.ids.first().cloned())
+            })
+    }
+
+    fn world_direction(part: &Value, grip: &Value) -> [f64; 3] {
+        let orientation = part
+            .get("3d")
+            .and_then(|part| part.get("orientation"))
+            .and_then(|value| serde_json::from_value::<[f64; 4]>(value.clone()).ok())
+            .unwrap_or([0.0, 0.0, 0.0, 1.0]);
+        let direction = grip
+            .get("3d")
+            .and_then(|grip| grip.get("direction"))
+            .and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok())
+            .unwrap_or([0.0, 0.0, -1.0]);
+        quat_rotate_vector(orientation, direction)
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dAddBrushPartWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let items = Self::catalogs(snapshot)
+            .len()
+            .checked_add(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS)?
+            .checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?
+            .checked_add(2)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle5d-add-brush-part-work-capacity"));
+        }
+        self.processed_units += 1;
+        let catalogs = Self::catalogs(snapshot);
+        match self.stage {
+            Puzzle5dAddBrushPartStage::Catalog => {
+                let Some(entry) = catalogs.get(self.catalog_cursor) else {
+                    self.stage = Puzzle5dAddBrushPartStage::Grips;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                };
+                let index = self.catalog_cursor;
+                self.catalog_cursor += 1;
+                if entry.get("id").and_then(Value::as_str) == Some(self.owned_part_kind(command)) {
+                    self.catalog_index = Some(index);
+                    self.mesh_url = entry.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
+                    self.stage = Puzzle5dAddBrushPartStage::Grips;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-catalog", "Reading part catalog", "Teilekatalog wird gelesen"))
+            }
+            Puzzle5dAddBrushPartStage::Grips => {
+                let templates = self.catalog_index.and_then(|index| catalogs.get(index)).and_then(|entry| entry.get("grips")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if let Some(template) = templates.get(self.grip_cursor) {
+                    if self.grips.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle5d-add-brush-part-grip-capacity"));
+                    }
+                    let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
+                    let grip_2d = template.get("2d").cloned().map(serde_json::from_value).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip2d-malformed"))?.unwrap_or_default();
+                    let grip_3d = template.get("3d").cloned().map(serde_json::from_value).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip3d-malformed"))?.unwrap_or_default();
+                    let id = format!("v{}", self.grip_cursor);
+                    if self.created_grip_id.is_none() {
+                        self.created_grip_id = Some(id.clone());
+                    }
+                    self.grips.push(crate::artifacts::puzzle5d::Puzzle5dGrip { id, grip_kind: Some(grip_kind), grip_2d, grip_3d });
+                    self.grip_cursor += 1;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                }
+                self.target_id = self.target(command, interaction);
+                self.stage = if self.target_id.is_some() { Puzzle5dAddBrushPartStage::Target } else { Puzzle5dAddBrushPartStage::Create };
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
+            }
+            Puzzle5dAddBrushPartStage::Target => {
+                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    self.target_id = None;
+                    self.stage = Puzzle5dAddBrushPartStage::Create;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"));
+                };
+                let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.target_grip_cursor)) else {
+                    self.part_cursor += 1;
+                    self.target_grip_cursor = 0;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"));
+                };
+                self.target_grip_cursor += 1;
+                let Some(part_id) = part.get("id").and_then(Value::as_str) else { return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht")) };
+                let Some(grip_id) = grip.get("id").and_then(Value::as_str) else { return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht")) };
+                if self.target_id.as_deref() == Some(puzzle5d_grip_full_id(part_id, grip_id).as_str()) {
+                    self.target_position = Some(Puzzle5dProximityConnectWork::world_position(part, grip));
+                    self.target_direction = Some(Self::world_direction(part, grip));
+                    self.stage = Puzzle5dAddBrushPartStage::Create;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
+            }
+            Puzzle5dAddBrushPartStage::Create => {
+                let x = self.args(command).and_then(|args| args.get("x")).and_then(Value::as_f64).unwrap_or(120.0);
+                let y = self.args(command).and_then(|args| args.get("y")).and_then(Value::as_f64).unwrap_or(120.0);
+                let origin = match (self.target_position, self.target_direction) {
+                    (Some(position), Some(direction)) => [position[0] + direction[0], position[1] + direction[1], position[2] + direction[2]],
+                    _ => [x / 48.0, -y / 48.0, 0.0],
+                };
+                let part_kind = self.owned_part_kind(command).to_string();
+                let id = self
+                    .args(command)
+                    .and_then(|args| args.get("nodeId").or_else(|| args.get("partId")).or_else(|| args.get("objectId")))
+                    .and_then(Value::as_str)
+                    .filter(|id| !id.is_empty())
+                    .map_or_else(next_part_id, str::to_string);
+                let part = crate::artifacts::puzzle5d::Puzzle5dPart {
+                    id: id.clone(),
+                    part_kind: Some(part_kind.clone()),
+                    anchor: Default::default(),
+                    part_2d: crate::artifacts::puzzle5d::Puzzle5dPart2d { x, y, shape: Some("circle".to_string()), radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS), text: Some(part_kind), ..Default::default() },
+                    part_3d: crate::artifacts::puzzle5d::Puzzle5dPart3d { origin, mesh_url: self.mesh_url.take(), orientation: Some([0.0, 0.0, 0.0, 1.0]), ..Default::default() },
+                    grips: std::mem::take(&mut self.grips),
+                };
+                self.created_id = Some(id);
+                self.mutations.push(crate::artifacts::puzzle5d::mutations::create_part(part, None));
+                self.stage = Puzzle5dAddBrushPartStage::Connect;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"))
+            }
+            Puzzle5dAddBrushPartStage::Connect => {
+                if let (Some(source), Some(part), Some(grip)) = (self.target_id.as_ref(), self.created_id.as_ref(), self.created_grip_id.as_ref()) {
+                    self.mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips(
+                        self.args(command).and_then(|args| args.get("edgeId")).and_then(Value::as_str).filter(|id| !id.is_empty()).map_or_else(next_fastener_id, str::to_string),
+                        source.clone(),
+                        puzzle5d_grip_full_id(part, grip),
+                        None,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                    ));
+                }
+                self.stage = Puzzle5dAddBrushPartStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dAddBrushPartStage::Complete => Err(Fault::from("puzzle5d-add-brush-part-complete-repolled")),
+            Puzzle5dAddBrushPartStage::Closing => Err(Fault::from("puzzle5d-add-brush-part-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dAddBrushPartStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some()
+            || self.payload.take().is_some()
+            || self.grips.pop().is_some()
+            || self.mesh_url.take().is_some()
+            || self.target_id.take().is_some()
+            || self.target_position.take().is_some()
+            || self.target_direction.take().is_some()
+            || self.created_id.take().is_some()
+            || self.created_grip_id.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dAddBrushPartStage::Closing
+            && self.mutations.is_empty()
+            && self.payload.is_none()
+            && self.grips.is_empty()
+            && self.mesh_url.is_none()
+            && self.target_id.is_none()
+            && self.target_position.is_none()
+            && self.target_direction.is_none()
+            && self.created_id.is_none()
+            && self.created_grip_id.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dBoardEventsStage {
+    Open,
+    Scan,
+    Decode,
+    Dispatch,
+    DragMove,
+    FindMovePart,
+    ScanEdge,
+    ScanDeleteEdges,
+    Brush,
+    DrainBrush,
+    CloseBrush,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dBoardEventsWork {
+    stage: Puzzle5dBoardEventsStage,
+    byte_cursor: usize,
+    event_start: Option<usize>,
+    event_end: usize,
+    depth: usize,
+    in_string: bool,
+    escape: bool,
+    event: Option<Value>,
+    drag_moves: Option<Value>,
+    drag_cursor: usize,
+    pending_move_id: Option<String>,
+    pending_move_x: Option<f64>,
+    pending_move_y: Option<f64>,
+    part_cursor: usize,
+    pending_source: Option<String>,
+    pending_target: Option<String>,
+    pending_edge_id: Option<String>,
+    pending_edge_kind: Option<String>,
+    fastener_cursor: usize,
+    pending_delete_id: Option<String>,
+    brush: Option<Puzzle5dAddBrushPartWork>,
+    brush_first: Option<Puzzle5dMutation>,
+    brush_second: Option<Puzzle5dMutation>,
+    camera2d: Option<Puzzle5dCamera2d>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dBoardEventsWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dBoardEventsStage::Open,
+            byte_cursor: 0,
+            event_start: None,
+            event_end: 0,
+            depth: 0,
+            in_string: false,
+            escape: false,
+            event: None,
+            drag_moves: None,
+            drag_cursor: 0,
+            pending_move_id: None,
+            pending_move_x: None,
+            pending_move_y: None,
+            part_cursor: 0,
+            pending_source: None,
+            pending_target: None,
+            pending_edge_id: None,
+            pending_edge_kind: None,
+            fastener_cursor: 0,
+            pending_delete_id: None,
+            brush: None,
+            brush_first: None,
+            brush_second: None,
+            camera2d: None,
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+        }
+    }
+}
+
+impl Puzzle5dBoardEventsWork {
+    fn source<'a>(command: &'a Puzzle5dCommand) -> Result<&'a str, Fault> {
+        command.args().and_then(|args| args.get("eventsJson")).and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-board-events-input-missing"))
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn push(&mut self, mutation: Puzzle5dMutation) -> Result<(), Fault> {
+        if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+            return Err(Fault::from("puzzle5d-board-events-mutation-capacity"));
+        }
+        self.mutations.push(mutation);
+        Ok(())
+    }
+
+    fn next_event(&mut self) {
+        self.event = None;
+        self.event_start = None;
+        self.event_end = 0;
+        self.depth = 0;
+        self.in_string = false;
+        self.escape = false;
+        self.stage = Puzzle5dBoardEventsStage::Scan;
+    }
+
+    fn scan_one(&mut self, source: &str) -> Result<(), Fault> {
+        let bytes = source.as_bytes();
+        let Some(byte) = bytes.get(self.byte_cursor).copied() else {
+            return Err(Fault::from("puzzle5d-board-events-array-unterminated"));
+        };
+        match self.stage {
+            Puzzle5dBoardEventsStage::Open => {
+                self.byte_cursor += 1;
+                if byte.is_ascii_whitespace() {
+                    return Ok(());
+                }
+                if byte != b'[' {
+                    return Err(Fault::from("puzzle5d-board-events-array-malformed"));
+                }
+                self.stage = Puzzle5dBoardEventsStage::Scan;
+            }
+            Puzzle5dBoardEventsStage::Scan if self.event_start.is_none() => {
+                self.byte_cursor += 1;
+                if byte.is_ascii_whitespace() || byte == b',' {
+                    return Ok(());
+                }
+                if byte == b']' {
+                    self.stage = Puzzle5dBoardEventsStage::Complete;
+                    return Ok(());
+                }
+                if byte != b'{' {
+                    return Err(Fault::from("puzzle5d-board-events-event-malformed"));
+                }
+                self.event_start = Some(self.byte_cursor - 1);
+                self.depth = 1;
+            }
+            Puzzle5dBoardEventsStage::Scan => {
+                self.byte_cursor += 1;
+                if self.in_string {
+                    if self.escape {
+                        self.escape = false;
+                    } else if byte == b'\\' {
+                        self.escape = true;
+                    } else if byte == b'"' {
+                        self.in_string = false;
+                    }
+                    return Ok(());
+                }
+                if byte == b'"' {
+                    self.in_string = true;
+                } else if byte == b'{' || byte == b'[' {
+                    self.depth = self.depth.checked_add(1).ok_or_else(|| Fault::from("puzzle5d-board-events-depth-capacity"))?;
+                } else if byte == b'}' || byte == b']' {
+                    self.depth = self.depth.checked_sub(1).ok_or_else(|| Fault::from("puzzle5d-board-events-depth-malformed"))?;
+                    if self.depth == 0 {
+                        self.event_end = self.byte_cursor;
+                        self.stage = Puzzle5dBoardEventsStage::Decode;
+                    }
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn take_payload(&mut self) -> Value {
+        self.event
+            .as_mut()
+            .and_then(Value::as_object_mut)
+            .and_then(|event| event.get_mut("payload"))
+            .map(Value::take)
+            .unwrap_or(Value::Null)
+    }
+
+    fn schedule_move(&mut self, payload: &Value) {
+        self.pending_move_id = payload.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
+        self.pending_move_x = payload.get("x").and_then(Value::as_f64);
+        self.pending_move_y = payload.get("y").and_then(Value::as_f64);
+        self.part_cursor = 0;
+        self.stage = Puzzle5dBoardEventsStage::FindMovePart;
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dBoardEventsWork {
+    fn tool_id(&self) -> &'static str {
+        "applyBoardEvents"
+    }
+
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let bytes = Self::source(command).ok()?.len();
+        let document_items = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len).checked_add(snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len))?.checked_add(2)?;
+        let items = bytes.checked_mul(document_items)?;
+        (bytes <= crate::retained_command::PUZZLE_COMMAND_RAW_BYTES && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items.max(1))
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        config: &Puzzle5dConfig,
+        interaction: &protocol::InteractionState,
+        hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let source = Self::source(command)?;
+        match self.stage {
+            Puzzle5dBoardEventsStage::Open | Puzzle5dBoardEventsStage::Scan => {
+                self.scan_one(source)?;
+                Ok(Self::progress("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"))
+            }
+            Puzzle5dBoardEventsStage::Decode => {
+                let start = self.event_start.ok_or_else(|| Fault::from("puzzle5d-board-events-event-owner-missing"))?;
+                self.event = Some(serde_json::from_str(source.get(start..self.event_end).ok_or_else(|| Fault::from("puzzle5d-board-events-event-range"))?).map_err(|_| Fault::from("puzzle5d-board-events-event-malformed"))?);
+                self.stage = Puzzle5dBoardEventsStage::Dispatch;
+                Ok(Self::progress("puzzle5d-board-event-decode", "Decoding board event", "Board-Ereignis wird dekodiert"))
+            }
+            Puzzle5dBoardEventsStage::Dispatch => {
+                let name = self.event.as_ref().and_then(|event| event.get("name")).and_then(Value::as_str).map(str::to_string);
+                let payload = self.take_payload();
+                match name.as_deref() {
+                    Some("camera") => {
+                        self.camera2d = Some(serde_json::from_value(payload).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
+                        self.next_event();
+                    }
+                    Some("nodeMove") => self.schedule_move(&payload),
+                    Some("nodeDragEnd") => {
+                        let mut payload = payload;
+                        self.drag_moves = Some(payload.as_object_mut().and_then(|payload| payload.get_mut("moves")).map(Value::take).unwrap_or(Value::Array(Vec::new())));
+                        self.drag_cursor = 0;
+                        self.stage = Puzzle5dBoardEventsStage::DragMove;
+                    }
+                    Some("edgeCreate") => {
+                        self.pending_source = payload.get("source").and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
+                        self.pending_target = payload.get("target").and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
+                        self.pending_edge_id = payload.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()).map_or_else(|| Some(next_fastener_id()), |id| Some(id.to_string()));
+                        self.pending_edge_kind = payload.get("edgeKind").and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
+                        self.fastener_cursor = 0;
+                        self.stage = Puzzle5dBoardEventsStage::ScanEdge;
+                    }
+                    Some("edgeDelete") => {
+                        if let Some(id) = payload.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()) {
+                            self.push(crate::artifacts::puzzle5d::mutations::disconnect_grips(id.to_string()))?;
+                        }
+                        self.next_event();
+                    }
+                    Some("nodeDelete") => {
+                        self.pending_delete_id = payload.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()).map(str::to_string);
+                        self.fastener_cursor = 0;
+                        self.stage = Puzzle5dBoardEventsStage::ScanDeleteEdges;
+                    }
+                    Some("brushPlace") => {
+                        self.brush = Some(Puzzle5dAddBrushPartWork::from_board_payload(payload));
+                        self.stage = Puzzle5dBoardEventsStage::Brush;
+                    }
+                    _ => self.next_event(),
+                }
+                Ok(Self::progress("puzzle5d-board-event-dispatch", "Applying board event", "Board-Ereignis wird angewendet"))
+            }
+            Puzzle5dBoardEventsStage::DragMove => {
+                let Some(move_payload) = self.drag_moves.as_ref().and_then(Value::as_array).and_then(|moves| moves.get(self.drag_cursor)).cloned() else {
+                    self.drag_moves = None;
+                    self.next_event();
+                    return Ok(Self::progress("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"));
+                };
+                self.drag_cursor += 1;
+                self.schedule_move(&move_payload);
+                Ok(Self::progress("puzzle5d-board-drag", "Moving board node", "Board-Knoten wird verschoben"))
+            }
+            Puzzle5dBoardEventsStage::FindMovePart => {
+                let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+                    self.pending_move_id = None;
+                    self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
+                    return Ok(Self::progress("puzzle5d-board-move", "Finding board node", "Board-Knoten wird gesucht"));
+                };
+                self.part_cursor += 1;
+                if part.get("id").and_then(Value::as_str) == self.pending_move_id.as_deref() {
+                    let current = part.get("2d");
+                    let x = self.pending_move_x.unwrap_or_else(|| current.and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or_default());
+                    let y = self.pending_move_y.unwrap_or_else(|| current.and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or_default());
+                    let id = self.pending_move_id.take().expect("matched move id");
+                    self.push(crate::artifacts::puzzle5d::mutations::move_part_2d(id, x, y))?;
+                    self.stage = if self.drag_moves.is_some() { Puzzle5dBoardEventsStage::DragMove } else { Puzzle5dBoardEventsStage::Scan };
+                }
+                Ok(Self::progress("puzzle5d-board-move", "Finding board node", "Board-Knoten wird gesucht"))
+            }
+            Puzzle5dBoardEventsStage::ScanEdge => {
+                if self.pending_source.is_none() || self.pending_target.is_none() {
+                    self.next_event();
+                    return Ok(Self::progress("puzzle5d-board-edge", "Checking board edge", "Board-Kante wird geprüft"));
+                }
+                if let Some(fastener) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                    self.fastener_cursor += 1;
+                    let source = fastener.get("source").and_then(Value::as_str);
+                    let target = fastener.get("target").and_then(Value::as_str);
+                    if (source == self.pending_source.as_deref() && target == self.pending_target.as_deref()) || (source == self.pending_target.as_deref() && target == self.pending_source.as_deref()) {
+                        self.pending_source = None;
+                        self.pending_target = None;
+                    }
+                    return Ok(Self::progress("puzzle5d-board-edge", "Checking board edge", "Board-Kante wird geprüft"));
+                }
+                let id = self.pending_edge_id.take().expect("preflighted edge id");
+                let source = self.pending_source.take().expect("preflighted edge source");
+                let target = self.pending_target.take().expect("preflighted edge target");
+                let kind = self.pending_edge_kind.take();
+                self.push(crate::artifacts::puzzle5d::mutations::connect_grips(id, source, target, kind, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))?;
+                self.next_event();
+                Ok(Self::progress("puzzle5d-board-edge", "Creating board edge", "Board-Kante wird erstellt"))
+            }
+            Puzzle5dBoardEventsStage::ScanDeleteEdges => {
+                let Some(id) = self.pending_delete_id.as_deref() else {
+                    self.next_event();
+                    return Ok(Self::progress("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"));
+                };
+                if let Some(fastener) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                    self.fastener_cursor += 1;
+                    let incident = fastener.get("source").and_then(Value::as_str).is_some_and(|grip| grip.split_once(':').is_some_and(|(part_id, _)| part_id == id))
+                        || fastener.get("target").and_then(Value::as_str).is_some_and(|grip| grip.split_once(':').is_some_and(|(part_id, _)| part_id == id));
+                    if incident {
+                        if let Some(fastener_id) = fastener.get("id").and_then(Value::as_str) {
+                            self.push(crate::artifacts::puzzle5d::mutations::disconnect_grips(fastener_id.to_string()))?;
+                        }
+                    }
+                    return Ok(Self::progress("puzzle5d-board-delete-edge", "Removing attached edge", "Verbundene Kante wird entfernt"));
+                }
+                let id = self.pending_delete_id.take().expect("preflighted deleted part");
+                self.push(crate::artifacts::puzzle5d::mutations::delete_part(id))?;
+                self.next_event();
+                Ok(Self::progress("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"))
+            }
+            Puzzle5dBoardEventsStage::Brush => {
+                let brush = self.brush.as_mut().ok_or_else(|| Fault::from("puzzle5d-board-brush-owner-missing"))?;
+                match <Puzzle5dAddBrushPartWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>>>::step(brush, command, snapshot, config, interaction, hover)? {
+                    crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de } => Ok(crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }),
+                    crate::retained_command::PuzzleCommandWorkStep::Complete(emit) => {
+                        let mut mutations = emit.artifact_mutations.into_iter();
+                        self.brush_first = mutations.next();
+                        self.brush_second = mutations.next();
+                        if mutations.next().is_some() {
+                            return Err(Fault::from("puzzle5d-board-brush-output-capacity"));
+                        }
+                        self.stage = Puzzle5dBoardEventsStage::DrainBrush;
+                        Ok(Self::progress("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"))
+                    }
+                }
+            }
+            Puzzle5dBoardEventsStage::DrainBrush => {
+                if let Some(mutation) = self.brush_first.take() {
+                    self.push(mutation)?;
+                    return Ok(Self::progress("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"));
+                }
+                if let Some(mutation) = self.brush_second.take() {
+                    self.push(mutation)?;
+                    return Ok(Self::progress("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"));
+                }
+                if let Some(brush) = self.brush.as_mut() {
+                    <Puzzle5dAddBrushPartWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>>>::begin_close(brush);
+                }
+                self.stage = Puzzle5dBoardEventsStage::CloseBrush;
+                Ok(Self::progress("puzzle5d-board-brush-close", "Releasing brush owners", "Pinseleigentümer werden freigegeben"))
+            }
+            Puzzle5dBoardEventsStage::CloseBrush => {
+                let Some(brush) = self.brush.as_mut() else {
+                    self.next_event();
+                    return Ok(Self::progress("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"));
+                };
+                let step = <Puzzle5dAddBrushPartWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>>>::close_step(
+                    brush,
+                    1,
+                    semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,
+                );
+                if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete)
+                    && <Puzzle5dAddBrushPartWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>>>::terminal_is_empty(brush)
+                {
+                    self.brush.take();
+                    self.next_event();
+                }
+                Ok(Self::progress("puzzle5d-board-brush-close", "Releasing brush owners", "Pinseleigentümer werden freigegeben"))
+            }
+            Puzzle5dBoardEventsStage::Complete => {
+                let config_mutations = self.camera2d.take().map(|camera2d| {
+                    let mut config = config.clone();
+                    config.camera2d = camera2d;
+                    vec![Puzzle5dConfigMutation::Snapshot { config }]
+                }).unwrap_or_default();
+                self.stage = Puzzle5dBoardEventsStage::Closing;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    config_mutations,
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dBoardEventsStage::Closing => Err(Fault::from("puzzle5d-board-events-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dBoardEventsStage::Closing;
+        if let Some(brush) = self.brush.as_mut() {
+            <Puzzle5dAddBrushPartWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>>>::begin_close(brush);
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(brush) = self.brush.as_mut() {
+            let step = <Puzzle5dAddBrushPartWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>>>::close_step(brush, maximum_items.min(1), maximum_bytes);
+            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete)
+                && <Puzzle5dAddBrushPartWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>>>::terminal_is_empty(brush)
+            {
+                self.brush.take();
+            }
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some()
+            || self.brush_first.take().is_some()
+            || self.brush_second.take().is_some()
+            || self.event.take().is_some()
+            || self.drag_moves.take().is_some()
+            || self.pending_move_id.take().is_some()
+            || self.pending_source.take().is_some()
+            || self.pending_target.take().is_some()
+            || self.pending_edge_id.take().is_some()
+            || self.pending_edge_kind.take().is_some()
+            || self.pending_delete_id.take().is_some()
+            || self.camera2d.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dBoardEventsStage::Closing
+            && self.brush.is_none()
+            && self.mutations.is_empty()
+            && self.brush_first.is_none()
+            && self.brush_second.is_none()
+            && self.event.is_none()
+            && self.drag_moves.is_none()
+            && self.pending_move_id.is_none()
+            && self.pending_source.is_none()
+            && self.pending_target.is_none()
+            && self.pending_edge_id.is_none()
+            && self.pending_edge_kind.is_none()
+            && self.pending_delete_id.is_none()
+            && self.camera2d.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dCreateFastenerStage {
+    Source,
+    Target,
+    Existing,
+    Compatibility,
+    Emit,
+    Complete,
+    Closing,
+}
+
+enum Puzzle5dGripScan {
+    Progress,
+    Found(Option<String>),
+    Exhausted,
+}
+
+struct Puzzle5dCreateFastenerWork {
+    stage: Puzzle5dCreateFastenerStage,
+    part_cursor: usize,
+    grip_cursor: usize,
+    fastener_cursor: usize,
+    compatibility_cursor: usize,
+    processed_units: usize,
+    source_kind: Option<String>,
+    target_kind: Option<String>,
+    mutation: Option<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dCreateFastenerWork {
+    fn default() -> Self {
+        Self { stage: Puzzle5dCreateFastenerStage::Source, part_cursor: 0, grip_cursor: 0, fastener_cursor: 0, compatibility_cursor: 0, processed_units: 0, source_kind: None, target_kind: None, mutation: None }
+    }
+}
+
+impl Puzzle5dCreateFastenerWork {
+    fn endpoint<'a>(command: &'a Puzzle5dCommand, primary: &str, alias: &str) -> &'a str {
+        command.args().and_then(|args| args.get(primary).or_else(|| args.get(alias))).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or("")
+    }
+
+    fn scan_grip(&mut self, snapshot: &Puzzle5dPlaySnapshot, target: &str) -> Puzzle5dGripScan {
+        let Some(part) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
+            return Puzzle5dGripScan::Exhausted;
+        };
+        let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
+            self.part_cursor += 1;
+            self.grip_cursor = 0;
+            return Puzzle5dGripScan::Progress;
+        };
+        self.grip_cursor += 1;
+        let Some(part_id) = part.get("id").and_then(Value::as_str) else { return Puzzle5dGripScan::Progress };
+        let Some(grip_id) = grip.get("id").and_then(Value::as_str) else { return Puzzle5dGripScan::Progress };
+        if puzzle5d_grip_full_id(part_id, grip_id) != target {
+            return Puzzle5dGripScan::Progress;
+        }
+        let kind = grip
+            .get("gripKind")
+            .and_then(Value::as_str)
+            .filter(|kind| !kind.is_empty())
+            .or_else(|| grip.get("2d").and_then(|value| value.get("gripKind")).and_then(Value::as_str).filter(|kind| !kind.is_empty()))
+            .map(str::to_string);
+        Puzzle5dGripScan::Found(kind)
+    }
+
+    fn complete_empty(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        self.stage = Puzzle5dCreateFastenerStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default())
+    }
+
+    fn arg_f64(command: &Puzzle5dCommand, key: &str) -> f64 {
+        command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(0.0)
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dCreateFastenerWork {
+    fn tool_id(&self) -> &'static str {
+        "createFastener"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let compatibility = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len);
+        let items = parts.checked_mul(2)?.checked_add(fasteners)?.checked_add(compatibility)?.checked_add(1)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle5d-create-fastener-work-capacity"));
+        }
+        self.processed_units += 1;
+        let source = Self::endpoint(command, "source", "attracting");
+        let target = Self::endpoint(command, "target", "attracted");
+        if source.is_empty() || target.is_empty() || source == target {
+            return Ok(self.complete_empty());
+        }
+        match self.stage {
+            Puzzle5dCreateFastenerStage::Source => match self.scan_grip(snapshot, source) {
+                Puzzle5dGripScan::Progress => Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-source", "Finding source grip", "Quellgriff wird gesucht")),
+                Puzzle5dGripScan::Found(kind) => {
+                    self.source_kind = kind;
+                    self.part_cursor = 0;
+                    self.grip_cursor = 0;
+                    self.stage = Puzzle5dCreateFastenerStage::Target;
+                    Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-target", "Finding target grip", "Zielgriff wird gesucht"))
+                }
+                Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
+            },
+            Puzzle5dCreateFastenerStage::Target => match self.scan_grip(snapshot, target) {
+                Puzzle5dGripScan::Progress => Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-target", "Finding target grip", "Zielgriff wird gesucht")),
+                Puzzle5dGripScan::Found(kind) => {
+                    self.target_kind = kind;
+                    self.stage = Puzzle5dCreateFastenerStage::Existing;
+                    Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"))
+                }
+                Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
+            },
+            Puzzle5dCreateFastenerStage::Existing => {
+                if let Some(fastener) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
+                    self.fastener_cursor += 1;
+                    let existing_source = fastener.get("source").and_then(Value::as_str).unwrap_or("");
+                    let existing_target = fastener.get("target").and_then(Value::as_str).unwrap_or("");
+                    if (existing_source == source && existing_target == target) || (existing_source == target && existing_target == source) {
+                        return Ok(self.complete_empty());
+                    }
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"));
+                }
+                self.stage = Puzzle5dCreateFastenerStage::Compatibility;
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+            }
+            Puzzle5dCreateFastenerStage::Compatibility => {
+                if self.source_kind.is_none() || self.target_kind.is_none() {
+                    self.stage = Puzzle5dCreateFastenerStage::Emit;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
+                }
+                let rows = snapshot.0.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if rows.is_empty() {
+                    self.stage = Puzzle5dCreateFastenerStage::Emit;
+                    return Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
+                }
+                let Some(row) = rows.get(self.compatibility_cursor) else { return Ok(self.complete_empty()) };
+                self.compatibility_cursor += 1;
+                let row_source = row.get("source").and_then(Value::as_str).unwrap_or("");
+                let row_target = row.get("target").and_then(Value::as_str).unwrap_or("");
+                let bidirectional = row.get("bidirectional").and_then(Value::as_bool).unwrap_or(false);
+                let source_kind = self.source_kind.as_deref().unwrap_or("");
+                let target_kind = self.target_kind.as_deref().unwrap_or("");
+                if (row_source == source_kind && row_target == target_kind) || (bidirectional && row_source == target_kind && row_target == source_kind) {
+                    self.stage = Puzzle5dCreateFastenerStage::Emit;
+                }
+                Ok(Puzzle5dPatchPartWork::progress("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+            }
+            Puzzle5dCreateFastenerStage::Emit => {
+                let id = command
+                    .args()
+                    .and_then(|args| args.get("id").or_else(|| args.get("fastenerId")))
+                    .and_then(Value::as_str)
+                    .filter(|id| !id.is_empty())
+                    .map_or_else(next_fastener_id, str::to_string);
+                let fastener_kind = command
+                    .args()
+                    .and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind")))
+                    .and_then(Value::as_str)
+                    .filter(|kind| !kind.is_empty())
+                    .map(str::to_string);
+                self.mutation = Some(crate::artifacts::puzzle5d::mutations::connect_grips(
+                    id,
+                    source.to_string(),
+                    target.to_string(),
+                    fastener_kind,
+                    Self::arg_f64(command, "gap"),
+                    Self::arg_f64(command, "shift"),
+                    Self::arg_f64(command, "rise"),
+                    Self::arg_f64(command, "rotation"),
+                    Self::arg_f64(command, "turn"),
+                    Self::arg_f64(command, "tilt"),
+                    Self::arg_f64(command, "x"),
+                    Self::arg_f64(command, "y"),
+                ));
+                self.stage = Puzzle5dCreateFastenerStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: self.mutation.take().into_iter().collect(),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dCreateFastenerStage::Complete => Err(Fault::from("puzzle5d-create-fastener-complete-repolled")),
+            Puzzle5dCreateFastenerStage::Closing => Err(Fault::from("puzzle5d-create-fastener-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dCreateFastenerStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutation.take().is_some() || self.source_kind.take().is_some() || self.target_kind.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dCreateFastenerStage::Closing && self.mutation.is_none() && self.source_kind.is_none() && self.target_kind.is_none()
+    }
+}
+
+const PUZZLE5D_RELOCATE_GRIPS_PER_PART: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dWorldRelocateStage {
+    SourcePart,
+    ExistingFasteners,
+    CandidatePart,
+    CandidateGrip,
+    PublishFastener,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dWorldRelocateSource {
+    part_id: String,
+    grip_id: String,
+    world_position: [f64; 3],
+}
+
+struct Puzzle5dWorldRelocateCandidate {
+    grip_id: String,
+}
+
+struct Puzzle5dWorldRelocateWork {
+    stage: Puzzle5dWorldRelocateStage,
+    part_cursor: usize,
+    grip_cursor: usize,
+    fastener_cursor: usize,
+    source: Option<Puzzle5dWorldRelocateSource>,
+    candidate_part: Option<Puzzle5dPart>,
+    candidate: Option<Puzzle5dWorldRelocateCandidate>,
+    existing: HashSet<String>,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dWorldRelocateWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle5dWorldRelocateStage::SourcePart,
+            part_cursor: 0,
+            grip_cursor: 0,
+            fastener_cursor: 0,
+            source: None,
+            candidate_part: None,
+            candidate: None,
+            existing: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle5dWorldRelocateWork {
+    fn position(command: &Puzzle5dCommand) -> Option<[f64; 3]> {
+        let values = command.args().and_then(|args| args.get("position")).and_then(Value::as_array)?;
+        Some([
+            values.first().and_then(Value::as_f64)?,
+            values.get(1).and_then(Value::as_f64)?,
+            values.get(2).and_then(Value::as_f64)?,
+        ])
+    }
+
+    fn edge(first: &str, second: &str) -> String {
+        if first <= second {
+            format!("{first}\0{second}")
+        } else {
+            format!("{second}\0{first}")
+        }
+    }
+
+    fn fastener_id(first: &str, second: &str) -> String {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        Self::edge(first, second).hash(&mut hasher);
+        format!("puzzle5d.relocate.{:016x}", hasher.finish())
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        self.stage = Puzzle5dWorldRelocateStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+            artifact_mutations: std::mem::take(&mut self.mutations),
+            ui_scope: UiDirtyScope::Full,
+            ..Default::default()
+        })
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dWorldRelocateWork {
+    fn tool_id(&self) -> &'static str {
+        "worldRelocate"
+    }
+
+    fn extent(&self, _command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let parts = snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len);
+        let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map_or(0, Vec::len);
+        let items = parts
+            .checked_mul(PUZZLE5D_RELOCATE_GRIPS_PER_PART)?
+            .checked_add(parts.checked_mul(2)?)?
+            .checked_add(fasteners)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle5dWorldRelocateStage::SourcePart => {
+                let requested = command.args().and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
+                let Some(position) = Self::position(command) else { return Ok(self.complete()) };
+                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
+                self.part_cursor += 1;
+                if row.get("id").and_then(Value::as_str) == Some(requested) {
+                    let mut part: Puzzle5dPart = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-world-relocate-source-malformed"))?;
+                    if part.grips.len() > PUZZLE5D_RELOCATE_GRIPS_PER_PART {
+                        return Err(Fault::from("puzzle5d-world-relocate-grip-capacity"));
+                    }
+                    part.part_3d.origin = position;
+                    self.mutations.push(crate::artifacts::puzzle5d::mutations::move_part_3d(part.id.clone(), position));
+                    if let Some(grip) = part.grips.first() {
+                        self.source = Some(Puzzle5dWorldRelocateSource {
+                            part_id: part.id.clone(),
+                            grip_id: puzzle5d_grip_full_id(&part.id, &grip.id),
+                            world_position: world_grip_position(&part, grip),
+                        });
+                    }
+                    self.fastener_cursor = 0;
+                    self.stage = Puzzle5dWorldRelocateStage::ExistingFasteners;
+                }
+                Ok(Self::progress("puzzle5d-world-relocate-source", "Finding moved part", "Verschobenes Teil wird gesucht"))
+            }
+            Puzzle5dWorldRelocateStage::ExistingFasteners => {
+                let Some(row) = snapshot.0.get("fasteners").and_then(Value::as_array).and_then(|rows| rows.get(self.fastener_cursor)) else {
+                    self.part_cursor = 0;
+                    self.stage = Puzzle5dWorldRelocateStage::CandidatePart;
+                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Finding nearby part", "Nahes Teil wird gesucht"));
+                };
+                let source = row.get("source").and_then(Value::as_str).unwrap_or("");
+                let target = row.get("target").and_then(Value::as_str).unwrap_or("");
+                if self.existing.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+                    return Err(Fault::from("puzzle5d-world-relocate-fastener-capacity"));
+                }
+                self.existing.insert(Self::edge(source, target));
+                self.fastener_cursor += 1;
+                Ok(Self::progress("puzzle5d-world-relocate-existing-fastener", "Reading existing fastener", "Bestehende Verbindung wird gelesen"))
+            }
+            Puzzle5dWorldRelocateStage::CandidatePart => {
+                let Some(source) = self.source.as_ref() else { return Ok(self.complete()) };
+                let Some(row) = snapshot.0.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else { return Ok(self.complete()) };
+                self.part_cursor += 1;
+                if row.get("id").and_then(Value::as_str) == Some(source.part_id.as_str()) {
+                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Skipping moved part", "Verschobenes Teil wird übersprungen"));
+                }
+                let part: Puzzle5dPart = serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-world-relocate-candidate-malformed"))?;
+                if part.grips.len() > PUZZLE5D_RELOCATE_GRIPS_PER_PART {
+                    return Err(Fault::from("puzzle5d-world-relocate-grip-capacity"));
+                }
+                self.candidate_part = Some(part);
+                self.grip_cursor = 0;
+                self.stage = Puzzle5dWorldRelocateStage::CandidateGrip;
+                Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Scanning nearby part", "Nahes Teil wird geprüft"))
+            }
+            Puzzle5dWorldRelocateStage::CandidateGrip => {
+                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle5d-world-relocate-source-owner"))?;
+                let part = self.candidate_part.as_ref().ok_or_else(|| Fault::from("puzzle5d-world-relocate-part-owner"))?;
+                let Some(grip) = part.grips.get(self.grip_cursor) else {
+                    self.candidate_part.take();
+                    self.stage = Puzzle5dWorldRelocateStage::CandidatePart;
+                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-part", "Advancing nearby part", "Nächstes nahes Teil wird geprüft"));
+                };
+                self.grip_cursor += 1;
+                let grip_id = puzzle5d_grip_full_id(&part.id, &grip.id);
+                let edge = Self::edge(&source.grip_id, &grip_id);
+                if grip_id == source.grip_id || self.existing.contains(&edge) {
+                    return Ok(Self::progress("puzzle5d-world-relocate-candidate-grip", "Skipping connected grip", "Verbundener Griff wird übersprungen"));
+                }
+                let world = world_grip_position(part, grip);
+                let delta = [source.world_position[0] - world[0], source.world_position[1] - world[1], source.world_position[2] - world[2]];
+                if (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt() <= PUZZLE5D_PROXIMITY_RADIUS {
+                    self.candidate = Some(Puzzle5dWorldRelocateCandidate { grip_id });
+                    self.stage = Puzzle5dWorldRelocateStage::PublishFastener;
+                }
+                Ok(Self::progress("puzzle5d-world-relocate-candidate-grip", "Measuring nearby grip", "Naher Griff wird gemessen"))
+            }
+            Puzzle5dWorldRelocateStage::PublishFastener => {
+                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle5d-world-relocate-source-owner"))?;
+                let candidate = self.candidate.take().ok_or_else(|| Fault::from("puzzle5d-world-relocate-candidate-owner"))?;
+                let id = Self::fastener_id(&source.grip_id, &candidate.grip_id);
+                self.mutations.push(crate::artifacts::puzzle5d::mutations::connect_grips(
+                    id,
+                    source.grip_id.clone(),
+                    candidate.grip_id.clone(),
+                    None,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ));
+                self.existing.insert(Self::edge(&source.grip_id, &candidate.grip_id));
+                self.stage = Puzzle5dWorldRelocateStage::CandidateGrip;
+                Ok(Self::progress("puzzle5d-world-relocate-publish", "Connecting nearby grip", "Naher Griff wird verbunden"))
+            }
+            Puzzle5dWorldRelocateStage::Complete => Err(Fault::from("puzzle5d-world-relocate-complete-repolled")),
+            Puzzle5dWorldRelocateStage::Closing => Err(Fault::from("puzzle5d-world-relocate-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dWorldRelocateStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some()
+            || self.candidate.take().is_some()
+            || self.candidate_part.take().is_some()
+            || self.source.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let edge = {
+            let mut existing = self.existing.extract_if(|_| true);
+            existing.next()
+        };
+        if edge.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dWorldRelocateStage::Closing
+            && self.source.is_none()
+            && self.candidate_part.is_none()
+            && self.candidate.is_none()
+            && self.existing.is_empty()
+            && self.mutations.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dSetActiveExampleStage {
+    ClearFasteners,
+    ClearParts,
+    Label,
+    Domain,
+    Description,
+    ClearCompatibility,
+    AddCompatibility,
+    Catalogs,
+    AddParts,
+    AddFasteners,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dSetActiveExampleWork {
+    stage: Puzzle5dSetActiveExampleStage,
+    cursor: usize,
+    mutations: Vec<Puzzle5dMutation>,
+}
+
+impl Default for Puzzle5dSetActiveExampleWork {
+    fn default() -> Self {
+        Self { stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) }
+    }
+}
+
+impl Puzzle5dSetActiveExampleWork {
+    fn target(command: &Puzzle5dCommand) -> Option<&'static Puzzle5dDocument> {
+        let example_id = command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or("");
+        match example_id {
+            "" => Some(&EMPTY_EXAMPLE_DOCUMENT),
+            PUZZLE5D_EXAMPLE_CONCRETE_FOREST | "concrete" => Some(&CONCRETE_FOREST_EXAMPLE_DOCUMENT),
+            PUZZLE5D_EXAMPLE_NAKAGIN | "nakagin" => Some(&NAKAGIN_EXAMPLE_DOCUMENT),
+            PUZZLE5D_EXAMPLE_CAPSULE_DREAM | "capsule-dream" | "capsule" => Some(&CAPSULE_DREAM_EXAMPLE_DOCUMENT),
+            _ => None,
+        }
+    }
+
+    fn compatibility_rows(document: &Puzzle5dDocument) -> &[Value] {
+        document.kind_compatibility.as_ref().and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn push(&mut self, mutation: Puzzle5dMutation) -> Result<(), Fault> {
+        if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle5d-set-active-example-output-capacity"));
+        }
+        self.mutations.push(mutation);
+        Ok(())
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dSetActiveExampleWork {
+    fn tool_id(&self) -> &'static str {
+        "setActiveExample"
+    }
+
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let target = Self::target(command)?;
+        let items = snapshot
+            .0
+            .get("fasteners")
+            .and_then(Value::as_array)
+            .map_or(0, Vec::len)
+            .checked_add(snapshot.0.get("parts").and_then(Value::as_array).map_or(0, Vec::len))?
+            .checked_add(snapshot.0.get("kindCompatibility").and_then(Value::as_array).map_or(0, Vec::len))?
+            .checked_add(Self::compatibility_rows(target).len())?
+            .checked_add(target.parts.len())?
+            .checked_add(target.fasteners.len())?
+            .checked_add(4)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        _config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let Some(target) = Self::target(command) else {
+            self.stage = Puzzle5dSetActiveExampleStage::Complete;
+            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+        };
+        match self.stage {
+            Puzzle5dSetActiveExampleStage::ClearFasteners => {
+                if let Some(id) = snapshot
+                    .0
+                    .get("fasteners")
+                    .and_then(Value::as_array)
+                    .and_then(|fasteners| fasteners.get(self.cursor))
+                    .and_then(|fastener| fastener.get("id"))
+                    .and_then(Value::as_str)
+                {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle5d::mutations::disconnect_grips(id.to_string()))?;
+                    return Ok(Self::progress("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
+                }
+                self.cursor = 0;
+                self.stage = Puzzle5dSetActiveExampleStage::ClearParts;
+                Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"))
+            }
+            Puzzle5dSetActiveExampleStage::ClearParts => {
+                if let Some(id) = snapshot
+                    .0
+                    .get("parts")
+                    .and_then(Value::as_array)
+                    .and_then(|parts| parts.get(self.cursor))
+                    .and_then(|part| part.get("id"))
+                    .and_then(Value::as_str)
+                {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle5d::mutations::delete_part(id.to_string()))?;
+                    return Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
+                }
+                self.cursor = 0;
+                self.stage = Puzzle5dSetActiveExampleStage::Label;
+                Ok(Self::progress("puzzle5d-example-label", "Updating document label", "Dokumenttitel wird aktualisiert"))
+            }
+            Puzzle5dSetActiveExampleStage::Label => {
+                self.push(crate::artifacts::puzzle5d::mutations::rename_puzzle5d(target.label.clone()))?;
+                self.stage = Puzzle5dSetActiveExampleStage::Domain;
+                Ok(Self::progress("puzzle5d-example-domain", "Updating document domain", "Dokumentdomäne wird aktualisiert"))
+            }
+            Puzzle5dSetActiveExampleStage::Domain => {
+                self.push(crate::artifacts::puzzle5d::mutations::change_domain(target.domain.clone()))?;
+                self.stage = Puzzle5dSetActiveExampleStage::Description;
+                Ok(Self::progress("puzzle5d-example-description", "Updating description", "Beschreibung wird aktualisiert"))
+            }
+            Puzzle5dSetActiveExampleStage::Description => {
+                let description = target.meta.as_ref().and_then(|meta| meta.get("description")).and_then(Value::as_str).unwrap_or("");
+                self.push(crate::artifacts::puzzle5d::mutations::change_description(description.to_string()))?;
+                self.stage = Puzzle5dSetActiveExampleStage::ClearCompatibility;
+                Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
+            }
+            Puzzle5dSetActiveExampleStage::ClearCompatibility => {
+                if let Some(row) = snapshot.0.get("kindCompatibility").and_then(Value::as_array).and_then(|rows| rows.get(self.cursor)) {
+                    self.cursor += 1;
+                    let source = row.get("source").and_then(Value::as_str).unwrap_or("").to_string();
+                    let target = row.get("target").and_then(Value::as_str).unwrap_or("").to_string();
+                    self.push(crate::artifacts::puzzle5d::mutations::disconnect_kind_compatibility(source, target))?;
+                    return Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
+                }
+                self.cursor = 0;
+                self.stage = Puzzle5dSetActiveExampleStage::AddCompatibility;
+                Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"))
+            }
+            Puzzle5dSetActiveExampleStage::AddCompatibility => {
+                if let Some(row) = Self::compatibility_rows(target).get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let row: crate::artifacts::puzzle5d::Puzzle5dKindCompatibility =
+                        serde_json::from_value(row).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
+                    self.push(crate::artifacts::puzzle5d::mutations::connect_kind_compatibility(
+                        row.source,
+                        row.target,
+                        row.bidirectional,
+                        row.important,
+                        row.specificity,
+                    ))?;
+                    return Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
+                }
+                self.cursor = 0;
+                self.stage = Puzzle5dSetActiveExampleStage::Catalogs;
+                Ok(Self::progress("puzzle5d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
+            }
+            Puzzle5dSetActiveExampleStage::Catalogs => {
+                let catalogs = target
+                    .kind_catalogs
+                    .as_ref()
+                    .map(|catalogs| serde_json::from_value(catalogs.clone()))
+                    .transpose()
+                    .map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
+                self.push(crate::artifacts::puzzle5d::mutations::replace_kind_catalogs(catalogs))?;
+                self.stage = Puzzle5dSetActiveExampleStage::AddParts;
+                Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
+            }
+            Puzzle5dSetActiveExampleStage::AddParts => {
+                if let Some(part) = target.parts.get(self.cursor) {
+                    self.cursor += 1;
+                    let value = serde_json::to_value(part).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                    let part = serde_json::from_value(value).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                    self.push(crate::artifacts::puzzle5d::mutations::create_part(part, None))?;
+                    return Ok(Self::progress("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
+                }
+                self.cursor = 0;
+                self.stage = Puzzle5dSetActiveExampleStage::AddFasteners;
+                Ok(Self::progress("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"))
+            }
+            Puzzle5dSetActiveExampleStage::AddFasteners => {
+                if let Some(fastener) = target.fasteners.get(self.cursor) {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle5d::mutations::connect_grips(
+                        fastener.id.clone(),
+                        fastener.source.clone(),
+                        fastener.target.clone(),
+                        fastener.fastener_kind.clone(),
+                        fastener.gap,
+                        fastener.shift,
+                        fastener.rise,
+                        fastener.rotation,
+                        fastener.turn,
+                        fastener.tilt,
+                        fastener.x,
+                        fastener.y,
+                    ))?;
+                    return Ok(Self::progress("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"));
+                }
+                self.stage = Puzzle5dSetActiveExampleStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    config_mutations: vec![Puzzle5dConfigMutation::Snapshot { config: Puzzle5dRuntime::default() }],
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle5dSetActiveExampleStage::Complete => Err(Fault::from("puzzle5d-set-active-example-complete-repolled")),
+            Puzzle5dSetActiveExampleStage::Closing => Err(Fault::from("puzzle5d-set-active-example-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dSetActiveExampleStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dSetActiveExampleStage::Closing && self.mutations.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle5dPrecomputeCommandStage {
+    Decode,
+    Parts,
+    Grips,
+    Fasteners,
+    CatalogParts,
+    CatalogGrips,
+    Positions,
+    Indices,
+    FillCount,
+    BoardUtility,
+    WorldUtility,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle5dPrecomputeCommandWork {
+    tool_id: &'static str,
+    stage: Puzzle5dPrecomputeCommandStage,
+    part_cursor: usize,
+    grip_cursor: usize,
+    fastener_cursor: usize,
+    catalog_cursor: usize,
+    payload_cursor: usize,
+    candidate_count: usize,
+    requested_count: u32,
+    processed_units: usize,
+    emit: Option<Emit<Puzzle5dMutation, Puzzle5dConfigMutation>>,
+}
+
+impl Puzzle5dPrecomputeCommandWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            stage: Puzzle5dPrecomputeCommandStage::Decode,
+            part_cursor: 0,
+            grip_cursor: 0,
+            fastener_cursor: 0,
+            catalog_cursor: 0,
+            payload_cursor: 0,
+            candidate_count: 0,
+            requested_count: 0,
+            processed_units: 0,
+            emit: Some(Emit::default()),
+        }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn emit_mut(&mut self) -> Result<&mut Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, Fault> {
+        self.emit.as_mut().ok_or_else(|| Fault::from("puzzle5d-precompute-emit-owner"))
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPrecomputeCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map_or(0, Vec::len);
+        let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map_or(0, Vec::len);
+        (positions <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && indices <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(1)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle5dCommand,
+        snapshot: &Puzzle5dPlaySnapshot,
+        config: &Puzzle5dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle5d-precompute-work-capacity"));
+        }
+        self.processed_units += 1;
+        match self.stage {
+            Puzzle5dPrecomputeCommandStage::Decode => {
+                self.requested_count = command
+                    .args()
+                    .and_then(|args| args.get("count").or_else(|| args.get("value")))
+                    .and_then(Value::as_f64)
+                    .map_or(0, |value| value.round().max(0.0) as u32)
+                    .min(PUZZLE5D_FILL_COUNT_MAX);
+                self.stage = if self.tool_id == "registerBrushMesh" { Puzzle5dPrecomputeCommandStage::Positions } else { Puzzle5dPrecomputeCommandStage::Parts };
+                Ok(Self::progress("puzzle5d-precompute-decode", "Reading precompute command", "Vorberechnungsbefehl wird gelesen"))
+            }
+            Puzzle5dPrecomputeCommandStage::Parts => {
+                let parts = snapshot.0.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let Some(part) = parts.get(self.part_cursor) else {
+                    self.stage = Puzzle5dPrecomputeCommandStage::Fasteners;
+                    return Ok(Self::progress("puzzle5d-precompute-fastener", "Scanning fastener owner", "Verbindungsinhaber wird geprüft"));
+                };
+                let grip_count = part.get("grips").and_then(Value::as_array).map_or(0, Vec::len);
+                if grip_count > crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                    return Err(Fault::from("puzzle5d-precompute-grip-capacity"));
+                }
+                self.stage = Puzzle5dPrecomputeCommandStage::Grips;
+                Ok(Self::progress("puzzle5d-precompute-part", "Scanning part owner", "Teilinhaber wird geprüft"))
+            }
+            Puzzle5dPrecomputeCommandStage::Grips => {
+                let parts = snapshot.0.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                let part = parts.get(self.part_cursor).ok_or_else(|| Fault::from("puzzle5d-precompute-part-cursor"))?;
+                let grips = part.get("grips").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if grips.get(self.grip_cursor).is_some() {
+                    self.grip_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-precompute-grip", "Scanning one grip owner", "Ein Griffinhaber wird geprüft"));
+                }
+                self.part_cursor += 1;
+                self.grip_cursor = 0;
+                self.stage = Puzzle5dPrecomputeCommandStage::Parts;
+                Ok(Self::progress("puzzle5d-precompute-part", "Advancing part cursor", "Teilzeiger wird fortgesetzt"))
+            }
+            Puzzle5dPrecomputeCommandStage::Fasteners => {
+                let fasteners = snapshot.0.get("fasteners").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if fasteners.get(self.fastener_cursor).is_some() {
+                    self.fastener_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-precompute-fastener", "Scanning one fastener owner", "Ein Verbindungsinhaber wird geprüft"));
+                }
+                self.stage = Puzzle5dPrecomputeCommandStage::CatalogParts;
+                Ok(Self::progress("puzzle5d-precompute-catalog-part", "Scanning part kind owner", "Teilartinhaber wird geprüft"))
+            }
+            Puzzle5dPrecomputeCommandStage::CatalogParts => {
+                let entries = snapshot
+                    .0
+                    .get("kindCatalogs")
+                    .and_then(|catalogs| catalogs.get("parts"))
+                    .and_then(Value::as_array)
+                    .map(Vec::as_slice)
+                    .unwrap_or_default();
+                if entries.get(self.catalog_cursor).is_some() {
+                    self.catalog_cursor += 1;
+                    self.candidate_count += 1;
+                    return Ok(Self::progress("puzzle5d-precompute-catalog-part", "Scanning one part kind", "Eine Teilart wird geprüft"));
+                }
+                self.catalog_cursor = 0;
+                self.stage = Puzzle5dPrecomputeCommandStage::CatalogGrips;
+                Ok(Self::progress("puzzle5d-precompute-catalog-grip", "Scanning grip kind owner", "Griffartinhaber wird geprüft"))
+            }
+            Puzzle5dPrecomputeCommandStage::CatalogGrips => {
+                let entries = snapshot
+                    .0
+                    .get("kindCatalogs")
+                    .and_then(|catalogs| catalogs.get("grips"))
+                    .and_then(Value::as_array)
+                    .map(Vec::as_slice)
+                    .unwrap_or_default();
+                if entries.get(self.catalog_cursor).is_some() {
+                    self.catalog_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-precompute-catalog-grip", "Scanning one grip kind", "Eine Griffart wird geprüft"));
+                }
+                self.stage = if self.tool_id == "setFillCount" { Puzzle5dPrecomputeCommandStage::FillCount } else { Puzzle5dPrecomputeCommandStage::Publish };
+                Ok(Self::progress("puzzle5d-precompute-transfer", "Transferring precompute census", "Vorberechnungszensus wird übertragen"))
+            }
+            Puzzle5dPrecomputeCommandStage::Positions => {
+                let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if let Some(value) = positions.get(self.payload_cursor) {
+                    if value.as_f64().filter(|value| value.is_finite()).is_none() {
+                        return Err(Fault::from("puzzle5d-register-mesh-position-malformed"));
+                    }
+                    self.payload_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-register-mesh-position", "Reading one mesh position", "Eine Mesh-Position wird gelesen"));
+                }
+                self.payload_cursor = 0;
+                self.stage = Puzzle5dPrecomputeCommandStage::Indices;
+                Ok(Self::progress("puzzle5d-register-mesh-index", "Reading mesh indices", "Mesh-Indizes werden gelesen"))
+            }
+            Puzzle5dPrecomputeCommandStage::Indices => {
+                let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if let Some(value) = indices.get(self.payload_cursor) {
+                    if value.as_u64().filter(|value| *value <= u32::MAX as u64).is_none() {
+                        return Err(Fault::from("puzzle5d-register-mesh-index-malformed"));
+                    }
+                    self.payload_cursor += 1;
+                    return Ok(Self::progress("puzzle5d-register-mesh-index", "Reading one mesh index", "Ein Mesh-Index wird gelesen"));
+                }
+                self.stage = Puzzle5dPrecomputeCommandStage::Publish;
+                Ok(Self::progress("puzzle5d-register-mesh-transfer", "Transferring validated mesh owner", "Geprüfter Mesh-Inhaber wird übertragen"))
+            }
+            Puzzle5dPrecomputeCommandStage::FillCount => {
+                let count = self.requested_count;
+                self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::SetFillCount { count });
+                self.stage = Puzzle5dPrecomputeCommandStage::BoardUtility;
+                Ok(Self::progress("puzzle5d-fill-count-owner", "Transferring fill count", "Füllanzahl wird übertragen"))
+            }
+            Puzzle5dPrecomputeCommandStage::BoardUtility => {
+                self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::SetActiveUtility {
+                    window_id: board2d::WINDOW_KIND_ID.to_string(),
+                    value: Some("fill".to_string()),
+                });
+                self.stage = Puzzle5dPrecomputeCommandStage::WorldUtility;
+                Ok(Self::progress("puzzle5d-fill-board-utility", "Transferring board fill utility", "Board-Füllwerkzeug wird übertragen"))
+            }
+            Puzzle5dPrecomputeCommandStage::WorldUtility => {
+                self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::SetActiveUtility {
+                    window_id: world3d::WINDOW_KIND_ID.to_string(),
+                    value: Some("fill".to_string()),
+                });
+                self.stage = Puzzle5dPrecomputeCommandStage::Publish;
+                Ok(Self::progress("puzzle5d-fill-world-utility", "Transferring world fill utility", "Welt-Füllwerkzeug wird übertragen"))
+            }
+            Puzzle5dPrecomputeCommandStage::Publish => {
+                match self.tool_id {
+                    "cycleBrushCandidate" => {
+                        let index = if self.candidate_count == 0 {
+                            config.brush_candidate_index.saturating_add(1)
+                        } else {
+                            (config.brush_candidate_index + 1) % self.candidate_count
+                        };
+                        self.emit_mut()?.config_mutations.push(Puzzle5dConfigMutation::SetBrushCandidateIndex { index });
+                        self.emit_mut()?.ui_scope = UiDirtyScope::Full;
+                    }
+                    "setFillCount" => self.emit_mut()?.ui_scope = UiDirtyScope::Full,
+                    "registerBrushMesh" => self.emit_mut()?.ui_scope = UiDirtyScope::None,
+                    _ => return Err(Fault::from("puzzle5d-precompute-tool-authority")),
+                }
+                self.stage = Puzzle5dPrecomputeCommandStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(
+                    self.emit.take().ok_or_else(|| Fault::from("puzzle5d-precompute-publish-owner"))?,
+                ))
+            }
+            Puzzle5dPrecomputeCommandStage::Complete => Err(Fault::from("puzzle5d-precompute-complete-repolled")),
+            Puzzle5dPrecomputeCommandStage::Closing => Err(Fault::from("puzzle5d-precompute-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle5dPrecomputeCommandStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.emit.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle5dPrecomputeCommandStage::Closing && self.emit.is_none()
+    }
+}
+
+struct BoundedFirstStepCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl BoundedFirstStepCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: PUZZLE5D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle5dPlayApp>>;
+    type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle5dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        PUZZLE5D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        crate::retained_command::puzzle_command_contract()
+    }
+
+    fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() || input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
+            return Err((ToolJobFactoryError::new("Puzzle 5d retained command rejects checkpoint or oversized wire owner"), input, checkpoint));
+        }
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Owner = EditorApp<Puzzle5dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = PUZZLE5D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for Puzzle5dPlayApp {
     const DIALECT: semio_framework_plugin::app::Dialect = crate::artifacts::puzzle5d::PUZZLE5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE5D_SCHEMA;
@@ -3154,12 +7324,90 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle5dCommand;
 
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Puzzle5dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.puzzle.puzzle5d@1/*#editor",
+        document_schema: "puzzle.5d",
+        factory: "BoundedFirstStepCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 512, 1, 262_144, 7_500),
+        tools: [
+            "addBrushObject", "addBrushPart", "addNode", "addPartKind", "applyBoardEvents", "canvasPointerDown",
+            "createFastener", "cycleBrushCandidate", "deleteFastener", "editFastener", "engagementAbort",
+            "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "patchFastener",
+            "patchGrip", "patchPart", "proximityConnect", "registerBrushMesh", "retargetFastener", "rotateSelection",
+            "scaleSelection", "selectSameKind", "setActiveExample", "setBrushPlacementOverlapBudget", "setCamera",
+            "setCamera2d", "setCamera3d", "setFillCount", "setGridFactor", "setGridSnapEnabled", "setLodMode",
+            "setObjectKindWeight", "setSuggestionOffset", "setSunAzimuth", "setSunElevation", "setSunIntensity",
+            "setVortexKindWeight", "toggleSun", "translateSelection", "worldPointerDown", "worldRelocate"
+        ]
+    }
+
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller_id = registry.controller_id().to_string();
         registry.register(Puzzle5dCopyJobFactory::new(&controller_id))?;
         registry.register(Puzzle5dCutJobFactory::new(&controller_id))?;
         registry.register(Puzzle5dPasteJobFactory::new(&controller_id))?;
-        registry.register(Puzzle5dImportJobFactory::new(&controller_id))
+        registry.register(Puzzle5dImportJobFactory::new(&controller_id))?;
+        registry.register(BoundedFirstStepCommandJobFactory::new(&controller_id))
+    }
+
+    async fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !PUZZLE5D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.action_id() != request.tool_id {
+            return Err(Fault::from("puzzle5d-command-tool-mismatch"));
+        }
+        let tool_id = request.command.action_id();
+        let work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
+            "addBrushPart" | "addBrushObject" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
+            "applyBoardEvents" => Box::new(Puzzle5dBoardEventsWork::default()),
+            "translateSelection" | "rotateSelection" | "scaleSelection" => Box::new(Puzzle5dTransformWork::new(tool_id)),
+            "focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default()),
+            "patchPart" => Box::new(Puzzle5dPatchPartWork::default()),
+            "patchFastener" => Box::new(Puzzle5dPatchFastenerWork::default()),
+            "editFastener" => Box::new(Puzzle5dEditFastenerWork::default()),
+            "retargetFastener" => Box::new(Puzzle5dRetargetFastenerWork::default()),
+            "proximityConnect" => Box::new(Puzzle5dProximityConnectWork::default()),
+            "patchGrip" => Box::new(Puzzle5dPatchGripWork::default()),
+            "deleteFastener" => Box::new(Puzzle5dDeleteFastenerWork::default()),
+            "addNode" => Box::new(Puzzle5dAddNodeWork::default()),
+            "createFastener" => Box::new(Puzzle5dCreateFastenerWork::default()),
+            "setActiveExample" => Box::new(Puzzle5dSetActiveExampleWork::default()),
+            "worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default()),
+            "engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default()),
+            "engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default()),
+            "setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id)),
+            "cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id)),
+            "setCamera"
+            | "setCamera2d"
+            | "setCamera3d"
+            | "setGridFactor"
+            | "setGridSnapEnabled"
+            | "setLodMode"
+            | "setSuggestionOffset"
+            | "setBrushPlacementOverlapBudget"
+            | "engagementControlSelect"
+            | "engagementInput"
+            | "toggleSun"
+            | "setSunAzimuth"
+            | "setSunElevation"
+            | "setSunIntensity" => Box::new(Puzzle5dScalarConfigWork::new(tool_id)),
+            "worldPointerDown" | "canvasPointerDown" | "selectSameKind" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
+            _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent)),
+        };
+        let payload = crate::retained_command::RetainedPuzzleCommandPayload {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            completion: request.completion,
+            command_id: Puzzle5dCommand::action_id,
+            work,
+        };
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
@@ -3285,6 +7533,11 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         command.action_id()
     }
 
+    async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(Value::as_str).map(str::to_string);
+        Puzzle5dCommand::try_from_action(action, args.cloned(), window_id).ok_or_else(|| Fault::from(format!("unknown Puzzle 5D action '{action}'")))
+    }
+
     /// @emoji 🧩️ Thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple `handle_action_impl` expects from the typed `Puzzle5dCommand`.
     async fn handle(
@@ -3295,7 +7548,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
-        with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)))
+        let selection = semio_framework::io::resolve_ready(interaction.selection(PUZZLE5D_INTERACTION_DOMAIN));
+        with_puzzle5d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, &cfg.snapshot, &selection)))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -3448,15 +7702,14 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
             let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
             let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
-            let labels = puzzle5d_labels(config);
+            let labels = puzzle5d_labels(config).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d locale or terminology is not recognized"))?;
             match body_key {
                 board2d::BODY_KEY => board2d::render(&envelope),
-                world3d::BODY_KEY => world3d::render(&envelope, &app.precompute.borrow()),
+                world3d::BODY_KEY => world3d::render(&envelope, &app.precompute.borrow(), labels),
                 document_panel::BODY_KEY => document_panel::render(&envelope, labels),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
                 inspection::BODY_KEY => inspection::render(&envelope, labels),
-                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
+                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
             }
         })?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -3464,7 +7717,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     async fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
-        let labels = puzzle5d_labels(config);
+        let Some(labels) = puzzle5d_labels(config) else {
+            return HashMap::new();
+        };
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
         // `window_instance_ids`'s doc comment for why puzzle5d needs none of puzzle3d's genuine
         // multi-instance-per-kind machinery here (each kind is always its own sole instance).
@@ -3483,7 +7738,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     async fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         with_puzzle5d_app(|app| {
             let config = cfg.snapshot;
-            let labels = puzzle5d_labels(config);
+            let Some(labels) = puzzle5d_labels(config) else {
+                return HashMap::new();
+            };
             PUZZLE5D_PLAY_WINDOWS
                 .iter()
                 .flat_map(|window| {
@@ -3505,8 +7762,12 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = cfg.snapshot;
-        let labels = puzzle5d_labels(config);
-        let is_de = puzzle5d_is_de_locale(config);
+        let Some(labels) = puzzle5d_labels(config) else {
+            return Vec::new();
+        };
+        let Some(is_de) = puzzle5d_is_de_locale(config) else {
+            return Vec::new();
+        };
         let active_utility = puzzle5d_scene_active_utility(config, Some(world3d::WINDOW_KIND_ID));
         let envelope = scene_from_projection(&doc.snapshot.0, config.clone(), &active_utility);
         let part_ids: Vec<String> =
@@ -3552,7 +7813,7 @@ fn puzzle5d_interaction_definition() -> InteractionDefinition {
 pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: PUZZLE5D_DEFAULT_UTILITY.into() };
     let precompute = Puzzle5dPrecomputeSession::new();
-    let manifest_labels = puzzle5d_labels(&Puzzle5dConfig::default());
+    let manifest_labels = puzzle5d_labels(&Puzzle5dConfig::default()).expect("default puzzle5d axes are explicit and recognized");
     Editor::builder(Puzzle5dPlayApp::DIALECT)
             .document(["semio", "puzzle", "5d"])
             .artifact_kind(crate::artifacts::puzzle5d::artifact_kind())
@@ -3635,6 +7896,49 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"))
             .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
+            .action_interactive_job("addBrushObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBrushPart", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addPartKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("applyBoardEvents", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("createFastener", InteractiveJobClassification::Migrated)
+            .action_interactive_job("cycleBrushCandidate", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteFastener", InteractiveJobClassification::Migrated)
+            .action_interactive_job("editFastener", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementControlSelect", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("focusSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchFastener", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchGrip", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchPart", InteractiveJobClassification::Migrated)
+            .action_interactive_job("proximityConnect", InteractiveJobClassification::Migrated)
+            .action_interactive_job("registerBrushMesh", InteractiveJobClassification::Migrated)
+            .action_interactive_job("retargetFastener", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectSameKind", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushPlacementOverlapBudget", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera2d", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera3d", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFillCount", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridFactor", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setObjectKindWeight", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexKindWeight", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldRelocate", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the brush create actions (P1).
             .action_args("addPartKind", vec![
                 ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
@@ -3678,7 +7982,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, testkit};
+    use semio_framework_plugin::{testkit, ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// ✏️ `Puzzle5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -3810,6 +8114,290 @@ mod tests {
     use protocol::MutationDiff;
     use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef};
 
+    fn precompute_routes_are_cursorized(source: &str) -> bool {
+        [
+            r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id))"#,
+            "Puzzle5dPrecomputeCommandStage::Parts",
+            "Puzzle5dPrecomputeCommandStage::Grips",
+            "Puzzle5dPrecomputeCommandStage::Fasteners",
+            "Puzzle5dPrecomputeCommandStage::CatalogParts",
+            "Puzzle5dPrecomputeCommandStage::CatalogGrips",
+            "Puzzle5dPrecomputeCommandStage::Positions",
+            "Puzzle5dPrecomputeCommandStage::Indices",
+            "Puzzle5dPrecomputeCommandStage::FillCount",
+            "Puzzle5dPrecomputeCommandStage::BoardUtility",
+            "Puzzle5dPrecomputeCommandStage::WorldUtility",
+            "Puzzle5dPrecomputeCommandStage::Publish",
+        ]
+        .into_iter()
+        .all(|marker| source.contains(marker))
+            && !source.contains(r#""cycleBrushCandidate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""registerBrushMesh" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn precompute_hostile_static_law_rejects_one_grant_reducers_and_missing_boundaries() {
+        let source = include_str!("🦀️component.rs");
+        assert!(precompute_routes_are_cursorized(source));
+        let direct = source.replace(
+            r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(Puzzle5dPrecomputeCommandWork::new(tool_id))"#,
+            r#""cycleBrushCandidate" | "registerBrushMesh" | "setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!precompute_routes_are_cursorized(&direct));
+        for marker in [
+            "Puzzle5dPrecomputeCommandStage::Parts",
+            "Puzzle5dPrecomputeCommandStage::Grips",
+            "Puzzle5dPrecomputeCommandStage::Fasteners",
+            "Puzzle5dPrecomputeCommandStage::CatalogParts",
+            "Puzzle5dPrecomputeCommandStage::CatalogGrips",
+            "Puzzle5dPrecomputeCommandStage::Positions",
+            "Puzzle5dPrecomputeCommandStage::Indices",
+            "Puzzle5dPrecomputeCommandStage::FillCount",
+            "Puzzle5dPrecomputeCommandStage::BoardUtility",
+            "Puzzle5dPrecomputeCommandStage::WorldUtility",
+            "Puzzle5dPrecomputeCommandStage::Publish",
+        ] {
+            assert!(!precompute_routes_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing retained boundary was falsely accepted: {marker}");
+        }
+    }
+
+    fn complex_retained_route_is_cursorized(source: &str) -> bool {
+        source.contains("\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())")
+            && source.contains("struct Puzzle5dBoardEventsWork")
+            && source.contains("self.scan_one(source)?")
+            && source.contains("Puzzle5dBoardEventsStage::FindMovePart")
+            && source.contains("Puzzle5dBoardEventsStage::ScanEdge")
+            && source.contains("Puzzle5dBoardEventsStage::ScanDeleteEdges")
+            && source.contains("Puzzle5dBoardEventsStage::Brush")
+            && source.contains("Puzzle5dBoardEventsStage::CloseBrush")
+            && !source.contains("\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork")
+    }
+
+    #[test]
+    fn apply_board_events_hostile_static_law_rejects_the_old_one_grant_reducer() {
+        let source = include_str!("🦀️component.rs");
+        assert!(complex_retained_route_is_cursorized(source));
+        let direct = source.replace(
+            "\"applyBoardEvents\" => Box::new(Puzzle5dBoardEventsWork::default())",
+            "\"applyBoardEvents\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))",
+        );
+        assert!(!complex_retained_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
+        for marker in ["self.scan_one(source)?", "Puzzle5dBoardEventsStage::FindMovePart", "Puzzle5dBoardEventsStage::ScanEdge", "Puzzle5dBoardEventsStage::ScanDeleteEdges", "Puzzle5dBoardEventsStage::CloseBrush"] {
+            assert!(!complex_retained_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing cursor marker was falsely accepted: {marker}");
+        }
+    }
+
+    fn focus_selection_route_is_cursorized(source: &str) -> bool {
+        source.contains(r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#)
+            && source.contains("Puzzle5dFocusSelectionStage::Selection")
+            && source.contains("Puzzle5dFocusSelectionStage::Parts")
+            && source.contains("Puzzle5dFocusSelectionStage::Publish")
+            && source.contains("self.part_cursor += 1")
+            && !source.contains(r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn focus_selection_hostile_static_law_rejects_whole_selection_reducers() {
+        let source = include_str!("🦀️component.rs");
+        assert!(focus_selection_route_is_cursorized(source));
+        let direct = source.replace(
+            r#""focusSelection" => Box::new(Puzzle5dFocusSelectionWork::default())"#,
+            r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!focus_selection_route_is_cursorized(&direct));
+        for marker in ["Puzzle5dFocusSelectionStage::Selection", "Puzzle5dFocusSelectionStage::Parts", "Puzzle5dFocusSelectionStage::Publish", "self.part_cursor += 1"] {
+            assert!(!focus_selection_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing focus cursor marker was falsely accepted: {marker}");
+        }
+    }
+
+    fn scalar_config_routes_are_direct(source: &str) -> bool {
+        source.contains("struct Puzzle5dScalarConfigWork")
+            && source.contains(r#""setCamera"
+            | "setCamera2d"
+            | "setCamera3d""#)
+            && source.contains(r#"| "setSunIntensity" => Box::new(Puzzle5dScalarConfigWork::new(tool_id))"#)
+            && source.contains(r#"| "engagementInput"
+            | "toggleSun""#)
+            && source.contains("Puzzle5dConfigMutation::SetCamera2d")
+            && source.contains("Puzzle5dConfigMutation::SetBrushCandidateIndex")
+            && source.contains("Puzzle5dConfigMutation::SetEngagementInput")
+            && source.contains("Puzzle5dConfigMutation::SetGridFactor")
+            && source.contains("Puzzle5dConfigMutation::SetOverlapBudget")
+            && source.contains("Puzzle5dConfigMutation::SetSun")
+            && !source.contains(r#""setCamera" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""setSunIntensity" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn scalar_config_hostile_static_law_rejects_old_reducer_and_missing_exact_mutations() {
+        let source = include_str!("🦀️component.rs");
+        assert!(scalar_config_routes_are_direct(source));
+        for marker in [
+            "struct Puzzle5dScalarConfigWork",
+            "Puzzle5dConfigMutation::SetCamera2d",
+            "Puzzle5dConfigMutation::SetBrushCandidateIndex",
+            "Puzzle5dConfigMutation::SetEngagementInput",
+            "Puzzle5dConfigMutation::SetGridFactor",
+            "Puzzle5dConfigMutation::SetOverlapBudget",
+            "Puzzle5dConfigMutation::SetSun",
+        ] {
+            assert!(!scalar_config_routes_are_direct(&source.replacen(marker, "route-removed", 1)), "missing scalar route marker was falsely accepted: {marker}");
+        }
+        let direct = source.replace(
+            r#"| "setSunIntensity" => Box::new(Puzzle5dScalarConfigWork::new(tool_id))"#,
+            r#"| "setSunIntensity" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!scalar_config_routes_are_direct(&direct), "hostile scalar old-reducer replacement must fail closed");
+    }
+
+    fn engagement_abort_route_is_cursorized(source: &str) -> bool {
+        source.contains(r#""engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default())"#)
+            && source.contains("Puzzle5dEngagementAbortStage::Input")
+            && source.contains("Puzzle5dEngagementAbortStage::BoardUtility")
+            && source.contains("Puzzle5dEngagementAbortStage::WorldUtility")
+            && source.contains("Puzzle5dEngagementAbortStage::Publish")
+            && source.contains("self.effects[0].take()")
+            && source.contains("self.effects[1].take()")
+            && !source.contains(r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn engagement_abort_hostile_static_law_rejects_old_reducer_and_missing_transfer_boundaries() {
+        let source = include_str!("🦀️component.rs");
+        assert!(engagement_abort_route_is_cursorized(source));
+        for marker in [
+            "Puzzle5dEngagementAbortStage::Input",
+            "Puzzle5dEngagementAbortStage::BoardUtility",
+            "Puzzle5dEngagementAbortStage::WorldUtility",
+            "Puzzle5dEngagementAbortStage::Publish",
+            "self.effects[0].take()",
+            "self.effects[1].take()",
+        ] {
+            assert!(!engagement_abort_route_is_cursorized(&source.replacen(marker, "route-removed", 1)), "missing engagement abort marker was falsely accepted: {marker}");
+        }
+        let direct = source.replace(
+            r#""engagementAbort" => Box::new(Puzzle5dEngagementAbortWork::default())"#,
+            r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!engagement_abort_route_is_cursorized(&direct));
+    }
+
+    fn add_part_kind_route_is_cursorized(source: &str) -> bool {
+        source.contains(r#""addBrushPart" | "addBrushObject" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#)
+            && source.contains("Puzzle5dAddBrushPartStage::Catalog")
+            && source.contains("Puzzle5dAddBrushPartStage::Grips")
+            && source.contains("Puzzle5dAddBrushPartStage::Target")
+            && source.contains("Puzzle5dAddBrushPartStage::Create")
+            && source.contains("Puzzle5dAddBrushPartStage::Connect")
+            && !source.contains(r#""addPartKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn add_part_kind_hostile_static_law_rejects_old_brush_reducer_and_missing_cursors() {
+        let source = include_str!("🦀️component.rs");
+        assert!(add_part_kind_route_is_cursorized(source));
+        let direct = source.replace(
+            r#""addBrushPart" | "addBrushObject" | "addPartKind" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id))"#,
+            r#""addBrushPart" | "addBrushObject" => Box::new(Puzzle5dAddBrushPartWork::new(tool_id)),
+            "addPartKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!add_part_kind_route_is_cursorized(&direct));
+    }
+
+    fn kind_weight_route_is_cursorized(source: &str) -> bool {
+        source.contains(r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#)
+            && source.contains("Puzzle5dKindWeightStage::Catalog")
+            && source.contains("Puzzle5dKindWeightStage::InferParts")
+            && source.contains("Puzzle5dKindWeightStage::InferGrips")
+            && source.contains("Puzzle5dKindWeightStage::Validate")
+            && source.contains("Puzzle5dKindWeightStage::SumOthers")
+            && source.contains("Puzzle5dKindWeightStage::Build")
+            && source.contains("Puzzle5dConfigMutation::SetObjectKindWeights")
+            && source.contains("Puzzle5dConfigMutation::SetVortexKindWeights")
+            && !source.contains(r#""setObjectKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors() {
+        let source = include_str!("🦀️component.rs");
+        assert!(kind_weight_route_is_cursorized(source));
+        let direct = source.replace(
+            r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id))"#,
+            r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!kind_weight_route_is_cursorized(&direct));
+        assert!(!source.contains("puzzle5d_normalize_kind_weight_group(self.weights"));
+    }
+
+    fn engagement_submit_route_is_cursorized(source: &str) -> bool {
+        source.contains(r#""engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default())"#)
+            && source.contains("Puzzle5dEngagementSubmitStage::Parse")
+            && source.contains("Puzzle5dEngagementSubmitStage::BoardConfig")
+            && source.contains("Puzzle5dEngagementSubmitStage::WorldConfig")
+            && source.contains("Puzzle5dEngagementSubmitStage::BoardEffect")
+            && source.contains("Puzzle5dEngagementSubmitStage::WorldEffect")
+            && source.contains("Puzzle5dEngagementSubmitStage::Input")
+            && source.contains("Puzzle5dEngagementSubmitStage::Publish")
+            && source.contains("Puzzle5dConfigMutation::SetActiveUtility")
+            && source.contains("Puzzle5dConfigMutation::SetEngagementInput")
+            && !source.contains(r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfers() {
+        let source = include_str!("🦀️component.rs");
+        assert!(engagement_submit_route_is_cursorized(source));
+        for marker in [
+            "Puzzle5dEngagementSubmitStage::Parse",
+            "Puzzle5dEngagementSubmitStage::BoardConfig",
+            "Puzzle5dEngagementSubmitStage::WorldConfig",
+            "Puzzle5dEngagementSubmitStage::BoardEffect",
+            "Puzzle5dEngagementSubmitStage::WorldEffect",
+            "Puzzle5dEngagementSubmitStage::Input",
+            "Puzzle5dEngagementSubmitStage::Publish",
+        ] {
+            assert!(!engagement_submit_route_is_cursorized(&source.replacen(marker, "route-removed", 1)), "missing engagement submit marker was falsely accepted: {marker}");
+        }
+        let direct = source.replace(
+            r#""engagementSubmit" => Box::new(Puzzle5dEngagementSubmitWork::default())"#,
+            r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!engagement_submit_route_is_cursorized(&direct));
+    }
+
+    fn world_relocate_route_is_cursorized(source: &str) -> bool {
+        source.contains(r#""worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default())"#)
+            && source.contains("struct Puzzle5dWorldRelocateWork")
+            && source.contains("Puzzle5dWorldRelocateStage::SourcePart")
+            && source.contains("Puzzle5dWorldRelocateStage::ExistingFasteners")
+            && source.contains("Puzzle5dWorldRelocateStage::CandidatePart")
+            && source.contains("Puzzle5dWorldRelocateStage::CandidateGrip")
+            && source.contains("Puzzle5dWorldRelocateStage::PublishFastener")
+            && source.contains("PUZZLE5D_RELOCATE_GRIPS_PER_PART")
+            && !source.contains(r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn world_relocate_hostile_static_law_rejects_whole_proximity_scans() {
+        let source = include_str!("🦀️component.rs");
+        assert!(world_relocate_route_is_cursorized(source));
+        let direct = source.replace(
+            r#""worldRelocate" => Box::new(Puzzle5dWorldRelocateWork::default())"#,
+            r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
+        );
+        assert!(!world_relocate_route_is_cursorized(&direct), "hostile old-reducer replacement must fail closed");
+        for marker in [
+            "Puzzle5dWorldRelocateStage::ExistingFasteners",
+            "Puzzle5dWorldRelocateStage::CandidatePart",
+            "Puzzle5dWorldRelocateStage::CandidateGrip",
+            "Puzzle5dWorldRelocateStage::PublishFastener",
+            "PUZZLE5D_RELOCATE_GRIPS_PER_PART",
+        ] {
+            assert!(!world_relocate_route_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing world-relocate marker was falsely accepted: {marker}");
+        }
+    }
+
     //#region 🔖️Rendering
     #[semio_framework_async_macros::async_test]
     async fn renders_paired_board_and_world_scenes() {
@@ -3915,9 +8503,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
-        use crate::artifacts::puzzle5d::{PUZZLE_5D_SCHEMA, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
+        use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
-        use store::{EngineHandles, create_document_envelope};
+        use store::{create_document_envelope, EngineHandles};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
@@ -4171,7 +8759,7 @@ mod tests {
     /// utility), never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
     #[semio_framework_async_macros::async_test]
     async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
-        let labels = puzzle5d_labels(&Puzzle5dConfig::default());
+        let labels = puzzle5d_labels(&Puzzle5dConfig::default()).expect("default puzzle5d axes are explicit");
         let session = Puzzle5dPrecomputeSession::new();
         // 🪣️ Fill utility: the fill-count slider lives in a "fill"-tagged Utility Options group (per window),
         // NOT the engagement HUD.

@@ -44,6 +44,7 @@ pub const PROFILE: crate::document::pdf_conformance::PdfConformanceProfile = cra
     subset: "a",
     output_intent_subtype: "GTS_PDFA1",
     output_intent_dest_profile: true,
+    conformant_title: "A PDF/A conformant document",
     axes: &["encryptionDictionaries", "javaScriptActions", "launchActions", "embeddedFiles", "outputIntents", "fontPrograms"],
 };
 //#endregion 🔖️Profile

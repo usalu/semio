@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_gamma_kn_m3::mutation::ChangeGam
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeGammaKnM3, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeGammaKnM3, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_gamma_kn_m3.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Soil unit weight [kN/m3] must be a finite number, got {}.", payload.new_gamma_kn_m3), Vec::<String>::new());
     }

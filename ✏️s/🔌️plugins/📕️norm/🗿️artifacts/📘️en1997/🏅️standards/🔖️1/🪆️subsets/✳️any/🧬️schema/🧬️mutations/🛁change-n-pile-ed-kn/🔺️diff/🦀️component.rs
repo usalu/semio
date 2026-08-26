@@ -5,7 +5,7 @@ use crate::artifacts::en1997::mutations::change_n_pile_ed_kn::mutation::ChangeNP
 use crate::artifacts::en1997::En1997Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeNPileEdKn, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+pub fn diff(payload: &ChangeNPileEdKn, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_n_pile_ed_kn.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Design pile axial load N_Ed [kN] must be a finite number, got {}.", payload.new_n_pile_ed_kn), Vec::<String>::new());
     }

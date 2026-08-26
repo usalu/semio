@@ -219,7 +219,7 @@ mod tests {
             use dsl::os_pack::cli::SchemaResolver;
             crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::register_schema_specs();
             let resolver = dsl::registry::full_resolver();
-            assert!(resolver.resolve("stdio.deflate").is_some(), "stdio.deflate must resolve");
+            assert!(resolver.await.resolve("stdio.deflate").await.is_some(), "stdio.deflate must resolve");
         }
     }
     //#endregion 🔖️ConformanceLaws

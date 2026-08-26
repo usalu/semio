@@ -18,7 +18,15 @@ use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::
 use semio_s_plugin_stdio_test_oracle::law;
 
 //#region 🔖️Input
-const INPUT: &str = "shared://🖼️dancing-87a.gif";
+/// 🖼️ The document every mutation row runs on: a genuine GIF87a of 117 704 bytes, derived ONCE from
+/// the real animated `💃️dancing` fixture — three real frames of it (0, 20 and 40), cropped to
+/// 400×400, 400×400 and 32×32 rectangles of real already-decoded palette indices, with frame 0's real
+/// 256-colour local table promoted to the file's own Global Color Table.
+const INPUT: &str = "shared://🖼️dancing-87a-large.gif";
+/// 🖼️ The 2 936-byte 16×16 derivation this case used to rest on, kept for `identity-round-trip`: it
+/// is the smallest genuine GIF87a committed here and the one whose whole index buffer a scenario can
+/// still name literally, so nothing it proved is given up.
+const SMALL_INPUT: &str = "shared://🖼️dancing-87a.gif";
 
 /// 🏷️ Mirrors `GifMutation::KINDS` (`../../🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
 /// 🦀️component.rs`) as a literal, like the OBJ/PDF adapters' own `SCENARIOS` constants — the
@@ -76,21 +84,27 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// alone, so the bytes must change (its own LZW writer and block layout are not the fixture's) while
 /// the semantic projection must not.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = ctx.fixture_bytes(INPUT)?;
+    let small = round_trip_oracle_once(&ctx.fixture_bytes(SMALL_INPUT)?)?;
+    let large = round_trip_oracle_once(&ctx.fixture_bytes(INPUT)?)?;
+    Ok(Outcome::with_raw(large.0, Json::Object(vec![("small".to_string(), small.1), ("large".to_string(), large.1)])))
+}
+
+/// 🔁️ The probe itself, over one GIF87a document.
+fn round_trip_oracle_once(input: &[u8]) -> Result<(Vec<u8>, Json), String> {
     let no_mutation = Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), empty_params())]);
-    let output = oracle_apply_mutation(&input, &no_mutation)?;
-    law::reparsed_not_copied(&output, &input)?;
-    let before = project_gif_87a(&input)?;
+    let output = oracle_apply_mutation(input, &no_mutation)?;
+    law::reparsed_not_copied(&output, input)?;
+    let before = project_gif_87a(input)?;
     let after = project_gif_87a(&output)?;
     law::round_trip_preserves(&after, &before)?;
-    Ok(Outcome::with_raw(output, after))
+    Ok((output, after))
 }
 //#endregion 🔖️Oracle
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{empty_params, spec, INPUT};
+    use super::{empty_params, spec, INPUT, SMALL_INPUT};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v87a::subsets::any::project_gif_87a;
     use semio_s_plugin_stdio::artifacts::gif::standards::v87a::subsets::any::io::{decode_gif, encode_gif};
@@ -260,15 +274,22 @@ mod subject {
     }
 
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let copy = ctx.copy_fixture(INPUT, Some("input.gif"))?;
+        let small = round_trip_once(ctx, SMALL_INPUT, "small-input.gif")?;
+        let large = round_trip_once(ctx, INPUT, "input.gif")?;
+        Ok(Outcome::with_raw(large.0, Json::Object(vec![("small".to_string(), small.1), ("large".to_string(), large.1)])))
+    }
+
+    /// 🔁️ The probe itself, over one GIF87a document.
+    fn round_trip_once(ctx: &Context, uri: &str, name: &str) -> Result<(Vec<u8>, Json), String> {
+        let copy = ctx.copy_fixture(uri, Some(name))?;
         let input = std::fs::read(&copy).map_err(|error| error.to_string())?;
         let snapshot = decode_gif(&input)?;
         let output = encode_gif(&snapshot)?;
         if output == input {
-            return Err("byte pass-through: output is bit-identical to the input".into());
+            return Err(format!("byte pass-through on {uri}: output is bit-identical to the input"));
         }
         let projection = project_gif_87a(&output)?;
-        Ok(Outcome::with_raw(output, projection))
+        Ok((output, projection))
     }
 }
 //#endregion 🔖️Subject

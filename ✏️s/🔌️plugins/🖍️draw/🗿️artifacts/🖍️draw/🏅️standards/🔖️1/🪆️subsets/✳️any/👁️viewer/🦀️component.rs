@@ -9,7 +9,7 @@ use crate::artifacts::draw::{DrawSnapshot, DRAW_DIALECT, DRAW_DOCUMENT_SCHEMA};
 use crate::viewer::draw::modes::view;
 use crate::viewer::draw::modes::view::windows::canvas;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -25,10 +25,10 @@ pub enum DrawViewCommand {
 }
 
 impl protocol::OpBinary for DrawViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(DrawViewCommand::Noop)
     }
 }
@@ -64,17 +64,19 @@ impl ArtifactViewer for DrawViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let root = match body_key {
             canvas::BODY_KEY => canvas::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("draw.viewer.body.label", "the fixed Draw viewer label exceeds its UI bound")),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(root))
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_draw_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_draw_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(DRAW_DIALECT).document(["semio", "draw"]).icon_id("draw").mode_def(view::definition()).default_mode_id(view::DRAW_VIEW_MODE_VIEW).window_kind_def(canvas::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

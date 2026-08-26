@@ -1,41 +1,68 @@
 @capability-cad-1-mutate
-@no-oracle-cad-mutation-semantics
+@oracle-cad-python-independent
 @comparison-ordered-json-v1
 @mutations-cad-1-any
-Feature: Replay every typed CAD 1 mutation against its committed specification vector
-  `s.cad.cad@1/*` is a semio-NATIVE composition document, carried as `.dsl.semio`/`.pack.semio`/
-  `.op.semio`/`.spr.semio`. No third party reads those, and none is authoritative over `CadMutation`, so
-  this case rests on the recorded `cad-mutation-semantics` no-oracle decision
-  (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`) and its two named substitutes: the
-  committed specification vectors, and the metamorphic laws below.
+Feature: Apply every typed cad composition mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.cad.cad` document and all twenty typed mutations, written in Python
+  from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json`, from rules 1, 2 and 7 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and
+  from the twenty committed quintets. It imports nothing from this repository's Rust.
 
-  What distinguishes this subset is that a CAD document owns almost no geometry of its own. It is a
-  COMPOSITION: four FIXED child slots (`shapeModel`, `buildingModel`, `energyModel`,
-  `structureClassicModel`), each either empty or holding one `s.stdio.semio.model` child by reference, plus
-  a `drawings` COLLECTION of the same shape, a node tree, and reference planes filed per model definition
-  in `referencesByModelDefinitionId`. The fourteen per-element verbs this enum used to carry were retired
-  when that data moved into the child documents, so what is left is exactly slot lifecycle, node lifecycle
-  and reference editing — three different collection disciplines in one vocabulary, which is why the
-  fixed-slot create kinds are vectored against an ALREADY OCCUPIED slot
-  (`rehandles-the-occupied-shape-slot`), the `drawings` create appends (`appends-drawing-2`), and the
-  deletes each remove a NAMED member rather than the last one.
+  Why a second implementation rather than a third-party library, and why the previous answer was only
+  half right. This case used to argue two things: that the child-slot lifecycle "IS this subset's
+  specification, not a fact an external library could confirm or refute", and that registering a
+  general-purpose CAD or JSON-patch crate "would put a library that has never seen this document model
+  in the position of the reference, which is worse than recording no oracle at all". The second half
+  is correct and still stands. The first half was refuted in this same wave by `mutate-gismap-1`,
+  which took a Python second implementation over this same carrier: a second implementation written
+  from this subset's own schemas is neither a third-party library nor no reference at all.
 
-  One wire defect is named here rather than excused. `CadDiff::shape_model` and its three sibling slots are
-  `Option<Option<CadModelChild>>`, so a VACATED slot renders as `null` on the JSON wire — indistinguishable
-  from an untouched one, which `delete-shape-model`'s own fixture test
-  (`…/🧨delete-shape-model/🧪️tests/vacates-the-shape-slot/🦀️component.rs`,
-  `committed_diff_applies_to_after`) records explicitly. The footprint law below accepts an undeclared
-  change on exactly those four fields and only when the new value IS `null`; a slot that changed to
-  anything else still fails.
+  What the document is, and why it is unusual: it holds no geometry. Its whole content is HANDLES to
+  other documents — four fixed child slots (`shapeModel`, `buildingModel`, `energyModel`,
+  `structureClassicModel`), one child collection (`drawings`) — plus a flat node tree and reference
+  lists filed per model-definition id. The reference therefore has to implement the child-target wire
+  spelling in both directions: the mutation payloads carry a target as the single string
+  `"<artifactId>!<artifactKind>@<standard>/<subset>"` while the snapshot carries it EXPANDED into a
+  record, so a reader that never split it could not reproduce a single `create-` vector.
 
-  Every scenario replays one committed `(before, mutation, diff, outcome, after)` quintet — the same
-  bytes the production crate's own fixture tests beside each leaf assert against — end to end through
-  the test platform. The vector each row names is written out in full in the row itself, so the
-  provenance of every input is readable here and pinned by digest at plan time.
+  ✅️ ALL TWENTY KINDS ARE ADJUDICATED AND NONE IS REFUSED. Every child id in this vocabulary is
+  supplied by the caller: `create-shape-model` names `shape-model-2` outright and REHANDLES the
+  occupied slot. That is the difference between this case and `mutate-block-3d-1` or
+  `mutate-program-1`, where the corresponding verbs rewrite a child id that is a CONTENT ADDRESS of
+  the child document and no specification states the addressing function. Here nothing is
+  content-addressed, so nothing has to be guessed — and the inverse of a rehandle is another rehandle
+  carrying the displaced handle, which is only expressible for the same reason.
+
+  📌️ TWO CEILINGS ON WHAT THIS COMPARISON ESTABLISHES, stated rather than implied. First, the
+  SUBJECT half does not run this subset's codec: `🦀️component.rs` beside this file links no plugin
+  crate and replays the committed vectors, so today the comparison establishes that an independent
+  implementation of the specification computes the committed after-snapshots — a real check of the
+  vectors, and the class of check that found `mutate-jack-1`'s wrong vector — but not yet our codec
+  against a second producer. A `cad_mutation_report_json` bridge beside the mutation enum closes it;
+  it was not added here for two reasons, and neither is that
+  the verb is hard: it is PRODUCTION code in a crate this test-side pass deliberately does not
+  touch, and it could not be verified end to end today anyway.
+  `parity` was not measured for any case in this pass: the single-case probe
+  `parity exhaustive --owner 🗒️note --case mutate-note-1` was killed at the runner's OWN 900 s
+  per-case budget while still COMPILING the generated subject host — the runner's message names the
+  cause, shared cargo target-dir lock contention from a concurrent session — and then threw
+  `spawnSync cargo ETIMEDOUT` out of `runProbe` with no summary line at all.
+  `📓️w14-final-audit.md` §5.3 measured the underlying blocker one day earlier (`unresolved import
+  component::component_persistent_local` in `semio-framework-plugin`, which sits in every generated
+  host's dependency graph); this pass did NOT re-verify whether that is still the state, and says so
+  rather than repeating it as fact. This subset's own plugin crate compiles clean at
+  `cargo check --lib`. Second, this case reads no real-world
+  artifact: all 100 of its fixtures are handcrafted specification vectors.
+
+  The committed specification vectors were KEPT, not replaced, and the reference asserts more against
+  them than the subject half can: it applies each verb, requires the committed after-snapshot member
+  by member, applies its OWN computed inverse and requires the committed before-snapshot back — the
+  full inverse law, where the subject half asserts only the weaker footprint precondition.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: The committed <id> vector declares its own kind and moves the document
     Given the committed specification vector for the <id> kind
       """
@@ -75,7 +102,7 @@ Feature: Replay every typed CAD 1 mutation against its committed specification v
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: The committed <id> vector changes only what its diff declares
     Given the committed specification vector for the <id> kind
       """

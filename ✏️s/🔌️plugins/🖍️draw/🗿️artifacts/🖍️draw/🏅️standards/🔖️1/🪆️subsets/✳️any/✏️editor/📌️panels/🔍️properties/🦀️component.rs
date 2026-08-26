@@ -3,12 +3,12 @@
 
 use crate::artifacts::draw::schema::flatten_draw_layers;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{built_text_node, BuiltNode, Label, PanelGroup, PanelTabDefinition, PanelTabKind, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 pub const DRAW_PLAY_BODY_PROPERTIES: &str = "draw.play.properties";
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -29,7 +29,8 @@ pub async fn definition() -> PanelTabDefinition {
 /// (`🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs`):
 /// falls through to the schema/utility/layer-count summary until a resolved-selection render path
 /// exists.
-pub async fn render(document: &DrawSnapshot, active_utility: &str) -> UiNode {
-    ui_stack_vertical(vec![ui_text(Label::data(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA))), ui_text(Label::data(format!("Utility: {active_utility}"))), ui_text(Label::data(format!("Layers: {}", flatten_draw_layers(&document.layers).len())))])
+pub fn render(document: &DrawSnapshot, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
+    built_text_node(Label::data(format!("Schema: {DRAW_DOCUMENT_SCHEMA}; Utility: {active_utility}; Layers: {}", flatten_draw_layers(&document.layers).len())))
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("draw.properties.label", "the fixed Draw properties summary exceeds its UI label bound"))
 }
 //#endregion 🔖️Render

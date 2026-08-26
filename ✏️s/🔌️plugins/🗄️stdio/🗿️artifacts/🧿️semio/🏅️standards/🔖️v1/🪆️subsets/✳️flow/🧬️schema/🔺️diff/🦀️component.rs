@@ -111,10 +111,41 @@ where
         }
     }
     if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(NamedTripleDiff { removed, modified, added })
+        return None;
     }
+    if !reproduces_order(base, other, &removed, &added, &key_of) {
+        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.to_vec() });
+    }
+    Some(NamedTripleDiff { removed, modified, added })
+}
+
+/// 🧮️ Whether the sparse triple can reproduce `other`'s ORDER. [`apply_named`] keeps every surviving
+/// member where it already stood and pushes `added` onto the tail, so the key sequence it produces is
+/// exactly `survivors(base order) ++ added(other order)`. When `other` orders its members any other
+/// way — a member that survives but moved, or a new member that belongs before an old one — the
+/// sparse triple is not a faithful description of the transition and `between` degrades to a full
+/// replacement instead, which the same `apply_named` reproduces exactly.
+///
+/// 🐛️ This is the fix for a real defect the `mutate-semio-flow` differential caught: `set-snapshot`
+/// on the Nakagin capsule network, undone by its own inverse, restored one node's `params` as
+/// `[rotation, name, composeGuid]` instead of the committed `[name, composeGuid, rotation]`, because
+/// `rotation` was the one key the replacement snapshot shared with the original and therefore kept
+/// its position while the other two were appended behind it. `set-snapshot` means the snapshot
+/// BECOMES the named one, order included, and now it does.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[T], key_of: &impl Fn(&T) -> K) -> bool
+where
+    K: PartialEq,
+{
+    let produced = base.iter().map(key_of).filter(|k| !removed.contains(k)).chain(added.iter().map(key_of));
+    let mut target = other.iter().map(key_of);
+    for key in produced {
+        match target.next() {
+            Some(expected) if expected == key => {}
+            _ => return false,
+        }
+    }
+    target.next().is_none()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

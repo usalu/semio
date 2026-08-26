@@ -14,8 +14,7 @@ use crate::artifacts::puzzle5d::Puzzle5dError;
 //#region 🔖️BrushEngine
 pub use crate::artifacts::puzzle3d::schema::BrushPlacePayload;
 
-/// 🧠️ A puzzle-5d brush/fill precompute session — a thin JSON-string facade over the 3d artifact's
-/// `Puzzle3dPrecomputeSession`, which owns the actual collision/placement solver.
+/// 🧠️ A puzzle-5d brush/fill precompute session over the 3d app's retained solver and preview page.
 pub struct Puzzle5dPrecomputeSession {
     inner: crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession,
 }
@@ -54,8 +53,12 @@ impl Puzzle5dPrecomputeSession {
         self.inner.brush_preview(grip_full_id, candidate_index).and_then(|preview| serde_json::to_string(&preview).ok())
     }
 
-    pub fn fill_progress(&self) -> String {
-        serde_json::to_string(&self.inner.fill_progress()).unwrap_or_else(|_| "{}".to_string())
+    pub fn fill_preview_object_kind(&self) -> Option<String> {
+        self.inner.fill_preview_object_kind()
+    }
+
+    pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String> {
+        self.inner.fill_preview_json_page(color, status_label)
     }
 
     /// 🎯️ Extracts the `Fixture` a 3d-engine `dispatch` call produced, re-serialized to the JSON

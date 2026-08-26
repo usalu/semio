@@ -29,7 +29,10 @@ pub fn definition() -> PanelTabDefinition {
 /// per-item action needed, and `_config` is unused (kept for call-site symmetry with `inspection`).
 pub fn render(document: &Procedural2dSnapshot, _config: &Procedural2dConfig, labels: &Procedural2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let widget_items = crate::ui_node_list(document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget).to_string(), widget_id(widget).to_string())))?;
-    PanelTreeBuilder::new("procedural2d-play-document")?.section_or_placeholder("procedural2d-play-document.widgets", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, widget_items, labels.none.as_str())?.interaction_domain("graph")?.build()
+    PanelTreeBuilder::new("procedural2d-play-document")?
+        .section_or_placeholder("procedural2d-play-document.widgets", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, widget_items, labels.none.as_str())?
+        .interaction_domain("graph")?
+        .build()
 }
 //#endregion 🔖️Render
 

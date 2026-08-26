@@ -8,7 +8,7 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
-pub(crate) async fn set_parameter(state: &RewriteSnapshot, name: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
+pub(crate) fn set_parameter(state: &RewriteSnapshot, name: &str, value: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
     if name.is_empty() {
         return Ok(Emit::default());
     }

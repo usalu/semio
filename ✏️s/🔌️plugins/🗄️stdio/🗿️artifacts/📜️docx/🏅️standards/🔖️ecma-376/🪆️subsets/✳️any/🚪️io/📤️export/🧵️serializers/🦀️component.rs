@@ -3,7 +3,7 @@
 //! reimplemented here: it is reused from the shared `crate::artifacts::zip::opc` layer and,
 //! transitively, `crate::artifacts::zip::engine` + `crate::artifacts::xml::schema::snapshot`.
 
-use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, W_NS};
+use super::super::super::{DocxError, MAIN_DOCUMENT_CONTENT_TYPE, MAIN_DOCUMENT_PART, REL_TYPE_STYLES, STRICT_REL_TYPE_OFFICE_DOCUMENT, STRICT_REL_TYPE_STYLES, STYLES_CONTENT_TYPE, STYLES_PART, STYLES_REL_TARGET, W_NS};
 use crate::artifacts::docx::{
     schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow},
     DocxSnapshot,
@@ -117,17 +117,17 @@ pub fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
 const STYLES_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn style_to_xml(s: &DocxStyle) -> XmlNode {
+    let mut sc = vec![elem("w:name", vec![attr("w:val", &s.name)], vec![])];
+    if let Some(based_on) = &s.based_on {
+        sc.push(elem("w:basedOn", vec![attr("w:val", based_on)], vec![]));
+    }
+    elem("w:style", vec![attr("w:styleId", &s.id)], sc)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn styles_to_xml(styles: &[DocxStyle]) -> XmlDocument {
-    let children = styles
-        .iter()
-        .map(|s| {
-            let mut sc = vec![elem("w:name", vec![attr("w:val", &s.name)], vec![])];
-            if let Some(based_on) = &s.based_on {
-                sc.push(elem("w:basedOn", vec![attr("w:val", based_on)], vec![]));
-            }
-            elem("w:style", vec![attr("w:styleId", &s.id)], sc)
-        })
-        .collect();
+    let children = styles.iter().map(style_to_xml).collect();
     XmlDocument { root: Some(elem("w:styles", vec![attr("xmlns:w", STYLES_NS)], children)), doctype: None, declaration: None, prolog: Vec::new() }
 }
 //#endregion 🔖️StylesMapping
@@ -153,26 +153,122 @@ pub fn build_minimal_docx(document: DocxDocument) -> DocxSnapshot {
     DocxSnapshot::from_parts(opc, document)
 }
 
+/// 🔬️ Whether the part currently at `path` already decodes to exactly `expected`. A part whose own
+/// bytes still project to the typed view MUST NOT be rewritten: `DocxDocument` is a semantic VIEW of
+/// `word/document.xml`, not its total content, so re-rendering an unchanged part from the view is a
+/// pure loss — it discards the root element's real attributes (`w:document`'s ECMA-376
+/// `conformance`, a Strict `xmlns:w`, `mc:Ignorable`), the XML declaration, and every `w:body` child
+/// this vocabulary does not model. That loss is what made the ✳️transitional conformance-class
+/// vocabulary report `set-conformance-attribute` as applied while the written package carried no
+/// such attribute. Same guard `pptx`'s `encode_pptx` already applies to `ppt/presentation.xml`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn part_already_projects<T: PartialEq>(snap: &DocxSnapshot, path: &str, expected: &T, project: impl Fn(&XmlDocument) -> Option<T>) -> bool {
+    let Some(part) = snap.opc.part(path) else { return false };
+    let Ok(text) = std::str::from_utf8(&part.bytes) else { return false };
+    let Ok(document) = crate::artifacts::xml::schema::snapshot::xml_document_from_text(text) else { return false };
+    project(&document).is_some_and(|actual| &actual == expected)
+}
+
+/// 🧬️ Renders the typed body INTO the main part's OWN xml shape: root element name and attributes,
+/// declaration, doctype, prolog and every `w:body` child that is neither `w:p` nor `w:tbl`
+/// (`w:sectPr` above all) come from the package that was READ, never from constants. Only the
+/// `w:p`/`w:tbl` sequence — the exact span `DocxDocument::body` is the view of — is regenerated.
+/// Falls back to a freshly built `w:document` when there is no readable main part yet (the
+/// `build_minimal_docx` path).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn document_into_part(existing: Option<&XmlDocument>, doc: &DocxDocument) -> XmlDocument {
+    let rendered: Vec<XmlNode> = doc.body.iter().map(block_to_xml).collect();
+    let Some(existing) = existing else { return document_to_xml(doc) };
+    let Some(XmlNode::Element { name: root_name, attrs: root_attrs, children }) = existing.root.as_ref() else { return document_to_xml(doc) };
+    if root_name != "w:document" {
+        return document_to_xml(doc);
+    }
+    let mut root_children = Vec::with_capacity(children.len());
+    let mut wrote_body = false;
+    for child in children {
+        match child {
+            XmlNode::Element { name, attrs, children: body_children } if name == "w:body" => {
+                let unmodeled = body_children.iter().filter(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:p" || name == "w:tbl")).cloned();
+                let mut merged = rendered.clone();
+                merged.extend(unmodeled);
+                root_children.push(XmlNode::Element { name: name.clone(), attrs: attrs.clone(), children: merged });
+                wrote_body = true;
+            }
+            other => root_children.push(other.clone()),
+        }
+    }
+    if !wrote_body {
+        root_children.push(elem("w:body", vec![], rendered));
+    }
+    XmlDocument { root: Some(XmlNode::Element { name: root_name.clone(), attrs: root_attrs.clone(), children: root_children }), doctype: existing.doctype.clone(), declaration: existing.declaration.clone(), prolog: existing.prolog.clone() }
+}
+
+/// 🧬️ Same principle as [`document_into_part`] for `word/styles.xml`: the root element, the prolog
+/// and every non-`w:style` child (`w:docDefaults`, `w:latentStyles`) are the read package's, and a
+/// style the model still carries keeps its OWN real definition — only `w:name`/`w:basedOn`, the two
+/// fields `DocxStyle` is the view of, are written back onto it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn styles_into_part(existing: Option<&XmlDocument>, styles: &[DocxStyle]) -> XmlDocument {
+    let Some(existing) = existing else { return styles_to_xml(styles) };
+    let Some(XmlNode::Element { name: root_name, attrs: root_attrs, children }) = existing.root.as_ref() else { return styles_to_xml(styles) };
+    if root_name != "w:styles" {
+        return styles_to_xml(styles);
+    }
+    let mut root_children: Vec<XmlNode> = children.iter().filter(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:style")).cloned().collect();
+    for style in styles {
+        let prior = children.iter().find(|node| matches!(node, XmlNode::Element { name, attrs, .. } if name == "w:style" && attrs.iter().any(|a| a.name == "w:styleId" && a.value == style.id)));
+        root_children.push(match prior {
+            Some(XmlNode::Element { name, attrs, children: inner }) => {
+                let mut merged: Vec<XmlNode> = inner.iter().filter(|node| !matches!(node, XmlNode::Element { name, .. } if name == "w:name" || name == "w:basedOn")).cloned().collect();
+                merged.insert(0, elem("w:name", vec![attr("w:val", &style.name)], vec![]));
+                if let Some(based_on) = &style.based_on {
+                    merged.insert(1, elem("w:basedOn", vec![attr("w:val", based_on)], vec![]));
+                }
+                XmlNode::Element { name: name.clone(), attrs: attrs.clone(), children: merged }
+            }
+            _ => style_to_xml(style),
+        });
+    }
+    XmlDocument { root: Some(XmlNode::Element { name: root_name.clone(), attrs: root_attrs.clone(), children: root_children }), doctype: existing.doctype.clone(), declaration: existing.declaration.clone(), prolog: existing.prolog.clone() }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parsed_part(snap: &DocxSnapshot, path: &str) -> Option<XmlDocument> {
+    let part = snap.opc.part(path)?;
+    let text = std::str::from_utf8(&part.bytes).ok()?;
+    crate::artifacts::xml::schema::snapshot::xml_document_from_text(text).ok()
+}
+
 /// 🔄️ Syncs `snap.opc`'s `word/document.xml` (and `word/styles.xml`, when styles are present) part
 /// bytes -- and their relationships, if missing -- from `snap.document`. The same materialization
 /// `encode_docx` always performs before writing real bytes. Exposed so a builder can call it
 /// BEFORE running a subset's conformance check on the still-in-memory snapshot (a check like
 /// `✳️transitional`'s needs a materialized main part to find at all — see its own builder's doc
 /// comment for why).
+///
+/// 🩹 A part that ALREADY projects to the typed view is left byte-for-byte alone (see
+/// [`part_already_projects`]), and a part that does have to be rewritten keeps its own root element
+/// and prolog (see [`document_into_part`]/[`styles_into_part`]). Both halves exist for one reason:
+/// this snapshot's `opc` is the authority on everything `DocxDocument` does not model, and a writer
+/// may never spend that authority to re-render markup nothing asked it to change.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sync_main_part(snap: &mut DocxSnapshot) {
-    let bytes = xml_document_to_text(&document_to_xml(&snap.document)).into_bytes();
-    let content_type = snap.opc.content_types.resolve(MAIN_DOCUMENT_PART).map(str::to_string).unwrap_or_else(|| MAIN_DOCUMENT_CONTENT_TYPE.into());
-    snap.opc.set_part(MAIN_DOCUMENT_PART, &content_type, bytes);
+    if !part_already_projects(snap, MAIN_DOCUMENT_PART, &snap.document.body, |document| crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::import::deserializers::document_from_xml(document).ok()) {
+        let bytes = xml_document_to_text(&document_into_part(parsed_part(snap, MAIN_DOCUMENT_PART).as_ref(), &snap.document)).into_bytes();
+        let content_type = snap.opc.content_types.resolve(MAIN_DOCUMENT_PART).map(str::to_string).unwrap_or_else(|| MAIN_DOCUMENT_CONTENT_TYPE.into());
+        snap.opc.set_part(MAIN_DOCUMENT_PART, &content_type, bytes);
+    }
     let has_office_document_rel = snap.opc.relationships_for("").iter().any(|r| r.rel_type == REL_TYPE_OFFICE_DOCUMENT || r.rel_type == STRICT_REL_TYPE_OFFICE_DOCUMENT);
     if !has_office_document_rel {
         snap.opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, MAIN_DOCUMENT_PART);
     }
     if !snap.document.styles.is_empty() {
-        let styles_bytes = xml_document_to_text(&styles_to_xml(&snap.document.styles)).into_bytes();
-        let styles_content_type = snap.opc.content_types.resolve(STYLES_PART).map(str::to_string).unwrap_or_else(|| STYLES_CONTENT_TYPE.into());
-        snap.opc.set_part(STYLES_PART, &styles_content_type, styles_bytes);
-        let has_styles_rel = snap.opc.relationships_for(MAIN_DOCUMENT_PART).iter().any(|r| r.rel_type == REL_TYPE_STYLES);
+        if !part_already_projects(snap, STYLES_PART, &snap.document.styles, |document| crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::import::deserializers::styles_from_xml(document).ok()) {
+            let styles_bytes = xml_document_to_text(&styles_into_part(parsed_part(snap, STYLES_PART).as_ref(), &snap.document.styles)).into_bytes();
+            let styles_content_type = snap.opc.content_types.resolve(STYLES_PART).map(str::to_string).unwrap_or_else(|| STYLES_CONTENT_TYPE.into());
+            snap.opc.set_part(STYLES_PART, &styles_content_type, styles_bytes);
+        }
+        let has_styles_rel = snap.opc.relationships_for(MAIN_DOCUMENT_PART).iter().any(|r| r.rel_type == REL_TYPE_STYLES || r.rel_type == STRICT_REL_TYPE_STYLES);
         if !has_styles_rel {
             snap.opc.add_relationship(MAIN_DOCUMENT_PART, "rId2", REL_TYPE_STYLES, STYLES_REL_TARGET);
         }

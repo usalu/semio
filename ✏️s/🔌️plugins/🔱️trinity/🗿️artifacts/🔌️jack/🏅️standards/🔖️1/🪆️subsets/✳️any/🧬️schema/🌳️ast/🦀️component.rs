@@ -81,11 +81,11 @@ pub struct QueryResult {
 }
 
 impl QueryResult {
-    pub async fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
+    pub fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
         Self { kind: QueryResultKind::Table, columns, rows, graph_fixture: None }
     }
 
-    pub async fn graph(columns: Vec<String>, graph_fixture: JackSnapshot) -> Self {
+    pub fn graph(columns: Vec<String>, graph_fixture: JackSnapshot) -> Self {
         Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture: Some(graph_fixture) }
     }
 }

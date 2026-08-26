@@ -21,7 +21,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl JackDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &JackArtifact) -> protocol::MutationApplyResult<JackArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &JackArtifact) -> protocol::MutationApplyResult<JackArtifact> {
         Ok({
             let mut next = artifact.clone();
             if let Some(value) = &self.schema {
@@ -101,7 +101,7 @@ impl JackDiff {
 }
 
 impl MutationDiff<JackSnapshot> for JackDiff {
-    async fn apply(&self, snapshot: &JackSnapshot) -> protocol::MutationApplyResult<JackSnapshot> {
+    fn apply(&self, snapshot: &JackSnapshot) -> protocol::MutationApplyResult<JackSnapshot> {
         Ok({
             let mut next = snapshot.clone();
             if let Some(value) = &self.schema {
@@ -128,7 +128,7 @@ impl MutationDiff<JackSnapshot> for JackDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -161,7 +161,7 @@ impl MutationDiff<JackSnapshot> for JackDiff {
 /// 🏗️ The one builder every triad's `🔺️diff` leaf funnels through — mints+caches a fresh
 /// content-addressed handle for the new `(nodes, edges)` scene and wraps it as a whole-handle-replace
 /// sparse diff. Mirrors `dag`'s `diff_replace_content` precedent exactly.
-pub async fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDiff {
+pub fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDiff {
     JackDiff { content: Some(crate::artifacts::jack::jack_content_child_handle_and_cache(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️Apply

@@ -34,7 +34,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1997Diff> {
 /// separately (0.25 m² here, not πD²/4) and this mutation deliberately does not re-derive it — the two are
 /// independent input rows.
 #[semio_framework_async_macros::async_test]
-async fn enlarges_the_pile_diameter_to_0_75_m() {
+fn enlarges_the_pile_diameter_to_0_75_m() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-pile-dm applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-pile-dm/enlarges-the-pile-diameter-to-0-75-m: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.pile_d_m, 0.75, "change-pile-dm/enlarges-the-pile-diameter-to-0-75-m: pile_d_m must read 0.75 m once the change lands");
@@ -44,7 +44,7 @@ async fn enlarges_the_pile_diameter_to_0_75_m() {
 /// ↩️ `change-pile-dm`'s inverse reads the OLD 0.5 m out of BASE, so replaying it puts the 0.5 m pile diameter
 /// back on `pile_d_m`.
 #[semio_framework_async_macros::async_test]
-async fn restoring_0_5_m_restores_before() {
+fn restoring_0_5_m_restores_before() {
     let base = before();
     let forward = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation(), &base);
     let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("the forward change-pile-dm applies");
@@ -62,7 +62,7 @@ async fn restoring_0_5_m_restores_before() {
 /// is a fixed point, so `newPileDM` (serde camelCase over `new_pile_d_m`) is spelled here exactly as this
 /// artifact's own serde attributes render it.
 #[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: En1997Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
@@ -77,7 +77,7 @@ async fn committed_json_is_canonical() {
 /// 🎯️ 0.75 m is finite and differs from the committed 0.5 m, so `change-pile-dm` (whose guard
 /// message reads "Pile diameter [m]") emits nothing.
 #[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+fn declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("the committed outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-pile-dm/enlarges-the-pile-diameter-to-0-75-m: this fixture declares an applied outcome");
     let produced = built_outcome();
@@ -93,7 +93,7 @@ async fn declared_outcome_holds() {
 /// assertion of this fixture: it pins that only `pileDM` is written, not merely that the end state
 /// matches.
 #[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+fn produces_committed_diff() {
     let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-pile-dm diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-pile-dm/enlarges-the-pile-diameter-to-0-75-m: the produced diff differs from the committed 🔺️diff/🔣️component.json");
@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff decodes to `En1997Diff`, re-encodes unchanged, and carries the pile diameter and
 /// nothing else.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+fn committed_diff_is_canonical() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-pile-dm diff decodes");
     assert_eq!(decoded.pile_d_m, Some(0.75), "change-pile-dm/enlarges-the-pile-diameter-to-0-75-m: the committed diff must carry pileDM = 0.75 m");
     assert!(decoded.pile_base_area_m2.is_none(), "change-pile-dm/enlarges-the-pile-diameter-to-0-75-m: change-pile-dm writes pileDM and must leave `pile_base_area_m2` untouched");
@@ -116,7 +116,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-snapshot to the after-snapshot: it is a complete
 /// description of the pile-diameter change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+fn committed_diff_applies_to_after() {
     let decoded: En1997Diff = serde_json::from_str(DIFF).expect("the committed change-pile-dm diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-pile-dm/enlarges-the-pile-diameter-to-0-75-m: the committed diff did not carry before to after");

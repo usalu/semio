@@ -28,7 +28,8 @@ Feature: Apply every typed GIF 89a mutation to a real-world animation
       trusting the decoder meant the round trip erased both the flag and the row permutation and
       landed back exactly where it started.
 
-  ⚠️ TWO KNOWN OPEN DIVERGENCES (parity 41/43, 2026-08-24), both the same disagreement: a mutation
+  ⚠️ TWO KNOWN OPEN DIVERGENCES (this case's parity ratio is recorded in the ticket, not here),
+  both the same disagreement: a mutation
   edits one field and leaves a dependent one behind, and the two implementations resolve the
   resulting inconsistency differently. Neither is a coding error and neither is to be papered over.
 

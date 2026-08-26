@@ -14,13 +14,13 @@ pub struct CatalogueId(pub String);
 /// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
 /// changing its public tuple shape (used pervasively as `.0` across this crate).
 impl dsl::DslField for CatalogueId {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Text
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Text(self.0.clone())
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Text(s) => Ok(CatalogueId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
@@ -63,7 +63,7 @@ impl DimensionSignature {
     pub const LENGTH: Self = Self { length: 1, mass: 0, time: 0, temperature: 0 };
     pub const LENGTH_3: Self = Self { length: 3, mass: 0, time: 0, temperature: 0 };
 
-    pub async fn compatible(self, other: Self) -> bool {
+    pub fn compatible(self, other: Self) -> bool {
         self == other
     }
 }
@@ -101,13 +101,13 @@ pub enum CatalogueValue {
 /// `DslVariants`, so it can't satisfy those sites. Binds through `Shape::Value` (the engine's
 /// existing serde_json escape hatch), reusing the `Serialize`/`Deserialize` this type already has.
 impl dsl::DslField for CatalogueValue {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Value
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("CatalogueValue always serializes to DslValue"))
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Value(dsl_value) => {
                 let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
@@ -137,19 +137,19 @@ pub struct Cardinality {
 }
 
 impl Cardinality {
-    pub async fn optional() -> Self {
+    pub fn optional() -> Self {
         Self { min: 0, max: Some(1) }
     }
 
-    pub async fn required() -> Self {
+    pub fn required() -> Self {
         Self { min: 1, max: Some(1) }
     }
 
-    pub async fn unbounded() -> Self {
+    pub fn unbounded() -> Self {
         Self { min: 0, max: None }
     }
 
-    pub async fn satisfies(&self, count: u32) -> bool {
+    pub fn satisfies(&self, count: u32) -> bool {
         count >= self.min && self.max.is_none_or(|max| count <= max)
     }
 }
@@ -451,18 +451,18 @@ pub mod part_2 {
     }
 
     impl BoundingBox {
-        pub async fn from_size(width: f64, height: f64, depth: f64) -> Self {
+        pub fn from_size(width: f64, height: f64, depth: f64) -> Self {
             Self { min: [0.0, 0.0, 0.0], max: [width, height, depth] }
         }
 
-        pub async fn volume_m3(self) -> f64 {
+        pub fn volume_m3(self) -> f64 {
             let dx = self.max[0] - self.min[0];
             let dy = self.max[1] - self.min[1];
             let dz = self.max[2] - self.min[2];
             dx * dy * dz
         }
 
-        pub async fn overlaps(self, other: Self, clearance_m: f64) -> bool {
+        pub fn overlaps(self, other: Self, clearance_m: f64) -> bool {
             self.min[0] - clearance_m < other.max[0]
                 && self.max[0] + clearance_m > other.min[0]
                 && self.min[1] - clearance_m < other.max[1]
@@ -552,7 +552,7 @@ pub mod part_2 {
     }
 
     impl GeometryCatalogue {
-        pub async fn default_primitives() -> Vec<PrimitiveKind> {
+        pub fn default_primitives() -> Vec<PrimitiveKind> {
             vec![
                 PrimitiveKind { id: "box".into(), parameters: vec!["width".into(), "height".into(), "depth".into()] },
                 PrimitiveKind { id: "cylinder".into(), parameters: vec!["radius".into(), "height".into()] },
@@ -711,13 +711,13 @@ pub mod part_5 {
     /// attribute on `Box<T>`/`Vec<T>`/`Option<T>` wrappers) — binding through `Shape::Value` avoids
     /// changing `Document.part_number_rule`'s plain-enum public shape just for the DSL boundary.
     impl dsl::DslField for PartNumberRule {
-        async fn shape() -> dsl::Shape {
+        fn shape() -> dsl::Shape {
             dsl::Shape::Value
         }
-        async fn to_value(&self) -> dsl::FieldValue {
+        fn to_value(&self) -> dsl::FieldValue {
             dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("PartNumberRule always serializes to DslValue"))
         }
-        async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
             match value {
                 dsl::FieldValue::Value(dsl_value) => dsl::from_dsl_value(dsl_value.clone()),
                 other => Err(format!("expected Value, found {other:?}")),
@@ -809,7 +809,7 @@ pub const ISO16757_EXTENSION: &str = "iso16757";
 
 /// 📋️ ISO 16757 evaluation session document.
 impl Iso16757Snapshot {
-    pub async fn reference_fixture() -> Self {
+    pub fn reference_fixture() -> Self {
         let dictionary = part_4::Dictionary {
             reference: DictionaryRef { id: "hvac-dict".into(), version: "2025-01".into() },
             subjects: vec![part_4::Subject {
@@ -933,7 +933,7 @@ impl Iso16757Snapshot {
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     crate::app_surface::artifact_kind_spec("iso16757", "ISO 16757")
 }
 //#endregion 🔖️ArtifactKind
@@ -949,14 +949,14 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn dimension_signature_compatible_checks_equality() {
+    fn dimension_signature_compatible_checks_equality() {
         assert!(DimensionSignature::LENGTH.compatible(DimensionSignature::LENGTH));
         assert!(!DimensionSignature::LENGTH.compatible(DimensionSignature::LENGTH_3));
         assert!(!DimensionSignature::DIMENSIONLESS.compatible(DimensionSignature::LENGTH));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn cardinality_variants_and_satisfies() {
+    fn cardinality_variants_and_satisfies() {
         let optional = Cardinality::optional();
         assert!(optional.satisfies(0));
         assert!(optional.satisfies(1));
@@ -970,14 +970,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn geometry_catalogue_default_primitives() {
+    fn geometry_catalogue_default_primitives() {
         let primitives = part_2::GeometryCatalogue::default_primitives();
         let ids: Vec<&str> = primitives.iter().map(|p| p.id.as_str()).collect();
         assert_eq!(ids, vec!["box", "cylinder", "sphere"]);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn bounding_box_overlaps() {
+    fn bounding_box_overlaps() {
         let a = part_2::BoundingBox::from_size(1.0, 1.0, 1.0);
         let touching = part_2::BoundingBox { min: [0.9, 0.9, 0.9], max: [1.9, 1.9, 1.9] };
         assert!(a.overlaps(touching, 0.0));
@@ -987,7 +987,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn script_limits_default_values() {
+    fn script_limits_default_values() {
         let limits = part_5::ScriptLimits::default();
         assert_eq!(limits.max_steps, 10_000);
         assert_eq!(limits.max_recursion, 64);
@@ -1000,7 +1000,7 @@ mod tests {
 /// the old side-effecting `register()`/`register_pilot_languages()`/`register_artifact_schema()`/
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757.inference" }];
@@ -1026,7 +1026,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     crate::artifacts::definition::assemble_definition("s.iso16757", ROWS)
 }
 
-pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(crate::artifacts::iso16757::schema::iso16757_artifact_schema_descriptor())
         .inferences([crate::artifacts::iso16757::standards::v1::subsets::any::schema::inferences::iso16757_artifact_inference_descriptor()])
@@ -1039,7 +1039,7 @@ pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition)
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

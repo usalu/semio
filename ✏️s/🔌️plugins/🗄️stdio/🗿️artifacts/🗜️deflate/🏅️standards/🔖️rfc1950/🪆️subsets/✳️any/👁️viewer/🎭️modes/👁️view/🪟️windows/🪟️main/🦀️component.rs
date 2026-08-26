@@ -66,6 +66,7 @@ pub fn render(document: &DeflateSnapshot) -> semio_framework_plugin::UiAssemblyR
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
+    use semio_framework_plugin::Component;
     use super::*;
 
     #[semio_framework_async_macros::async_test]
@@ -79,8 +80,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_carries_the_header_fields_as_read_only_text() {
         let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: vec![1, 2, 3, 4], ..DeflateSnapshot::default() };
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.text_editor.expect("text_editor scene");
+        let node = render(&document).expect("render");
+        let Component::Surface(props) = node.component else { panic!("expected a retained text surface") };
+        let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(&props).expect("decode text scene");
         assert!(scene.buffer.contains("method=8"));
         assert!(scene.buffer.contains("presetDictionary=none"));
         assert!(scene.settings_json.unwrap_or_default().contains("readOnly"));

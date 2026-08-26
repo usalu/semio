@@ -10,7 +10,9 @@
 //! (That gate is a build-cost boundary, nothing more: the subject phase RUNS. This adapter used to
 //! say it was peer-blocked by a concurrent os-kernel refactor — that blocker was cleared on
 //! 2026-08-24, `cargo check -p semio-framework-os-kernel --lib` is exit 0, and this case's own
-//! `parity exhaustive --owner 🗄️stdio --case mutate-zip-2-0` reports `parity=15/15`.)
+//! `parity exhaustive --owner 🗄️stdio --case mutate-zip-2-0` is the measurement of record. No ratio
+//! is restated here: a parity figure in source is a claim about one moment that silently becomes
+//! false when anything moves, so measurements live in the dated ticket record instead.)
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::artifacts::zip::standards::v2_0::subsets::any::{oracle_apply_inverse, oracle_apply_mutation, oracle_round_trip, project_zip_mutation};

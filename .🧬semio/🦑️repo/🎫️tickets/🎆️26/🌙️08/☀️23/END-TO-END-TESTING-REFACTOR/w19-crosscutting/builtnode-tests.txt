@@ -1,0 +1,1169 @@
+######## ../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_record_with_35_columns() {
+        let mut document = EpwSnapshot::default();
+        document.records.push(Default::default());
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let columns: Vec<String> = serde_json::from_str(&scene.columns_json).expect("columns json");
+        assert_eq!(columns.len(), 35);
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].len(), 35);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_read_only_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+        assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_record_with_35_columns() {
+        let mut document = EpwSnapshot::default();
+        document.records.push(Default::default());
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let columns: Vec<String> = serde_json::from_str(&scene.columns_json).expect("columns json");
+        assert_eq!(columns.len(), 35);
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::zip::schema::snapshot::ZipEntry;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
+        let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, COMMENT_NODE_ID);
+        let children = root.items.as_ref().expect("root has children");
+        assert_eq!(children.len(), 1);
+        assert_eq!(children[0].id, format!("{ENTRY_NODE_PREFIX}0"));
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::zip::schema::snapshot::ZipEntry;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_read_only_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+        assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
+        let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, COMMENT_NODE_ID);
+        let children = root.items.as_ref().expect("root has children");
+        assert_eq!(children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::zip::schema::snapshot::ZipEntry;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
+        let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, COMMENT_NODE_ID);
+        let children = root.items.as_ref().expect("root has children");
+        assert_eq!(children.len(), 1);
+        assert_eq!(children[0].id, format!("{ENTRY_NODE_PREFIX}0"));
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::zip::schema::snapshot::ZipEntry;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_read_only_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+        assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
+        let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, COMMENT_NODE_ID);
+        let children = root.items.as_ref().expect("root has children");
+        assert_eq!(children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::pptx::schema::snapshot::PptxSlide;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_slide_joining_text_bearing_shapes() {
+        let mut document = PptxSnapshot::default();
+        document.presentation.slides.push(PptxSlide {
+            shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("a")], position: Default::default() }, PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("b")], position: Default::default() }],
+        });
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::pptx::schema::snapshot::PptxSlide;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_slide() {
+        let mut document = PptxSnapshot::default();
+        document.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("only")], position: Default::default() }] });
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::pptx::schema::snapshot::PptxSlide;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_slide_joining_text_bearing_shapes() {
+        let mut document = PptxSnapshot::default();
+        document.presentation.slides.push(PptxSlide {
+            shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("a")], position: Default::default() }, PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("b")], position: Default::default() }],
+        });
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::pptx::schema::snapshot::PptxSlide;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_slide() {
+        let mut document = PptxSnapshot::default();
+        document.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("only")], position: Default::default() }] });
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::pptx::schema::snapshot::PptxSlide;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_slide_joining_text_bearing_shapes() {
+        let mut document = PptxSnapshot::default();
+        document.presentation.slides.push(PptxSlide {
+            shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("a")], position: Default::default() }, PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("b")], position: Default::default() }],
+        });
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+    use crate::artifacts::pptx::schema::snapshot::PptxSlide;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_slide() {
+        let mut document = PptxSnapshot::default();
+        document.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("only")], position: Default::default() }] });
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_an_editable_text_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+        assert!(def.actions.iter().any(|action| action.id == "replace-text"), "editable text window must carry the replace-text catalog action");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_carries_the_bytes_as_editable_hex() {
+        let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text_editor scene");
+        assert!(scene.buffer.starts_with("deadbeef"));
+        assert!(scene.buffer.contains("total bytes: 4"));
+        assert!(scene.settings_json.is_none(), "editable window must not stamp readOnly");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_binary_editor_builds_a_definition_for_the_editor_role() {
+        let def = create_binary_editor();
+        assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+        assert_eq!(def.dialect, BINARY_EDITOR_DIALECT.into());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn editor_dialect_matches_the_artifact_coordinate() {
+        assert_eq!(<BinaryEditor as ArtifactEditor>::DIALECT, BINARY_EDITOR_DIALECT);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn editor_declares_the_main_window() {
+        let def = create_binary_editor();
+        assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn parse_hex_dump_round_trips_a_rendered_snapshot() {
+        let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
+        let UiNode::ComponentScene(node) = main::render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text_editor scene");
+        let parsed = parse_hex_dump(&scene.buffer).expect("well-formed hex dump must parse");
+        assert_eq!(parsed, vec![0xde, 0xad, 0xbe, 0xef]);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn parse_hex_dump_rejects_odd_length_hex() {
+        assert!(parse_hex_dump("abc").is_none());
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_read_only_text_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+        assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_carries_the_bytes_as_read_only_hex() {
+        let document = BinarySnapshot { bytes: vec![0xde, 0xad, 0xbe, 0xef], ..BinarySnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text_editor scene");
+        assert!(scene.buffer.starts_with("deadbeef"));
+        assert!(scene.settings_json.unwrap_or_default().contains("readOnly"));
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_text_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_joins_lines_with_the_line_ending() {
+        let document = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["a".into(), "b".into()], trailing_newline: false, line_ending: Default::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text editor scene");
+        assert_eq!(scene.buffer, "a\nb");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_text_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_joins_lines_with_the_line_ending() {
+        let document = TxtSnapshot { schema: "stdio.txt".into(), lines: vec!["a".into(), "b".into()], trailing_newline: false, line_ending: Default::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text editor scene");
+        assert_eq!(scene.buffer, "a\nb");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_splits_header_from_data_rows() {
+        let document = CsvSnapshot {
+            schema: "stdio.csv".into(),
+            has_header: true,
+            records: vec![
+                crate::artifacts::csv::CsvRecord { fields: vec![crate::artifacts::csv::CsvField { value: "name".into(), quoted: false }] },
+                crate::artifacts::csv::CsvRecord { fields: vec![crate::artifacts::csv::CsvField { value: "ada".into(), quoted: false }] },
+            ],
+        };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0][0], "ada");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_splits_header_from_data_rows() {
+        let document = CsvSnapshot {
+            schema: "stdio.csv".into(),
+            has_header: true,
+            records: vec![
+                crate::artifacts::csv::CsvRecord { fields: vec![crate::artifacts::csv::CsvField { value: "name".into(), quoted: false }] },
+                crate::artifacts::csv::CsvRecord { fields: vec![crate::artifacts::csv::CsvField { value: "ada".into(), quoted: false }] },
+            ],
+        };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0][0], "ada");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_record() {
+        let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["a".into(), "b".into()]], trailing_newline: false, line_ending: Default::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0][1], "b");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_record() {
+        let document = TsvSnapshot { schema: "stdio.tsv".into(), records: vec![vec!["a".into(), "b".into()]], trailing_newline: false, line_ending: Default::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_cell() {
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+        let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_cell() {
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+        let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_cell() {
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+        let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_cell() {
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+        let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_cell() {
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+        let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_table_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_lists_one_row_per_cell() {
+        use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+        let document = XlsxSnapshot { workbook: XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }], ..Default::default() }, ..XlsxSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.table.expect("table scene");
+        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_top_level_block() {
+        let mut document = DocxSnapshot::default();
+        document.document.body.push(DocxBlock::paragraph("first"));
+        document.document.body.push(DocxBlock::paragraph("second"));
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 2);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_top_level_block() {
+        let mut document = DocxSnapshot::default();
+        document.document.body.push(DocxBlock::paragraph("only"));
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_top_level_block() {
+        let mut document = DocxSnapshot::default();
+        document.document.body.push(DocxBlock::paragraph("first"));
+        document.document.body.push(DocxBlock::paragraph("second"));
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 2);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_top_level_block() {
+        let mut document = DocxSnapshot::default();
+        document.document.body.push(DocxBlock::paragraph("only"));
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_top_level_block() {
+        let mut document = DocxSnapshot::default();
+        document.document.body.push(DocxBlock::paragraph("first"));
+        document.document.body.push(DocxBlock::paragraph("second"));
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 2);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_document_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_emits_one_page_per_top_level_block() {
+        let mut document = DocxSnapshot::default();
+        document.document.body.push(DocxBlock::paragraph("only"));
+        let UiNode::Stack(stack) = render(&document) else { panic!("expected Stack") };
+        assert_eq!(stack.children.len(), 1);
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_element_children() {
+        let document = XmlSnapshot {
+            schema: "stdio.xml".into(),
+            doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
+                root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }),
+                doctype: None,
+                declaration: None,
+                prolog: Vec::new(),
+            },
+        };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+        let child = &root.items.as_ref().unwrap()[0];
+        assert_eq!(child.id, "0");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_element_children() {
+        let document = XmlSnapshot {
+            schema: "stdio.xml".into(),
+            doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() },
+        };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_element_children() {
+        let document = XmlSnapshot {
+            schema: "stdio.xml".into(),
+            doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
+                root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }),
+                doctype: None,
+                declaration: None,
+                prolog: Vec::new(),
+            },
+        };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+        let child = &root.items.as_ref().unwrap()[0];
+        assert_eq!(child.id, "0");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_element_children() {
+        let document = XmlSnapshot {
+            schema: "stdio.xml".into(),
+            doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: None, declaration: None, prolog: Vec::new() },
+        };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_object_and_array_members() {
+        let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }] } }] } };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+        let a = &root.items.as_ref().unwrap()[0];
+        assert_eq!(a.id, "k=a");
+        let item0 = &a.items.as_ref().unwrap()[0];
+        assert_eq!(item0.id, "k=a/i=0");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_object_and_array_members() {
+        let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Bool { value: true } }] } };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_object_and_array_members() {
+        let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Bool { value: true }] } }] } };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+        let a = &root.items.as_ref().unwrap()[0];
+        assert_eq!(a.id, "k=a");
+        let item0 = &a.items.as_ref().unwrap()[0];
+        assert_eq!(item0.id, "k=a/i=0");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_tree_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_walks_object_and_array_members() {
+        let document = JsonSnapshot { schema: "stdio.json".into(), value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Bool { value: true } }] } };
+        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
+        let root = &node.sections[0].items[0];
+        assert_eq!(root.id, "");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_an_editable_text_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+        assert!(def.actions.iter().any(|action| action.id == "replace-text"), "editable text window must carry the replace-text catalog action");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_carries_the_header_fields_as_editable_text() {
+        let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Fast, dict_id: Some(42), payload: vec![1, 2, 3], ..DeflateSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text_editor scene");
+        assert!(scene.buffer.contains("method=8"));
+        assert!(scene.buffer.contains("windowBits=7"));
+        assert!(scene.buffer.contains("levelHint=fast"));
+        assert!(scene.buffer.contains("presetDictionary=42"));
+        assert!(scene.buffer.contains("payloadBytes: 3"));
+        assert!(scene.settings_json.is_none(), "editable window must not stamp readOnly");
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_deflate_editor_builds_a_definition_for_the_editor_role() {
+        let def = create_deflate_editor();
+        assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+        assert_eq!(def.dialect, DEFLATE_EDITOR_DIALECT.into());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn editor_dialect_matches_the_artifact_coordinate() {
+        assert_eq!(<DeflateEditor as ArtifactEditor>::DIALECT, DEFLATE_EDITOR_DIALECT);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn editor_declares_the_main_window() {
+        let def = create_deflate_editor();
+        assert!(def.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn parse_header_summary_round_trips_a_rendered_snapshot() {
+        let document = DeflateSnapshot { compression_method: 8, window_bits: 9, compression_level_hint: crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::Maximum, dict_id: Some(7), payload: vec![9, 9], ..DeflateSnapshot::default() };
+        let UiNode::ComponentScene(node) = main::render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text_editor scene");
+        let (method, window_bits, level_hint, dict_id) = parse_header_summary(&scene.buffer).expect("well-formed summary must parse");
+        assert_eq!(method, 8);
+        assert_eq!(window_bits, 9);
+        assert_eq!(level_hint, crate::artifacts::deflate::schema::snapshot::DeflateLevelHint::Maximum);
+        assert_eq!(dict_id, Some(7));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn parse_header_summary_rejects_a_missing_required_field() {
+        assert!(parse_header_summary("method=8\nwindowBits=7").is_none());
+    }
+}
+//#endregion 🧪️Tests
+######## ../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use semio_framework_plugin::UiNode;
+use super::*;
+
+    #[semio_framework_async_macros::async_test]
+    async fn definition_declares_a_read_only_text_window() {
+        let def = definition();
+        assert_eq!(def.id, WINDOW_KIND_ID);
+        assert_eq!(def.body_key, BODY_KEY);
+        assert!(def.actions.is_empty(), "a viewer window kind declares no mutation-shaped actions");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn render_carries_the_header_fields_as_read_only_text() {
+        let document = DeflateSnapshot { compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: vec![1, 2, 3, 4], ..DeflateSnapshot::default() };
+        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
+        let scene = node.text_editor.expect("text_editor scene");
+        assert!(scene.buffer.contains("method=8"));
+        assert!(scene.buffer.contains("presetDictionary=none"));
+        assert!(scene.settings_json.unwrap_or_default().contains("readOnly"));
+    }
+}
+//#endregion 🧪️Tests

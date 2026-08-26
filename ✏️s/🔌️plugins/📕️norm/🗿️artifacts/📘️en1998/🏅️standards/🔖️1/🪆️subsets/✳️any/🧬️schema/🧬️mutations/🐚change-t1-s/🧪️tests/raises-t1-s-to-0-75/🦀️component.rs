@@ -30,7 +30,7 @@ fn mutation() -> En1998Mutation {
 /// ▶️ `change-t1-s` carries the committed before-snapshot to the committed after-snapshot by moving
 /// `t1_s` from 0.3 to 0.75, leaving every other EN 1998 seismic-design input alone.
 #[semio_framework_async_macros::async_test]
-async fn change_t1_s_applies_to_committed_after() {
+fn change_t1_s_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-t1-s applies to its committed before-snapshot");
     assert_eq!(applied.t1_s, 0.75, "change-t1-s/raises-t1-s-to-0-75: t1_s must read 0.75 after the change");
     assert_eq!(applied, expected_after(), "change-t1-s/raises-t1-s-to-0-75: applied state differs from the committed after-snapshot");
@@ -40,7 +40,7 @@ async fn change_t1_s_applies_to_committed_after() {
 /// ↩️ `change-t1-s` is its own inverse partner: the inverse step restores `t1_s` to its pre-change
 /// 0.3 and nothing else has to be undone.
 #[semio_framework_async_macros::async_test]
-async fn change_t1_s_inverse_restores_before() {
+fn change_t1_s_inverse_restores_before() {
     let base = before();
     let (forward, _messages) = vcs::apply_mutation(&base, &mutation()).expect("forward change-t1-s applies");
     let inverse = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(&mutation(), &base);
@@ -58,7 +58,7 @@ async fn change_t1_s_inverse_restores_before() {
 /// decode then encode is a fixed point, so `t1S` and `newT1S` are spelled exactly
 /// the way serde spells them.
 #[semio_framework_async_macros::async_test]
-async fn change_t1_s_committed_json_is_canonical() {
+fn change_t1_s_committed_json_is_canonical() {
     for (side, text) in [("⬅️before", BEFORE), ("➡️after", AFTER)] {
         let decoded: En1998Snapshot = serde_json::from_str(text).expect("change-t1-s snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("change-t1-s snapshot encodes");
@@ -73,7 +73,7 @@ async fn change_t1_s_committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `change-t1-s` at 0.75 is applied, not rejected, and carries no
 /// diagnostic of its own.
 #[semio_framework_async_macros::async_test]
-async fn change_t1_s_declared_outcome_holds() {
+fn change_t1_s_declared_outcome_holds() {
     let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("change-t1-s outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "change-t1-s/raises-t1-s-to-0-75: this fixture declares an applied outcome");
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
@@ -85,7 +85,7 @@ async fn change_t1_s_declared_outcome_holds() {
 /// assertion: it pins that only `t1S` is written, never the whole-artifact replacement
 /// path and never a neighbouring input such as `massT`.
 #[semio_framework_async_macros::async_test]
-async fn change_t1_s_produces_committed_diff() {
+fn change_t1_s_produces_committed_diff() {
     let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff().t1_s, Some(0.75), "change-t1-s/raises-t1-s-to-0-75: the diff must set t1_s to 0.75");
     assert!(outcome.diff().artifact.is_none(), "change-t1-s/raises-t1-s-to-0-75: a scalar change must never take the whole-artifact replacement path");
@@ -100,7 +100,7 @@ async fn change_t1_s_produces_committed_diff() {
 /// `Some(None)` both encode as JSON `null`, so no fixture can pin the difference — and `change-t1-s`
 /// never writes it anyway.
 #[semio_framework_async_macros::async_test]
-async fn change_t1_s_committed_diff_is_canonical() {
+fn change_t1_s_committed_diff_is_canonical() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-t1-s committed diff decodes");
     assert_eq!(decoded.t1_s, Some(0.75), "change-t1-s/raises-t1-s-to-0-75: the committed diff must carry t1_s at 0.75");
     assert!(decoded.selected_check_index.is_none(), "change-t1-s/raises-t1-s-to-0-75: the committed diff must leave the presence-lane selected_check_index unset");
@@ -112,7 +112,7 @@ async fn change_t1_s_committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to the before-snapshot yields the committed after —
 /// the 0.3 to 0.75 delta is a complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
-async fn change_t1_s_committed_diff_applies_to_after() {
+fn change_t1_s_committed_diff_applies_to_after() {
     let decoded: En1998Diff = serde_json::from_str(DIFF).expect("change-t1-s committed diff decodes");
     let produced = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&decoded, &before()).expect("change-t1-s committed diff applies to the before-snapshot");
     assert_eq!(produced.t1_s, 0.75, "change-t1-s/raises-t1-s-to-0-75: the committed diff must leave t1_s reading 0.75");

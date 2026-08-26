@@ -1,21 +1,24 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
   "schemaVersion": 1,
-  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here rather than in a shared manifest. `en1992-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️component.rs` fails the moment this list and the enum part company.",
-  "oracles": [],
-  "noOracleDecisions": [
+  "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the oracle registration and the catalog live here rather than in a shared manifest. `en1992-1-any` is generated from each triad leaf's own `SemanticDescriptor.kind`, in `#[derive(dsl::Mutations)]`'s declaration order, and `kinds_match_the_enum_and_the_catalog` in `../🧬️schema/🧬️mutations/🦀️component.rs` fails the moment this list and the enum part company.",
+  "oracles": [
     {
-      "id": "en1992-1-mutation-semantics",
+      "id": "en1992-1-python-independent",
+      "ecosystem": "python",
+      "package": "",
       "capabilities": [
         "en1992-1-mutate"
       ],
-      "rationale": "`s.norm.en1992` is a semio-NATIVE artifact: the document is this repository's own `.dsl.semio`/`.pack.semio` envelope over a EN 1992 — design of concrete structures model, and no third-party library — in any ecosystem — reads or writes it, let alone one that could be authoritative over this subset's `En1992Mutation` vocabulary. That vocabulary IS this subset's own specification (derived from `En1992Snapshot`'s shape by `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️derivation-rules.md`), not a fact an external implementation could confirm or refute; a crate that parsed EN 1992 data from some other interchange format would be judging a different document. Registering a weak or tangential crate here would be worse than registering none. Confidence comes instead from the 35 committed, independently handcrafted per-kind specification vectors under `../🧬️schema/🧬️mutations/<kind>/🧪️tests/<fixture>/` — a `(before, mutation, after, diff, outcome)` quintet per kind, already unit-tested inside the production crate itself — re-exercised end to end here through `apply_en1992_mutation`, plus the inverse law as a metamorphic property: applying a mutation and then its own computed inverse must restore the exact pre-mutation document.",
-      "substitutes": [
-        "specification-vectors",
-        "metamorphic-laws"
-      ]
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.en1992` — checked against PyPI, which serves no `en1992`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../../../../../🧪️tests/mutate-en1992-1/🐍️component.py`, all 35 kinds of `En1992Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do."
     }
   ],
+  "noOracleDecisions": [],
   "mutationCatalogs": [
     {
       "id": "en1992-1-any",

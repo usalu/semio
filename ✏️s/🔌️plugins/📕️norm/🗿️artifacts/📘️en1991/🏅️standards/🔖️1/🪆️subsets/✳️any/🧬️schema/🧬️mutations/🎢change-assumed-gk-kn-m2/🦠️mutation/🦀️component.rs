@@ -12,13 +12,13 @@ pub struct ChangeAssumedGKKnM2 {
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedGKKnM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "assumed-gk-kn-m2", kind: "change-assumed-gk-kn-m2", record: "ChangedAssumedGkKnM2" };
 
-    async fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
+    fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change assumed self-weight load to {:?}", self.new_assumed_g_k_kn_m2)
     }
 }

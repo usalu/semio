@@ -10,6 +10,9 @@
 // guest-side (`?Send`) transports.
 #![allow(async_fn_in_trait)]
 
+#[cfg(target_arch = "wasm32")]
+extern crate semio_framework_async as wasm_bindgen_futures;
+
 #[path = "../../🦀️component.rs"]
 mod component;
 pub use component::*;

@@ -97,14 +97,14 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn conforming_builder_snapshot_composes_with_fewer_advisories() {
             let snapshot = PdfHBuilder::new()
-                .await
+                
                 .add_page(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage::new(100.0, 100.0))
-                .await
+                
                 .set_info(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfInfo { title: Some("A Chart".into()), author: Some("Dr. X".into()), ..Default::default() })
-                .await
+                
                 .build()
-                .await
-                .unwrap();
+                
+                .await.unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
             let composed = PdfHComposerComposition::compose(&sources).await.expect("PDF/H never hard-gates");

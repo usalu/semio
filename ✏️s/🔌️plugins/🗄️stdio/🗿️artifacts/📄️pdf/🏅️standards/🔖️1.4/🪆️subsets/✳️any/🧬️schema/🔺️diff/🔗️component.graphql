@@ -1,6 +1,23 @@
-# 🔺️ PdfDiff (1.4) — flat 3-field patch over PageDoc (no collections, no full-replace slot).
+# 🔺️ PdfDiff (1.4) — an index-keyed triple over the document's page tree. No full-replace slot:
+# even SetSnapshot's diff is the sparse page-by-page between(base, next).
+type PdfPageDiff {
+  width: Float
+  height: Float
+  text: String
+}
+type PdfPageModified {
+  index: Int!
+  diff: PdfPageDiff!
+}
+type PdfPageAdded {
+  index: Int!
+  page: PageDoc!
+}
+type PdfPagesDiff {
+  removed: [Int!]!
+  modified: [PdfPageModified!]!
+  added: [PdfPageAdded!]!
+}
 type PdfDiff {
-  width: Float @state(class: ARTIFACT)
-  height: Float @state(class: ARTIFACT)
-  text: String @state(class: ARTIFACT)
+  pages: PdfPagesDiff @state(class: ARTIFACT)
 }

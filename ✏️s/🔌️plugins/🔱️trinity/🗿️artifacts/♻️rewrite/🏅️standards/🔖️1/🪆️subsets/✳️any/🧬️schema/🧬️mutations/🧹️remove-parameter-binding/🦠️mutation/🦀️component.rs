@@ -15,23 +15,23 @@ pub struct RemoveParameterBinding {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn remove_parameter_binding(key: String) -> RewriteRuleMutation {
+pub fn remove_parameter_binding(key: String) -> RewriteRuleMutation {
     RewriteRuleMutation::RemoveParameterBinding(RemoveParameterBinding { key })
 }
 
 impl protocol::MutationKind<RewriteSnapshot, RewriteRuleMutation> for RemoveParameterBinding {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "parameter-binding", kind: "remove-parameter-binding", record: "RemovedParameterBinding" };
 
-    async fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
+    fn diff(&self, base: &RewriteSnapshot) -> protocol::MutationOutcome<RewriteDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
+    fn inverse(&self, base: &RewriteSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Remove parameter binding \"{}\"", self.key)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.key.clone()]
     }
 }

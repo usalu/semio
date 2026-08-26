@@ -6,7 +6,7 @@ use crate::artifacts::jack::{JackSnapshot, Node};
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
-async fn force_layout_nodes(fixture: &JackSnapshot) -> Option<Vec<Node>> {
+fn force_layout_nodes(fixture: &JackSnapshot) -> Option<Vec<Node>> {
     let scene = crate::artifacts::jack::jack_working_scene(fixture);
     if scene.nodes.is_empty() {
         return None;
@@ -34,7 +34,7 @@ async fn force_layout_nodes(fixture: &JackSnapshot) -> Option<Vec<Node>> {
     }
     Some(nodes)
 }
-async fn reposition_operations(before: &[Node], after: &[Node]) -> Vec<TrinityGraphMutation> {
+fn reposition_operations(before: &[Node], after: &[Node]) -> Vec<TrinityGraphMutation> {
     after
         .iter()
         .filter_map(|node| {
@@ -48,7 +48,7 @@ async fn reposition_operations(before: &[Node], after: &[Node]) -> Vec<TrinityGr
         .collect()
 }
 
-pub(crate) async fn reorganize(fixture: &JackSnapshot, reorganize_epoch: u64) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
+pub(crate) fn reorganize(fixture: &JackSnapshot, reorganize_epoch: u64) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     let config_mutations = vec![JackConfigMutation::SetReorganizeEpoch { value: reorganize_epoch + 1 }];
     match force_layout_nodes(fixture) {
         Some(after) => Ok(Emit { artifact_mutations: reposition_operations(&fixture.nodes(), &after), config_mutations, ..Default::default() }),

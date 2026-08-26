@@ -5,7 +5,7 @@ use crate::artifacts::din16798::mutations::change_hr_t_h::mutation::ChangeHrTH;
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &ChangeHrTH, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+pub fn diff(payload: &ChangeHrTH, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if !payload.new_hr_t_h.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Heat recovery operating time must be a finite number, got {}.", payload.new_hr_t_h), Vec::<String>::new());
     }

@@ -10,11 +10,11 @@ use crate::artifacts::iso16757::schema::mutations::text::Iso16757Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
-pub async fn encode_op(mutation: &Iso16757Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(mutation: &Iso16757Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     mutation.encode_op()
 }
 
 /// 📖️ Decodes a document mutation from its binary op form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Iso16757Mutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Iso16757Mutation, protocol::ProtocolError> {
     Iso16757Mutation::decode_op(bytes)
 }

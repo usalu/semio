@@ -22,7 +22,7 @@ use crate::editor::puzzle3d::commands::{
     set_projection, set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_terminology, set_transform_gumball_flag, set_visible, set_vortex_direction, set_vortex_show,
     set_voxel_dims, suggestions_tick, translate_selection, world_relocate,
 };
-use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime};
+use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime, Puzzle3dWindowOptions};
 use crate::editor::puzzle3d::modes::edit;
 use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle3d::modes::edit::windows::main;
@@ -34,10 +34,11 @@ use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, 
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
-    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactView, BuiltNode, ConfigView,
-    Dialect, DialogDefinition, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement,
-    IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec,
-    ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+    apply_world3d_projection_action, apply_world3d_sun_action, mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, world3d_projection_action_moves_pose, world3d_projection_pose, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory,
+    ArtifactToolFactoryRegistry, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
+    InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode,
+    NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
+    SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use store::EngineHandles;
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
@@ -100,6 +101,7 @@ pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| par
 pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
 static CONCRETE_FOREST_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
 static NAKAGIN_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| serde_json::from_str(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
+static EMPTY_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(empty_fixture);
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
@@ -1856,7 +1858,7 @@ pub struct Puzzle3dActionCtx<'a> {
     /// (delete/duplicate/focus/rotate/scale/translate-selection, select-same-kind,
     /// set-selection-flag, engagement-control-select) read `.selection(PUZZLE3D_INTERACTION_DOMAIN)`
     /// here instead of the deleted `Puzzle3dConfig` selection fields.
-    pub interaction: &'a InteractionView<'a>,
+    pub selection: &'a protocol::DomainSelection,
     pub ui_scope: &'a mut UiDirtyScope,
     pub effects: &'a mut Vec<Effect>,
     /// 🛑️ Set by an arm that must skip the whole epilogue (window save, delta, config snapshot).
@@ -1869,9 +1871,8 @@ impl<'a> Puzzle3dActionCtx<'a> {
     /// set-selection-flag, select-same-kind) reads exactly one granularity's ids this way, since a
     /// `DomainSelection` only ever carries one active granularity at a time.
     fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
-        let selection = semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE3D_INTERACTION_DOMAIN));
-        if selection.granularity == granularity_id {
-            selection.ids.clone()
+        if self.selection.granularity == granularity_id {
+            self.selection.ids.clone()
         } else {
             Vec::new()
         }
@@ -1894,8 +1895,7 @@ impl<'a> Puzzle3dActionCtx<'a> {
 }
 /// 🏷️ Admits dynamic puzzle labels into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string())
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d label admission failed"))
+    semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d label admission failed"))
 }
 
 /// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
@@ -2239,40 +2239,31 @@ impl Puzzle3dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle3dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle3dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    fn handle_action_impl(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        window_id: Option<&str>,
-        doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>,
-        config: &Puzzle3dConfig,
-        interaction: &InteractionView<'_>,
-    ) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dConfig, selection: &protocol::DomainSelection) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
         // 🗨️ Shell-only effect (no document interaction, hence no scene/before/after scaffolding
         // below): opens the declared "addObject" dialog over a glass veil.
         if action == "openAddObjectDialog" {
             return Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None });
         }
         if action == "transformBegin" {
-            self.begin_transform_session(doc.snapshot.value());
+            self.begin_transform_session(snapshot.value());
             return Emit::default();
         }
-        let interaction_selection = semio_framework::io::resolve_ready(interaction.selection(PUZZLE3D_INTERACTION_DOMAIN));
-        let (transform_object_ids, transform_volume_ids) = if interaction_selection.granularity == PUZZLE3D_GRANULARITY_TARGET_VOLUME {
-            (Vec::new(), interaction_selection.ids.clone())
-        } else if interaction_selection.granularity == PUZZLE3D_GRANULARITY_OBJECT {
-            (interaction_selection.ids.clone(), Vec::new())
+        let (transform_object_ids, transform_volume_ids) = if selection.granularity == PUZZLE3D_GRANULARITY_TARGET_VOLUME {
+            (Vec::new(), selection.ids.clone())
+        } else if selection.granularity == PUZZLE3D_GRANULARITY_OBJECT {
+            (selection.ids.clone(), Vec::new())
         } else {
             (Vec::new(), Vec::new())
         };
         if action == "transformEnd" {
-            return self.commit_transform(doc.snapshot.value(), &transform_object_ids);
+            return self.commit_transform(snapshot.value(), &transform_object_ids);
         }
         if *self.transform_drag_active.borrow() && matches!(action, "translateSelection" | "rotateSelection" | "scaleSelection") {
-            return self.transform_drag_tick(action, args, doc.snapshot.value(), &transform_object_ids, &transform_volume_ids);
+            return self.transform_drag_tick(action, args, snapshot.value(), &transform_object_ids, &transform_volume_ids);
         }
         let document_action = puzzle3d_action_document_intent(action);
-        let before = document_action.then(|| doc.snapshot.value().clone());
+        let before = document_action.then(|| snapshot.value().clone());
         let active_utility_initial = puzzle3d_scene_active_utility(config, window_id);
         // 🪟️ This action targets exactly one window instance — materialize ITS view-local options onto
         // the scene runtime before handling, and snapshot them back out (via `save_window`) so a
@@ -2287,7 +2278,7 @@ impl Puzzle3dPlayApp {
             runtime_for_window.window_ids.push(wid.clone());
         }
         runtime_for_window.load_window(&wid);
-        let mut scene = scene_from_projection(doc.snapshot.value(), runtime_for_window, &active_utility_initial);
+        let mut scene = scene_from_projection(snapshot.value(), runtime_for_window, &active_utility_initial);
         let mut ui_scope = UiDirtyScope::Full;
         let mut effects = Vec::new();
         let uses_precompute = puzzle3d_action_uses_precompute(action);
@@ -2296,7 +2287,7 @@ impl Puzzle3dPlayApp {
             self.precompute.borrow_mut().restore_persisted_fill(&config.fill_checkpoint);
             self.precompute.borrow_mut().set_fill_applied_count(config.fill_applied_count);
         }
-        let mut ctx = Puzzle3dActionCtx { app: self, scene: &mut scene, window_id: &wid, config, interaction, ui_scope: &mut ui_scope, effects: &mut effects, abort: false };
+        let mut ctx = Puzzle3dActionCtx { app: self, scene: &mut scene, window_id: &wid, config, selection, ui_scope: &mut ui_scope, effects: &mut effects, abort: false };
         dispatch_puzzle3d_action(&mut ctx, action, args);
         let aborted = ctx.abort;
         if aborted {
@@ -2433,6 +2424,3722 @@ fn puzzle3d_action_uses_precompute(action: &str) -> bool {
     )
 }
 
+//#region 🧵️RetainedCommands
+pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
+    "acceptSuggestion",
+    "addBrushObject",
+    "addObjectKind",
+    "addTargetVolume",
+    "closeVortexSuggestions",
+    "createAttraction",
+    "cycleBrushCandidate",
+    "cycleBrushCandidateBack",
+    "deleteAttraction",
+    "deleteSelection",
+    "deleteTargetVolume",
+    "duplicateSelection",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementRepeatLast",
+    "engagementSubmit",
+    "fillBuildTick",
+    "focusSelection",
+    "hoverSuggestion",
+    "openAddObjectDialog",
+    "openVortexSuggestions",
+    "patchInspector",
+    "registerBrushMesh",
+    "relocateTargetVolume",
+    "rotateSelection",
+    "scaleSelection",
+    "selectSameKindSelection",
+    "setActiveExample",
+    "setBrushPlacementOverlapBudget",
+    "setCamera",
+    "setChunkSize",
+    "setFillCount",
+    "setFillCountStep",
+    "setFixtureJson",
+    "setGridSnapEnabled",
+    "setGridSpacing",
+    "setGridVisible",
+    "setLodAutomatic",
+    "setLodDepthVariable",
+    "setLodManual",
+    "setObjectKindWeight",
+    "setProjection",
+    "setProjectionParam",
+    "setProximityRadius",
+    "setSelectableKind",
+    "setSelectionFlag",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setTargetVolumeFlag",
+    "setTransformGumballFlag",
+    "setVortexDirection",
+    "setVortexKindWeight",
+    "setVortexShow",
+    "setVoxelDims",
+    "suggestionsTick",
+    "toggleSun",
+    "transformBegin",
+    "transformEnd",
+    "translateSelection",
+    "worldPointerDown",
+    "worldRelocate",
+];
+const PUZZLE3D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.3d.fixture.tool-command.v1";
+
+fn puzzle3d_retained_extent(command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+    if matches!(command.action_id(), "addTargetVolume" | "openAddObjectDialog") {
+        return Some(1);
+    }
+    let selection = interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
+    let document = snapshot.typed();
+    let document_items = match command.action_id() {
+        "focusSelection" | "patchInspector" | "translateSelection" | "rotateSelection" | "scaleSelection" | "transformEnd" => document.objects.len().checked_add(document.target_volumes.len())?,
+        "createAttraction" | "worldRelocate" => document.objects.len().checked_add(document.attractions.len())?,
+        "addObjectKind" | "setObjectKindWeight" | "setVortexKindWeight" => document.meta.kind_catalogs.as_ref().map_or(0, |catalogs| catalogs.objects.len().saturating_add(catalogs.vortices.len())),
+        _ => 1,
+    };
+    selection.checked_add(document_items).filter(|items| *items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS)
+}
+
+fn puzzle3d_retained_reduce(
+    command: &Puzzle3dCommand,
+    snapshot: &Puzzle3dPlaySnapshot,
+    config: &Puzzle3dConfig,
+    interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, Fault> {
+    if command.action_id() == "openAddObjectDialog" {
+        return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }));
+    }
+    if command.action_id() == "addTargetVolume" {
+        let Some(origin) = command.args().and_then(|args| args.get("origin")).and_then(value_as_vec3) else { return Ok(Emit::default()) };
+        let options = command.window_id().and_then(|window_id| config.window_options.get(window_id));
+        let grid_spacing = options.map_or(config.grid_spacing, |options| options.grid_spacing).max(0.1);
+        let voxel_dims = options.map_or(config.voxel_dims, |options| options.voxel_dims);
+        let snapped = [(origin[0] / grid_spacing).round() * grid_spacing, (origin[1] / grid_spacing).round() * grid_spacing, (origin[2] / grid_spacing).round() * grid_spacing];
+        let scale = crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([voxel_dims[0] as f64 * grid_spacing, voxel_dims[1] as f64 * grid_spacing, voxel_dims[2] as f64 * grid_spacing]);
+        let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+        let volume = crate::artifacts::puzzle3d::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false };
+        return Ok(Emit { artifact_mutations: vec![crate::artifacts::puzzle3d::mutations::create_target_volume(volume, None)], ui_scope: UiDirtyScope::Full, ..Default::default() });
+    }
+    let empty_selection = protocol::DomainSelection::default();
+    let selection = interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
+    Ok(with_puzzle3d_app_for(config, |app| {
+        if command.action_id() == "fillBuildTick" {
+            if let Some(emit) = fill_build_tick::fill_build_tick_cached(app, config) {
+                return emit;
+            }
+        }
+        if command.action_id() == "setFillCount" {
+            let mut precompute = app.precompute.borrow_mut();
+            if !config.fill_checkpoint.is_empty() {
+                precompute.restore_persisted_fill(&config.fill_checkpoint);
+            }
+            precompute.set_fill_applied_count(config.fill_applied_count);
+            return set_fill_count::begin(&mut precompute, config, command.args());
+        }
+        app.handle_action_impl(command.action_id(), command.args(), command.window_id(), snapshot, config, selection)
+    }))
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dScalarConfigStage {
+    Prepare,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dScalarConfigWork {
+    tool_id: &'static str,
+    stage: Puzzle3dScalarConfigStage,
+    mutation: Option<Puzzle3dConfigMutation>,
+}
+
+impl Puzzle3dScalarConfigWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, stage: Puzzle3dScalarConfigStage::Prepare, mutation: None }
+    }
+
+    fn window<'a>(command: &'a Puzzle3dCommand) -> &'a str {
+        command.window_id().unwrap_or(main::WINDOW_KIND_ID)
+    }
+
+    fn options(command: &Puzzle3dCommand, config: &Puzzle3dConfig) -> Puzzle3dWindowOptions {
+        config.window_options.get(Self::window(command)).cloned().unwrap_or_default()
+    }
+
+    fn arg_f64(command: &Puzzle3dCommand, key: &str) -> Option<f64> {
+        command.args().and_then(|args| args.get(key)).and_then(Value::as_f64)
+    }
+
+    fn mutation(&self, command: &Puzzle3dCommand, config: &Puzzle3dConfig) -> Option<Puzzle3dConfigMutation> {
+        let window_id = Self::window(command).to_string();
+        let options = Self::options(command, config);
+        let args = command.args();
+        match self.tool_id {
+            "setCamera" => {
+                let camera = args.and_then(|value| value.get("camera")).cloned().and_then(|value| serde_json::from_value(value).ok())?;
+                Some(Puzzle3dConfigMutation::SetWindowCamera { window_id, camera })
+            }
+            "setProjection" | "setProjectionParam" => {
+                let mut camera = options.camera;
+                let moves_pose = world3d_projection_action_moves_pose(self.tool_id, args);
+                apply_world3d_projection_action(&mut camera.projection, self.tool_id, args);
+                if moves_pose {
+                    let distance = crate::editor::puzzle3d::config::puzzle3d_camera_distance(&camera);
+                    let (position, up) = world3d_projection_pose(&camera.projection, camera.target, distance);
+                    camera.position = position;
+                    camera.up = Some(up);
+                }
+                Some(Puzzle3dConfigMutation::SetWindowCamera { window_id, camera })
+            }
+            "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
+                let mut sun = options.sun;
+                apply_world3d_sun_action(&mut sun, self.tool_id, args);
+                Some(Puzzle3dConfigMutation::SetWindowSun { window_id, sun })
+            }
+            "setLodAutomatic" => Some(Puzzle3dConfigMutation::SetWindowLodAutomatic {
+                window_id,
+                value: args.and_then(|value| value.get("pressed")).and_then(Value::as_bool).unwrap_or(!options.lod_automatic),
+            }),
+            "setLodDepthVariable" => Some(Puzzle3dConfigMutation::SetWindowLodDepthVariable {
+                window_id,
+                value: args.and_then(|value| value.get("pressed")).and_then(Value::as_bool).unwrap_or(!options.lod_depth_variable),
+            }),
+            "setLodManual" => Some(Puzzle3dConfigMutation::SetWindowLodManual {
+                window_id,
+                value: Self::arg_f64(command, "value")?.clamp(
+                    crate::editor::puzzle3d::modes::edit::options::lod::PUZZLE3D_LOD_SLIDER_MIN,
+                    crate::editor::puzzle3d::modes::edit::options::lod::PUZZLE3D_LOD_SLIDER_MAX,
+                ),
+            }),
+            "setGridVisible" => Some(Puzzle3dConfigMutation::SetWindowGridVisible {
+                window_id,
+                value: args.and_then(|value| value.get("pressed")).and_then(Value::as_bool).unwrap_or(!options.grid_visible),
+            }),
+            "setGridSnapEnabled" => Some(Puzzle3dConfigMutation::SetWindowGridSnapEnabled {
+                window_id,
+                value: args.and_then(|value| value.get("pressed")).and_then(Value::as_bool).unwrap_or(!options.grid_snap_enabled),
+            }),
+            "setGridSpacing" => Some(Puzzle3dConfigMutation::SetWindowGridSpacing {
+                window_id,
+                value: puzzle3d_absolute_or_delta(args, options.grid_spacing)?.max(0.1),
+            }),
+            "setSelectableKind" => {
+                let mut value = options.selectable_kinds;
+                let pressed = args.and_then(|args| args.get("pressed")).and_then(Value::as_bool);
+                match args.and_then(|args| args.get("kind")).and_then(Value::as_str).unwrap_or("") {
+                    "objects" => value.objects = pressed.unwrap_or(!value.objects),
+                    "vortices" => value.vortices = pressed.unwrap_or(!value.vortices),
+                    "attractions" => value.attractions = pressed.unwrap_or(!value.attractions),
+                    _ => return None,
+                }
+                Some(Puzzle3dConfigMutation::SetWindowSelectableKinds { window_id, value })
+            }
+            "setProximityRadius" => Some(Puzzle3dConfigMutation::SetWindowProximityRadius {
+                window_id,
+                value: puzzle3d_absolute_or_delta(args, options.proximity_radius)?.max(0.0),
+            }),
+            "setChunkSize" => Some(Puzzle3dConfigMutation::SetWindowChunkSize {
+                window_id,
+                value: puzzle3d_absolute_or_delta(args, options.chunk_size)?.max(1.0),
+            }),
+            "setVoxelDims" => {
+                let mut value = options.voxel_dims;
+                let dimension = Self::arg_f64(command, "value")?.max(1.0).round() as u32;
+                match args.and_then(|args| args.get("axis")).and_then(Value::as_str).unwrap_or("") {
+                    "w" => value[0] = dimension,
+                    "d" => value[1] = dimension,
+                    "h" => value[2] = dimension,
+                    _ => return None,
+                }
+                Some(Puzzle3dConfigMutation::SetWindowVoxelDims { window_id, value })
+            }
+            "setTransformGumballFlag" => {
+                let pressed = args.and_then(|args| args.get("pressed")).and_then(Value::as_bool);
+                match args.and_then(|args| args.get("flag")).and_then(Value::as_str).unwrap_or("") {
+                    "move" => Some(Puzzle3dConfigMutation::SetWindowTransformMove { window_id, value: pressed.unwrap_or(!options.transform_move) }),
+                    "rotate" => Some(Puzzle3dConfigMutation::SetWindowTransformRotate { window_id, value: pressed.unwrap_or(!options.transform_rotate) }),
+                    _ => None,
+                }
+            }
+            "setVortexShow" => {
+                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str)?;
+                matches!(value, PUZZLE3D_VORTEX_SHOW_ALWAYS | PUZZLE3D_VORTEX_SHOW_SELECTED)
+                    .then(|| Puzzle3dConfigMutation::SetWindowVortexShow { window_id, value: value.to_string() })
+            }
+            "setVortexDirection" => {
+                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str)?;
+                matches!(value, PUZZLE3D_VORTEX_DIRECTION_OUTWARDS | PUZZLE3D_VORTEX_DIRECTION_INWARDS)
+                    .then(|| Puzzle3dConfigMutation::SetWindowVortexDirection { window_id, value: value.to_string() })
+            }
+            "setBrushPlacementOverlapBudget" => {
+                let value = puzzle3d_absolute_or_delta(args, config.overlap_budget)?;
+                Some(Puzzle3dConfigMutation::SetOverlapBudget { value: value.clamp(0.0, 1.0) })
+            }
+            "closeVortexSuggestions" => Some(Puzzle3dConfigMutation::SetSuggestionMenu { value: None }),
+            "hoverSuggestion" => Some(Puzzle3dConfigMutation::SetBrushCandidateIndex {
+                value: args.and_then(|args| args.get("index")).and_then(Value::as_u64)? as usize,
+            }),
+            "engagementControlSelect" => {
+                let candidate_id = args.and_then(|args| args.get("id").or_else(|| args.get("value"))).and_then(Value::as_str)?;
+                let value = candidate_id.strip_prefix("puzzle3d.brush.candidate.")?.parse().ok()?;
+                Some(Puzzle3dConfigMutation::SetBrushCandidateIndex { value })
+            }
+            "engagementInput" => Some(Puzzle3dConfigMutation::SetWindowEngagementInput {
+                window_id,
+                value: args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("").to_string(),
+            }),
+            _ => None,
+        }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dScalarConfigWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(2)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        _snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle3dScalarConfigStage::Prepare => {
+                self.mutation = self.mutation(command, config);
+                self.stage = Puzzle3dScalarConfigStage::Publish;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress {
+                    stage: "puzzle3d-config-decode",
+                    en: "Reading exact setting",
+                    de: "Exakte Einstellung wird gelesen",
+                })
+            }
+            Puzzle3dScalarConfigStage::Publish => {
+                self.stage = Puzzle3dScalarConfigStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    config_mutations: self.mutation.take().into_iter().collect(),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dScalarConfigStage::Complete => Err(Fault::from("puzzle3d-config-complete-repolled")),
+            Puzzle3dScalarConfigStage::Closing => Err(Fault::from("puzzle3d-config-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dScalarConfigStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutation.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dScalarConfigStage::Closing && self.mutation.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dKindWeightStage {
+    Catalog,
+    Validate,
+    SumOthers,
+    Changed,
+    Build,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dKindWeightWork {
+    tool_id: &'static str,
+    stage: Puzzle3dKindWeightStage,
+    cursor: usize,
+    ids: Vec<String>,
+    result: HashMap<String, f64>,
+    missing: bool,
+    base_sum: f64,
+    other_sum: f64,
+    other_count: usize,
+    changed_id: Option<String>,
+    requested: f64,
+    ignored: bool,
+}
+
+impl Puzzle3dKindWeightWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            stage: Puzzle3dKindWeightStage::Catalog,
+            cursor: 0,
+            ids: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            result: HashMap::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            missing: false,
+            base_sum: 0.0,
+            other_sum: 0.0,
+            other_count: 0,
+            changed_id: None,
+            requested: 1.0,
+            ignored: false,
+        }
+    }
+
+    fn section(&self) -> &'static str {
+        if self.tool_id == "setObjectKindWeight" { "objects" } else { "vortices" }
+    }
+
+    fn weights<'a>(&self, config: &'a Puzzle3dConfig) -> &'a HashMap<String, f64> {
+        if self.tool_id == "setObjectKindWeight" { &config.object_kind_weights } else { &config.vortex_kind_weights }
+    }
+
+    fn base_weight(&self, config: &Puzzle3dConfig, id: &str) -> f64 {
+        if self.ids.is_empty() {
+            return 0.0;
+        }
+        if self.missing || self.weights(config).is_empty() {
+            return 1.0 / self.ids.len() as f64;
+        }
+        let value = self.weights(config).get(id).copied().unwrap_or(0.0);
+        if (self.base_sum - 1.0).abs() > 0.001 && self.base_sum.abs() > f64::EPSILON {
+            value / self.base_sum
+        } else {
+            value
+        }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dKindWeightWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let catalogs = snapshot.typed().meta.kind_catalogs.as_ref()?;
+        let count = if self.tool_id == "setObjectKindWeight" { catalogs.objects.len() } else { catalogs.vortices.len() };
+        let items = count.checked_mul(4)?.checked_add(3)?;
+        (count <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle3dKindWeightStage::Catalog => {
+                let catalogs = snapshot.typed().meta.kind_catalogs.as_ref().ok_or_else(|| Fault::from("puzzle3d-kind-weight-catalog-owner"))?;
+                let id = if self.tool_id == "setObjectKindWeight" {
+                    catalogs.objects.get(self.cursor).map(|entry| entry.id.as_str())
+                } else {
+                    catalogs.vortices.get(self.cursor).map(|entry| entry.id.as_str())
+                };
+                if let Some(id) = id {
+                    if self.ids.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle3d-kind-weight-catalog-capacity"));
+                    }
+                    self.ids.push(id.to_string());
+                    self.cursor += 1;
+                    return Ok(Self::progress("puzzle3d-kind-weight-catalog", "Reading kind owner", "Artinhaber wird gelesen"));
+                }
+                self.changed_id = Some(command.args().and_then(|args| args.get("kindId")).and_then(Value::as_str).unwrap_or("").to_string());
+                let requested = command.args().and_then(|args| args.get("value")).and_then(Value::as_f64).unwrap_or(1.0).clamp(0.0, 1.0);
+                self.requested = if self.tool_id == "setVortexKindWeight" {
+                    if let Some(object_kind_id) = command.args().and_then(|args| args.get("objectKindId")).and_then(Value::as_str) {
+                        let object_weight = config.object_kind_weights.get(object_kind_id).copied().unwrap_or(0.0);
+                        if object_weight <= f64::EPSILON {
+                            self.ignored = true;
+                            self.stage = Puzzle3dKindWeightStage::Publish;
+                            return Ok(Self::progress("puzzle3d-kind-weight-publish", "Ignoring zero-weight child", "Kind mit Nullgewicht wird ignoriert"));
+                        }
+                        (requested / object_weight).clamp(0.0, 1.0)
+                    } else {
+                        requested
+                    }
+                } else {
+                    requested
+                };
+                self.cursor = 0;
+                self.stage = Puzzle3dKindWeightStage::Validate;
+                Ok(Self::progress("puzzle3d-kind-weight-validate", "Validating current weights", "Aktuelle Gewichte werden geprüft"))
+            }
+            Puzzle3dKindWeightStage::Validate => {
+                let Some(id) = self.ids.get(self.cursor) else {
+                    self.cursor = 0;
+                    self.stage = Puzzle3dKindWeightStage::SumOthers;
+                    return Ok(Self::progress("puzzle3d-kind-weight-sum", "Measuring sibling weights", "Geschwistergewichte werden gemessen"));
+                };
+                let weights = self.weights(config);
+                self.missing |= !weights.contains_key(id);
+                self.base_sum += weights.get(id).copied().unwrap_or(0.0);
+                self.cursor += 1;
+                Ok(Self::progress("puzzle3d-kind-weight-validate", "Validating kind weight", "Artgewicht wird geprüft"))
+            }
+            Puzzle3dKindWeightStage::SumOthers => {
+                let Some(id) = self.ids.get(self.cursor) else {
+                    self.cursor = 0;
+                    self.stage = Puzzle3dKindWeightStage::Changed;
+                    return Ok(Self::progress("puzzle3d-kind-weight-changed", "Preparing changed weight", "Geändertes Gewicht wird vorbereitet"));
+                };
+                if self.changed_id.as_deref() != Some(id.as_str()) {
+                    self.other_sum += self.base_weight(config, id);
+                    self.other_count += 1;
+                }
+                self.cursor += 1;
+                Ok(Self::progress("puzzle3d-kind-weight-sum", "Measuring sibling weight", "Geschwistergewicht wird gemessen"))
+            }
+            Puzzle3dKindWeightStage::Changed => {
+                if self.ids.len() >= 2 {
+                    let changed_id = self.changed_id.clone().ok_or_else(|| Fault::from("puzzle3d-kind-weight-changed-owner"))?;
+                    self.result.insert(changed_id, self.requested);
+                }
+                self.stage = Puzzle3dKindWeightStage::Build;
+                Ok(Self::progress("puzzle3d-kind-weight-build", "Building normalized weights", "Normalisierte Gewichte werden aufgebaut"))
+            }
+            Puzzle3dKindWeightStage::Build => {
+                let Some(id) = self.ids.get(self.cursor).cloned() else {
+                    self.stage = Puzzle3dKindWeightStage::Publish;
+                    return Ok(Self::progress("puzzle3d-kind-weight-publish", "Preparing weight publication", "Gewichtsveröffentlichung wird vorbereitet"));
+                };
+                self.cursor += 1;
+                let value = if self.ids.len() == 1 {
+                    1.0
+                } else if self.changed_id.as_deref() == Some(id.as_str()) {
+                    return Ok(Self::progress("puzzle3d-kind-weight-build", "Keeping changed weight", "Geändertes Gewicht wird beibehalten"));
+                } else {
+                    let remainder = (1.0 - self.requested).max(0.0);
+                    if self.other_sum <= f64::EPSILON {
+                        remainder / self.other_count.max(1) as f64
+                    } else {
+                        self.base_weight(config, &id) / self.other_sum * remainder
+                    }
+                };
+                self.result.insert(id, value);
+                Ok(Self::progress("puzzle3d-kind-weight-build", "Building kind weight", "Artgewicht wird aufgebaut"))
+            }
+            Puzzle3dKindWeightStage::Publish => {
+                self.stage = Puzzle3dKindWeightStage::Complete;
+                if self.ignored {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                }
+                let mutation = if self.tool_id == "setObjectKindWeight" {
+                    Puzzle3dConfigMutation::SetObjectKindWeights { value: std::mem::take(&mut self.result) }
+                } else {
+                    Puzzle3dConfigMutation::SetVortexKindWeights { value: std::mem::take(&mut self.result) }
+                };
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    config_mutations: vec![mutation],
+                    ui_scope: puzzle3d_fill_options_scope(),
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dKindWeightStage::Complete => Err(Fault::from("puzzle3d-kind-weight-complete-repolled")),
+            Puzzle3dKindWeightStage::Closing => Err(Fault::from("puzzle3d-kind-weight-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dKindWeightStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.ids.pop().is_some() || self.changed_id.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let removed = {
+            let mut values = self.result.extract_if(|_, _| true);
+            values.next()
+        };
+        if removed.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dKindWeightStage::Closing && self.ids.is_empty() && self.result.is_empty() && self.changed_id.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dEngagementAbortStage {
+    Input,
+    Candidate,
+    Utility,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dEngagementAbortWork {
+    stage: Puzzle3dEngagementAbortStage,
+    input: Option<Puzzle3dConfigMutation>,
+    candidate: Option<Puzzle3dConfigMutation>,
+    utility: Option<Puzzle3dConfigMutation>,
+    window_id: Option<String>,
+}
+
+impl Default for Puzzle3dEngagementAbortWork {
+    fn default() -> Self {
+        Self { stage: Puzzle3dEngagementAbortStage::Input, input: None, candidate: None, utility: None, window_id: None }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dEngagementAbortWork {
+    fn tool_id(&self) -> &'static str {
+        "engagementAbort"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(4)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        _snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let window_id = command.window_id().unwrap_or(main::WINDOW_KIND_ID).to_string();
+        match self.stage {
+            Puzzle3dEngagementAbortStage::Input => {
+                self.window_id = Some(window_id.clone());
+                self.input = Some(Puzzle3dConfigMutation::SetWindowEngagementInput { window_id, value: String::new() });
+                self.stage = Puzzle3dEngagementAbortStage::Candidate;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress {
+                    stage: "puzzle3d-engagement-abort-input",
+                    en: "Clearing engagement input",
+                    de: "Interaktionseingabe wird geleert",
+                })
+            }
+            Puzzle3dEngagementAbortStage::Candidate => {
+                self.candidate = Some(Puzzle3dConfigMutation::SetBrushCandidateIndex { value: 0 });
+                self.stage = Puzzle3dEngagementAbortStage::Utility;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress {
+                    stage: "puzzle3d-engagement-abort-candidate",
+                    en: "Resetting brush candidate",
+                    de: "Pinselkandidat wird zurückgesetzt",
+                })
+            }
+            Puzzle3dEngagementAbortStage::Utility => {
+                self.utility = Some(Puzzle3dConfigMutation::SetActiveUtility { window_id, value: Some(PUZZLE3D_DEFAULT_UTILITY.to_string()) });
+                self.stage = Puzzle3dEngagementAbortStage::Publish;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress {
+                    stage: "puzzle3d-engagement-abort-utility",
+                    en: "Releasing active utility",
+                    de: "Aktives Werkzeug wird freigegeben",
+                })
+            }
+            Puzzle3dEngagementAbortStage::Publish => {
+                self.stage = Puzzle3dEngagementAbortStage::Complete;
+                let effect_window_id = self.window_id.take().unwrap_or_else(|| main::WINDOW_KIND_ID.to_string());
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    config_mutations: [self.input.take(), self.candidate.take(), self.utility.take()].into_iter().flatten().collect(),
+                    effects: vec![Effect::SetActiveUtility { window_id: effect_window_id, utility_id: PUZZLE3D_DEFAULT_UTILITY.to_string() }],
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dEngagementAbortStage::Complete => Err(Fault::from("puzzle3d-engagement-abort-complete-repolled")),
+            Puzzle3dEngagementAbortStage::Closing => Err(Fault::from("puzzle3d-engagement-abort-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dEngagementAbortStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.input.take().is_some() || self.candidate.take().is_some() || self.utility.take().is_some() || self.window_id.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dEngagementAbortStage::Closing
+            && self.input.is_none()
+            && self.candidate.is_none()
+            && self.utility.is_none()
+            && self.window_id.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dEngagementRepeatStage {
+    Prepare,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dEngagementRepeatWork {
+    stage: Puzzle3dEngagementRepeatStage,
+    effect: Option<Effect>,
+}
+
+impl Default for Puzzle3dEngagementRepeatWork {
+    fn default() -> Self {
+        Self { stage: Puzzle3dEngagementRepeatStage::Prepare, effect: None }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dEngagementRepeatWork {
+    fn tool_id(&self) -> &'static str {
+        "engagementRepeatLast"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(2)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        _snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle3dEngagementRepeatStage::Prepare => {
+                if puzzle3d_scene_active_utility(config, command.window_id()) == "fill" {
+                    self.effect = Some(set_fill_count::request(config.fill_count.saturating_add(1).min(PUZZLE3D_FILL_COUNT_MAX)));
+                }
+                self.stage = Puzzle3dEngagementRepeatStage::Publish;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress {
+                    stage: "puzzle3d-engagement-repeat-prepare",
+                    en: "Preparing repeated engagement",
+                    de: "Wiederholte Eingabe wird vorbereitet",
+                })
+            }
+            Puzzle3dEngagementRepeatStage::Publish => {
+                self.stage = Puzzle3dEngagementRepeatStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    effects: self.effect.take().into_iter().collect(),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dEngagementRepeatStage::Complete => Err(Fault::from("puzzle3d-engagement-repeat-complete-repolled")),
+            Puzzle3dEngagementRepeatStage::Closing => Err(Fault::from("puzzle3d-engagement-repeat-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dEngagementRepeatStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.effect.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dEngagementRepeatStage::Closing && self.effect.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dAddObjectKindStage {
+    Decode,
+    Kind,
+    Representation,
+    Vortex,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dAddObjectKindPayload {
+    kind_id: String,
+    origin: [f64; 3],
+}
+
+struct Puzzle3dAddObjectKindWork {
+    stage: Puzzle3dAddObjectKindStage,
+    kind_cursor: usize,
+    representation_cursor: usize,
+    vortex_cursor: usize,
+    kind_index: Option<usize>,
+    payload: Option<Puzzle3dAddObjectKindPayload>,
+    object_id: Option<String>,
+    mesh_url: Option<String>,
+    vortices: Vec<crate::artifacts::puzzle3d::Puzzle3dVortex>,
+    mutation: Option<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dAddObjectKindWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dAddObjectKindStage::Decode,
+            kind_cursor: 0,
+            representation_cursor: 0,
+            vortex_cursor: 0,
+            kind_index: None,
+            payload: None,
+            object_id: None,
+            mesh_url: None,
+            vortices: Vec::with_capacity(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT),
+            mutation: None,
+        }
+    }
+}
+
+impl Puzzle3dAddObjectKindWork {
+    fn decode(command: &Puzzle3dCommand) -> Puzzle3dAddObjectKindPayload {
+        let args = command.args();
+        Puzzle3dAddObjectKindPayload {
+            kind_id: args.and_then(|args| args.get("objectKind")).and_then(Value::as_str).unwrap_or("Object").to_string(),
+            origin: args.and_then(|args| args.get("origin")).and_then(value_as_vec3).unwrap_or([0.0, 0.0, 0.0]),
+        }
+    }
+
+    fn object_id(snapshot: &Puzzle3dPlaySnapshot, payload: &Puzzle3dAddObjectKindPayload) -> String {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        snapshot.typed().objects.len().hash(&mut hasher);
+        payload.kind_id.hash(&mut hasher);
+        for value in payload.origin {
+            value.to_bits().hash(&mut hasher);
+        }
+        format!("puzzle3d.object.{:016x}", hasher.finish())
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dAddObjectKindWork {
+    fn tool_id(&self) -> &'static str {
+        "addObjectKind"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let catalogs = snapshot.typed().meta.kind_catalogs.as_ref()?;
+        let items = catalogs
+            .objects
+            .len()
+            .checked_add(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT.checked_mul(2)?)?
+            .checked_add(3)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let Some(catalogs) = snapshot.typed().meta.kind_catalogs.as_ref() else {
+            self.stage = Puzzle3dAddObjectKindStage::Complete;
+            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+        };
+        match self.stage {
+            Puzzle3dAddObjectKindStage::Decode => {
+                let payload = Self::decode(command);
+                self.object_id = Some(Self::object_id(snapshot, &payload));
+                self.payload = Some(payload);
+                self.stage = Puzzle3dAddObjectKindStage::Kind;
+                Ok(Self::progress("puzzle3d-add-kind-scan", "Finding object kind", "Objektart wird gesucht"))
+            }
+            Puzzle3dAddObjectKindStage::Kind => {
+                let payload = self.payload.as_ref().ok_or_else(|| Fault::from("puzzle3d-add-kind-payload-owner"))?;
+                let Some(kind) = catalogs.objects.get(self.kind_cursor) else {
+                    self.stage = Puzzle3dAddObjectKindStage::Publish;
+                    return Ok(Self::progress("puzzle3d-add-kind-publish", "Preparing default object", "Standardobjekt wird vorbereitet"));
+                };
+                if kind.id == payload.kind_id {
+                    if kind.representations.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT || kind.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
+                        return Err(Fault::from("puzzle3d-add-kind-catalog-capacity"));
+                    }
+                    self.kind_index = Some(self.kind_cursor);
+                    self.stage = Puzzle3dAddObjectKindStage::Representation;
+                } else {
+                    self.kind_cursor += 1;
+                }
+                Ok(Self::progress("puzzle3d-add-kind-scan", "Scanning object kind", "Objektart wird geprüft"))
+            }
+            Puzzle3dAddObjectKindStage::Representation => {
+                let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-add-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-add-kind-cursor"))?;
+                let Some(representation) = kind.representations.get(self.representation_cursor) else {
+                    self.stage = Puzzle3dAddObjectKindStage::Vortex;
+                    return Ok(Self::progress("puzzle3d-add-kind-vortex", "Preparing object vortices", "Objekt-Vortices werden vorbereitet"));
+                };
+                self.representation_cursor += 1;
+                if self.mesh_url.is_none() && !representation.url.is_empty() {
+                    self.mesh_url = Some(representation.url.clone());
+                }
+                Ok(Self::progress("puzzle3d-add-kind-representation", "Reading object representation", "Objektdarstellung wird gelesen"))
+            }
+            Puzzle3dAddObjectKindStage::Vortex => {
+                let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-add-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-add-kind-cursor"))?;
+                let Some(template) = kind.vortices.get(self.vortex_cursor) else {
+                    self.stage = Puzzle3dAddObjectKindStage::Publish;
+                    return Ok(Self::progress("puzzle3d-add-kind-publish", "Preparing object publication", "Objektveröffentlichung wird vorbereitet"));
+                };
+                let index = self.vortex_cursor;
+                self.vortex_cursor += 1;
+                self.vortices.push(crate::artifacts::puzzle3d::Puzzle3dVortex {
+                    id: if template.id.is_empty() { format!("v{index}") } else { template.id.clone() },
+                    label: (!template.label.is_empty()).then(|| template.label.clone()),
+                    vortex_kind: template.vortex_kind.clone(),
+                    position: template.point,
+                    direction: Some(template.direction),
+                    radius: template.radius,
+                    hidden: false,
+                    locked: false,
+                });
+                Ok(Self::progress("puzzle3d-add-kind-vortex", "Building one object vortex", "Ein Objekt-Vortex wird aufgebaut"))
+            }
+            Puzzle3dAddObjectKindStage::Publish => {
+                let payload = self.payload.take().ok_or_else(|| Fault::from("puzzle3d-add-kind-payload-owner"))?;
+                let object = crate::artifacts::puzzle3d::Puzzle3dObject {
+                    id: self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-add-kind-object-owner"))?,
+                    label: Some(payload.kind_id.clone()),
+                    object_kind: Some(payload.kind_id),
+                    anchor: Default::default(),
+                    origin: payload.origin,
+                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    scale: None,
+                    mesh_url: self.mesh_url.take(),
+                    vortices: std::mem::take(&mut self.vortices),
+                    hidden: false,
+                    locked: false,
+                };
+                self.mutation = Some(crate::artifacts::puzzle3d::mutations::create_object(object, None));
+                self.stage = Puzzle3dAddObjectKindStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: self.mutation.take().into_iter().collect(),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dAddObjectKindStage::Complete => Err(Fault::from("puzzle3d-add-kind-complete-repolled")),
+            Puzzle3dAddObjectKindStage::Closing => Err(Fault::from("puzzle3d-add-kind-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dAddObjectKindStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutation.take().is_some()
+            || self.vortices.pop().is_some()
+            || self.mesh_url.take().is_some()
+            || self.object_id.take().is_some()
+            || self.payload.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dAddObjectKindStage::Closing
+            && self.mutation.is_none()
+            && self.vortices.is_empty()
+            && self.mesh_url.is_none()
+            && self.object_id.is_none()
+            && self.payload.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dScaleStage {
+    ObjectSelection,
+    VolumeSelection,
+    Objects,
+    Volumes,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dScaleWork {
+    tool_id: &'static str,
+    stage: Puzzle3dScaleStage,
+    selection_cursor: usize,
+    object_cursor: usize,
+    volume_cursor: usize,
+    objects: HashSet<String>,
+    volumes: HashSet<String>,
+    mutations: Vec<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dScaleWork {
+    fn default() -> Self {
+        Self::new("scaleSelection")
+    }
+}
+
+impl Puzzle3dScaleWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            stage: Puzzle3dScaleStage::ObjectSelection,
+            selection_cursor: 0,
+            object_cursor: 0,
+            volume_cursor: 0,
+            objects: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            volumes: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+    fn explicit_ids(command: &Puzzle3dCommand) -> Option<&Vec<Value>> {
+        command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).filter(|ids| !ids.is_empty())
+    }
+
+    fn selection<'a>(interaction: &'a protocol::InteractionState, granularity: &str) -> Option<&'a protocol::DomainSelection> {
+        interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == granularity)
+    }
+
+    fn scale(command: &Puzzle3dCommand) -> [f64; 3] {
+        let axis = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(1.0);
+        [axis("sx"), axis("sy"), axis("sz")]
+    }
+
+    fn scaled(scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>, factors: [f64; 3]) -> crate::artifacts::puzzle3d::Puzzle3dScale {
+        let current = match scale {
+            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Uniform(value)) => [value; 3],
+            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(value)) => value,
+            None => [1.0; 3],
+        };
+        crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
+    }
+
+    fn translated(origin: [f64; 3], command: &Puzzle3dCommand) -> [f64; 3] {
+        let axis = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or_default();
+        [origin[0] + axis("dx"), origin[1] + axis("dy"), origin[2] + axis("dz")]
+    }
+
+    fn rotated(orientation: Option<[f64; 4]>, command: &Puzzle3dCommand) -> [f64; 4] {
+        let axis = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or_default();
+        let delta = quat_from_axis_angle(axis("ax"), axis("ay"), axis("az"), axis("angle"));
+        quat_mul(delta, orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))
+    }
+
+    fn object_mutation(&self, object: &crate::artifacts::puzzle3d::Puzzle3dObject, command: &Puzzle3dCommand) -> Puzzle3dMutation {
+        match self.tool_id {
+            "translateSelection" => crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), Self::translated(object.origin, command)),
+            "rotateSelection" => crate::artifacts::puzzle3d::mutations::rotate_object(object.id.clone(), Some(Self::rotated(object.orientation, command))),
+            _ => crate::artifacts::puzzle3d::mutations::scale_object(object.id.clone(), Some(Self::scaled(object.scale, Self::scale(command)))),
+        }
+    }
+
+    fn volume_mutation(&self, volume: &crate::artifacts::puzzle3d::Puzzle3dTargetVolume, command: &Puzzle3dCommand) -> Puzzle3dMutation {
+        match self.tool_id {
+            "translateSelection" => crate::artifacts::puzzle3d::mutations::move_target_volume(volume.id.clone(), Self::translated(volume.origin, command)),
+            "rotateSelection" => crate::artifacts::puzzle3d::mutations::rotate_target_volume(volume.id.clone(), Some(Self::rotated(volume.orientation, command))),
+            _ => crate::artifacts::puzzle3d::mutations::scale_target_volume(volume.id.clone(), Some(Self::scaled(volume.scale, Self::scale(command)))),
+        }
+    }
+
+    fn coalesce_key(&self) -> &'static str {
+        match self.tool_id {
+            "translateSelection" => "gumball-translate",
+            "rotateSelection" => "gumball-rotate",
+            _ => "gumball-scale",
+        }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dScaleWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let object_selection = Self::explicit_ids(command).map_or_else(
+            || Self::selection(interaction, PUZZLE3D_GRANULARITY_OBJECT).map_or(0, |selection| selection.ids.len()),
+            Vec::len,
+        );
+        let volume_selection = Self::selection(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).map_or(0, |selection| selection.ids.len());
+        let items = object_selection
+            .checked_add(volume_selection)?
+            .checked_add(snapshot.typed().objects.len())?
+            .checked_add(snapshot.typed().target_volumes.len())?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle3dScaleStage::ObjectSelection => {
+                let id = if let Some(ids) = Self::explicit_ids(command) {
+                    ids.get(self.selection_cursor).and_then(Value::as_str)
+                } else {
+                    Self::selection(interaction, PUZZLE3D_GRANULARITY_OBJECT).and_then(|selection| selection.ids.get(self.selection_cursor)).map(String::as_str)
+                };
+                if let Some(id) = id {
+                    if self.objects.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle3d-scale-object-selection-capacity"));
+                    }
+                    self.objects.insert(id.to_string());
+                    self.selection_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-scale-object-selection", "Reading selected object", "Ausgewähltes Objekt wird gelesen"));
+                }
+                self.selection_cursor = 0;
+                self.stage = Puzzle3dScaleStage::VolumeSelection;
+                Ok(Self::progress("puzzle3d-scale-volume-selection", "Reading selected volume", "Ausgewähltes Volumen wird gelesen"))
+            }
+            Puzzle3dScaleStage::VolumeSelection => {
+                let id = Self::selection(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).and_then(|selection| selection.ids.get(self.selection_cursor));
+                if let Some(id) = id {
+                    if self.volumes.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle3d-scale-volume-selection-capacity"));
+                    }
+                    self.volumes.insert(id.clone());
+                    self.selection_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-scale-volume-selection", "Reading selected volume", "Ausgewähltes Volumen wird gelesen"));
+                }
+                self.stage = Puzzle3dScaleStage::Objects;
+                Ok(Self::progress("puzzle3d-scale-object", "Scaling selected object", "Ausgewähltes Objekt wird skaliert"))
+            }
+            Puzzle3dScaleStage::Objects => {
+                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else {
+                    self.stage = Puzzle3dScaleStage::Volumes;
+                    return Ok(Self::progress("puzzle3d-scale-volume", "Scaling selected volume", "Ausgewähltes Volumen wird skaliert"));
+                };
+                self.object_cursor += 1;
+                if self.objects.contains(&object.id) {
+                    self.mutations.push(self.object_mutation(object, command));
+                }
+                Ok(Self::progress("puzzle3d-scale-object", "Scaling selected object", "Ausgewähltes Objekt wird skaliert"))
+            }
+            Puzzle3dScaleStage::Volumes => {
+                let Some(volume) = snapshot.typed().target_volumes.get(self.volume_cursor) else {
+                    self.stage = Puzzle3dScaleStage::Complete;
+                    let mutations = std::mem::take(&mut self.mutations);
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        artifact_mutations: mutations,
+                        coalesce_key: Some(self.coalesce_key().to_string()),
+                        ui_scope: UiDirtyScope::Full,
+                        ..Default::default()
+                    }));
+                };
+                self.volume_cursor += 1;
+                if self.volumes.contains(&volume.id) && !volume.locked {
+                    self.mutations.push(self.volume_mutation(volume, command));
+                }
+                Ok(Self::progress("puzzle3d-scale-volume", "Scaling selected volume", "Ausgewähltes Volumen wird skaliert"))
+            }
+            Puzzle3dScaleStage::Complete => Err(Fault::from("puzzle3d-scale-complete-repolled")),
+            Puzzle3dScaleStage::Closing => Err(Fault::from("puzzle3d-scale-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dScaleStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let object = {
+            let mut objects = self.objects.extract_if(|_| true);
+            objects.next()
+        };
+        if object.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let volume = {
+            let mut volumes = self.volumes.extract_if(|_| true);
+            volumes.next()
+        };
+        if volume.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dScaleStage::Closing && self.mutations.is_empty() && self.objects.is_empty() && self.volumes.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dPatchInspectorStage {
+    Selection,
+    Objects,
+    Vortices,
+    Attractions,
+    AttractionReconnect,
+    References,
+    Volumes,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dPatchInspectorWork {
+    stage: Puzzle3dPatchInspectorStage,
+    selection_cursor: usize,
+    item_cursor: usize,
+    child_cursor: usize,
+    selected: HashSet<String>,
+    pending_attraction: Option<crate::artifacts::puzzle3d::Puzzle3dAttraction>,
+    mutations: Vec<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dPatchInspectorWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dPatchInspectorStage::Selection,
+            selection_cursor: 0,
+            item_cursor: 0,
+            child_cursor: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            pending_attraction: None,
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle3dPatchInspectorWork {
+    fn entity(command: &Puzzle3dCommand) -> &str {
+        command.args().and_then(|args| args.get("entity")).and_then(Value::as_str).unwrap_or("")
+    }
+
+    fn field(command: &Puzzle3dCommand) -> &str {
+        command.args().and_then(|args| args.get("field")).and_then(Value::as_str).unwrap_or("")
+    }
+
+    fn granularity(entity: &str) -> &str {
+        match entity {
+            "object" => PUZZLE3D_GRANULARITY_OBJECT,
+            "vortex" => PUZZLE3D_GRANULARITY_VORTEX,
+            "attraction" => PUZZLE3D_GRANULARITY_ATTRACTION,
+            "reference" => PUZZLE3D_GRANULARITY_REFERENCE,
+            "targetVolume" => PUZZLE3D_GRANULARITY_TARGET_VOLUME,
+            _ => "",
+        }
+    }
+
+    fn source_id<'a>(command: &'a Puzzle3dCommand, interaction: &'a protocol::InteractionState, index: usize) -> Option<&'a str> {
+        if let Some(ids) = command.args().and_then(|args| args.get("ids")).and_then(Value::as_array).filter(|ids| !ids.is_empty()) {
+            return ids.get(index).and_then(Value::as_str);
+        }
+        let granularity = Self::granularity(Self::entity(command));
+        interaction
+            .selection
+            .get(PUZZLE3D_INTERACTION_DOMAIN)
+            .filter(|selection| selection.granularity == granularity)
+            .and_then(|selection| selection.ids.get(index))
+            .map(String::as_str)
+    }
+
+    fn source_len(command: &Puzzle3dCommand, interaction: &protocol::InteractionState) -> usize {
+        command
+            .args()
+            .and_then(|args| args.get("ids"))
+            .and_then(Value::as_array)
+            .filter(|ids| !ids.is_empty())
+            .map_or_else(
+                || {
+                    let granularity = Self::granularity(Self::entity(command));
+                    interaction
+                        .selection
+                        .get(PUZZLE3D_INTERACTION_DOMAIN)
+                        .filter(|selection| selection.granularity == granularity)
+                        .map_or(0, |selection| selection.ids.len())
+                },
+                Vec::len,
+            )
+    }
+
+    fn first_stage(entity: &str) -> Puzzle3dPatchInspectorStage {
+        match entity {
+            "object" => Puzzle3dPatchInspectorStage::Objects,
+            "vortex" => Puzzle3dPatchInspectorStage::Vortices,
+            "attraction" => Puzzle3dPatchInspectorStage::Attractions,
+            "reference" => Puzzle3dPatchInspectorStage::References,
+            "targetVolume" => Puzzle3dPatchInspectorStage::Volumes,
+            _ => Puzzle3dPatchInspectorStage::Complete,
+        }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn push(&mut self, mutation: Puzzle3dMutation) -> Result<(), Fault> {
+        if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle3d-patch-inspector-output-capacity"));
+        }
+        self.mutations.push(mutation);
+        Ok(())
+    }
+
+    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        self.stage = Puzzle3dPatchInspectorStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+            artifact_mutations: std::mem::take(&mut self.mutations),
+            ui_scope: UiDirtyScope::Full,
+            ..Default::default()
+        })
+    }
+
+    fn scale(value: Option<crate::artifacts::puzzle3d::Puzzle3dScale>) -> [f64; 3] {
+        match value {
+            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Uniform(value)) => [value; 3],
+            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(value)) => value,
+            None => [1.0; 3],
+        }
+    }
+
+    fn object_mutation(command: &Puzzle3dCommand, object: &crate::artifacts::puzzle3d::Puzzle3dObject) -> Option<Puzzle3dMutation> {
+        let args = command.args()?;
+        let field = Self::field(command);
+        let value = args.get("value");
+        let delta = args.get("delta");
+        match field {
+            "hidden" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_object_hidden(object.id.clone(), value)),
+            "locked" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_object_locked(object.id.clone(), value)),
+            "label" => Some(crate::artifacts::puzzle3d::mutations::edit_object_label(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
+            "objectKind" => Some(crate::artifacts::puzzle3d::mutations::change_object_kind(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
+            "meshUrl" => Some(crate::artifacts::puzzle3d::mutations::change_object_mesh(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
+            "origin" => value.and_then(value_as_vec3).map(|origin| crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), origin)),
+            _ => {
+                if let Some(axis) = puzzle3d_axis_index(field, "origin") {
+                    let mut origin = object.origin;
+                    origin[axis] = puzzle3d_resolve_number_edit(origin[axis], value, delta)?;
+                    return Some(crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), origin));
+                }
+                if let Some(axis) = puzzle3d_axis_index(field, "scale") {
+                    let mut scale = Self::scale(object.scale);
+                    scale[axis] = puzzle3d_resolve_number_edit(scale[axis], value, delta)?;
+                    return Some(crate::artifacts::puzzle3d::mutations::scale_object(
+                        object.id.clone(),
+                        Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(scale)),
+                    ));
+                }
+                let axis = puzzle3d_axis_index(field, "orientation")?;
+                let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                orientation[axis] = puzzle3d_resolve_number_edit(orientation[axis], value, delta)?;
+                Some(crate::artifacts::puzzle3d::mutations::rotate_object(object.id.clone(), Some(quat_normalize(orientation))))
+            }
+        }
+    }
+
+    fn vortex_mutation(
+        command: &Puzzle3dCommand,
+        object_id: &str,
+        vortex: &crate::artifacts::puzzle3d::Puzzle3dVortex,
+    ) -> Option<Puzzle3dMutation> {
+        let args = command.args()?;
+        let field = Self::field(command);
+        let value = args.get("value");
+        let delta = args.get("delta");
+        let mut next = vortex.clone();
+        match field {
+            "hidden" => next.hidden = value.and_then(Value::as_bool)?,
+            "locked" => next.locked = value.and_then(Value::as_bool)?,
+            "vortexKind" => next.vortex_kind = value.and_then(Value::as_str).map(str::to_string),
+            "position" => next.position = value.and_then(value_as_vec3)?,
+            "direction" => next.direction = Some(value.and_then(value_as_vec3)?),
+            "radius" => next.radius = Some(puzzle3d_resolve_number_edit(next.radius.unwrap_or(0.35), value, delta)?),
+            _ => {
+                if let Some(axis) = puzzle3d_axis_index(field, "position") {
+                    next.position[axis] = puzzle3d_resolve_number_edit(next.position[axis], value, delta)?;
+                } else {
+                    let axis = puzzle3d_axis_index(field, "direction")?;
+                    let mut direction = next.direction.unwrap_or([0.0, 0.0, 1.0]);
+                    direction[axis] = puzzle3d_resolve_number_edit(direction[axis], value, delta)?;
+                    next.direction = Some(direction);
+                }
+            }
+        }
+        Some(crate::artifacts::puzzle3d::mutations::replace_object_vortex(object_id.to_string(), vortex.id.clone(), next))
+    }
+
+    fn attraction_geometry(command: &Puzzle3dCommand, attraction: &crate::artifacts::puzzle3d::Puzzle3dAttraction) -> Option<Puzzle3dMutation> {
+        let args = command.args()?;
+        let field = Self::field(command);
+        let value = args.get("value");
+        let delta = args.get("delta");
+        let mut geometry = [attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y];
+        let index = match field {
+            "gap" => 0,
+            "shift" => 1,
+            "rise" => 2,
+            "rotation" => 3,
+            "turn" => 4,
+            "tilt" => 5,
+            _ => return None,
+        };
+        geometry[index] = puzzle3d_resolve_number_edit(geometry[index], value, delta)?;
+        Some(crate::artifacts::puzzle3d::mutations::replace_attraction_geometry(
+            attraction.id.clone(),
+            geometry[0],
+            geometry[1],
+            geometry[2],
+            geometry[3],
+            geometry[4],
+            geometry[5],
+            geometry[6],
+            geometry[7],
+        ))
+    }
+
+    fn reference_mutation(command: &Puzzle3dCommand, reference: &crate::artifacts::puzzle3d::Puzzle3dReference) -> Option<Puzzle3dMutation> {
+        let args = command.args()?;
+        let field = Self::field(command);
+        let value = args.get("value");
+        let delta = args.get("delta");
+        match field {
+            "hidden" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_reference_hidden(reference.id.clone(), value)),
+            "locked" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_reference_locked(reference.id.clone(), value)),
+            "sourceUrl" | "mediaKind" => {
+                let mut source = reference.source.clone();
+                if field == "sourceUrl" {
+                    source.url = value.and_then(Value::as_str)?.to_string();
+                } else {
+                    source.media_kind = value.and_then(Value::as_str).map(str::to_string);
+                }
+                Some(crate::artifacts::puzzle3d::mutations::replace_reference_source(reference.id.clone(), source))
+            }
+            "origin" => value.and_then(value_as_vec3).map(|origin| crate::artifacts::puzzle3d::mutations::move_reference(reference.id.clone(), origin)),
+            "widthWorld" => puzzle3d_resolve_number_edit(reference.width_world, value, delta)
+                .map(|width| crate::artifacts::puzzle3d::mutations::resize_reference(reference.id.clone(), width)),
+            _ => {
+                let axis = puzzle3d_axis_index(field, "origin")?;
+                let mut origin = reference.origin;
+                origin[axis] = puzzle3d_resolve_number_edit(origin[axis], value, delta)?;
+                Some(crate::artifacts::puzzle3d::mutations::move_reference(reference.id.clone(), origin))
+            }
+        }
+    }
+
+    fn volume_mutation(command: &Puzzle3dCommand, volume: &crate::artifacts::puzzle3d::Puzzle3dTargetVolume) -> Option<Puzzle3dMutation> {
+        let args = command.args()?;
+        let field = Self::field(command);
+        let value = args.get("value");
+        let delta = args.get("delta");
+        match field {
+            "hidden" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_target_volume_hidden(volume.id.clone(), value)),
+            "locked" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_target_volume_locked(volume.id.clone(), value)),
+            "origin" => value.and_then(value_as_vec3).map(|origin| crate::artifacts::puzzle3d::mutations::move_target_volume(volume.id.clone(), origin)),
+            _ => {
+                if let Some(axis) = puzzle3d_axis_index(field, "origin") {
+                    let mut origin = volume.origin;
+                    origin[axis] = puzzle3d_resolve_number_edit(origin[axis], value, delta)?;
+                    return Some(crate::artifacts::puzzle3d::mutations::move_target_volume(volume.id.clone(), origin));
+                }
+                if let Some(axis) = puzzle3d_axis_index(field, "scale") {
+                    let mut scale = Self::scale(volume.scale);
+                    scale[axis] = puzzle3d_resolve_number_edit(scale[axis], value, delta)?;
+                    return Some(crate::artifacts::puzzle3d::mutations::scale_target_volume(
+                        volume.id.clone(),
+                        Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(scale)),
+                    ));
+                }
+                let axis = puzzle3d_axis_index(field, "orientation")?;
+                let mut orientation = volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                orientation[axis] = puzzle3d_resolve_number_edit(orientation[axis], value, delta)?;
+                Some(crate::artifacts::puzzle3d::mutations::rotate_target_volume(volume.id.clone(), Some(quat_normalize(orientation))))
+            }
+        }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dPatchInspectorWork {
+    fn tool_id(&self) -> &'static str {
+        "patchInspector"
+    }
+
+    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let source = Self::source_len(command, interaction);
+        let document = snapshot.typed();
+        let scan = match Self::entity(command) {
+            "object" => document.objects.len(),
+            "vortex" => document.objects.len().checked_mul(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS)?,
+            "attraction" => document.attractions.len().checked_mul(2)?,
+            "reference" => document.references.len(),
+            "targetVolume" => document.target_volumes.len(),
+            _ => 0,
+        };
+        let items = source.checked_add(scan)?;
+        (source <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle3dPatchInspectorStage::Selection => {
+                if let Some(id) = Self::source_id(command, interaction, self.selection_cursor) {
+                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle3d-patch-inspector-selection-capacity"));
+                    }
+                    self.selected.insert(id.to_string());
+                    self.selection_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-patch-inspector-selection", "Reading inspector target", "Inspektionsziel wird gelesen"));
+                }
+                self.stage = Self::first_stage(Self::entity(command));
+                Ok(Self::progress("puzzle3d-patch-inspector-scan", "Finding inspector target", "Inspektionsziel wird gesucht"))
+            }
+            Puzzle3dPatchInspectorStage::Objects => {
+                let Some(object) = snapshot.typed().objects.get(self.item_cursor) else { return Ok(self.complete()) };
+                self.item_cursor += 1;
+                if self.selected.contains(&object.id) {
+                    if let Some(mutation) = Self::object_mutation(command, object) {
+                        self.push(mutation)?;
+                    }
+                }
+                Ok(Self::progress("puzzle3d-patch-inspector-object", "Patching object", "Objekt wird geändert"))
+            }
+            Puzzle3dPatchInspectorStage::Vortices => {
+                let Some(object) = snapshot.typed().objects.get(self.item_cursor) else { return Ok(self.complete()) };
+                let Some(vortex) = object.vortices.get(self.child_cursor) else {
+                    self.item_cursor += 1;
+                    self.child_cursor = 0;
+                    return Ok(Self::progress("puzzle3d-patch-inspector-vortex-owner", "Advancing vortex owner", "Vortex-Eigentümer wird gewechselt"));
+                };
+                self.child_cursor += 1;
+                if self.selected.contains(&puzzle3d_vortex_full_id(&object.id, &vortex.id)) {
+                    if let Some(mutation) = Self::vortex_mutation(command, &object.id, vortex) {
+                        self.push(mutation)?;
+                    }
+                }
+                Ok(Self::progress("puzzle3d-patch-inspector-vortex", "Patching vortex", "Vortex wird geändert"))
+            }
+            Puzzle3dPatchInspectorStage::Attractions => {
+                let Some(attraction) = snapshot.typed().attractions.get(self.item_cursor) else { return Ok(self.complete()) };
+                self.item_cursor += 1;
+                if !self.selected.contains(&attraction.id) {
+                    return Ok(Self::progress("puzzle3d-patch-inspector-attraction", "Scanning attraction", "Anziehung wird geprüft"));
+                }
+                let field = Self::field(command);
+                if matches!(field, "attracting" | "attracted") {
+                    let Some(value) = command.args().and_then(|args| args.get("value")).and_then(Value::as_str) else {
+                        return Ok(Self::progress("puzzle3d-patch-inspector-attraction", "Skipping malformed attraction", "Fehlerhafte Anziehung wird übersprungen"));
+                    };
+                    let mut next = attraction.clone();
+                    if field == "attracting" {
+                        next.attracting = value.to_string();
+                    } else {
+                        next.attracted = value.to_string();
+                    }
+                    self.push(crate::artifacts::puzzle3d::mutations::disconnect_vortices(attraction.id.clone()))?;
+                    self.pending_attraction = Some(next);
+                    self.stage = Puzzle3dPatchInspectorStage::AttractionReconnect;
+                } else if let Some(mutation) = Self::attraction_geometry(command, attraction) {
+                    self.push(mutation)?;
+                }
+                Ok(Self::progress("puzzle3d-patch-inspector-attraction", "Patching attraction", "Anziehung wird geändert"))
+            }
+            Puzzle3dPatchInspectorStage::AttractionReconnect => {
+                let attraction = self.pending_attraction.take().ok_or_else(|| Fault::from("puzzle3d-patch-inspector-attraction-owner"))?;
+                self.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                    attraction.id,
+                    attraction.attracting,
+                    attraction.attracted,
+                    attraction.gap,
+                    attraction.shift,
+                    attraction.rise,
+                    attraction.rotation,
+                    attraction.turn,
+                    attraction.tilt,
+                    attraction.x,
+                    attraction.y,
+                ))?;
+                self.stage = Puzzle3dPatchInspectorStage::Attractions;
+                Ok(Self::progress("puzzle3d-patch-inspector-attraction-reconnect", "Reconnecting attraction", "Anziehung wird neu verbunden"))
+            }
+            Puzzle3dPatchInspectorStage::References => {
+                let Some(reference) = snapshot.typed().references.get(self.item_cursor) else { return Ok(self.complete()) };
+                self.item_cursor += 1;
+                if self.selected.contains(&reference.id) {
+                    if let Some(mutation) = Self::reference_mutation(command, reference) {
+                        self.push(mutation)?;
+                    }
+                }
+                Ok(Self::progress("puzzle3d-patch-inspector-reference", "Patching reference", "Referenz wird geändert"))
+            }
+            Puzzle3dPatchInspectorStage::Volumes => {
+                let Some(volume) = snapshot.typed().target_volumes.get(self.item_cursor) else { return Ok(self.complete()) };
+                self.item_cursor += 1;
+                if self.selected.contains(&volume.id) {
+                    if let Some(mutation) = Self::volume_mutation(command, volume) {
+                        self.push(mutation)?;
+                    }
+                }
+                Ok(Self::progress("puzzle3d-patch-inspector-volume", "Patching target volume", "Zielvolumen wird geändert"))
+            }
+            Puzzle3dPatchInspectorStage::Complete => Err(Fault::from("puzzle3d-patch-inspector-complete-repolled")),
+            Puzzle3dPatchInspectorStage::Closing => Err(Fault::from("puzzle3d-patch-inspector-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dPatchInspectorStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() || self.pending_attraction.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let selected = {
+            let mut selected = self.selected.extract_if(|_| true);
+            selected.next()
+        };
+        if selected.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dPatchInspectorStage::Closing && self.selected.is_empty() && self.mutations.is_empty() && self.pending_attraction.is_none()
+    }
+}
+
+const PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dWorldRelocateStage {
+    Object,
+    ExistingAttractions,
+    CandidateObject,
+    CandidateVortex,
+    PublishAttraction,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dWorldRelocateSource {
+    object_id: String,
+    vortex_id: String,
+    local_position: [f64; 3],
+    local_direction: [f64; 3],
+    world_position: [f64; 3],
+    object_position: [f64; 3],
+    object_orientation: [f64; 4],
+}
+
+struct Puzzle3dWorldRelocateCandidate {
+    vortex_id: String,
+    local_position: [f64; 3],
+    local_direction: [f64; 3],
+    object_position: [f64; 3],
+    object_orientation: [f64; 4],
+}
+
+struct Puzzle3dWorldRelocateWork {
+    stage: Puzzle3dWorldRelocateStage,
+    object_cursor: usize,
+    vortex_cursor: usize,
+    attraction_cursor: usize,
+    source: Option<Puzzle3dWorldRelocateSource>,
+    candidate: Option<Puzzle3dWorldRelocateCandidate>,
+    existing: HashSet<String>,
+    mutations: Vec<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dWorldRelocateWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dWorldRelocateStage::Object,
+            object_cursor: 0,
+            vortex_cursor: 0,
+            attraction_cursor: 0,
+            source: None,
+            candidate: None,
+            existing: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle3dWorldRelocateWork {
+    fn position(command: &Puzzle3dCommand) -> Option<[f64; 3]> {
+        command.args().and_then(|args| args.get("position")).and_then(value_as_vec3)
+    }
+
+    fn edge(first: &str, second: &str) -> String {
+        if first <= second {
+            format!("{first}\0{second}")
+        } else {
+            format!("{second}\0{first}")
+        }
+    }
+
+    fn world_position(origin: [f64; 3], orientation: [f64; 4], local: [f64; 3]) -> [f64; 3] {
+        let rotated = quat_rotate_vector(orientation, local);
+        [origin[0] + rotated[0], origin[1] + rotated[1], origin[2] + rotated[2]]
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        self.stage = Puzzle3dWorldRelocateStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+            artifact_mutations: std::mem::take(&mut self.mutations),
+            ui_scope: UiDirtyScope::Full,
+            ..Default::default()
+        })
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dWorldRelocateWork {
+    fn tool_id(&self) -> &'static str {
+        "worldRelocate"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let document = snapshot.typed();
+        let object_vortices = document.objects.len().checked_mul(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT)?;
+        let items = document.objects.len().checked_mul(2)?.checked_add(object_vortices)?.checked_add(document.attractions.len())?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle3dWorldRelocateStage::Object => {
+                let requested = command.args().and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
+                let Some(position) = Self::position(command) else { return Ok(self.complete()) };
+                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else { return Ok(self.complete()) };
+                self.object_cursor += 1;
+                if object.id == requested && !object.locked && !object.hidden {
+                    self.mutations.push(crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), position));
+                    if let Some(vortex) = object.vortices.first() {
+                        let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                        self.source = Some(Puzzle3dWorldRelocateSource {
+                            object_id: object.id.clone(),
+                            vortex_id: puzzle3d_vortex_full_id(&object.id, &vortex.id),
+                            local_position: vortex.position,
+                            local_direction: vortex.direction.unwrap_or([0.0, 0.0, -1.0]),
+                            world_position: Self::world_position(position, orientation, vortex.position),
+                            object_position: position,
+                            object_orientation: orientation,
+                        });
+                    }
+                    self.attraction_cursor = 0;
+                    self.stage = Puzzle3dWorldRelocateStage::ExistingAttractions;
+                }
+                Ok(Self::progress("puzzle3d-world-relocate-object", "Finding moved object", "Verschobenes Objekt wird gesucht"))
+            }
+            Puzzle3dWorldRelocateStage::ExistingAttractions => {
+                let Some(attraction) = snapshot.typed().attractions.get(self.attraction_cursor) else {
+                    self.object_cursor = 0;
+                    self.stage = Puzzle3dWorldRelocateStage::CandidateObject;
+                    return Ok(Self::progress("puzzle3d-world-relocate-candidate-object", "Finding nearby object", "Nahes Objekt wird gesucht"));
+                };
+                if self.existing.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+                    return Err(Fault::from("puzzle3d-world-relocate-attraction-capacity"));
+                }
+                self.existing.insert(Self::edge(&attraction.attracting, &attraction.attracted));
+                self.attraction_cursor += 1;
+                Ok(Self::progress("puzzle3d-world-relocate-existing-attraction", "Reading existing attraction", "Bestehende Anziehung wird gelesen"))
+            }
+            Puzzle3dWorldRelocateStage::CandidateObject => {
+                let Some(source) = self.source.as_ref() else { return Ok(self.complete()) };
+                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else { return Ok(self.complete()) };
+                if object.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
+                    return Err(Fault::from("puzzle3d-world-relocate-vortex-capacity"));
+                }
+                self.vortex_cursor = 0;
+                if object.id == source.object_id {
+                    self.object_cursor += 1;
+                } else {
+                    self.stage = Puzzle3dWorldRelocateStage::CandidateVortex;
+                }
+                Ok(Self::progress("puzzle3d-world-relocate-candidate-object", "Scanning nearby object", "Nahes Objekt wird geprüft"))
+            }
+            Puzzle3dWorldRelocateStage::CandidateVortex => {
+                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle3d-world-relocate-source-owner"))?;
+                let object = snapshot.typed().objects.get(self.object_cursor).ok_or_else(|| Fault::from("puzzle3d-world-relocate-object-cursor"))?;
+                let Some(vortex) = object.vortices.get(self.vortex_cursor) else {
+                    self.object_cursor += 1;
+                    self.stage = Puzzle3dWorldRelocateStage::CandidateObject;
+                    return Ok(Self::progress("puzzle3d-world-relocate-candidate-object", "Advancing nearby object", "Nächstes nahes Objekt wird geprüft"));
+                };
+                self.vortex_cursor += 1;
+                let vortex_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+                let edge = Self::edge(&source.vortex_id, &vortex_id);
+                if vortex_id == source.vortex_id || self.existing.contains(&edge) {
+                    return Ok(Self::progress("puzzle3d-world-relocate-candidate-vortex", "Skipping connected vortex", "Verbundener Vortex wird übersprungen"));
+                }
+                let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                let world = Self::world_position(object.origin, orientation, vortex.position);
+                let delta = [source.world_position[0] - world[0], source.world_position[1] - world[1], source.world_position[2] - world[2]];
+                let distance = (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt();
+                if distance <= config.proximity_radius {
+                    self.candidate = Some(Puzzle3dWorldRelocateCandidate {
+                        vortex_id,
+                        local_position: vortex.position,
+                        local_direction: vortex.direction.unwrap_or([0.0, 0.0, -1.0]),
+                        object_position: object.origin,
+                        object_orientation: orientation,
+                    });
+                    self.stage = Puzzle3dWorldRelocateStage::PublishAttraction;
+                }
+                Ok(Self::progress("puzzle3d-world-relocate-candidate-vortex", "Measuring nearby vortex", "Naher Vortex wird gemessen"))
+            }
+            Puzzle3dWorldRelocateStage::PublishAttraction => {
+                let source = self.source.as_ref().ok_or_else(|| Fault::from("puzzle3d-world-relocate-source-owner"))?;
+                let candidate = self.candidate.take().ok_or_else(|| Fault::from("puzzle3d-world-relocate-candidate-owner"))?;
+                let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(
+                    candidate.object_position,
+                    candidate.object_orientation,
+                    candidate.local_position,
+                    candidate.local_direction,
+                    source.local_position,
+                    source.local_direction,
+                    source.object_position,
+                    source.object_orientation,
+                );
+                let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+                self.mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                    id,
+                    candidate.vortex_id.clone(),
+                    source.vortex_id.clone(),
+                    gap,
+                    shift,
+                    rise,
+                    rotation,
+                    turn,
+                    tilt,
+                    0.0,
+                    0.0,
+                ));
+                self.existing.insert(Self::edge(&source.vortex_id, &candidate.vortex_id));
+                self.stage = Puzzle3dWorldRelocateStage::CandidateVortex;
+                Ok(Self::progress("puzzle3d-world-relocate-publish-attraction", "Connecting nearby vortex", "Naher Vortex wird verbunden"))
+            }
+            Puzzle3dWorldRelocateStage::Complete => Err(Fault::from("puzzle3d-world-relocate-complete-repolled")),
+            Puzzle3dWorldRelocateStage::Closing => Err(Fault::from("puzzle3d-world-relocate-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dWorldRelocateStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() || self.candidate.take().is_some() || self.source.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let edge = {
+            let mut existing = self.existing.extract_if(|_| true);
+            existing.next()
+        };
+        if edge.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dWorldRelocateStage::Closing
+            && self.source.is_none()
+            && self.candidate.is_none()
+            && self.existing.is_empty()
+            && self.mutations.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dCreateAttractionStage {
+    Existing,
+    Attracting,
+    Attracted,
+    Compatibility,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dAttractionEndpoint {
+    vortex_id: String,
+    vortex_kind: Option<String>,
+    local_position: [f64; 3],
+    local_direction: [f64; 3],
+    object_position: [f64; 3],
+    object_orientation: [f64; 4],
+}
+
+struct Puzzle3dCreateAttractionWork {
+    stage: Puzzle3dCreateAttractionStage,
+    item_cursor: usize,
+    child_cursor: usize,
+    compatibility_cursor: usize,
+    attracting: Option<Puzzle3dAttractionEndpoint>,
+    attracted: Option<Puzzle3dAttractionEndpoint>,
+    compatible: bool,
+}
+
+impl Default for Puzzle3dCreateAttractionWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dCreateAttractionStage::Existing,
+            item_cursor: 0,
+            child_cursor: 0,
+            compatibility_cursor: 0,
+            attracting: None,
+            attracted: None,
+            compatible: false,
+        }
+    }
+}
+
+impl Puzzle3dCreateAttractionWork {
+    fn ids(command: &Puzzle3dCommand) -> (&str, &str) {
+        let args = command.args();
+        (
+            args.and_then(|args| args.get("attracting")).and_then(Value::as_str).unwrap_or(""),
+            args.and_then(|args| args.get("attracted")).and_then(Value::as_str).unwrap_or(""),
+        )
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn endpoint(
+        object: &crate::artifacts::puzzle3d::Puzzle3dObject,
+        vortex: &crate::artifacts::puzzle3d::Puzzle3dVortex,
+    ) -> Puzzle3dAttractionEndpoint {
+        Puzzle3dAttractionEndpoint {
+            vortex_id: puzzle3d_vortex_full_id(&object.id, &vortex.id),
+            vortex_kind: vortex.vortex_kind.clone(),
+            local_position: vortex.position,
+            local_direction: vortex.direction.unwrap_or([0.0, 0.0, -1.0]),
+            object_position: object.origin,
+            object_orientation: object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+        }
+    }
+
+    fn scan_endpoint(
+        &mut self,
+        snapshot: &Puzzle3dPlaySnapshot,
+        requested: &str,
+    ) -> Result<Option<Puzzle3dAttractionEndpoint>, Fault> {
+        let Some(object) = snapshot.typed().objects.get(self.item_cursor) else {
+            return Ok(None);
+        };
+        if object.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
+            return Err(Fault::from("puzzle3d-create-attraction-vortex-capacity"));
+        }
+        let Some(vortex) = object.vortices.get(self.child_cursor) else {
+            self.item_cursor += 1;
+            self.child_cursor = 0;
+            return Ok(None);
+        };
+        self.child_cursor += 1;
+        Ok((puzzle3d_vortex_full_id(&object.id, &vortex.id) == requested).then(|| Self::endpoint(object, vortex)))
+    }
+
+    fn begin_endpoint_scan(&mut self, stage: Puzzle3dCreateAttractionStage) {
+        self.item_cursor = 0;
+        self.child_cursor = 0;
+        self.stage = stage;
+    }
+
+    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        self.stage = Puzzle3dCreateAttractionStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default())
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dCreateAttractionWork {
+    fn tool_id(&self) -> &'static str {
+        "createAttraction"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let document = snapshot.typed();
+        let endpoint_scans = document.objects.len().checked_mul(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT)?.checked_mul(2)?;
+        let items = document.attractions.len().checked_add(endpoint_scans)?.checked_add(document.meta.kind_compatibility.len())?.checked_add(1)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let (attracting_id, attracted_id) = Self::ids(command);
+        if attracting_id.is_empty() || attracted_id.is_empty() || attracting_id == attracted_id {
+            return Ok(self.complete());
+        }
+        match self.stage {
+            Puzzle3dCreateAttractionStage::Existing => {
+                let Some(attraction) = snapshot.typed().attractions.get(self.item_cursor) else {
+                    self.begin_endpoint_scan(Puzzle3dCreateAttractionStage::Attracting);
+                    return Ok(Self::progress("puzzle3d-create-attraction-attracting", "Finding attracting vortex", "Anziehender Vortex wird gesucht"));
+                };
+                self.item_cursor += 1;
+                if (attraction.attracting == attracting_id && attraction.attracted == attracted_id)
+                    || (attraction.attracting == attracted_id && attraction.attracted == attracting_id)
+                {
+                    return Ok(self.complete());
+                }
+                Ok(Self::progress("puzzle3d-create-attraction-existing", "Checking existing attraction", "Bestehende Anziehung wird geprüft"))
+            }
+            Puzzle3dCreateAttractionStage::Attracting => {
+                if self.item_cursor >= snapshot.typed().objects.len() {
+                    return Ok(self.complete());
+                }
+                if let Some(endpoint) = self.scan_endpoint(snapshot, attracting_id)? {
+                    self.attracting = Some(endpoint);
+                    self.begin_endpoint_scan(Puzzle3dCreateAttractionStage::Attracted);
+                }
+                Ok(Self::progress("puzzle3d-create-attraction-attracting", "Scanning attracting vortex", "Anziehender Vortex wird geprüft"))
+            }
+            Puzzle3dCreateAttractionStage::Attracted => {
+                if self.item_cursor >= snapshot.typed().objects.len() {
+                    return Ok(self.complete());
+                }
+                if let Some(endpoint) = self.scan_endpoint(snapshot, attracted_id)? {
+                    self.attracted = Some(endpoint);
+                    self.compatibility_cursor = 0;
+                    self.compatible = snapshot.typed().meta.kind_compatibility.is_empty();
+                    self.stage = Puzzle3dCreateAttractionStage::Compatibility;
+                }
+                Ok(Self::progress("puzzle3d-create-attraction-attracted", "Scanning attracted vortex", "Angezogener Vortex wird geprüft"))
+            }
+            Puzzle3dCreateAttractionStage::Compatibility => {
+                let attracting_kind = self.attracting.as_ref().and_then(|endpoint| endpoint.vortex_kind.as_deref());
+                let attracted_kind = self.attracted.as_ref().and_then(|endpoint| endpoint.vortex_kind.as_deref());
+                let (Some(attracting_kind), Some(attracted_kind)) = (attracting_kind, attracted_kind) else {
+                    return Ok(self.complete());
+                };
+                let Some(row) = snapshot.typed().meta.kind_compatibility.get(self.compatibility_cursor) else {
+                    if self.compatible {
+                        self.stage = Puzzle3dCreateAttractionStage::Publish;
+                        return Ok(Self::progress("puzzle3d-create-attraction-publish", "Preparing attraction", "Anziehung wird vorbereitet"));
+                    }
+                    return Ok(self.complete());
+                };
+                self.compatibility_cursor += 1;
+                self.compatible |= (row.source == attracting_kind && row.target == attracted_kind)
+                    || (row.bidirectional && row.source == attracted_kind && row.target == attracting_kind);
+                Ok(Self::progress("puzzle3d-create-attraction-compatibility", "Checking vortex compatibility", "Vortex-Kompatibilität wird geprüft"))
+            }
+            Puzzle3dCreateAttractionStage::Publish => {
+                let attracting = self.attracting.take().ok_or_else(|| Fault::from("puzzle3d-create-attraction-attracting-owner"))?;
+                let attracted = self.attracted.take().ok_or_else(|| Fault::from("puzzle3d-create-attraction-attracted-owner"))?;
+                let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(
+                    attracting.object_position,
+                    attracting.object_orientation,
+                    attracting.local_position,
+                    attracting.local_direction,
+                    attracted.local_position,
+                    attracted.local_direction,
+                    attracted.object_position,
+                    attracted.object_orientation,
+                );
+                let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+                self.stage = Puzzle3dCreateAttractionStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: vec![crate::artifacts::puzzle3d::mutations::connect_vortices(
+                        id,
+                        attracting.vortex_id,
+                        attracted.vortex_id,
+                        gap,
+                        shift,
+                        rise,
+                        rotation,
+                        turn,
+                        tilt,
+                        0.0,
+                        0.0,
+                    )],
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dCreateAttractionStage::Complete => Err(Fault::from("puzzle3d-create-attraction-complete-repolled")),
+            Puzzle3dCreateAttractionStage::Closing => Err(Fault::from("puzzle3d-create-attraction-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dCreateAttractionStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.attracting.take().is_some() || self.attracted.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dCreateAttractionStage::Closing && self.attracting.is_none() && self.attracted.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dSetActiveExampleStage {
+    DeleteAttractions,
+    DeleteObjects,
+    DeleteVolumes,
+    DeleteReferences,
+    DeleteCompatibility,
+    Domain,
+    Catalogs,
+    CreateObjects,
+    CreateAttractions,
+    CreateVolumes,
+    CreateReferences,
+    CreateCompatibility,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dSetActiveExampleWork {
+    stage: Puzzle3dSetActiveExampleStage,
+    cursor: usize,
+    mutations: Vec<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dSetActiveExampleWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dSetActiveExampleStage::DeleteAttractions,
+            cursor: 0,
+            mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS),
+        }
+    }
+}
+
+impl Puzzle3dSetActiveExampleWork {
+    fn target(command: &Puzzle3dCommand) -> Option<&'static Puzzle3dFixture> {
+        match command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or("") {
+            "" => Some(&EMPTY_EXAMPLE_FIXTURE),
+            PUZZLE3D_EXAMPLE_CONCRETE_FOREST | "concrete" => Some(&CONCRETE_FOREST_EXAMPLE_FIXTURE),
+            PUZZLE3D_EXAMPLE_NAKAGIN | "nakagin" => Some(&NAKAGIN_EXAMPLE_FIXTURE),
+            _ => None,
+        }
+    }
+
+    fn compatibility_rows(target: &Puzzle3dFixture) -> &[Value] {
+        target.meta.kind_compatibility.as_ref().and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn push(&mut self, mutation: Puzzle3dMutation) -> Result<(), Fault> {
+        if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle3d-set-active-example-output-capacity"));
+        }
+        self.mutations.push(mutation);
+        Ok(())
+    }
+
+    fn advance(&mut self, stage: Puzzle3dSetActiveExampleStage) {
+        self.cursor = 0;
+        self.stage = stage;
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dSetActiveExampleWork {
+    fn tool_id(&self) -> &'static str {
+        "setActiveExample"
+    }
+
+    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let target = Self::target(command)?;
+        let document = snapshot.typed();
+        let items = document
+            .attractions
+            .len()
+            .checked_add(document.objects.len())?
+            .checked_add(document.target_volumes.len())?
+            .checked_add(document.references.len())?
+            .checked_add(document.meta.kind_compatibility.len())?
+            .checked_add(target.attractions.len())?
+            .checked_add(target.objects.len())?
+            .checked_add(target.target_volumes.len())?
+            .checked_add(target.references.len())?
+            .checked_add(Self::compatibility_rows(target).len())?
+            .checked_add(3)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let Some(target) = Self::target(command) else { return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default())) };
+        match self.stage {
+            Puzzle3dSetActiveExampleStage::DeleteAttractions => {
+                if let Some(attraction) = snapshot.typed().attractions.get(self.cursor) {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle3d::mutations::disconnect_vortices(attraction.id.clone()))?;
+                    return Ok(Self::progress("puzzle3d-example-delete-attraction", "Removing old attraction", "Alte Anziehung wird entfernt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::DeleteObjects);
+                Ok(Self::progress("puzzle3d-example-delete-object", "Removing old object", "Altes Objekt wird entfernt"))
+            }
+            Puzzle3dSetActiveExampleStage::DeleteObjects => {
+                if let Some(object) = snapshot.typed().objects.get(self.cursor) {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle3d::mutations::delete_object(object.id.clone()))?;
+                    return Ok(Self::progress("puzzle3d-example-delete-object", "Removing old object", "Altes Objekt wird entfernt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::DeleteVolumes);
+                Ok(Self::progress("puzzle3d-example-delete-volume", "Removing old target volume", "Altes Zielvolumen wird entfernt"))
+            }
+            Puzzle3dSetActiveExampleStage::DeleteVolumes => {
+                if let Some(volume) = snapshot.typed().target_volumes.get(self.cursor) {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle3d::mutations::delete_target_volume(volume.id.clone()))?;
+                    return Ok(Self::progress("puzzle3d-example-delete-volume", "Removing old target volume", "Altes Zielvolumen wird entfernt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::DeleteReferences);
+                Ok(Self::progress("puzzle3d-example-delete-reference", "Removing old reference", "Alte Referenz wird entfernt"))
+            }
+            Puzzle3dSetActiveExampleStage::DeleteReferences => {
+                if let Some(reference) = snapshot.typed().references.get(self.cursor) {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle3d::mutations::delete_reference(reference.id.clone()))?;
+                    return Ok(Self::progress("puzzle3d-example-delete-reference", "Removing old reference", "Alte Referenz wird entfernt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::DeleteCompatibility);
+                Ok(Self::progress("puzzle3d-example-delete-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
+            }
+            Puzzle3dSetActiveExampleStage::DeleteCompatibility => {
+                if let Some(row) = snapshot.typed().meta.kind_compatibility.get(self.cursor) {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle3d::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()))?;
+                    return Ok(Self::progress("puzzle3d-example-delete-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::Domain);
+                Ok(Self::progress("puzzle3d-example-domain", "Updating document domain", "Dokumentdomäne wird aktualisiert"))
+            }
+            Puzzle3dSetActiveExampleStage::Domain => {
+                self.push(crate::artifacts::puzzle3d::mutations::change_domain(target.domain.clone()))?;
+                self.advance(Puzzle3dSetActiveExampleStage::Catalogs);
+                Ok(Self::progress("puzzle3d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
+            }
+            Puzzle3dSetActiveExampleStage::Catalogs => {
+                let catalogs = target
+                    .meta
+                    .kind_catalogs
+                    .as_ref()
+                    .map(|catalogs| serde_json::from_value(catalogs.clone()))
+                    .transpose()
+                    .map_err(|_| Fault::from("puzzle3d-set-active-example-catalogs-malformed"))?;
+                self.push(crate::artifacts::puzzle3d::mutations::replace_kind_catalogs(catalogs))?;
+                self.advance(Puzzle3dSetActiveExampleStage::CreateObjects);
+                Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"))
+            }
+            Puzzle3dSetActiveExampleStage::CreateObjects => {
+                if let Some(object) = target.objects.get(self.cursor) {
+                    self.cursor += 1;
+                    let value = serde_json::to_value(object).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
+                    let object = serde_json::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
+                    self.push(crate::artifacts::puzzle3d::mutations::create_object(object, None))?;
+                    return Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::CreateAttractions);
+                Ok(Self::progress("puzzle3d-example-create-attraction", "Adding example attraction", "Beispielanziehung wird hinzugefügt"))
+            }
+            Puzzle3dSetActiveExampleStage::CreateAttractions => {
+                if let Some(attraction) = target.attractions.get(self.cursor) {
+                    self.cursor += 1;
+                    self.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                        attraction.id.clone(),
+                        attraction.attracting.clone(),
+                        attraction.attracted.clone(),
+                        attraction.gap,
+                        attraction.shift,
+                        attraction.rise,
+                        attraction.rotation,
+                        attraction.turn,
+                        attraction.tilt,
+                        0.0,
+                        0.0,
+                    ))?;
+                    return Ok(Self::progress("puzzle3d-example-create-attraction", "Adding example attraction", "Beispielanziehung wird hinzugefügt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::CreateVolumes);
+                Ok(Self::progress("puzzle3d-example-create-volume", "Adding example target volume", "Beispielzielvolumen wird hinzugefügt"))
+            }
+            Puzzle3dSetActiveExampleStage::CreateVolumes => {
+                if let Some(volume) = target.target_volumes.get(self.cursor) {
+                    self.cursor += 1;
+                    let value = serde_json::to_value(volume).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
+                    let volume = serde_json::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
+                    self.push(crate::artifacts::puzzle3d::mutations::create_target_volume(volume, None))?;
+                    return Ok(Self::progress("puzzle3d-example-create-volume", "Adding example target volume", "Beispielzielvolumen wird hinzugefügt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::CreateReferences);
+                Ok(Self::progress("puzzle3d-example-create-reference", "Adding example reference", "Beispielreferenz wird hinzugefügt"))
+            }
+            Puzzle3dSetActiveExampleStage::CreateReferences => {
+                if let Some(reference) = target.references.get(self.cursor) {
+                    self.cursor += 1;
+                    let value = serde_json::to_value(reference).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
+                    let reference = serde_json::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
+                    self.push(crate::artifacts::puzzle3d::mutations::create_reference(reference, None))?;
+                    return Ok(Self::progress("puzzle3d-example-create-reference", "Adding example reference", "Beispielreferenz wird hinzugefügt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::CreateCompatibility);
+                Ok(Self::progress("puzzle3d-example-create-compatibility", "Adding example compatibility", "Beispielkompatibilität wird hinzugefügt"))
+            }
+            Puzzle3dSetActiveExampleStage::CreateCompatibility => {
+                if let Some(row) = Self::compatibility_rows(target).get(self.cursor).cloned() {
+                    self.cursor += 1;
+                    let row: crate::artifacts::puzzle3d::Puzzle3dKindCompatibility =
+                        serde_json::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
+                    self.push(crate::artifacts::puzzle3d::mutations::connect_kind_compatibility(
+                        row.source,
+                        row.target,
+                        row.bidirectional,
+                        row.important,
+                        row.specificity,
+                    ))?;
+                    return Ok(Self::progress("puzzle3d-example-create-compatibility", "Adding example compatibility", "Beispielkompatibilität wird hinzugefügt"));
+                }
+                self.advance(Puzzle3dSetActiveExampleStage::Publish);
+                Ok(Self::progress("puzzle3d-example-publish", "Publishing example", "Beispiel wird veröffentlicht"))
+            }
+            Puzzle3dSetActiveExampleStage::Publish => {
+                self.stage = Puzzle3dSetActiveExampleStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    config_mutations: vec![Puzzle3dConfigMutation::Snapshot { config: Puzzle3dRuntime::default() }],
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dSetActiveExampleStage::Complete => Err(Fault::from("puzzle3d-set-active-example-complete-repolled")),
+            Puzzle3dSetActiveExampleStage::Closing => Err(Fault::from("puzzle3d-set-active-example-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dSetActiveExampleStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dSetActiveExampleStage::Closing && self.mutations.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dAddBrushObjectStage {
+    Decode,
+    Kind,
+    Representation,
+    Vortices,
+    ExistingAttractions,
+    PublishObject,
+    PublishAttraction,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dBrushPayloadOwner {
+    target_vortex_id: String,
+    object_kind_id: String,
+    source_vortex_index: usize,
+    origin: [f64; 3],
+    orientation: [f64; 4],
+    scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>,
+}
+
+struct Puzzle3dAddBrushObjectWork {
+    stage: Puzzle3dAddBrushObjectStage,
+    kind_cursor: usize,
+    representation_cursor: usize,
+    vortex_cursor: usize,
+    attraction_cursor: usize,
+    kind_index: Option<usize>,
+    payload: Option<Puzzle3dBrushPayloadOwner>,
+    object_id: Option<String>,
+    mesh_url: Option<String>,
+    vortices: Vec<crate::artifacts::puzzle3d::Puzzle3dVortex>,
+    mutations: Vec<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dAddBrushObjectWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dAddBrushObjectStage::Decode,
+            kind_cursor: 0,
+            representation_cursor: 0,
+            vortex_cursor: 0,
+            attraction_cursor: 0,
+            kind_index: None,
+            payload: None,
+            object_id: None,
+            mesh_url: None,
+            vortices: Vec::with_capacity(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT),
+            mutations: Vec::with_capacity(2),
+        }
+    }
+}
+
+impl Puzzle3dAddBrushObjectWork {
+    fn vector3(value: Option<&Value>) -> Option<[f64; 3]> {
+        let values = value.and_then(Value::as_array)?;
+        Some([
+            values.first().and_then(Value::as_f64)?,
+            values.get(1).and_then(Value::as_f64)?,
+            values.get(2).and_then(Value::as_f64)?,
+        ])
+    }
+
+    fn quaternion(value: Option<&Value>) -> Option<[f64; 4]> {
+        let values = value.and_then(Value::as_array)?;
+        Some([
+            values.first().and_then(Value::as_f64)?,
+            values.get(1).and_then(Value::as_f64)?,
+            values.get(2).and_then(Value::as_f64)?,
+            values.get(3).and_then(Value::as_f64)?,
+        ])
+    }
+
+    fn scale(value: Option<&Value>) -> Option<crate::artifacts::puzzle3d::Puzzle3dScale> {
+        match value {
+            Some(Value::Number(value)) => value.as_f64().map(crate::artifacts::puzzle3d::Puzzle3dScale::Uniform),
+            Some(Value::Array(values)) if values.len() >= 3 => Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([
+                values.first().and_then(Value::as_f64)?,
+                values.get(1).and_then(Value::as_f64)?,
+                values.get(2).and_then(Value::as_f64)?,
+            ])),
+            _ => None,
+        }
+    }
+
+    fn decode(command: &Puzzle3dCommand) -> Option<Puzzle3dBrushPayloadOwner> {
+        let args = command.args()?;
+        let target_vortex_id = args.get("targetVortexFullId").and_then(Value::as_str)?.to_string();
+        let object_kind_id = args.get("objectKindId").and_then(Value::as_str)?.to_string();
+        let source_vortex_index = args.get("sourceVortexIndex").and_then(Value::as_u64)? as usize;
+        Some(Puzzle3dBrushPayloadOwner {
+            target_vortex_id,
+            object_kind_id,
+            source_vortex_index,
+            origin: Self::vector3(args.get("origin"))?,
+            orientation: Self::quaternion(args.get("orientation"))?,
+            scale: Self::scale(args.get("scale")),
+        })
+    }
+
+    fn object_id(snapshot: &Puzzle3dPlaySnapshot, payload: &Puzzle3dBrushPayloadOwner) -> String {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        snapshot.typed().objects.len().hash(&mut hasher);
+        payload.target_vortex_id.hash(&mut hasher);
+        payload.object_kind_id.hash(&mut hasher);
+        payload.source_vortex_index.hash(&mut hasher);
+        for value in payload.origin.into_iter().chain(payload.orientation) {
+            value.to_bits().hash(&mut hasher);
+        }
+        format!("puzzle3d.brush.{:016x}", hasher.finish())
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dAddBrushObjectWork {
+    fn tool_id(&self) -> &'static str {
+        "addBrushObject"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let catalogs = snapshot.typed().meta.kind_catalogs.as_ref()?;
+        let items = catalogs
+            .objects
+            .len()
+            .checked_add(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT.checked_mul(2)?)?
+            .checked_add(snapshot.typed().attractions.len())?
+            .checked_add(4)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let Some(catalogs) = snapshot.typed().meta.kind_catalogs.as_ref() else {
+            self.stage = Puzzle3dAddBrushObjectStage::Complete;
+            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+        };
+        match self.stage {
+            Puzzle3dAddBrushObjectStage::Decode => {
+                let Some(payload) = Self::decode(command) else {
+                    self.stage = Puzzle3dAddBrushObjectStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                self.object_id = Some(Self::object_id(snapshot, &payload));
+                self.payload = Some(payload);
+                self.stage = Puzzle3dAddBrushObjectStage::Kind;
+                Ok(Self::progress("puzzle3d-brush-kind", "Finding brush object kind", "Pinselobjektart wird gesucht"))
+            }
+            Puzzle3dAddBrushObjectStage::Kind => {
+                let payload = self.payload.as_ref().ok_or_else(|| Fault::from("puzzle3d-brush-payload-owner"))?;
+                let Some(kind) = catalogs.objects.get(self.kind_cursor) else {
+                    self.stage = Puzzle3dAddBrushObjectStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                if kind.id == payload.object_kind_id {
+                    if kind.representations.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT || kind.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
+                        return Err(Fault::from("puzzle3d-brush-catalog-capacity"));
+                    }
+                    self.kind_index = Some(self.kind_cursor);
+                    self.stage = Puzzle3dAddBrushObjectStage::Representation;
+                } else {
+                    self.kind_cursor += 1;
+                }
+                Ok(Self::progress("puzzle3d-brush-kind", "Scanning brush object kind", "Pinselobjektart wird geprüft"))
+            }
+            Puzzle3dAddBrushObjectStage::Representation => {
+                let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-brush-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-brush-kind-cursor"))?;
+                let Some(representation) = kind.representations.get(self.representation_cursor) else {
+                    self.stage = Puzzle3dAddBrushObjectStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                };
+                self.representation_cursor += 1;
+                if !representation.url.is_empty() {
+                    self.mesh_url = Some(representation.url.clone());
+                    self.stage = Puzzle3dAddBrushObjectStage::Vortices;
+                }
+                Ok(Self::progress("puzzle3d-brush-representation", "Finding brush mesh", "Pinsel-Mesh wird gesucht"))
+            }
+            Puzzle3dAddBrushObjectStage::Vortices => {
+                let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-brush-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-brush-kind-cursor"))?;
+                let Some(template) = kind.vortices.get(self.vortex_cursor) else {
+                    let payload = self.payload.as_ref().ok_or_else(|| Fault::from("puzzle3d-brush-payload-owner"))?;
+                    if payload.source_vortex_index >= self.vortices.len() {
+                        self.stage = Puzzle3dAddBrushObjectStage::Complete;
+                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                    }
+                    self.stage = Puzzle3dAddBrushObjectStage::ExistingAttractions;
+                    return Ok(Self::progress("puzzle3d-brush-existing-attraction", "Checking brush target", "Pinselziel wird geprüft"));
+                };
+                let object_id = self.object_id.as_ref().ok_or_else(|| Fault::from("puzzle3d-brush-object-owner"))?;
+                let index = self.vortex_cursor;
+                self.vortex_cursor += 1;
+                self.vortices.push(crate::artifacts::puzzle3d::Puzzle3dVortex {
+                    id: format!("{object_id}:v{index}"),
+                    label: None,
+                    vortex_kind: template.vortex_kind.clone(),
+                    position: template.point,
+                    direction: Some(template.direction),
+                    radius: template.radius,
+                    hidden: false,
+                    locked: false,
+                });
+                Ok(Self::progress("puzzle3d-brush-vortex", "Building brush vortex", "Pinsel-Vortex wird aufgebaut"))
+            }
+            Puzzle3dAddBrushObjectStage::ExistingAttractions => {
+                let payload = self.payload.as_ref().ok_or_else(|| Fault::from("puzzle3d-brush-payload-owner"))?;
+                let source = self.vortices.get(payload.source_vortex_index).ok_or_else(|| Fault::from("puzzle3d-brush-source-vortex-owner"))?;
+                let Some(attraction) = snapshot.typed().attractions.get(self.attraction_cursor) else {
+                    self.stage = Puzzle3dAddBrushObjectStage::PublishObject;
+                    return Ok(Self::progress("puzzle3d-brush-publish-object", "Preparing brush object", "Pinselobjekt wird vorbereitet"));
+                };
+                self.attraction_cursor += 1;
+                if attraction.attracting == payload.target_vortex_id || attraction.attracted == source.id {
+                    self.stage = Puzzle3dAddBrushObjectStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                }
+                Ok(Self::progress("puzzle3d-brush-existing-attraction", "Scanning brush target", "Pinselziel wird geprüft"))
+            }
+            Puzzle3dAddBrushObjectStage::PublishObject => {
+                let payload = self.payload.as_ref().ok_or_else(|| Fault::from("puzzle3d-brush-payload-owner"))?;
+                let object = crate::artifacts::puzzle3d::Puzzle3dObject {
+                    id: self.object_id.clone().ok_or_else(|| Fault::from("puzzle3d-brush-object-owner"))?,
+                    label: None,
+                    object_kind: Some(payload.object_kind_id.clone()),
+                    anchor: Default::default(),
+                    origin: payload.origin,
+                    orientation: Some(payload.orientation),
+                    scale: payload.scale,
+                    mesh_url: self.mesh_url.clone(),
+                    vortices: std::mem::take(&mut self.vortices),
+                    hidden: false,
+                    locked: false,
+                };
+                self.mutations.push(crate::artifacts::puzzle3d::mutations::create_object(object, None));
+                self.stage = Puzzle3dAddBrushObjectStage::PublishAttraction;
+                Ok(Self::progress("puzzle3d-brush-publish-object", "Publishing brush object", "Pinselobjekt wird veröffentlicht"))
+            }
+            Puzzle3dAddBrushObjectStage::PublishAttraction => {
+                let payload = self.payload.take().ok_or_else(|| Fault::from("puzzle3d-brush-payload-owner"))?;
+                let object_id = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-brush-object-owner"))?;
+                let attracted = format!("{object_id}:v{}", payload.source_vortex_index);
+                let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_id);
+                self.mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                    attraction_id,
+                    payload.target_vortex_id,
+                    attracted,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ));
+                self.stage = Puzzle3dAddBrushObjectStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dAddBrushObjectStage::Complete => Err(Fault::from("puzzle3d-brush-complete-repolled")),
+            Puzzle3dAddBrushObjectStage::Closing => Err(Fault::from("puzzle3d-brush-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dAddBrushObjectStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some()
+            || self.vortices.pop().is_some()
+            || self.payload.take().is_some()
+            || self.object_id.take().is_some()
+            || self.mesh_url.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dAddBrushObjectStage::Closing
+            && self.payload.is_none()
+            && self.object_id.is_none()
+            && self.mesh_url.is_none()
+            && self.vortices.is_empty()
+            && self.mutations.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dFocusSelectionStage {
+    Selection,
+    SumObjects,
+    DistanceObjects,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dFocusSelectionWork {
+    stage: Puzzle3dFocusSelectionStage,
+    selection_cursor: usize,
+    object_cursor: usize,
+    selected: HashSet<String>,
+    center: [f64; 3],
+    matched: usize,
+    maximum_distance: f64,
+}
+
+impl Default for Puzzle3dFocusSelectionWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dFocusSelectionStage::Selection,
+            selection_cursor: 0,
+            object_cursor: 0,
+            selected: HashSet::with_capacity(crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS),
+            center: [0.0; 3],
+            matched: 0,
+            maximum_distance: 1.0,
+        }
+    }
+}
+
+impl Puzzle3dFocusSelectionWork {
+    fn selection(interaction: &protocol::InteractionState) -> &[String] {
+        interaction
+            .selection
+            .get(PUZZLE3D_INTERACTION_DOMAIN)
+            .filter(|selection| selection.granularity == PUZZLE3D_GRANULARITY_OBJECT)
+            .map(|selection| selection.ids.as_slice())
+            .unwrap_or_default()
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dFocusSelectionWork {
+    fn tool_id(&self) -> &'static str {
+        "focusSelection"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let selected = Self::selection(interaction).len();
+        let objects = snapshot.typed().objects.len();
+        let items = selected.checked_add(objects.checked_mul(2)?)?.checked_add(1)?;
+        (selected <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        _command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        match self.stage {
+            Puzzle3dFocusSelectionStage::Selection => {
+                if let Some(id) = Self::selection(interaction).get(self.selection_cursor) {
+                    if self.selected.len() >= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS {
+                        return Err(Fault::from("puzzle3d-focus-selection-capacity"));
+                    }
+                    self.selected.insert(id.clone());
+                    self.selection_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-focus-selection-owner", "Reading selected object", "Ausgewähltes Objekt wird gelesen"));
+                }
+                self.stage = Puzzle3dFocusSelectionStage::SumObjects;
+                Ok(Self::progress("puzzle3d-focus-selection-center", "Measuring selection center", "Auswahlzentrum wird gemessen"))
+            }
+            Puzzle3dFocusSelectionStage::SumObjects => {
+                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else {
+                    self.object_cursor = 0;
+                    if self.matched > 0 {
+                        let divisor = self.matched as f64;
+                        self.center = [self.center[0] / divisor, self.center[1] / divisor, self.center[2] / divisor];
+                    }
+                    self.stage = Puzzle3dFocusSelectionStage::DistanceObjects;
+                    return Ok(Self::progress("puzzle3d-focus-selection-distance", "Measuring selection radius", "Auswahlradius wird gemessen"));
+                };
+                self.object_cursor += 1;
+                if self.selected.contains(&object.id) {
+                    self.center[0] += object.origin[0];
+                    self.center[1] += object.origin[1];
+                    self.center[2] += object.origin[2];
+                    self.matched += 1;
+                }
+                Ok(Self::progress("puzzle3d-focus-selection-center", "Scanning selected object", "Ausgewähltes Objekt wird geprüft"))
+            }
+            Puzzle3dFocusSelectionStage::DistanceObjects => {
+                let Some(object) = snapshot.typed().objects.get(self.object_cursor) else {
+                    self.stage = Puzzle3dFocusSelectionStage::Publish;
+                    return Ok(Self::progress("puzzle3d-focus-selection-publish", "Preparing camera focus", "Kamerafokus wird vorbereitet"));
+                };
+                self.object_cursor += 1;
+                if self.selected.contains(&object.id) {
+                    let delta = [object.origin[0] - self.center[0], object.origin[1] - self.center[1], object.origin[2] - self.center[2]];
+                    self.maximum_distance = self.maximum_distance.max((delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]).sqrt());
+                }
+                Ok(Self::progress("puzzle3d-focus-selection-distance", "Scanning selection radius", "Auswahlradius wird geprüft"))
+            }
+            Puzzle3dFocusSelectionStage::Publish => {
+                self.stage = Puzzle3dFocusSelectionStage::Complete;
+                if self.matched == 0 {
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
+                }
+                let distance = self.maximum_distance * 3.0 + 2.0;
+                let mut next = config.clone();
+                next.camera.position = [
+                    self.center[0] + distance * 0.6,
+                    self.center[1] - distance * 0.6,
+                    self.center[2] + distance * 0.5,
+                ];
+                next.camera.target = self.center;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    config_mutations: vec![Puzzle3dConfigMutation::Snapshot { config: next }],
+                    ui_scope: puzzle3d_viewport_scope(),
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dFocusSelectionStage::Complete => Err(Fault::from("puzzle3d-focus-selection-complete-repolled")),
+            Puzzle3dFocusSelectionStage::Closing => Err(Fault::from("puzzle3d-focus-selection-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dFocusSelectionStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let selected = {
+            let mut selected = self.selected.extract_if(|_| true);
+            selected.next()
+        };
+        if selected.is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dFocusSelectionStage::Closing && self.selected.is_empty()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dEngagementSubmitStage {
+    Parse,
+    Focus,
+    UtilityConfig,
+    UtilityEffect,
+    FillEffect,
+    Input,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dEngagementSubmitWork {
+    stage: Puzzle3dEngagementSubmitStage,
+    focus: Option<Puzzle3dFocusSelectionWork>,
+    emit: Option<Emit<Puzzle3dMutation, Puzzle3dConfigMutation>>,
+    utility: Option<String>,
+    fill_count: Option<u32>,
+}
+
+impl Default for Puzzle3dEngagementSubmitWork {
+    fn default() -> Self {
+        Self { stage: Puzzle3dEngagementSubmitStage::Parse, focus: None, emit: Some(Emit::default()), utility: None, fill_count: None }
+    }
+}
+
+impl Puzzle3dEngagementSubmitWork {
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+
+    fn emit_mut(&mut self) -> Result<&mut Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, Fault> {
+        self.emit.as_mut().ok_or_else(|| Fault::from("puzzle3d-engagement-submit-emit-owner"))
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dEngagementSubmitWork {
+    fn tool_id(&self) -> &'static str {
+        "engagementSubmit"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+        let selected = Puzzle3dFocusSelectionWork::selection(interaction).len();
+        let objects = snapshot.typed().objects.len();
+        let items = selected.checked_add(objects.checked_mul(2)?)?.checked_add(7)?;
+        (selected <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        interaction: &protocol::InteractionState,
+        hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let window_id = command.window_id().unwrap_or(main::WINDOW_KIND_ID);
+        match self.stage {
+            Puzzle3dEngagementSubmitStage::Parse => {
+                let raw = command.args().and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("").trim().to_lowercase();
+                if raw == "zoom" {
+                    self.focus = Some(Puzzle3dFocusSelectionWork::default());
+                    self.stage = Puzzle3dEngagementSubmitStage::Focus;
+                } else if raw == "brush" {
+                    self.utility = Some("brush".to_string());
+                    self.stage = Puzzle3dEngagementSubmitStage::UtilityConfig;
+                } else if raw == "fill" || raw.starts_with("fill ") {
+                    self.utility = Some("fill".to_string());
+                    self.fill_count = raw.strip_prefix("fill").map(str::trim).and_then(|value| value.parse().ok()).or(Some(config.fill_count)).map(|count| count.min(PUZZLE3D_FILL_COUNT_MAX));
+                    self.stage = Puzzle3dEngagementSubmitStage::UtilityConfig;
+                } else {
+                    self.stage = Puzzle3dEngagementSubmitStage::Input;
+                }
+                Ok(Self::progress("puzzle3d-engagement-submit-parse", "Reading engagement command", "Eingabebefehl wird gelesen"))
+            }
+            Puzzle3dEngagementSubmitStage::Focus => {
+                let focus = self.focus.as_mut().ok_or_else(|| Fault::from("puzzle3d-engagement-submit-focus-owner"))?;
+                match <Puzzle3dFocusSelectionWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>>>::step(focus, command, snapshot, config, interaction, hover)? {
+                    crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de } => Ok(Self::progress(stage, en, de)),
+                    crate::retained_command::PuzzleCommandWorkStep::Complete(focus_emit) => {
+                        self.emit = Some(focus_emit);
+                        self.stage = Puzzle3dEngagementSubmitStage::Input;
+                        Ok(Self::progress("puzzle3d-engagement-submit-focus-transfer", "Transferring camera result", "Kameraergebnis wird übertragen"))
+                    }
+                }
+            }
+            Puzzle3dEngagementSubmitStage::UtilityConfig => {
+                let value = self.utility.clone();
+                self.emit_mut()?.config_mutations.push(Puzzle3dConfigMutation::SetActiveUtility { window_id: window_id.to_string(), value });
+                self.stage = Puzzle3dEngagementSubmitStage::UtilityEffect;
+                Ok(Self::progress("puzzle3d-engagement-submit-utility-config", "Preparing active utility", "Aktives Werkzeug wird vorbereitet"))
+            }
+            Puzzle3dEngagementSubmitStage::UtilityEffect => {
+                let utility_id = self.utility.clone().ok_or_else(|| Fault::from("puzzle3d-engagement-submit-utility-owner"))?;
+                self.emit_mut()?.effects.push(Effect::SetActiveUtility { window_id: window_id.to_string(), utility_id });
+                self.stage = Puzzle3dEngagementSubmitStage::FillEffect;
+                Ok(Self::progress("puzzle3d-engagement-submit-utility-effect", "Preparing utility publication", "Werkzeugveröffentlichung wird vorbereitet"))
+            }
+            Puzzle3dEngagementSubmitStage::FillEffect => {
+                if let Some(count) = self.fill_count.take() {
+                    self.emit_mut()?.effects.push(set_fill_count::request(count));
+                }
+                self.stage = Puzzle3dEngagementSubmitStage::Input;
+                Ok(Self::progress("puzzle3d-engagement-submit-fill", "Preparing fill request", "Füllanfrage wird vorbereitet"))
+            }
+            Puzzle3dEngagementSubmitStage::Input => {
+                self.emit_mut()?.config_mutations.push(Puzzle3dConfigMutation::SetWindowEngagementInput { window_id: window_id.to_string(), value: String::new() });
+                self.stage = Puzzle3dEngagementSubmitStage::Publish;
+                Ok(Self::progress("puzzle3d-engagement-submit-input", "Clearing engagement input", "Eingabe wird geleert"))
+            }
+            Puzzle3dEngagementSubmitStage::Publish => {
+                self.stage = Puzzle3dEngagementSubmitStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.emit.take().ok_or_else(|| Fault::from("puzzle3d-engagement-submit-publish-owner"))?))
+            }
+            Puzzle3dEngagementSubmitStage::Complete => Err(Fault::from("puzzle3d-engagement-submit-complete-repolled")),
+            Puzzle3dEngagementSubmitStage::Closing => Err(Fault::from("puzzle3d-engagement-submit-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dEngagementSubmitStage::Closing;
+        if let Some(focus) = self.focus.as_mut() {
+            <Puzzle3dFocusSelectionWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>>>::begin_close(focus);
+        }
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(focus) = self.focus.as_mut() {
+            let step = <Puzzle3dFocusSelectionWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>>>::close_step(focus, maximum_items.min(1), maximum_bytes);
+            if <Puzzle3dFocusSelectionWork as crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>>>::terminal_is_empty(focus) {
+                self.focus = None;
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            return step;
+        }
+        if self.emit.take().is_some() || self.utility.take().is_some() || self.fill_count.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dEngagementSubmitStage::Closing && self.focus.is_none() && self.emit.is_none() && self.utility.is_none() && self.fill_count.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dRelocateVolumeStage {
+    Search,
+    Origin,
+    Orientation,
+    Scale,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dRelocateVolumeWork {
+    stage: Puzzle3dRelocateVolumeStage,
+    cursor: usize,
+    volume_id: Option<String>,
+    mutations: Vec<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dRelocateVolumeWork {
+    fn default() -> Self {
+        Self { stage: Puzzle3dRelocateVolumeStage::Search, cursor: 0, volume_id: None, mutations: Vec::with_capacity(3) }
+    }
+}
+
+impl Puzzle3dRelocateVolumeWork {
+    fn complete(&mut self) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        self.stage = Puzzle3dRelocateVolumeStage::Complete;
+        crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+            artifact_mutations: std::mem::take(&mut self.mutations),
+            ui_scope: UiDirtyScope::Full,
+            ..Default::default()
+        })
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dRelocateVolumeWork {
+    fn tool_id(&self) -> &'static str {
+        "relocateTargetVolume"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let items = snapshot.typed().target_volumes.len().checked_add(4)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        _config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let requested_id = command.args().and_then(|args| args.get("volumeId")).and_then(Value::as_str).unwrap_or("");
+        let after = command.args().and_then(|args| args.get("after"));
+        match self.stage {
+            Puzzle3dRelocateVolumeStage::Search => {
+                let Some(volume) = snapshot.typed().target_volumes.get(self.cursor) else { return Ok(self.complete()) };
+                self.cursor += 1;
+                if volume.id == requested_id && !volume.locked && after.is_some() {
+                    self.volume_id = Some(volume.id.clone());
+                    self.stage = Puzzle3dRelocateVolumeStage::Origin;
+                }
+                Ok(Self::progress("puzzle3d-relocate-volume-search", "Finding target volume", "Zielvolumen wird gesucht"))
+            }
+            Puzzle3dRelocateVolumeStage::Origin => {
+                if let Some(origin) = after.and_then(|after| after.get("position")).and_then(value_as_vec3) {
+                    self.mutations.push(crate::artifacts::puzzle3d::mutations::move_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, origin));
+                }
+                self.stage = Puzzle3dRelocateVolumeStage::Orientation;
+                Ok(Self::progress("puzzle3d-relocate-volume-orientation", "Preparing volume rotation", "Volumendrehung wird vorbereitet"))
+            }
+            Puzzle3dRelocateVolumeStage::Orientation => {
+                if let Some(values) = after.and_then(|after| after.get("quaternion")).and_then(Value::as_array).filter(|values| values.len() >= 4) {
+                    let orientation = [
+                        values.first().and_then(Value::as_f64).unwrap_or(0.0),
+                        values.get(1).and_then(Value::as_f64).unwrap_or(0.0),
+                        values.get(2).and_then(Value::as_f64).unwrap_or(0.0),
+                        values.get(3).and_then(Value::as_f64).unwrap_or(1.0),
+                    ];
+                    self.mutations.push(crate::artifacts::puzzle3d::mutations::rotate_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(orientation)));
+                }
+                self.stage = Puzzle3dRelocateVolumeStage::Scale;
+                Ok(Self::progress("puzzle3d-relocate-volume-scale", "Preparing volume scale", "Volumenskalierung wird vorbereitet"))
+            }
+            Puzzle3dRelocateVolumeStage::Scale => {
+                if let Some(values) = after.and_then(|after| after.get("scale")).and_then(Value::as_array).filter(|values| values.len() >= 3) {
+                    let scale = crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([
+                        values.first().and_then(Value::as_f64).unwrap_or(1.0),
+                        values.get(1).and_then(Value::as_f64).unwrap_or(1.0),
+                        values.get(2).and_then(Value::as_f64).unwrap_or(1.0),
+                    ]);
+                    self.mutations.push(crate::artifacts::puzzle3d::mutations::scale_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(scale)));
+                }
+                Ok(self.complete())
+            }
+            Puzzle3dRelocateVolumeStage::Complete => Err(Fault::from("puzzle3d-relocate-volume-complete-repolled")),
+            Puzzle3dRelocateVolumeStage::Closing => Err(Fault::from("puzzle3d-relocate-volume-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dRelocateVolumeStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.mutations.pop().is_some() || self.volume_id.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dRelocateVolumeStage::Closing && self.mutations.is_empty() && self.volume_id.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dAcceptSuggestionStage {
+    Target,
+    Candidate,
+    Representation,
+    Vortices,
+    ExistingAttractions,
+    PublishObject,
+    PublishAttraction,
+    PublishResult,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dAcceptSuggestionWork {
+    stage: Puzzle3dAcceptSuggestionStage,
+    object_cursor: usize,
+    vortex_cursor: usize,
+    representation_cursor: usize,
+    attraction_cursor: usize,
+    target_id: Option<String>,
+    target_position: Option<[f64; 3]>,
+    kind_index: Option<usize>,
+    object_id: Option<String>,
+    mesh_url: Option<String>,
+    vortices: Vec<crate::artifacts::puzzle3d::Puzzle3dVortex>,
+    mutations: Vec<Puzzle3dMutation>,
+}
+
+impl Default for Puzzle3dAcceptSuggestionWork {
+    fn default() -> Self {
+        Self {
+            stage: Puzzle3dAcceptSuggestionStage::Target,
+            object_cursor: 0,
+            vortex_cursor: 0,
+            representation_cursor: 0,
+            attraction_cursor: 0,
+            target_id: None,
+            target_position: None,
+            kind_index: None,
+            object_id: None,
+            mesh_url: None,
+            vortices: Vec::with_capacity(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT),
+            mutations: Vec::with_capacity(2),
+        }
+    }
+}
+
+impl Puzzle3dAcceptSuggestionWork {
+    fn requested_target(command: &Puzzle3dCommand, config: &Puzzle3dConfig, interaction: &protocol::InteractionState) -> Option<String> {
+        command
+            .args()
+            .and_then(|args| args.get("fullId"))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .or_else(|| config.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.clone()).filter(|id| !id.is_empty()))
+            .or_else(|| {
+                interaction
+                    .selection
+                    .get(PUZZLE3D_INTERACTION_DOMAIN)
+                    .filter(|selection| selection.granularity == PUZZLE3D_GRANULARITY_VORTEX)
+                    .and_then(|selection| selection.ids.first().cloned())
+            })
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dAcceptSuggestionWork {
+    fn tool_id(&self) -> &'static str {
+        "acceptSuggestion"
+    }
+
+    fn extent(&self, _command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let document = snapshot.typed();
+        let catalogs = document.meta.kind_catalogs.as_ref()?;
+        let target_scans = document.objects.len().checked_mul(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT)?;
+        let items = target_scans
+            .checked_add(catalogs.objects.len())?
+            .checked_add(PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT.checked_mul(2)?)?
+            .checked_add(document.attractions.len())?
+            .checked_add(4)?;
+        (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        let document = snapshot.typed();
+        let Some(catalogs) = document.meta.kind_catalogs.as_ref() else {
+            self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                config_mutations: vec![Puzzle3dConfigMutation::SetSuggestionMenu { value: None }],
+                ..Default::default()
+            }));
+        };
+        match self.stage {
+            Puzzle3dAcceptSuggestionStage::Target => {
+                let Some(requested) = Self::requested_target(command, config, interaction) else {
+                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        config_mutations: vec![Puzzle3dConfigMutation::SetSuggestionMenu { value: None }],
+                        ..Default::default()
+                    }));
+                };
+                let Some(object) = document.objects.get(self.object_cursor) else {
+                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        config_mutations: vec![Puzzle3dConfigMutation::SetSuggestionMenu { value: None }],
+                        ..Default::default()
+                    }));
+                };
+                if object.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
+                    return Err(Fault::from("puzzle3d-accept-target-vortex-capacity"));
+                }
+                let Some(vortex) = object.vortices.get(self.vortex_cursor) else {
+                    self.object_cursor += 1;
+                    self.vortex_cursor = 0;
+                    return Ok(Self::progress("puzzle3d-accept-target-object", "Scanning target object", "Zielobjekt wird geprüft"));
+                };
+                self.vortex_cursor += 1;
+                if puzzle3d_vortex_full_id(&object.id, &vortex.id) == requested {
+                    let rotated = quat_rotate_vector(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), vortex.position);
+                    self.target_id = Some(requested.clone());
+                    self.target_position = Some([object.origin[0] + rotated[0], object.origin[1] + rotated[1], object.origin[2] + rotated[2]]);
+                    self.stage = Puzzle3dAcceptSuggestionStage::Candidate;
+                }
+                Ok(Self::progress("puzzle3d-accept-target-vortex", "Scanning target vortex", "Ziel-Vortex wird geprüft"))
+            }
+            Puzzle3dAcceptSuggestionStage::Candidate => {
+                if catalogs.objects.is_empty() {
+                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        config_mutations: vec![Puzzle3dConfigMutation::SetSuggestionMenu { value: None }],
+                        ..Default::default()
+                    }));
+                }
+                let requested = command.args().and_then(|args| args.get("index")).and_then(Value::as_u64).unwrap_or(config.brush_candidate_index as u64) as usize;
+                let index = requested % catalogs.objects.len();
+                let kind = catalogs.objects.get(index).ok_or_else(|| Fault::from("puzzle3d-accept-candidate-cursor"))?;
+                if kind.representations.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT || kind.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
+                    return Err(Fault::from("puzzle3d-accept-candidate-capacity"));
+                }
+                use std::hash::{Hash, Hasher};
+                let mut hasher = std::collections::hash_map::DefaultHasher::new();
+                self.target_id.hash(&mut hasher);
+                kind.id.hash(&mut hasher);
+                requested.hash(&mut hasher);
+                document.objects.len().hash(&mut hasher);
+                self.object_id = Some(format!("puzzle3d.suggestion.{:016x}", hasher.finish()));
+                self.kind_index = Some(index);
+                self.stage = Puzzle3dAcceptSuggestionStage::Representation;
+                Ok(Self::progress("puzzle3d-accept-candidate", "Selecting suggestion candidate", "Vorschlagskandidat wird gewählt"))
+            }
+            Puzzle3dAcceptSuggestionStage::Representation => {
+                let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-accept-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-accept-kind-cursor"))?;
+                let Some(representation) = kind.representations.get(self.representation_cursor) else {
+                    self.stage = Puzzle3dAcceptSuggestionStage::Vortices;
+                    return Ok(Self::progress("puzzle3d-accept-vortex", "Building suggested vortices", "Vorschlags-Vortices werden aufgebaut"));
+                };
+                self.representation_cursor += 1;
+                if self.mesh_url.is_none() && !representation.url.is_empty() {
+                    self.mesh_url = Some(representation.url.clone());
+                }
+                Ok(Self::progress("puzzle3d-accept-representation", "Scanning candidate mesh", "Kandidaten-Mesh wird geprüft"))
+            }
+            Puzzle3dAcceptSuggestionStage::Vortices => {
+                let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-accept-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-accept-kind-cursor"))?;
+                let Some(template) = kind.vortices.get(self.vortices.len()) else {
+                    if self.vortices.is_empty() {
+                        self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+                        return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                            config_mutations: vec![Puzzle3dConfigMutation::SetSuggestionMenu { value: None }],
+                            ..Default::default()
+                        }));
+                    }
+                    self.stage = Puzzle3dAcceptSuggestionStage::ExistingAttractions;
+                    return Ok(Self::progress("puzzle3d-accept-existing", "Checking target ownership", "Zielinhaberschaft wird geprüft"));
+                };
+                let object_id = self.object_id.as_ref().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
+                let index = self.vortices.len();
+                self.vortices.push(crate::artifacts::puzzle3d::Puzzle3dVortex {
+                    id: format!("{object_id}:v{index}"),
+                    label: None,
+                    vortex_kind: template.vortex_kind.clone(),
+                    position: template.point,
+                    direction: Some(template.direction),
+                    radius: template.radius,
+                    hidden: false,
+                    locked: false,
+                });
+                Ok(Self::progress("puzzle3d-accept-vortex", "Building one suggested vortex", "Ein Vorschlags-Vortex wird aufgebaut"))
+            }
+            Puzzle3dAcceptSuggestionStage::ExistingAttractions => {
+                let target = self.target_id.as_ref().ok_or_else(|| Fault::from("puzzle3d-accept-target-owner"))?;
+                let Some(attraction) = document.attractions.get(self.attraction_cursor) else {
+                    self.stage = Puzzle3dAcceptSuggestionStage::PublishObject;
+                    return Ok(Self::progress("puzzle3d-accept-publish-object", "Preparing suggested object", "Vorschlagsobjekt wird vorbereitet"));
+                };
+                self.attraction_cursor += 1;
+                if attraction.attracting == *target || attraction.attracted == *target {
+                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+                    return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                        config_mutations: vec![Puzzle3dConfigMutation::SetSuggestionMenu { value: None }],
+                        ..Default::default()
+                    }));
+                }
+                Ok(Self::progress("puzzle3d-accept-existing", "Scanning existing attraction", "Bestehende Anziehung wird geprüft"))
+            }
+            Puzzle3dAcceptSuggestionStage::PublishObject => {
+                let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-accept-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-accept-kind-cursor"))?;
+                let object = crate::artifacts::puzzle3d::Puzzle3dObject {
+                    id: self.object_id.clone().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?,
+                    label: None,
+                    object_kind: Some(kind.id.clone()),
+                    anchor: Default::default(),
+                    origin: self.target_position.ok_or_else(|| Fault::from("puzzle3d-accept-position-owner"))?,
+                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    scale: None,
+                    mesh_url: self.mesh_url.clone(),
+                    vortices: std::mem::take(&mut self.vortices),
+                    hidden: false,
+                    locked: false,
+                };
+                self.mutations.push(crate::artifacts::puzzle3d::mutations::create_object(object, None));
+                self.stage = Puzzle3dAcceptSuggestionStage::PublishAttraction;
+                Ok(Self::progress("puzzle3d-accept-publish-object", "Transferring suggested object", "Vorschlagsobjekt wird übertragen"))
+            }
+            Puzzle3dAcceptSuggestionStage::PublishAttraction => {
+                let target = self.target_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-target-owner"))?;
+                let object_id = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
+                let source = format!("{object_id}:v0");
+                self.mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                    format!("attraction-{target}-{source}"),
+                    target,
+                    source,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ));
+                self.stage = Puzzle3dAcceptSuggestionStage::PublishResult;
+                Ok(Self::progress("puzzle3d-accept-publish-attraction", "Transferring suggested attraction", "Vorschlagsanziehung wird übertragen"))
+            }
+            Puzzle3dAcceptSuggestionStage::PublishResult => {
+                self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    artifact_mutations: std::mem::take(&mut self.mutations),
+                    config_mutations: vec![Puzzle3dConfigMutation::SetSuggestionMenu { value: None }],
+                    ui_scope: UiDirtyScope::Full,
+                    ..Default::default()
+                }))
+            }
+            Puzzle3dAcceptSuggestionStage::Complete => Err(Fault::from("puzzle3d-accept-complete-repolled")),
+            Puzzle3dAcceptSuggestionStage::Closing => Err(Fault::from("puzzle3d-accept-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dAcceptSuggestionStage::Closing;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.vortices.pop().is_some()
+            || self.mutations.pop().is_some()
+            || self.target_id.take().is_some()
+            || self.target_position.take().is_some()
+            || self.object_id.take().is_some()
+            || self.mesh_url.take().is_some()
+        {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dAcceptSuggestionStage::Closing
+            && self.vortices.is_empty()
+            && self.mutations.is_empty()
+            && self.target_id.is_none()
+            && self.target_position.is_none()
+            && self.object_id.is_none()
+            && self.mesh_url.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Puzzle3dPrecomputeCommandStage {
+    Decode,
+    Objects,
+    Vortices,
+    Attractions,
+    CatalogObjects,
+    CatalogVortices,
+    Positions,
+    Indices,
+    CheckpointBytes,
+    Publish,
+    Complete,
+    Closing,
+}
+
+struct Puzzle3dPrecomputeCommandWork {
+    tool_id: &'static str,
+    stage: Puzzle3dPrecomputeCommandStage,
+    object_cursor: usize,
+    child_cursor: usize,
+    attraction_cursor: usize,
+    catalog_object_cursor: usize,
+    catalog_vortex_cursor: usize,
+    payload_cursor: usize,
+    checkpoint_cursor: usize,
+    requested_count: u32,
+    delta: isize,
+    candidate_count: usize,
+    processed_units: usize,
+}
+
+impl Puzzle3dPrecomputeCommandWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self {
+            tool_id,
+            stage: Puzzle3dPrecomputeCommandStage::Decode,
+            object_cursor: 0,
+            child_cursor: 0,
+            attraction_cursor: 0,
+            catalog_object_cursor: 0,
+            catalog_vortex_cursor: 0,
+            payload_cursor: 0,
+            checkpoint_cursor: 0,
+            requested_count: 0,
+            delta: if tool_id == "cycleBrushCandidateBack" { -1 } else { 1 },
+            candidate_count: 0,
+            processed_units: 0,
+        }
+    }
+
+    fn progress(stage: &'static str, en: &'static str, de: &'static str) -> crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>> {
+        crate::retained_command::PuzzleCommandWorkStep::Progress { stage, en, de }
+    }
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dPrecomputeCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map_or(0, Vec::len);
+        let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map_or(0, Vec::len);
+        (positions <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS && indices <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(1)
+    }
+
+    fn step(
+        &mut self,
+        command: &Puzzle3dCommand,
+        snapshot: &Puzzle3dPlaySnapshot,
+        config: &Puzzle3dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+        if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
+            return Err(Fault::from("puzzle3d-precompute-work-capacity"));
+        }
+        self.processed_units += 1;
+        let document = snapshot.typed();
+        match self.stage {
+            Puzzle3dPrecomputeCommandStage::Decode => {
+                self.requested_count = command
+                    .args()
+                    .and_then(|args| args.get("count").or_else(|| args.get("value")))
+                    .and_then(Value::as_f64)
+                    .map_or(0, |value| value.round().max(0.0) as u32)
+                    .min(PUZZLE3D_FILL_COUNT_MAX);
+                self.delta = command.args().and_then(|args| args.get("delta")).and_then(Value::as_i64).map_or(self.delta, |value| value.clamp(isize::MIN as i64, isize::MAX as i64) as isize);
+                self.stage = if self.tool_id == "registerBrushMesh" { Puzzle3dPrecomputeCommandStage::Positions } else { Puzzle3dPrecomputeCommandStage::Objects };
+                Ok(Self::progress("puzzle3d-precompute-decode", "Reading precompute command", "Vorberechnungsbefehl wird gelesen"))
+            }
+            Puzzle3dPrecomputeCommandStage::Objects => {
+                let Some(object) = document.objects.get(self.object_cursor) else {
+                    self.stage = Puzzle3dPrecomputeCommandStage::Attractions;
+                    return Ok(Self::progress("puzzle3d-precompute-attractions", "Scanning attraction owner", "Anziehungsinhaber wird geprüft"));
+                };
+                if object.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
+                    return Err(Fault::from("puzzle3d-precompute-vortex-capacity"));
+                }
+                self.stage = Puzzle3dPrecomputeCommandStage::Vortices;
+                Ok(Self::progress("puzzle3d-precompute-object", "Scanning object owner", "Objektinhaber wird geprüft"))
+            }
+            Puzzle3dPrecomputeCommandStage::Vortices => {
+                let object = document.objects.get(self.object_cursor).ok_or_else(|| Fault::from("puzzle3d-precompute-object-cursor"))?;
+                if object.vortices.get(self.child_cursor).is_some() {
+                    self.child_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-precompute-vortex", "Scanning one vortex owner", "Ein Vortexinhaber wird geprüft"));
+                }
+                self.object_cursor += 1;
+                self.child_cursor = 0;
+                self.stage = Puzzle3dPrecomputeCommandStage::Objects;
+                Ok(Self::progress("puzzle3d-precompute-object", "Advancing object cursor", "Objektzeiger wird fortgesetzt"))
+            }
+            Puzzle3dPrecomputeCommandStage::Attractions => {
+                if document.attractions.get(self.attraction_cursor).is_some() {
+                    self.attraction_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-precompute-attraction", "Scanning one attraction owner", "Ein Anziehungsinhaber wird geprüft"));
+                }
+                self.stage = Puzzle3dPrecomputeCommandStage::CatalogObjects;
+                Ok(Self::progress("puzzle3d-precompute-catalog-object", "Scanning object kind owner", "Objektartinhaber wird geprüft"))
+            }
+            Puzzle3dPrecomputeCommandStage::CatalogObjects => {
+                let entries = document.meta.kind_catalogs.as_ref().map(|catalogs| catalogs.objects.as_slice()).unwrap_or_default();
+                if entries.get(self.catalog_object_cursor).is_some() {
+                    self.catalog_object_cursor += 1;
+                    self.candidate_count += 1;
+                    return Ok(Self::progress("puzzle3d-precompute-catalog-object", "Scanning one object kind", "Eine Objektart wird geprüft"));
+                }
+                self.stage = Puzzle3dPrecomputeCommandStage::CatalogVortices;
+                Ok(Self::progress("puzzle3d-precompute-catalog-vortex", "Scanning vortex kind owner", "Vortexartinhaber wird geprüft"))
+            }
+            Puzzle3dPrecomputeCommandStage::CatalogVortices => {
+                let entries = document.meta.kind_catalogs.as_ref().map(|catalogs| catalogs.vortices.as_slice()).unwrap_or_default();
+                if entries.get(self.catalog_vortex_cursor).is_some() {
+                    self.catalog_vortex_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-precompute-catalog-vortex", "Scanning one vortex kind", "Eine Vortexart wird geprüft"));
+                }
+                self.stage = if matches!(self.tool_id, "setFillCount" | "fillBuildTick") {
+                    Puzzle3dPrecomputeCommandStage::CheckpointBytes
+                } else {
+                    Puzzle3dPrecomputeCommandStage::Publish
+                };
+                Ok(Self::progress("puzzle3d-precompute-transfer", "Transferring precompute census", "Vorberechnungszensus wird übertragen"))
+            }
+            Puzzle3dPrecomputeCommandStage::Positions => {
+                let positions = command.args().and_then(|args| args.get("positions")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if let Some(value) = positions.get(self.payload_cursor) {
+                    if value.as_f64().filter(|value| value.is_finite()).is_none() {
+                        return Err(Fault::from("puzzle3d-register-mesh-position-malformed"));
+                    }
+                    self.payload_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-register-mesh-position", "Reading one mesh position", "Eine Mesh-Position wird gelesen"));
+                }
+                self.payload_cursor = 0;
+                self.stage = Puzzle3dPrecomputeCommandStage::Indices;
+                Ok(Self::progress("puzzle3d-register-mesh-index", "Reading mesh indices", "Mesh-Indizes werden gelesen"))
+            }
+            Puzzle3dPrecomputeCommandStage::Indices => {
+                let indices = command.args().and_then(|args| args.get("indices")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
+                if let Some(value) = indices.get(self.payload_cursor) {
+                    if value.as_u64().filter(|value| *value <= u32::MAX as u64).is_none() {
+                        return Err(Fault::from("puzzle3d-register-mesh-index-malformed"));
+                    }
+                    self.payload_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-register-mesh-index", "Reading one mesh index", "Ein Mesh-Index wird gelesen"));
+                }
+                self.stage = Puzzle3dPrecomputeCommandStage::Publish;
+                Ok(Self::progress("puzzle3d-register-mesh-transfer", "Transferring validated mesh owner", "Geprüfter Mesh-Inhaber wird übertragen"))
+            }
+            Puzzle3dPrecomputeCommandStage::CheckpointBytes => {
+                if config.fill_checkpoint.get(self.checkpoint_cursor).is_some() {
+                    self.checkpoint_cursor += 1;
+                    return Ok(Self::progress("puzzle3d-fill-checkpoint-byte", "Reading one fill checkpoint byte", "Ein Füllprüfpunktbyte wird gelesen"));
+                }
+                self.stage = Puzzle3dPrecomputeCommandStage::Publish;
+                Ok(Self::progress("puzzle3d-fill-checkpoint-transfer", "Transferring fill authority", "Füllautorität wird übertragen"))
+            }
+            Puzzle3dPrecomputeCommandStage::Publish => {
+                let mut emit = Emit::default();
+                match self.tool_id {
+                    "cycleBrushCandidate" | "cycleBrushCandidateBack" => {
+                        let value = if self.candidate_count == 0 {
+                            config.brush_candidate_index.saturating_add_signed(self.delta)
+                        } else {
+                            (config.brush_candidate_index as isize + self.delta).rem_euclid(self.candidate_count as isize) as usize
+                        };
+                        emit.config_mutations.push(Puzzle3dConfigMutation::SetBrushCandidateIndex { value });
+                        emit.ui_scope = UiDirtyScope::Full;
+                    }
+                    "setFillCount" => {
+                        emit.config_mutations.push(Puzzle3dConfigMutation::SetFillRequest {
+                            count: self.requested_count,
+                            generation: config.fill_apply_generation.saturating_add(1),
+                        });
+                        emit.ui_scope = puzzle3d_fill_build_scope();
+                    }
+                    "fillBuildTick" => {
+                        emit.ui_scope = if puzzle3d_fill_tool_active(config) { puzzle3d_fill_build_scope() } else { UiDirtyScope::None };
+                    }
+                    "suggestionsTick" => emit.ui_scope = puzzle3d_suggestions_tick_scope(),
+                    "registerBrushMesh" => emit.ui_scope = UiDirtyScope::None,
+                    _ => return Err(Fault::from("puzzle3d-precompute-tool-authority")),
+                }
+                self.stage = Puzzle3dPrecomputeCommandStage::Complete;
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
+            }
+            Puzzle3dPrecomputeCommandStage::Complete => Err(Fault::from("puzzle3d-precompute-complete-repolled")),
+            Puzzle3dPrecomputeCommandStage::Closing => Err(Fault::from("puzzle3d-precompute-closing")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.stage = Puzzle3dPrecomputeCommandStage::Closing;
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.stage == Puzzle3dPrecomputeCommandStage::Closing
+    }
+}
+
+struct BoundedFirstStepCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl BoundedFirstStepCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle3dPlayApp>>;
+    type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle3dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        PUZZLE3D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        crate::retained_command::puzzle_command_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() || input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
+            return Err((ToolJobFactoryError::new("Puzzle 3d retained command rejects checkpoint or oversized wire owner"), input, checkpoint));
+        }
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for BoundedFirstStepCommandJobFactory {
+    type Owner = EditorApp<Puzzle3dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = PUZZLE3D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
+}
+//#endregion 🧵️RetainedCommands
+
 impl ArtifactEditor for Puzzle3dPlayApp {
     const DIALECT: Dialect = crate::artifacts::puzzle3d::PUZZLE3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
@@ -2448,20 +6155,101 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = Puzzle3dCommand;
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        <Puzzle3dCommand as protocol::OpBinary>::TOOL_JOB_IDS
-            .iter()
-            .map(|tool_id| {
-                semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>>(
-                    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
-                    "s.puzzle.puzzle3d@1/*#editor",
-                    "BoundedFirstStepCommandJobFactory",
-                    tool_id,
-                    "puzzle.3d.fixture",
-                    semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-                )
-            })
-            .collect()
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Puzzle3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.puzzle.puzzle3d@1/*#editor",
+        document_schema: "puzzle.3d.fixture",
+        factory: "BoundedFirstStepCommandJobFactory",
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 512, 1, 262_144, 7_500),
+        tools: [
+            "acceptSuggestion", "addBrushObject", "addObjectKind", "addTargetVolume", "closeVortexSuggestions", "createAttraction",
+            "cycleBrushCandidate", "cycleBrushCandidateBack", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection",
+            "engagementAbort", "engagementControlSelect", "engagementInput",
+            "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openAddObjectDialog",
+            "openVortexSuggestions", "patchInspector", "registerBrushMesh", "relocateTargetVolume", "rotateSelection", "scaleSelection",
+            "selectSameKindSelection", "setActiveExample", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setFillCount",
+            "setFillCountStep", "setFixtureJson", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic",
+            "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius",
+            "setSelectableKind", "setSelectionFlag", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTargetVolumeFlag",
+            "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick",
+            "toggleSun", "transformBegin", "transformEnd", "translateSelection", "worldPointerDown", "worldRelocate"
+        ]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller_id = registry.controller_id().to_string();
+        registry.register(BoundedFirstStepCommandJobFactory::new(&controller_id))
+    }
+
+    async fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !PUZZLE3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.action_id() != request.tool_id {
+            return Err(Fault::from("puzzle3d-command-tool-mismatch"));
+        }
+        let tool_id = request.command.action_id();
+        let work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
+            "translateSelection" | "rotateSelection" | "scaleSelection" => Box::new(Puzzle3dScaleWork::new(tool_id)),
+            "patchInspector" => Box::new(Puzzle3dPatchInspectorWork::default()),
+            "worldRelocate" => Box::new(Puzzle3dWorldRelocateWork::default()),
+            "createAttraction" => Box::new(Puzzle3dCreateAttractionWork::default()),
+            "setActiveExample" => Box::new(Puzzle3dSetActiveExampleWork::default()),
+            "addBrushObject" => Box::new(Puzzle3dAddBrushObjectWork::default()),
+            "addObjectKind" => Box::new(Puzzle3dAddObjectKindWork::default()),
+            "engagementAbort" => Box::new(Puzzle3dEngagementAbortWork::default()),
+            "engagementRepeatLast" => Box::new(Puzzle3dEngagementRepeatWork::default()),
+            "engagementSubmit" => Box::new(Puzzle3dEngagementSubmitWork::default()),
+            "setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle3dKindWeightWork::new(tool_id)),
+            "acceptSuggestion" => Box::new(Puzzle3dAcceptSuggestionWork::default()),
+            "cycleBrushCandidate"
+            | "cycleBrushCandidateBack"
+            | "fillBuildTick"
+            | "registerBrushMesh"
+            | "setFillCount"
+            | "suggestionsTick" => Box::new(Puzzle3dPrecomputeCommandWork::new(tool_id)),
+            "focusSelection" => Box::new(Puzzle3dFocusSelectionWork::default()),
+            "relocateTargetVolume" => Box::new(Puzzle3dRelocateVolumeWork::default()),
+            "setCamera"
+            | "setProjection"
+            | "setProjectionParam"
+            | "toggleSun"
+            | "setSunAzimuth"
+            | "setSunElevation"
+            | "setSunIntensity"
+            | "setLodAutomatic"
+            | "setLodDepthVariable"
+            | "setLodManual"
+            | "setGridVisible"
+            | "setGridSnapEnabled"
+            | "setGridSpacing"
+            | "setSelectableKind"
+            | "setProximityRadius"
+            | "setChunkSize"
+            | "setVoxelDims"
+            | "setTransformGumballFlag"
+            | "setVortexShow"
+            | "setVortexDirection"
+            | "setBrushPlacementOverlapBudget"
+            | "closeVortexSuggestions"
+            | "hoverSuggestion"
+            | "engagementControlSelect"
+            | "engagementInput" => Box::new(Puzzle3dScalarConfigWork::new(tool_id)),
+            "worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
+            _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
+        };
+        let payload = crate::retained_command::RetainedPuzzleCommandPayload {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            completion: request.completion,
+            command_id: Puzzle3dCommand::action_id,
+            work,
+        };
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old
@@ -2507,6 +6295,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
+        let selection = semio_framework::io::resolve_ready(interaction.selection(PUZZLE3D_INTERACTION_DOMAIN));
         Ok(with_puzzle3d_app_for(&cfg.snapshot, |app| {
             if command.action_id() == "fillBuildTick" {
                 if let Some(emit) = fill_build_tick::fill_build_tick_cached(app, &cfg.snapshot) {
@@ -2524,7 +6313,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
                 precompute.set_fill_applied_count(cfg.snapshot.fill_applied_count);
                 return if command.action_id() == "setFillCount" { set_fill_count::begin(&mut precompute, &cfg.snapshot, command.args()) } else { set_fill_count::step(&mut precompute, &cfg.snapshot, command.args()) };
             }
-            app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)
+            app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc.snapshot, &cfg.snapshot, selection)
         }))
     }
 
@@ -2633,18 +6422,17 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             let fill_available = precompute.fill_available_count();
             let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(doc.snapshot.value()), &precompute, config.fill_applied_count, fill_available, &app.fill_display_memo);
             let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility };
-            let labels = puzzle3d_labels(config);
+            let labels = puzzle3d_labels(config).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d locale or terminology is not recognized"))?;
             match base_body_key {
                 main::BODY_KEY => {
                     let (instances_json, meshes_json) = app.geometry_jsons(&envelope.fixture);
-                    main::render(&envelope, &precompute, instances_json, meshes_json)
+                    main::render(&envelope, &precompute, labels, instances_json, meshes_json)
                 }
                 document::BODY_KEY => app.document_tree_cached(&envelope.fixture, labels),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
                 inspection::BODY_KEY => inspection::render(&envelope, labels),
                 settings_panel::BODY_KEY => settings_panel::render(&envelope, labels),
-                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
-                    .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d unknown-body label admission failed")),
+                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d unknown-body label admission failed")),
             }
         })?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -2653,7 +6441,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     async fn window_engagements(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement> {
         with_puzzle3d_app_for(&cfg.snapshot, |app| {
             let config = cfg.snapshot;
-            let labels = puzzle3d_labels(config);
+            let Some(labels) = puzzle3d_labels(config) else {
+                return HashMap::new();
+            };
             // 🪟️ One entry per live window INSTANCE (split top/perspective panes are two instances of the
             // same kind) — each built from ITS OWN materialized options, never the shared kind entry.
             window_instance_ids(config, main::WINDOW_KIND_ID)
@@ -2669,7 +6459,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     async fn window_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         with_puzzle3d_app_for(&cfg.snapshot, |app| {
             let config = cfg.snapshot;
-            let labels = puzzle3d_labels(config);
+            let Some(labels) = puzzle3d_labels(config) else {
+                return HashMap::new();
+            };
             window_instance_ids(config, main::WINDOW_KIND_ID)
                 .into_iter()
                 .map(|wid| {
@@ -2685,7 +6477,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         with_puzzle3d_app_for(&cfg.snapshot, |app| {
             let config = cfg.snapshot;
             let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
-            let labels = puzzle3d_labels(config);
+            let Some(labels) = puzzle3d_labels(config) else {
+                return HashMap::new();
+            };
             let envelope = app.scene_for(doc.snapshot.value(), config, wid);
             let precompute = restored_precompute_session(&envelope, &config.fill_checkpoint);
             HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &precompute, labels))])
@@ -2699,7 +6493,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = cfg.snapshot;
-        let labels = puzzle3d_labels(config);
+        let Some(labels) = puzzle3d_labels(config) else {
+            return Vec::new();
+        };
         let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
         let active_utility = puzzle3d_scene_active_utility(config, Some(wid));
         let envelope = scene_from_projection(doc.snapshot.value(), config.clone(), &active_utility);
@@ -2967,7 +6763,69 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     ])
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             )
-            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .action_interactive_job("acceptSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addBrushObject", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addObjectKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("addTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("closeVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("createAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("cycleBrushCandidate", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("cycleBrushCandidateBack", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteAttraction", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementAbort", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementControlSelect", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementRepeatLast", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("fillBuildTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("hoverSuggestion", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("openAddObjectDialog", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("openVortexSuggestions", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchInspector", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("registerBrushMesh", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("relocateTargetVolume", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("selectSameKindSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushPlacementOverlapBudget", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFillCount", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job(set_fill_count::STEP_ACTION_ID, semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setObjectKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProjectionParam", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setProximityRadius", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectableKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSelectionFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTargetVolumeFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTransformGumballFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexDirection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVortexShow", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setVoxelDims", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("suggestionsTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("transformBegin", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("transformEnd", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldRelocate", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .build_definition()
 }
 
@@ -3283,6 +7141,475 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
+
+    #[test]
+    fn migrated_generated_command_catalog_has_an_exact_bounded_reducer_proof_bijection() {
+        let _ = app_with_registry();
+    }
+
+    fn suggestion_and_precompute_routes_are_cursorized(source: &str) -> bool {
+        [
+            r#""acceptSuggestion" => Box::new(Puzzle3dAcceptSuggestionWork::default())"#,
+            r#"| "suggestionsTick" => Box::new(Puzzle3dPrecomputeCommandWork::new(tool_id))"#,
+            "Puzzle3dAcceptSuggestionStage::Target",
+            "Puzzle3dAcceptSuggestionStage::Candidate",
+            "Puzzle3dAcceptSuggestionStage::Representation",
+            "Puzzle3dAcceptSuggestionStage::Vortices",
+            "Puzzle3dAcceptSuggestionStage::ExistingAttractions",
+            "Puzzle3dAcceptSuggestionStage::PublishObject",
+            "Puzzle3dAcceptSuggestionStage::PublishAttraction",
+            "Puzzle3dPrecomputeCommandStage::Objects",
+            "Puzzle3dPrecomputeCommandStage::Vortices",
+            "Puzzle3dPrecomputeCommandStage::Attractions",
+            "Puzzle3dPrecomputeCommandStage::CatalogObjects",
+            "Puzzle3dPrecomputeCommandStage::CatalogVortices",
+            "Puzzle3dPrecomputeCommandStage::Positions",
+            "Puzzle3dPrecomputeCommandStage::Indices",
+            "Puzzle3dPrecomputeCommandStage::CheckpointBytes",
+            "Puzzle3dPrecomputeCommandStage::Publish",
+        ]
+        .into_iter()
+        .all(|marker| source.contains(marker))
+            && !source.contains(r#""acceptSuggestion" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""cycleBrushCandidate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""fillBuildTick" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""registerBrushMesh" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""setFillCount" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""suggestionsTick" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn suggestion_and_precompute_hostile_static_law_rejects_one_grant_reducers_and_missing_boundaries() {
+        let source = include_str!("🦀️component.rs");
+        assert!(suggestion_and_precompute_routes_are_cursorized(source));
+        let direct_accept = source.replace(
+            r#""acceptSuggestion" => Box::new(Puzzle3dAcceptSuggestionWork::default())"#,
+            r#""acceptSuggestion" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!suggestion_and_precompute_routes_are_cursorized(&direct_accept));
+        let direct_precompute = source.replace(
+            r#"| "suggestionsTick" => Box::new(Puzzle3dPrecomputeCommandWork::new(tool_id))"#,
+            r#"| "suggestionsTick" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!suggestion_and_precompute_routes_are_cursorized(&direct_precompute));
+        for marker in [
+            "Puzzle3dAcceptSuggestionStage::Target",
+            "Puzzle3dAcceptSuggestionStage::Representation",
+            "Puzzle3dAcceptSuggestionStage::Vortices",
+            "Puzzle3dAcceptSuggestionStage::ExistingAttractions",
+            "Puzzle3dAcceptSuggestionStage::PublishObject",
+            "Puzzle3dAcceptSuggestionStage::PublishAttraction",
+            "Puzzle3dPrecomputeCommandStage::Objects",
+            "Puzzle3dPrecomputeCommandStage::Vortices",
+            "Puzzle3dPrecomputeCommandStage::Attractions",
+            "Puzzle3dPrecomputeCommandStage::CatalogObjects",
+            "Puzzle3dPrecomputeCommandStage::CatalogVortices",
+            "Puzzle3dPrecomputeCommandStage::Positions",
+            "Puzzle3dPrecomputeCommandStage::Indices",
+            "Puzzle3dPrecomputeCommandStage::CheckpointBytes",
+            "Puzzle3dPrecomputeCommandStage::Publish",
+        ] {
+            assert!(!suggestion_and_precompute_routes_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing retained boundary was falsely accepted: {marker}");
+        }
+    }
+
+    fn selection_transforms_are_cursorized(source: &str) -> bool {
+        source.contains("\"translateSelection\" | \"rotateSelection\" | \"scaleSelection\" => Box::new(Puzzle3dScaleWork::new(tool_id))")
+            && source.contains("Puzzle3dScaleStage::ObjectSelection")
+            && source.contains("Puzzle3dScaleStage::VolumeSelection")
+            && source.contains("Puzzle3dScaleStage::Objects")
+            && source.contains("Puzzle3dScaleStage::Volumes")
+            && !source.contains("\"translateSelection\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork")
+            && !source.contains("\"rotateSelection\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork")
+    }
+
+    #[test]
+    fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_missing_cursors() {
+        let source = include_str!("🦀️component.rs");
+        assert!(selection_transforms_are_cursorized(source));
+        let direct = source.replace(
+            "\"translateSelection\" | \"rotateSelection\" | \"scaleSelection\" => Box::new(Puzzle3dScaleWork::new(tool_id))",
+            "\"translateSelection\" | \"rotateSelection\" | \"scaleSelection\" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))",
+        );
+        assert!(!selection_transforms_are_cursorized(&direct), "hostile old-reducer replacement must fail closed");
+        for marker in ["Puzzle3dScaleStage::ObjectSelection", "Puzzle3dScaleStage::VolumeSelection", "Puzzle3dScaleStage::Objects", "Puzzle3dScaleStage::Volumes"] {
+            assert!(!selection_transforms_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing transform cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn focus_selection_is_cursorized(source: &str) -> bool {
+        source.contains(r#""focusSelection" => Box::new(Puzzle3dFocusSelectionWork::default())"#)
+            && source.contains("Puzzle3dFocusSelectionStage::Selection")
+            && source.contains("Puzzle3dFocusSelectionStage::SumObjects")
+            && source.contains("Puzzle3dFocusSelectionStage::DistanceObjects")
+            && source.contains("Puzzle3dFocusSelectionStage::Publish")
+            && !source.contains(r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn focus_selection_hostile_static_law_rejects_hidden_whole_collection_work() {
+        let source = include_str!("🦀️component.rs");
+        assert!(focus_selection_is_cursorized(source));
+        let direct = source.replace(
+            r#""focusSelection" => Box::new(Puzzle3dFocusSelectionWork::default())"#,
+            r#""focusSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!focus_selection_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dFocusSelectionStage::Selection",
+            "Puzzle3dFocusSelectionStage::SumObjects",
+            "Puzzle3dFocusSelectionStage::DistanceObjects",
+            "Puzzle3dFocusSelectionStage::Publish",
+        ] {
+            assert!(!focus_selection_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing focus cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn patch_inspector_is_cursorized(source: &str) -> bool {
+        source.contains(r#""patchInspector" => Box::new(Puzzle3dPatchInspectorWork::default())"#)
+            && source.contains("Puzzle3dPatchInspectorStage::Selection")
+            && source.contains("Puzzle3dPatchInspectorStage::Objects")
+            && source.contains("Puzzle3dPatchInspectorStage::Vortices")
+            && source.contains("Puzzle3dPatchInspectorStage::Attractions")
+            && source.contains("Puzzle3dPatchInspectorStage::AttractionReconnect")
+            && source.contains("Puzzle3dPatchInspectorStage::References")
+            && source.contains("Puzzle3dPatchInspectorStage::Volumes")
+            && !source.contains(r#""patchInspector" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn patch_inspector_hostile_static_law_rejects_old_reducer_and_hidden_collection_loops() {
+        let source = include_str!("🦀️component.rs");
+        assert!(patch_inspector_is_cursorized(source));
+        let direct = source.replace(
+            r#""patchInspector" => Box::new(Puzzle3dPatchInspectorWork::default())"#,
+            r#""patchInspector" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!patch_inspector_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dPatchInspectorStage::Selection",
+            "Puzzle3dPatchInspectorStage::Objects",
+            "Puzzle3dPatchInspectorStage::Vortices",
+            "Puzzle3dPatchInspectorStage::Attractions",
+            "Puzzle3dPatchInspectorStage::AttractionReconnect",
+            "Puzzle3dPatchInspectorStage::References",
+            "Puzzle3dPatchInspectorStage::Volumes",
+        ] {
+            assert!(!patch_inspector_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing inspector cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn world_relocate_is_cursorized(source: &str) -> bool {
+        source.contains(r#""worldRelocate" => Box::new(Puzzle3dWorldRelocateWork::default())"#)
+            && source.contains("Puzzle3dWorldRelocateStage::Object")
+            && source.contains("Puzzle3dWorldRelocateStage::ExistingAttractions")
+            && source.contains("Puzzle3dWorldRelocateStage::CandidateObject")
+            && source.contains("Puzzle3dWorldRelocateStage::CandidateVortex")
+            && source.contains("Puzzle3dWorldRelocateStage::PublishAttraction")
+            && source.contains("PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT")
+            && !source.contains(r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn world_relocate_hostile_static_law_rejects_whole_proximity_scans() {
+        let source = include_str!("🦀️component.rs");
+        assert!(world_relocate_is_cursorized(source));
+        let direct = source.replace(
+            r#""worldRelocate" => Box::new(Puzzle3dWorldRelocateWork::default())"#,
+            r#""worldRelocate" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!world_relocate_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dWorldRelocateStage::Object",
+            "Puzzle3dWorldRelocateStage::ExistingAttractions",
+            "Puzzle3dWorldRelocateStage::CandidateObject",
+            "Puzzle3dWorldRelocateStage::CandidateVortex",
+            "Puzzle3dWorldRelocateStage::PublishAttraction",
+            "PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT",
+        ] {
+            assert!(!world_relocate_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing relocate cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn create_attraction_is_cursorized(source: &str) -> bool {
+        source.contains(r#""createAttraction" => Box::new(Puzzle3dCreateAttractionWork::default())"#)
+            && source.contains("Puzzle3dCreateAttractionStage::Existing")
+            && source.contains("Puzzle3dCreateAttractionStage::Attracting")
+            && source.contains("Puzzle3dCreateAttractionStage::Attracted")
+            && source.contains("Puzzle3dCreateAttractionStage::Compatibility")
+            && source.contains("Puzzle3dCreateAttractionStage::Publish")
+            && !source.contains(r#""createAttraction" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn create_attraction_hostile_static_law_rejects_nested_whole_scans() {
+        let source = include_str!("🦀️component.rs");
+        assert!(create_attraction_is_cursorized(source));
+        let direct = source.replace(
+            r#""createAttraction" => Box::new(Puzzle3dCreateAttractionWork::default())"#,
+            r#""createAttraction" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!create_attraction_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dCreateAttractionStage::Existing",
+            "Puzzle3dCreateAttractionStage::Attracting",
+            "Puzzle3dCreateAttractionStage::Attracted",
+            "Puzzle3dCreateAttractionStage::Compatibility",
+            "Puzzle3dCreateAttractionStage::Publish",
+        ] {
+            assert!(!create_attraction_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing attraction cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn set_active_example_is_cursorized(source: &str) -> bool {
+        source.contains(r#""setActiveExample" => Box::new(Puzzle3dSetActiveExampleWork::default())"#)
+            && source.contains("Puzzle3dSetActiveExampleStage::DeleteAttractions")
+            && source.contains("Puzzle3dSetActiveExampleStage::DeleteObjects")
+            && source.contains("Puzzle3dSetActiveExampleStage::DeleteVolumes")
+            && source.contains("Puzzle3dSetActiveExampleStage::DeleteReferences")
+            && source.contains("Puzzle3dSetActiveExampleStage::DeleteCompatibility")
+            && source.contains("Puzzle3dSetActiveExampleStage::CreateObjects")
+            && source.contains("Puzzle3dSetActiveExampleStage::CreateAttractions")
+            && source.contains("Puzzle3dSetActiveExampleStage::CreateVolumes")
+            && source.contains("Puzzle3dSetActiveExampleStage::CreateReferences")
+            && source.contains("Puzzle3dSetActiveExampleStage::CreateCompatibility")
+            && source.contains("Puzzle3dSetActiveExampleStage::Publish")
+            && !source.contains(r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
+        let source = include_str!("🦀️component.rs");
+        assert!(set_active_example_is_cursorized(source));
+        let direct = source.replace(
+            r#""setActiveExample" => Box::new(Puzzle3dSetActiveExampleWork::default())"#,
+            r#""setActiveExample" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!set_active_example_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dSetActiveExampleStage::DeleteAttractions",
+            "Puzzle3dSetActiveExampleStage::DeleteObjects",
+            "Puzzle3dSetActiveExampleStage::DeleteVolumes",
+            "Puzzle3dSetActiveExampleStage::DeleteReferences",
+            "Puzzle3dSetActiveExampleStage::DeleteCompatibility",
+            "Puzzle3dSetActiveExampleStage::CreateObjects",
+            "Puzzle3dSetActiveExampleStage::CreateAttractions",
+            "Puzzle3dSetActiveExampleStage::CreateVolumes",
+            "Puzzle3dSetActiveExampleStage::CreateReferences",
+            "Puzzle3dSetActiveExampleStage::CreateCompatibility",
+            "Puzzle3dSetActiveExampleStage::Publish",
+        ] {
+            assert!(!set_active_example_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing example cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn add_brush_object_is_cursorized(source: &str) -> bool {
+        source.contains(r#""addBrushObject" => Box::new(Puzzle3dAddBrushObjectWork::default())"#)
+            && source.contains("Puzzle3dAddBrushObjectStage::Decode")
+            && source.contains("Puzzle3dAddBrushObjectStage::Kind")
+            && source.contains("Puzzle3dAddBrushObjectStage::Representation")
+            && source.contains("Puzzle3dAddBrushObjectStage::Vortices")
+            && source.contains("Puzzle3dAddBrushObjectStage::ExistingAttractions")
+            && source.contains("Puzzle3dAddBrushObjectStage::PublishObject")
+            && source.contains("Puzzle3dAddBrushObjectStage::PublishAttraction")
+            && !source.contains(r#""addBrushObject" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn add_brush_object_hostile_static_law_rejects_engine_run_to_completion() {
+        let source = include_str!("🦀️component.rs");
+        assert!(add_brush_object_is_cursorized(source));
+        let direct = source.replace(
+            r#""addBrushObject" => Box::new(Puzzle3dAddBrushObjectWork::default())"#,
+            r#""addBrushObject" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!add_brush_object_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dAddBrushObjectStage::Decode",
+            "Puzzle3dAddBrushObjectStage::Kind",
+            "Puzzle3dAddBrushObjectStage::Representation",
+            "Puzzle3dAddBrushObjectStage::Vortices",
+            "Puzzle3dAddBrushObjectStage::ExistingAttractions",
+            "Puzzle3dAddBrushObjectStage::PublishObject",
+            "Puzzle3dAddBrushObjectStage::PublishAttraction",
+        ] {
+            assert!(!add_brush_object_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing brush cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn add_object_kind_is_cursorized(source: &str) -> bool {
+        source.contains(r#""addObjectKind" => Box::new(Puzzle3dAddObjectKindWork::default())"#)
+            && source.contains("Puzzle3dAddObjectKindStage::Decode")
+            && source.contains("Puzzle3dAddObjectKindStage::Kind")
+            && source.contains("Puzzle3dAddObjectKindStage::Representation")
+            && source.contains("Puzzle3dAddObjectKindStage::Vortex")
+            && source.contains("Puzzle3dAddObjectKindStage::Publish")
+            && source.contains("PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT")
+            && !source.contains(r#""addObjectKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn add_object_kind_hostile_static_law_rejects_whole_catalog_conversion() {
+        let source = include_str!("🦀️component.rs");
+        assert!(add_object_kind_is_cursorized(source));
+        let direct = source.replace(
+            r#""addObjectKind" => Box::new(Puzzle3dAddObjectKindWork::default())"#,
+            r#""addObjectKind" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!add_object_kind_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dAddObjectKindStage::Kind",
+            "Puzzle3dAddObjectKindStage::Representation",
+            "Puzzle3dAddObjectKindStage::Vortex",
+            "Puzzle3dAddObjectKindStage::Publish",
+            "PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT",
+        ] {
+            assert!(!add_object_kind_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing add-object-kind cursor was falsely accepted: {marker}");
+        }
+    }
+
+    fn scalar_config_routes_are_direct(source: &str) -> bool {
+        source.contains("struct Puzzle3dScalarConfigWork")
+            && source.contains(r#""setCamera"
+            | "setProjection"
+            | "setProjectionParam""#)
+            && source.contains(r#"| "engagementInput" => Box::new(Puzzle3dScalarConfigWork::new(tool_id))"#)
+            && source.contains("Puzzle3dScalarConfigStage::Prepare")
+            && source.contains("Puzzle3dScalarConfigStage::Publish")
+            && source.contains("Puzzle3dConfigMutation::SetWindowCamera")
+            && source.contains("Puzzle3dConfigMutation::SetWindowSun")
+            && source.contains("Puzzle3dConfigMutation::SetWindowGridSpacing")
+            && source.contains("Puzzle3dConfigMutation::SetOverlapBudget")
+            && source.contains("Puzzle3dConfigMutation::SetWindowVoxelDims")
+            && source.contains("Puzzle3dConfigMutation::SetSuggestionMenu")
+            && source.contains("Puzzle3dConfigMutation::SetBrushCandidateIndex")
+            && source.contains("Puzzle3dConfigMutation::SetWindowEngagementInput")
+            && !source.contains(r#""setCamera" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+            && !source.contains(r#""setVortexDirection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn scalar_config_hostile_static_law_rejects_old_reducer_and_missing_exact_fields() {
+        let source = include_str!("🦀️component.rs");
+        assert!(scalar_config_routes_are_direct(source));
+        for marker in [
+            "Puzzle3dScalarConfigStage::Prepare",
+            "Puzzle3dScalarConfigStage::Publish",
+            "Puzzle3dConfigMutation::SetWindowCamera",
+            "Puzzle3dConfigMutation::SetWindowSun",
+            "Puzzle3dConfigMutation::SetWindowGridSpacing",
+            "Puzzle3dConfigMutation::SetOverlapBudget",
+            "Puzzle3dConfigMutation::SetWindowVoxelDims",
+            "Puzzle3dConfigMutation::SetSuggestionMenu",
+            "Puzzle3dConfigMutation::SetBrushCandidateIndex",
+            "Puzzle3dConfigMutation::SetWindowEngagementInput",
+        ] {
+            assert!(!scalar_config_routes_are_direct(&source.replacen(marker, "route-removed", 1)), "missing scalar route marker was falsely accepted: {marker}");
+        }
+        let direct = source.replace(
+            r#"| "engagementInput" => Box::new(Puzzle3dScalarConfigWork::new(tool_id))"#,
+            r#"| "engagementInput" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!scalar_config_routes_are_direct(&direct), "hostile scalar old-reducer replacement must fail closed");
+    }
+
+    #[test]
+    fn transform_lifecycle_is_an_explicit_bounded_retained_boundary() {
+        let source = include_str!("🦀️component.rs");
+        let route = r#""worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id))"#;
+        assert!(source.contains(route));
+        let direct = source.replace(
+            route,
+            r#""worldPointerDown" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
+            "transformBegin" | "transformEnd" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!direct.contains(route));
+        assert!(direct.contains(r#""transformBegin" | "transformEnd" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#));
+    }
+
+    fn engagement_submit_is_cursorized(source: &str) -> bool {
+        source.contains(r#""engagementSubmit" => Box::new(Puzzle3dEngagementSubmitWork::default())"#)
+            && source.contains("Puzzle3dEngagementSubmitStage::Focus")
+            && source.contains("Puzzle3dEngagementSubmitStage::UtilityConfig")
+            && source.contains("Puzzle3dEngagementSubmitStage::UtilityEffect")
+            && source.contains("Puzzle3dEngagementSubmitStage::FillEffect")
+            && source.contains("Puzzle3dEngagementSubmitStage::Input")
+            && source.contains("Puzzle3dEngagementSubmitStage::Publish")
+            && !source.contains(r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfers() {
+        let source = include_str!("🦀️component.rs");
+        assert!(engagement_submit_is_cursorized(source));
+        let direct = source.replace(
+            r#""engagementSubmit" => Box::new(Puzzle3dEngagementSubmitWork::default())"#,
+            r#""engagementSubmit" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!engagement_submit_is_cursorized(&direct));
+    }
+
+    #[test]
+    fn engagement_repeat_is_a_direct_retained_fill_request() {
+        let source = include_str!("🦀️component.rs");
+        assert!(source.contains(r#""engagementRepeatLast" => Box::new(Puzzle3dEngagementRepeatWork::default())"#));
+        assert!(source.contains("Puzzle3dEngagementRepeatStage::Prepare"));
+        assert!(source.contains("set_fill_count::request(config.fill_count.saturating_add(1).min(PUZZLE3D_FILL_COUNT_MAX))"));
+        assert!(!source.contains(r#""engagementRepeatLast" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#));
+    }
+
+    fn kind_weight_route_is_cursorized(source: &str) -> bool {
+        source.contains(r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle3dKindWeightWork::new(tool_id))"#)
+            && source.contains("Puzzle3dKindWeightStage::Catalog")
+            && source.contains("Puzzle3dKindWeightStage::Validate")
+            && source.contains("Puzzle3dKindWeightStage::SumOthers")
+            && source.contains("Puzzle3dKindWeightStage::Build")
+            && source.contains("Puzzle3dConfigMutation::SetObjectKindWeights")
+            && source.contains("Puzzle3dConfigMutation::SetVortexKindWeights")
+            && !source.contains(r#""setObjectKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn kind_weight_hostile_static_law_rejects_whole_normalizer_and_missing_cursors() {
+        let source = include_str!("🦀️component.rs");
+        assert!(kind_weight_route_is_cursorized(source));
+        let direct = source.replace(
+            r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(Puzzle3dKindWeightWork::new(tool_id))"#,
+            r#""setObjectKindWeight" | "setVortexKindWeight" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!kind_weight_route_is_cursorized(&direct));
+        assert!(!source.contains("puzzle3d_normalize_kind_weight_group(self.weights"));
+    }
+
+    fn engagement_abort_is_cursorized(source: &str) -> bool {
+        source.contains(r#""engagementAbort" => Box::new(Puzzle3dEngagementAbortWork::default())"#)
+            && source.contains("Puzzle3dEngagementAbortStage::Input")
+            && source.contains("Puzzle3dEngagementAbortStage::Candidate")
+            && source.contains("Puzzle3dEngagementAbortStage::Utility")
+            && source.contains("Puzzle3dEngagementAbortStage::Publish")
+            && source.contains("Puzzle3dConfigMutation::SetActiveUtility")
+            && !source.contains(r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
+    }
+
+    #[test]
+    fn engagement_abort_hostile_static_law_rejects_atomic_multi_owner_reset() {
+        let source = include_str!("🦀️component.rs");
+        assert!(engagement_abort_is_cursorized(source));
+        let direct = source.replace(
+            r#""engagementAbort" => Box::new(Puzzle3dEngagementAbortWork::default())"#,
+            r#""engagementAbort" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
+        );
+        assert!(!engagement_abort_is_cursorized(&direct));
+        for marker in [
+            "Puzzle3dEngagementAbortStage::Input",
+            "Puzzle3dEngagementAbortStage::Candidate",
+            "Puzzle3dEngagementAbortStage::Utility",
+            "Puzzle3dEngagementAbortStage::Publish",
+            "Puzzle3dConfigMutation::SetActiveUtility",
+        ] {
+            assert!(!engagement_abort_is_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing engagement-abort boundary was falsely accepted: {marker}");
+        }
+    }
     use crate::editor::puzzle3d::config::Puzzle3dCamera;
     use protocol::MutationDiff;
     use semio_framework_plugin::{testkit as framework_testkit, EditorApp, PluginApp};
@@ -4310,7 +8637,7 @@ mod tests {
     /// 🚫️ Zero object-kind weight disables every vortex slider under that kind — anything × 0 is 0.
     #[semio_framework_async_macros::async_test]
     async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
-        let labels = puzzle3d_labels(&Puzzle3dConfig::default());
+        let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
         let session = Puzzle3dPrecomputeSession::new();
         let fixture = nakagin_fixture();
         let object_ids = puzzle3d_kind_ids(&fixture, "objects");
@@ -4352,7 +8679,7 @@ mod tests {
     /// Brush voxel dims live in a utility-options group in the window's own measures.
     #[semio_framework_async_macros::async_test]
     async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
-        let labels = puzzle3d_labels(&Puzzle3dConfig::default());
+        let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
         let session = Puzzle3dPrecomputeSession::new();
         let fill_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
         let fill_measures = fill_tool::measures(&fill_scene, &session, labels);
@@ -4723,7 +9050,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn transform_utility_options_expose_move_and_rotate_flags() {
-        let labels = puzzle3d_labels(&Puzzle3dConfig::default());
+        let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
         let session = Puzzle3dPrecomputeSession::new();
         let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
         let measures = main::window_measures(&scene, &session, labels);

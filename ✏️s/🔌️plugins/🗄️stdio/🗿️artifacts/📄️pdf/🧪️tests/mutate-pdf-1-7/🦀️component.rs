@@ -11,17 +11,21 @@
 //! the `semantic-pdf-v1` profile compares them. The subject half is gated behind the generated
 //! host's `sut` feature so the oracle-only run never compiles the local implementation.
 //!
-//! 🩺 What the differential run found. The first oracle-against-subject run of this case scored
-//! `parity=24/37`, and ten of the thirteen failures were ONE production defect: `encode_pdf`
-//! serialized the retained COS graph alone, so every mutation in the authored `pages`/`info` lane
-//! applied to the snapshot and then vanished on export. Fixed at the cause in
-//! `../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs` (`reconcile_authored_lanes`);
-//! `parity` is now 34/37 with no comparison profile touched, no `ignoreKeys` added and no fixture
-//! swapped. The three that remain are `inverse-remove-page`, `inverse-append-page-content` and
-//! `inverse-set-page-content`, they diverge on `pages.N.contentOperators` and on nothing else, and
-//! they are left red on purpose — this side restores the page's original stream, the reference's
-//! own undo rebuilds it from a prior-text capture that reads only `Tj` while the thesis sets its
-//! type with `TJ`. The feature description argues it in full.
+//! 🩺 What the differential run found. The first oracle-against-subject run of this case exposed
+//! ONE production defect behind ten of its thirteen failures: `encode_pdf` serialized the retained
+//! COS graph alone, so every mutation in the authored `pages`/`info` lane applied to the snapshot
+//! and then vanished on export. Fixed at the cause in
+//! `../../🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs` (`reconcile_authored_lanes`),
+//! with no comparison profile touched, no `ignoreKeys` added and no fixture swapped.
+//!
+//! Three divergences are left RED on purpose: `inverse-remove-page`, `inverse-append-page-content`
+//! and `inverse-set-page-content`. They differ on `pages.N.contentOperators` and on nothing else.
+//! This side restores the page's original stream; the reference's own undo rebuilds it from a
+//! prior-text capture that reads only `Tj`, while the thesis sets its type with `TJ`. That is the
+//! reference being lossy, not us, so the failure stays. The feature description argues it in full.
+//!
+//! No measured ratio is recorded here. A parity figure in source is a claim about one moment that
+//! silently becomes false when anything moves; the dated ticket record is where measurements live.
 //!
 //! ⚖️ All three laws are asserted IN ROLE, through the shared `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/⚖️law`
 //! module and under `semantic-pdf-v1`'s own tolerance, so a scenario cannot pass merely because

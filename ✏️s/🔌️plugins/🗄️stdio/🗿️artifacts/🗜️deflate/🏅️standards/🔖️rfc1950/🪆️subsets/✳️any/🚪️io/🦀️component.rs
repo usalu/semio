@@ -1190,6 +1190,21 @@ mod codec_tests {
         assert_eq!(dec, p);
     }
 
+    /// 📦️ Flattens a paged `RetainedJobPayload` back into the contiguous bytes these byte-identity
+    /// assertions compare, then closes it to terminal-empty — the job protocol hands out pages, never
+    /// one `Vec<u8>`, and `RetainedJobPayload::drop` refuses any payload that still owns page backing.
+    fn retained_bytes(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(payload.len());
+        for index in 0..payload.page_count() {
+            if let Some(page) = payload.page(index) {
+                bytes.extend_from_slice(page);
+            }
+        }
+        assert_eq!(bytes.len(), payload.len(), "retained payload reports {} bytes but its {} page(s) hold {}", payload.len(), payload.page_count(), bytes.len());
+        while payload.close_step(usize::MAX, usize::MAX) != semio_framework_job::JobPayloadCloseStep::Complete {}
+        bytes
+    }
+
     fn drive_encode_job(mut job: DeflateEncodeJob, fuel: u64) -> Vec<u8> {
         use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
         let cancel = root_cancel_token();
@@ -1197,7 +1212,7 @@ mod codec_tests {
         loop {
             let mut context = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, u64::MAX), cancel.clone(), || 0, &mut sequence);
             match job.step(&mut context) {
-                StepOutcome::Complete(commit) => return commit.output,
+                StepOutcome::Complete(commit) => return retained_bytes(commit.output),
                 StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
                 outcome => panic!("unexpected DEFLATE job outcome: {outcome:?}"),
             }
@@ -1231,7 +1246,8 @@ mod codec_tests {
                 break checkpoint;
             }
         };
-        let restored = DeflateEncodeJob::from_checkpoint(&checkpoint.state).expect("restore checkpoint");
+        assert!(!checkpoint.state.is_empty(), "a CheckpointReady outcome must own its serialized state; an empty retained payload means `payload_from_bytes` rejected it and `retained_payload` swallowed the rejection");
+        let restored = DeflateEncodeJob::from_checkpoint(&retained_bytes(checkpoint.state)).expect("restore checkpoint");
         assert_eq!(checkpoint.applied_progress as usize, restored.progress().0);
         assert_eq!(drive_encode_job(restored, 3), expected);
     }

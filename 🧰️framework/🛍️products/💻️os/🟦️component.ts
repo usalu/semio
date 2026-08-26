@@ -1073,6 +1073,123 @@ export function decodeMutationEnvelopesPack(pack: string): MutationEnvelope[] {
 //#endregion 🔖️PublicApi
 //#endregion 🔖️PackValueCodec
 
+//#region 🔖️ScenePackCodec
+const SCENE_PACK_TAG_UNIT = 0;
+const SCENE_PACK_TAG_FALSE = 1;
+const SCENE_PACK_TAG_TRUE = 2;
+const SCENE_PACK_TAG_U64 = 3;
+const SCENE_PACK_TAG_I64 = 4;
+const SCENE_PACK_TAG_F64 = 5;
+const SCENE_PACK_TAG_STR = 6;
+const SCENE_PACK_TAG_BYTES = 7;
+const SCENE_PACK_TAG_NONE = 8;
+const SCENE_PACK_TAG_SOME = 9;
+const SCENE_PACK_TAG_SEQ = 10;
+const SCENE_PACK_TAG_CHAR = 11;
+const SCENE_PACK_TAG_VARIANT = 12;
+const SCENE_PACK_TAG_MAP = 13;
+const SCENE_PACK_UNIT = Symbol("scene-pack-unit");
+
+function readScenePackVarint(bytes: Uint8Array, position: { value: number }): bigint {
+  let value = 0n;
+  for (let shift = 0n; shift < 70n; shift += 7n) {
+    const byte = bytes[position.value];
+    if (byte === undefined) throw new Error("decodeScenePackValue: truncated varint");
+    position.value += 1;
+    value |= BigInt(byte & 0x7f) << shift;
+    if ((byte & 0x80) === 0) return value;
+  }
+  throw new Error("decodeScenePackValue: varint exceeds u64");
+}
+
+function scenePackNumber(value: bigint): number {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number)) throw new Error("decodeScenePackValue: integer exceeds JavaScript's safe range");
+  return number;
+}
+
+function readScenePackLength(bytes: Uint8Array, position: { value: number }): number {
+  const length = scenePackNumber(readScenePackVarint(bytes, position));
+  if (length > bytes.length - position.value) throw new Error("decodeScenePackValue: declared length exceeds remaining bytes");
+  return length;
+}
+
+function decodeScenePackItem(bytes: Uint8Array, position: { value: number }): unknown | typeof SCENE_PACK_UNIT {
+  const tag = bytes[position.value];
+  if (tag === undefined) throw new Error("decodeScenePackValue: truncated value");
+  position.value += 1;
+  if (tag === SCENE_PACK_TAG_UNIT) return SCENE_PACK_UNIT;
+  if (tag === SCENE_PACK_TAG_FALSE) return false;
+  if (tag === SCENE_PACK_TAG_TRUE) return true;
+  if (tag === SCENE_PACK_TAG_U64) return scenePackNumber(readScenePackVarint(bytes, position));
+  if (tag === SCENE_PACK_TAG_I64) {
+    const raw = readScenePackVarint(bytes, position);
+    return scenePackNumber((raw >> 1n) ^ -(raw & 1n));
+  }
+  if (tag === SCENE_PACK_TAG_F64) {
+    if (bytes.length - position.value < 8) throw new Error("decodeScenePackValue: truncated f64");
+    const value = new DataView(bytes.buffer, bytes.byteOffset + position.value, 8).getFloat64(0, true);
+    position.value += 8;
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_STR) {
+    const length = readScenePackLength(bytes, position);
+    const value = new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(position.value, position.value + length));
+    position.value += length;
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_BYTES) {
+    const length = readScenePackLength(bytes, position);
+    const value = Array.from(bytes.subarray(position.value, position.value + length));
+    position.value += length;
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_NONE) return null;
+  if (tag === SCENE_PACK_TAG_SOME) return decodeScenePackItem(bytes, position);
+  if (tag === SCENE_PACK_TAG_SEQ) {
+    const count = readScenePackLength(bytes, position);
+    const value: unknown[] = [];
+    for (let index = 0; index < count; index += 1) {
+      const item = decodeScenePackItem(bytes, position);
+      value.push(item === SCENE_PACK_UNIT ? null : item);
+    }
+    return value;
+  }
+  if (tag === SCENE_PACK_TAG_CHAR) {
+    const codePoint = scenePackNumber(readScenePackVarint(bytes, position));
+    if (codePoint > 0x10ffff || (codePoint >= 0xd800 && codePoint <= 0xdfff)) throw new Error("decodeScenePackValue: invalid Unicode scalar");
+    return String.fromCodePoint(codePoint);
+  }
+  if (tag === SCENE_PACK_TAG_VARIANT) {
+    const name = decodeScenePackItem(bytes, position);
+    if (typeof name !== "string") throw new Error("decodeScenePackValue: variant name is not a string");
+    const payload = decodeScenePackItem(bytes, position);
+    return payload === SCENE_PACK_UNIT ? name : { [name]: payload };
+  }
+  if (tag === SCENE_PACK_TAG_MAP) {
+    const count = readScenePackLength(bytes, position);
+    const value: Record<string, unknown> = {};
+    for (let index = 0; index < count; index += 1) {
+      const key = decodeScenePackItem(bytes, position);
+      if (typeof key !== "string") throw new Error("decodeScenePackValue: map key is not a string");
+      if (Object.hasOwn(value, key)) throw new Error(`decodeScenePackValue: duplicate map key ${key}`);
+      const item = decodeScenePackItem(bytes, position);
+      value[key] = item === SCENE_PACK_UNIT ? null : item;
+    }
+    return value;
+  }
+  throw new Error(`decodeScenePackValue: invalid tag ${tag}`);
+}
+
+/** @emoji 🎬️ Decodes the self-describing serde packet emitted by `semio-framework-ui-scene`. */
+export function decodeScenePackValue(bytes: Uint8Array): unknown {
+  const position = { value: 0 };
+  const value = decodeScenePackItem(bytes, position);
+  if (position.value !== bytes.length) throw new Error(`decodeScenePackValue: ${bytes.length - position.value} trailing bytes`);
+  return value === SCENE_PACK_UNIT ? null : value;
+}
+//#endregion 🔖️ScenePackCodec
+
 //#region 🔖️AppChannelCodec
 /**
  * 📡️ TS mirror of the `protocol_channel` crate's `AppCommand`/`AppFrame` binary frame protocol
@@ -2341,6 +2458,15 @@ if (import.meta.vitest) {
 
     it.each(packValueFixtures)("round-trips %s through encodePackValue/decodePackValue", (_name, value) => {
       expect(decodePackValue(encodePackValue(value))).toEqual(value);
+    });
+  });
+
+  describe("@semio-tech/framework-os ScenePackCodec", () => {
+    it("decodes the byte-exact Rust TableScene fixture without a schema-specific field mirror", () => {
+      const hex = "0d02060b636f6c756d6e734a736f6e060f5b7b226964223a226e616d65227d5d0608726f77734a736f6e06025b5d";
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let index = 0; index < bytes.length; index += 1) bytes[index] = Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16);
+      expect(decodeScenePackValue(bytes)).toEqual({ columnsJson: '[{"id":"name"}]', rowsJson: "[]" });
     });
   });
 

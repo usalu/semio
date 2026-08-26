@@ -1,44 +1,77 @@
 @capability-program-1-mutate
-@no-oracle-architect-program-mutation-semantics
+@oracle-architect-program-python-independent
 @comparison-ordered-json-v1
 @mutations-program-1-any
-Feature: Apply every typed architect program mutation to its committed specification vectors
-  `s.architect.program` is a semio-NATIVE artifact: it is persisted as `.dsl.semio` text and
-  `.pack.semio` binary through this subset's own codecs, and no third party reads or writes either.
-  There is therefore no reference implementation to register as an oracle — recorded as the
-  `architect-program-mutation-semantics` no-oracle decision in
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`, whose substitutes are the
-  committed specification vectors and the inverse law. Because that decision is recorded, the runner
-  dispatches NO oracle role for this case: every assertion below lives inside the subject handler,
-  and a handler that merely ran the mutation and returned would report a pass having checked nothing.
+Feature: Apply every typed architect program mutation twice — once in Rust, once in Python — and require the same answer
+  This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️component.py` in this directory: a
+  second implementation of the `s.architect.program` architectural-brief document and all 266 typed
+  mutations, written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json`,
+  from `…/🧬️schema/📸️snapshot/🔣️component.json`, from rules 1, 2 and 4 of
+  `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`, and from
+  the 266 committed specification vectors. It imports nothing from this repository's Rust and reads
+  none of the per-kind `🦠️mutation`/`↩️inverse`/`🔺️diff` Rust leaves.
+
+  Why a second implementation rather than a third-party library. `ProgramSnapshot` is an
+  architectural brief: 66 registers holding stakeholders, users, activities, functions, elements,
+  requirements of sixteen families, records, constraints and governance. IFC and its property sets
+  carry the built model rather than the brief that precedes it; ReqIF and SysML carry requirement
+  records but no 66-register brief and no closed algebra over it; and none of them reads
+  `.dsl.semio`. What a reference genuinely can adjudicate is the ALGEBRA, and the claim that it
+  cannot — "the 266 kinds are mechanically derived from this subset's own 66 registers by
+  `📓️derivation-rules.md`, and that derivation is a specification, not a fact an external library
+  could confirm or refute" — is refuted inside this repository: the fifteen `📕️norm` Python
+  references were written from that same document.
 
   What distinguishes this subset is SCALE and the fact that its vocabulary is DERIVED rather than
-  designed. `ProgramSnapshot` is an architectural brief: 66 registers holding stakeholders, users,
-  activities, functions, requirements of sixteen different families, records, constraints and
-  governance. `📓️derivation-rules.md` assigns each register's shape a verb set — a header-shaped
-  id-keyed register yields create/delete/rename/replace (rule 2), the two EDGE-shaped registers
-  `adjacencies` and `traces` yield connect/disconnect instead (rule 4), and the three document-level
-  scalar facets `meta`, `project` and `governance` yield rename/replace (rule 1). 266 kinds come out
-  of that, and the interesting property of the set is that it is CLOSED: there is no whole-document
-  replace, because a whole-document replace is not an in-history mutation and goes through
-  `ArtifactStore::reset` instead.
+  designed. A header-shaped id-keyed register yields create/delete/rename/replace (rule 2), the two
+  EDGE-shaped registers `adjacencies` and `traces` yield connect/disconnect instead (rule 4), and the
+  three document-level scalar facets `meta`, `project` and `governance` yield rename/replace (rule 1).
+  266 kinds come out of that, and the set is CLOSED: there is no whole-document replace, because a
+  whole-document replace is not an in-history mutation and goes through `ArtifactStore::reset`.
+
+  Three things only the committed vectors state, and both implementations take them from there: a
+  `connect-` verb NORMALISES the edge it appends (the `connects-reception-to-waiting` vector's
+  payload carries `normalized` false and its after-snapshot carries true, with nothing else moved);
+  an addressed id the document does not hold is `mutation.target-missing` with that id as its path,
+  not a silent no-op; and the 47th register is serialized `artifacts` even though the committed JSON
+  Schema requires `documents`.
 
   📌️ 260 of the 266 committed vectors move the document. The six that do not are
   `delete`/`rename`/`replace` over `knowledge-record` and `benchmark-record`, and the reason is
   structural rather than an authoring gap: those two registers alone are composed
   `s.stdio.semio.table` CHILD handles whose rows live in a working-scene cache a fresh process has
   never populated, so the only branch reachable from a committed snapshot is the
-  `mutation.target-missing` rejection — which is exactly what those six vectors pin, and what the
-  `mutate` scenario asserts for them (declared status, declared code, empty diff). They are named in
-  the adapter's `GUARD_VECTORS` list and exempted from the observability law on that basis; the
+  `mutation.target-missing` rejection — which is exactly what those six vectors pin. They are named
+  in both adapters' `GUARD_VECTORS` list and exempted from the observability law on that basis; the
   other 260 kinds carry it with no exemption.
 
+  🚧️ THREE SCENARIOS THE REFERENCE REFUSES BY CLAUSE, and reports rather than works around. First,
+  `create-knowledge-record` and `create-benchmark-record`: over those same two composed child
+  handles, `create` is the one verb whose whole observable effect is the after-snapshot's new
+  `childId` — a content address of the child `s.stdio.semio@v1/table` document after the row is
+  appended. No document in this repository states the addressing function, the child table's
+  canonical encoding, or where the child's existing rows come from, so the reference declines to
+  guess instead of hard-coding the committed answer. Second, `identity-round-trip`: this subset's
+  `.dsl.semio` carrier has only the repository-wide PLACEHOLDER grammar — the whole body of
+  `…/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` is `payload = OCTET+`, and its `header`
+  production declares `"schema" SP "stdio.json"`, which the committed artifact contradicts on its
+  first line with `semio architect.program.dsl v1`. The notation flattens nested records into
+  `key=key=value` (`ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ]`) and nothing
+  bounds them: all seventy record `$defs` of `…/🧬️schema/📸️snapshot/🔣️component.json` are
+  `{"type": "object", "additionalProperties": true}` with no `properties`, and that same row header
+  writes `tags` and `notes` members no committed snapshot vector carries on any record of any
+  register. These three are the same class of finding `mutate-iso16757-1` and `mutate-vdi3805-1`
+  report: the specification is thinner than the implementation, and a second producer is what makes
+  that visible.
+
   Every scenario reads the committed vectors where the domain already keeps them, through
-  `asset://`, and never writes to them.
+  `asset://`, and never writes to them. Both implementations additionally assert, in role, that a
+  kind moves exactly ONE member of the document and that it moves the member its own noun addresses —
+  the check an after-snapshot comparison cannot make on its own.
 
   @id-mutate
   @level-exhaustive
-  @mode-conformance
+  @mode-differential
   Scenario Outline: Applying <id> to its committed before-snapshot yields the committed after-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json
@@ -320,7 +353,7 @@ Feature: Apply every typed architect program mutation to its committed specifica
 
   @id-inverse
   @level-exhaustive
-  @mode-property
+  @mode-differential
   Scenario Outline: Undoing <id> restores the committed before-snapshot
     Given the committed before-snapshot asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️component.json
     And the committed mutation payload asset://🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<vector>/🦠️mutation/🔣️component.json

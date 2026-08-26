@@ -15,15 +15,15 @@ pub struct ChangeSystemLossesKwh {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeSystemLossesKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "system-losses-kwh", kind: "change-system-losses-kwh", record: "ChangedSystemLossesKwh" };
 
-    async fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_system_losses_kwh::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Vec<Din18599Mutation> {
         crate::artifacts::din18599::mutations::change_system_losses_kwh::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change system losses [kWh] to {}", self.new_system_losses_kwh)
     }
 }
